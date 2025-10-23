@@ -26,14 +26,26 @@ class TaskEstimate(BaseModel):
 
     distribution: DistributionType = Field(default=DistributionType.TRIANGULAR)
     min: Optional[float] = Field(default=None, ge=0)
-    most_likely: float = Field(gt=0)
+    most_likely: Optional[float] = Field(default=None, gt=0)
     max: Optional[float] = Field(default=None, ge=0)
     standard_deviation: Optional[float] = Field(default=None, gt=0)
+    t_shirt_size: Optional[str] = Field(default=None)
     unit: str = Field(default="days")
 
     @model_validator(mode="after")
     def validate_distribution(self) -> "TaskEstimate":
         """Validate distribution parameters."""
+        # If T-shirt size is specified, skip other validations
+        # The actual values will be populated from config during simulation
+        if self.t_shirt_size is not None:
+            return self
+        
+        # For explicit estimates, most_likely is required
+        if self.most_likely is None:
+            raise ValueError(
+                "Either 't_shirt_size' or 'most_likely' must be specified"
+            )
+        
         if self.distribution == DistributionType.TRIANGULAR:
             if self.min is None or self.max is None:
                 raise ValueError(

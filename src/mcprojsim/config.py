@@ -30,10 +30,19 @@ class OutputConfig(BaseModel):
     histogram_bins: int = Field(default=50, gt=0)
 
 
+class TShirtSizeConfig(BaseModel):
+    """T-shirt size estimate configuration."""
+
+    min: float = Field(gt=0)
+    most_likely: float = Field(gt=0)
+    max: float = Field(gt=0)
+
+
 class Config(BaseModel):
     """Complete application configuration."""
 
     uncertainty_factors: Dict[str, Dict[str, float]] = Field(default_factory=dict)
+    t_shirt_sizes: Dict[str, TShirtSizeConfig] = Field(default_factory=dict)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
 
@@ -66,7 +75,15 @@ class Config(BaseModel):
                 "technical_complexity": {"low": 1.0, "medium": 1.20, "high": 1.50},
                 "team_distribution": {"colocated": 1.0, "distributed": 1.25},
                 "integration_complexity": {"low": 1.0, "medium": 1.15, "high": 1.35},
-            }
+            },
+            t_shirt_sizes={
+                "XS": TShirtSizeConfig(min=0.5, most_likely=1, max=2),
+                "S": TShirtSizeConfig(min=1, most_likely=2, max=4),
+                "M": TShirtSizeConfig(min=3, most_likely=5, max=8),
+                "L": TShirtSizeConfig(min=5, most_likely=8, max=13),
+                "XL": TShirtSizeConfig(min=8, most_likely=13, max=21),
+                "XXL": TShirtSizeConfig(min=13, most_likely=21, max=34),
+            },
         )
 
     def get_uncertainty_multiplier(
@@ -86,3 +103,14 @@ class Config(BaseModel):
 
         factor_config = self.uncertainty_factors[factor_name]
         return factor_config.get(level, 1.0)
+
+    def get_t_shirt_size(self, size: str) -> Optional[TShirtSizeConfig]:
+        """Get T-shirt size configuration.
+
+        Args:
+            size: T-shirt size (e.g., 'XS', 'S', 'M', 'L', 'XL', 'XXL')
+
+        Returns:
+            TShirtSizeConfig object or None if not found
+        """
+        return self.t_shirt_sizes.get(size)

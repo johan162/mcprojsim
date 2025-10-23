@@ -80,6 +80,48 @@ class TestSimulationConfig:
         assert config.random_seed is None
 
 
+class TestTShirtSizes:
+    """Tests for T-shirt size configuration."""
+
+    def test_default_tshirt_sizes(self):
+        """Test default T-shirt sizes are defined."""
+        config = Config.get_default()
+        
+        assert "XS" in config.t_shirt_sizes
+        assert "S" in config.t_shirt_sizes
+        assert "M" in config.t_shirt_sizes
+        assert "L" in config.t_shirt_sizes
+        assert "XL" in config.t_shirt_sizes
+        assert "XXL" in config.t_shirt_sizes
+
+    def test_tshirt_size_values(self):
+        """Test T-shirt size values are correctly configured."""
+        config = Config.get_default()
+        
+        # Test a few sizes
+        xs = config.get_t_shirt_size("XS")
+        assert xs.min == 0.5
+        assert xs.most_likely == 1
+        assert xs.max == 2
+        
+        m = config.get_t_shirt_size("M")
+        assert m.min == 3
+        assert m.most_likely == 5
+        assert m.max == 8
+        
+        xxl = config.get_t_shirt_size("XXL")
+        assert xxl.min == 13
+        assert xxl.most_likely == 21
+        assert xxl.max == 34
+
+    def test_get_unknown_tshirt_size(self):
+        """Test getting unknown T-shirt size returns None."""
+        config = Config.get_default()
+        
+        size = config.get_t_shirt_size("XXXL")
+        assert size is None
+
+
 class TestOutputConfig:
     """Tests for output configuration."""
 

@@ -67,6 +67,30 @@ class TestTaskEstimate:
                 most_likely=5.0,
             )
 
+    def test_tshirt_size_valid(self):
+        """Test T-shirt size specification."""
+        estimate = TaskEstimate(
+            t_shirt_size="M",
+        )
+        assert estimate.t_shirt_size == "M"
+        assert estimate.min is None
+        assert estimate.most_likely is None
+        assert estimate.max is None
+
+    def test_tshirt_size_with_unit(self):
+        """Test T-shirt size with custom unit."""
+        estimate = TaskEstimate(
+            t_shirt_size="L",
+            unit="weeks",
+        )
+        assert estimate.t_shirt_size == "L"
+        assert estimate.unit == "weeks"
+
+    def test_missing_estimate_values(self):
+        """Test that either T-shirt size or explicit estimate is required."""
+        with pytest.raises(ValueError, match="Either 't_shirt_size' or 'most_likely' must be specified"):
+            TaskEstimate()
+
 
 class TestRisk:
     """Tests for Risk model."""

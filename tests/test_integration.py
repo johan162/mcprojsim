@@ -190,3 +190,75 @@ class TestCLIIntegration:
         
         assert results.project_name == "CLI Test"
         assert len(results.durations) == 50
+
+    def test_tshirt_sizing_simulation(self, tmp_path):
+        """Test simulation with T-shirt size estimates."""
+        # Create project with T-shirt sizes
+        data = {
+            "project": {
+                "name": "T-Shirt Test",
+                "start_date": "2025-01-01",
+                "confidence_levels": [50, 90],
+            },
+            "tasks": [
+                {
+                    "id": "task_xs",
+                    "name": "Extra Small Task",
+                    "estimate": {"t_shirt_size": "XS"},
+                    "dependencies": [],
+                },
+                {
+                    "id": "task_m",
+                    "name": "Medium Task",
+                    "estimate": {"t_shirt_size": "M"},
+                    "dependencies": ["task_xs"],
+                },
+                {
+                    "id": "task_l",
+                    "name": "Large Task",
+                    "estimate": {"t_shirt_size": "L"},
+                    "dependencies": ["task_m"],
+                },
+            ],
+        }
+        
+        file_path = tmp_path / "tshirt_project.yaml"
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
+        
+        # Parse and validate
+        parser = YAMLParser()
+        is_valid, error = parser.validate_file(file_path)
+        assert is_valid, f"Validation failed: {error}"
+        
+        # Load and simulate
+        project = parser.parse_file(file_path)
+        config = Config.get_default()
+        engine = SimulationEngine(
+            iterations=100, 
+            random_seed=42, 
+            config=config,
+            show_progress=False
+        )
+        results = engine.run(project)
+        
+        # Verify results
+        assert results.project_name == "T-Shirt Test"
+        assert len(results.durations) == 100
+        assert results.mean > 0
+        assert results.std_dev > 0
+        
+        # Check that task durations are reasonable for their sizes
+        # XS: 0.5-2 days, M: 3-8 days, L: 5-13 days
+        task_xs_durations = results.task_durations["task_xs"]
+        task_m_durations = results.task_durations["task_m"]
+        task_l_durations = results.task_durations["task_l"]
+        
+        # XS should be smallest on average
+        assert task_xs_durations.mean() < task_m_durations.mean()
+        assert task_m_durations.mean() < task_l_durations.mean()
+        
+        # Check reasonable ranges
+        assert 0.5 <= task_xs_durations.min() <= 2.0
+        assert 3.0 <= task_m_durations.min() <= 8.0
+        assert 5.0 <= task_l_durations.min() <= 13.0

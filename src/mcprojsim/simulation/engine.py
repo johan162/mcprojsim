@@ -123,8 +123,11 @@ class SimulationEngine:
 
         # Sample and adjust task durations
         for task in project.tasks:
+            # Resolve T-shirt size to actual estimate if needed
+            estimate = self._resolve_estimate(task.estimate)
+            
             # Sample base duration
-            base_duration = self.sampler.sample(task.estimate)
+            base_duration = self.sampler.sample(estimate)
 
             # Apply uncertainty factors
             adjusted_duration = self._apply_uncertainty_factors(task, base_duration)
@@ -197,3 +200,35 @@ class SimulationEngine:
             )
 
         return base_duration * multiplier
+
+    def _resolve_estimate(self, estimate):
+        """Resolve T-shirt size to actual estimate values.
+
+        Args:
+            estimate: TaskEstimate object
+
+        Returns:
+            TaskEstimate with resolved values
+        """
+        from mcprojsim.models.project import TaskEstimate
+        
+        # If T-shirt size is not specified, return as-is
+        if estimate.t_shirt_size is None:
+            return estimate
+        
+        # Look up T-shirt size configuration
+        size_config = self.config.get_t_shirt_size(estimate.t_shirt_size)
+        if size_config is None:
+            raise ValueError(
+                f"Unknown T-shirt size: {estimate.t_shirt_size}. "
+                f"Available sizes: {', '.join(self.config.t_shirt_sizes.keys())}"
+            )
+        
+        # Create new estimate with resolved values
+        return TaskEstimate(
+            distribution=estimate.distribution,
+            min=size_config.min,
+            most_likely=size_config.most_likely,
+            max=size_config.max,
+            unit=estimate.unit,
+        )

@@ -74,7 +74,7 @@ This document provides a complete formal grammar specification for Monte Carlo P
 # Estimate Section
 <estimate> ::= "estimate:" <estimate_spec>
 
-<estimate_spec> ::= <triangular_estimate> | <lognormal_estimate>
+<estimate_spec> ::= <triangular_estimate> | <lognormal_estimate> | <tshirt_estimate>
 
 <triangular_estimate> ::= <min_value>
                          <most_likely_value>
@@ -85,6 +85,11 @@ This document provides a complete formal grammar specification for Monte Carlo P
                         <most_likely_value>
                         <standard_deviation>
                         <unit>
+
+<tshirt_estimate> ::= "t_shirt_size:" <tshirt_size>
+                     [<unit>]
+
+<tshirt_size> ::= "XS" | "S" | "M" | "L" | "XL" | "XXL"
 
 <min_value> ::= "min:" <positive_number>
 
@@ -204,11 +209,21 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
 3. **Estimate Validity** (Log-Normal):
    - `most_likely` > 0
    - `standard_deviation` > 0
-4. **Dependencies**: 
+4. **Estimate Validity** (T-Shirt Size):
+   - Must be one of: `XS`, `S`, `M`, `L`, `XL`, `XXL`
+   - Values are resolved from configuration file
+   - Default values (in days):
+     * `XS`: min=0.5, most_likely=1, max=2
+     * `S`: min=1, most_likely=2, max=4
+     * `M`: min=3, most_likely=5, max=8
+     * `L`: min=5, most_likely=8, max=13
+     * `XL`: min=8, most_likely=13, max=21
+     * `XXL`: min=13, most_likely=21, max=34
+5. **Dependencies**: 
    - Referenced task IDs must exist
    - No circular dependencies allowed
    - Dependencies must form a Directed Acyclic Graph (DAG)
-5. **Uncertainty Factors**: Custom factor names allowed beyond predefined set
+6. **Uncertainty Factors**: Custom factor names allowed beyond predefined set
 
 ### Risk Constraints
 
@@ -258,6 +273,13 @@ tasks:
       unit: "days"
     dependencies: ["task_001"]
 
+  - id: "task_003"
+    name: "Quick Fix"
+    estimate:
+      t_shirt_size: "S"
+      unit: "days"
+    dependencies: []
+
 project_risks:
   - id: "resource_loss"
     name: "Team member leaves"
@@ -294,6 +316,11 @@ risks:
 project:
   probability_red_threshold: 0.90
   probability_green_threshold: 0.50  # ERROR: must be > red_threshold
+
+# INVALID: unknown T-shirt size
+estimate:
+  t_shirt_size: "XXXL"  # ERROR: not a valid size (XS, S, M, L, XL, XXL)
+  unit: "days"
 ```
 
 ## Format Support
@@ -314,6 +341,44 @@ The grammar is implemented using:
 - **tomli/tomli-w**: For TOML parsing
 
 See `src/mcprojsim/models/` for the complete Pydantic model definitions that enforce this grammar.
+
+## T-Shirt Size Configuration
+
+T-shirt sizes can be customized via configuration file. The default values are defined as Fibonacci-like sequences:
+
+```yaml
+t_shirt_sizes:
+  XS:
+    min: 0.5
+    most_likely: 1
+    max: 2
+  S:
+    min: 1
+    most_likely: 2
+    max: 4
+  M:
+    min: 3
+    most_likely: 5
+    max: 8
+  L:
+    min: 5
+    most_likely: 8
+    max: 13
+  XL:
+    min: 8
+    most_likely: 13
+    max: 21
+  XXL:
+    min: 13
+    most_likely: 21
+    max: 34
+```
+
+These values can be customized in a configuration file and passed using `--config` option. To view current configuration including T-shirt sizes, use:
+
+```bash
+mc-estimate config show
+```
 
 ## Related Documentation
 

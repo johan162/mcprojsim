@@ -11,6 +11,7 @@ docs/index.md
 examples/project_with_custom_thresholds.yaml
 examples/sample_config.yaml
 examples/sample_project.yaml
+examples/tshirt_sizing_project.yaml
 src/mcprojsim/__init__.py
 src/mcprojsim/cli.py
 src/mcprojsim/config.py

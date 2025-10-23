@@ -169,6 +169,11 @@ def show_config(config_file: Optional[str]) -> None:
         for level, value in levels.items():
             click.echo(f"    {level}: {value}")
 
+    click.echo("\nT-Shirt Sizes (effort estimates in days):")
+    for size, config in cfg.t_shirt_sizes.items():
+        click.echo(f"  {size}:")
+        click.echo(f"    min: {config.min}, most_likely: {config.most_likely}, max: {config.max}")
+
     click.echo(f"\nSimulation:")
     click.echo(f"  Default iterations: {cfg.simulation.default_iterations}")
     click.echo(f"  Random seed: {cfg.simulation.random_seed}")

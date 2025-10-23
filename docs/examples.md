@@ -108,6 +108,59 @@ tasks:
     dependencies: []
 ```
 
+## Using T-Shirt Sizing
+
+For quick estimation using relative sizes (XS, S, M, L, XL, XXL):
+
+```yaml
+project:
+  name: "Mobile App Development"
+  start_date: "2025-11-01"
+
+tasks:
+  - id: "ui_design"
+    name: "UI/UX Design"
+    estimate:
+      t_shirt_size: "M"
+      unit: "days"
+    dependencies: []
+    uncertainty_factors:
+      team_experience: "high"
+
+  - id: "backend"
+    name: "Backend Development"
+    estimate:
+      t_shirt_size: "XL"
+      unit: "days"
+    dependencies: []
+    uncertainty_factors:
+      technical_complexity: "high"
+
+  - id: "mobile_app"
+    name: "Mobile App"
+    estimate:
+      t_shirt_size: "XXL"
+      unit: "days"
+    dependencies: ["ui_design", "backend"]
+
+  - id: "deployment"
+    name: "Deploy to Store"
+    estimate:
+      t_shirt_size: "S"
+      unit: "days"
+    dependencies: ["mobile_app"]
+```
+
+T-shirt sizes map to default effort ranges (configurable):
+- **XS**: 0.5-2 days (most likely: 1 day)
+- **S**: 1-4 days (most likely: 2 days)
+- **M**: 3-8 days (most likely: 5 days)
+- **L**: 5-13 days (most likely: 8 days)
+- **XL**: 8-21 days (most likely: 13 days)
+- **XXL**: 13-34 days (most likely: 21 days)
+
+See `examples/tshirt_sizing_project.yaml` for a complete example.
+
 ## Running Examples
 
 ```bash
