@@ -129,7 +129,9 @@ Open the HTML file in your browser to see a detailed report with:
 ### Percentiles
 
 - **P50 (Median)**: 50% chance of completing by this date
-- **P80**: 80% chance of completing by this date (recommended for commitments)
+- **P75**: 75% chance of completing by this date
+- **P80**: 80% chance of completing by this date 
+- **P85**: 85% chance of completing by this date (recommended for commitments)
 - **P90**: 90% chance of completing by this date (high confidence)
 - **P95**: 95% chance of completing by this date (very high confidence)
 

@@ -56,9 +56,9 @@ docs = [
 mc-estimate = "mcprojsim.cli:cli"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/mcprojsim"
-Repository = "https://github.com/yourusername/mcprojsim"
-Documentation = "https://github.com/yourusername/mcprojsim/docs"
+Homepage = "https://github.com/johan162/mcprojsim"
+Repository = "https://github.com/johan162/mcprojsim"
+Documentation = "https://github.com/johan162/mcprojsim/docs"
 
 [tool.setuptools.packages.find]
 where = ["src"]
