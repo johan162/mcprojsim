@@ -4,9 +4,9 @@ Version: 1.0.0
 Summary: Monte Carlo simulation system for software development effort estimation
 Author-email: Your Name <your.email@example.com>
 License: MIT
-Project-URL: Homepage, https://github.com/yourusername/mcprojsim
-Project-URL: Repository, https://github.com/yourusername/mcprojsim
-Project-URL: Documentation, https://github.com/yourusername/mcprojsim/docs
+Project-URL: Homepage, https://github.com/johan162/mcprojsim
+Project-URL: Repository, https://github.com/johan162/mcprojsim
+Project-URL: Documentation, https://github.com/johan162/mcprojsim/docs
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
@@ -27,6 +27,7 @@ Requires-Dist: pydantic>=2.0.0
 Requires-Dist: click>=8.0.0
 Requires-Dist: jinja2>=3.0.0
 Requires-Dist: scipy>=1.10.0
+Requires-Dist: matplotlib>=3.5.0
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
@@ -53,7 +54,7 @@ A Monte Carlo simulation system for software development effort estimation. This
 - **Task Dependency Resolution** (precedence constraints)
 - **Uncertainty Factor Application** (team experience, requirements maturity, etc.)
 - **Resource Allocation and Availability Modeling**
-- **Percentile-Based Confidence Intervals** (P50, P80, P90, P95)
+- **Percentile-Based Confidence Intervals** (P50, P75, P80, P85, P90, P95)
 - **Sensitivity Analysis** and critical path identification
 - **Multiple Export Formats** (JSON, CSV, HTML reports)
 
@@ -93,7 +94,7 @@ project:
   name: "My Project"
   description: "Sample project for estimation"
   start_date: "2025-11-01"
-  confidence_levels: [50, 80, 90, 95]
+  confidence_levels: [50, 75, 80, 85, 90, 95]
 
 tasks:
   - id: "task_001"
@@ -215,6 +216,28 @@ output:
 See the `examples/` directory for:
 - `sample_project.yaml` - Complete project definition example
 - `sample_config.yaml` - Configuration file example
+
+```
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[Getting Started](docs/getting_started.md)** - Step-by-step guide to your first simulation
+- **[Formal Grammar](docs/grammar.md)** - Complete EBNF specification of the input file format
+- **[Examples](docs/examples.md)** - Working examples and use cases
+- **[Configuration](docs/configuration.md)** - Customizing uncertainty factors
+- **[API Reference](docs/api_reference.md)** - Python API documentation
+
+### View Documentation Locally
+
+```bash
+# Install documentation dependencies
+pip install -e ".[docs]"
+
+# Serve documentation locally at http://127.0.0.1:8000
+mkdocs serve
+```
 
 ## Development
 

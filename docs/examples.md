@@ -1,5 +1,7 @@
 # Examples
 
+This page provides practical examples of project definitions. For complete specification details, see the [Formal Grammar](grammar.md).
+
 ## Basic Web Application
 
 A simple web application project with frontend and backend tasks.

@@ -6,7 +6,9 @@ docs/api_reference.md
 docs/configuration.md
 docs/examples.md
 docs/getting_started.md
+docs/grammar.md
 docs/index.md
+examples/project_with_custom_thresholds.yaml
 examples/sample_config.yaml
 examples/sample_project.yaml
 src/mcprojsim/__init__.py

@@ -141,6 +141,7 @@ Tasks with high criticality (e.g., >0.5) appear on the critical path frequently 
 
 ## Next Steps
 
+- Review the [Formal Grammar](grammar.md) for complete specification details
 - Learn about [Configuration](configuration.md) to customize uncertainty factors
 - Explore the [examples directory](examples.md) for more complex projects
 - Read the [API Reference](api_reference.md) to integrate mcprojsim into your tools

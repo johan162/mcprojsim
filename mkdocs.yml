@@ -1,10 +1,10 @@
 site_name: Monte Carlo Project Simulator
 site_description: A probabilistic project estimation tool using Monte Carlo simulation
 site_author: Your Name
-site_url: https://yourusername.github.io/mcprojsim
+site_url: https://johan162.github.io/mcprojsim
 
-repo_name: yourusername/mcprojsim
-repo_url: https://github.com/yourusername/mcprojsim
+repo_name: johan162/mcprojsim
+repo_url: https://github.com/johan162/mcprojsim
 edit_uri: edit/main/docs/
 
 theme:
@@ -69,6 +69,6 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/yourusername/mcprojsim
+      link: https://github.com/johan162/mcprojsim
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/mcprojsim/

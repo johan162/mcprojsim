@@ -172,6 +172,28 @@ See the `examples/` directory for:
 - `sample_project.yaml` - Complete project definition example
 - `sample_config.yaml` - Configuration file example
 
+```
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[Getting Started](docs/getting_started.md)** - Step-by-step guide to your first simulation
+- **[Formal Grammar](docs/grammar.md)** - Complete EBNF specification of the input file format
+- **[Examples](docs/examples.md)** - Working examples and use cases
+- **[Configuration](docs/configuration.md)** - Customizing uncertainty factors
+- **[API Reference](docs/api_reference.md)** - Python API documentation
+
+### View Documentation Locally
+
+```bash
+# Install documentation dependencies
+pip install -e ".[docs]"
+
+# Serve documentation locally at http://127.0.0.1:8000
+mkdocs serve
+```
+
 ## Development
 
 ### Setup Development Environment
