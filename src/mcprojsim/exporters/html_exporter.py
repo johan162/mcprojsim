@@ -165,7 +165,7 @@ HTML_TEMPLATE = """
                     </thead>
                     <tbody>
                         {% for p, value in percentiles %}
-                        <tr class="{% if p in [50, 80, 90, 95] %}highlight{% endif %}">
+                        <tr class="{% if p in [50, 75, 80, 85, 90, 95] %}highlight{% endif %}">
                             <td>P{{ p }}</td>
                             <td class="value">{{ "%.2f"|format(value) }}</td>
                         </tr>

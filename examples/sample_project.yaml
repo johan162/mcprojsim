@@ -2,7 +2,7 @@ project:
   name: "Customer Portal Redesign"
   description: "Next-generation customer portal with enhanced features"
   start_date: "2025-11-01"
-  confidence_levels: [50, 80, 90, 95]
+  confidence_levels: [50, 75, 80, 85, 90, 95]
   # Probability thresholds for thermometer visualization
   probability_red_threshold: 0.50    # Below 50% shown as red (high risk)
   probability_green_threshold: 0.90  # Above 90% shown as green (low risk)

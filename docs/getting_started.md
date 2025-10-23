@@ -33,9 +33,9 @@ Create a file called `my_project.yaml`:
 ```yaml
 project:
   name: "Website Redesign"
-  description: "Redesign company website"
+  description: "Complete redesign of company website"
   start_date: "2025-11-01"
-  confidence_levels: [50, 80, 90, 95]
+  confidence_levels: [50, 75, 80, 85, 90, 95]
 
 tasks:
   - id: "task_001"

@@ -1,21 +1,23 @@
 Metric,Value
 Project Name,Customer Portal Redesign
-Iterations,100
+Iterations,1000
 Random Seed,42
 
 Statistics,
-Mean,74.86
-Median,75.69
-Std Dev,10.84
-Min,52.71
+Mean,72.38
+Median,71.87
+Std Dev,9.47
+Min,47.35
 Max,114.14
-Coefficient of Variation,0.1448
+Coefficient of Variation,0.1308
 
 Percentiles,
-P50,75.69
-P80,83.02
-P90,88.36
-P95,92.21
+P50,71.87
+P75,78.47
+P80,80.07
+P85,82.01
+P90,84.31
+P95,88.42
 
 Critical Path,Criticality
 task_001,1.0000

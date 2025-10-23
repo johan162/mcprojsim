@@ -134,7 +134,7 @@ class ProjectMetadata(BaseModel):
     description: Optional[str] = None
     start_date: date
     currency: Optional[str] = Field(default="USD")
-    confidence_levels: List[int] = Field(default_factory=lambda: [50, 80, 90, 95])
+    confidence_levels: List[int] = Field(default_factory=lambda: [50, 75, 80, 85, 90, 95])
     probability_red_threshold: float = Field(
         default=0.50,
         ge=0.0,

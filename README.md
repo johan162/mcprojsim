@@ -9,7 +9,7 @@ A Monte Carlo simulation system for software development effort estimation. This
 - **Task Dependency Resolution** (precedence constraints)
 - **Uncertainty Factor Application** (team experience, requirements maturity, etc.)
 - **Resource Allocation and Availability Modeling**
-- **Percentile-Based Confidence Intervals** (P50, P80, P90, P95)
+- **Percentile-Based Confidence Intervals** (P50, P75, P80, P85, P90, P95)
 - **Sensitivity Analysis** and critical path identification
 - **Multiple Export Formats** (JSON, CSV, HTML reports)
 
@@ -49,7 +49,7 @@ project:
   name: "My Project"
   description: "Sample project for estimation"
   start_date: "2025-11-01"
-  confidence_levels: [50, 80, 90, 95]
+  confidence_levels: [50, 75, 80, 85, 90, 95]
 
 tasks:
   - id: "task_001"
