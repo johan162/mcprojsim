@@ -56,3 +56,17 @@ class CSVExporter:
                 critical_path.items(), key=lambda x: x[1], reverse=True
             ):
                 writer.writerow([task_id, f"{criticality:.4f}"])
+            writer.writerow([])
+
+            # Write histogram
+            writer.writerow(["Histogram Data", ""])
+            bin_edges, counts = results.get_histogram_data(bins=50)
+            writer.writerow(["Bin Edge (days)", "Count", "Cumulative %"])
+            
+            cumulative_count = 0
+            total_count = sum(counts)
+            
+            for i, (edge, count) in enumerate(zip(bin_edges[1:], counts)):
+                cumulative_count += count
+                cumulative_pct = (cumulative_count / total_count * 100) if total_count > 0 else 0
+                writer.writerow([f"{edge:.2f}", int(count), f"{cumulative_pct:.2f}"])

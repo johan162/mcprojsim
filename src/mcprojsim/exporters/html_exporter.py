@@ -1,11 +1,21 @@
 """HTML exporter for simulation results."""
 
+import base64
+from io import BytesIO
 from pathlib import Path
 
 import numpy as np
 from jinja2 import Template
 
 from mcprojsim.models.simulation import SimulationResults
+
+try:
+    import matplotlib
+    matplotlib.use('Agg')  # Non-interactive backend
+    import matplotlib.pyplot as plt
+    MATPLOTLIB_AVAILABLE = True
+except ImportError:
+    MATPLOTLIB_AVAILABLE = False
 
 
 HTML_TEMPLATE = """
@@ -174,6 +184,15 @@ HTML_TEMPLATE = """
                 </table>
             </div>
 
+            {% if histogram_image %}
+            <div class="section">
+                <h3>Duration Distribution</h3>
+                <div style="text-align: center;">
+                    <img src="data:image/png;base64,{{ histogram_image }}" alt="Duration Histogram" style="max-width: 100%; height: auto;">
+                </div>
+            </div>
+            {% endif %}
+
             <div class="section">
                 <h3>Critical Path Analysis</h3>
                 <table>
@@ -264,6 +283,9 @@ class HTMLExporter:
         # Calculate thermometer data
         thermometer_segments = HTMLExporter._calculate_thermometer(results)
 
+        # Generate histogram image
+        histogram_image = HTMLExporter._generate_histogram_image(results)
+
         html = template.render(
             project_name=results.project_name,
             iterations=results.iterations,
@@ -279,6 +301,7 @@ class HTMLExporter:
             thermometer_segments=thermometer_segments,
             red_threshold=results.probability_red_threshold,
             green_threshold=results.probability_green_threshold,
+            histogram_image=histogram_image,
         )
 
         with open(output_path, "w") as f:
@@ -368,3 +391,94 @@ class HTMLExporter:
                 b = 0
 
             return f"#{r:02x}{g:02x}{b:02x}"
+
+    @staticmethod
+    def _generate_histogram_image(results: SimulationResults) -> str:
+        """Generate a base64-encoded histogram image.
+
+        Args:
+            results: Simulation results
+
+        Returns:
+            Base64-encoded PNG image string, or empty string if matplotlib unavailable
+        """
+        if not MATPLOTLIB_AVAILABLE:
+            return ""
+
+        try:
+            # Get histogram data
+            bin_edges, counts = results.get_histogram_data(bins=50)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+            # Create figure with nice styling
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+            # Plot histogram as bars
+            ax.bar(
+                bin_centers,
+                counts,
+                width=np.diff(bin_edges),
+                color='#4CAF50',
+                alpha=0.7,
+                edgecolor='#2E7D32',
+                linewidth=1.5,
+            )
+
+            # Add mean and median lines
+            ax.axvline(
+                results.mean,
+                color='#FF5722',
+                linestyle='--',
+                linewidth=2,
+                label=f'Mean: {results.mean:.1f} days',
+            )
+            ax.axvline(
+                results.median,
+                color='#2196F3',
+                linestyle='--',
+                linewidth=2,
+                label=f'Median: {results.median:.1f} days',
+            )
+
+            # Add percentile lines
+            for p in [80, 90, 95]:
+                if p in results.percentiles:
+                    ax.axvline(
+                        results.percentiles[p],
+                        color='#9E9E9E',
+                        linestyle=':',
+                        linewidth=1.5,
+                        alpha=0.7,
+                        label=f'P{p}: {results.percentiles[p]:.1f} days',
+                    )
+
+            # Styling
+            ax.set_xlabel('Duration (days)', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Frequency', fontsize=12, fontweight='bold')
+            ax.set_title(
+                f'Project Duration Distribution ({results.iterations:,} simulations)',
+                fontsize=14,
+                fontweight='bold',
+                pad=20,
+            )
+            ax.legend(loc='upper right', framealpha=0.9, fontsize=10)
+            ax.grid(True, alpha=0.3, linestyle='--')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+
+            # Tight layout
+            plt.tight_layout()
+
+            # Save to BytesIO
+            buffer = BytesIO()
+            plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            plt.close(fig)
+            buffer.seek(0)
+
+            # Encode to base64
+            img_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+            return img_base64
+
+        except Exception:
+            # If anything goes wrong, return empty string
+            return ""

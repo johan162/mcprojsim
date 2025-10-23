@@ -122,6 +122,40 @@ class TestCSVExporter:
         assert "Median" in content
         assert "Percentile" in content or "P50" in content
 
+    def test_csv_contains_histogram(self, sample_results, tmp_path):
+        """Test that CSV contains histogram data."""
+        output_file = tmp_path / "results.csv"
+        CSVExporter.export(sample_results, output_file)
+        
+        with open(output_file, "r") as f:
+            content = f.read()
+        
+        assert "Histogram Data" in content
+        assert "Bin Edge (days)" in content
+        assert "Count" in content
+        assert "Cumulative %" in content
+        
+        # Verify we have histogram data rows
+        lines = content.split('\n')
+        histogram_section = False
+        histogram_data_rows = 0
+        
+        for line in lines:
+            if "Histogram Data" in line:
+                histogram_section = True
+            elif histogram_section and line and not line.startswith("Bin Edge"):
+                # Count data rows (should have numeric values)
+                parts = line.split(',')
+                if len(parts) >= 3:
+                    try:
+                        float(parts[0])
+                        histogram_data_rows += 1
+                    except (ValueError, IndexError):
+                        pass
+        
+        # Should have at least some histogram bins
+        assert histogram_data_rows > 0
+
 
 class TestHTMLExporter:
     """Tests for HTML exporter."""
