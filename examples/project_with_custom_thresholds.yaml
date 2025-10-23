@@ -1,0 +1,56 @@
+project:
+  name: "High-Stakes Mission Critical Project"
+  description: "Project with strict success criteria"
+  start_date: "2025-12-01"
+  confidence_levels: [50, 80, 90, 95]
+  # Custom thresholds for thermometer visualization
+  # This project is high-stakes, so we want:
+  # - Red (high risk) for anything below 70% probability
+  # - Green (low risk) only above 95% probability
+  probability_red_threshold: 0.70
+  probability_green_threshold: 0.95
+
+tasks:
+  - id: "task_001"
+    name: "Security architecture design"
+    description: "Design secure architecture"
+    estimate:
+      min: 5
+      most_likely: 8
+      max: 15
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "high"
+      requirements_maturity: "low"
+
+  - id: "task_002"
+    name: "Implementation"
+    description: "Implement core features"
+    estimate:
+      min: 10
+      most_likely: 20
+      max: 35
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "high"
+
+  - id: "task_003"
+    name: "Security testing"
+    description: "Comprehensive security audit"
+    estimate:
+      min: 5
+      most_likely: 10
+      max: 20
+    dependencies: ["task_002"]
+    uncertainty_factors:
+      technical_complexity: "high"
+
+project_risks:
+  - id: "risk_001"
+    name: "Security vulnerability discovered"
+    probability: 0.25
+    impact:
+      type: "absolute"
+      value: 15
+      unit: "days"

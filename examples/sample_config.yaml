@@ -1,0 +1,33 @@
+uncertainty_factors:
+  team_experience:
+    high: 0.90      # Experienced team is 10% faster
+    medium: 1.0     # Baseline
+    low: 1.30       # Inexperienced team is 30% slower
+  
+  requirements_maturity:
+    high: 1.0       # Well-defined requirements
+    medium: 1.15    # Some ambiguity
+    low: 1.40       # High ambiguity
+  
+  technical_complexity:
+    low: 1.0        # Simple, well-understood technology
+    medium: 1.20    # Moderate complexity
+    high: 1.50      # High complexity, cutting-edge tech
+  
+  team_distribution:
+    colocated: 1.0  # Team in same location
+    distributed: 1.25  # Distributed team with communication overhead
+  
+  integration_complexity:
+    low: 1.0        # Minimal integration
+    medium: 1.15    # Moderate integration
+    high: 1.35      # Complex integration with multiple systems
+
+simulation:
+  default_iterations: 10000
+  random_seed: null  # null for random, or integer for reproducibility
+
+output:
+  formats: ["json", "csv", "html"]
+  include_histogram: true
+  histogram_bins: 50

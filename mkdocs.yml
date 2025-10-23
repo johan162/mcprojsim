@@ -1,0 +1,74 @@
+site_name: Monte Carlo Project Simulator
+site_description: A probabilistic project estimation tool using Monte Carlo simulation
+site_author: Your Name
+site_url: https://yourusername.github.io/mcprojsim
+
+repo_name: yourusername/mcprojsim
+repo_url: https://github.com/yourusername/mcprojsim
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: green
+      accent: light green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: green
+      accent: light green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - Configuration: configuration.md
+  - User Guide:
+      - Project Files: user_guide/project_files.md
+      - Running Simulations: user_guide/running_simulations.md
+      - Interpreting Results: user_guide/interpreting_results.md
+  - API Reference: api_reference.md
+  - Examples: examples.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            show_category_heading: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/yourusername/mcprojsim
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/mcprojsim/

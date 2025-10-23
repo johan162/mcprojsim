@@ -1,0 +1,182 @@
+project:
+  name: "Customer Portal Redesign"
+  description: "Next-generation customer portal with enhanced features"
+  start_date: "2025-11-01"
+  confidence_levels: [50, 80, 90, 95]
+  # Probability thresholds for thermometer visualization
+  probability_red_threshold: 0.50    # Below 50% shown as red (high risk)
+  probability_green_threshold: 0.90  # Above 90% shown as green (low risk)
+
+project_risks:
+  - id: "risk_001"
+    name: "Key developer leaves"
+    probability: 0.15
+    impact:
+      type: "percentage"
+      value: 20
+    description: "Risk of losing senior developer mid-project"
+  
+  - id: "risk_002"
+    name: "Requirements change"
+    probability: 0.30
+    impact:
+      type: "absolute"
+      value: 10
+      unit: "days"
+
+tasks:
+  - id: "task_001"
+    name: "Database schema design"
+    description: "Design normalized schema for customer data"
+    estimate:
+      min: 3
+      most_likely: 5
+      max: 10
+      unit: "days"
+    dependencies: []
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "medium"
+      technical_complexity: "low"
+      team_distribution: "colocated"
+      integration_complexity: "low"
+    risks:
+      - id: "task_risk_001"
+        name: "Schema migration issues"
+        probability: 0.20
+        impact: 2
+
+  - id: "task_002"
+    name: "API endpoint implementation"
+    description: "Implement RESTful API endpoints"
+    estimate:
+      min: 5
+      most_likely: 8
+      max: 15
+      unit: "days"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "high"
+      technical_complexity: "medium"
+      team_distribution: "colocated"
+      integration_complexity: "medium"
+    risks: []
+
+  - id: "task_003"
+    name: "Frontend React components"
+    description: "Build reusable React components for UI"
+    estimate:
+      min: 7
+      most_likely: 10
+      max: 18
+      unit: "days"
+    dependencies: []
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "medium"
+      technical_complexity: "medium"
+      team_distribution: "colocated"
+      integration_complexity: "low"
+    risks:
+      - id: "task_risk_002"
+        name: "Browser compatibility issues"
+        probability: 0.25
+        impact: 3
+
+  - id: "task_004"
+    name: "Authentication & Authorization"
+    description: "Implement OAuth2 and role-based access control"
+    estimate:
+      min: 4
+      most_likely: 6
+      max: 12
+      unit: "days"
+    dependencies: ["task_002"]
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "high"
+      technical_complexity: "high"
+      team_distribution: "colocated"
+      integration_complexity: "high"
+    risks:
+      - id: "task_risk_003"
+        name: "Security audit findings"
+        probability: 0.30
+        impact: 5
+
+  - id: "task_005"
+    name: "Integration testing"
+    description: "End-to-end integration tests"
+    estimate:
+      min: 3
+      most_likely: 5
+      max: 8
+      unit: "days"
+    dependencies: ["task_002", "task_003", "task_004"]
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "high"
+      technical_complexity: "medium"
+      team_distribution: "colocated"
+      integration_complexity: "high"
+    risks: []
+
+  - id: "task_006"
+    name: "Performance optimization"
+    description: "Optimize API and frontend performance"
+    estimate:
+      min: 2
+      most_likely: 4
+      max: 7
+      unit: "days"
+    dependencies: ["task_005"]
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "medium"
+      technical_complexity: "high"
+      team_distribution: "colocated"
+      integration_complexity: "medium"
+    risks:
+      - id: "task_risk_004"
+        name: "Performance targets not met"
+        probability: 0.35
+        impact: 4
+
+  - id: "task_007"
+    name: "Documentation"
+    description: "API documentation and user guides"
+    estimate:
+      min: 2
+      most_likely: 3
+      max: 5
+      unit: "days"
+    dependencies: ["task_002", "task_003"]
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "high"
+      technical_complexity: "low"
+      team_distribution: "colocated"
+      integration_complexity: "low"
+    risks: []
+
+  - id: "task_008"
+    name: "Deployment & DevOps"
+    description: "Setup CI/CD pipeline and production deployment"
+    estimate:
+      min: 3
+      most_likely: 5
+      max: 9
+      unit: "days"
+    dependencies: ["task_006"]
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "medium"
+      technical_complexity: "medium"
+      team_distribution: "distributed"
+      integration_complexity: "high"
+    risks:
+      - id: "task_risk_005"
+        name: "Infrastructure issues"
+        probability: 0.20
+        impact: 3
