@@ -9,6 +9,7 @@ import numpy as np
 from jinja2 import Template
 
 from mcprojsim.models.simulation import SimulationResults
+from mcprojsim.models.project import Project
 
 try:
     import matplotlib
@@ -215,7 +216,7 @@ HTML_TEMPLATE = """
                         {% for task_id, criticality, effort in critical_path_with_effort %}
                         <tr>
                             <td>{{ task_id }}</td>
-                            <td class="value-center">{{ "%.2f"|format(effort) }}</td>
+                            <td class="value-center">{{ effort }}</td>
                             <td class="value-center">{{ "%.4f"|format(criticality) }}</td>
                             <td class="value-center">{{ "%.1f"|format(criticality * 100) }}%</td>
                         </tr>
@@ -283,12 +284,13 @@ class HTMLExporter:
     """Exporter for HTML format."""
 
     @staticmethod
-    def export(results: SimulationResults, output_path: Path | str) -> None:
+    def export(results: SimulationResults, output_path: Path | str, project: Project | None = None) -> None:
         """Export results to HTML file.
 
         Args:
             results: Simulation results
             output_path: Path to output file
+            project: Original project data (optional, for enhanced effort display)
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -304,12 +306,9 @@ class HTMLExporter:
         # Calculate critical path with effort data
         critical_path_with_effort = []
         for task_id, criticality in critical_path:
-            # Calculate mean effort for this task from simulation results
-            if task_id in results.task_durations:
-                mean_effort = float(np.mean(results.task_durations[task_id]))
-            else:
-                mean_effort = 0.0  # Fallback if no data available
-            critical_path_with_effort.append((task_id, criticality, mean_effort))
+            # Get original task estimate if project data is available
+            effort_display = HTMLExporter._format_effort_display(task_id, results, project)
+            critical_path_with_effort.append((task_id, criticality, effort_display))
         
         percentiles = sorted(results.percentiles.items())
 
@@ -435,6 +434,74 @@ class HTMLExporter:
         text_color = "#000000" if brightness > 0.5 else "#ffffff"
         
         return background_color, text_color
+
+    @staticmethod
+    def _format_effort_display(task_id: str, results: SimulationResults, project: Project | None) -> str:
+        """Format the effort display for a task.
+
+        Args:
+            task_id: Task identifier
+            results: Simulation results
+            project: Original project data (optional)
+
+        Returns:
+            Formatted effort string
+        """
+        if project is None:
+            # Fallback to mean simulated effort if no project data
+            if task_id in results.task_durations:
+                mean_effort = float(np.mean(results.task_durations[task_id]))
+                return f"{mean_effort:.2f}"
+            else:
+                return "N/A"
+
+        # Find the task in the original project
+        task = None
+        for t in project.tasks:
+            if t.id == task_id:
+                task = t
+                break
+
+        if task is None:
+            # Task not found, fallback to mean simulated effort
+            if task_id in results.task_durations:
+                mean_effort = float(np.mean(results.task_durations[task_id]))
+                return f"{mean_effort:.2f}"
+            else:
+                return "N/A"
+
+        # Check if it's a T-shirt size estimate
+        if hasattr(task.estimate, 't_shirt_size') and task.estimate.t_shirt_size:
+            # T-shirt size format: "M (2, 5, 8)"
+            t_shirt = task.estimate.t_shirt_size
+            
+            # Use the default T-shirt size mappings from the system
+            tshirt_mappings = {
+                "XS": (0.5, 1, 2),
+                "S": (1, 2, 4),
+                "M": (3, 5, 8),
+                "L": (5, 8, 13),
+                "XL": (8, 13, 21),
+                "XXL": (13, 21, 34)
+            }
+            
+            if t_shirt in tshirt_mappings:
+                low, nominal, high = tshirt_mappings[t_shirt]
+                return f"{t_shirt} ({low}, {nominal}, {high})"
+            else:
+                return f"{t_shirt} (unknown)"
+        
+        # Check if it's a triangular distribution (min, most_likely, max)
+        elif hasattr(task.estimate, 'min') and hasattr(task.estimate, 'most_likely') and hasattr(task.estimate, 'max'):
+            if task.estimate.min is not None and task.estimate.most_likely is not None and task.estimate.max is not None:
+                return f"({task.estimate.min}, {task.estimate.most_likely}, {task.estimate.max})"
+        
+        # Fallback to mean simulated effort
+        if task_id in results.task_durations:
+            mean_effort = float(np.mean(results.task_durations[task_id]))
+            return f"{mean_effort:.2f}"
+        else:
+            return "N/A"
 
     @staticmethod
     def _generate_histogram_image(results: SimulationResults) -> str:
