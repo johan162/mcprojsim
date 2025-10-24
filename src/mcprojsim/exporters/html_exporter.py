@@ -94,10 +94,8 @@ HTML_TEMPLATE = """
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
             font-size: 11px;
             font-weight: bold;
-            text-shadow: 0 0 3px rgba(0,0,0,0.5);
             border-top: 1px solid rgba(255,255,255,0.2);
         }
         .thermometer-labels {
@@ -222,7 +220,7 @@ HTML_TEMPLATE = """
                 <div class="thermometer-display">
                     <div class="thermometer-bar">
                         {% for segment in thermometer_segments %}
-                        <div class="thermometer-segment" style="background-color: {{ segment.color }};" title="{{ segment.effort|round(1) }} days: {{ segment.probability|round(1) }}% success">
+                        <div class="thermometer-segment" style="background-color: {{ segment.color }}; color: {{ segment.text_color }};" title="{{ segment.effort|round(1) }} days: {{ segment.probability|round(0)|int }}% success">
                             {{ segment.probability|round(0)|int }}%
                         </div>
                         {% endfor %}
@@ -238,16 +236,16 @@ HTML_TEMPLATE = """
             </div>
             <div class="thermometer-legend">
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ff0000;"></div>
-                    <span>&lt; {{ (red_threshold * 100)|round(0)|int }}% (High Risk)</span>
+                    <div class="legend-color" style="background-color: #CC6600;"></div>
+                    <span>50% (Dark Orange - Higher Risk)</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: #ffaa00;"></div>
-                    <span>{{ (red_threshold * 100)|round(0)|int }}% - {{ (green_threshold * 100)|round(0)|int }}% (Medium Risk)</span>
+                    <div class="legend-color" style="background-color: #996633;"></div>
+                    <span>~75% (Medium Risk)</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: #00ff00;"></div>
-                    <span>&gt; {{ (green_threshold * 100)|round(0)|int }}% (Low Risk)</span>
+                    <div class="legend-color" style="background-color: #006633;"></div>
+                    <span>95%+ (Dark Green - Lower Risk)</span>
                 </div>
             </div>
         </div>
@@ -299,8 +297,6 @@ class HTMLExporter:
             percentiles=percentiles,
             critical_path=critical_path,
             thermometer_segments=thermometer_segments,
-            red_threshold=results.probability_red_threshold,
-            green_threshold=results.probability_green_threshold,
             histogram_image=histogram_image,
         )
 
@@ -309,88 +305,96 @@ class HTMLExporter:
 
     @staticmethod
     def _calculate_thermometer(
-        results: SimulationResults, num_segments: int = 10
+        results: SimulationResults, num_segments: int = 11
     ) -> list[dict]:
-        """Calculate thermometer segments with effort levels and success probabilities.
+        """Calculate thermometer segments with fixed probability bins.
 
         Args:
             results: Simulation results
-            num_segments: Number of segments in the thermometer
+            num_segments: Number of segments in the thermometer (ignored, fixed at 11)
 
         Returns:
             List of segment dictionaries with effort, probability, and color
         """
-        # Create effort bins from min to max duration
-        min_effort = results.min_duration
-        max_effort = results.max_duration
-        effort_bins = np.linspace(min_effort, max_effort, num_segments + 1)
-
+        # Fixed probability bins: 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 99
+        probability_bins = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 99]
+        
         segments = []
-        for i in range(num_segments):
-            effort = effort_bins[i + 1]  # Upper bound of the bin
+        for prob_target in probability_bins:
+            # Find the effort level that corresponds to this probability
+            # This is the percentile that gives us this success probability
+            percentile = prob_target
+            if percentile in results.percentiles:
+                effort = results.percentiles[percentile]
+            else:
+                # Interpolate if exact percentile not available
+                available_percentiles = sorted(results.percentiles.keys())
+                if percentile < min(available_percentiles):
+                    effort = results.min_duration
+                elif percentile > max(available_percentiles):
+                    effort = results.max_duration
+                else:
+                    # Linear interpolation
+                    lower_p = max(p for p in available_percentiles if p < percentile)
+                    upper_p = min(p for p in available_percentiles if p > percentile)
+                    lower_effort = results.percentiles[lower_p]
+                    upper_effort = results.percentiles[upper_p]
+                    effort = lower_effort + (upper_effort - lower_effort) * (percentile - lower_p) / (upper_p - lower_p)
 
-            # Calculate probability of success (completing within this effort)
-            probability = np.mean(results.durations <= effort) * 100
-
-            # Calculate color based on probability and thresholds
-            color = HTMLExporter._get_probability_color(
-                probability / 100,
-                results.probability_red_threshold,
-                results.probability_green_threshold,
-            )
+            # Calculate color and text color based on probability
+            color, text_color = HTMLExporter._get_probability_color_and_text(prob_target)
 
             segments.append(
                 {
                     "effort": effort,
-                    "probability": probability,
+                    "probability": prob_target,
                     "color": color,
+                    "text_color": text_color,
                 }
             )
 
         return segments
 
     @staticmethod
-    def _get_probability_color(
-        probability: float, red_threshold: float, green_threshold: float
-    ) -> str:
-        """Get RGB color for a given probability using gradient.
+    def _get_probability_color_and_text(probability: float) -> tuple[str, str]:
+        """Get RGB color and text color for a given probability percentage.
+
+        Creates a gradient from dark orange (50%) to dark green (>95%).
 
         Args:
-            probability: Probability value (0.0 to 1.0)
-            red_threshold: Threshold below which is bright red
-            green_threshold: Threshold above which is bright green
+            probability: Probability percentage (50.0 to 99.0)
 
         Returns:
-            RGB color string
+            Tuple of (background_color, text_color) as RGB strings
         """
-        if probability < red_threshold:
-            # Below red threshold: bright red
-            return "#ff0000"
-        elif probability > green_threshold:
-            # Above green threshold: bright green
-            return "#00ff00"
-        else:
-            # In between: gradient from red to yellow to green
-            # Normalize to 0-1 range within the threshold range
-            normalized = (probability - red_threshold) / (
-                green_threshold - red_threshold
-            )
-
-            # Create gradient: red -> yellow -> green
-            if normalized < 0.5:
-                # Red to yellow (first half)
-                mix = normalized * 2
-                r = 255
-                g = int(255 * mix)
-                b = 0
-            else:
-                # Yellow to green (second half)
-                mix = (normalized - 0.5) * 2
-                r = int(255 * (1 - mix))
-                g = 255
-                b = 0
-
-            return f"#{r:02x}{g:02x}{b:02x}"
+        # Clamp probability to our range
+        prob = max(50.0, min(99.0, probability))
+        
+        # Normalize to 0-1 range (50% = 0, 99% = 1)
+        normalized = (prob - 50.0) / (99.0 - 50.0)
+        
+        # Create gradient from dark orange to dark green
+        # Dark orange: RGB(204, 102, 0) = #CC6600
+        # Dark green: RGB(0, 102, 51) = #006633
+        
+        start_r, start_g, start_b = 204, 102, 0   # Dark orange
+        end_r, end_g, end_b = 0, 102, 51          # Dark green
+        
+        # Interpolate colors
+        r = int(start_r + (end_r - start_r) * normalized)
+        g = int(start_g + (end_g - start_g) * normalized)
+        b = int(start_b + (end_b - start_b) * normalized)
+        
+        background_color = f"#{r:02x}{g:02x}{b:02x}"
+        
+        # Determine text color based on brightness
+        # Calculate perceived brightness using the luminance formula
+        brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+        
+        # Use black text for bright colors, white text for dark colors
+        text_color = "#000000" if brightness > 0.5 else "#ffffff"
+        
+        return background_color, text_color
 
     @staticmethod
     def _generate_histogram_image(results: SimulationResults) -> str:
