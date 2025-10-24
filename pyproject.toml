@@ -55,7 +55,7 @@ docs = [
 ]
 
 [project.scripts]
-mc-estimate = "mcprojsim.cli:cli"
+mcprojsim = "mcprojsim.cli:cli"
 
 [project.urls]
 Homepage = "https://github.com/johan162/mcprojsim"
