@@ -11,14 +11,11 @@ Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.9
-Classifier: Programming Language :: Python :: 3.10
-Classifier: Programming Language :: Python :: 3.11
-Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: numpy>=1.24.0
+Requires-Dist: numpy>=2.3.4
 Requires-Dist: pandas>=2.0.0
 Requires-Dist: pyyaml>=6.0
 Requires-Dist: tomli>=2.0.0; python_version < "3.11"
@@ -29,14 +26,15 @@ Requires-Dist: jinja2>=3.0.0
 Requires-Dist: scipy>=1.10.0
 Requires-Dist: matplotlib>=3.5.0
 Provides-Extra: dev
-Requires-Dist: pytest>=7.0.0; extra == "dev"
-Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
-Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: pytest>=8.4.2; extra == "dev"
+Requires-Dist: pytest-cov>=7.0.0; extra == "dev"
+Requires-Dist: black>=25.9.0; extra == "dev"
 Requires-Dist: mypy>=1.0.0; extra == "dev"
-Requires-Dist: flake8>=6.0.0; extra == "dev"
-Requires-Dist: pre-commit>=3.0.0; extra == "dev"
+Requires-Dist: flake8>=7.3.0; extra == "dev"
+Requires-Dist: pre-commit>=4.3.0; extra == "dev"
 Requires-Dist: types-PyYAML>=6.0.0; extra == "dev"
 Requires-Dist: pandas-stubs>=2.0.0; extra == "dev"
+Requires-Dist: jinja2>=3.0.0; extra == "dev"
 Provides-Extra: docs
 Requires-Dist: mkdocs>=1.5.0; extra == "docs"
 Requires-Dist: mkdocs-material>=9.0.0; extra == "docs"
@@ -66,6 +64,10 @@ A Monte Carlo simulation system for software development effort estimation. This
 # Clone the repository
 git clone https://github.com/yourusername/mcprojsim.git
 cd mcprojsim
+
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install in development mode
 pip install -e .

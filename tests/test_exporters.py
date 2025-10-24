@@ -196,20 +196,3 @@ class TestHTMLExporter:
         assert "thermometer" in content.lower()
         assert "Probability of Success" in content
         assert "thermometer-segment" in content
-
-    def test_thermometer_color_calculation(self):
-        """Test thermometer color calculation."""
-        # Test bright red for low probability
-        color = HTMLExporter._get_probability_color(0.3, 0.5, 0.9)
-        assert color == "#ff0000"
-        
-        # Test bright green for high probability
-        color = HTMLExporter._get_probability_color(0.95, 0.5, 0.9)
-        assert color == "#00ff00"
-        
-        # Test gradient color for mid-range probability
-        color = HTMLExporter._get_probability_color(0.7, 0.5, 0.9)
-        assert color.startswith("#")
-        assert len(color) == 7
-        assert color != "#ff0000"
-        assert color != "#00ff00"

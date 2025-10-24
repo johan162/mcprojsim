@@ -517,7 +517,7 @@ class HTMLExporter:
             return ""
 
         try:
-            import matplotlib.pyplot as plt
+            # matplotlib.pyplot is already imported at module level as plt
             # Get histogram data
             bin_edges, counts = results.get_histogram_data(bins=50)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
