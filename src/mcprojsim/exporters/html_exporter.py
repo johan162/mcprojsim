@@ -48,6 +48,9 @@ HTML_TEMPLATE = """
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             min-width: 300px;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
         }
         .section {
             background: white;
@@ -55,6 +58,12 @@ HTML_TEMPLATE = """
             margin: 20px 0;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section.simulation-params {
+            margin-bottom: 20px;
+        }
+        .section.statistical-summary {
+            margin-top: 0px;
         }
         table {
             width: 100%;
@@ -124,6 +133,7 @@ HTML_TEMPLATE = """
         .thermometer-display {
             display: flex;
             align-items: stretch;
+            flex: 1;
         }
         .legend-item {
             margin: 5px 0;
@@ -145,7 +155,7 @@ HTML_TEMPLATE = """
     
     <div class="container">
         <div class="main-content">
-            <div class="section">
+            <div class="section simulation-params">
                 <h3>Simulation Parameters</h3>
                 <table>
                     <tr><td class="metric">Iterations</td><td class="value">{{ iterations }}</td></tr>
@@ -153,7 +163,7 @@ HTML_TEMPLATE = """
                 </table>
             </div>
 
-            <div class="section">
+            <div class="section statistical-summary">
                 <h3>Statistical Summary</h3>
                 <table>
                     <tr><td class="metric">Mean</td><td class="value">{{ "%.2f"|format(mean) }} days</td></tr>
