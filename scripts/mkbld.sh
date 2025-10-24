@@ -248,19 +248,38 @@ fi
 # 1.3 Clean previous build and coverage artifacts
 run_command "rm -rf dist/ build/ src/*.egg-info/ htmlcov/" "Cleaning previous build and coverage artifacts"
 
+# =======================================
+# PHASE 2: STATIC ANALYSIS AND FORMATTING
+# =======================================
+
+echo ""
+print_step_colored ""
+print_step_colored "🧪 PHASE 2: STATIC ANALYSIS WITH FLAKE8, MYPY, AND BLACK"
+print_step_colored ""
+
+# Step 2.1: Static analysis with flake8
+run_command "python -m flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
+
+# Step 2.2: Type checking with mypy
+run_command "python -m mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy type checking"
+
+# Step 2.3: Code formatting check with black
+run_command "python -m black --check --diff src/${PROGRAMNAME} tests/" "Checking code formatting with black"
+
+
 # =====================================
-# PHASE 2: RUN TESTS WITH COVERAGE
+# PHASE 3: RUN TESTS WITH COVERAGE
 # =====================================
 
 echo ""
 print_step_colored ""
-print_step_colored "🧪 PHASE 2: CHECKING UNIT TESTS & COVERAGE"
+print_step_colored "🧪 PHASE 3: CHECKING UNIT TESTS & COVERAGE"
 print_step_colored ""
 
-# Step 2.1: Run tests with coverage
+# Step 3.1: Run tests with coverage
 run_command "python -m pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=${COVERAGE}" "Running tests with coverage"
 
-# Step 2.2: Update coverage badge in README
+# Step 3.2: Update coverage badge in README
 if [ "$CI_MODE" = false ] && [ "$DRY_RUN" = false ]; then
     print_sub_step "Updating coverage badge in README.md"
     if [ -f "scripts/mkcovupd.sh" ]; then
@@ -270,23 +289,6 @@ if [ "$CI_MODE" = false ] && [ "$DRY_RUN" = false ]; then
     fi
 fi
 
-# =======================================
-# PHASE 3: STATIC ANALYSIS AND FORMATTING
-# =======================================
-
-echo ""
-print_step_colored ""
-print_step_colored "🧪 PHASE 3: STATIC ANALYSIS WITH FLAKE8, MYPY, AND BLACK"
-print_step_colored ""
-
-# Step 3.1: Static analysis with flake8
-run_command "python -m flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
-
-# Step 3.2: Type checking with mypy
-run_command "python -m mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy type checking"
-
-# Step 3.3: Code formatting check with black
-run_command "python -m black --check --diff src/${PROGRAMNAME} tests/" "Checking code formatting with black"
 
 # =======================================
 # PHASE 4: BUILD AND VALIDATE PACKAGE
