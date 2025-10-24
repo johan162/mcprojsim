@@ -82,6 +82,8 @@ HTML_TEMPLATE = """
         tr:hover { background-color: #f5f5f5; }
         .metric { font-weight: bold; }
         .value { text-align: right; }
+        .value-center { text-align: center; }
+        .header-center { text-align: center; }
         .highlight { background-color: #fff3cd; }
         
         /* Thermometer styles */
@@ -205,14 +207,14 @@ HTML_TEMPLATE = """
                 <h3>Critical Path Analysis</h3>
                 <table>
                     <thead>
-                        <tr><th>Task ID</th><th>Criticality Index</th><th>Percentage</th></tr>
+                        <tr><th>Task ID</th><th class="header-center">Criticality Index</th><th class="header-center">Percentage</th></tr>
                     </thead>
                     <tbody>
                         {% for task_id, criticality in critical_path %}
                         <tr>
                             <td>{{ task_id }}</td>
-                            <td class="value">{{ "%.4f"|format(criticality) }}</td>
-                            <td class="value">{{ "%.1f"|format(criticality * 100) }}%</td>
+                            <td class="value-center">{{ "%.4f"|format(criticality) }}</td>
+                            <td class="value-center">{{ "%.1f"|format(criticality * 100) }}%</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -420,6 +422,7 @@ class HTMLExporter:
             return ""
 
         try:
+            import matplotlib.pyplot as plt
             # Get histogram data
             bin_edges, counts = results.get_histogram_data(bins=50)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
