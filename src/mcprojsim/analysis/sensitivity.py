@@ -1,6 +1,7 @@
 """Sensitivity analysis for task impacts."""
 
 from typing import Dict
+import numpy as np
 from scipy import stats
 from mcprojsim.models.simulation import SimulationResults
 
@@ -22,8 +23,14 @@ class SensitivityAnalyzer:
 
         for task_id, task_durations in results.task_durations.items():
             # Calculate Spearman correlation
-            correlation, _ = stats.spearmanr(task_durations, results.durations)
-            correlations[task_id] = float(correlation)
+            # Convert to numpy arrays to ensure proper typing
+            x: np.ndarray = np.asarray(task_durations)
+            y: np.ndarray = np.asarray(results.durations)
+
+            # stats.spearmanr returns a tuple (correlation, p-value)
+            correlation_coeff, _ = stats.spearmanr(x, y)
+            # Explicit cast to handle scipy type inference issues
+            correlations[task_id] = float(np.asarray(correlation_coeff).item())
 
         return correlations
 
