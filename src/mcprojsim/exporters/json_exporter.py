@@ -13,14 +13,14 @@ from mcprojsim.models.simulation import SimulationResults
 class NumpyEncoder(json.JSONEncoder):
     """JSON encoder that handles NumPy types."""
 
-    def default(self, obj: Any) -> Any:
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super().default(obj)
+    def default(self, o: Any) -> Any:
+        if isinstance(o, np.integer):
+            return int(o)
+        elif isinstance(o, np.floating):
+            return float(o)
+        elif isinstance(o, np.ndarray):
+            return o.tolist()
+        return super().default(o)
 
 
 class JSONExporter:
