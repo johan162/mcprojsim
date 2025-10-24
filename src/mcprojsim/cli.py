@@ -36,8 +36,8 @@ def cli() -> None:
 @click.option(
     "--output-format",
     "-f",
-    default="json,csv,html",
-    help="Output formats (comma-separated: json,csv,html)",
+    default="",
+    help="Output formats (comma-separated: json,csv,html). If not specified, only CLI output is shown.",
 )
 @click.option("--quiet", "-q", is_flag=True, help="Suppress progress output")
 def simulate(
@@ -98,28 +98,35 @@ def simulate(
             for p in sorted(results.percentiles.keys()):
                 click.echo(f"  P{p}: {results.percentiles[p]:.2f} days")
 
-        # Export results
-        formats = [f.strip().lower() for f in output_format.split(",")]
-        base_output = (
-            Path(output) if output else Path(f"{project.project.name}_results")
-        )
+        # Export results (only if formats are explicitly specified)
+        if output_format.strip():
+            formats = [f.strip().lower() for f in output_format.split(",") if f.strip()]
+            base_output = (
+                Path(output) if output else Path(f"{project.project.name}_results")
+            )
 
-        for fmt in formats:
-            if fmt == "json":
-                output_file = base_output.with_suffix(".json")
-                JSONExporter.export(results, output_file)
-                if not quiet:
-                    click.echo(f"\nResults exported to {output_file}")
-            elif fmt == "csv":
-                output_file = base_output.with_suffix(".csv")
-                CSVExporter.export(results, output_file)
-                if not quiet:
-                    click.echo(f"Results exported to {output_file}")
-            elif fmt == "html":
-                output_file = base_output.with_suffix(".html")
-                HTMLExporter.export(results, output_file)
-                if not quiet:
-                    click.echo(f"Results exported to {output_file}")
+            for fmt in formats:
+                if fmt == "json":
+                    output_file = base_output.with_suffix(".json")
+                    JSONExporter.export(results, output_file)
+                    if not quiet:
+                        click.echo(f"\nResults exported to {output_file}")
+                elif fmt == "csv":
+                    output_file = base_output.with_suffix(".csv")
+                    CSVExporter.export(results, output_file)
+                    if not quiet:
+                        click.echo(f"Results exported to {output_file}")
+                elif fmt == "html":
+                    output_file = base_output.with_suffix(".html")
+                    HTMLExporter.export(results, output_file, project=project)
+                    if not quiet:
+                        click.echo(f"Results exported to {output_file}")
+                else:
+                    if not quiet:
+                        click.echo(f"Warning: Unknown format '{fmt}' ignored")
+        else:
+            if not quiet:
+                click.echo("\nNo export formats specified. Use -f to export results to files.")
 
     except Exception as e:
         logger.error(f"Error during simulation: {e}")
