@@ -4,13 +4,16 @@ import base64
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from jinja2 import Template
 
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.models.project import Project
+
+if TYPE_CHECKING:
+    import matplotlib.pyplot as plt
 
 try:
     import matplotlib
