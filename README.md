@@ -22,6 +22,10 @@ A Monte Carlo simulation system for software development effort estimation. This
 git clone https://github.com/yourusername/mcprojsim.git
 cd mcprojsim
 
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
 # Install in development mode
 pip install -e .
 
