@@ -82,7 +82,7 @@ class TestYAMLParser:
         file_path = tmp_path / "invalid.yaml"
         with open(file_path, "w") as f:
             yaml.dump({"invalid": "data"}, f)
-        
+
         parser = YAMLParser()
         is_valid, error = parser.validate_file(file_path)
         assert not is_valid

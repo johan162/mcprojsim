@@ -14,8 +14,10 @@ from mcprojsim.models.project import Project
 
 try:
     import matplotlib
-    matplotlib.use('Agg')  # Non-interactive backend
+
+    matplotlib.use("Agg")  # Non-interactive backend
     import matplotlib.pyplot as plt
+
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
@@ -285,7 +287,11 @@ class HTMLExporter:
     """Exporter for HTML format."""
 
     @staticmethod
-    def export(results: SimulationResults, output_path: Path | str, project: Project | None = None) -> None:
+    def export(
+        results: SimulationResults,
+        output_path: Path | str,
+        project: Project | None = None,
+    ) -> None:
         """Export results to HTML file.
 
         Args:
@@ -303,14 +309,16 @@ class HTMLExporter:
         critical_path = sorted(
             results.get_critical_path().items(), key=lambda x: x[1], reverse=True
         )
-        
+
         # Calculate critical path with effort data
         critical_path_with_effort = []
         for task_id, criticality in critical_path:
             # Get original task estimate if project data is available
-            effort_display = HTMLExporter._format_effort_display(task_id, results, project)
+            effort_display = HTMLExporter._format_effort_display(
+                task_id, results, project
+            )
             critical_path_with_effort.append((task_id, criticality, effort_display))
-        
+
         percentiles = sorted(results.percentiles.items())
 
         # Calculate thermometer data
@@ -321,7 +329,7 @@ class HTMLExporter:
 
         # Get current date and time for simulation timestamp
         simulation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
+
         html = template.render(
             project_name=results.project_name,
             simulation_date=simulation_date,
@@ -358,7 +366,7 @@ class HTMLExporter:
         """
         # Fixed probability bins: 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 99
         probability_bins = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 99]
-        
+
         segments = []
         for prob_target in probability_bins:
             # Find the effort level that corresponds to this probability
@@ -379,10 +387,14 @@ class HTMLExporter:
                     upper_p = min(p for p in available_percentiles if p > percentile)
                     lower_effort = results.percentiles[lower_p]
                     upper_effort = results.percentiles[upper_p]
-                    effort = lower_effort + (upper_effort - lower_effort) * (percentile - lower_p) / (upper_p - lower_p)
+                    effort = lower_effort + (upper_effort - lower_effort) * (
+                        percentile - lower_p
+                    ) / (upper_p - lower_p)
 
             # Calculate color and text color based on probability
-            color, text_color = HTMLExporter._get_probability_color_and_text(prob_target)
+            color, text_color = HTMLExporter._get_probability_color_and_text(
+                prob_target
+            )
 
             segments.append(
                 {
@@ -409,35 +421,37 @@ class HTMLExporter:
         """
         # Clamp probability to our range
         prob = max(50.0, min(99.0, probability))
-        
+
         # Normalize to 0-1 range (50% = 0, 99% = 1)
         normalized = (prob - 50.0) / (99.0 - 50.0)
-        
+
         # Create gradient from dark orange to dark green
         # Dark orange: RGB(204, 102, 0) = #CC6600
         # Dark green: RGB(0, 102, 51) = #006633
-        
-        start_r, start_g, start_b = 204, 102, 0   # Dark orange
-        end_r, end_g, end_b = 0, 102, 51          # Dark green
-        
+
+        start_r, start_g, start_b = 204, 102, 0  # Dark orange
+        end_r, end_g, end_b = 0, 102, 51  # Dark green
+
         # Interpolate colors
         r = int(start_r + (end_r - start_r) * normalized)
         g = int(start_g + (end_g - start_g) * normalized)
         b = int(start_b + (end_b - start_b) * normalized)
-        
+
         background_color = f"#{r:02x}{g:02x}{b:02x}"
-        
+
         # Determine text color based on brightness
         # Calculate perceived brightness using the luminance formula
         brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-        
+
         # Use black text for bright colors, white text for dark colors
         text_color = "#000000" if brightness > 0.5 else "#ffffff"
-        
+
         return background_color, text_color
 
     @staticmethod
-    def _format_effort_display(task_id: str, results: SimulationResults, project: Project | None) -> str:
+    def _format_effort_display(
+        task_id: str, results: SimulationResults, project: Project | None
+    ) -> str:
         """Format the effort display for a task.
 
         Args:
@@ -472,10 +486,10 @@ class HTMLExporter:
                 return "N/A"
 
         # Check if it's a T-shirt size estimate
-        if hasattr(task.estimate, 't_shirt_size') and task.estimate.t_shirt_size:
+        if hasattr(task.estimate, "t_shirt_size") and task.estimate.t_shirt_size:
             # T-shirt size format: "M (2, 5, 8)"
             t_shirt = task.estimate.t_shirt_size
-            
+
             # Use the default T-shirt size mappings from the system
             tshirt_mappings = {
                 "XS": (0.5, 1, 2),
@@ -483,20 +497,28 @@ class HTMLExporter:
                 "M": (3, 5, 8),
                 "L": (5, 8, 13),
                 "XL": (8, 13, 21),
-                "XXL": (13, 21, 34)
+                "XXL": (13, 21, 34),
             }
-            
+
             if t_shirt in tshirt_mappings:
                 low, nominal, high = tshirt_mappings[t_shirt]
                 return f"{t_shirt} ({low}, {nominal}, {high})"
             else:
                 return f"{t_shirt} (unknown)"
-        
+
         # Check if it's a triangular distribution (min, most_likely, max)
-        elif hasattr(task.estimate, 'min') and hasattr(task.estimate, 'most_likely') and hasattr(task.estimate, 'max'):
-            if task.estimate.min is not None and task.estimate.most_likely is not None and task.estimate.max is not None:
+        elif (
+            hasattr(task.estimate, "min")
+            and hasattr(task.estimate, "most_likely")
+            and hasattr(task.estimate, "max")
+        ):
+            if (
+                task.estimate.min is not None
+                and task.estimate.most_likely is not None
+                and task.estimate.max is not None
+            ):
                 return f"({task.estimate.min}, {task.estimate.most_likely}, {task.estimate.max})"
-        
+
         # Fallback to mean simulated effort
         if task_id in results.task_durations:
             mean_effort = float(np.mean(results.task_durations[task_id]))
@@ -525,32 +547,32 @@ class HTMLExporter:
 
             # Create figure with nice styling
             fig, ax = plt.subplots(figsize=(10, 6))
-            
+
             # Plot histogram as bars
             ax.bar(
                 bin_centers,
                 counts,
                 width=np.diff(bin_edges),
-                color='#4CAF50',
+                color="#4CAF50",
                 alpha=0.7,
-                edgecolor='#2E7D32',
+                edgecolor="#2E7D32",
                 linewidth=1.5,
             )
 
             # Add mean and median lines
             ax.axvline(
                 results.mean,
-                color='#FF5722',
-                linestyle='--',
+                color="#FF5722",
+                linestyle="--",
                 linewidth=2,
-                label=f'Mean: {results.mean:.1f} days',
+                label=f"Mean: {results.mean:.1f} days",
             )
             ax.axvline(
                 results.median,
-                color='#2196F3',
-                linestyle='--',
+                color="#2196F3",
+                linestyle="--",
                 linewidth=2,
-                label=f'Median: {results.median:.1f} days',
+                label=f"Median: {results.median:.1f} days",
             )
 
             # Add percentile lines
@@ -558,38 +580,38 @@ class HTMLExporter:
                 if p in results.percentiles:
                     ax.axvline(
                         results.percentiles[p],
-                        color='#9E9E9E',
-                        linestyle=':',
+                        color="#9E9E9E",
+                        linestyle=":",
                         linewidth=1.5,
                         alpha=0.7,
-                        label=f'P{p}: {results.percentiles[p]:.1f} days',
+                        label=f"P{p}: {results.percentiles[p]:.1f} days",
                     )
 
             # Styling
-            ax.set_xlabel('Duration (days)', fontsize=12, fontweight='bold')
-            ax.set_ylabel('Frequency', fontsize=12, fontweight='bold')
+            ax.set_xlabel("Duration (days)", fontsize=12, fontweight="bold")
+            ax.set_ylabel("Frequency", fontsize=12, fontweight="bold")
             ax.set_title(
-                f'Project Duration Distribution ({results.iterations:,} simulations)',
+                f"Project Duration Distribution ({results.iterations:,} simulations)",
                 fontsize=14,
-                fontweight='bold',
+                fontweight="bold",
                 pad=20,
             )
-            ax.legend(loc='upper right', framealpha=0.9, fontsize=10)
-            ax.grid(True, alpha=0.3, linestyle='--')
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
+            ax.legend(loc="upper right", framealpha=0.9, fontsize=10)
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
 
             # Tight layout
             plt.tight_layout()
 
             # Save to BytesIO
             buffer = BytesIO()
-            plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+            plt.savefig(buffer, format="png", dpi=100, bbox_inches="tight")
             plt.close(fig)
             buffer.seek(0)
 
             # Encode to base64
-            img_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+            img_base64 = base64.b64encode(buffer.read()).decode("utf-8")
             return img_base64
 
         except Exception:

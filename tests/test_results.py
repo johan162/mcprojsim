@@ -12,12 +12,16 @@ class TestSimulationResults:
     @pytest.fixture
     def sample_results(self):
         """Create sample simulation results."""
-        durations = np.array([10.0, 12.0, 15.0, 18.0, 20.0, 22.0, 25.0, 28.0, 30.0, 35.0])
+        durations = np.array(
+            [10.0, 12.0, 15.0, 18.0, 20.0, 22.0, 25.0, 28.0, 30.0, 35.0]
+        )
         task_durations = {
             "task_001": np.array([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0]),
-            "task_002": np.array([8.0, 9.0, 11.0, 13.0, 14.0, 15.0, 17.0, 19.0, 20.0, 24.0]),
+            "task_002": np.array(
+                [8.0, 9.0, 11.0, 13.0, 14.0, 15.0, 17.0, 19.0, 20.0, 24.0]
+            ),
         }
-        
+
         results = SimulationResults(
             iterations=10,
             project_name="Test Project",
@@ -31,7 +35,7 @@ class TestSimulationResults:
     def test_calculate_statistics(self, sample_results):
         """Test calculating statistics."""
         sample_results.calculate_statistics()
-        
+
         assert sample_results.mean == pytest.approx(21.5, abs=0.1)
         assert sample_results.median == pytest.approx(21.0, abs=0.1)
         assert sample_results.std_dev > 0
@@ -42,7 +46,7 @@ class TestSimulationResults:
         """Test getting percentile."""
         p50 = sample_results.percentile(50)
         p90 = sample_results.percentile(90)
-        
+
         assert p50 > 0
         assert p90 > p50
 
@@ -50,14 +54,14 @@ class TestSimulationResults:
         """Test that percentiles are cached."""
         p50_1 = sample_results.percentile(50)
         p50_2 = sample_results.percentile(50)
-        
+
         assert p50_1 == p50_2
         assert 50 in sample_results.percentiles
 
     def test_get_critical_path(self, sample_results):
         """Test getting critical path."""
         critical_path = sample_results.get_critical_path()
-        
+
         assert critical_path["task_001"] == 1.0
         assert critical_path["task_002"] == 0.7
         assert critical_path["task_003"] == 0.3
@@ -65,7 +69,7 @@ class TestSimulationResults:
     def test_get_histogram_data(self, sample_results):
         """Test getting histogram data."""
         bin_edges, counts = sample_results.get_histogram_data(bins=5)
-        
+
         assert len(bin_edges) == 6  # bins + 1
         assert len(counts) == 5
         assert np.sum(counts) == len(sample_results.durations)
@@ -75,9 +79,9 @@ class TestSimulationResults:
         sample_results.calculate_statistics()
         sample_results.percentile(50)
         sample_results.percentile(90)
-        
+
         data = sample_results.to_dict()
-        
+
         assert data["project_name"] == "Test Project"
         assert data["iterations"] == 10
         assert data["random_seed"] == 42
@@ -89,7 +93,7 @@ class TestSimulationResults:
         """Test coefficient of variation in dict."""
         sample_results.calculate_statistics()
         data = sample_results.to_dict()
-        
+
         cv = data["statistics"]["coefficient_of_variation"]
         expected_cv = sample_results.std_dev / sample_results.mean
         assert cv == pytest.approx(expected_cv, abs=0.01)

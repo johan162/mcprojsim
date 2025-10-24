@@ -88,9 +88,7 @@ class TaskScheduler:
 
         return sorted_tasks
 
-    def get_critical_path(
-        self, schedule: Dict[str, Dict[str, float]]
-    ) -> Set[str]:
+    def get_critical_path(self, schedule: Dict[str, Dict[str, float]]) -> Set[str]:
         """Identify critical path tasks.
 
         Args:

@@ -60,7 +60,7 @@ class TestValidator:
         """Test validating unsupported file format."""
         file_path = tmp_path / "project.txt"
         file_path.write_text("some content")
-        
+
         is_valid, error = Validator.validate_file(file_path)
         assert not is_valid
         assert "Unsupported" in error
@@ -68,6 +68,7 @@ class TestValidator:
     def test_validate_toml_file(self, tmp_path):
         """Test validating a TOML file."""
         import tomli_w
+
         data = {
             "project": {"name": "Test", "start_date": "2025-01-01"},
             "tasks": [
@@ -81,7 +82,7 @@ class TestValidator:
         file_path = tmp_path / "project.toml"
         with open(file_path, "wb") as f:
             tomli_w.dump(data, f)
-        
+
         is_valid, error = Validator.validate_file(file_path)
         assert is_valid
         assert error == ""

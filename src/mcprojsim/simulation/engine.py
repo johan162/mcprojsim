@@ -58,9 +58,7 @@ class SimulationEngine:
         task_durations_all: Dict[str, list[float]] = {
             task.id: [] for task in project.tasks
         }
-        critical_path_frequency: Dict[str, int] = {
-            task.id: 0 for task in project.tasks
-        }
+        critical_path_frequency: Dict[str, int] = {task.id: 0 for task in project.tasks}
 
         # Run iterations
         for iteration in range(self.iterations):
@@ -125,7 +123,7 @@ class SimulationEngine:
         for task in project.tasks:
             # Resolve T-shirt size to actual estimate if needed
             estimate = self._resolve_estimate(task.estimate)
-            
+
             # Sample base duration
             base_duration = self.sampler.sample(estimate)
 
@@ -211,11 +209,11 @@ class SimulationEngine:
             TaskEstimate with resolved values
         """
         from mcprojsim.models.project import TaskEstimate
-        
+
         # If T-shirt size is not specified, return as-is
         if estimate.t_shirt_size is None:
             return estimate
-        
+
         # Look up T-shirt size configuration
         size_config = self.config.get_t_shirt_size(estimate.t_shirt_size)
         if size_config is None:
@@ -223,7 +221,7 @@ class SimulationEngine:
                 f"Unknown T-shirt size: {estimate.t_shirt_size}. "
                 f"Available sizes: {', '.join(self.config.t_shirt_sizes.keys())}"
             )
-        
+
         # Create new estimate with resolved values
         return TaskEstimate(
             distribution=estimate.distribution,

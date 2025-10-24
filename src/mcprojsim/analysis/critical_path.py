@@ -34,6 +34,4 @@ class CriticalPathAnalyzer:
             List of critical task IDs
         """
         criticality = CriticalPathAnalyzer.get_criticality_index(results)
-        return [
-            task_id for task_id, crit in criticality.items() if crit >= threshold
-        ]
+        return [task_id for task_id, crit in criticality.items() if crit >= threshold]

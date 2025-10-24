@@ -34,9 +34,7 @@ class RiskEvaluator:
             return risk.get_impact_value(base_duration)
         return 0.0
 
-    def evaluate_risks(
-        self, risks: list[Risk], base_duration: float = 0.0
-    ) -> float:
+    def evaluate_risks(self, risks: list[Risk], base_duration: float = 0.0) -> float:
         """Evaluate multiple risks and return cumulative impact.
 
         Args:

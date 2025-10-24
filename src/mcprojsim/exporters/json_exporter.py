@@ -57,7 +57,7 @@ class JSONExporter:
 
         # Get current date and time for simulation timestamp
         simulation_date = datetime.now().isoformat()
-        
+
         return {
             "project": {"name": results.project_name},
             "simulation": {

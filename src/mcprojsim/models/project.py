@@ -39,13 +39,11 @@ class TaskEstimate(BaseModel):
         # The actual values will be populated from config during simulation
         if self.t_shirt_size is not None:
             return self
-        
+
         # For explicit estimates, most_likely is required
         if self.most_likely is None:
-            raise ValueError(
-                "Either 't_shirt_size' or 'most_likely' must be specified"
-            )
-        
+            raise ValueError("Either 't_shirt_size' or 'most_likely' must be specified")
+
         if self.distribution == DistributionType.TRIANGULAR:
             if self.min is None or self.max is None:
                 raise ValueError(
@@ -94,7 +92,9 @@ class Risk(BaseModel):
         elif isinstance(v, RiskImpact):
             return v
         else:
-            raise ValueError(f"Invalid impact value: {v}. Must be a number or RiskImpact object.")
+            raise ValueError(
+                f"Invalid impact value: {v}. Must be a number or RiskImpact object."
+            )
 
     def get_impact_value(self, base_duration: float = 0.0) -> float:
         """Get the impact value in absolute time units.
@@ -149,7 +149,9 @@ class ProjectMetadata(BaseModel):
     description: Optional[str] = None
     start_date: date
     currency: Optional[str] = Field(default="USD")
-    confidence_levels: List[int] = Field(default_factory=lambda: [50, 75, 80, 85, 90, 95])
+    confidence_levels: List[int] = Field(
+        default_factory=lambda: [50, 75, 80, 85, 90, 95]
+    )
     probability_red_threshold: float = Field(
         default=0.50,
         ge=0.0,
@@ -172,7 +174,9 @@ class ProjectMetadata(BaseModel):
         elif isinstance(v, date):
             return v
         else:
-            raise ValueError(f"Invalid date value: {v}. Must be a date object or ISO format string.")
+            raise ValueError(
+                f"Invalid date value: {v}. Must be a date object or ISO format string."
+            )
 
     @model_validator(mode="after")
     def validate_thresholds(self) -> "ProjectMetadata":

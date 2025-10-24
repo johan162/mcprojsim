@@ -79,9 +79,7 @@ def simulate(
 
         # Run simulation
         if not quiet:
-            click.echo(
-                f"Running simulation with {iterations} iterations..."
-            )
+            click.echo(f"Running simulation with {iterations} iterations...")
         engine = SimulationEngine(
             iterations=iterations,
             random_seed=seed,
@@ -102,7 +100,9 @@ def simulate(
 
         # Export results
         formats = [f.strip().lower() for f in output_format.split(",")]
-        base_output = Path(output) if output else Path(f"{project.project.name}_results")
+        base_output = (
+            Path(output) if output else Path(f"{project.project.name}_results")
+        )
 
         for fmt in formats:
             if fmt == "json":
@@ -173,7 +173,9 @@ def show_config(config_file: Optional[str]) -> None:
     click.echo("\nT-Shirt Sizes (effort estimates in days):")
     for size, config in cfg.t_shirt_sizes.items():
         click.echo(f"  {size}:")
-        click.echo(f"    min: {config.min}, most_likely: {config.most_likely}, max: {config.max}")
+        click.echo(
+            f"    min: {config.min}, most_likely: {config.most_likely}, max: {config.max}"
+        )
 
     click.echo(f"\nSimulation:")
     click.echo(f"  Default iterations: {cfg.simulation.default_iterations}")

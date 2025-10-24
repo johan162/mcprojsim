@@ -61,7 +61,9 @@ class TestTaskEstimate:
 
     def test_lognormal_distribution_missing_params(self):
         """Test lognormal distribution with missing parameters."""
-        with pytest.raises(ValueError, match="requires most_likely and standard_deviation"):
+        with pytest.raises(
+            ValueError, match="requires most_likely and standard_deviation"
+        ):
             TaskEstimate(
                 distribution=DistributionType.LOGNORMAL,
                 most_likely=5.0,
@@ -88,7 +90,9 @@ class TestTaskEstimate:
 
     def test_missing_estimate_values(self):
         """Test that either T-shirt size or explicit estimate is required."""
-        with pytest.raises(ValueError, match="Either 't_shirt_size' or 'most_likely' must be specified"):
+        with pytest.raises(
+            ValueError, match="Either 't_shirt_size' or 'most_likely' must be specified"
+        ):
             TaskEstimate()
 
 
@@ -111,7 +115,7 @@ class TestRisk:
             id="risk_001",
             name="Test Risk",
             probability=0.3,
-            impact={"type": "absolute", "value": 10.0},
+            impact=RiskImpact(type=ImpactType.ABSOLUTE, value=10.0),
         )
         assert risk.get_impact_value() == 10.0
 
@@ -121,7 +125,7 @@ class TestRisk:
             id="risk_001",
             name="Test Risk",
             probability=0.3,
-            impact={"type": "percentage", "value": 20.0},
+            impact=RiskImpact(type=ImpactType.PERCENTAGE, value=20.0),
         )
         assert risk.get_impact_value(base_duration=100.0) == 20.0
 
@@ -172,6 +176,7 @@ class TestTask:
                 technical_complexity="low",
             ),
         )
+        assert task.uncertainty_factors is not None
         assert task.uncertainty_factors.team_experience == "high"
 
 
@@ -289,7 +294,7 @@ class TestProject:
         task = project.get_task_by_id("task_001")
         assert task is not None
         assert task.id == "task_001"
-        
+
         task = project.get_task_by_id("task_999")
         assert task is None
 

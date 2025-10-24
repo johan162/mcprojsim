@@ -63,7 +63,7 @@ class TestEndToEnd:
                 }
             ],
         }
-        
+
         file_path = tmp_path / "project.yaml"
         with open(file_path, "w") as f:
             yaml.dump(data, f)
@@ -74,11 +74,11 @@ class TestEndToEnd:
         # Parse project
         parser = YAMLParser()
         project = parser.parse_file(project_file)
-        
+
         assert project.project.name == "Integration Test Project"
         assert len(project.tasks) == 3
         assert len(project.project_risks) == 1
-        
+
         # Run simulation
         config = Config.get_default()
         engine = SimulationEngine(
@@ -88,20 +88,20 @@ class TestEndToEnd:
             show_progress=False,
         )
         results = engine.run(project)
-        
+
         assert results.iterations == 100
         assert results.mean > 0
         assert results.median > 0
-        
+
         # Export results
         json_file = tmp_path / "results.json"
         csv_file = tmp_path / "results.csv"
         html_file = tmp_path / "results.html"
-        
+
         JSONExporter.export(results, json_file)
         CSVExporter.export(results, csv_file)
         HTMLExporter.export(results, html_file)
-        
+
         assert json_file.exists()
         assert csv_file.exists()
         assert html_file.exists()
@@ -110,10 +110,10 @@ class TestEndToEnd:
         """Test simulation respects dependencies."""
         parser = YAMLParser()
         project = parser.parse_file(project_file)
-        
+
         engine = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
         results = engine.run(project)
-        
+
         # Task 001 should be on critical path
         critical_path = results.get_critical_path()
         assert "task_001" in critical_path
@@ -123,14 +123,14 @@ class TestEndToEnd:
         """Test simulation with risks."""
         parser = YAMLParser()
         project = parser.parse_file(project_file)
-        
+
         # Run multiple times to check variability
         engine1 = SimulationEngine(iterations=100, random_seed=42, show_progress=False)
         results1 = engine1.run(project)
-        
+
         engine2 = SimulationEngine(iterations=100, random_seed=43, show_progress=False)
         results2 = engine2.run(project)
-        
+
         # Results should be different with different seeds
         assert results1.mean != results2.mean
 
@@ -147,11 +147,11 @@ class TestEndToEnd:
                 }
             ],
         }
-        
+
         file_path = tmp_path / "invalid.yaml"
         with open(file_path, "w") as f:
             yaml.dump(invalid_data, f)
-        
+
         parser = YAMLParser()
         with pytest.raises(ValueError):
             parser.parse_file(file_path)
@@ -173,21 +173,21 @@ class TestCLIIntegration:
                 }
             ],
         }
-        
+
         file_path = tmp_path / "project.yaml"
         with open(file_path, "w") as f:
             yaml.dump(data, f)
-        
+
         # Parse
         parser = YAMLParser()
         is_valid, error = parser.validate_file(file_path)
         assert is_valid
-        
+
         # Load and simulate
         project = parser.parse_file(file_path)
         engine = SimulationEngine(iterations=50, show_progress=False)
         results = engine.run(project)
-        
+
         assert results.project_name == "CLI Test"
         assert len(results.durations) == 50
 
@@ -221,43 +221,40 @@ class TestCLIIntegration:
                 },
             ],
         }
-        
+
         file_path = tmp_path / "tshirt_project.yaml"
         with open(file_path, "w") as f:
             yaml.dump(data, f)
-        
+
         # Parse and validate
         parser = YAMLParser()
         is_valid, error = parser.validate_file(file_path)
         assert is_valid, f"Validation failed: {error}"
-        
+
         # Load and simulate
         project = parser.parse_file(file_path)
         config = Config.get_default()
         engine = SimulationEngine(
-            iterations=100, 
-            random_seed=42, 
-            config=config,
-            show_progress=False
+            iterations=100, random_seed=42, config=config, show_progress=False
         )
         results = engine.run(project)
-        
+
         # Verify results
         assert results.project_name == "T-Shirt Test"
         assert len(results.durations) == 100
         assert results.mean > 0
         assert results.std_dev > 0
-        
+
         # Check that task durations are reasonable for their sizes
         # XS: 0.5-2 days, M: 3-8 days, L: 5-13 days
         task_xs_durations = results.task_durations["task_xs"]
         task_m_durations = results.task_durations["task_m"]
         task_l_durations = results.task_durations["task_l"]
-        
+
         # XS should be smallest on average
         assert task_xs_durations.mean() < task_m_durations.mean()
         assert task_m_durations.mean() < task_l_durations.mean()
-        
+
         # Check reasonable ranges
         assert 0.5 <= task_xs_durations.min() <= 2.0
         assert 3.0 <= task_m_durations.min() <= 8.0

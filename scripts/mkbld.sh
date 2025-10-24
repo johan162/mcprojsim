@@ -1,21 +1,13 @@
 #!/bin/bash
 # Build script for mcprojsim
 
-set -e
+set -eu
 
 echo "=== Building mcprojsim ==="
 
 # Clean previous builds
 echo "Cleaning previous builds..."
 rm -rf build/ dist/ *.egg-info
-
-# Install build dependencies
-#echo "Installing build dependencies..."
-#pip install --upgrade pip setuptools wheel build
-
-# Install test dependencies
-# echo "Installing test dependencies..."
-# pip install pytest pytest-cov mypy types-PyYAML
 
 # Run type checking with mypy
 echo "Running type checking with mypy..."
@@ -27,6 +19,18 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "✅ Type checking passed"
+
+# Run code style checking with black
+echo "Running code style checking with black..."
+black --check --diff src/mcprojsim tests/
+
+if [ $? -ne 0 ]; then
+    echo "❌ Code style check failed"
+    echo "Run 'black src/mcprojsim tests/' to fix formatting issues"
+    exit 1
+fi
+
+echo "✅ Code style check passed"
 
 # Run unit tests with coverage
 echo "Running unit tests with coverage..."

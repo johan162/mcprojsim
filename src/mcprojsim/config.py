@@ -86,9 +86,7 @@ class Config(BaseModel):
             },
         )
 
-    def get_uncertainty_multiplier(
-        self, factor_name: str, level: str
-    ) -> float:
+    def get_uncertainty_multiplier(self, factor_name: str, level: str) -> float:
         """Get uncertainty multiplier for a given factor and level.
 
         Args:

@@ -15,6 +15,7 @@ from mcprojsim.models.project import (
     TaskEstimate,
     Risk,
     DistributionType,
+    UncertaintyFactors,
 )
 from mcprojsim.config import Config
 
@@ -31,7 +32,7 @@ class TestDistributionSampler:
             most_likely=2.0,
             max=5.0,
         )
-        
+
         samples = [sampler.sample(estimate) for _ in range(100)]
         assert all(1.0 <= s <= 5.0 for s in samples)
         assert np.mean(samples) > 1.0
@@ -45,31 +46,32 @@ class TestDistributionSampler:
             most_likely=5.0,
             standard_deviation=1.0,
         )
-        
+
         samples = [sampler.sample(estimate) for _ in range(100)]
         assert all(s > 0 for s in samples)
 
     def test_sample_reproducibility(self):
         """Test that sampling is reproducible with same seed."""
         estimate = TaskEstimate(min=1, most_likely=2, max=5)
-        
+
         sampler1 = DistributionSampler(np.random.RandomState(42))
         samples1 = [sampler1.sample(estimate) for _ in range(10)]
-        
+
         sampler2 = DistributionSampler(np.random.RandomState(42))
         samples2 = [sampler2.sample(estimate) for _ in range(10)]
-        
+
         assert np.allclose(samples1, samples2)
 
     def test_sample_unknown_distribution(self):
         """Test that unknown distribution type raises error."""
         from mcprojsim.models.project import DistributionType
+
         sampler = DistributionSampler(np.random.RandomState(42))
-        
+
         # Create an estimate with an invalid distribution type
         estimate = TaskEstimate(min=1, most_likely=2, max=5)
         estimate.distribution = "invalid_distribution"  # type: ignore
-        
+
         with pytest.raises(ValueError, match="Unknown distribution type"):
             sampler.sample(estimate)
 
@@ -86,7 +88,7 @@ class TestRiskEvaluator:
             probability=0.0,  # Never triggers
             impact=10.0,
         )
-        
+
         impact = evaluator.evaluate_risk(risk)
         assert impact == 0.0
 
@@ -99,7 +101,7 @@ class TestRiskEvaluator:
             probability=1.0,  # Always triggers
             impact=10.0,
         )
-        
+
         impact = evaluator.evaluate_risk(risk)
         assert impact == 10.0
 
@@ -110,7 +112,7 @@ class TestRiskEvaluator:
             Risk(id="r1", name="Risk 1", probability=1.0, impact=5.0),
             Risk(id="r2", name="Risk 2", probability=1.0, impact=3.0),
         ]
-        
+
         total_impact = evaluator.evaluate_risks(risks)
         assert total_impact == 8.0
 
@@ -151,10 +153,10 @@ class TestTaskScheduler:
                 )
             ],
         )
-        
+
         scheduler = TaskScheduler(project)
         schedule = scheduler.schedule_tasks({"task_001": 5.0})
-        
+
         assert schedule["task_001"]["start"] == 0.0
         assert schedule["task_001"]["end"] == 5.0
         assert schedule["task_001"]["duration"] == 5.0
@@ -163,7 +165,7 @@ class TestTaskScheduler:
         """Test scheduling tasks with dependencies."""
         scheduler = TaskScheduler(simple_project)
         schedule = scheduler.schedule_tasks({"task_001": 3.0, "task_002": 4.0})
-        
+
         assert schedule["task_001"]["start"] == 0.0
         assert schedule["task_001"]["end"] == 3.0
         assert schedule["task_002"]["start"] == 3.0
@@ -173,7 +175,7 @@ class TestTaskScheduler:
         """Test topological sort."""
         scheduler = TaskScheduler(simple_project)
         sorted_tasks = scheduler._topological_sort()
-        
+
         # task_001 should come before task_002
         assert sorted_tasks.index("task_001") < sorted_tasks.index("task_002")
 
@@ -182,7 +184,7 @@ class TestTaskScheduler:
         scheduler = TaskScheduler(simple_project)
         schedule = scheduler.schedule_tasks({"task_001": 3.0, "task_002": 4.0})
         critical_path = scheduler.get_critical_path(schedule)
-        
+
         # Both tasks should be on critical path
         assert "task_001" in critical_path
         assert "task_002" in critical_path
@@ -209,9 +211,14 @@ class TestTaskScheduler:
         # This test verifies the scheduler's own circular dependency detection
         # We can't easily create a project with circular dependencies through
         # normal means, so we test that the project validation catches it
-        from mcprojsim.models.project import Project, ProjectMetadata, Task, TaskEstimate
+        from mcprojsim.models.project import (
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
+        )
         from datetime import date
-        
+
         # Try to create a project with circular dependency - should fail at validation
         with pytest.raises(ValueError, match="Circular dependency"):
             Project(
@@ -260,7 +267,7 @@ class TestSimulationEngine:
         """Test running simulation."""
         engine = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
         results = engine.run(simple_project)
-        
+
         assert results.iterations == 10
         assert results.project_name == "Test"
         assert len(results.durations) == 10
@@ -271,10 +278,10 @@ class TestSimulationEngine:
         """Test simulation reproducibility with same seed."""
         engine1 = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
         results1 = engine1.run(simple_project)
-        
+
         engine2 = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
         results2 = engine2.run(simple_project)
-        
+
         assert np.allclose(results1.durations, results2.durations)
 
     def test_apply_uncertainty_factors(self):
@@ -282,17 +289,17 @@ class TestSimulationEngine:
         # Use empty config for no uncertainty factors
         config = Config()
         engine = SimulationEngine(config=config, show_progress=False)
-        
+
         task = Task(
             id="task_001",
             name="Task 1",
             estimate=TaskEstimate(min=1, most_likely=2, max=5),
         )
-        
+
         # No uncertainty factors should not change duration
         adjusted = engine._apply_uncertainty_factors(task, 10.0)
         assert adjusted == 10.0
-        
+
         # Test with uncertainty factors
         config_with_factors = Config(
             uncertainty_factors={
@@ -300,14 +307,13 @@ class TestSimulationEngine:
             }
         )
         engine2 = SimulationEngine(config=config_with_factors, show_progress=False)
-        
         task_with_factors = Task(
             id="task_002",
             name="Task 2",
             estimate=TaskEstimate(min=1, most_likely=2, max=5),
-            uncertainty_factors={"team_experience": "low"}
+            uncertainty_factors=UncertaintyFactors(team_experience="low"),
         )
-        
+
         # Should multiply by 1.30
         adjusted2 = engine2._apply_uncertainty_factors(task_with_factors, 10.0)
         assert adjusted2 == 13.0
@@ -332,9 +338,9 @@ class TestSimulationEngine:
                 )
             ],
         )
-        
+
         engine = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
         results = engine.run(project)
-        
+
         # Mean should be higher due to risk
         assert results.mean > 2.0

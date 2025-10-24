@@ -13,7 +13,7 @@ class TestConfig:
     def test_default_config(self):
         """Test default configuration."""
         config = Config.get_default()
-        
+
         assert "team_experience" in config.uncertainty_factors
         assert "requirements_maturity" in config.uncertainty_factors
         assert "technical_complexity" in config.uncertainty_factors
@@ -22,27 +22,27 @@ class TestConfig:
     def test_get_uncertainty_multiplier(self):
         """Test getting uncertainty multiplier."""
         config = Config.get_default()
-        
+
         multiplier = config.get_uncertainty_multiplier("team_experience", "high")
         assert multiplier == 0.9
-        
+
         multiplier = config.get_uncertainty_multiplier("team_experience", "medium")
         assert multiplier == 1.0
-        
+
         multiplier = config.get_uncertainty_multiplier("team_experience", "low")
         assert multiplier == 1.3
 
     def test_get_uncertainty_multiplier_unknown_factor(self):
         """Test getting multiplier for unknown factor."""
         config = Config.get_default()
-        
+
         multiplier = config.get_uncertainty_multiplier("unknown_factor", "high")
         assert multiplier == 1.0
 
     def test_get_uncertainty_multiplier_unknown_level(self):
         """Test getting multiplier for unknown level."""
         config = Config.get_default()
-        
+
         multiplier = config.get_uncertainty_multiplier("team_experience", "unknown")
         assert multiplier == 1.0
 
@@ -53,13 +53,17 @@ class TestConfig:
                 "team_experience": {"high": 0.8, "medium": 1.0, "low": 1.5}
             },
             "simulation": {"default_iterations": 5000, "random_seed": 42},
-            "output": {"formats": ["json"], "include_histogram": False, "histogram_bins": 30},
+            "output": {
+                "formats": ["json"],
+                "include_histogram": False,
+                "histogram_bins": 30,
+            },
         }
-        
+
         config_file = tmp_path / "config.yaml"
         with open(config_file, "w") as f:
             yaml.dump(config_data, f)
-        
+
         config = Config.load_from_file(config_file)
         assert config.simulation.default_iterations == 5000
         assert config.simulation.random_seed == 42
@@ -86,7 +90,7 @@ class TestTShirtSizes:
     def test_default_tshirt_sizes(self):
         """Test default T-shirt sizes are defined."""
         config = Config.get_default()
-        
+
         assert "XS" in config.t_shirt_sizes
         assert "S" in config.t_shirt_sizes
         assert "M" in config.t_shirt_sizes
@@ -97,19 +101,22 @@ class TestTShirtSizes:
     def test_tshirt_size_values(self):
         """Test T-shirt size values are correctly configured."""
         config = Config.get_default()
-        
+
         # Test a few sizes
         xs = config.get_t_shirt_size("XS")
+        assert xs is not None
         assert xs.min == 0.5
         assert xs.most_likely == 1
         assert xs.max == 2
-        
+
         m = config.get_t_shirt_size("M")
+        assert m is not None
         assert m.min == 3
         assert m.most_likely == 5
         assert m.max == 8
-        
+
         xxl = config.get_t_shirt_size("XXL")
+        assert xxl is not None
         assert xxl.min == 13
         assert xxl.most_likely == 21
         assert xxl.max == 34
@@ -117,7 +124,7 @@ class TestTShirtSizes:
     def test_get_unknown_tshirt_size(self):
         """Test getting unknown T-shirt size returns None."""
         config = Config.get_default()
-        
+
         size = config.get_t_shirt_size("XXXL")
         assert size is None
 
