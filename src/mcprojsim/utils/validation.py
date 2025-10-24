@@ -1,6 +1,7 @@
 """Validation utilities."""
 
 from pathlib import Path
+from typing import Union
 
 from mcprojsim.parsers import YAMLParser, TOMLParser
 
@@ -24,6 +25,7 @@ class Validator:
             return False, f"File not found: {file_path}"
 
         # Determine parser based on extension
+        parser: Union[YAMLParser, TOMLParser]
         if file_path.suffix in [".yaml", ".yml"]:
             parser = YAMLParser()
         elif file_path.suffix == ".toml":

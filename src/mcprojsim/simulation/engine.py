@@ -5,7 +5,7 @@ from typing import Dict, Optional
 import numpy as np
 
 from mcprojsim.config import Config
-from mcprojsim.models.project import Project, Task
+from mcprojsim.models.project import Project, Task, TaskEstimate
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.simulation.distributions import DistributionSampler
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
@@ -201,7 +201,7 @@ class SimulationEngine:
 
         return base_duration * multiplier
 
-    def _resolve_estimate(self, estimate):
+    def _resolve_estimate(self, estimate: TaskEstimate) -> TaskEstimate:
         """Resolve T-shirt size to actual estimate values.
 
         Args:

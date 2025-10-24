@@ -10,12 +10,23 @@ echo "Cleaning previous builds..."
 rm -rf build/ dist/ *.egg-info
 
 # Install build dependencies
-echo "Installing build dependencies..."
-pip install --upgrade pip setuptools wheel build
+#echo "Installing build dependencies..."
+#pip install --upgrade pip setuptools wheel build
 
 # Install test dependencies
-echo "Installing test dependencies..."
-pip install pytest pytest-cov
+# echo "Installing test dependencies..."
+# pip install pytest pytest-cov mypy types-PyYAML
+
+# Run type checking with mypy
+echo "Running type checking with mypy..."
+mypy src/mcprojsim
+
+if [ $? -ne 0 ]; then
+    echo "❌ Type checking failed"
+    exit 1
+fi
+
+echo "✅ Type checking passed"
 
 # Run unit tests with coverage
 echo "Running unit tests with coverage..."

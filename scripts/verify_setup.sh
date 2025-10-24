@@ -7,20 +7,24 @@ echo "=== mcprojsim Setup Verification ==="
 echo ""
 
 # Check if virtual environment exists
-if [ ! -d "venv" ]; then
+if [ ! -d ".venv" ]; then
     echo "❌ Virtual environment not found"
-    echo "Run: python3 -m venv venv"
-    exit 1
+    echo "Running: python3 -m venv .venv"
+    python3 -m venv .venv
 fi
 echo "✅ Virtual environment exists"
 
 # Activate virtual environment
-source venv/bin/activate
+source .venv/bin/activate
 
 # Check if package is installed
 if ! command -v mc-estimate &> /dev/null; then
     echo "❌ mc-estimate command not found"
-    echo "Run: pip install -e ."
+    echo "Running: pip install -e ."
+    pip install -e .
+fi
+if ! command -v mc-estimate &> /dev/null; then
+    echo "❌ mc-estimate command still not found after installation"
     exit 1
 fi
 echo "✅ mc-estimate command available"

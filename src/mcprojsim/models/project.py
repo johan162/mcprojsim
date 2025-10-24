@@ -91,7 +91,10 @@ class Risk(BaseModel):
             return float(v)
         elif isinstance(v, dict):
             return RiskImpact(**v)
-        return v
+        elif isinstance(v, RiskImpact):
+            return v
+        else:
+            raise ValueError(f"Invalid impact value: {v}. Must be a number or RiskImpact object.")
 
     def get_impact_value(self, base_duration: float = 0.0) -> float:
         """Get the impact value in absolute time units.
@@ -166,7 +169,10 @@ class ProjectMetadata(BaseModel):
         """Parse date from string if needed."""
         if isinstance(v, str):
             return date.fromisoformat(v)
-        return v
+        elif isinstance(v, date):
+            return v
+        else:
+            raise ValueError(f"Invalid date value: {v}. Must be a date object or ISO format string.")
 
     @model_validator(mode="after")
     def validate_thresholds(self) -> "ProjectMetadata":

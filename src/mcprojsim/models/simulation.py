@@ -1,6 +1,6 @@
 """Simulation result models."""
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -74,7 +74,7 @@ class SimulationResults(BaseModel):
         counts, bin_edges = np.histogram(self.durations, bins=bins)
         return bin_edges, counts
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Convert results to dictionary for export."""
         return {
             "project_name": self.project_name,

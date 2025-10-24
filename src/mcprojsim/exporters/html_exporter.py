@@ -4,6 +4,7 @@ import base64
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from jinja2 import Template
@@ -345,7 +346,7 @@ class HTMLExporter:
     @staticmethod
     def _calculate_thermometer(
         results: SimulationResults, num_segments: int = 11
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Calculate thermometer segments with fixed probability bins.
 
         Args:

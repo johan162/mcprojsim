@@ -1,7 +1,7 @@
 """Command-line interface for Monte Carlo Project Simulator."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import click
 
@@ -63,6 +63,7 @@ def simulate(
 
         # Parse project file
         project_path = Path(project_file)
+        parser: Union[YAMLParser, TOMLParser]
         if project_path.suffix in [".yaml", ".yml"]:
             parser = YAMLParser()
         elif project_path.suffix == ".toml":
