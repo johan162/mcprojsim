@@ -1,6 +1,7 @@
 """CSV exporter for simulation results."""
 
 import csv
+from datetime import datetime
 from pathlib import Path
 
 from mcprojsim.models.simulation import SimulationResults
@@ -27,7 +28,9 @@ class CSVExporter:
             writer.writerow(["Metric", "Value"])
 
             # Write project info
+            simulation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             writer.writerow(["Project Name", results.project_name])
+            writer.writerow(["Simulation Date", simulation_date])
             writer.writerow(["Iterations", results.iterations])
             writer.writerow(["Random Seed", results.random_seed])
             writer.writerow([])

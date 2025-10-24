@@ -1,6 +1,7 @@
 """JSON exporter for simulation results."""
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
 
@@ -54,9 +55,13 @@ class JSONExporter:
         # Get histogram data
         bin_edges, counts = results.get_histogram_data(bins=50)
 
+        # Get current date and time for simulation timestamp
+        simulation_date = datetime.now().isoformat()
+        
         return {
             "project": {"name": results.project_name},
             "simulation": {
+                "date": simulation_date,
                 "iterations": results.iterations,
                 "random_seed": results.random_seed,
             },

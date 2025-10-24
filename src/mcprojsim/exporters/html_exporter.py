@@ -1,6 +1,7 @@
 """HTML exporter for simulation results."""
 
 import base64
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 
@@ -160,6 +161,7 @@ HTML_TEMPLATE = """
             <div class="section simulation-params">
                 <h3>Simulation Parameters</h3>
                 <table>
+                    <tr><td class="metric">Simulation Date</td><td class="value">{{ simulation_date }}</td></tr>
                     <tr><td class="metric">Iterations</td><td class="value">{{ iterations }}</td></tr>
                     <tr><td class="metric">Random Seed</td><td class="value">{{ random_seed }}</td></tr>
                 </table>
@@ -207,18 +209,28 @@ HTML_TEMPLATE = """
                 <h3>Critical Path Analysis</h3>
                 <table>
                     <thead>
-                        <tr><th>Task ID</th><th class="header-center">Criticality Index</th><th class="header-center">Percentage</th></tr>
+                        <tr><th>Task ID</th><th class="header-center">Effort (days)</th><th class="header-center">Criticality Index</th><th class="header-center">Percentage</th></tr>
                     </thead>
                     <tbody>
-                        {% for task_id, criticality in critical_path %}
+                        {% for task_id, criticality, effort in critical_path_with_effort %}
                         <tr>
                             <td>{{ task_id }}</td>
+                            <td class="value-center">{{ "%.2f"|format(effort) }}</td>
                             <td class="value-center">{{ "%.4f"|format(criticality) }}</td>
                             <td class="value-center">{{ "%.1f"|format(criticality * 100) }}%</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                
+                <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #4CAF50; border-radius: 4px;">
+                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                        <strong>About Criticality Index:</strong> This metric represents the probability that a task lies on the critical path 
+                        across all simulation iterations. A value of 1.0 (100%) means the task was always on the critical path, 
+                        while 0.0 (0%) means it never was. Tasks with higher criticality indices are more likely to delay the project 
+                        if their duration increases.
+                    </p>
+                </div>
             </div>
 
             <div class="section">
@@ -288,6 +300,17 @@ class HTMLExporter:
         critical_path = sorted(
             results.get_critical_path().items(), key=lambda x: x[1], reverse=True
         )
+        
+        # Calculate critical path with effort data
+        critical_path_with_effort = []
+        for task_id, criticality in critical_path:
+            # Calculate mean effort for this task from simulation results
+            if task_id in results.task_durations:
+                mean_effort = float(np.mean(results.task_durations[task_id]))
+            else:
+                mean_effort = 0.0  # Fallback if no data available
+            critical_path_with_effort.append((task_id, criticality, mean_effort))
+        
         percentiles = sorted(results.percentiles.items())
 
         # Calculate thermometer data
@@ -296,8 +319,12 @@ class HTMLExporter:
         # Generate histogram image
         histogram_image = HTMLExporter._generate_histogram_image(results)
 
+        # Get current date and time for simulation timestamp
+        simulation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         html = template.render(
             project_name=results.project_name,
+            simulation_date=simulation_date,
             iterations=results.iterations,
             random_seed=results.random_seed or "None",
             mean=results.mean,
@@ -308,6 +335,7 @@ class HTMLExporter:
             cv=cv,
             percentiles=percentiles,
             critical_path=critical_path,
+            critical_path_with_effort=critical_path_with_effort,
             thermometer_segments=thermometer_segments,
             histogram_image=histogram_image,
         )
