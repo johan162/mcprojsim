@@ -10,14 +10,12 @@ env/
 dist/
 site/
 build/
-bayescalc.egg-info/
 .pytest_cache/
 *.pdf
 *.backup
 *.bak
 **/*.bak
-.bayescalc_history
-bayescalc2.egg-info
+mcprojsim.egg-info
 .coverage
 coverage.xml
 htmlcov/
@@ -29,4 +27,5 @@ htmlcov/
 *.tmp
 *.log
 docs/CHANGELOG.md
+
 

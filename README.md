@@ -1,5 +1,18 @@
 # Monte Carlo Project Simulator (mcprojsim)
 
+| Category | Link |
+|----------|--------|
+|**Package**|[![PyPI version](https://img.shields.io/pypi/v/bayescalc2.svg)](https://pypi.org/project/bayescalc2/) [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)|
+|**Documentation**|[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://johan162.github.io/bayescalc2/)|
+|**License**|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)|
+|**Release**|[![GitHub release](https://img.shields.io/github/v/release/johan162/bayescalc2?include_prereleases)](https://github.com/johan162/bayescalc2/releases)|
+|**CI/CD**|[![CI](https://github.com/johan162/bayescalc2/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/bayescalc2/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/bayescalc2/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/bayescalc2/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-83%25-green)](coverage.svg)|
+|**Code Quality**|[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/) [![Linting: flake8](https://img.shields.io/badge/linting-flake8-yellowgreen)](https://flake8.pycqa.org/)|
+|Repo URL|[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat-square&logo=github&logoColor=white)](https://github.com/johan162/bayescalc2)|
+
+
+## Overview
+
 A Monte Carlo simulation system for software development effort estimation. This tool helps you generate probabilistic estimates for project completion by modeling uncertainties in task duration, applying risk impacts, handling task dependencies, and generating confidence intervals through iterative simulation.
 
 ## Features

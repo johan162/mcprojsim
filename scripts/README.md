@@ -21,7 +21,7 @@ the following "glyphs" are used as a visual aid to what activity is going on
 - ✅ for "Success"
 - ❌ for "Error"
 - ⚠️ for "Warning"
-- ⏳ for "Pending/Waaiting"
+- ⏳ for "Pending/Waiting"
 
 ## Scripts Overview
 
