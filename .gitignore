@@ -27,5 +27,8 @@ htmlcov/
 *.tmp
 *.log
 docs/CHANGELOG.md
+*.htmlcov
+*.json
+.mypy_cache
 
 
