@@ -1,7 +1,6 @@
 """Tests for utilities."""
 
 import pytest
-from pathlib import Path
 import yaml
 
 from mcprojsim.utils.validation import Validator

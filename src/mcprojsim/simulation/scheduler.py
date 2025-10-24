@@ -1,8 +1,7 @@
 """Task scheduler with dependency resolution."""
 
 from typing import Dict, List, Set
-
-from mcprojsim.models.project import Project, Task
+from mcprojsim.models.project import Project
 
 
 class TaskScheduler:

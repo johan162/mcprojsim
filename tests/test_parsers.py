@@ -1,8 +1,6 @@
 """Tests for parsers."""
 
 import pytest
-from pathlib import Path
-import tempfile
 import yaml
 
 from mcprojsim.parsers import YAMLParser, TOMLParser

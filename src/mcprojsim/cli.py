@@ -126,7 +126,9 @@ def simulate(
                         click.echo(f"Warning: Unknown format '{fmt}' ignored")
         else:
             if not quiet:
-                click.echo("\nNo export formats specified. Use -f to export results to files.")
+                click.echo(
+                    "\nNo export formats specified. Use -f to export results to files."
+                )
 
     except Exception as e:
         logger.error(f"Error during simulation: {e}")
@@ -148,7 +150,7 @@ def validate(project_file: str) -> None:
         click.echo("✓ Project file is valid!")
         logger.info(f"Project file {project_file} is valid")
     else:
-        click.echo(f"✗ Validation failed:", err=True)
+        click.echo("✗ Validation failed:", err=True)
         click.echo(f"  {error_message}", err=True)
         logger.error(f"Validation failed for {project_file}: {error_message}")
         raise click.Abort()
@@ -184,11 +186,11 @@ def show_config(config_file: Optional[str]) -> None:
             f"    min: {config.min}, most_likely: {config.most_likely}, max: {config.max}"
         )
 
-    click.echo(f"\nSimulation:")
+    click.echo("\nSimulation:")
     click.echo(f"  Default iterations: {cfg.simulation.default_iterations}")
     click.echo(f"  Random seed: {cfg.simulation.random_seed}")
 
-    click.echo(f"\nOutput:")
+    click.echo("\nOutput:")
     click.echo(f"  Formats: {', '.join(cfg.output.formats)}")
     click.echo(f"  Include histogram: {cfg.output.include_histogram}")
     click.echo(f"  Histogram bins: {cfg.output.histogram_bins}")

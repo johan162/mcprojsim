@@ -1,7 +1,6 @@
 """Tests for configuration."""
 
 import pytest
-from pathlib import Path
 import yaml
 
 from mcprojsim.config import Config, SimulationConfig, OutputConfig

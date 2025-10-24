@@ -1,11 +1,8 @@
 """Statistical analysis utilities."""
 
 from typing import Dict
-
 import numpy as np
 from scipy import stats
-
-from mcprojsim.models.simulation import SimulationResults
 
 
 class StatisticalAnalyzer:

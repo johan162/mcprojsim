@@ -1,7 +1,6 @@
 """Integration tests."""
 
 import pytest
-from pathlib import Path
 import yaml
 
 from mcprojsim import SimulationEngine

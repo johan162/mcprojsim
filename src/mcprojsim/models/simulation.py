@@ -1,6 +1,6 @@
 """Simulation result models."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import numpy as np
 from pydantic import BaseModel, Field

@@ -64,7 +64,7 @@ class TestDistributionSampler:
 
     def test_sample_unknown_distribution(self):
         """Test that unknown distribution type raises error."""
-        from mcprojsim.models.project import DistributionType
+        # from mcprojsim.models.project import DistributionType
 
         sampler = DistributionSampler(np.random.RandomState(42))
 

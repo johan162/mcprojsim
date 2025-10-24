@@ -3,7 +3,6 @@
 import pytest
 import json
 import csv
-from pathlib import Path
 
 from mcprojsim.exporters import JSONExporter, CSVExporter, HTMLExporter
 from mcprojsim.models.simulation import SimulationResults

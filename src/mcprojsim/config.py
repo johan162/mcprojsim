@@ -1,7 +1,7 @@
 """Configuration management for uncertainty factors and simulation settings."""
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 import yaml
 from pydantic import BaseModel, Field

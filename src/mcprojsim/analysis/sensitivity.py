@@ -1,10 +1,7 @@
 """Sensitivity analysis for task impacts."""
 
 from typing import Dict
-
-import numpy as np
 from scipy import stats
-
 from mcprojsim.models.simulation import SimulationResults
 
 
