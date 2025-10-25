@@ -1,6 +1,6 @@
 #!/bin/bash
-# BayesCalc2 Build Script
-# Description: Automates testing, static analysis, formatting checks, and package building for BayesCalc2.
+# Build Script
+# Description: Automates testing, static analysis, formatting checks, and package building.
 # CI/CD Support: Yes. Can be run in CI environments.
 # Usage: ./scripts/mkbld.sh [--dry-run] [--help]
 #
@@ -10,6 +10,12 @@
 
 set -euo pipefail # Exit on any error or uninitialized variable
 
+# =====================================
+# CONFIGURATION
+# =====================================
+
+declare GITHUB_USER="johan162"
+declare SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 declare PROGRAMNAME="mcprojsim"
 declare PROGRAMNAME_PRETTY="MCProjSim"
 declare PROGRAM_ENTRYPOINT="mcprojsim.cli"

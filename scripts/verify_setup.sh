@@ -1,5 +1,8 @@
 #!/bin/bash
-# Setup verification script for mcprojsim
+# Setup & Verification script for mcprojsim
+# Purpose: Do all necessary steps toi setup a local development environment and verify installation
+# CI/CD Support: Yes. Can be run in CI environments.
+# Usage: ./scripts/verify_setup.sh
 
 set -e
 
@@ -18,25 +21,25 @@ echo "✅ Virtual environment exists"
 source .venv/bin/activate
 
 # Check if package is installed
-if ! command -v mc-estimate &> /dev/null; then
-    echo "❌ mc-estimate command not found"
+if ! command -v mcprojsim &> /dev/null; then
+    echo "❌ mcprojsim command not found"
     echo "Running: pip install -e ."
     pip install -e .
 fi
-if ! command -v mc-estimate &> /dev/null; then
-    echo "❌ mc-estimate command still not found after installation"
+if ! command -v mcprojsim &> /dev/null; then
+    echo "❌ mcprojsim command still not found after installation"
     exit 1
 fi
-echo "✅ mc-estimate command available"
+echo "✅ mcprojsim command available"
 
 # Check version
-VERSION=$(mc-estimate --version)
+VERSION=$(mcprojsim --version)
 echo "✅ Version: $VERSION"
 
 # Validate example project
 echo ""
 echo "Testing project validation..."
-if mc-estimate validate examples/sample_project.yaml 2>&1 | grep -q "valid"; then
+if mcprojsim validate examples/sample_project.yaml 2>&1 | grep -q "valid"; then
     echo "✅ Project validation works"
 else
     echo "❌ Project validation failed"
@@ -46,7 +49,7 @@ fi
 # Run quick simulation
 echo ""
 echo "Running quick simulation test (100 iterations)..."
-if mc-estimate simulate examples/sample_project.yaml --iterations 100 --seed 42 --quiet > /dev/null 2>&1; then
+if mcprojsim simulate examples/sample_project.yaml --iterations 100 --seed 42 --quiet > /dev/null 2>&1; then
     echo "✅ Simulation runs successfully"
 else
     echo "❌ Simulation failed"
@@ -66,7 +69,7 @@ fi
 # Test config command
 echo ""
 echo "Testing config command..."
-if mc-estimate config show 2>&1 | grep -q "Uncertainty Factors"; then
+if mcprojsim config show 2>&1 | grep -q "Uncertainty Factors"; then
     echo "✅ Config command works"
 else
     echo "❌ Config command failed"
@@ -81,9 +84,9 @@ echo ""
 echo "mcprojsim is ready to use!"
 echo ""
 echo "Quick commands:"
-echo "  mc-estimate --help"
-echo "  mc-estimate validate examples/sample_project.yaml"
-echo "  mc-estimate simulate examples/sample_project.yaml"
-echo "  mc-estimate config show"
+echo "  mcprojsim --help"
+echo "  mcprojsim validate examples/sample_project.yaml"
+echo "  mcprojsim simulate examples/sample_project.yaml"
+echo "  mcprojsim config show"
 echo ""
 echo "See QUICKSTART.md for more information."

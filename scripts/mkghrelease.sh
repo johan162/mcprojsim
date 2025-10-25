@@ -28,6 +28,8 @@ NC='\033[0m'
 # CONFIGURATION
 # =====================================
 
+declare GITHUB_USER="johan162"
+declare SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 declare PROGRAMNAME="mcprojsim"
 declare PROGRAMNAME_PRETTY="MCProjSim"
 declare PROGRAM_ENTRYPOINT="mcprojsim.cli"
@@ -579,7 +581,7 @@ if [[ $EXTRACT_STATUS -ne 0 ]] || [[ ! -s "$RELEASE_NOTES_FILE" ]]; then
 - [List internal changes]
 
 ---
-For full details, see [CHANGELOG.md](https://github.com/johan162/${PROGRAMNAME}/blob/main/CHANGELOG.md)
+For full details, see [CHANGELOG.md](https://github.com/${GITHUB_USER}/${PROGRAMNAME}/blob/main/CHANGELOG.md)
 EOF
 fi
 
@@ -686,7 +688,7 @@ else
     echo ""
     echo "Release: $LATEST_TAG ($RELEASE_TYPE)"
     echo "View:    gh release view $LATEST_TAG"
-    echo "URL:     https://github.com/johan162/${PROGRAMNAME}/releases/tag/$LATEST_TAG"
+    echo "URL:     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/releases/tag/$LATEST_TAG"
     echo ""
     echo "Artifacts uploaded:"
     echo "  - $(basename "$WHEEL_FILE")"
@@ -694,9 +696,9 @@ else
     echo ""
     echo "Next steps:"
     echo "  1. Verify release on GitHub:"
-    echo "     https://github.com/johan162/${PROGRAMNAME}/releases"
+    echo "     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/releases"
     echo "  2. Verify that PyPI upload has been done or is in progress (via GitHub Actions):"
-    echo "     https://github.com/johan162/${PROGRAMNAME}/actions"
+    echo "     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/actions"
     echo "  3. Announce release to users"
     echo ""
 fi
