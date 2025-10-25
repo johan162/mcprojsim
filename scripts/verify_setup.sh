@@ -49,7 +49,7 @@ fi
 # Run quick simulation
 echo ""
 echo "Running quick simulation test (100 iterations)..."
-if mcprojsim simulate examples/sample_project.yaml --iterations 100 --seed 42 --quiet > /dev/null 2>&1; then
+if mcprojsim simulate examples/sample_project.yaml --iterations 100 --seed 42 --quiet -f "html,csv,json" > /dev/null 2>&1; then
     echo "✅ Simulation runs successfully"
 else
     echo "❌ Simulation failed"

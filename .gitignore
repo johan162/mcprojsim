@@ -29,6 +29,8 @@ htmlcov/
 docs/CHANGELOG.md
 *.htmlcov
 *.json
+*.csv
+*.html
 .mypy_cache
 
 
