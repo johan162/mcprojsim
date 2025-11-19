@@ -254,7 +254,7 @@ run_command "test -f pyproject.toml" "Build script must be run from project root
 
 # 1.2: Ensure we are in a virtual environment and if not try to activate one
 if [ "$DRY_RUN" = false ]; then
-    if [ -z "$VIRTUAL_ENV" ]; then
+    if [ -z  "${VIRTUAL_ENV+x}" ]; then
         # Activate virtual environment if exists
         if [ -f ".venv/bin/activate" ]; then
             print_warning "No virtual environment detected. Activating venv/bin/activate"
@@ -268,7 +268,7 @@ if [ "$DRY_RUN" = false ]; then
         echo "Using virtual environment: $VIRTUAL_ENV"
     fi
 else
-    if [ -z "$VIRTUAL_ENV" ]; then
+    if [ -z  "${VIRTUAL_ENV+x}" ]; then
         echo "  [DRY-RUN] No virtual environment detected."
         echo "  [DRY-RUN] Would activate .venv/bin/activate if no VIRTUAL_ENV detected"
     else
@@ -282,7 +282,10 @@ check_condition '[[ -z $(git status --porcelain) ]]' "Working directory must be 
 
 if [[ "$DRY_RUN" == "false" && -n $(git status --porcelain) ]]; then
     git status --short
+    exit 1
 fi
+
+exit 2
 
 # 1.4: Pull latest changes
 run_command "git pull origin develop" "Pulling latest changes..."
