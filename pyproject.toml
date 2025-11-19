@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcprojsim"
-version = "1.0.0"
+version = "0.0.1"
 description = "Monte Carlo simulation system for software development effort estimation"
 readme = "README.md"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Johan Persson", email = "johan162@gmail.com"}
 ]
 license = {text = "MIT"}
 requires-python = ">=3.13"
@@ -34,7 +34,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.4.2",
+    "pytest>=9.0.1",
     "pytest-cov>=7.0.0",
     "black>=25.9.0",
     "mypy>=1.0.0",

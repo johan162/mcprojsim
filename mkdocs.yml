@@ -1,6 +1,6 @@
 site_name: Monte Carlo Project Simulator
 site_description: A probabilistic project estimation tool using Monte Carlo simulation
-site_author: Your Name
+site_author: Johan Persson
 site_url: https://johan162.github.io/mcprojsim
 
 repo_name: johan162/mcprojsim
