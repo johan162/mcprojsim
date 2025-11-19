@@ -235,7 +235,7 @@ print_sub_step "Updating virtual environment if needed"
 if [ "$CI_MODE" = false ]; then
     # Step 0: Verify we are running in a virtual environment and if not try to activate one
     if [ "$DRY_RUN" = false ]; then
-        if [ -z "$VIRTUAL_ENV" ]; then
+        if [ -z  "${VIRTUAL_ENV+x}" ]; then
             # Activate virtual environment if exists
             if [ -f ".venv/bin/activate" ]; then
                 print_warning "No virtual environment detected. Activating venv/bin/activate"
