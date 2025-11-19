@@ -382,7 +382,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [DRY-RUN] Would update version in README.md to $VERSION"
 else
     echo "  ✓ Updating version in __init__.py..."
-    sed -i.bak 's/__version__ = ".*"/__version__ = "'"$VERSION"'"/' src/bayescalc/__init__.py
+    sed -i.bak 's/__version__ = ".*"/__version__ = "'"$VERSION"'"/' src/mcprojsim/__init__.py
     
     echo "  ✓ Updating version in pyproject.toml..."
     sed -i.bak 's/^version = ".*"/version = "'"$VERSION"'"/' pyproject.toml
