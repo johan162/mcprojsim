@@ -289,10 +289,10 @@ fi
 run_command "git pull origin develop" "Pulling latest changes..."
 
 # 1.5: Validate version format (semver)
-check_condition '[[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9][0-9]?)?$ ]]' "Version must follow semver format (x.y.z or x.y.z-rcNN)"
+check_condition '[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9][0-9]?)?$ ]]' "Version must follow semver format (x.y.z or x.y.z-rcNN)"
 
 # 1.6: Check if version already exists
-check_condition '! git tag | grep -q "${VERSION}\$"' "Version $VERSION already exists"
+check_condition '! git tag | grep -q "v${VERSION}\$"' "Tag v$VERSION already exists"
 
 # =====================================
 # PHASE 2: UNIT TESTING & STATIC ANALYSIS
@@ -491,7 +491,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
 else
     echo "  ✓ Creating release tag..."
     CHANGELOG_DATE=$(date +%Y-%m-%d)
-    git tag -a "$VERSION" -m "Release version $VERSION
+    git tag -a "v$VERSION" -m "Release version $VERSION
 
 Release Type: $RELEASE_TYPE
 Release Date: $CHANGELOG_DATE
@@ -509,7 +509,7 @@ fi
 
 # 4.4: Push main branch and tags
 run_command "git push origin main" "Pushing main branch..."
-run_command "git push origin \"$VERSION\"" "Pushing release tag..."
+run_command "git push origin \"v$VERSION\"" "Pushing release tag..."
 
 # =====================================
 # PHASE 5: POST-RELEASE CLEANUP
@@ -531,7 +531,7 @@ else
     echo "  ✓ Merging main into develop to sync branches..."
     
     # Use --no-ff to create explicit merge commit
-    git merge --no-ff -m "chore: sync develop with main after release $VERSION" main
+    git merge --no-ff -m "chore: sync develop with main after release v$VERSION" main
 
     if [[ $? -ne 0 ]]; then
         print_error_colored "Failed to merge main into develop"
@@ -540,7 +540,7 @@ else
         echo "  1. git status  # See conflicting files"
         echo "  2. Edit files to resolve conflicts"
         echo "  3. git add <resolved-files>"
-        echo "  4. git commit -m \"chore: resolve merge conflicts after release $VERSION\""
+        echo "  4. git commit -m \"chore: resolve merge conflicts after release v$VERSION\""
         echo "  5. git push origin develop"
         echo ""
         exit 1
@@ -639,7 +639,7 @@ else
     echo "   Type:        $RELEASE_TYPE"
     echo "   Date:        $(date +%Y-%m-%d)"
     echo "   Branch:      main"
-    echo "   Tag:         $VERSION"
+    echo "   Tag:         v$VERSION"
     echo ""
     echo "📦 Artifacts:"
     echo "   - $(ls dist|head -1)"
