@@ -303,7 +303,7 @@ print_step_colored "🧪 PHASE 2: UNIT TESTING & STATIC ANALYSIS"
 print_step_colored ""
 
 # 2.1: Full test suite with coverage requirements
-run_command "pytest --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
+run_command "pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Test suite failed - aborting release"

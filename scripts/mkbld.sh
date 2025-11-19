@@ -283,7 +283,7 @@ print_step_colored "🧪 PHASE 3: CHECKING UNIT TESTS & COVERAGE"
 print_step_colored ""
 
 # Step 3.1: Run tests with coverage
-run_command "python -m pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html --cov-report=xml --cov-fail-under=${COVERAGE}" "Running tests with coverage"
+run_command "python -m pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}" "Running tests with coverage"
 
 # Step 3.2: Update coverage badge in README
 if [ "$CI_MODE" = false ] && [ "$DRY_RUN" = false ]; then

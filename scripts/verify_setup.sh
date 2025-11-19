@@ -23,8 +23,8 @@ source .venv/bin/activate
 # Check if package is installed
 if ! command -v mcprojsim &> /dev/null; then
     echo "❌ mcprojsim command not found"
-    echo "Running: pip install -e ."
-    pip install -e .
+    echo "Running: pip install -e \".[dev]\""
+    pip install -e ".[dev]"
 fi
 if ! command -v mcprojsim &> /dev/null; then
     echo "❌ mcprojsim command still not found after installation"
