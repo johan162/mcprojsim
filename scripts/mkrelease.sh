@@ -285,8 +285,6 @@ if [[ "$DRY_RUN" == "false" && -n $(git status --porcelain) ]]; then
     exit 1
 fi
 
-exit 2
-
 # 1.4: Pull latest changes
 run_command "git pull origin develop" "Pulling latest changes..."
 
