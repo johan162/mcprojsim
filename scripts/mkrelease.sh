@@ -334,16 +334,15 @@ fi
 
 # 2.3: Integration testing with example projects
 if [[ "$DRY_RUN" == "true" ]]; then
-    echo "  [DRY-RUN] Would test example networks..."
-    echo "  [DRY-RUN] Would iterate through examples/*.net files"
+    echo "  [DRY-RUN] Would test example projects..."
     echo "  [DRY-RUN] Would run: python -m ${PROGRAMNAME} \$network --cmd \"help\" for each network"
 else
-    echo "  ✓ Testing that all example networks can load ..."
-    for project in examples/*.yaml; do
+    echo "  ✓ Smoke test of three projects  ..."
+    for project in examples/sample_project.yaml examples/tshirt_sizing_project.yaml examples/project_with_custom_thresholds.yaml; do
         if [[ -f "$project" ]]; then
             echo "    Testing: $project"
-            python -m ${PROGRAM_ENTRYPOINT} validate "$project"  >/dev/null 2>&1 || {
-                print_error_colored "Failed to validate project: $project"
+            python -m ${PROGRAM_ENTRYPOINT} simulate -n 50 "$project"  >/dev/null 2>&1 || {
+                print_error_colored "Failed to simulate project: $project"
                 exit 1
             }
         fi
