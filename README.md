@@ -304,8 +304,8 @@ Contributions are welcome! Please:
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/yourusername/mcprojsim/issues
-- Documentation: https://github.com/yourusername/mcprojsim/docs
+- GitHub Issues: https://github.com/johan162/mcprojsim/issues
+- Documentation: https://github.com/johan162/mcprojsim/docs
 
 ## Citation
 
@@ -314,9 +314,10 @@ If you use this tool in your research or project management, please cite:
 ```
 @software{mcprojsim,
   title = {Monte Carlo Project Simulator},
-  author = {Your Name},
+  author = {Johan Persson},
   year = {2025},
   url = {https://github.com/yourusername/mcprojsim}
+  version={v0.0.1}
 }
 ```
 

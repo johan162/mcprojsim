@@ -1,0 +1,69 @@
+name: Publish Python Package to PyPI
+
+on:
+  # This workflow runs every time a new release is created on GitHub
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Check tag format
+      id: tag_check
+      run: |
+        TAG_NAME="${{ github.ref_name }}"
+        echo "Tag name: $TAG_NAME"
+        
+        # Check if tag starts with 'v' and ends with a digit
+        if [[ "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          echo "is_production_release=true" >> $GITHUB_OUTPUT
+          echo "This is a production release (starts with 'v' and ends with digit)"
+        else
+          echo "is_production_release=false" >> $GITHUB_OUTPUT
+          echo "This is a test release (does not start with 'v' or does not end with digit)"
+        fi
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+
+    - name: Build package
+      run: python -m build
+
+    - name: Check package
+      run: python -m twine check dist/*
+
+    # ------------------------------------------------------------------
+    # CONDITIONAL UPLOAD TO TESTPYPI
+    # This step runs for test releases (examples: test-v1.0.0, v1.0.0-rc1, v1.0.0-beta)
+    # ------------------------------------------------------------------
+    - name: Publish package to TestPyPI
+      if: steps.tag_check.outputs.is_production_release == 'false'
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      run: |
+        python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+    # ------------------------------------------------------------------
+    # CONDITIONAL UPLOAD TO REAL PYPI  
+    # This step runs for production releases (examples: v1.0.0, v2.1.5, v1.2.3)
+    # ------------------------------------------------------------------
+    - name: Publish package to PyPI
+      if: steps.tag_check.outputs.is_production_release == 'true'
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        python -m twine upload dist/*
