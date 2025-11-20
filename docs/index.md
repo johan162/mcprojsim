@@ -71,7 +71,7 @@ pip install -e .
 
 ## Next Steps
 
-- [Getting Started Guide](getting_started.md) - Learn how to create your first project
+- [Getting Started Guide](user_guide/introduction.md) - Learn how to create your first project
 - [Formal Grammar](grammar.md) - Complete specification in EBNF notation
 - [Examples](examples.md) - Working examples and use cases
 - [Configuration](configuration.md) - Customize uncertainty factors

@@ -53,6 +53,7 @@ nav:
       - Running Simulations: user_guide/running_simulations.md
       - Interpreting Results: user_guide/interpreting_results.md
   - API Reference: api_reference.md
+  - Formal Grammar: grammar.md
   - Examples: examples.md
 
 plugins:
@@ -101,6 +102,3 @@ extra:
       link: https://github.com/johan162/mcprojsim
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/mcprojsim/
-version:
-    provider: mike
-    default: latest
