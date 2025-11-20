@@ -349,7 +349,6 @@ else
     done
 fi
 
-
 echo "All example projects validated successfully."
 
 # 2.4: Package building test
@@ -490,7 +489,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
 else
     echo "  ✓ Creating release tag..."
     CHANGELOG_DATE=$(date +%Y-%m-%d)
-    git tag -a "v$VERSION" -m "Release version $VERSION
+    git tag -a "v$VERSION" -m "Release tag v$VERSION
 
 Release Type: $RELEASE_TYPE
 Release Date: $CHANGELOG_DATE

@@ -64,7 +64,7 @@ pip install mcprojsim
 Or install from source:
 
 ```bash
-git clone https://github.com/yourusername/mcprojsim.git
+git clone https://github.com/johan162/mcprojsim.git
 cd mcprojsim
 pip install -e .
 ```
