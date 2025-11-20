@@ -669,6 +669,8 @@ else
     print_warning "[DRY-RUN] Would remove: $RELEASE_NOTES_FILE"
 fi
 
+git checkout develop
+
 # =====================================
 # RELEASE COMPLETE
 # =====================================
