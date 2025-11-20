@@ -1,0 +1,79 @@
+project:
+  name: "Mobile App Development"
+  description: "Example project using T-shirt sizing for effort estimates"
+  start_date: "2025-11-01"
+  confidence_levels: [50, 75, 80, 85, 90, 95]
+  probability_red_threshold: 0.50
+  probability_green_threshold: 0.90
+
+tasks:
+  - id: "design_ui"
+    name: "UI/UX Design"
+    estimate:
+      t_shirt_size: "M"
+      unit: "days"
+    dependencies: []
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "high"
+
+  - id: "setup_backend"
+    name: "Backend Infrastructure Setup"
+    estimate:
+      t_shirt_size: "L"
+      unit: "days"
+    dependencies: []
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"
+
+  - id: "api_development"
+    name: "REST API Development"
+    estimate:
+      t_shirt_size: "XL"
+      unit: "days"
+    dependencies: ["setup_backend"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "high"
+    risks:
+      - id: "api_complexity"
+        name: "API complexity higher than expected"
+        probability: 0.30
+        impact: 5
+
+  - id: "mobile_app_dev"
+    name: "Mobile App Development"
+    estimate:
+      t_shirt_size: "XXL"
+      unit: "days"
+    dependencies: ["design_ui", "api_development"]
+    uncertainty_factors:
+      team_experience: "low"
+      technical_complexity: "high"
+
+  - id: "integration_testing"
+    name: "Integration Testing"
+    estimate:
+      t_shirt_size: "M"
+      unit: "days"
+    dependencies: ["mobile_app_dev"]
+    uncertainty_factors:
+      testing_requirements: "high"
+
+  - id: "deployment"
+    name: "Deployment and Go-Live"
+    estimate:
+      t_shirt_size: "S"
+      unit: "days"
+    dependencies: ["integration_testing"]
+    uncertainty_factors:
+      deployment_complexity: "medium"
+
+project_risks:
+  - id: "team_change"
+    name: "Key team member leaves"
+    probability: 0.15
+    impact:
+      type: "percentage"
+      value: 20

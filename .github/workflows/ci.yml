@@ -1,0 +1,73 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ develop, main, 'feature/**', 'bugfix/**', 'hotfix/**' ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.13']
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y graphviz
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install package and dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+    
+    - name: Run build script
+      run: |
+        chmod +x scripts/mkbld.sh
+        ./scripts/mkbld.sh
+
+    - name: Upload test artifacts on Failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          htmlcov/
+          .coverage
+          pytest-report.xml
+        retention-days: 7 
+    
+    - name: Get build metadata
+      id: metadata
+      run: |
+        echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+        echo "timestamp=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+    - name: Upload builds on success
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: bayescalc2-${{ steps.metadata.outputs.branch }}-${{ steps.metadata.outputs.short_sha }}-${{ steps.metadata.outputs.timestamp }}-py${{ matrix.python-version }}
+        path: |
+          dist/
+        retention-days: 3 

@@ -1,0 +1,346 @@
+"""Tests for simulation components."""
+
+import pytest
+import numpy as np
+from datetime import date
+
+from mcprojsim.simulation.distributions import DistributionSampler
+from mcprojsim.simulation.risk_evaluator import RiskEvaluator
+from mcprojsim.simulation.scheduler import TaskScheduler
+from mcprojsim.simulation.engine import SimulationEngine
+from mcprojsim.models.project import (
+    Project,
+    ProjectMetadata,
+    Task,
+    TaskEstimate,
+    Risk,
+    DistributionType,
+    UncertaintyFactors,
+)
+from mcprojsim.config import Config
+
+
+class TestDistributionSampler:
+    """Tests for distribution sampler."""
+
+    def test_sample_triangular(self):
+        """Test sampling from triangular distribution."""
+        sampler = DistributionSampler(np.random.RandomState(42))
+        estimate = TaskEstimate(
+            distribution=DistributionType.TRIANGULAR,
+            min=1.0,
+            most_likely=2.0,
+            max=5.0,
+        )
+
+        samples = [sampler.sample(estimate) for _ in range(100)]
+        assert all(1.0 <= s <= 5.0 for s in samples)
+        assert np.mean(samples) > 1.0
+        assert np.mean(samples) < 5.0
+
+    def test_sample_lognormal(self):
+        """Test sampling from lognormal distribution."""
+        sampler = DistributionSampler(np.random.RandomState(42))
+        estimate = TaskEstimate(
+            distribution=DistributionType.LOGNORMAL,
+            most_likely=5.0,
+            standard_deviation=1.0,
+        )
+
+        samples = [sampler.sample(estimate) for _ in range(100)]
+        assert all(s > 0 for s in samples)
+
+    def test_sample_reproducibility(self):
+        """Test that sampling is reproducible with same seed."""
+        estimate = TaskEstimate(min=1, most_likely=2, max=5)
+
+        sampler1 = DistributionSampler(np.random.RandomState(42))
+        samples1 = [sampler1.sample(estimate) for _ in range(10)]
+
+        sampler2 = DistributionSampler(np.random.RandomState(42))
+        samples2 = [sampler2.sample(estimate) for _ in range(10)]
+
+        assert np.allclose(samples1, samples2)
+
+    def test_sample_unknown_distribution(self):
+        """Test that unknown distribution type raises error."""
+        # from mcprojsim.models.project import DistributionType
+
+        sampler = DistributionSampler(np.random.RandomState(42))
+
+        # Create an estimate with an invalid distribution type
+        estimate = TaskEstimate(min=1, most_likely=2, max=5)
+        estimate.distribution = "invalid_distribution"  # type: ignore
+
+        with pytest.raises(ValueError, match="Unknown distribution type"):
+            sampler.sample(estimate)
+
+
+class TestRiskEvaluator:
+    """Tests for risk evaluator."""
+
+    def test_evaluate_risk_not_triggered(self):
+        """Test risk that doesn't trigger."""
+        evaluator = RiskEvaluator(np.random.RandomState(42))
+        risk = Risk(
+            id="risk_001",
+            name="Test Risk",
+            probability=0.0,  # Never triggers
+            impact=10.0,
+        )
+
+        impact = evaluator.evaluate_risk(risk)
+        assert impact == 0.0
+
+    def test_evaluate_risk_always_triggered(self):
+        """Test risk that always triggers."""
+        evaluator = RiskEvaluator(np.random.RandomState(42))
+        risk = Risk(
+            id="risk_001",
+            name="Test Risk",
+            probability=1.0,  # Always triggers
+            impact=10.0,
+        )
+
+        impact = evaluator.evaluate_risk(risk)
+        assert impact == 10.0
+
+    def test_evaluate_multiple_risks(self):
+        """Test evaluating multiple risks."""
+        evaluator = RiskEvaluator(np.random.RandomState(42))
+        risks = [
+            Risk(id="r1", name="Risk 1", probability=1.0, impact=5.0),
+            Risk(id="r2", name="Risk 2", probability=1.0, impact=3.0),
+        ]
+
+        total_impact = evaluator.evaluate_risks(risks)
+        assert total_impact == 8.0
+
+
+class TestTaskScheduler:
+    """Tests for task scheduler."""
+
+    @pytest.fixture
+    def simple_project(self):
+        """Create a simple project."""
+        return Project(
+            project=ProjectMetadata(name="Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    dependencies=[],
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    dependencies=["task_001"],
+                ),
+            ],
+        )
+
+    def test_schedule_tasks_no_dependencies(self):
+        """Test scheduling tasks with no dependencies."""
+        project = Project(
+            project=ProjectMetadata(name="Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                )
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        schedule = scheduler.schedule_tasks({"task_001": 5.0})
+
+        assert schedule["task_001"]["start"] == 0.0
+        assert schedule["task_001"]["end"] == 5.0
+        assert schedule["task_001"]["duration"] == 5.0
+
+    def test_schedule_tasks_with_dependencies(self, simple_project):
+        """Test scheduling tasks with dependencies."""
+        scheduler = TaskScheduler(simple_project)
+        schedule = scheduler.schedule_tasks({"task_001": 3.0, "task_002": 4.0})
+
+        assert schedule["task_001"]["start"] == 0.0
+        assert schedule["task_001"]["end"] == 3.0
+        assert schedule["task_002"]["start"] == 3.0
+        assert schedule["task_002"]["end"] == 7.0
+
+    def test_topological_sort(self, simple_project):
+        """Test topological sort."""
+        scheduler = TaskScheduler(simple_project)
+        sorted_tasks = scheduler._topological_sort()
+
+        # task_001 should come before task_002
+        assert sorted_tasks.index("task_001") < sorted_tasks.index("task_002")
+
+    def test_get_critical_path(self, simple_project):
+        """Test critical path identification."""
+        scheduler = TaskScheduler(simple_project)
+        schedule = scheduler.schedule_tasks({"task_001": 3.0, "task_002": 4.0})
+        critical_path = scheduler.get_critical_path(schedule)
+
+        # Both tasks should be on critical path
+        assert "task_001" in critical_path
+        assert "task_002" in critical_path
+
+    def test_get_critical_path_empty_schedule(self):
+        """Test critical path with empty schedule."""
+        project = Project(
+            project=ProjectMetadata(name="Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                )
+            ],
+        )
+        scheduler = TaskScheduler(project)
+        critical_path = scheduler.get_critical_path({})
+        assert len(critical_path) == 0
+
+    def test_topological_sort_circular_dependency(self):
+        """Test that circular dependency is detected in topological sort."""
+        # Note: Circular dependencies are caught during Project validation
+        # This test verifies the scheduler's own circular dependency detection
+        # We can't easily create a project with circular dependencies through
+        # normal means, so we test that the project validation catches it
+        from mcprojsim.models.project import (
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
+        )
+        from datetime import date
+
+        # Try to create a project with circular dependency - should fail at validation
+        with pytest.raises(ValueError, match="Circular dependency"):
+            Project(
+                project=ProjectMetadata(name="Test", start_date=date(2025, 1, 1)),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        dependencies=["task_002"],
+                    ),
+                    Task(
+                        id="task_002",
+                        name="Task 2",
+                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        dependencies=["task_001"],
+                    ),
+                ],
+            )
+
+
+class TestSimulationEngine:
+    """Tests for simulation engine."""
+
+    @pytest.fixture
+    def simple_project(self):
+        """Create a simple project."""
+        return Project(
+            project=ProjectMetadata(name="Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                )
+            ],
+        )
+
+    def test_engine_initialization(self):
+        """Test engine initialization."""
+        engine = SimulationEngine(iterations=100, random_seed=42)
+        assert engine.iterations == 100
+        assert engine.random_seed == 42
+
+    def test_run_simulation(self, simple_project):
+        """Test running simulation."""
+        engine = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
+        results = engine.run(simple_project)
+
+        assert results.iterations == 10
+        assert results.project_name == "Test"
+        assert len(results.durations) == 10
+        assert results.mean > 0
+        assert results.median > 0
+
+    def test_simulation_reproducibility(self, simple_project):
+        """Test simulation reproducibility with same seed."""
+        engine1 = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
+        results1 = engine1.run(simple_project)
+
+        engine2 = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
+        results2 = engine2.run(simple_project)
+
+        assert np.allclose(results1.durations, results2.durations)
+
+    def test_apply_uncertainty_factors(self):
+        """Test applying uncertainty factors."""
+        # Use empty config for no uncertainty factors
+        config = Config()
+        engine = SimulationEngine(config=config, show_progress=False)
+
+        task = Task(
+            id="task_001",
+            name="Task 1",
+            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+        )
+
+        # No uncertainty factors should not change duration
+        adjusted = engine._apply_uncertainty_factors(task, 10.0)
+        assert adjusted == 10.0
+
+        # Test with uncertainty factors
+        config_with_factors = Config(
+            uncertainty_factors={
+                "team_experience": {"high": 0.90, "medium": 1.0, "low": 1.30}
+            }
+        )
+        engine2 = SimulationEngine(config=config_with_factors, show_progress=False)
+        task_with_factors = Task(
+            id="task_002",
+            name="Task 2",
+            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            uncertainty_factors=UncertaintyFactors(team_experience="low"),
+        )
+
+        # Should multiply by 1.30
+        adjusted2 = engine2._apply_uncertainty_factors(task_with_factors, 10.0)
+        assert adjusted2 == 13.0
+
+    def test_simulation_with_risks(self):
+        """Test simulation with risks."""
+        project = Project(
+            project=ProjectMetadata(name="Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    risks=[
+                        Risk(
+                            id="risk_001",
+                            name="Risk",
+                            probability=1.0,  # Always triggers
+                            impact=5.0,
+                        )
+                    ],
+                )
+            ],
+        )
+
+        engine = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
+        results = engine.run(project)
+
+        # Mean should be higher due to risk
+        assert results.mean > 2.0
