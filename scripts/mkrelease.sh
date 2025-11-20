@@ -289,7 +289,7 @@ fi
 run_command "git pull origin develop" "Pulling latest changes..."
 
 # 1.5: Validate version format (semver)
-check_condition '[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9][0-9]?)?$ ]]' "Version must follow semver format (x.y.z or x.y.z-rcNN)"
+check_condition '[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[1-9][0-9]?)?$ ]]' "Version must follow semver format (x.y.z or x.y.z-rcNN)"
 
 # 1.6: Check if version already exists
 check_condition '! git tag | grep -q "v${VERSION}\$"' "Tag v$VERSION already exists"
@@ -348,7 +348,6 @@ else
         fi
     done
 fi
-
 
 echo "All example projects validated successfully."
 
@@ -490,7 +489,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
 else
     echo "  ✓ Creating release tag..."
     CHANGELOG_DATE=$(date +%Y-%m-%d)
-    git tag -a "v$VERSION" -m "Release version $VERSION
+    git tag -a "v$VERSION" -m "Release tag v$VERSION
 
 Release Type: $RELEASE_TYPE
 Release Date: $CHANGELOG_DATE

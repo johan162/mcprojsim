@@ -135,13 +135,13 @@ Automates the complete release process from develop to main branch.
 **Example:**
 ```bash
 # Create release candidate
-./scripts/mkrelease.sh v1.0.0-rc1 minor
+./scripts/mkrelease.sh 1.0.0-rc1 minor
 
 # Create stable release
-./scripts/mkrelease.sh v1.0.0 major
+./scripts/mkrelease.sh 1.0.0 major
 
 # Preview what would happen
-./scripts/mkrelease.sh v1.0.1 patch --dry-run
+./scripts/mkrelease.sh 1.0.1 patch --dry-run
 ```
 
 ### `mkghrelease.sh` - GitHub Release Creator

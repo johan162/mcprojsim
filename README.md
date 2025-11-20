@@ -32,7 +32,7 @@ A Monte Carlo simulation system for software development effort estimation. This
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mcprojsim.git
+git clone https://github.com/johan162/mcprojsim.git
 cd mcprojsim
 
 # Create and activate a virtual environment
@@ -316,8 +316,8 @@ If you use this tool in your research or project management, please cite:
   title = {Monte Carlo Project Simulator},
   author = {Johan Persson},
   year = {2025},
-  url = {https://github.com/yourusername/mcprojsim}
-  version={0.0.1-rc2}
+  url = {https://github.com/johan162/mcprojsim}
+  version={0.0.1-rc3}
 }
 ```
 

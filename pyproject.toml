@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcprojsim"
-version = "0.0.1-rc2"
+version = "0.0.1-rc3"
 description = "Monte Carlo simulation system for software development effort estimation"
 readme = "README.md"
 authors = [
@@ -71,7 +71,7 @@ mcprojsim = ["py.typed"]
 
 [tool.black]
 line-length = 88
-target-version = ["py39", "py310", "py311", "py312"]
+target-version = ["py310", "py311", "py312", "py313"]
 
 [tool.mypy]
 python_version = "3.13"

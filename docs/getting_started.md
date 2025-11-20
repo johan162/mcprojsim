@@ -13,7 +13,7 @@ pip install mcprojsim
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/mcprojsim.git
+git clone https://github.com/johan162/mcprojsim.git
 cd mcprojsim
 pip install -e .
 ```
@@ -21,7 +21,7 @@ pip install -e .
 ### Verify Installation
 
 ```bash
-mc-estimate --version
+mcprojsim --version
 ```
 
 ## Your First Project
@@ -79,7 +79,7 @@ tasks:
 ### Step 2: Validate the Project File
 
 ```bash
-mc-estimate validate my_project.yaml
+mcprojsim validate my_project.yaml
 ```
 
 You should see: `✓ Project file is valid!`
@@ -87,7 +87,7 @@ You should see: `✓ Project file is valid!`
 ### Step 3: Run the Simulation
 
 ```bash
-mc-estimate simulate my_project.yaml
+mcprojsim simulate my_project.yaml
 ```
 
 This will run 10,000 iterations and display results like:
@@ -134,10 +134,6 @@ Open the HTML file in your browser to see a detailed report with:
 - **P85**: 85% chance of completing by this date (recommended for commitments)
 - **P90**: 90% chance of completing by this date (high confidence)
 - **P95**: 95% chance of completing by this date (very high confidence)
-
-### Critical Path
-
-Tasks with high criticality (e.g., >0.5) appear on the critical path frequently and should be monitored closely.
 
 ## Next Steps
 
