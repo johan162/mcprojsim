@@ -1,3 +1,14 @@
+## [v0.0.1-rc2] - 2025-11-20
+
+Release Type: patch
+
+### 📋 Summary 
+- Fix release scripts
+
+### 🛠 Internal
+- Synchronize use of "v" in front of version used in different places.
+
+
 ## [v0.0.1-rc01] - 2025-11-20
 
 Release Type: major

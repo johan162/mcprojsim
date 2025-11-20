@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcprojsim"
-version = "0.0.1-rc01"
+version = "0.0.1-rc2"
 description = "Monte Carlo simulation system for software development effort estimation"
 readme = "README.md"
 authors = [
