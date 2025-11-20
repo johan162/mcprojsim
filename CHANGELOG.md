@@ -1,3 +1,11 @@
+## [v0.0.1-rc3] - 2025-11-20
+
+Release Type: patch
+
+### 📋 Summary 
+- Setup doc structure for user guide.
+
+
 ## [v0.0.1-rc2] - 2025-11-20
 
 Release Type: patch
