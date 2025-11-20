@@ -403,7 +403,7 @@ else
 
     # Create temporary changelog entry (customize as needed)
     cat > CHANGELOG_ENTRY.tmp << EOF
-## [$VERSION] - $CHANGELOG_DATE
+## [v$VERSION] - $CHANGELOG_DATE
 
 Release Type: $RELEASE_TYPE
 
