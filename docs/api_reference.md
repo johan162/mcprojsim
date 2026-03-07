@@ -1,10 +1,74 @@
 # API Reference
 
-## Core Classes
+This page documents the main Python API intended for library consumers.
 
-### SimulationEngine
+The most stable entry points are:
 
-Main engine for running Monte Carlo simulations.
+- Root package imports from `mcprojsim`
+- Data models from `mcprojsim.models`
+- File parsers from `mcprojsim.parsers`
+- Exporters from `mcprojsim.exporters`
+- Analysis helpers from `mcprojsim.analysis`
+- Configuration from `mcprojsim.config`
+
+Internal helper modules under `mcprojsim.simulation` and `mcprojsim.utils` are usable, but they are less central to the day-to-day library workflow.
+
+## Root Package
+
+The root package currently exports:
+
+- `Project`
+- `Task`
+- `Risk`
+- `SimulationEngine`
+- `__version__`
+
+```python
+from mcprojsim import Project, Task, Risk, SimulationEngine, __version__
+```
+
+Use these imports when you want the shortest path for common programmatic usage.
+
+## Simulation Workflow
+
+The standard workflow is:
+
+1. Load a project definition with `YAMLParser` or `TOMLParser`
+2. Optionally load a `Config`
+3. Run `SimulationEngine`
+4. Inspect `SimulationResults`
+5. Export the results if needed
+
+```python
+from mcprojsim import SimulationEngine
+from mcprojsim.config import Config
+from mcprojsim.parsers import YAMLParser
+from mcprojsim.exporters import JSONExporter, HTMLExporter
+
+project = YAMLParser().parse_file("project.yaml")
+config = Config.load_from_file("config.yaml")
+
+engine = SimulationEngine(
+    iterations=10000,
+    random_seed=42,
+    config=config,
+    show_progress=True,
+)
+results = engine.run(project)
+
+print(results.mean)
+print(results.percentile(90))
+print(results.get_critical_path())
+
+JSONExporter.export(results, "results.json")
+HTMLExporter.export(results, "results.html", project=project, config=config)
+```
+
+## Core API
+
+### `SimulationEngine`
+
+Main entry point for Monte Carlo simulation.
 
 ```python
 from mcprojsim import SimulationEngine
@@ -12,77 +76,190 @@ from mcprojsim import SimulationEngine
 engine = SimulationEngine(
     iterations=10000,
     random_seed=42,
-    show_progress=True
+    config=config,
+    show_progress=True,
 )
 
 results = engine.run(project)
 ```
 
-**Parameters:**
-- `iterations` (int): Number of Monte Carlo iterations (default: 10000)
-- `random_seed` (Optional[int]): Random seed for reproducibility
-- `config` (Optional[Config]): Configuration object
-- `show_progress` (bool): Show progress updates (default: True)
+Key constructor parameters:
 
-**Methods:**
-- `run(project: Project) -> SimulationResults`: Run simulation and return results
+- `iterations`: Number of Monte Carlo iterations
+- `random_seed`: Seed for reproducible sampling
+- `config`: `Config` object used for uncertainty multipliers and T-shirt estimates
+- `show_progress`: Whether to print progress updates during long runs
 
-### Project
+Key method:
 
-Project definition with tasks and risks.
+- `run(project: Project) -> SimulationResults`
+
+### `SimulationResults`
+
+Holds the output of a simulation run, including durations, summary statistics, percentiles, and critical-path frequency data.
+
+Useful attributes:
+
+- `project_name`
+- `iterations`
+- `durations`
+- `task_durations`
+- `mean`
+- `median`
+- `std_dev`
+- `min_duration`
+- `max_duration`
+- `percentiles`
+
+Useful methods:
+
+- `calculate_statistics()`
+- `percentile(p: int) -> float`
+- `get_critical_path() -> dict[str, float]`
+- `get_histogram_data(bins: int = 50)`
+- `to_dict() -> dict[str, Any]`
 
 ```python
-from mcprojsim.models import Project
-from mcprojsim.parsers import YAMLParser
+print(f"Mean: {results.mean:.2f}")
+print(f"Median: {results.median:.2f}")
+print(f"P80: {results.percentile(80):.2f}")
 
-parser = YAMLParser()
-project = parser.parse_file("project.yaml")
+criticality = results.get_critical_path()
+for task_id, value in criticality.items():
+    print(task_id, value)
 ```
 
-### SimulationResults
+## Project Models
 
-Results from Monte Carlo simulation.
+The data model layer is richer than the previous version of this page suggested.
 
-```python
-# Access statistics
-print(f"Mean: {results.mean}")
-print(f"Median: {results.median}")
-print(f"Std Dev: {results.std_dev}")
+### `Project`
 
-# Get percentiles
-p80 = results.percentile(80)
-p90 = results.percentile(90)
+Represents the complete project definition.
 
-# Get critical path
-critical_path = results.get_critical_path()
-for task_id, criticality in critical_path.items():
-    print(f"{task_id}: {criticality:.2%}")
+Key fields:
 
-# Get histogram data
-bin_edges, counts = results.get_histogram_data(bins=50)
-```
+- `project`: `ProjectMetadata`
+- `tasks`: `list[Task]`
+- `project_risks`: `list[Risk]`
+- `resources`: `list[dict[str, Any]]`
+- `calendars`: `list[dict[str, Any]]`
+
+Key method:
+
+- `get_task_by_id(task_id: str) -> Task | None`
+
+### `ProjectMetadata`
+
+Stores top-level project settings such as:
+
+- `name`
+- `description`
+- `start_date`
+- `currency`
+- `confidence_levels`
+- `probability_red_threshold`
+- `probability_green_threshold`
+
+### `Task`
+
+Represents a single work item in the project network.
+
+Key fields:
+
+- `id`
+- `name`
+- `description`
+- `estimate`: `TaskEstimate`
+- `dependencies`: `list[str]`
+- `uncertainty_factors`: `UncertaintyFactors | None`
+- `resources`: `list[str]`
+- `risks`: `list[Risk]`
+
+Key method:
+
+- `has_dependency(task_id: str) -> bool`
+
+### `TaskEstimate`
+
+Supports three estimation styles:
+
+- Triangular estimates via `min`, `most_likely`, and `max`
+- Log-normal estimates via `most_likely` and `standard_deviation`
+- T-shirt-sized estimates via `t_shirt_size`
+
+Key fields:
+
+- `distribution`
+- `min`
+- `most_likely`
+- `max`
+- `standard_deviation`
+- `t_shirt_size`
+- `unit`
+
+### `Risk` and `RiskImpact`
+
+Represents task-level or project-level risk.
+
+`Risk` supports:
+
+- `probability`
+- `impact` as either a numeric absolute duration or a structured `RiskImpact`
+- `description`
+
+`RiskImpact` supports:
+
+- `type`: percentage or absolute
+- `value`
+- `unit`
+
+Useful method:
+
+- `Risk.get_impact_value(base_duration: float = 0.0) -> float`
+
+### `UncertaintyFactors`
+
+Represents factor levels used to adjust base task duration.
+
+Supported fields:
+
+- `team_experience`
+- `requirements_maturity`
+- `technical_complexity`
+- `team_distribution`
+- `integration_complexity`
+
+### Enums
+
+The following enums are also part of the model API:
+
+- `DistributionType`
+- `ImpactType`
 
 ## Parsers
 
-### YAMLParser
+### `YAMLParser`
 
-Parse YAML project files.
+Parses YAML project files into `Project` objects.
+
+Methods:
+
+- `parse_file(file_path) -> Project`
+- `parse_dict(data) -> Project`
+- `validate_file(file_path) -> tuple[bool, str]`
 
 ```python
 from mcprojsim.parsers import YAMLParser
 
 parser = YAMLParser()
-
-# Parse file
 project = parser.parse_file("project.yaml")
-
-# Validate file
 is_valid, error = parser.validate_file("project.yaml")
 ```
 
-### TOMLParser
+### `TOMLParser`
 
-Parse TOML project files.
+Same interface as `YAMLParser`, but for TOML project files.
 
 ```python
 from mcprojsim.parsers import TOMLParser
@@ -91,91 +268,126 @@ parser = TOMLParser()
 project = parser.parse_file("project.toml")
 ```
 
+## Configuration
+
+### `Config`
+
+Application configuration for simulation settings, output settings, uncertainty-factor multipliers, and T-shirt-size mappings.
+
+Important methods:
+
+- `Config.load_from_file(config_path) -> Config`
+- `Config.get_default() -> Config`
+- `get_uncertainty_multiplier(factor_name, level) -> float`
+- `get_t_shirt_size(size) -> TShirtSizeConfig | None`
+
+Important nested models:
+
+- `SimulationConfig`
+- `OutputConfig`
+- `TShirtSizeConfig`
+- `UncertaintyFactorConfig`
+
+```python
+from mcprojsim.config import Config
+
+config = Config.load_from_file("config.yaml")
+
+multiplier = config.get_uncertainty_multiplier("team_experience", "high")
+size = config.get_t_shirt_size("L")
+```
+
 ## Exporters
 
-### JSONExporter
+### `JSONExporter`
 
-Export results to JSON.
+Exports summary results, percentiles, histogram data, and critical-path output to JSON.
 
-```python
-from mcprojsim.exporters import JSONExporter
+Method:
 
-JSONExporter.export(results, "results.json")
-```
+- `export(results: SimulationResults, output_path) -> None`
 
-### CSVExporter
+### `CSVExporter`
 
-Export results to CSV.
+Exports summary results, percentiles, critical path, and histogram table to CSV.
 
-```python
-from mcprojsim.exporters import CSVExporter
+Method:
 
-CSVExporter.export(results, "results.csv")
-```
+- `export(results: SimulationResults, output_path) -> None`
 
-### HTMLExporter
+### `HTMLExporter`
 
-Export results to HTML.
+Exports a formatted HTML report.
+
+Method:
+
+- `export(results: SimulationResults, output_path, project: Project | None = None, config: Config | None = None) -> None`
+
+If `project` is provided, the report can show richer task effort information. If `config` is also provided, T-shirt-sized tasks are rendered using the active simulation configuration rather than only default mappings.
 
 ```python
 from mcprojsim.exporters import HTMLExporter
 
-HTMLExporter.export(results, "results.html")
+HTMLExporter.export(results, "results.html", project=project, config=config)
 ```
 
-## Configuration
+## Analysis Helpers
 
-### Config
+These APIs are currently exported but were missing from the previous documentation page.
 
-Configuration management.
+### `StatisticalAnalyzer`
+
+Convenience helpers for working directly with duration arrays.
+
+Methods:
+
+- `calculate_statistics(durations) -> dict[str, float]`
+- `calculate_percentiles(durations, percentiles) -> dict[int, float]`
+- `confidence_interval(durations, confidence=0.95) -> tuple[float, float]`
+
+### `SensitivityAnalyzer`
+
+Provides task-to-project sensitivity analysis based on simulated task durations.
+
+Methods:
+
+- `calculate_correlations(results: SimulationResults) -> dict[str, float]`
+- `get_top_contributors(results: SimulationResults, n: int = 10)`
+
+### `CriticalPathAnalyzer`
+
+Thin analysis helper around `SimulationResults.get_critical_path()`.
+
+Methods:
+
+- `get_criticality_index(results: SimulationResults) -> dict[str, float]`
+- `get_most_critical_tasks(results: SimulationResults, threshold: float = 0.5) -> list[str]`
+
+## Validation Utility
+
+### `Validator`
+
+Available from `mcprojsim.utils`.
+
+Method:
+
+- `validate_file(file_path) -> tuple[bool, str]`
+
+This is a simple convenience wrapper that selects `YAMLParser` or `TOMLParser` based on file extension.
 
 ```python
-from mcprojsim.config import Config
+from mcprojsim.utils import Validator
 
-# Load from file
-config = Config.load_from_file("config.yaml")
-
-# Get default config
-config = Config.get_default()
-
-# Get uncertainty multiplier
-multiplier = config.get_uncertainty_multiplier(
-    "team_experience", 
-    "high"
-)
+is_valid, error = Validator.validate_file("project.yaml")
 ```
 
-## Complete Example
+## What Is Not a Stable User-Facing API?
 
-```python
-from mcprojsim import Project, SimulationEngine
-from mcprojsim.parsers import YAMLParser
-from mcprojsim.exporters import JSONExporter, HTMLExporter
-from mcprojsim.config import Config
+The following modules are useful implementation details, but they should usually not be the first things documented for end users:
 
-# Load configuration
-config = Config.load_from_file("config.yaml")
+- `mcprojsim.simulation.distributions`
+- `mcprojsim.simulation.scheduler`
+- `mcprojsim.simulation.risk_evaluator`
+- `mcprojsim.utils.logging`
 
-# Parse project
-parser = YAMLParser()
-project = parser.parse_file("project.yaml")
-
-# Run simulation
-engine = SimulationEngine(
-    iterations=10000,
-    random_seed=42,
-    config=config
-)
-results = engine.run(project)
-
-# Display results
-print(f"Project: {results.project_name}")
-print(f"Mean: {results.mean:.2f} days")
-print(f"P50: {results.percentile(50):.2f} days")
-print(f"P80: {results.percentile(80):.2f} days")
-print(f"P90: {results.percentile(90):.2f} days")
-
-# Export results
-JSONExporter.export(results, "results.json")
-HTMLExporter.export(results, "results.html")
-```
+They can still be documented later if you want a fuller developer reference.
