@@ -1,0 +1,48 @@
+t_shirt_sizes:
+  XS:
+    min: 0.5
+    most_likely: 1
+    max: 2
+  S:
+    min: 1
+    most_likely: 2
+    max: 4
+  M:
+    min: 3
+    most_likely: 5
+    max: 8
+  L:
+    min: 5
+    most_likely: 8
+    max: 13
+  XL:
+    min: 8
+    most_likely: 13
+    max: 21
+  XXL:
+    min: 13
+    most_likely: 21
+    max: 34
+
+uncertainty_factors:
+  team_experience:
+    high: 0.90
+    medium: 1.0
+    low: 1.30
+  requirements_maturity:
+    high: 1.0
+    medium: 1.15
+    low: 1.40
+  technical_complexity:
+    low: 1.0
+    medium: 1.20
+    high: 1.50
+
+simulation:
+  default_iterations: 10000
+  random_seed: null
+
+output:
+  formats: ["json", "csv", "html"]
+  include_histogram: true
+  histogram_bins: 50
