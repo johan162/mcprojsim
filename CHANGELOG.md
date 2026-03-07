@@ -1,3 +1,21 @@
+## [v0.2.0rc5] - 2026-03-07
+
+Release Type: patch
+
+### 📋 Summary 
+- Internal project structure and documentation updates
+
+### ✨ Additions
+- `mcprojsim.sh` script in `bin/` directory to easily call the containeraized version of hte project
+
+### 🚀 Improvements
+- The containerized document server has a new control script in `scripts/` called `docs-contctl.sh`
+- All README and QUICKSTART.have been revised and reworked
+
+### 🛠 Internal
+- The PyPi classification now better reflect tha purpose of the project
+
+
 ## [v0.2.0rc4] - 2026-03-07
 
 Release Type: patch

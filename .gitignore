@@ -100,8 +100,15 @@ dmypy.json
 *.stamp
 *-stamp
 
-CA_proxy_fw_all.pem
+# Certificate files
+*.pem
 
+# Generated files in examples
 /examples/*.csv
 /examples/*.html
 /examples/*.json
+
+# Backup files
+*~
+*.bak
+

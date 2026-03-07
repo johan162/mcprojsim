@@ -18,6 +18,25 @@ python3 -m pipx ensurepath
 pipx install mcprojsim
 ```
 
+### 2a. Install a pre-release from TestPyPI
+
+Pre-releases are published to TestPyPI before they are promoted to the main PyPI index.
+Use TestPyPI as the main index and keep PyPI as the fallback for dependencies.
+
+```bash
+# Install the latest pre-release
+pipx install \
+	--pip-args="--pre --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple" \
+	mcprojsim
+
+# Or install a specific pre-release version
+pipx install \
+	--pip-args="--index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple" \
+	mcprojsim==0.2.0rc2
+```
+
+If `mcprojsim` is already installed with `pipx`, use `pipx upgrade` with the same `--pip-args` values.
+
 ### 3. Run the CLI directly
 
 ```bash
@@ -129,7 +148,7 @@ poetry install
 
 ```bash
 poetry run mcprojsim --version
-# Output: mcprojsim, version 1.0.0
+# Output: mcprojsim, version 0.2.0rc2
 ```
 
 You can also open a Poetry shell if you prefer:

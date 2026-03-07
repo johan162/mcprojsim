@@ -1,34 +1,52 @@
 #!/usr/bin/env bash
 # =============================================================================
-# mcprojsim.sh - Run mcprojsim in a Podman container
+# mcprojsim.sh - Run mcprojsim in a container like a local command
 #
 # This script wraps the mcprojsim tool to run inside a container while
 # transparently handling file I/O with the host filesystem.
 #
 # Usage:
-#   ./mcprojsim.sh [mcprojsim options]
+#   ./bin/mcprojsim.sh [mcprojsim options]
 #
 # Examples:
-#   ./mcprojsim.sh --help
-#   ./mcprojsim.sh simulate project.yaml -n 10000
-#   ./mcprojsim.sh simulate project.yaml -n 10000 -o results -f json,csv,html
-#   ./mcprojsim.sh validate project.yaml
-#   ./mcprojsim.sh config show
+#   ./bin/mcprojsim.sh --help
+#   ./bin/mcprojsim.sh simulate project.yaml -n 10000
+#   ./bin/mcprojsim.sh simulate project.yaml -n 10000 -o results -f json,csv,html
+#   ./bin/mcprojsim.sh validate project.yaml
+#   ./bin/mcprojsim.sh config show
 #
 # Environment Variables:
-#   MCPROJSIM_IMAGE        - Container image name (default: mcprojsim:latest)
-#   MCPROJSIM_WORKDIR      - Working directory to mount (default: current directory)
-#   MCPROJSIM_USE_PROXY_CA - Set to "true" to build with proxy CA cert (default: false)
-#   PODMAN_OPTS            - Additional Podman options
+#   MCPROJSIM_IMAGE          - Container image name (default: mcprojsim:latest)
+#   MCPROJSIM_WORKDIR        - Working directory to mount (default: current directory)
+#   MCPROJSIM_USE_PROXY_CA   - Set to "true" to build with proxy CA cert (default: false)
+#   MCPROJSIM_CONTAINER_CMD  - Override container engine command
+#   CONTAINER_OPTS           - Additional container engine options
+#   PODMAN_OPTS              - Additional Podman options (legacy alias)
 # =============================================================================
 
 set -euo pipefail
 
+# Paths
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly PROJECT_ROOT="$(
+    if [[ -f "${SCRIPT_DIR}/Dockerfile" ]]; then
+        cd "${SCRIPT_DIR}" && pwd
+    elif [[ -f "${SCRIPT_DIR}/../Dockerfile" ]]; then
+        cd "${SCRIPT_DIR}/.." && pwd
+    else
+        cd "${SCRIPT_DIR}" && pwd
+    fi
+)"
+readonly DOCKERFILE_PATH="${PROJECT_ROOT}/Dockerfile"
+
 # Configuration
 readonly IMAGE_NAME="${MCPROJSIM_IMAGE:-mcprojsim:latest}"
-readonly WORK_DIR="${MCPROJSIM_WORKDIR:-$(pwd)}"
 readonly USE_PROXY_CA="${MCPROJSIM_USE_PROXY_CA:-false}"
 readonly CONTAINER_WORK="/work"
+readonly REQUESTED_WORK_DIR="${MCPROJSIM_WORKDIR:-$PWD}"
+
+CONTAINER_CMD=""
+WORK_DIR=""
 
 # Colors for output (disabled if not a terminal)
 if [[ -t 1 ]]; then
@@ -59,40 +77,56 @@ info() {
     echo -e "${GREEN}$*${NC}" >&2
 }
 
-# Check if podman is available
-check_podman() {
-    if ! command -v podman &>/dev/null; then
-        error "Podman is not installed. Please install Podman first."
+# Resolve working directory to an absolute canonical path
+resolve_workdir() {
+    if [[ ! -d "${REQUESTED_WORK_DIR}" ]]; then
+        error "Working directory '${REQUESTED_WORK_DIR}' does not exist"
     fi
+
+    WORK_DIR="$(cd "${REQUESTED_WORK_DIR}" && pwd)"
+}
+
+# Detect which container engine to use
+detect_container_cmd() {
+    if [[ -n "${MCPROJSIM_CONTAINER_CMD:-}" ]]; then
+        CONTAINER_CMD="${MCPROJSIM_CONTAINER_CMD}"
+        return
+    fi
+
+    if command -v podman &>/dev/null; then
+        CONTAINER_CMD="podman"
+        return
+    fi
+
+    if command -v docker &>/dev/null; then
+        CONTAINER_CMD="docker"
+        return
+    fi
+
+    error "Neither Podman nor Docker is installed. Please install one of them first."
 }
 
 # Check if the image exists, build if not
 ensure_image() {
-    if ! podman image exists "${IMAGE_NAME}" 2>/dev/null; then
+    if ! "${CONTAINER_CMD}" image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
         warn "Image '${IMAGE_NAME}' not found."
-        
-        # Check if Dockerfile exists in the script's directory
-        local script_dir
-        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-        local dockerfile="${script_dir}/Dockerfile"
-        
-        if [[ -f "${dockerfile}" ]]; then
-            info "Building image from ${dockerfile}..."
-            
-            # Build command with optional proxy CA support
-            local build_cmd=(podman build -t "${IMAGE_NAME}")
-            
+
+        if [[ -f "${DOCKERFILE_PATH}" ]]; then
+            info "Building image from ${DOCKERFILE_PATH} with ${CONTAINER_CMD}..."
+
+            local build_cmd=("${CONTAINER_CMD}" build -f "${DOCKERFILE_PATH}" -t "${IMAGE_NAME}")
+
             if [[ "${USE_PROXY_CA}" == "true" ]]; then
                 info "Building with proxy CA certificate support..."
                 build_cmd+=(--build-arg USE_PROXY_CA=true)
             fi
-            
-            build_cmd+=("${script_dir}")
-            
+
+            build_cmd+=("${PROJECT_ROOT}")
+
             "${build_cmd[@]}" || error "Failed to build image"
             info "Image built successfully."
         else
-            error "Image not found and no Dockerfile available at ${dockerfile}"
+            error "Image not found and no Dockerfile available at ${DOCKERFILE_PATH}"
         fi
     fi
 }
@@ -110,7 +144,7 @@ convert_path() {
     fi
     
     # Absolute path - check if it's within work directory
-    abs_path="$(cd "${WORK_DIR}" && pwd)"
+    abs_path="${WORK_DIR}"
     if [[ "${path}" == "${abs_path}"* ]]; then
         # Convert to container path
         echo "${CONTAINER_WORK}${path#${abs_path}}"
@@ -124,7 +158,6 @@ convert_path() {
 # Process arguments, converting file paths where necessary
 process_args() {
     local args=()
-    local prev_arg=""
     local expect_file=false
     
     for arg in "$@"; do
@@ -138,7 +171,6 @@ process_args() {
                 args+=("${arg}")
             fi
             expect_file=false
-            prev_arg="${arg}"
             continue
         fi
         
@@ -158,7 +190,6 @@ process_args() {
                 fi
                 ;;
         esac
-        prev_arg="${arg}"
     done
     
     printf '%s\n' "${args[@]}"
@@ -166,7 +197,8 @@ process_args() {
 
 # Main function
 main() {
-    check_podman
+    resolve_workdir
+    detect_container_cmd
     ensure_image
     
     # Process arguments
@@ -177,36 +209,46 @@ main() {
         done < <(process_args "$@")
     fi
     
-    # Build podman command
-    local podman_cmd=(
-        podman run
+    local volume_spec="${WORK_DIR}:${CONTAINER_WORK}"
+    if [[ "${CONTAINER_CMD}" == "podman" ]]; then
+        volume_spec="${volume_spec}:Z"
+    fi
+
+    # Build container command
+    local container_cmd=(
+        "${CONTAINER_CMD}" run
         --rm
         --interactive
-        --tty
-        --volume "${WORK_DIR}:${CONTAINER_WORK}:Z"
+        --volume "${volume_spec}"
         --workdir "${CONTAINER_WORK}"
-        --security-opt label=disable
     )
+
+    if [[ -t 0 ]]; then
+        container_cmd+=(--tty)
+    fi
     
-    # Add any additional podman options from environment
-    if [[ -n "${PODMAN_OPTS:-}" ]]; then
+    # Add any additional container options from environment
+    if [[ -n "${CONTAINER_OPTS:-}" ]]; then
         # shellcheck disable=SC2206
-        podman_cmd+=(${PODMAN_OPTS})
+        container_cmd+=(${CONTAINER_OPTS})
+    elif [[ -n "${PODMAN_OPTS:-}" ]]; then
+        # shellcheck disable=SC2206
+        container_cmd+=(${PODMAN_OPTS})
     fi
     
     # Add image name
-    podman_cmd+=("${IMAGE_NAME}")
+    container_cmd+=("${IMAGE_NAME}")
     
     # Add processed arguments
     if [[ ${#processed_args[@]} -gt 0 ]]; then
-        podman_cmd+=("${processed_args[@]}")
+        container_cmd+=("${processed_args[@]}")
     fi
 
     # Debug: print the final command
-    info "Running command: ${podman_cmd[*]}"
+    info "Running command: ${container_cmd[*]}"
     
     # Execute the command
-    exec "${podman_cmd[@]}"
+    exec "${container_cmd[@]}"
 }
 
 # Run main function with all arguments
