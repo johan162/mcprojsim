@@ -4,7 +4,7 @@
 # to re-run certain tasks based on file changes.
 
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
-pre-commit clean maintainer-clean docs docs-serve build container-build container-build-corporate container-build-public container-up container-down container-logs \
+pre-commit clean maintainer-clean docs docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean
 
@@ -111,6 +111,7 @@ endif
 SRC_DIR := src
 TEST_DIR := tests
 DOCS_DIR := docs
+DOCS_CONTAINER_SCRIPT := ./scripts/docs-contctl.sh
 
 # Server configuration
 SERVER_HOST := 0.0.0.0
@@ -275,7 +276,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build|docs|docs-serve|docs-deploy)
+	@$(call print_section,Build & Documentation,build|docs|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
@@ -386,6 +387,24 @@ docs: $(DOC_STAMP) ## Build the project documentation with MkDocs
 docs-serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
 	@poetry run mkdocs serve -a localhost:$(DOCS_PORT)
+
+docs-container-build: ## Build the containerized documentation image
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) build
+
+docs-container-start: ## Start the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) start
+
+docs-container-stop: ## Stop the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) stop
+
+docs-container-restart: ## Restart the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) restart
+
+docs-container-status: ## Show status for the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) status
+
+docs-container-logs: ## Show logs for the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) logs --follow
 
 docs-deploy: ## Build and deploy documentation to GitHub Pages
 	@echo -e "$(DARKYELLOW)- Deploying documentation to GitHub Pages...$(NC)"

@@ -1,401 +1,303 @@
 # Build Scripts
 
-This directory contains utility scripts for building, testing, releasing, and maintaining the MCProjSim project.
+This directory contains the maintenance scripts for `mcprojsim`.
+They support local development, CI validation, release preparation,
+documentation workflows, setup verification, and containerized docs serving.
 
-## Script conventions 
+# Table of Contents
 
-All scripts support dry-run (with option `--dry-run`) which allows to see the commands to be executed but will not execute them.
-When a script is suitable for usage in a CI/CD pipeline (e.g. `mkbld.sh` script) it will auto-detect when
-running in a pipeline and remove colored output. Finally all scripts support an extensive `--help` function.
+- [Build Scripts](#build-scripts)
+- [Table of Contents](#table-of-contents)
+  - [Script Conventions](#script-conventions)
+  - [Scripts Overview](#scripts-overview)
+    - [`mkbld.sh` - Main Build Script](#mkbldsh---main-build-script)
+    - [`mkcovupd.sh` - Coverage Badge Updater](#mkcovupdsh---coverage-badge-updater)
+    - [`mkrelease.sh` - Release Automation Script](#mkreleasesh---release-automation-script)
+    - [`mkghrelease.sh` - GitHub Release Creator](#mkghreleasesh---github-release-creator)
+    - [`mkdocs.sh` - Documentation Automation Script](#mkdocssh---documentation-automation-script)
+    - [`verify_setup.sh` - Local Setup Verification](#verify_setupsh---local-setup-verification)
+    - [`docs-contctl.sh` - Containerized Docs Server Manager](#docs-contctlsh---containerized-docs-server-manager)
+  - [Typical Workflows](#typical-workflows)
+    - [Daily Development Check](#daily-development-check)
+    - [Fresh Local Setup Verification](#fresh-local-setup-verification)
+    - [Documentation Workflows](#documentation-workflows)
+    - [Release Workflow](#release-workflow)
+  - [Troubleshooting](#troubleshooting)
+  - [Related Files](#related-files)
 
-To report on progress scripts are usually divided in phases whcih will print a header. In these headers
-the following "glyphs" are used as a visual aid to what activity is going on
 
-- 🚀 for "Starting"
-- 🔍 for "Validation"
-- 🧪 for "Testing"
-- 📝 for "Preparation"
-- 🎯 for "Execution"
-- 🧹 for "Cleanup"
-- 📦 for "Package"
-- ✅ for "Success"
-- ❌ for "Error"
-- ⚠️ for "Warning"
-- ⏳ for "Pending/Waiting"
+## Script Conventions
+
+- Most scripts support `--help`.
+- Several scripts support `--dry-run`, but not all do.
+- The project is Poetry-based, so the scripts generally assume `poetry` is installed.
+- Scripts that are meant for guarded automation typically exit on the first error.
 
 ## Scripts Overview
 
 ### `mkbld.sh` - Main Build Script
 
-The primary build script that runs the complete build pipeline:
+Runs the main quality and packaging pipeline and is the primary script used by CI.
 
 ```bash
 ./scripts/mkbld.sh [OPTIONS]
 ```
 
-This script is suitable to run regularly while developing to continuesly be aware that the system has not been broken.
-In addition this is the primary CI/CD script that is automatically run on GitHub for each push. This makes it obvious to
-detect a commit that "breaks the build". 
-
-**Pipeline Steps:**
-1. Run tests with coverage (≥80% required)
-2. Update coverage badge in README.md (local only)
-3. Run flake8 static analysis
-4. Run mypy type checking
-5. Check code formatting with black
-6. Clean previous builds
-7. Build package (wheel + source distribution)
-8. Validate package with twine
+**What it does:**
+1. Verifies the Poetry environment and required dev tools
+2. Runs `flake8`, `mypy`, and `black --check`
+3. Runs the test suite with coverage enforcement
+4. Updates the README coverage badge locally when `coverage.xml` changes
+5. Builds wheel and source distribution artifacts
+6. Validates the built artifacts with `twine check`
 
 **Options:**
 - `--dry-run` - Show commands without executing them
 - `--help` - Display help message
 
 **Requirements:**
-- Python 3.10+
-- Virtual environment activated (`.venv/bin/activate`)
-- All dev dependencies installed (`pip install -e ".[dev]"`)
+- Poetry installed and available on `PATH`
+- Development dependencies installed: `poetry install --with dev`
+- Run from the project root
 
-**Output:**
-- Test coverage report: `htmlcov/index.html`
-- Coverage XML: `coverage.xml`
-- Built packages: `dist/`
+**Outputs:**
+- `coverage.xml`
+- `htmlcov/`
+- `dist/`
 
-### `update_coverage_badge.sh` - Coverage Badge Updater
+### `mkcovupd.sh` - Coverage Badge Updater
 
-Automatically updates the coverage badge in README.md based on actual test coverage.
+Updates the coverage badge in the top-level `README.md` from the current `coverage.xml` report.
 
 ```bash
-./scripts/update_coverage_badge.sh
+./scripts/mkcovupd.sh [OPTIONS]
 ```
 
 **What it does:**
-1. Reads line coverage from `coverage.xml` (line-rate attribute)
-2. Converts decimal to percentage (rounded to nearest integer)
-3. Determines badge color based on coverage:
-   - 90%+ → brightgreen
-   - 80-89% → darkgreen
-   - 70-79% → yellowgreen
-   - 60-69% → yellow
-   - 50-59% → orange
-   - <50% → red
+1. Extracts line coverage from `coverage.xml`
+2. Converts it to a rounded percentage
+3. Chooses the Shields badge color from the current coverage result
 4. Updates the coverage badge URL in `README.md`
+5. Asserts that the exact expected badge URL is present afterward
+6. Skips rewriting `README.md` when the badge is already up to date
+
+**Options:**
+- `--dry-run` - Show commands without executing them
+- `--help` - Display help message
+
+**Badge color mapping:**
+- `>= 90%` → `darkgreen`
+- `>= 80%` → `brightgreen`
+- `>= 70%` → `yellowgreen`
+- `>= 60%` → `yellow`
+- `>= 50%` → `orange`
+- `< 50%` → `red`
 
 **Requirements:**
-- `coverage.xml` must exist (run tests with `--cov-report=xml`)
-- `README.md` must contain a coverage badge
-
-**Example Output:**
-```
-📊 Coverage line-rate: 0.8272
-📊 Coverage percentage: 83%
-🎨 Badge color: green
-✅ Updated coverage badge in README.md to 83%
-✅ Verification successful: Badge updated to 83%
-🎉 Coverage badge update complete!
-```
-
-**Badge Format:**
-```markdown
-[![Coverage](https://img.shields.io/badge/coverage-83%25-green.svg)](https://github.com/johan162/mcprojsim)
-```
+- `coverage.xml` must exist
+- `README.md` must already contain a coverage badge
 
 ### `mkrelease.sh` - Release Automation Script
 
-Automates the complete release process from develop to main branch.
+Automates the local release workflow, including version bumping, quality gates, changelog updates, and git operations.
 
 ```bash
-./scripts/mkrelease.sh <version> [release_type] [OPTIONS]
+./scripts/mkrelease.sh <version> [major|minor|patch] [OPTIONS]
 ```
 
-**Arguments:**
-- `<version>` - Version tag (e.g., `v1.0.0`, `v2.1.0-rc1`)
-- `[release_type]` - Optional: `major`, `minor`, `patch` (for changelog)
-
-**Options:**
-- `--dry-run` - Preview release steps without executing
-- `--help` - Display help message
+**Examples:**
+```bash
+./scripts/mkrelease.sh 0.2.0rc5 minor --dry-run
+./scripts/mkrelease.sh 0.2.0 patch
+```
 
 **What it does:**
-1. Validates version format and prerequisites
-2. Runs complete build pipeline (`mkbld.sh`)
-3. Updates version in `__init__.py` and `pyproject.toml`
-4. Updates or creates CHANGELOG entry
-5. Commits changes on develop
-6. Merges develop → main (squash merge)
-7. Creates and pushes release tag
-8. Syncs main back to develop
-9. Cleans up build artifacts
+1. Validates the requested version and release prerequisites
+2. Runs the project quality gates
+3. Updates the Poetry version in `pyproject.toml`
+4. Updates release-related files such as `CHANGELOG.md` with a new template entry that has to be completed by the developer
+5. Performs the configured branch / tag workflow. This means tagging `develop` and squash merge `develop` to `main` and also back-sync `main` to `develop` 
 
-**Requirements:**
-- On `develop` branch with clean working directory
-- All tests passing
-- Version format: `vX.Y.Z` or `vX.Y.Z-rcN`
+**Options:**
+- `--dry-run` - Preview release actions
+- `--help`, `-h` - Display help message
 
-**Example:**
-```bash
-# Create release candidate
-./scripts/mkrelease.sh 1.0.0-rc1 minor
+**Notes:**
+- Versioning is Poetry-driven; package version data is not edited manually in `__init__.py`
+- Pre-release versions should use the current Poetry / PEP 440 style, for example `0.2.0rc5`
 
-# Create stable release
-./scripts/mkrelease.sh 1.0.0 major
-
-# Preview what would happen
-./scripts/mkrelease.sh 1.0.1 patch --dry-run
-```
 
 ### `mkghrelease.sh` - GitHub Release Creator
 
-Creates GitHub releases using the `gh` CLI tool. **Run after `mkrelease.sh` and GitHub Actions complete.**
+Creates a GitHub release with the `gh` CLI after the local release work and CI/artifact generation are complete.'
+It will base the GitHub release on the latest tag on `main`
 
 ```bash
 ./scripts/mkghrelease.sh [OPTIONS]
 ```
 
+**What it does:**
+1. Validates that `gh` is installed and authenticated
+2. Finds the release tag to publish
+3. Collects artifacts from `dist/`
+4. Prepares release notes
+5. Creates the GitHub release and uploads the artifacts
+
 **Options:**
 - `--help` - Display help message
-- `--pre-release` - Force marking as pre-release
-- `--dry-run` - Preview without creating release
-
-**What it does:**
-1. Validates `gh` CLI is installed and authenticated
-2. Checks no workflows are currently running
-3. Identifies latest tag on main branch
-4. Validates tag format and artifacts in `dist/`
-5. Extracts release notes from CHANGELOG.md
-6. Opens editor for you to review/edit notes
-7. Creates GitHub release with wheel and sdist
-8. Automatically determines pre-release status from tag
-
-**Pre-release Detection:**
-- Tags ending with `-rc1`, `-rc2`, etc. → Automatically marked as pre-release
-- Other tags (e.g., `v1.0.0`) → Stable release
-- Use `--pre-release` to force pre-release status
+- `--pre-release` - Force pre-release mode (same as ticking the pre-release box in the GitHub UI)
+- `--dry-run` - Preview without creating the release
 
 **Requirements:**
-- GitHub CLI (`gh`) version 2.0.0+ installed
-- Authenticated with GitHub (`gh auth login`)
-- On `main` branch
-- `mkrelease.sh` completed successfully
-- All GitHub Actions workflows passed
+- GitHub CLI installed and authenticated
+- Release artifacts already built in `dist/`
+- Typically run after `mkrelease.sh` and after CI completes successfully
 
-**Example:**
-```bash
-# After mkrelease.sh completes and CI passes:
-./scripts/mkghrelease.sh
-
-# Force as pre-release
-./scripts/mkghrelease.sh --pre-release
-
-# Preview what would be created
-./scripts/mkghrelease.sh --dry-run
-```
-
-**Artifacts uploaded:**
-- `mcprojsim-X.Y.Z-py3-none-any.whl` (wheel)
-- `mcprojsim-X.Y.Z.tar.gz` (source distribution)
 
 ### `mkdocs.sh` - Documentation Automation Script
 
-Creates HTML documentation from the `docs/` directory using [MkDocs](https://www.mkdocs.org/).
+Builds, serves, deploys, or cleans the MkDocs documentation site.
 
 ```bash
-./scripts/mkdocs.sh [OPTIONS]
+./scripts/mkdocs.sh {serve|build|deploy|clean}
 ```
 
-Creates static HTML site with the help of [MkDocs](https://www.mkdocs.org/), [Material theme](https://squidfunk.github.io/mkdocs-material/).
+**Commands:**
+- `serve` - Start the local MkDocs development server
+- `build` - Build the static site into `site/`
+- `deploy` - Deploy docs with `mkdocs gh-deploy`
+- `clean` - Remove built docs artifacts
 
-
-**Options:**
-- `--help` - Display help message
-- `build` - Build static site to `site/`
-- `serve` - Start development server (http://127.0.0.1:8000)
-- `deploy` - Deploy to GitHub Pages (maintainers only)
-- `clean` - Clean built documentation
+**Behavior:**
+- Works from the project root automatically
+- Ensures docs dependencies are available before running
+- Creates the `docs/CHANGELOG.md` symlink when needed
 
 **Requirements:**
-- `pip install -e ".[docs]"`
+- Poetry docs dependencies preferred: `poetry install --with docs`
 
-**Artifacts created:**
-- Static site: `site/`
+### `verify_setup.sh` - Local Setup Verification
 
-
-## Usage Workflows
-
-### Development Workflow
+Verifies that a local Poetry-based installation is working end to end.
 
 ```bash
-# Make code changes
-vim src/mcprojsim/cli.py
+./scripts/verify_setup.sh
+```
 
-# Run full build pipeline
+**What it does:**
+1. Verifies Poetry is installed
+2. Installs dependencies with `poetry install --with dev`
+3. Checks that the `mcprojsim` CLI is available
+4. Validates the sample project file
+5. Runs a short simulation
+6. Confirms expected output files are created
+7. Verifies the configuration command works
+
+**Best used for:**
+- Initial local setup verification
+- Smoke testing a fresh development environment
+
+### `docs-contctl.sh` - Containerized Docs Server Manager
+
+Manages the containerized documentation server built from `Dockerfile.docs`.
+
+```bash
+./scripts/docs-contctl.sh [command] [options]
+```
+
+**Commands:**
+- `start` - Start the docs server container (default)
+- `stop` - Stop and remove the docs server container
+- `restart` - Restart the docs server container
+- `status` - Show current status and URL
+- `logs` - Show container logs
+- `build` - Build or rebuild the docs image
+
+**Options:**
+- `-p`, `--port PORT` - Published host port
+- `-n`, `--name NAME` - Container name override
+- `-d`, `--detach` - Run in the background
+- `-f`, `--foreground` - Run in the foreground
+- `-h`, `--help` - Display help message
+
+**Environment variables:**
+- `MCPROJSIM_DOCS_IMAGE` - Override image name
+- `MCPROJSIM_DOCS_PORT` - Override default port
+- `MCPROJSIM_USE_PROXY_CA=true` - Build with proxy CA support
+
+**When to use it:**
+- Use this script when you want the docs served from the same containerized environment used for docs image validation
+- Prefer `make docs-serve` or `poetry run mkdocs serve` for the fastest local editing feedback
+
+## Typical Workflows
+
+### Daily Development Check
+
+```bash
 ./scripts/mkbld.sh
-
-# Check coverage report
 open htmlcov/index.html
 ```
 
-### Before Committing
+### Fresh Local Setup Verification
 
 ```bash
-# Verify everything passes
-./scripts/mkbld.sh
-
-# Review changes (including updated coverage badge)
-git status
-git diff README.md
-
-# Commit
-git add .
-git commit -m "feat: add new feature with tests"
+./scripts/verify_setup.sh
 ```
 
-### Complete Release Workflow
+### Documentation Workflows
 
 ```bash
-# 1. Development on develop branch
-git checkout develop
-# ... make changes, add features ...
+# Local fast feedback
+poetry install --with docs
+make docs-serve
 
-# 2. Build and test
-./scripts/mkbld.sh
-
-# 3. Commit changes
-git add .
-git commit -m "feat: add new feature"
-git push origin develop
-
-# 4. Create release (merges to main, creates tag)
-./scripts/mkrelease.sh v1.0.0 major
-
-# 5. Wait for GitHub Actions to complete
-# Check: gh run list --branch main
-
-# 6. Create GitHub release
-./scripts/mkghrelease.sh
-
-# 7. Verify release
-gh release view v1.0.0
-# Or visit: https://github.com/johan162/mcprojsim/releases
-
-# 8. Optional: Upload to PyPI
-python -m twine upload dist/*
+# Containerized docs environment
+make docs-container-start
+./scripts/docs-contctl.sh status
+./scripts/docs-contctl.sh logs --follow
 ```
 
-### Release Candidate Workflow
+### Release Workflow
 
 ```bash
-# Create RC release
-./scripts/mkrelease.sh v1.0.0-rc1 minor
+# Preview the release steps first
+./scripts/mkrelease.sh 0.2.0rc5 minor --dry-run
 
-# Wait for CI to pass
-gh run watch
+# Perform the release workflow
+./scripts/mkrelease.sh 0.2.0rc5 minor
 
-# Create pre-release on GitHub (auto-detected as pre-release)
-./scripts/mkghrelease.sh
-
-# Test the RC...
-# If issues found, fix and create rc2:
-./scripts/mkrelease.sh v1.0.0-rc2 minor
-./scripts/mkghrelease.sh
-
-# When ready for stable:
-./scripts/mkrelease.sh v1.0.0 minor
+# After CI and artifacts are ready, create the GitHub release
 ./scripts/mkghrelease.sh
 ```
 
-### CI/CD Integration
+## Troubleshooting
 
-The `mkbld.sh` script automatically detects CI environments (`$CI` or `$GITHUB_ACTIONS`) and:
-- Disables color output
-- Skips coverage badge update (CI should not modify README)
-- Generates XML coverage report for external services
-
-## Understanding "Ahead/Behind" Status
-
-After running `mkrelease.sh`, GitHub will show `develop` as "N commits ahead" of `main`.
-
-**This is expected and correct!**
-
-- `develop` preserves detailed commit history (individual commits)
-- `main` uses squash merges (one commit per release)
-- Both branches have **identical code**, just different history
-
-The "ahead" commits represent the detailed development work that was
-squashed into a single release commit on `main`.
-
-**To verify code is identical:**
-```bash
-git diff main develop
-# Should show no output
-```
-
-
-## Maintenance
-
-### Adding New Build Steps
-
-Edit `mkbld.sh` and add your step using the `execute_cmd` function:
+**Problem: `coverage.xml` not found**
 
 ```bash
-execute_cmd "your_command_here" "Description of what it does"
+poetry run pytest --cov=src/mcprojsim --cov-report=xml
+./scripts/mkcovupd.sh
 ```
 
-### Updating Coverage Thresholds
-
-Edit the badge color mapping in `update_coverage_badge.sh`:
+**Problem: docs dependencies missing**
 
 ```bash
-if [ "$coverage_percent" -ge 90 ]; then
-    badge_color="brightgreen"
-# ... etc
+poetry install --with docs
 ```
 
-### Troubleshooting
+**Problem: dev tools missing for build scripts**
 
-**Problem: "coverage.xml not found"**
 ```bash
-# Solution: Generate coverage report first
-pytest --cov=src/mcprojsim --cov-report=xml
-./scripts/update_coverage_badge.sh
+poetry install --with dev
 ```
 
-**Problem: "Badge not found in README.md"**
-- Ensure README.md contains the coverage badge
-- Pattern: `https://img.shields.io/badge/coverage-XX%25-COLOR.svg`
+**Problem: Podman not available for containerized docs**
 
-**Problem: "sed: command not found" or syntax errors**
-- Script handles both macOS and Linux sed syntax
-- Requires bash 3.2+
+- Install Podman and ensure the engine is running before using `docs-contctl.sh`
 
-## Script Dependencies
+## Related Files
 
-### System Dependencies
-- bash (≥3.2)
-- sed
-- grep
-- bc (for decimal calculations)
-- git
-
-### Python Dependencies
-- pytest
-- pytest-cov
-- flake8
-- mypy
-- black
-- build
-- twine
-
-## Best Practices
-
-1. **Always run `mkbld.sh` before pushing** to ensure all checks pass
-2. **Keep coverage ≥80%** - builds fail below this threshold
-3. **Review coverage report** after adding new features
-4. **Don't manually edit coverage badge** - let the script update it
-5. **Use `--dry-run`** to preview build steps without executing
-
-## Related Documentation
-
-- [Developer Guide](../docs/developer_guide.md) - Architecture and contribution guidelines
-- [User Guide](../docs/user_guide.md) - End-user documentation
-- [GitHub Workflows](../.github/workflows/) - CI/CD configuration
+- [Makefile](../Makefile) - Thin wrappers for common development and docs commands
+- [README.md](../README.md) - Main project usage and installation guide
+- [QUICKSTART.md](../QUICKSTART.md) - End-user quick start guide
+- [GitHub workflows](../.github/workflows/) - CI/CD automation
