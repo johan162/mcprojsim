@@ -6,7 +6,7 @@ from typing import Optional, Union
 import click
 
 from mcprojsim import __version__
-from mcprojsim.config import Config
+from mcprojsim.config import Config, DEFAULT_SIMULATION_ITERATIONS
 from mcprojsim.exporters import CSVExporter, HTMLExporter, JSONExporter
 from mcprojsim.parsers import TOMLParser, YAMLParser
 from mcprojsim.simulation import SimulationEngine
@@ -26,7 +26,7 @@ def cli() -> None:
     "--iterations",
     "-n",
     type=int,
-    default=10000,
+    default=DEFAULT_SIMULATION_ITERATIONS,
     help="Number of simulation iterations",
 )
 @click.option("--config", "-c", type=click.Path(exists=True), help="Configuration file")
@@ -119,7 +119,12 @@ def simulate(
                         click.echo(f"Results exported to {output_file}")
                 elif fmt == "html":
                     output_file = base_output.with_suffix(".html")
-                    HTMLExporter.export(results, output_file, project=project)
+                    HTMLExporter.export(
+                        results,
+                        output_file,
+                        project=project,
+                        config=cfg if config else None,
+                    )
                     if not quiet:
                         click.echo(f"Results exported to {output_file}")
                 else:

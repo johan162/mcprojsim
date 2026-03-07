@@ -4,7 +4,7 @@ from typing import Dict, Optional
 
 import numpy as np
 
-from mcprojsim.config import Config
+from mcprojsim.config import Config, DEFAULT_SIMULATION_ITERATIONS
 from mcprojsim.models.project import Project, Task, TaskEstimate
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.simulation.distributions import DistributionSampler
@@ -17,7 +17,7 @@ class SimulationEngine:
 
     def __init__(
         self,
-        iterations: int = 10000,
+        iterations: int = DEFAULT_SIMULATION_ITERATIONS,
         random_seed: Optional[int] = None,
         config: Optional[Config] = None,
         show_progress: bool = True,

@@ -6,6 +6,13 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from mcprojsim.config import (
+    DEFAULT_CONFIDENCE_LEVELS,
+    DEFAULT_PROBABILITY_GREEN_THRESHOLD,
+    DEFAULT_PROBABILITY_RED_THRESHOLD,
+    DEFAULT_UNCERTAINTY_FACTOR_LEVELS,
+)
+
 
 class DistributionType(str, Enum):
     """Types of probability distributions."""
@@ -116,11 +123,21 @@ class Risk(BaseModel):
 class UncertaintyFactors(BaseModel):
     """Uncertainty factors affecting task estimates."""
 
-    team_experience: Optional[str] = Field(default="medium")
-    requirements_maturity: Optional[str] = Field(default="medium")
-    technical_complexity: Optional[str] = Field(default="medium")
-    team_distribution: Optional[str] = Field(default="colocated")
-    integration_complexity: Optional[str] = Field(default="medium")
+    team_experience: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["team_experience"]
+    )
+    requirements_maturity: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["requirements_maturity"]
+    )
+    technical_complexity: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["technical_complexity"]
+    )
+    team_distribution: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["team_distribution"]
+    )
+    integration_complexity: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["integration_complexity"]
+    )
 
 
 class Task(BaseModel):
@@ -150,16 +167,16 @@ class ProjectMetadata(BaseModel):
     start_date: date
     currency: Optional[str] = Field(default="USD")
     confidence_levels: List[int] = Field(
-        default_factory=lambda: [50, 75, 80, 85, 90, 95]
+        default_factory=lambda: list(DEFAULT_CONFIDENCE_LEVELS)
     )
     probability_red_threshold: float = Field(
-        default=0.50,
+        default=DEFAULT_PROBABILITY_RED_THRESHOLD,
         ge=0.0,
         le=1.0,
         description="Probability threshold below which is shown as red (default 50%)",
     )
     probability_green_threshold: float = Field(
-        default=0.90,
+        default=DEFAULT_PROBABILITY_GREEN_THRESHOLD,
         ge=0.0,
         le=1.0,
         description="Probability threshold above which is shown as green (default 90%)",
