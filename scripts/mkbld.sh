@@ -157,7 +157,8 @@ OPTIONS:
     --help          Show this help message and exit
 
 REQUIREMENTS:
-    - Development dependencies must be installed: pip install -e ".[dev]"
+    - Poetry must be installed and available on PATH
+    - Development dependencies must be installed: poetry install --with dev
     - Must be run from the project root directory
 
 EXAMPLES:
@@ -222,33 +223,29 @@ print_step_colored ""
 # 1.1 Check if we're in the root directory (pyproject.toml must exist)
 run_command "test -f pyproject.toml" "Build script must be run from project root."
 
-# Check if dev dependencies are available
+# Check if Poetry and required dev dependencies are available
 if [ "$DRY_RUN" = false ]; then
-    if ! command -v pytest &> /dev/null; then
-        print_error "Error: pytest not found. Please install dev dependencies: pip install -e \".[dev]\""
+    if ! command -v poetry &> /dev/null; then
+        print_error "Poetry not found. Please install Poetry and try again."
         exit 2
     fi
-fi
 
-# 1.2 If not in CI mode, ensure we are in a virtual environment
-print_sub_step "Updating virtual environment if needed"
-if [ "$CI_MODE" = false ]; then
-    # Step 0: Verify we are running in a virtual environment and if not try to activate one
-    if [ "$DRY_RUN" = false ]; then
-        if [ -z  "${VIRTUAL_ENV+x}" ]; then
-            # Activate virtual environment if exists
-            if [ -f ".venv/bin/activate" ]; then
-                print_warning "No virtual environment detected. Activating venv/bin/activate"
-                # shellcheck disable=SC1091
-                source .venv/bin/activate
-            else
-                print_warning "No virtual environment detected and venv/bin/activate not found. Exiting."
-                exit 2
-            fi
-        else
-            echo "Using virtual environment: $VIRTUAL_ENV"
-        fi
+    if ! poetry env info --path >/dev/null 2>&1; then
+        print_error "Poetry environment not found. Please run: poetry install --with dev"
+        exit 2
     fi
+
+    POETRY_ENV_PATH="$(poetry env info --path)"
+    print_sub_step "Using Poetry environment: ${POETRY_ENV_PATH}"
+
+    for required_command in pytest flake8 mypy black twine; do
+        if ! poetry run "$required_command" --version >/dev/null 2>&1; then
+            print_error "Required Poetry command '$required_command' not found. Please run: poetry install --with dev"
+            exit 2
+        fi
+    done
+else
+    print_sub_step "Would verify Poetry environment and required dev tools"
 fi
 
 # 1.3 Clean previous build and coverage artifacts
@@ -264,13 +261,13 @@ print_step_colored "🧪 PHASE 2: STATIC ANALYSIS WITH FLAKE8, MYPY, AND BLACK"
 print_step_colored ""
 
 # Step 2.1: Static analysis with flake8
-run_command "python -m flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
+run_command "poetry run flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
 
 # Step 2.2: Type checking with mypy
-run_command "python -m mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy type checking"
+run_command "poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy type checking"
 
 # Step 2.3: Code formatting check with black
-run_command "python -m black --check --diff src/${PROGRAMNAME} tests/" "Checking code formatting with black"
+run_command "poetry run black --check --diff src/${PROGRAMNAME} tests/" "Checking code formatting with black"
 
 
 # =====================================
@@ -282,17 +279,36 @@ print_step_colored ""
 print_step_colored "🧪 PHASE 3: CHECKING UNIT TESTS & COVERAGE"
 print_step_colored ""
 
+previous_coverage_checksum=""
+if [ "$DRY_RUN" = false ] && [ -f "coverage.xml" ]; then
+    previous_coverage_checksum="$(shasum -a 256 coverage.xml | awk '{print $1}')"
+    print_sub_step "Recorded existing coverage.xml checksum"
+fi
+
 # Step 3.1: Run tests with coverage
-run_command "python -m pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}" "Running tests with coverage"
+run_command "poetry run pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}" "Running tests with coverage"
 
 # Step 3.2: Update coverage badge in README
 if [ "$CI_MODE" = false ] && [ "$DRY_RUN" = false ]; then
-    print_sub_step "Updating coverage badge in README.md"
-    if [ -f "scripts/mkcovupd.sh" ]; then
-        ./scripts/mkcovupd.sh
-    else
-        print_warning "Coverage badge update script not found"
+    current_coverage_checksum=""
+    if [ -f "coverage.xml" ]; then
+        current_coverage_checksum="$(shasum -a 256 coverage.xml | awk '{print $1}')"
     fi
+
+    if [ ! -f "coverage.xml" ]; then
+        print_warning "coverage.xml not found after tests; skipping coverage badge update"
+    elif [ "$current_coverage_checksum" = "$previous_coverage_checksum" ]; then
+        print_info_colored "coverage.xml unchanged; skipping coverage badge update"
+    else
+        print_sub_step "Updating coverage badge in README.md"
+        if [ -f "scripts/mkcovupd.sh" ]; then
+            ./scripts/mkcovupd.sh
+        else
+            print_warning "Coverage badge update script not found"
+        fi
+    fi
+elif [ "$CI_MODE" = false ] && [ "$DRY_RUN" = true ]; then
+    print_sub_step "Would compare coverage.xml checksum before updating README badge"
 fi
 
 
@@ -309,10 +325,10 @@ print_step_colored ""
 run_command "rm -rf dist/ build/ src/*.egg-info/" "Cleaning previous builds"
 
 # Step 4.2: Build package
-run_command "python -m build" "Building package"
+run_command "poetry build" "Building package"
 
 # Step 4.3: Check package with twine
-run_command "python -m twine check dist/*" "Validating package with twine"
+run_command "poetry run twine check dist/*" "Validating package with twine"
 
 
 # =======================================

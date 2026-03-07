@@ -1,3 +1,17 @@
+## [v0.2.0rc1] - 2026-03-07
+
+Release Type: minor
+
+### 📋 Summary 
+- Convert the build system to fully use Poetry
+- Added Containerized build of program and docs
+
+### 🛠 Internal
+- Make program version single source (from pyproject)
+- Tighten the Coverage badge update
+- Bumped libraries and also removed dependency on Panda-libraries
+
+
 ## [v0.0.1-rc3] - 2025-11-20
 
 Release Type: patch

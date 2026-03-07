@@ -2,13 +2,56 @@
 
 | Category | Link |
 |----------|--------|
-|**Package**|[![PyPI version](https://img.shields.io/pypi/v/mcprojsim.svg)](https://pypi.org/project/mcprojsim/) [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)|
+|**Package**|[![PyPI version](https://img.shields.io/pypi/v/mcprojsim.svg)](https://pypi.org/project/mcprojsim/) [![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)|
 |**Documentation**|[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://johan162.github.io/mcprojsim/)|
 |**License**|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)|
 |**Release**|[![GitHub release](https://img.shields.io/github/v/release/johan162/mcprojsim?include_prereleases)](https://github.com/johan162/mcprojsim/releases)|
-|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-83%25-green)](coverage.svg)|
+|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)](coverage.svg)|
 |**Code Quality**|[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/) [![Linting: flake8](https://img.shields.io/badge/linting-flake8-yellowgreen)](https://flake8.pycqa.org/)|
 |Repo URL|[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat-square&logo=github&logoColor=white)](https://github.com/johan162/mcprojsim)|
+
+
+# Table of Content
+
+- [Monte Carlo Project Simulator (mcprojsim)](#monte-carlo-project-simulator-mcprojsim)
+- [Table of Content](#table-of-content)
+  - [Overview](#overview)
+  - [Features](#features)
+  - [Installation](#installation)
+    - [Best for end users: Install with `pipx`](#best-for-end-users-install-with-pipx)
+      - [Install with `pipx`](#install-with-pipx)
+    - [Preferred: Run with Podman or Docker](#preferred-run-with-podman-or-docker)
+      - [Prerequisites](#prerequisites)
+      - [Build the container image](#build-the-container-image)
+      - [Run the CLI in the container](#run-the-cli-in-the-container)
+      - [Run simulations with local files](#run-simulations-with-local-files)
+      - [Container Troubleshooting](#container-troubleshooting)
+    - [Local development / source install prerequisites](#local-development--source-install-prerequisites)
+    - [From Source](#from-source)
+    - [Activate the Virtual Environment](#activate-the-virtual-environment)
+    - [From PyPI (when published)](#from-pypi-when-published)
+  - [Quick Start](#quick-start)
+    - [1. Create a Project Definition File](#1-create-a-project-definition-file)
+    - [2. Run the Simulation](#2-run-the-simulation)
+    - [3. Validate Input Files](#3-validate-input-files)
+  - [Command-Line Interface](#command-line-interface)
+    - [Commands](#commands)
+    - [Options](#options)
+  - [Python API](#python-api)
+  - [Configuration](#configuration)
+  - [Examples](#examples)
+  - [Development](#development)
+    - [Setup Development Environment](#setup-development-environment)
+    - [Run Tests](#run-tests)
+    - [Code Quality](#code-quality)
+    - [Build Documentation](#build-documentation)
+  - [Project Structure](#project-structure)
+  - [Requirements](#requirements)
+  - [License](#license)
+  - [Contributing](#contributing)
+  - [Support](#support)
+  - [Citation](#citation)
+  - [Acknowledgments](#acknowledgments)
 
 
 ## Overview
@@ -28,6 +71,112 @@ A Monte Carlo simulation system for software development effort estimation. This
 
 ## Installation
 
+### Best for end users: Install with `pipx`
+
+If you want to install `mcprojsim` as a normal command-line tool, `pipx` is the simplest option.
+It installs the application in an isolated environment and makes the `mcprojsim` command directly available on your `PATH`.
+
+#### Install with `pipx`
+
+```bash
+# Install pipx if needed
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# Install mcprojsim
+pipx install mcprojsim
+
+# Run it directly
+mcprojsim --help
+mcprojsim --version
+```
+
+This is the recommended non-container option for end users.
+
+### Preferred: Run with Podman or Docker
+
+Running `mcprojsim` as a container is the recommended option for end users.
+It avoids installing Poetry locally and provides an isolated runtime with the CLI preconfigured.
+
+#### Prerequisites
+
+- Podman or Docker
+
+#### Build the container image
+
+```bash
+# Clone the repository
+git clone https://github.com/johan162/mcprojsim.git
+cd mcprojsim
+
+# Preferred: Podman
+podman build -t mcprojsim .
+
+# Alternative: Docker
+docker build -t mcprojsim .
+```
+
+#### Run the CLI in the container
+
+The container entrypoint is already set to `mcprojsim`, so you only need to pass the CLI arguments.
+
+```bash
+# Preferred: Podman
+podman run --rm mcprojsim --help
+podman run --rm mcprojsim --version
+
+# Alternative: Docker
+docker run --rm mcprojsim --help
+```
+
+#### Run simulations with local files
+
+Mount your working directory into the container so it can read input files and write result files.
+
+```bash
+# Preferred: Podman
+podman run --rm -v "$PWD:/work:Z" mcprojsim validate examples/sample_project.yaml
+podman run --rm -v "$PWD:/work:Z" mcprojsim simulate examples/sample_project.yaml --seed 42
+
+# Alternative: Docker
+docker run --rm -v "$PWD:/work" mcprojsim validate examples/sample_project.yaml
+docker run --rm -v "$PWD:/work" mcprojsim simulate examples/sample_project.yaml --seed 42
+```
+
+Generated JSON, CSV, and HTML reports are written back to your local working directory.
+
+#### Container Troubleshooting
+
+- **No proxy in your environment:** you do not need any certificate file or extra build flags. A standard `podman build -t mcprojsim .` or `docker build -t mcprojsim .` works as-is.
+- **Corporate proxy / TLS interception:** some environments re-sign HTTPS traffic with an internal CA. In that case, pass the CA certificate as a build secret so Poetry and `pip` can trust outbound HTTPS during the image build.
+
+```bash
+# Preferred: Podman
+podman build \
+  --build-arg USE_PROXY_CA=true \
+  --secret id=proxy_ca,src=CA_proxy_fw_all.pem \
+  -t mcprojsim .
+
+# Alternative: Docker
+docker build \
+  --build-arg USE_PROXY_CA=true \
+  --secret id=proxy_ca,src=CA_proxy_fw_all.pem \
+  -t mcprojsim .
+```
+
+- **Why this is needed:** Dockerfile `COPY` wildcard patterns do **not** silently ignore missing files. The glob is resolved while preparing the build context, and if it matches nothing, the build fails. That is why `COPY CA_proxy_fw_all.pem* ...` still errors when the file does not exist.
+- **Why the new approach is better:** using an optional build secret keeps standard builds simple, avoids placeholder files in the repository, and only requires the certificate when proxy mode is explicitly enabled.
+
+### Local development / source install prerequisites
+
+- Python 3.14 or higher
+- [Poetry](https://python-poetry.org/) for dependency management
+
+Install Poetry if you haven't already:
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
 ### From Source
 
 ```bash
@@ -35,24 +184,34 @@ A Monte Carlo simulation system for software development effort estimation. This
 git clone https://github.com/johan162/mcprojsim.git
 cd mcprojsim
 
-# Create and activate a virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+# Install all dependencies (including dev dependencies)
+poetry install
 
-# Install in development mode
-pip install -e .
-
-# Or install with development dependencies
-pip install -e ".[dev]"
+# Or install only production dependencies
+poetry install --only main
 
 # Or install with documentation dependencies
-pip install -e ".[docs]"
+poetry install --with docs
+```
+
+### Activate the Virtual Environment
+
+```bash
+# Activate the Poetry-managed virtual environment
+poetry shell
+
+# Or run commands directly with poetry run
+poetry run mcprojsim --help
 ```
 
 ### From PyPI (when published)
 
 ```bash
+# Using pip
 pip install mcprojsim
+
+# Or using Poetry in your project
+poetry add mcprojsim
 ```
 
 ## Quick Start
@@ -93,34 +252,58 @@ tasks:
 
 ```bash
 # Run with default settings (10,000 iterations)
-mc-estimate simulate project.yaml
+poetry run mcprojsim simulate project.yaml
+
+# Or activate the shell first
+poetry shell
+mcprojsim simulate project.yaml
 
 # Specify number of iterations
-mc-estimate simulate project.yaml --iterations 50000
+mcprojsim simulate project.yaml --iterations 50000
 
 # Use custom config file
-mc-estimate simulate project.yaml --config custom_config.yaml
+mcprojsim simulate project.yaml --config custom_config.yaml
 
 # Specify random seed for reproducibility
-mc-estimate simulate project.yaml --seed 12345
+mcprojsim simulate project.yaml --seed 12345
 
 # Export to specific formats
-mc-estimate simulate project.yaml --output-format json,html
+mcprojsim simulate project.yaml --output-format json,html
+```
+
+Container equivalent:
+
+```bash
+# Preferred: Podman
+podman run --rm -v "$PWD:/work:Z" mcprojsim simulate project.yaml --seed 12345
+
+# Alternative: Docker
+docker run --rm -v "$PWD:/work" mcprojsim simulate project.yaml --seed 12345
 ```
 
 ### 3. Validate Input Files
 
 ```bash
-mc-estimate validate project.yaml
+mcprojsim validate project.yaml
+```
+
+Container equivalent:
+
+```bash
+# Preferred: Podman
+podman run --rm -v "$PWD:/work:Z" mcprojsim validate project.yaml
+
+# Alternative: Docker
+docker run --rm -v "$PWD:/work" mcprojsim validate project.yaml
 ```
 
 ## Command-Line Interface
 
 ### Commands
 
-- `mc-estimate simulate <project-file>` - Run Monte Carlo simulation
-- `mc-estimate validate <project-file>` - Validate input file without running
-- `mc-estimate config show` - Show current configuration
+- `mcprojsim simulate <project-file>` - Run Monte Carlo simulation
+- `mcprojsim validate <project-file>` - Validate input file without running
+- `mcprojsim config show` - Show current configuration
 
 ### Options
 
@@ -204,11 +387,11 @@ Comprehensive documentation is available in the `docs/` directory:
 ### View Documentation Locally
 
 ```bash
-# Install documentation dependencies
-pip install -e ".[docs]"
+# Install with documentation dependencies
+poetry install --with docs
 
 # Serve documentation locally at http://127.0.0.1:8000
-mkdocs serve
+poetry run mkdocs serve
 ```
 
 ## Development
@@ -216,8 +399,11 @@ mkdocs serve
 ### Setup Development Environment
 
 ```bash
-# Install with development dependencies
-pip install -e ".[dev]"
+# Install with all dependencies including dev dependencies
+poetry install
+
+# Activate the virtual environment
+poetry shell
 
 # Install pre-commit hooks
 pre-commit install
@@ -227,39 +413,42 @@ pre-commit install
 
 ```bash
 # Run all tests
-pytest
+poetry run pytest
 
 # Run with coverage
-pytest --cov=mcprojsim --cov-report=html
+poetry run pytest --cov=mcprojsim --cov-report=html
+
+# Run tests in parallel
+poetry run pytest -n auto
 
 # Run specific test file
-pytest tests/test_simulation.py
+poetry run pytest tests/test_simulation.py
 ```
 
 ### Code Quality
 
 ```bash
 # Format code
-black src/ tests/
+poetry run black src/ tests/
 
 # Type checking
-mypy src/
+poetry run mypy src/
 
 # Linting
-flake8 src/ tests/
+poetry run flake8 src/ tests/
 ```
 
 ### Build Documentation
 
 ```bash
-# Install documentation dependencies
-pip install -e ".[docs]"
+# Install with documentation dependencies
+poetry install --with docs
 
 # Serve documentation locally
-mkdocs serve
+poetry run mkdocs serve
 
 # Build documentation
-mkdocs build
+poetry run mkdocs build
 ```
 
 ## Project Structure
@@ -281,12 +470,15 @@ mcprojsim/
 
 ## Requirements
 
-- Python 3.9+
-- NumPy 1.24+
+- Python 3.14+
+- Poetry 2.0+
+- NumPy 2.3.4+
 - Pandas 2.0+
 - PyYAML 6.0+
 - Pydantic 2.0+
 - Click 8.0+
+
+All Python dependencies are managed by Poetry and will be installed automatically.
 
 ## License
 
@@ -316,8 +508,8 @@ If you use this tool in your research or project management, please cite:
   title = {Monte Carlo Project Simulator},
   author = {Johan Persson},
   year = {2025},
-  url = {https://github.com/johan162/mcprojsim}
-  version={0.0.1-rc3}
+  url = {https://github.com/johan162/mcprojsim},
+  version = {0.2.0rc1}
 }
 ```
 

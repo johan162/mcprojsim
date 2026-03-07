@@ -33,15 +33,17 @@ jobs:
           fetch-depth: 0  # Full history for git info plugin
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-          cache: 'pip'
+          python-version: '3.14'
+
+      - name: Install Poetry
+        run: |
+          pipx install poetry
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[docs]"
+          poetry install --with docs
 
       - name: Create CHANGELOG symlink
         run: |
@@ -49,7 +51,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          mkdocs build
+          poetry run mkdocs build
 
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
@@ -69,15 +71,17 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-          cache: 'pip'
+          python-version: '3.14'
+
+      - name: Install Poetry
+        run: |
+          pipx install poetry
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[docs]"
+          poetry install --with docs
 
       - name: Create CHANGELOG symlink
         run: |
@@ -91,4 +95,4 @@ jobs:
 
       - name: Deploy to GitHub Pages
         run: |
-          mkdocs gh-deploy --force --message "Deploy documentation from ${GITHUB_SHA}"
+          poetry run mkdocs gh-deploy --force --message "Deploy documentation from ${GITHUB_SHA}"

@@ -1,0 +1,14 @@
+# Keep the build context as small as possible.
+# The Dockerfile only needs these files for the current image build.
+*
+
+# Required build metadata
+!.dockerignore
+!Dockerfile
+!pyproject.toml
+!poetry.lock
+!README.md
+
+# Application source
+!src/
+!src/**

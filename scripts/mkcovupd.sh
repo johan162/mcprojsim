@@ -145,7 +145,7 @@ REQUIREMENTS:
     - Must be run from the project root directory
 
 EXAMPLES:
-    $0                  # Run full build process
+    $0                  # Update the coverage badge in README.md
     $0 --dry-run        # Show what would be executed
     $0 --help           # Show this help
 
@@ -204,7 +204,7 @@ run_command "test -f pyproject.toml" "Build script must be run from project root
 print_sub_step "Check for 'coverage.xml'"
 if [ ! -f "$COVERAGE_XML" ]; then
     print_error_colored "coverage.xml not found"
-    echo "Run pytest with coverage first: pytest --cov=src/${PROGRAMNAME} --cov-report=xml"
+    echo "Run pytest with coverage first: poetry run pytest --cov=src/${PROGRAMNAME} --cov-report=xml"
     exit 1
 fi
 
@@ -258,6 +258,7 @@ echo -e "🎨 Badge color: ${MAGENTA}${badge_color}${NC}"
 
 # Create the new badge URL
 new_badge_url="https://img.shields.io/badge/coverage-${coverage_percent}%25-${badge_color}.svg"
+badge_url_pattern='https://img.shields.io/badge/coverage-[0-9][0-9]*%25-[A-Za-z][A-Za-z0-9-]*(\.svg)?'
 
 
 # =====================================
@@ -271,15 +272,19 @@ print_step_colored ""
 
 # Find the line with the coverage badge and replace it
 if grep -q "img.shields.io/badge/coverage-" "$README_FILE"; then
-    # Use sed to replace the coverage badge URL
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS sed requires empty string after -i
-        run_command "sed -i '' \"s|https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*.svg|${new_badge_url}|g\" \"$README_FILE\"" "Updating coverage badge in README.md to ${coverage_percent}%"
-        # sed -i '' "s|https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*.svg|${new_badge_url}|g" "$README_FILE"
+    if grep -Fq "${new_badge_url}" "$README_FILE"; then
+        print_info_colored "Coverage badge already up to date in README.md"
     else
-        # Linux sed
-        run_command "sed -i \"s|https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*.svg|${new_badge_url}|g\" \"$README_FILE\"" "Updating coverage badge in README.md to ${coverage_percent}%"
-        # sed -i "s|https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*.svg|${new_badge_url}|g" "$README_FILE"
+        # Use sed to replace the coverage badge URL
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS sed requires empty string after -i
+            run_command "sed -E -i '' \"s|${badge_url_pattern}|${new_badge_url}|g\" \"$README_FILE\"" "Updating coverage badge in README.md to ${coverage_percent}%"
+            # sed -i '' "s|https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*.svg|${new_badge_url}|g" "$README_FILE"
+        else
+            # Linux sed
+            run_command "sed -E -i \"s|${badge_url_pattern}|${new_badge_url}|g\" \"$README_FILE\"" "Updating coverage badge in README.md to ${coverage_percent}%"
+            # sed -i "s|https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*.svg|${new_badge_url}|g" "$README_FILE"
+        fi
     fi
     # print_success_colored "Updated coverage badge in README.md to ${coverage_percent}%"
 else
@@ -289,7 +294,8 @@ else
 fi
 
 # Verify the change
-run_command "grep 'img.shields.io/badge/coverage-' \"$README_FILE\"" "Verifying updated badge (${coverage_percent}%) in README.md"
+run_command "grep -F \"${new_badge_url}\" \"$README_FILE\" >/dev/null" "Asserting README badge matches ${new_badge_url}"
+run_command "grep 'img.shields.io/badge/coverage-' \"$README_FILE\"" "Displaying updated badge line from README.md"
 
 echo ""
 exit 0

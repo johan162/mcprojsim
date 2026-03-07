@@ -4,8 +4,8 @@
 # CI/CD Support: No. Can not be run in CI as it requires user interaction.
 # Usage: ./scripts/mkrelease.sh <version> [major|minor|patch] [--dry-run] [--help]
 #
-# Example: ./scripts/mkrelease.sh v2.1.0 minor
-# Example: ./scripts/mkrelease.sh v2.1.0 minor --dry-run
+# Example: ./scripts/mkrelease.sh 2.1.0 minor
+# Example: ./scripts/mkrelease.sh 2.1.0 minor --dry-run
 # Example: ./scripts/mkrelease.sh --help
 
 set -euo pipefail  # Exit on any error or uninitialized variable
@@ -104,18 +104,18 @@ EXAMPLES:
     $0 --help
     
     # Preview a minor release (recommended first step)
-    $0 v2.1.0 minor --dry-run
+    $0 2.1.0 minor --dry-run
     
     # Execute a minor release
-    $0 v2.1.0 minor
+    $0 2.1.0 minor
     
     # Create a patch release with preview
-    $0 v2.0.1 patch --dry-run
-    $0 v2.0.1 patch
+    $0 2.0.1 patch --dry-run
+    $0 2.0.1 patch
 
     # Create a major release
-    $0 v3.0.0-rc1 major --dry-run
-    $0 v3.0.0-rc1 major
+    $0 3.0.0-rc1 major --dry-run
+    $0 3.0.0-rc1 major
 
 QUALITY GATES:
     The script enforces comprehensive quality controls:
@@ -137,8 +137,8 @@ WORKFLOW:
 REQUIREMENTS:
     • Must be run from project root directory
     • Must be on 'develop' branch with clean working directory
-    • Requires: git, python, pytest, build tools (pip install build twine)
-    • Optional: mypy (type checking), black (code formatting)
+    • Requires: git, python, poetry, gh
+    • Requires Poetry dev dependencies installed (run: poetry install)
 
 SAFETY:
     • Use --dry-run first to preview all operations
@@ -196,6 +196,8 @@ if [[ -z "$VERSION" ]]; then
     exit 1
 fi
 
+VERSION="${VERSION/-rc/rc}"
+
 # Function to execute command or print it in dry-run mode
 run_command() {
     local cmd="$1"
@@ -252,28 +254,28 @@ print_step_colored ""
 # 1.1: Check if we're in the root directory (pyproject.toml must exist)
 run_command "test -f pyproject.toml" "Build script must be run from project root."
 
-# 1.2: Ensure we are in a virtual environment and if not try to activate one
+# 1.2: Ensure Poetry is available and a Poetry environment exists
 if [ "$DRY_RUN" = false ]; then
-    if [ -z  "${VIRTUAL_ENV+x}" ]; then
-        # Activate virtual environment if exists
-        if [ -f ".venv/bin/activate" ]; then
-            print_warning "No virtual environment detected. Activating venv/bin/activate"
-            # shellcheck disable=SC1091
-            source .venv/bin/activate
-        else
-            print_error_colored "No virtual environment detected and venv/bin/activate not found. Exiting."
+    if ! command -v poetry >/dev/null 2>&1; then
+        print_error_colored "Poetry is required but was not found in PATH."
+        exit 2
+    fi
+
+    if poetry env info --path >/dev/null 2>&1; then
+        echo "Using Poetry environment: $(poetry env info --path)"
+    else
+        print_error_colored "No Poetry environment found. Run 'poetry install' first."
+        exit 2
+    fi
+
+    for required_command in pytest mypy black twine; do
+        if ! poetry run "$required_command" --version >/dev/null 2>&1; then
+            print_error_colored "Required Poetry command '$required_command' is unavailable. Run 'poetry install'."
             exit 2
         fi
-    else
-        echo "Using virtual environment: $VIRTUAL_ENV"
-    fi
+    done
 else
-    if [ -z  "${VIRTUAL_ENV+x}" ]; then
-        echo "  [DRY-RUN] No virtual environment detected."
-        echo "  [DRY-RUN] Would activate .venv/bin/activate if no VIRTUAL_ENV detected"
-    else
-        echo "  [DRY-RUN] Virtual environment detected: $VIRTUAL_ENV"
-    fi
+    echo "  [DRY-RUN] Would verify Poetry is available, a Poetry environment exists, and dev tools are installed"
 fi
 
 # 1.3: Verify we're on develop and it's clean
@@ -288,8 +290,8 @@ fi
 # 1.4: Pull latest changes
 run_command "git pull origin develop" "Pulling latest changes..."
 
-# 1.5: Validate version format (semver)
-check_condition '[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc[1-9][0-9]?)?$ ]]' "Version must follow semver format (x.y.z or x.y.z-rcNN)"
+# 1.5: Validate version format (Poetry / PEP 440 compatible)
+check_condition '[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(rc[1-9][0-9]?)?$ ]]' "Version must follow semver format (x.y.z or x.y.zrcNN)"
 
 # 1.6: Check if version already exists
 check_condition '! git tag | grep -q "v${VERSION}\$"' "Tag v$VERSION already exists"
@@ -303,7 +305,7 @@ print_step_colored "🧪 PHASE 2: UNIT TESTING & STATIC ANALYSIS"
 print_step_colored ""
 
 # 2.1: Full test suite with coverage requirements
-run_command "pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
+run_command "poetry run pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Test suite failed - aborting release"
@@ -312,36 +314,29 @@ fi
 
 # 2.2: Static analysis and code quality
 if [[ "$DRY_RUN" == "true" ]]; then 
-    echo "  [DRY-RUN] Would run static analysis..."
-    echo "  [DRY-RUN] Would check if mypy is available and run type checking"
-    echo "  [DRY-RUN] Would check if black is available and run code formatting checks"
+    echo "  [DRY-RUN] Would run mypy via Poetry"
+    echo "  [DRY-RUN] Would run black via Poetry"
 else
     echo "  ✓ Running static analysis..."
-    # Type checking
-    if command -v mypy >/dev/null 2>&1; then
-        mypy src/${PROGRAMNAME} --ignore-missing-imports || echo "⚠️  Type check warnings found"
-    fi
+    poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports || echo "⚠️  Type check warnings found"
 
-    # Code style (if black is available)
-    if command -v black >/dev/null 2>&1; then
-        echo "  ✓ Checking code formatting..."
-        black --check --diff src/ tests/ || {
-            print_error_colored "Code formatting issues found. Run: black src/ tests/"
-            exit 1
-        }
-    fi
+    echo "  ✓ Checking code formatting..."
+    poetry run black --check --diff src/ tests/ || {
+        print_error_colored "Code formatting issues found. Run: poetry run black src/ tests/"
+        exit 1
+    }
 fi
 
 # 2.3: Integration testing with example projects
 if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [DRY-RUN] Would test example projects..."
-    echo "  [DRY-RUN] Would run: python -m ${PROGRAMNAME} \$network --cmd \"help\" for each network"
+    echo "  [DRY-RUN] Would run: poetry run mcprojsim simulate -n 50 <project.yaml> for each example project"
 else
     echo "  ✓ Smoke test of three projects  ..."
     for project in examples/sample_project.yaml examples/tshirt_sizing_project.yaml examples/project_with_custom_thresholds.yaml; do
         if [[ -f "$project" ]]; then
             echo "    Testing: $project"
-            python -m ${PROGRAM_ENTRYPOINT} simulate -n 50 "$project"  >/dev/null 2>&1 || {
+            poetry run mcprojsim simulate -n 50 "$project" >/dev/null 2>&1 || {
                 print_error_colored "Failed to simulate project: $project"
                 exit 1
             }
@@ -352,14 +347,14 @@ fi
 echo "All example projects validated successfully."
 
 # 2.4: Package building test
-run_command "python -m build --wheel --sdist" "Testing package building..."
+run_command "poetry build" "Testing package building..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Package build failed"
     exit 1
 fi
 
-run_command "python -m twine check dist/*" "Verifying built packages..."
+run_command "poetry run twine check dist/*" "Verifying built packages..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Package validation failed"
@@ -376,18 +371,15 @@ print_step_colored ""
 
 # 3.1: Update version numbers
 if [[ "$DRY_RUN" == "true" ]]; then
-    echo "  [DRY-RUN] Would update __version__ in __init__.py to $VERSION"
     echo "  [DRY-RUN] Would update version in pyproject.toml to $VERSION"
     echo "  [DRY-RUN] Would update version in README.md to $VERSION"
 else
-    echo "  ✓ Updating version in __init__.py..."
-    sed -i.bak 's/__version__ = ".*"/__version__ = "'"$VERSION"'"/' src/mcprojsim/__init__.py
-    
     echo "  ✓ Updating version in pyproject.toml..."
-    sed -i.bak 's/^version = ".*"/version = "'"$VERSION"'"/' pyproject.toml
+    poetry version "$VERSION"
+    VERSION="$(poetry version --short)"
 
     echo "  ✓ Updating version in README.md..."
-    sed -i.bak 's/^  version={.*}/  version={'"$VERSION"'}/' README.md
+    sed -i.bak -E 's/^  version *= *\{.*\}/  version = {'"$VERSION"'}/' README.md
 fi
 
 # 3.2: Generate changelog entry
@@ -439,7 +431,7 @@ EOF
 fi
 
 # 3.3: Final pre-commit validation
-run_command "pytest ${SMOKE_TEST_FILE} -v" "Final validation after version updates..."
+run_command "poetry run pytest ${SMOKE_TEST_FILE} -v" "Final validation after version updates..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Final validation failed"
@@ -455,7 +447,7 @@ print_step_colored "🎯 PHASE 4: RELEASE EXECUTION"
 print_step_colored ""
 
 # 4.1: Commit version updates
-run_command "git add src/${PROGRAMNAME}/__init__.py pyproject.toml CHANGELOG.md README.md" "Staging release files..."
+run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md" "Staging release files..."
 
 run_command "git commit -m \"chore(release): prepare $VERSION
 
@@ -588,7 +580,7 @@ run_command "rm -rf build/ dist/ src/*.egg-info/ htmlcov/" "Cleaning up build ar
 run_command "rm -f *.bak src/${PROGRAMNAME}/*.bak" "Removing backup files..."
 
 # 7.2: Build Package with the now updated version number
-run_command "python -m build --wheel --sdist" "Testing package building..."
+run_command "poetry build" "Testing package building..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Distribution package build failed"
@@ -596,7 +588,7 @@ if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
 fi
 
 # 7.3: Package building validation
-run_command "python -m twine check dist/*" "Verifying built packages..."
+run_command "poetry run twine check dist/*" "Verifying built packages..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Distribution package validation failed"
