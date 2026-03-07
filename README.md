@@ -20,6 +20,7 @@
   - [Installation](#installation)
     - [Best for end users: Install with `pipx`](#best-for-end-users-install-with-pipx)
       - [Install with `pipx`](#install-with-pipx)
+      - [Install a pre-release from TestPyPI](#install-a-pre-release-from-testpypi)
     - [Preferred: Run with Podman or Docker](#preferred-run-with-podman-or-docker)
       - [Prerequisites](#prerequisites)
       - [Build the container image](#build-the-container-image)
@@ -92,6 +93,25 @@ mcprojsim --version
 ```
 
 This is the recommended non-container option for end users.
+
+#### Install a pre-release from TestPyPI
+
+Pre-releases are published (based on pre-release tags) to TestPyPI before a full production release reaches PyPI.
+When installing from TestPyPI, use TestPyPI as the main index and keep PyPI as the extra index for dependencies.
+
+```bash
+# Install the latest pre-release from TestPyPI
+pipx install \
+  --pip-args="--pre --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple" \
+  mcprojsim
+
+# Or install a specific pre-release version
+pipx install \
+  --pip-args="--index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple" \
+  mcprojsim==0.2.0rc2
+```
+
+If `mcprojsim` is already installed with `pipx`, use `pipx upgrade` with the same `--pip-args` values.
 
 ### Preferred: Run with Podman or Docker
 
@@ -212,6 +232,19 @@ pip install mcprojsim
 
 # Or using Poetry in your project
 poetry add mcprojsim
+```
+
+To install a pre-release with `pip`, point the main index at TestPyPI and keep PyPI as the fallback for dependencies:
+
+```bash
+pip install --pre --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple mcprojsim
+```
+
+If you prefer running the project from a source checkout without installing it locally, you can also use the containerized CLI wrapper:
+
+```bash
+./bin/mcprojsim.sh --help
+./bin/mcprojsim.sh simulate project.yaml --seed 12345
 ```
 
 ## Quick Start
@@ -386,12 +419,32 @@ Comprehensive documentation is available in the `docs/` directory:
 
 ### View Documentation Locally
 
+Use the local MkDocs server when you are editing documentation or Python code and want fast live-reload during development.
+
 ```bash
 # Install with documentation dependencies
 poetry install --with docs
 
 # Serve documentation locally at http://127.0.0.1:8000
 poetry run mkdocs serve
+```
+
+### Documentation Server Options
+
+- Use `make docs-serve` for day-to-day documentation editing with the fastest feedback loop.
+- Use `make docs-container-start` when you want to validate the containerized docs environment or run the docs server without relying on a local Poetry environment.
+- Use `./scripts/docs-contctl.sh ...` directly when you want full container lifecycle control such as `start`, `stop`, `restart`, `status`, `logs`, or `build`.
+
+```bash
+# Fast local development server
+make docs-serve
+
+# Containerized docs server
+make docs-container-start
+
+# Direct container management
+./scripts/docs-contctl.sh status
+./scripts/docs-contctl.sh logs --follow
 ```
 
 ## Development
@@ -440,12 +493,27 @@ poetry run flake8 src/ tests/
 
 ### Build Documentation
 
+Choose the command based on what you are doing:
+
+- `make docs-serve` or `poetry run mkdocs serve` for editing docs locally.
+- `make docs-container-start` for the containerized docs server.
+- `make docs-container-stop` and `make docs-container-logs` for container lifecycle tasks.
+
 ```bash
 # Install with documentation dependencies
 poetry install --with docs
 
 # Serve documentation locally
 poetry run mkdocs serve
+
+# Or use the Makefile wrapper
+make docs-serve
+
+# Start the containerized docs server
+make docs-container-start
+
+# Stop the containerized docs server
+make docs-container-stop
 
 # Build documentation
 poetry run mkdocs build
@@ -455,6 +523,8 @@ poetry run mkdocs build
 
 ```
 mcprojsim/
+├── bin/                    # User-facing wrapper scripts
+│   └── mcprojsim.sh        # Runs the containerized CLI like a local command
 ├── src/mcprojsim/          # Source code
 │   ├── models/             # Data models
 │   ├── parsers/            # Input file parsers
@@ -465,7 +535,7 @@ mcprojsim/
 ├── tests/                  # Test files
 ├── docs/                   # Documentation
 ├── examples/               # Example files
-└── scripts/                # Build scripts
+└── scripts/                # Build, release, setup, and docs-control scripts
 ```
 
 ## Requirements
