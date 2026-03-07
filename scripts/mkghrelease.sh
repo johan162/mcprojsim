@@ -431,10 +431,10 @@ print_success "Latest tag: $LATEST_TAG"
 
 # 3.2: Validate tag format
 print_sub_step "Validating tag format..."
-if [[ ! "$LATEST_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]{1,2})?$ ]]; then
+if [[ ! "$LATEST_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(rc[0-9]{1,2})?$ ]]; then
     print_error "Invalid tag format: $LATEST_TAG"
-    echo "Expected format: vX.Y.Z or vX.Y.Z-rcN"
-    echo "Examples: v1.0.0, v2.1.3-rc1, v1.5.0-rc12"
+    echo "Expected format: vX.Y.Z or vX.Y.ZrcN"
+    echo "Examples: v1.0.0, v2.1.3rc1, v1.5.0rc12"
     exit 1
 fi
 print_success "Tag format valid"
@@ -445,7 +445,7 @@ IS_PRE_RELEASE=false
 if [[ "$FORCE_PRE_RELEASE" == "true" ]]; then
     IS_PRE_RELEASE=true
     RELEASE_TYPE="pre-release (forced)"
-elif [[ "$LATEST_TAG" =~ -rc[0-9]+$ ]]; then
+elif [[ "$LATEST_TAG" =~ rc[0-9]+$ ]]; then
     IS_PRE_RELEASE=true
     RELEASE_TYPE="pre-release (auto-detected from tag)"
 else
