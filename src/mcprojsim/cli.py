@@ -5,6 +5,7 @@ from typing import Optional, Union
 
 import click
 
+from mcprojsim import __version__
 from mcprojsim.config import Config
 from mcprojsim.exporters import CSVExporter, HTMLExporter, JSONExporter
 from mcprojsim.parsers import TOMLParser, YAMLParser
@@ -13,7 +14,7 @@ from mcprojsim.utils import Validator, setup_logging
 
 
 @click.group()
-@click.version_option(version="1.0.0")
+@click.version_option(version=__version__, prog_name="mcprojsim")
 def cli() -> None:
     """Monte Carlo Project Simulator - Probabilistic project estimation."""
     pass

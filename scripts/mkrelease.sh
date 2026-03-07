@@ -137,7 +137,7 @@ WORKFLOW:
 REQUIREMENTS:
     • Must be run from project root directory
     • Must be on 'develop' branch with clean working directory
-    • Requires: git, python, pytest, build tools (pip install build twine)
+    • Requires: git, python, pytest, poetry
     • Optional: mypy (type checking), black (code formatting)
 
 SAFETY:
@@ -303,7 +303,7 @@ print_step_colored "🧪 PHASE 2: UNIT TESTING & STATIC ANALYSIS"
 print_step_colored ""
 
 # 2.1: Full test suite with coverage requirements
-run_command "pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
+run_command "poetry run pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Test suite failed - aborting release"
@@ -326,7 +326,7 @@ else
     if command -v black >/dev/null 2>&1; then
         echo "  ✓ Checking code formatting..."
         black --check --diff src/ tests/ || {
-            print_error_colored "Code formatting issues found. Run: black src/ tests/"
+            print_error_colored "Code formatting issues found. Run: poetry run black src/ tests/"
             exit 1
         }
     fi
@@ -352,14 +352,14 @@ fi
 echo "All example projects validated successfully."
 
 # 2.4: Package building test
-run_command "python -m build --wheel --sdist" "Testing package building..."
+run_command "poetry build" "Testing package building..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Package build failed"
     exit 1
 fi
 
-run_command "python -m twine check dist/*" "Verifying built packages..."
+run_command "poetry run twine check dist/*" "Verifying built packages..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Package validation failed"
@@ -384,7 +384,7 @@ else
     sed -i.bak 's/__version__ = ".*"/__version__ = "'"$VERSION"'"/' src/mcprojsim/__init__.py
     
     echo "  ✓ Updating version in pyproject.toml..."
-    sed -i.bak 's/^version = ".*"/version = "'"$VERSION"'"/' pyproject.toml
+    poetry version "$VERSION"
 
     echo "  ✓ Updating version in README.md..."
     sed -i.bak 's/^  version={.*}/  version={'"$VERSION"'}/' README.md
@@ -439,7 +439,7 @@ EOF
 fi
 
 # 3.3: Final pre-commit validation
-run_command "pytest ${SMOKE_TEST_FILE} -v" "Final validation after version updates..."
+run_command "poetry run pytest ${SMOKE_TEST_FILE} -v" "Final validation after version updates..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Final validation failed"
@@ -455,7 +455,7 @@ print_step_colored "🎯 PHASE 4: RELEASE EXECUTION"
 print_step_colored ""
 
 # 4.1: Commit version updates
-run_command "git add src/${PROGRAMNAME}/__init__.py pyproject.toml CHANGELOG.md README.md" "Staging release files..."
+run_command "git add src/${PROGRAMNAME}/__init__.py pyproject.toml poetry.lock CHANGELOG.md README.md" "Staging release files..."
 
 run_command "git commit -m \"chore(release): prepare $VERSION
 
@@ -588,7 +588,7 @@ run_command "rm -rf build/ dist/ src/*.egg-info/ htmlcov/" "Cleaning up build ar
 run_command "rm -f *.bak src/${PROGRAMNAME}/*.bak" "Removing backup files..."
 
 # 7.2: Build Package with the now updated version number
-run_command "python -m build --wheel --sdist" "Testing package building..."
+run_command "poetry build" "Testing package building..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Distribution package build failed"
@@ -596,7 +596,7 @@ if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
 fi
 
 # 7.3: Package building validation
-run_command "python -m twine check dist/*" "Verifying built packages..."
+run_command "poetry run twine check dist/*" "Verifying built packages..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Distribution package validation failed"

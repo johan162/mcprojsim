@@ -9,37 +9,33 @@ set -e
 echo "=== mcprojsim Setup Verification ==="
 echo ""
 
-# Check if virtual environment exists
-if [ ! -d ".venv" ]; then
-    echo "❌ Virtual environment not found"
-    echo "Running: python3 -m venv .venv"
-    python3 -m venv .venv
+# Ensure Poetry is available
+if ! command -v poetry &> /dev/null; then
+    echo "❌ Poetry not found. Install with: pip install poetry"
+    exit 1
 fi
-echo "✅ Virtual environment exists"
+echo "✅ Poetry is available"
 
-# Activate virtual environment
-source .venv/bin/activate
+# Install project dependencies via Poetry
+echo "Installing dependencies with Poetry..."
+poetry install --with dev
+echo "✅ Dependencies installed"
 
 # Check if package is installed
-if ! command -v mcprojsim &> /dev/null; then
-    echo "❌ mcprojsim command not found"
-    echo "Running: pip install -e \".[dev]\""
-    pip install -e ".[dev]"
-fi
-if ! command -v mcprojsim &> /dev/null; then
-    echo "❌ mcprojsim command still not found after installation"
+if ! poetry run mcprojsim --version &> /dev/null; then
+    echo "❌ mcprojsim command not found after poetry install"
     exit 1
 fi
 echo "✅ mcprojsim command available"
 
 # Check version
-VERSION=$(mcprojsim --version)
+VERSION=$(poetry run mcprojsim --version)
 echo "✅ Version: $VERSION"
 
 # Validate example project
 echo ""
 echo "Testing project validation..."
-if mcprojsim validate examples/sample_project.yaml 2>&1 | grep -q "valid"; then
+if poetry run mcprojsim validate examples/sample_project.yaml 2>&1 | grep -q "valid"; then
     echo "✅ Project validation works"
 else
     echo "❌ Project validation failed"
@@ -49,7 +45,7 @@ fi
 # Run quick simulation
 echo ""
 echo "Running quick simulation test (100 iterations)..."
-if mcprojsim simulate examples/sample_project.yaml --iterations 100 --seed 42 --quiet -f "html,csv,json" > /dev/null 2>&1; then
+if poetry run mcprojsim simulate examples/sample_project.yaml --iterations 100 --seed 42 --quiet -f "html,csv,json" > /dev/null 2>&1; then
     echo "✅ Simulation runs successfully"
 else
     echo "❌ Simulation failed"
@@ -69,7 +65,7 @@ fi
 # Test config command
 echo ""
 echo "Testing config command..."
-if mcprojsim config show 2>&1 | grep -q "Uncertainty Factors"; then
+if poetry run mcprojsim config show 2>&1 | grep -q "Uncertainty Factors"; then
     echo "✅ Config command works"
 else
     echo "❌ Config command failed"
@@ -84,9 +80,9 @@ echo ""
 echo "mcprojsim is ready to use!"
 echo ""
 echo "Quick commands:"
-echo "  mcprojsim --help"
-echo "  mcprojsim validate examples/sample_project.yaml"
-echo "  mcprojsim simulate examples/sample_project.yaml"
-echo "  mcprojsim config show"
+echo "  poetry run mcprojsim --help"
+echo "  poetry run mcprojsim validate examples/sample_project.yaml"
+echo "  poetry run mcprojsim simulate examples/sample_project.yaml"
+echo "  poetry run mcprojsim config show"
 echo ""
 echo "See QUICKSTART.md for more information."

@@ -1,0 +1,119 @@
+# =============================================================================
+# Multi-stage Dockerfile for mcprojsim Documentation
+# 
+# Builds and serves the MkDocs documentation
+#
+# Build: podman build -f Dockerfile.docs -t mcprojsim-docs .
+# Run:   podman run -d --rm -p 9090:80 --name mcprojsim-docs mcprojsim-docs
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Builder - Build the documentation with MkDocs
+# -----------------------------------------------------------------------------
+FROM python:3.13-slim AS builder
+
+# Build argument to enable proxy/CA certificate handling
+# Usage: podman build --build-arg USE_PROXY_CA=true ...
+ARG USE_PROXY_CA=false
+ARG CA_CERT_FILE=CA_proxy_fw_all.pem
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install build dependencies
+WORKDIR /build
+
+# Copy project files needed for documentation
+COPY pyproject.toml mkdocs.yml ./
+COPY docs/ ./docs/
+COPY src/ ./src/
+COPY README.md ./
+
+# Copy and configure proxy CA certificate if USE_PROXY_CA=true
+# This must happen BEFORE pip install
+COPY ${CA_CERT_FILE}* /tmp/certs/
+RUN if [ "$USE_PROXY_CA" = "true" ]; then \
+        if [ -f /tmp/certs/${CA_CERT_FILE} ]; then \
+            echo "✓ Configuring proxy CA certificate..."; \
+            cat /tmp/certs/${CA_CERT_FILE} >> /etc/ssl/certs/ca-certificates.crt; \
+            echo "✓ CA certificate appended to system bundle"; \
+        else \
+            echo "⚠ Warning: USE_PROXY_CA=true but ${CA_CERT_FILE} not found!"; \
+            echo "   Build may fail when accessing HTTPS resources."; \
+            exit 1; \
+        fi; \
+    else \
+        echo "→ Using standard SSL certificates (no proxy)"; \
+    fi
+
+# Set environment variables for SSL/TLS (ensures pip and requests use system CA bundle)
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+
+# Install mkdocs and documentation dependencies
+RUN pip install --upgrade pip && \
+    pip install \
+        "mkdocs>=1.5.0" \
+        "mkdocs-material>=9.0.0" \
+        "mkdocstrings[python]>=0.22.0" && \
+    pip install -e .
+
+# Build the static documentation site
+RUN mkdocs build --strict --site-dir /build/site
+
+# -----------------------------------------------------------------------------
+# Stage 2: Server - Serve the documentation with nginx
+# -----------------------------------------------------------------------------
+FROM nginx:alpine AS server
+
+# Create non-root user for security (nginx already runs as nginx user)
+# Copy the built documentation from builder
+COPY --from=builder /build/site /usr/share/nginx/html
+
+# Custom nginx configuration for better defaults
+RUN cat > /etc/nginx/conf.d/default.conf <<'EOF'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name localhost;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Enable gzip compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Cache static assets
+    location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+# Expose default port (can be mapped to different host port)
+EXPOSE 80
+
+# Run nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]

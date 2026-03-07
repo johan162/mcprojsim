@@ -1,21 +1,142 @@
 # Quick Start Guide - mcprojsim
 
-## Installation
+## Best for end users: Install with `pipx`
 
-The project is now set up and ready to use! Here's how to get started:
+If you want a normal `mcprojsim` command without using Poetry, install the application with `pipx`.
+This gives you an isolated installation while exposing the CLI directly on your `PATH`.
 
-### 1. Activate the Virtual Environment
+### 1. Install `pipx`
 
 ```bash
-cd /Users/ljp/Devel/python/mcprojsim
-source venv/bin/activate
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
 ```
 
-### 2. Test the Installation
+### 2. Install `mcprojsim`
 
 ```bash
-mc-estimate --version
-# Output: mc-estimate, version 1.0.0
+pipx install mcprojsim
+```
+
+### 3. Run the CLI directly
+
+```bash
+mcprojsim --help
+mcprojsim --version
+mcprojsim validate examples/sample_project.yaml
+```
+
+This is the recommended non-container option for end users.
+
+## Preferred: Run with Podman or Docker
+
+Running `mcprojsim` as a container is the recommended option for end users.
+It avoids installing Poetry locally and gives you an isolated runtime with the CLI already configured.
+
+### Prerequisites
+
+- Docker or Podman
+
+### 1. Build the Container Image
+
+```bash
+git clone https://github.com/johan162/mcprojsim.git
+cd mcprojsim
+
+# Preferred: Podman
+podman build -t mcprojsim .
+
+# Alternative: Docker
+docker build -t mcprojsim .
+```
+
+### 2. Run the CLI in the Container
+
+The container entrypoint is already set to `mcprojsim`, so you only pass the command arguments.
+
+```bash
+# Preferred: Podman
+podman run --rm mcprojsim --help
+podman run --rm mcprojsim --version
+
+# Alternative: Docker
+docker run --rm mcprojsim --help
+docker run --rm mcprojsim --version
+```
+
+### 3. Run Simulations with Local Files
+
+Mount your current directory into the container so `mcprojsim` can read project files and write output files.
+
+```bash
+# Docker
+docker run --rm -v "$PWD:/work" mcprojsim validate examples/sample_project.yaml
+docker run --rm -v "$PWD:/work" mcprojsim simulate examples/sample_project.yaml --seed 42
+
+# Podman
+podman run --rm -v "$PWD:/work:Z" mcprojsim validate examples/sample_project.yaml
+podman run --rm -v "$PWD:/work:Z" mcprojsim simulate examples/sample_project.yaml --seed 42
+```
+
+Generated output files such as JSON, CSV, and HTML reports will be written to your local working directory.
+
+### Proxy / Corporate Network Build Example
+
+If your network uses HTTPS interception or an internal proxy CA, standard container builds may fail when installing dependencies.
+In that case, pass your proxy CA certificate explicitly as a build secret.
+
+```bash
+# Preferred: Podman
+podman build \
+	--build-arg USE_PROXY_CA=true \
+	--secret id=proxy_ca,src=CA_proxy_fw_all.pem \
+	-t mcprojsim .
+
+# Alternative: Docker
+docker build \
+	--build-arg USE_PROXY_CA=true \
+	--secret id=proxy_ca,src=CA_proxy_fw_all.pem \
+	-t mcprojsim .
+```
+
+If you are not behind such a proxy, do not pass these options. A normal `podman build -t mcprojsim .` or `docker build -t mcprojsim .` is enough.
+
+## Alternative: Local Installation with Poetry
+
+Use this if you are working from a source checkout, developing the project, or contributing changes.
+
+### Prerequisites
+
+- Python 3.14 or higher
+- [Poetry](https://python-poetry.org/) 2.0+ for dependency management
+
+Install Poetry if you haven't already:
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+### 1. Clone and Install
+
+```bash
+git clone https://github.com/johan162/mcprojsim.git
+cd mcprojsim
+
+# Install all dependencies (including dev dependencies)
+poetry install
+```
+
+### 2. Verify the Installation
+
+```bash
+poetry run mcprojsim --version
+# Output: mcprojsim, version 1.0.0
+```
+
+You can also open a Poetry shell if you prefer:
+
+```bash
+poetry shell
+mcprojsim --help
 ```
 
 ## Usage Examples
@@ -23,36 +144,55 @@ mc-estimate --version
 ### Validate a Project File
 
 ```bash
-mc-estimate validate examples/sample_project.yaml
+poetry run mcprojsim validate examples/sample_project.yaml
+```
+
+Docker equivalent:
+
+```bash
+docker run --rm -v "$PWD:/work" mcprojsim validate examples/sample_project.yaml
 ```
 
 ### Run a Simulation
 
 ```bash
 # Quick test with 1000 iterations
-mc-estimate simulate examples/sample_project.yaml --iterations 1000
+poetry run mcprojsim simulate examples/sample_project.yaml --iterations 1000
 
 # Full simulation with 10000 iterations (default)
-mc-estimate simulate examples/sample_project.yaml
+poetry run mcprojsim simulate examples/sample_project.yaml
 
 # With custom configuration
-mc-estimate simulate examples/sample_project.yaml --config examples/sample_config.yaml
+poetry run mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml
 
 # With reproducible results
-mc-estimate simulate examples/sample_project.yaml --seed 42
+poetry run mcprojsim simulate examples/sample_project.yaml --seed 42
 
 # Quiet mode (no progress output)
-mc-estimate simulate examples/sample_project.yaml --quiet
+poetry run mcprojsim simulate examples/sample_project.yaml --quiet
+```
+
+Docker equivalent:
+
+```bash
+docker run --rm -v "$PWD:/work" mcprojsim simulate examples/sample_project.yaml --iterations 1000
+docker run --rm -v "$PWD:/work" mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml
 ```
 
 ### View Configuration
 
 ```bash
 # Show default configuration
-mc-estimate config show
+poetry run mcprojsim config show
 
 # Show custom configuration
-mc-estimate config show --config-file examples/sample_config.yaml
+poetry run mcprojsim config show --config-file examples/sample_config.yaml
+```
+
+Docker equivalent:
+
+```bash
+docker run --rm -v "$PWD:/work" mcprojsim config show
 ```
 
 ## Output Files
@@ -88,49 +228,58 @@ mcprojsim/
 │   └── sample_config.yaml
 ├── docs/                   # Documentation
 ├── scripts/                # Build scripts
-│   ├── mkblbd.sh          # Build package
-│   ├── mkrelease.sh       # Create release
-│   ├── mkdocs.sh          # Build documentation
-│   └── mkghrelease.sh     # GitHub release
-└── tests/                  # Tests (to be added)
+│   ├── mkbld.sh            # Build package
+│   ├── mkrelease.sh        # Create release
+│   ├── mkdocs.sh           # Build documentation
+│   └── mkghrelease.sh      # GitHub release
+└── tests/                  # Unit and integration tests
 ```
 
 ## Development
 
-### Run Tests (when added)
+### Run Tests
 
 ```bash
-pytest
-pytest --cov=mcprojsim
+# Run all tests
+poetry run pytest
+
+# Run with coverage
+poetry run pytest --cov=mcprojsim --cov-report=html
+
+# Run tests in parallel
+poetry run pytest -n auto
 ```
 
 ### Code Quality
 
 ```bash
 # Format code
-black src/ tests/
+poetry run black src/ tests/
 
 # Type checking
-mypy src/
+poetry run mypy src/
 
 # Linting
-flake8 src/ tests/
+poetry run flake8 src/ tests/
 ```
 
 ### Build Package
 
 ```bash
-./scripts/mkblbd.sh
+poetry build
 ```
 
 ### Build Documentation
 
 ```bash
-./scripts/mkdocs.sh
-mkdocs serve  # Serve locally at http://127.0.0.1:8000
+# Install with documentation dependencies
+poetry install --with docs
+
+# Serve locally at http://127.0.0.1:8000
+poetry run mkdocs serve
 ```
 
-## Key Features Implemented
+## Key Features
 
 ✅ **Core Models** - Project, Task, Risk with Pydantic validation
 ✅ **Parsers** - YAML and TOML support
@@ -149,15 +298,12 @@ mkdocs serve  # Serve locally at http://127.0.0.1:8000
 ## Example Session
 
 ```bash
-# Activate environment
-source venv/bin/activate
-
 # Validate project
-mc-estimate validate examples/sample_project.yaml
+poetry run mcprojsim validate examples/sample_project.yaml
 # ✓ Project file is valid!
 
 # Run simulation
-mc-estimate simulate examples/sample_project.yaml --seed 42
+poetry run mcprojsim simulate examples/sample_project.yaml --seed 42
 # Progress: 100.0% (10000/10000)
 # === Simulation Results ===
 # Project: Customer Portal Redesign

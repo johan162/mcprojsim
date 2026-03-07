@@ -152,7 +152,7 @@ class TestCSVExporter:
                     try:
                         float(parts[0])
                         histogram_data_rows += 1
-                    except (ValueError, IndexError):
+                    except ValueError, IndexError:
                         pass
 
         # Should have at least some histogram bins

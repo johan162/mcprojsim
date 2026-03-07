@@ -225,7 +225,7 @@ run_command "test -f pyproject.toml" "Build script must be run from project root
 # Check if dev dependencies are available
 if [ "$DRY_RUN" = false ]; then
     if ! command -v pytest &> /dev/null; then
-        print_error "Error: pytest not found. Please install dev dependencies: pip install -e \".[dev]\""
+        print_error "Error: pytest not found. Please install dev dependencies: poetry install"
         exit 2
     fi
 fi
@@ -264,13 +264,13 @@ print_step_colored "🧪 PHASE 2: STATIC ANALYSIS WITH FLAKE8, MYPY, AND BLACK"
 print_step_colored ""
 
 # Step 2.1: Static analysis with flake8
-run_command "python -m flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
+run_command "poetry run flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
 
 # Step 2.2: Type checking with mypy
-run_command "python -m mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy type checking"
+run_command "poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy type checking"
 
 # Step 2.3: Code formatting check with black
-run_command "python -m black --check --diff src/${PROGRAMNAME} tests/" "Checking code formatting with black"
+run_command "poetry run black --check --diff src/${PROGRAMNAME} tests/" "Checking code formatting with black"
 
 
 # =====================================
@@ -283,7 +283,7 @@ print_step_colored "🧪 PHASE 3: CHECKING UNIT TESTS & COVERAGE"
 print_step_colored ""
 
 # Step 3.1: Run tests with coverage
-run_command "python -m pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}" "Running tests with coverage"
+run_command "poetry run pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}" "Running tests with coverage"
 
 # Step 3.2: Update coverage badge in README
 if [ "$CI_MODE" = false ] && [ "$DRY_RUN" = false ]; then
@@ -309,10 +309,10 @@ print_step_colored ""
 run_command "rm -rf dist/ build/ src/*.egg-info/" "Cleaning previous builds"
 
 # Step 4.2: Build package
-run_command "python -m build" "Building package"
+run_command "poetry build" "Building package"
 
 # Step 4.3: Check package with twine
-run_command "python -m twine check dist/*" "Validating package with twine"
+run_command "poetry run twine check dist/*" "Validating package with twine"
 
 
 # =======================================
