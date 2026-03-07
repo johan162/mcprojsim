@@ -1,9 +1,20 @@
+## [v0.2.0rc4] - 2026-03-07
+
+Release Type: patch
+
+### 📋 Summary 
+- Fix Internal CI/CD pipeline
+
+### 🛠 Internal
+- Fix PyPi workflow script
+
+
 ## [v0.2.0rc3] - 2026-03-07
 
 Release Type: minor
 
 ### 📋 Summary 
-- Fix INternal CI/CD pipeline
+- Fix Internal CI/CD pipeline
 
 ### 🛠 Internal
 - Correctly install Poetry on the runner before trying to upload to PyPi
