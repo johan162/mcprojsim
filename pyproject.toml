@@ -14,11 +14,18 @@ repository = "https://github.com/johan162/mcprojsim"
 documentation = "https://github.com/johan162/mcprojsim/docs"
 keywords = ["monte-carlo", "simulation", "project-management", "estimation"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Utilities",
+    "Typing :: Typed",
 ]
 packages = [{include = "mcprojsim", from = "src"}]
 include = ["src/mcprojsim/py.typed"]
