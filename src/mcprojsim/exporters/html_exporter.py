@@ -497,12 +497,13 @@ class HTMLExporter:
             else:
                 return "N/A"
 
+        effective_config = config if config is not None else Config.get_default()
+
         # Check if it's a T-shirt size estimate
         if hasattr(task.estimate, "t_shirt_size") and task.estimate.t_shirt_size:
             # T-shirt size format: "M (2, 5, 8)"
             t_shirt = task.estimate.t_shirt_size
 
-            effective_config = config if config is not None else Config.get_default()
             size_config = effective_config.get_t_shirt_size(t_shirt)
             if size_config is not None:
                 return (
@@ -510,6 +511,18 @@ class HTMLExporter:
                     f"{size_config.most_likely}, {size_config.max})"
                 )
             return f"{t_shirt} (unknown)"
+
+        # Check if it's a Story Point estimate
+        if hasattr(task.estimate, "story_points") and task.estimate.story_points:
+            story_points = task.estimate.story_points
+
+            points_config = effective_config.get_story_point(story_points)
+            if points_config is not None:
+                return (
+                    f"SP {story_points} ({points_config.min}, "
+                    f"{points_config.most_likely}, {points_config.max})"
+                )
+            return f"SP {story_points} (unknown)"
 
         # Check if it's a triangular distribution (min, most_likely, max)
         elif (

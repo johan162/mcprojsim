@@ -88,10 +88,43 @@ class TestTaskEstimate:
         assert estimate.t_shirt_size == "L"
         assert estimate.unit == "weeks"
 
+    def test_story_points_valid(self):
+        """Test Story Point specification."""
+        estimate = TaskEstimate(story_points=5)
+
+        assert estimate.story_points == 5
+        assert estimate.unit == "storypoint"
+        assert estimate.min is None
+        assert estimate.most_likely is None
+        assert estimate.max is None
+
+    def test_story_points_with_explicit_unit(self):
+        """Test Story Points with explicit storypoint unit."""
+        estimate = TaskEstimate(story_points=8, unit="storypoint")
+
+        assert estimate.story_points == 8
+        assert estimate.unit == "storypoint"
+
+    def test_story_points_invalid_value(self):
+        """Test Story Points must use supported agile sequence values."""
+        with pytest.raises(ValueError, match="Story Points must be one of"):
+            TaskEstimate(story_points=4)
+
+    def test_story_points_invalid_unit(self):
+        """Test Story Points reject non-storypoint units."""
+        with pytest.raises(ValueError, match="must use unit 'storypoint'"):
+            TaskEstimate(story_points=5, unit="days")
+
+    def test_multiple_symbolic_estimates_invalid(self):
+        """Test that only one symbolic estimate mode may be used."""
+        with pytest.raises(ValueError, match="Only one symbolic estimate"):
+            TaskEstimate(t_shirt_size="M", story_points=5)
+
     def test_missing_estimate_values(self):
         """Test that either T-shirt size or explicit estimate is required."""
         with pytest.raises(
-            ValueError, match="Either 't_shirt_size' or 'most_likely' must be specified"
+            ValueError,
+            match="Either 't_shirt_size', 'story_points', or 'most_likely' must be specified",
         ):
             TaskEstimate()
 

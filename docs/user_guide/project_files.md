@@ -195,11 +195,12 @@ max = 8
 
 Every task must define an `estimate` object.
 
-The implementation supports three estimate styles:
+The implementation supports four estimate styles:
 
 1. triangular estimate,
 2. log-normal estimate,
-3. T-shirt-size estimate.
+3. T-shirt-size estimate,
+4. Story Point estimate.
 
 The `distribution` field defaults to `triangular` when omitted.
 
@@ -342,6 +343,72 @@ estimate:
 ```
 
 But it should be treated as ambiguous and avoided in real project files. If you use `t_shirt_size`, prefer to omit the explicit numeric range fields.
+
+### 4. Story Point estimate
+
+This form lets a task use agile-style relative sizing while still simulating an effort range in days.
+
+#### Supported fields
+
+| Field | Required | Type | Default |
+|---|---|---|---|
+| `story_points` | Yes | integer | — |
+| `unit` | No | string | `"storypoint"` |
+| `distribution` | No | enum | Defaults to `triangular` |
+
+#### Validation behavior
+
+When `story_points` is present:
+
+- the value must currently be one of `1`, `2`, `3`, `5`, `8`, `13`, or `21`,
+- `unit` defaults to `"storypoint"` if omitted,
+- the simulation engine resolves the Story Point value to actual `min`, `most_likely`, and `max` values in days from the active configuration.
+
+If the chosen Story Point value does not exist in the active configuration, simulation raises an error.
+
+#### YAML example
+
+```yaml
+estimate:
+  story_points: 5
+  unit: "storypoint"
+```
+
+#### TOML example
+
+```toml
+[tasks.estimate]
+story_points = 5
+unit = "storypoint"
+```
+
+### Symbolic estimate mappings in configuration
+
+Both `t_shirt_size` and `story_points` are symbolic estimate forms. They are converted to day-based ranges by the active configuration.
+
+Built-in defaults exist for both styles, and a custom configuration file may override all or only some of those mappings.
+
+#### Example configuration
+
+```yaml
+t_shirt_sizes:
+  M:
+    min: 4
+    most_likely: 6
+    max: 9
+
+story_points:
+  5:
+    min: 4
+    most_likely: 6
+    max: 9
+  8:
+    min: 6
+    most_likely: 9
+    max: 16
+```
+
+If a custom configuration overrides only some T-shirt sizes or Story Point values, the remaining built-in defaults stay available.
 
 ## The `dependencies` field
 
@@ -789,4 +856,4 @@ Although multiple forms are accepted, the clearest project files usually follow 
 - use structured risk impacts when you need `percentage` or explicit units,
 - treat `resources` and `calendars` as advanced sections whose detailed internal schema may evolve.
 
-If you want to see the reference syntax used in practice, compare this chapter with [examples/sample_project.yaml](examples/sample_project.yaml), [examples/tshirt_walkthrough_project.yaml](examples/tshirt_walkthrough_project.yaml), and [examples/project_with_custom_thresholds.yaml](examples/project_with_custom_thresholds.yaml).
+If you want to see the reference syntax used in practice, compare this chapter with [examples/sample_project.yaml](examples/sample_project.yaml), [examples/tshirt_walkthrough_project.yaml](examples/tshirt_walkthrough_project.yaml), [examples/story_points_walkthrough_project.yaml](examples/story_points_walkthrough_project.yaml), and [examples/project_with_custom_thresholds.yaml](examples/project_with_custom_thresholds.yaml).

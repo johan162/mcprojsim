@@ -122,11 +122,7 @@ class TestCli:
             )
             config_file.write_text(
                 yaml.safe_dump(
-                    {
-                        "t_shirt_sizes": {
-                            "M": {"min": 10, "most_likely": 20, "max": 30}
-                        }
-                    }
+                    {"t_shirt_sizes": {"M": {"min": 10, "most_likely": 20, "max": 30}}}
                 )
             )
 

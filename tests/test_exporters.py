@@ -215,7 +215,9 @@ class TestHTMLExporter:
         results.percentile(50)
 
         project = Project(
-            project=ProjectMetadata(name="T-Shirt Project", start_date=date(2025, 1, 1)),
+            project=ProjectMetadata(
+                name="T-Shirt Project", start_date=date(2025, 1, 1)
+            ),
             tasks=[
                 Task(
                     id="task_001",
@@ -226,11 +228,7 @@ class TestHTMLExporter:
         )
 
         config = Config.model_validate(
-            {
-                "t_shirt_sizes": {
-                    "M": {"min": 10, "most_likely": 20, "max": 30}
-                }
-            }
+            {"t_shirt_sizes": {"M": {"min": 10, "most_likely": 20, "max": 30}}}
         )
 
         output_file = tmp_path / "results.html"
@@ -256,7 +254,9 @@ class TestHTMLExporter:
         results.percentile(50)
 
         project = Project(
-            project=ProjectMetadata(name="T-Shirt Project", start_date=date(2025, 1, 1)),
+            project=ProjectMetadata(
+                name="T-Shirt Project", start_date=date(2025, 1, 1)
+            ),
             tasks=[
                 Task(
                     id="task_001",
@@ -273,3 +273,75 @@ class TestHTMLExporter:
             content = f.read()
 
         assert "M (3.0, 5.0, 8.0)" in content
+
+    def test_html_uses_active_config_for_story_point_display(self, tmp_path):
+        """Test that HTML uses the provided config for Story Point effort display."""
+        results = SimulationResults(
+            iterations=3,
+            project_name="Story Point Project",
+            durations=np.array([10.0, 11.0, 12.0]),
+            task_durations={"task_001": np.array([4.0, 5.0, 6.0])},
+            critical_path_frequency={"task_001": 3},
+        )
+        results.calculate_statistics()
+        results.percentile(50)
+
+        project = Project(
+            project=ProjectMetadata(
+                name="Story Point Project", start_date=date(2025, 1, 1)
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Sized Task",
+                    estimate=TaskEstimate(story_points=5),
+                )
+            ],
+        )
+
+        config = Config.model_validate(
+            {"story_points": {5: {"min": 10, "most_likely": 20, "max": 30}}}
+        )
+
+        output_file = tmp_path / "story-points.html"
+        HTMLExporter.export(results, output_file, project=project, config=config)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "SP 5 (10.0, 20.0, 30.0)" in content
+
+    def test_html_uses_default_config_for_story_point_display_when_none_provided(
+        self, tmp_path
+    ):
+        """Test that HTML falls back to default Story Point mappings."""
+        results = SimulationResults(
+            iterations=3,
+            project_name="Story Point Project",
+            durations=np.array([10.0, 11.0, 12.0]),
+            task_durations={"task_001": np.array([4.0, 5.0, 6.0])},
+            critical_path_frequency={"task_001": 3},
+        )
+        results.calculate_statistics()
+        results.percentile(50)
+
+        project = Project(
+            project=ProjectMetadata(
+                name="Story Point Project", start_date=date(2025, 1, 1)
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Sized Task",
+                    estimate=TaskEstimate(story_points=5),
+                )
+            ],
+        )
+
+        output_file = tmp_path / "story-points-default.html"
+        HTMLExporter.export(results, output_file, project=project)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "SP 5 (3.0, 5.0, 8.0)" in content

@@ -4,7 +4,11 @@ from typing import Dict, Optional
 
 import numpy as np
 
-from mcprojsim.config import Config, DEFAULT_SIMULATION_ITERATIONS
+from mcprojsim.config import (
+    Config,
+    DEFAULT_SIMULATION_ITERATIONS,
+    EstimateRangeConfig,
+)
 from mcprojsim.models.project import Project, Task, TaskEstimate
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.simulation.distributions import DistributionSampler
@@ -200,7 +204,7 @@ class SimulationEngine:
         return base_duration * multiplier
 
     def _resolve_estimate(self, estimate: TaskEstimate) -> TaskEstimate:
-        """Resolve T-shirt size to actual estimate values.
+        """Resolve symbolic estimates to actual day-based estimate values.
 
         Args:
             estimate: TaskEstimate object
@@ -210,23 +214,32 @@ class SimulationEngine:
         """
         from mcprojsim.models.project import TaskEstimate
 
-        # If T-shirt size is not specified, return as-is
-        if estimate.t_shirt_size is None:
-            return estimate
+        resolved_config: EstimateRangeConfig | None = None
 
-        # Look up T-shirt size configuration
-        size_config = self.config.get_t_shirt_size(estimate.t_shirt_size)
-        if size_config is None:
-            raise ValueError(
-                f"Unknown T-shirt size: {estimate.t_shirt_size}. "
-                f"Available sizes: {', '.join(self.config.t_shirt_sizes.keys())}"
-            )
+        if estimate.t_shirt_size is not None:
+            resolved_config = self.config.get_t_shirt_size(estimate.t_shirt_size)
+            if resolved_config is None:
+                raise ValueError(
+                    f"Unknown T-shirt size: {estimate.t_shirt_size}. "
+                    f"Available sizes: {', '.join(self.config.t_shirt_sizes.keys())}"
+                )
+
+        elif estimate.story_points is not None:
+            resolved_config = self.config.get_story_point(estimate.story_points)
+            if resolved_config is None:
+                raise ValueError(
+                    f"Unknown Story Point value: {estimate.story_points}. "
+                    f"Available Story Points: {', '.join(str(value) for value in sorted(self.config.story_points.keys()))}"
+                )
+
+        else:
+            return estimate
 
         # Create new estimate with resolved values
         return TaskEstimate(
             distribution=estimate.distribution,
-            min=size_config.min,
-            most_likely=size_config.most_likely,
-            max=size_config.max,
-            unit=estimate.unit,
+            min=resolved_config.min,
+            most_likely=resolved_config.most_likely,
+            max=resolved_config.max,
+            unit="days",
         )

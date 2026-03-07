@@ -87,7 +87,7 @@ Key constructor parameters:
 
 - `iterations`: Number of Monte Carlo iterations
 - `random_seed`: Seed for reproducible sampling
-- `config`: `Config` object used for uncertainty multipliers and T-shirt estimates
+- `config`: `Config` object used for uncertainty multipliers, T-shirt mappings, and Story Point mappings
 - `show_progress`: Whether to print progress updates during long runs
 
 Key method:
@@ -182,11 +182,12 @@ Key method:
 
 ### `TaskEstimate`
 
-Supports three estimation styles:
+Supports four estimation styles:
 
 - Triangular estimates via `min`, `most_likely`, and `max`
 - Log-normal estimates via `most_likely` and `standard_deviation`
 - T-shirt-sized estimates via `t_shirt_size`
+- Story Point estimates via `story_points`
 
 Key fields:
 
@@ -196,6 +197,7 @@ Key fields:
 - `max`
 - `standard_deviation`
 - `t_shirt_size`
+- `story_points`
 - `unit`
 
 ### `Risk` and `RiskImpact`
@@ -272,7 +274,7 @@ project = parser.parse_file("project.toml")
 
 ### `Config`
 
-Application configuration for simulation settings, output settings, uncertainty-factor multipliers, and T-shirt-size mappings.
+Application configuration for simulation settings, output settings, uncertainty-factor multipliers, T-shirt-size mappings, and Story Point mappings.
 
 Important methods:
 
@@ -280,12 +282,14 @@ Important methods:
 - `Config.get_default() -> Config`
 - `get_uncertainty_multiplier(factor_name, level) -> float`
 - `get_t_shirt_size(size) -> TShirtSizeConfig | None`
+- `get_story_point(points) -> StoryPointConfig | None`
 
 Important nested models:
 
 - `SimulationConfig`
 - `OutputConfig`
 - `TShirtSizeConfig`
+- `StoryPointConfig`
 - `UncertaintyFactorConfig`
 
 ```python
@@ -295,6 +299,7 @@ config = Config.load_from_file("config.yaml")
 
 multiplier = config.get_uncertainty_multiplier("team_experience", "high")
 size = config.get_t_shirt_size("L")
+story_points = config.get_story_point(5)
 ```
 
 ## Exporters
@@ -323,7 +328,7 @@ Method:
 
 - `export(results: SimulationResults, output_path, project: Project | None = None, config: Config | None = None) -> None`
 
-If `project` is provided, the report can show richer task effort information. If `config` is also provided, T-shirt-sized tasks are rendered using the active simulation configuration rather than only default mappings.
+If `project` is provided, the report can show richer task effort information. If `config` is also provided, T-shirt-sized tasks and Story Point tasks are rendered using the active simulation configuration rather than only default mappings.
 
 ```python
 from mcprojsim.exporters import HTMLExporter

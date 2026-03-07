@@ -6,16 +6,18 @@ The goal is not to start with a large “realistic” file and explain it all at
 
 That approach mirrors how most teams actually learn the tool. First they want to know the minimum needed to run a simulation. After that, they want to enrich the model with the information they already have about the work, the team, and the main sources of schedule risk.
 
-The examples in this chapter are intentionally small, but they follow the same style as the more complete files in `examples/sample_project.yaml`, `examples/sample_config.yaml`, and `examples/tshirt_sizing_project.yaml`.
+The examples in this chapter are intentionally small, but they follow the same style as the more complete files in `examples/sample_project.yaml`, `examples/sample_config.yaml`, `examples/tshirt_sizing_project.yaml`, and `examples/story_points_walkthrough_project.yaml`.
 
 ## Chapter outline
 
-In this chapter we will build the input in four stages:
+In this chapter we will build the input in six stages:
 
 1. Start with the smallest possible project file.
 2. Add a second task and a dependency.
 3. Introduce a configuration file and uncertainty factors.
 4. Add task-level and project-level risks.
+5. Express work with T-shirt sizes.
+6. Express work with Story Points.
 
 At each step we will run the simulation and look at how the results change.
 
@@ -458,6 +460,89 @@ The interpretation is exactly the same as for explicit ranges. The only differen
 
 T-shirt sizes are especially useful early in planning, when the team can compare tasks relative to each other more easily than they can assign precise numeric ranges. Later, if needed, the team can replace those symbolic sizes with explicit estimate ranges for finer control.
 
+## Another alternative style: Story Point estimates
+
+Some teams prefer to estimate backlog items in Story Points rather than T-shirt sizes or explicit day ranges.
+
+`mcprojsim` supports that style as another symbolic estimate form. In the input file you provide a `story_points` value, and during simulation the active configuration resolves it to a day-based `(min, most_likely, max)` range.
+
+### Step 6: use `story_points`
+
+Here is a small Story Point example:
+
+```yaml
+project:
+  name: "Tiny Landing Page"
+  description: "Story Point sizing example"
+  start_date: "2026-03-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Design page"
+    estimate:
+      story_points: 2
+      unit: "storypoint"
+    dependencies: []
+
+  - id: "task_002"
+    name: "Build page"
+    estimate:
+      story_points: 5
+      unit: "storypoint"
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "Deploy page"
+    estimate:
+      story_points: 1
+      unit: "storypoint"
+    dependencies: ["task_002"]
+```
+
+The same example is also available as [examples/story_points_walkthrough_project.yaml](examples/story_points_walkthrough_project.yaml), with a matching configuration file at [examples/story_points_walkthrough_config.yaml](examples/story_points_walkthrough_config.yaml).
+
+### How Story Points are configured
+
+If you want to customize Story Point mappings, add a `story_points` section to the configuration file:
+
+```yaml
+story_points:
+  1:
+    min: 0.5
+    most_likely: 1
+    max: 3
+  2:
+    min: 1
+    most_likely: 2
+    max: 4
+  3:
+    min: 1.5
+    most_likely: 3
+    max: 5
+  5:
+    min: 3
+    most_likely: 5
+    max: 8
+  8:
+    min: 5
+    most_likely: 8
+    max: 15
+```
+
+These are built-in defaults. If you provide a custom configuration file, you may override only the Story Point values you want to recalibrate for your team; the remaining built-in defaults stay available.
+
+Run the Story Point example like this:
+
+```bash
+mcprojsim simulate examples/story_points_walkthrough_project.yaml \
+  --config examples/story_points_walkthrough_config.yaml \
+  --iterations 5000 \
+  --seed 42
+```
+
+Story Points are useful when the team has a stable internal understanding of what `1`, `2`, `3`, `5`, or `8` mean, but that understanding does not translate directly to raw uninterrupted days. The config file is where that team-specific calibration belongs.
+
 ## What each stage added
 
 It is useful to summarize what changed at each step:
@@ -469,6 +554,7 @@ It is useful to summarize what changed at each step:
 | 3 | Configuration and uncertainty factors | Adds team and context knowledge without cluttering the project file |
 | 4 | Risks | Models probabilistic events that may push the schedule later |
 | 5 | T-shirt sizes | Lets teams express effort symbolically while still simulating numeric ranges |
+| 6 | Story Points | Lets agile teams use calibrated relative sizing while still simulating numeric ranges |
 
 This is a good way to think about building real project files. Start with the structure that is definitely known. Then add more realism in layers.
 
@@ -494,9 +580,10 @@ The tiny examples in this chapter are teaching examples. The files in the `examp
 - `examples/sample_project.yaml` shows a more complete project with several tasks, dependencies, uncertainty factors, and risks.
 - `examples/sample_config.yaml` shows a fuller configuration with reusable uncertainty-factor mappings and output settings.
 - `examples/tshirt_sizing_project.yaml` shows an alternative style where tasks use T-shirt sizes instead of explicit `min`, `most_likely`, and `max` values.
+- `examples/story_points_walkthrough_project.yaml` shows the same symbolic-estimate idea using Story Points and a configuration mapping in days.
 - `examples/project_with_custom_thresholds.yaml` shows how project-level reporting thresholds can be tuned for stricter or more conservative decision-making.
 
-If you have understood the four stages in this chapter, those larger example files should now feel much easier to read.
+If you have understood the stages in this chapter, those larger example files should now feel much easier to read.
 
 ## What to try next
 
@@ -506,6 +593,7 @@ Once you are comfortable with the basic structure, good next experiments are:
 - add a task-level risk and compare P80 or P90,
 - move uncertainty-factor labels from one level to another,
 - try T-shirt sizes instead of explicit estimate ranges,
+- try Story Points with a team-calibrated config mapping,
 - export JSON or HTML output and inspect the richer reports.
 
 The next chapters go deeper into the input format and configuration options. The purpose of this chapter was simply to get you from “empty file” to “first useful simulation” in a gradual and understandable way.

@@ -258,3 +258,64 @@ class TestCLIIntegration:
         assert 0.5 <= task_xs_durations.min() <= 2.0
         assert 3.0 <= task_m_durations.min() <= 8.0
         assert 5.0 <= task_l_durations.min() <= 13.0
+
+    def test_story_point_sizing_simulation(self, tmp_path):
+        """Test simulation with Story Point estimates."""
+        data = {
+            "project": {
+                "name": "Story Point Test",
+                "start_date": "2025-01-01",
+                "confidence_levels": [50, 90],
+            },
+            "tasks": [
+                {
+                    "id": "task_sp1",
+                    "name": "Small Story",
+                    "estimate": {"story_points": 1},
+                    "dependencies": [],
+                },
+                {
+                    "id": "task_sp5",
+                    "name": "Medium Story",
+                    "estimate": {"story_points": 5},
+                    "dependencies": ["task_sp1"],
+                },
+                {
+                    "id": "task_sp13",
+                    "name": "Large Story",
+                    "estimate": {"story_points": 13},
+                    "dependencies": ["task_sp5"],
+                },
+            ],
+        }
+
+        file_path = tmp_path / "story_points_project.yaml"
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
+
+        parser = YAMLParser()
+        is_valid, error = parser.validate_file(file_path)
+        assert is_valid, f"Validation failed: {error}"
+
+        project = parser.parse_file(file_path)
+        config = Config.get_default()
+        engine = SimulationEngine(
+            iterations=100, random_seed=42, config=config, show_progress=False
+        )
+        results = engine.run(project)
+
+        assert results.project_name == "Story Point Test"
+        assert len(results.durations) == 100
+        assert results.mean > 0
+        assert results.std_dev > 0
+
+        task_sp1_durations = results.task_durations["task_sp1"]
+        task_sp5_durations = results.task_durations["task_sp5"]
+        task_sp13_durations = results.task_durations["task_sp13"]
+
+        assert task_sp1_durations.mean() < task_sp5_durations.mean()
+        assert task_sp5_durations.mean() < task_sp13_durations.mean()
+
+        assert 0.5 <= task_sp1_durations.min() <= 3.0
+        assert 3.0 <= task_sp5_durations.min() <= 8.0
+        assert 8.0 <= task_sp13_durations.min() <= 21.0
