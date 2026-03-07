@@ -1,3 +1,14 @@
+## [v0.2.0rc3] - 2026-03-07
+
+Release Type: minor
+
+### 📋 Summary 
+- Fix INternal CI/CD pipeline
+
+### 🛠 Internal
+- Correctly install Poetry on the runner before trying to upload to PyPi
+  
+
 ## [v0.2.0rc2] - 2026-03-07
 
 Release Type: patch
