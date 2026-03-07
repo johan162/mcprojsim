@@ -1,3 +1,14 @@
+## [v0.2.0rc2] - 2026-03-07
+
+Release Type: patch
+
+### 📋 Summary 
+- Fix internal GitHub release script
+
+### 🛠 Internal
+- Accept 1.x.xrcYY as valid version number (PEP compliant)
+
+
 ## [v0.2.0rc1] - 2026-03-07
 
 Release Type: minor
