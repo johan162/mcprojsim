@@ -1,3 +1,21 @@
+## [v0.2.0rc6] - 2026-03-08
+
+Release Type: minor
+
+### 📋 Summary 
+- Story point suppport and documentaton updates
+
+### ✨ Additions
+- Added Story Point task estimation support
+
+### 🚀 Improvements
+- The first two draft chapters of "User Guide" done
+- Updated API reference in docs
+
+### 🛠 Internal
+- All default values now have a single source (config.py)
+
+
 ## [v0.2.0rc5] - 2026-03-07
 
 Release Type: patch
