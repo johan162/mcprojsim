@@ -57,11 +57,13 @@ story_points:
 simulation:
   default_iterations: 10000
   random_seed: 42  # For reproducibility
+  max_stored_critical_paths: 20  # Keep the 20 most common full critical paths
 
 output:
   formats: ["json", "csv", "html"]
   include_histogram: true
   histogram_bins: 50
+  critical_path_report_limit: 2  # Show the two most common paths in reports by default
 ```
 
 ## Uncertainty Factors
@@ -117,12 +119,52 @@ config = Config.load_from_file("config.yaml")
 engine = SimulationEngine(iterations=10000, config=config)
 ```
 
+### Critical path reporting
+
+The simulation can now keep track of full critical path sequences, not just task-level criticality.
+
+- `simulation.max_stored_critical_paths` controls how many of the most common full paths are retained in the results object.
+- `output.critical_path_report_limit` controls how many of those stored paths are shown in CLI summaries and exports by default.
+
+Example:
+
+```yaml
+simulation:
+  default_iterations: 10000
+  random_seed: null
+  max_stored_critical_paths: 50
+
+output:
+  formats: ["json", "html"]
+  include_histogram: true
+  histogram_bins: 50
+  critical_path_report_limit: 3
+```
+
+With that configuration, the simulation stores up to 50 unique full critical path sequences and shows the top 3 most common ones in the CLI, JSON, CSV, and HTML outputs.
+
+You can override the report count from the CLI:
+
+```bash
+mcprojsim simulate project.yaml --config config.yaml --critical-paths 5
+```
+
+This affects reporting only. Storage remains controlled by `simulation.max_stored_critical_paths`.
+
 ## Viewing Current Configuration
 
 ```bash
 mcprojsim config show
 mcprojsim config show --config-file config.yaml
 ```
+
+The `config show` output now includes:
+
+- default iteration count
+- random seed
+- max stored critical paths
+- output histogram settings
+- critical path report limit
 
 ## Symbolic Estimate Mappings
 

@@ -1,3 +1,23 @@
+## [v0.2.0] - 2026-03-08
+
+Release Type: minor
+
+### 📋 Summary 
+- First public pre-release. There are still functionality missing to reach 1.0.0 but there is enough to be useful.
+
+### ✨ Additions
+- Added full critical path analysis to show the entire critical network
+
+### 🚀 Improvements
+- Much improved error reporting for errors in project specifications (with line numbers and suggestions)
+
+### 🐛 Bug Fixes
+- Fixed wrong field names in one example
+
+### 🛠 Internal
+- Added a todo.md for what remains to reach 1.0.0
+
+
 ## [v0.2.0rc6] - 2026-03-08
 
 Release Type: minor

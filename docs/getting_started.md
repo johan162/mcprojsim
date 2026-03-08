@@ -35,7 +35,7 @@ project:
   name: "Website Redesign"
   description: "Complete redesign of company website"
   start_date: "2025-11-01"
-  confidence_levels: [50, 75, 80, 85, 90, 95]
+  confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
 
 tasks:
   - id: "task_001"
@@ -107,10 +107,14 @@ Median (P50): 13.8 days
 Std Dev: 2.3 days
 
 Confidence Intervals:
+  P25: 12.4 days
   P50: 13.8 days
+  P75: 15.9 days
   P80: 16.5 days
+  P85: 17.1 days
   P90: 17.9 days
   P95: 19.2 days
+  P99: 21.4 days
 
 Results exported to Website_Redesign_results.json
 Results exported to Website_Redesign_results.csv
@@ -128,12 +132,14 @@ Open the HTML file in your browser to see a detailed report with:
 
 ### Percentiles
 
+ - **P25**: 25% chance of completing by this date (aggressive target)
 - **P50 (Median)**: 50% chance of completing by this date
 - **P75**: 75% chance of completing by this date
 - **P80**: 80% chance of completing by this date 
 - **P85**: 85% chance of completing by this date (recommended for commitments)
 - **P90**: 90% chance of completing by this date (high confidence)
 - **P95**: 95% chance of completing by this date (very high confidence)
+- **P99**: 99% chance of completing by this date (near worst-case confidence)
 
 ## Next Steps
 

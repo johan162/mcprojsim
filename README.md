@@ -21,11 +21,11 @@
     - [Best for end users: Install with `pipx`](#best-for-end-users-install-with-pipx)
       - [Install with `pipx`](#install-with-pipx)
       - [Install a pre-release from TestPyPI](#install-a-pre-release-from-testpypi)
-    - [Preferred: Run with Podman or Docker](#preferred-run-with-podman-or-docker)
+    - [Containers: Run with Podman or Docker](#containers-run-with-podman-or-docker)
       - [Prerequisites](#prerequisites)
       - [Build the container image](#build-the-container-image)
       - [Run the CLI in the container](#run-the-cli-in-the-container)
-      - [Run simulations with local files](#run-simulations-with-local-files)
+      - [Run Container with local files](#run-container-with-local-files)
       - [Container Troubleshooting](#container-troubleshooting)
     - [Local development / source install prerequisites](#local-development--source-install-prerequisites)
     - [From Source](#from-source)
@@ -38,9 +38,11 @@
   - [Command-Line Interface](#command-line-interface)
     - [Commands](#commands)
     - [Options](#options)
-  - [Python API](#python-api)
   - [Configuration](#configuration)
   - [Examples](#examples)
+  - [Documentation](#documentation)
+    - [View Documentation Locally](#view-documentation-locally)
+    - [Documentation Server Options](#documentation-server-options)
   - [Development](#development)
     - [Setup Development Environment](#setup-development-environment)
     - [Run Tests](#run-tests)
@@ -66,7 +68,7 @@ A Monte Carlo simulation system for software development effort estimation. This
 - **Task Dependency Resolution** (precedence constraints)
 - **Uncertainty Factor Application** (team experience, requirements maturity, etc.)
 - **Resource Allocation and Availability Modeling**
-- **Percentile-Based Confidence Intervals** (P50, P75, P80, P85, P90, P95)
+- **Percentile-Based Confidence Intervals** (P25, P50, P75, P80, P85, P90, P95, P99)
 - **Sensitivity Analysis** and critical path identification
 - **Multiple Export Formats** (JSON, CSV, HTML reports)
 
@@ -76,6 +78,7 @@ A Monte Carlo simulation system for software development effort estimation. This
 
 If you want to install `mcprojsim` as a normal command-line tool, `pipx` is the simplest option.
 It installs the application in an isolated environment and makes the `mcprojsim` command directly available on your `PATH`.
+This is however limited to official releases (either pre- or production)
 
 #### Install with `pipx`
 
@@ -90,6 +93,7 @@ pipx install mcprojsim
 # Run it directly
 mcprojsim --help
 mcprojsim --version
+mcprojsim simulate examples/sample_project.yaml
 ```
 
 This is the recommended non-container option for end users.
@@ -113,10 +117,12 @@ pipx install \
 
 If `mcprojsim` is already installed with `pipx`, use `pipx upgrade` with the same `--pip-args` values.
 
-### Preferred: Run with Podman or Docker
+### Containers: Run with Podman or Docker
 
-Running `mcprojsim` as a container is the recommended option for end users.
+Running `mcprojsim` as a container is the best way to run the downloaded source in a defined environment.
 It avoids installing Poetry locally and provides an isolated runtime with the CLI preconfigured.
+This is recommended for advanced users and/or developers who might modify the source or run development
+versions of the project.
 
 #### Prerequisites
 
@@ -129,16 +135,36 @@ It avoids installing Poetry locally and provides an isolated runtime with the CL
 git clone https://github.com/johan162/mcprojsim.git
 cd mcprojsim
 
+# Automaticall selects available container manager (Podman or Docker)
+make container-build
+```
+
+This will be the same as ether running
+
+```bash
 # Preferred: Podman
 podman build -t mcprojsim .
+```
 
+or
+
+```bash
 # Alternative: Docker
 docker build -t mcprojsim .
 ```
 
 #### Run the CLI in the container
 
-The container entrypoint is already set to `mcprojsim`, so you only need to pass the CLI arguments.
+To run the container the recommended way is to use the supplied `./bin/mcprojsim.sh` shell script. It 
+will allow you to run the program as any other CLI tool.
+
+```bash
+./bin/mcprojsim --help
+./bin/mcprojsim simulate sample_project.yml
+```
+
+
+The container entrypoint is already set to `mcprojsim`, so you only need to pass the CLI arguments, for example as (here the cntainer is automatically removed as soon as it is finished)
 
 ```bash
 # Preferred: Podman
@@ -149,7 +175,7 @@ podman run --rm mcprojsim --version
 docker run --rm mcprojsim --help
 ```
 
-#### Run simulations with local files
+#### Run Container with local files
 
 Mount your working directory into the container so it can read input files and write result files.
 
@@ -183,9 +209,6 @@ docker build \
   --secret id=proxy_ca,src=CA_proxy_fw_all.pem \
   -t mcprojsim .
 ```
-
-- **Why this is needed:** Dockerfile `COPY` wildcard patterns do **not** silently ignore missing files. The glob is resolved while preparing the build context, and if it matches nothing, the build fails. That is why `COPY CA_proxy_fw_all.pem* ...` still errors when the file does not exist.
-- **Why the new approach is better:** using an optional build secret keeps standard builds simple, avoids placeholder files in the repository, and only requires the certificate when proxy mode is explicitly enabled.
 
 ### Local development / source install prerequisites
 
@@ -227,17 +250,12 @@ poetry run mcprojsim --help
 ### From PyPI (when published)
 
 ```bash
-# Using pip
-pip install mcprojsim
+# Using pipx
+pipx install mcprojsim
+
 
 # Or using Poetry in your project
 poetry add mcprojsim
-```
-
-To install a pre-release with `pip`, point the main index at TestPyPI and keep PyPI as the fallback for dependencies:
-
-```bash
-pip install --pre --index-url https://test.pypi.org/simple --extra-index-url https://pypi.org/simple mcprojsim
 ```
 
 If you prefer running the project from a source checkout without installing it locally, you can also use the containerized CLI wrapper:
@@ -258,7 +276,7 @@ project:
   name: "My Project"
   description: "Sample project for estimation"
   start_date: "2025-11-01"
-  confidence_levels: [50, 75, 80, 85, 90, 95]
+  confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
 
 tasks:
   - id: "task_001"
@@ -347,31 +365,6 @@ docker run --rm -v "$PWD:/work" mcprojsim validate project.yaml
 - `--output-format, -f` - Output formats: json, csv, html (comma-separated)
 - `--quiet, -q` - Suppress progress output
 
-## Python API
-
-```python
-from mcprojsim import Project, SimulationEngine
-from mcprojsim.parsers import YAMLParser
-
-# Load project
-parser = YAMLParser()
-project = parser.parse_file("project.yaml")
-
-# Run simulation
-engine = SimulationEngine(iterations=10000, random_seed=42)
-results = engine.run(project)
-
-# Access results
-print(f"P50 (Median): {results.percentile(50)} days")
-print(f"P90: {results.percentile(90)} days")
-print(f"Mean: {results.mean} days")
-print(f"Std Dev: {results.std_dev} days")
-
-# Get critical path
-critical_tasks = results.get_critical_path()
-for task_id, criticality in critical_tasks.items():
-    print(f"{task_id}: {criticality*100:.1f}% critical")
-```
 
 ## Configuration
 
@@ -405,11 +398,16 @@ See the `examples/` directory for:
 - `sample_project.yaml` - Complete project definition example
 - `sample_config.yaml` - Configuration file example
 
+To use a custom configuration file together with a project file use this syntax (see `mcprojsim simulate --help` for supported options)
+
+```bash
+mcprojsim simulate --config example/sample_config.yaml examples/sample_project.yaml  
 ```
+
 
 ## Documentation
 
-Comprehensive documentation is available in the `docs/` directory:
+The source documentation is available in the `docs/` directory. These doc sources are used to build a `mkdocs` site that can be run locally. It is also available in GitHub as a static site [mcprojsim documentation](https://johan162.github.io/mcprojsim/)
 
 - **[Getting Started](docs/getting_started.md)** - Step-by-step guide to your first simulation
 - **[Formal Grammar](docs/grammar.md)** - Complete EBNF specification of the input file format
@@ -458,8 +456,6 @@ poetry install
 # Activate the virtual environment
 poetry shell
 
-# Install pre-commit hooks
-pre-commit install
 ```
 
 ### Run Tests
@@ -476,6 +472,7 @@ poetry run pytest -n auto
 
 # Run specific test file
 poetry run pytest tests/test_simulation.py
+
 ```
 
 ### Code Quality
@@ -489,6 +486,13 @@ poetry run mypy src/
 
 # Linting
 poetry run flake8 src/ tests/
+```
+
+or using the `Makefile`
+
+```bash
+# Run both Lint, formatting, and type checks
+make check
 ```
 
 ### Build Documentation
@@ -543,7 +547,6 @@ mcprojsim/
 - Python 3.14+
 - Poetry 2.0+
 - NumPy 2.3.4+
-- Pandas 2.0+
 - PyYAML 6.0+
 - Pydantic 2.0+
 - Click 8.0+
@@ -577,9 +580,9 @@ If you use this tool in your research or project management, please cite:
 @software{mcprojsim,
   title = {Monte Carlo Project Simulator},
   author = {Johan Persson},
-  year = {2025},
+  year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.2.0rc6}
+  version = {0.2.0}
 }
 ```
 

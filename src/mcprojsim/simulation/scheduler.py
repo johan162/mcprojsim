@@ -96,44 +96,71 @@ class TaskScheduler:
         Returns:
             Set of task IDs on the critical path
         """
+        critical_paths = self.get_critical_paths(schedule)
+        return {task_id for path in critical_paths for task_id in path}
+
+    def get_critical_paths(
+        self, schedule: Dict[str, Dict[str, float]]
+    ) -> list[tuple[str, ...]]:
+        """Identify all full critical path sequences.
+
+        Args:
+            schedule: Task schedule from `schedule_tasks()`
+
+        Returns:
+            Sorted list of critical path sequences from start task to end task
+        """
         if not schedule:
-            return set()
+            return []
 
-        # Find project end time
         project_end = max(info["end"] for info in schedule.values())
+        critical_paths: set[tuple[str, ...]] = set()
+        cache: Dict[str, set[tuple[str, ...]]] = {}
 
-        # Work backwards to find critical path
-        critical_tasks: Set[str] = set()
-
-        # Find tasks that end at project completion
         for task_id, info in schedule.items():
             if abs(info["end"] - project_end) < 1e-9:  # Float comparison tolerance
-                self._trace_critical_path(task_id, schedule, critical_tasks)
+                critical_paths.update(
+                    self._trace_critical_paths(task_id, schedule, cache)
+                )
 
-        return critical_tasks
+        return sorted(critical_paths)
 
-    def _trace_critical_path(
+    def _trace_critical_paths(
         self,
         task_id: str,
         schedule: Dict[str, Dict[str, float]],
-        critical_tasks: Set[str],
-    ) -> None:
-        """Recursively trace critical path backwards.
+        cache: Dict[str, set[tuple[str, ...]]],
+    ) -> set[tuple[str, ...]]:
+        """Recursively trace all critical paths backwards.
 
         Args:
             task_id: Current task ID
             schedule: Task schedule
-            critical_tasks: Set to accumulate critical tasks
-        """
-        if task_id in critical_tasks:
-            return
+            cache: Memoized critical paths ending at each task
 
-        critical_tasks.add(task_id)
+        Returns:
+            Set of critical path sequences ending at `task_id`
+        """
+        if task_id in cache:
+            return cache[task_id]
+
         task = self.task_map[task_id]
         task_start = schedule[task_id]["start"]
+        matching_dependencies = [
+            dep_id
+            for dep_id in task.dependencies
+            if abs(schedule[dep_id]["end"] - task_start) < 1e-9
+        ]
 
-        # Find dependencies that directly precede this task
-        for dep_id in task.dependencies:
-            dep_end = schedule[dep_id]["end"]
-            if abs(dep_end - task_start) < 1e-9:  # Float comparison tolerance
-                self._trace_critical_path(dep_id, schedule, critical_tasks)
+        if not matching_dependencies:
+            leaf_paths: set[tuple[str, ...]] = {(task_id,)}
+            cache[task_id] = leaf_paths
+            return leaf_paths
+
+        paths: set[tuple[str, ...]] = set()
+        for dep_id in sorted(matching_dependencies):
+            for path in self._trace_critical_paths(dep_id, schedule, cache):
+                paths.add(path + (task_id,))
+
+        cache[task_id] = paths
+        return paths

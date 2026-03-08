@@ -2,7 +2,7 @@ project:
   name: "Mobile App Development"
   description: "Example project using T-shirt sizing for effort estimates"
   start_date: "2025-11-01"
-  confidence_levels: [50, 75, 80, 85, 90, 95]
+  confidence_levels: [10, 50, 75, 80, 85, 90, 95, 99]
   probability_red_threshold: 0.50
   probability_green_threshold: 0.90
 
@@ -59,7 +59,7 @@ tasks:
       unit: "days"
     dependencies: ["mobile_app_dev"]
     uncertainty_factors:
-      testing_requirements: "high"
+      requirements_maturity: "high"
 
   - id: "deployment"
     name: "Deployment and Go-Live"
@@ -68,7 +68,7 @@ tasks:
       unit: "days"
     dependencies: ["integration_testing"]
     uncertainty_factors:
-      deployment_complexity: "medium"
+      integration_complexity: "medium"
 
 project_risks:
   - id: "team_change"

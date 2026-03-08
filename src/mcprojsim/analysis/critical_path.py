@@ -2,7 +2,7 @@
 
 from typing import Dict, List
 
-from mcprojsim.models.simulation import SimulationResults
+from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
 
 
 class CriticalPathAnalyzer:
@@ -35,3 +35,18 @@ class CriticalPathAnalyzer:
         """
         criticality = CriticalPathAnalyzer.get_criticality_index(results)
         return [task_id for task_id, crit in criticality.items() if crit >= threshold]
+
+    @staticmethod
+    def get_most_frequent_paths(
+        results: SimulationResults, top_n: int | None = None
+    ) -> list[CriticalPathRecord]:
+        """Get the most frequent full critical path sequences.
+
+        Args:
+            results: Simulation results
+            top_n: Maximum number of paths to return
+
+        Returns:
+            List of aggregated critical path records
+        """
+        return results.get_critical_path_sequences(top_n)

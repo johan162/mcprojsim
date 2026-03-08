@@ -3,7 +3,12 @@
 import pytest
 import yaml
 
-from mcprojsim.config import Config, SimulationConfig, OutputConfig
+from mcprojsim.config import (
+    Config,
+    DEFAULT_CONFIDENCE_LEVELS,
+    OutputConfig,
+    SimulationConfig,
+)
 
 
 class TestConfig:
@@ -17,6 +22,10 @@ class TestConfig:
         assert "requirements_maturity" in config.uncertainty_factors
         assert "technical_complexity" in config.uncertainty_factors
         assert config.simulation.default_iterations == 10000
+
+    def test_default_confidence_levels_include_p25_and_p99(self):
+        """Test the shared default confidence levels include P25 and P99."""
+        assert DEFAULT_CONFIDENCE_LEVELS == [25, 50, 75, 80, 85, 90, 95, 99]
 
     def test_get_uncertainty_multiplier(self):
         """Test getting uncertainty multiplier."""
@@ -66,6 +75,7 @@ class TestConfig:
         config = Config.load_from_file(config_file)
         assert config.simulation.default_iterations == 5000
         assert config.simulation.random_seed == 42
+        assert config.simulation.max_stored_critical_paths == 20
         assert config.get_t_shirt_size("M") is not None
         assert config.get_story_point(5) is not None
 
@@ -103,6 +113,7 @@ class TestSimulationConfig:
         config = SimulationConfig()
         assert config.default_iterations == 10000
         assert config.random_seed is None
+        assert config.max_stored_critical_paths == 20
 
 
 class TestTShirtSizes:
@@ -200,3 +211,9 @@ class TestOutputConfig:
         assert "html" in config.formats
         assert config.include_histogram is True
         assert config.histogram_bins == 50
+        assert config.critical_path_report_limit == 2
+
+    def test_output_config_custom_critical_path_report_limit(self):
+        """Test custom critical path report limit."""
+        config = OutputConfig(critical_path_report_limit=4)
+        assert config.critical_path_report_limit == 4

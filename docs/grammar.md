@@ -202,7 +202,7 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
 1. **Date Format**: `start_date` must be a valid ISO 8601 date (YYYY-MM-DD)
 2. **Percentiles**: Values in `confidence_levels` must be unique, sorted in ascending order, and in range [1, 99]
 3. **Thresholds**: `probability_red_threshold` < `probability_green_threshold`
-4. **Default Percentiles**: If not specified, defaults to `[50, 75, 80, 85, 90, 95]`
+4. **Default Percentiles**: If not specified, defaults to `[25, 50, 75, 80, 85, 90, 95, 99]`
 5. **Default Thresholds**: 
    - `probability_red_threshold`: 0.50 (50%)
    - `probability_green_threshold`: 0.90 (90%)

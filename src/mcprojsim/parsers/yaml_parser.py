@@ -6,6 +6,13 @@ from typing import Any, Dict
 import yaml
 
 from mcprojsim.models.project import Project
+from mcprojsim.parsers.error_reporting import (
+    format_validation_error,
+    format_validation_issues,
+    format_yaml_parse_error,
+    load_yaml_with_locations,
+    validate_project_payload,
+)
 
 
 class YAMLParser:
@@ -29,11 +36,26 @@ class YAMLParser:
             raise FileNotFoundError(f"Project file not found: {file_path}")
 
         with open(file_path, "r") as f:
-            data = yaml.safe_load(f)
+            text = f.read()
 
-        return self.parse_dict(data)
+        try:
+            parsed = load_yaml_with_locations(text)
+        except yaml.YAMLError as e:
+            raise ValueError(format_yaml_parse_error(e, file_path)) from e
 
-    def parse_dict(self, data: Dict[str, Any]) -> Project:
+        return self.parse_dict(
+            parsed.data,
+            file_path=file_path,
+            path_lines=parsed.path_lines,
+        )
+
+    def parse_dict(
+        self,
+        data: Dict[str, Any],
+        *,
+        file_path: Path | str | None = None,
+        path_lines: dict[tuple[str | int, ...], int] | None = None,
+    ) -> Project:
         """Parse project data from dictionary.
 
         Args:
@@ -42,10 +64,19 @@ class YAMLParser:
         Returns:
             Project object
         """
+        file_path = Path(file_path) if file_path is not None else Path("<memory>.yaml")
+        path_lines = path_lines or {(): 1}
+
+        issues = validate_project_payload(data)
+        if issues:
+            raise ValueError(format_validation_issues(issues, path_lines, file_path))
+
         try:
             return Project(**data)
         except Exception as e:
-            raise ValueError(f"Invalid project data: {e}") from e
+            raise ValueError(
+                format_validation_error(e, path_lines, data, file_path)
+            ) from e
 
     def validate_file(self, file_path: Path | str) -> tuple[bool, str]:
         """Validate a project file without creating Project object.

@@ -32,10 +32,13 @@ print(f"Mean: {results.mean:.2f} days")
 print(f"Median (P50): {results.median:.2f} days")
 print(f"Std Dev: {results.std_dev:.2f} days")
 print(f"\nConfidence Intervals:")
+print(f"  P25: {results.percentile(25):.2f} days")
 print(f"  P50: {results.percentile(50):.2f} days")
+print(f"  P75: {results.percentile(75):.2f} days")
 print(f"  P80: {results.percentile(80):.2f} days")
 print(f"  P90: {results.percentile(90):.2f} days")
 print(f"  P95: {results.percentile(95):.2f} days")
+print(f"  P99: {results.percentile(99):.2f} days")
 
 # Critical path
 print(f"\nCritical Path Analysis:")

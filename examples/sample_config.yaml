@@ -55,8 +55,10 @@ t_shirt_sizes:
 simulation:
   default_iterations: 10000
   random_seed: null  # null for random, or integer for reproducibility
+  max_stored_critical_paths: 20  # keep the 20 most frequent full paths in results
 
 output:
   formats: ["json", "csv", "html"]
   include_histogram: true
   histogram_bins: 50
+  critical_path_report_limit: 2  # show the two most common full paths by default

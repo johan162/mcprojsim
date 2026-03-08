@@ -2,7 +2,7 @@ project:
   name: "High-Stakes Mission Critical Project"
   description: "Project with strict success criteria"
   start_date: "2025-12-01"
-  confidence_levels: [50, 75, 80, 85, 90, 95]
+  confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
   # Custom thresholds for thermometer visualization
   # This project is high-stakes, so we want:
   # - Red (high risk) for anything below 70% probability
