@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#introduction" class="md-skip">
+        <a href="#introduction-to-monte-carlo-simulation" class="md-skip">
           Skip to content
         </a>
       
@@ -558,6 +558,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -574,6 +592,410 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-software-schedule-estimates-are-difficult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why software schedule estimates are difficult
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-with-single-point-estimates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem with single-point estimates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-certainty-to-uncertainty" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From certainty to uncertainty
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-a-range-estimate-really-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What a range estimate really means
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-range-estimates-are-more-informative-than-they-look" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why range estimates are more informative than they look
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-monte-carlo-simulation-comes-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Monte Carlo simulation comes in
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-simple-example-one-uncertain-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A simple example: one uncertain task
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-one-run-is-not-the-forecast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why one run is not the forecast
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-many-runs-to-a-probability-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From many runs to a probability distribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-one-task-to-a-full-project-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From one task to a full project network
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-dependencies-matter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why dependencies matter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#duration-sequencing-and-project-completion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duration, sequencing, and project completion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-critical-path-informally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The critical path, informally
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-critical-path-can-change-between-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the critical path can change between runs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uncertainty-does-not-come-only-from-the-estimate-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Uncertainty does not come only from the estimate range
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uncertainty-factors-in-practical-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Uncertainty factors in practical terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-configuration-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why configuration matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risks-are-different-from-uncertainty-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks are different from uncertainty factors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-level-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task-level risks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-level-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project-level risks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#probability-and-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Probability and impact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources-and-calendars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resources and calendars
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-simulation-is-really-computing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the simulation is really computing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-results-mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the results mean
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-percentiles-such-as-p50-p80-and-p90" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common percentiles such as P50, P80, and P90
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#histograms-and-spread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histograms and spread
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sensitivity-and-criticality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensitivity and criticality
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproducibility-and-random-seeds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducibility and random seeds
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-project-file-reflects-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the project file reflects the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-configuration-file-reflects-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the configuration file reflects the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-a-project-file-informally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading a project file informally
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-can-be-estimated-in-more-than-one-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What can be estimated in more than one way
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#t-shirt-sizes-as-a-bridge-from-intuition-to-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        T-shirt sizes as a bridge from intuition to simulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-monte-carlo-estimation-is-especially-useful" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When Monte Carlo estimation is especially useful
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-comes-next-in-this-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What comes next in this guide
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -884,6 +1306,399 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-software-schedule-estimates-are-difficult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why software schedule estimates are difficult
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-with-single-point-estimates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem with single-point estimates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-certainty-to-uncertainty" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From certainty to uncertainty
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-a-range-estimate-really-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What a range estimate really means
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-range-estimates-are-more-informative-than-they-look" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why range estimates are more informative than they look
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-monte-carlo-simulation-comes-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Where Monte Carlo simulation comes in
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-simple-example-one-uncertain-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A simple example: one uncertain task
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-one-run-is-not-the-forecast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why one run is not the forecast
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-many-runs-to-a-probability-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From many runs to a probability distribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#from-one-task-to-a-full-project-network" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From one task to a full project network
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-dependencies-matter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why dependencies matter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#duration-sequencing-and-project-completion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duration, sequencing, and project completion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-critical-path-informally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The critical path, informally
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-the-critical-path-can-change-between-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the critical path can change between runs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uncertainty-does-not-come-only-from-the-estimate-range" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Uncertainty does not come only from the estimate range
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uncertainty-factors-in-practical-terms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Uncertainty factors in practical terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-configuration-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why configuration matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#risks-are-different-from-uncertainty-factors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks are different from uncertainty factors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#task-level-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task-level risks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-level-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project-level risks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#probability-and-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Probability and impact
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resources-and-calendars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resources and calendars
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-simulation-is-really-computing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the simulation is really computing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-results-mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What the results mean
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-percentiles-such-as-p50-p80-and-p90" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common percentiles such as P50, P80, and P90
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#histograms-and-spread" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histograms and spread
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sensitivity-and-criticality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensitivity and criticality
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reproducibility-and-random-seeds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducibility and random seeds
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-project-file-reflects-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the project file reflects the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-configuration-file-reflects-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the configuration file reflects the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-a-project-file-informally" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading a project file informally
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-can-be-estimated-in-more-than-one-way" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What can be estimated in more than one way
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#t-shirt-sizes-as-a-bridge-from-intuition-to-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        T-shirt sizes as a bridge from intuition to simulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-monte-carlo-estimation-is-especially-useful" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When Monte Carlo estimation is especially useful
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-comes-next-in-this-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What comes next in this guide
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -902,9 +1717,115 @@
   
 
 
-<h1 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h1>
+<h1 id="introduction-to-monte-carlo-simulation">Introduction to Monte Carlo Simulation<a class="headerlink" href="#introduction-to-monte-carlo-simulation" title="Permanent link">&para;</a></h1>
 <p>Welcome to the Monte Carlo Project Simulator User Guide.</p>
-<p>This guide will walk you through all aspects of using mcprojsim for probabilistic project estimation.</p>
+<p>This chapter introduces the ideas behind probabilistic project estimation in a gradual way. The goal is not to jump directly into commands or file syntax, but to build a clear mental model of what Monte Carlo simulation is, why it is useful for project planning, and how the main concepts appear in <code>mcprojsim</code>.</p>
+<p>The intended reader is generally knowledgeable about software projects and planning, but not necessarily familiar with Monte Carlo methods. For that reason, the discussion starts with familiar project problems and then moves step by step toward the simulation model used by the tool.</p>
+<h2 id="why-software-schedule-estimates-are-difficult">Why software schedule estimates are difficult<a class="headerlink" href="#why-software-schedule-estimates-are-difficult" title="Permanent link">&para;</a></h2>
+<p>Software projects are not repetitive production processes. They involve discovery, design trade-offs, unknown technical constraints, communication overhead, integration problems, and changing assumptions. Even when the team is experienced and the work is well understood, the true effort is rarely captured well by a single number.</p>
+<p>This is not because software teams are uniquely poor at estimating. It is because the work itself is uncertain. A realistic planning method should therefore begin by acknowledging uncertainty rather than trying to hide it.</p>
+<h2 id="the-problem-with-single-point-estimates">The problem with single-point estimates<a class="headerlink" href="#the-problem-with-single-point-estimates" title="Permanent link">&para;</a></h2>
+<p>A single-point estimate such as “this task will take five days” appears precise, but it compresses several different possibilities into one number. It says nothing about how optimistic that estimate is, how much variation is plausible, or how likely delays are.</p>
+<p>In practice, a task may finish early if the work is straightforward, finish near the expected time if things go normally, or finish much later if complications arise. A single-point estimate does not distinguish between these cases, which makes it difficult to reason about overall project risk.</p>
+<h2 id="from-certainty-to-uncertainty">From certainty to uncertainty<a class="headerlink" href="#from-certainty-to-uncertainty" title="Permanent link">&para;</a></h2>
+<p>Monte Carlo estimation begins with a simple shift in thinking: instead of asking for one exact duration, we ask for a structured description of plausible outcomes. That structured description is what makes simulation possible.</p>
+<p>This is an important idea throughout the tool. The purpose is not to predict the future with certainty, but to describe a range of credible futures and estimate how often each kind of outcome occurs.</p>
+<h2 id="what-a-range-estimate-really-means">What a range estimate really means<a class="headerlink" href="#what-a-range-estimate-really-means" title="Permanent link">&para;</a></h2>
+<p>A range estimate expresses uncertainty more honestly than a single number. In its simplest form, a task is described using a minimum value, a most likely value, and a maximum value. These are not arbitrary numbers; together they describe the shape of belief about the task.</p>
+<p>The minimum represents an optimistic but still plausible outcome. The most likely value represents the outcome you would expect under normal conditions. The maximum represents a difficult but still credible outcome if several things go wrong.</p>
+<h2 id="why-range-estimates-are-more-informative-than-they-look">Why range estimates are more informative than they look<a class="headerlink" href="#why-range-estimates-are-more-informative-than-they-look" title="Permanent link">&para;</a></h2>
+<p>At first glance, a range estimate may seem less precise than a single-point estimate. In fact, it contains more information. It tells us not only what outcome seems typical, but also how much variation surrounds it.</p>
+<p>That variation is essential at project level. Even if every task has only moderate uncertainty, the combined uncertainty across many tasks can create a wide spread of overall completion dates.</p>
+<h2 id="where-monte-carlo-simulation-comes-in">Where Monte Carlo simulation comes in<a class="headerlink" href="#where-monte-carlo-simulation-comes-in" title="Permanent link">&para;</a></h2>
+<p>Once tasks are described as ranges rather than fixed durations, the next natural question is what to do with those ranges. Monte Carlo simulation answers that question by repeatedly sampling possible values and computing the resulting project outcome each time.</p>
+<p>Each run of the simulation is one plausible version of how the project might unfold. By repeating the process many times, the tool builds a distribution of outcomes instead of a single answer.</p>
+<h2 id="a-simple-example-one-uncertain-task">A simple example: one uncertain task<a class="headerlink" href="#a-simple-example-one-uncertain-task" title="Permanent link">&para;</a></h2>
+<p>Imagine a single task with a minimum of 3 days, a most likely value of 5 days, and a maximum of 10 days. A simulation does not always choose 5. Instead, it repeatedly draws values from within the range according to the selected distribution.</p>
+<p>Some runs may produce a duration near 4 days, others near 6, and some near the extremes. No single run is “the truth”. The value of the method comes from looking at the collection of results rather than any one sample.</p>
+<h2 id="why-one-run-is-not-the-forecast">Why one run is not the forecast<a class="headerlink" href="#why-one-run-is-not-the-forecast" title="Permanent link">&para;</a></h2>
+<p>One simulation run is simply one possible future. It is useful only as one member of a much larger set. This is why Monte Carlo methods typically run thousands of iterations.</p>
+<p>The more iterations we run, the better we can approximate the overall shape of the outcome distribution. In <code>mcprojsim</code>, the default is 10,000 iterations, which is usually enough to provide a stable picture for many planning tasks.</p>
+<h2 id="from-many-runs-to-a-probability-distribution">From many runs to a probability distribution<a class="headerlink" href="#from-many-runs-to-a-probability-distribution" title="Permanent link">&para;</a></h2>
+<p>When we aggregate the results of many iterations, we can see not only the central tendency of the schedule, but also its spread. Instead of saying “the project ends in 73 days”, we can say things like “there is a 50% chance of finishing by this date” or “there is an 80% chance of finishing by that date”.</p>
+<p>This is the point at which simulation becomes valuable for management decisions. Planning is rarely about the most likely outcome alone. It is often about deciding how much confidence is required before committing to a date.</p>
+<h2 id="from-one-task-to-a-full-project-network">From one task to a full project network<a class="headerlink" href="#from-one-task-to-a-full-project-network" title="Permanent link">&para;</a></h2>
+<p>Real projects consist of many tasks, not one. Each task has its own estimate, and the tasks are not independent in a scheduling sense. Some can start immediately, while others must wait for predecessors to finish.</p>
+<p>This means the simulation must do more than draw random durations. It must also respect the logical structure of the project. In <code>mcprojsim</code>, that structure is represented through task dependencies.</p>
+<h2 id="why-dependencies-matter">Why dependencies matter<a class="headerlink" href="#why-dependencies-matter" title="Permanent link">&para;</a></h2>
+<p>Dependencies determine the order in which work can occur. A task cannot begin simply because a team is ready to work on it; it may also require certain other tasks to be complete first.</p>
+<p>This matters because uncertainty propagates through the dependency network. A delay in one upstream task can delay many downstream tasks even if those later tasks are estimated accurately.</p>
+<h2 id="duration-sequencing-and-project-completion">Duration, sequencing, and project completion<a class="headerlink" href="#duration-sequencing-and-project-completion" title="Permanent link">&para;</a></h2>
+<p>Project duration is not computed by adding all task durations together blindly. Some tasks can run in parallel, while others form chains that must happen in sequence. The final project duration emerges from both the estimated task durations and the structure of the task network.</p>
+<p>This is why task scheduling is a central part of project simulation. The same set of task estimates can lead to different overall project durations depending on how the work is connected.</p>
+<h2 id="the-critical-path-informally">The critical path, informally<a class="headerlink" href="#the-critical-path-informally" title="Permanent link">&para;</a></h2>
+<p>In any given simulated run, some sequence of dependent tasks effectively determines the final completion time. This sequence is commonly called the critical path.</p>
+<p>Thinking about the critical path is useful because not every task contributes equally to schedule risk. Some tasks are important but not schedule-dominant. Others repeatedly determine whether the project finishes early or late.</p>
+<h2 id="why-the-critical-path-can-change-between-runs">Why the critical path can change between runs<a class="headerlink" href="#why-the-critical-path-can-change-between-runs" title="Permanent link">&para;</a></h2>
+<p>A common mistake is to assume there is one fixed critical path. In deterministic planning this may be a useful simplification, but in a simulation context it is often wrong.</p>
+<p>Because task durations vary from run to run, the schedule-dominating path can also change. One of the strengths of Monte Carlo simulation is that it can show which tasks are frequently critical, not just which tasks are critical in one nominal plan.</p>
+<h2 id="uncertainty-does-not-come-only-from-the-estimate-range">Uncertainty does not come only from the estimate range<a class="headerlink" href="#uncertainty-does-not-come-only-from-the-estimate-range" title="Permanent link">&para;</a></h2>
+<p>The raw estimate range is only one source of schedule variation. Projects are also shaped by systematic factors such as team capability, requirements clarity, technical novelty, distribution of the team, and integration complexity.</p>
+<p>These factors are not random events in the same way as risks. Instead, they act as multipliers that adjust the underlying estimate before the broader project simulation runs.</p>
+<h2 id="uncertainty-factors-in-practical-terms">Uncertainty factors in practical terms<a class="headerlink" href="#uncertainty-factors-in-practical-terms" title="Permanent link">&para;</a></h2>
+<p><code>mcprojsim</code> supports configurable uncertainty factors such as <code>team_experience</code>, <code>requirements_maturity</code>, <code>technical_complexity</code>, <code>team_distribution</code>, and <code>integration_complexity</code>. Each factor maps qualitative labels such as <code>high</code>, <code>medium</code>, or <code>low</code> to numeric multipliers.</p>
+<p>For example, a highly experienced team may reduce effective duration, while poorly defined requirements may increase it. This makes the model easier to understand because the user can express judgment in domain language, while the simulator converts that judgment into a numerical effect.</p>
+<h2 id="why-configuration-matters">Why configuration matters<a class="headerlink" href="#why-configuration-matters" title="Permanent link">&para;</a></h2>
+<p>The meaning of labels such as <code>high complexity</code> or <code>low maturity</code> depends on the organization, team, and domain. For that reason, these multipliers are defined in a separate configuration file rather than being hard-coded into the project file.</p>
+<p>This separation is conceptually important. The project file describes the project itself, while the configuration file describes how the organization wants to interpret uncertainty and defaults.</p>
+<h2 id="risks-are-different-from-uncertainty-factors">Risks are different from uncertainty factors<a class="headerlink" href="#risks-are-different-from-uncertainty-factors" title="Permanent link">&para;</a></h2>
+<p>Uncertainty factors describe persistent conditions around the work. Risks describe events that may or may not happen. A difficult architecture is an uncertainty factor. A failed security audit that adds rework is a risk.</p>
+<p>This distinction helps the model stay understandable. Not every source of delay should be represented as a probabilistic event. Some are better represented as systematic adjustments, while others are better represented as discrete possibilities.</p>
+<h2 id="task-level-risks">Task-level risks<a class="headerlink" href="#task-level-risks" title="Permanent link">&para;</a></h2>
+<p>Task-level risks apply to a specific task. Examples include migration problems during a database change, browser compatibility issues in frontend work, or integration failures in a specific subsystem.</p>
+<p>Each risk has a probability and an impact. During each iteration, the simulator evaluates whether the risk triggers. If it does, the impact is added to the task duration for that run.</p>
+<h2 id="project-level-risks">Project-level risks<a class="headerlink" href="#project-level-risks" title="Permanent link">&para;</a></h2>
+<p>Some risks affect the project more broadly than a single task. For example, a major requirements change, loss of key staff, or unexpected organizational constraints may affect overall delivery time.</p>
+<p>Project-level risks are therefore modeled separately from task-level risks. They are still probabilistic, but they apply at overall project level rather than to one task’s estimate.</p>
+<h2 id="probability-and-impact">Probability and impact<a class="headerlink" href="#probability-and-impact" title="Permanent link">&para;</a></h2>
+<p>Every risk model combines two different ideas: how likely the event is, and how large the consequence is if it happens. These dimensions should not be confused.</p>
+<p>A low-probability, high-impact event behaves differently from a high-probability, low-impact event. Monte Carlo simulation is useful precisely because it can represent both without forcing them into a single oversimplified score.</p>
+<h2 id="resources-and-calendars">Resources and calendars<a class="headerlink" href="#resources-and-calendars" title="Permanent link">&para;</a></h2>
+<p>Projects are not constrained only by logic and estimates. They are also constrained by people, availability, and calendars. Two tasks may be logically ready to start at the same time, but still compete for the same specialist.</p>
+<p><code>mcprojsim</code> supports resource modeling so that the schedule can reflect over-allocation, limited availability, and non-working periods. This is particularly useful when a few shared specialists create bottlenecks across the plan.</p>
+<h2 id="what-the-simulation-is-really-computing">What the simulation is really computing<a class="headerlink" href="#what-the-simulation-is-really-computing" title="Permanent link">&para;</a></h2>
+<p>At this point, the core logic of the tool can be stated informally. For each iteration, the simulator samples task durations, applies uncertainty factors, evaluates risks, respects dependencies, considers scheduling constraints, and computes the resulting project completion time.</p>
+<p>This process is then repeated many times. The final output is not the result of one deterministic calculation, but the statistical summary of many plausible project histories.</p>
+<h2 id="what-the-results-mean">What the results mean<a class="headerlink" href="#what-the-results-mean" title="Permanent link">&para;</a></h2>
+<p>Simulation results should be read as statements about confidence, spread, and likelihood. A median outcome tells you what happens in the middle of the simulated runs. A percentile such as P80 tells you the duration that 80% of runs finish within.</p>
+<p>These numbers are decision aids, not guarantees. They help users choose targets that reflect a chosen level of planning confidence.</p>
+<h2 id="common-percentiles-such-as-p50-p80-and-p90">Common percentiles such as P50, P80, and P90<a class="headerlink" href="#common-percentiles-such-as-p50-p80-and-p90" title="Permanent link">&para;</a></h2>
+<p>P50 is often interpreted as a neutral or even split-risk date: half of all simulated runs finish earlier, and half finish later. P80 and P90 are more conservative and therefore more useful when the cost of lateness is high.</p>
+<p>The important point is not that one percentile is always correct. The important point is that the simulation allows stakeholders to choose a confidence level deliberately rather than inheriting one implicitly.</p>
+<h2 id="histograms-and-spread">Histograms and spread<a class="headerlink" href="#histograms-and-spread" title="Permanent link">&para;</a></h2>
+<p>A histogram gives a visual summary of how outcomes are distributed. A narrow histogram suggests relatively stable outcomes. A wide histogram suggests greater uncertainty. Skewness can indicate that the project has more downside than upside.</p>
+<p>Even users who are not statistically trained can often read histograms effectively once they understand that the horizontal axis represents duration and the vertical axis represents frequency.</p>
+<h2 id="sensitivity-and-criticality">Sensitivity and criticality<a class="headerlink" href="#sensitivity-and-criticality" title="Permanent link">&para;</a></h2>
+<p>One of the most useful questions in project planning is not only “how long will this take?” but also “what drives the answer?” Sensitivity analysis helps identify which tasks contribute most to schedule variation.</p>
+<p>Criticality analysis helps answer a related question: which tasks most often appear on the critical path across iterations? Together, these views can tell you where to focus mitigation and management attention.</p>
+<h2 id="reproducibility-and-random-seeds">Reproducibility and random seeds<a class="headerlink" href="#reproducibility-and-random-seeds" title="Permanent link">&para;</a></h2>
+<p>Although Monte Carlo simulation relies on randomness, it can still be made reproducible. By setting a random seed, users can repeat the same simulation and obtain the same results.</p>
+<p>This is useful for analysis, review, automation, and auditability. It allows teams to discuss the same output without worrying that the numbers changed simply because the simulation was run again.</p>
+<h2 id="how-the-project-file-reflects-the-model">How the project file reflects the model<a class="headerlink" href="#how-the-project-file-reflects-the-model" title="Permanent link">&para;</a></h2>
+<p>Once the conceptual model is clear, the project file becomes much easier to understand. It is not just a list of parameters. It is a structured description of the project: metadata, tasks, dependencies, risks, optional resources, and reporting preferences.</p>
+<p>The order of the file also reflects the logic of the model. First comes the project as a whole, then broad project risks, then the task network, and optionally the resources and calendars that constrain execution.</p>
+<h2 id="how-the-configuration-file-reflects-the-model">How the configuration file reflects the model<a class="headerlink" href="#how-the-configuration-file-reflects-the-model" title="Permanent link">&para;</a></h2>
+<p>The configuration file provides the shared assumptions that the project file should not have to repeat. It defines the meaning of uncertainty labels, simulation defaults, output behavior, and predefined estimate shapes such as T-shirt sizes.</p>
+<p>This allows teams to keep project files focused and readable while still expressing organization-specific estimation logic.</p>
+<h2 id="reading-a-project-file-informally">Reading a project file informally<a class="headerlink" href="#reading-a-project-file-informally" title="Permanent link">&para;</a></h2>
+<p>Before learning every schema detail, it helps to read a project file as a narrative. The project block says what is being planned. The task list says what must be done. Dependencies say in what order work becomes possible. Risks and uncertainty factors explain why durations may vary.</p>
+<p>This informal reading is often enough to understand the structure of an example file before moving into the more formal format reference.</p>
+<h2 id="what-can-be-estimated-in-more-than-one-way">What can be estimated in more than one way<a class="headerlink" href="#what-can-be-estimated-in-more-than-one-way" title="Permanent link">&para;</a></h2>
+<p><code>mcprojsim</code> supports more than one way to express effort uncertainty. In many cases the most direct approach is to give explicit range values such as minimum, most likely, and maximum. In other cases, the configuration may define reusable effort patterns such as T-shirt sizes.</p>
+<p>The introduction should make it clear that these are not competing ideas. They are different ways of expressing the same underlying concept: uncertain effort represented in a structured form.</p>
+<h2 id="t-shirt-sizes-as-a-bridge-from-intuition-to-simulation">T-shirt sizes as a bridge from intuition to simulation<a class="headerlink" href="#t-shirt-sizes-as-a-bridge-from-intuition-to-simulation" title="Permanent link">&para;</a></h2>
+<p>T-shirt sizing is useful when teams are comfortable making relative judgments before they are comfortable making detailed numeric estimates. Sizes such as <code>S</code>, <code>M</code>, or <code>L</code> can be mapped in configuration to specific estimation ranges.</p>
+<p>This can make early-stage estimation faster and more consistent. It also provides a natural path from familiar agile estimation practices into probabilistic simulation.</p>
+<h2 id="when-monte-carlo-estimation-is-especially-useful">When Monte Carlo estimation is especially useful<a class="headerlink" href="#when-monte-carlo-estimation-is-especially-useful" title="Permanent link">&para;</a></h2>
+<p>Monte Carlo methods are particularly helpful when projects have multiple dependencies, meaningful uncertainty, or significant consequences for late delivery. They are also useful when stakeholders need to reason in terms of confidence rather than optimistic commitments.</p>
+<p>The method is less valuable when the work is trivial, highly repetitive, or too poorly defined to estimate in any structured way at all. Like any planning method, it works best when the inputs are thoughtful and the model is used with judgment.</p>
+<h2 id="what-comes-next-in-this-guide">What comes next in this guide<a class="headerlink" href="#what-comes-next-in-this-guide" title="Permanent link">&para;</a></h2>
+<p>The rest of the user guide builds on the concepts introduced here. Later chapters describe the project file format, the configuration file, practical examples, and the meaning of the generated outputs in more detail.</p>
+<p>By the time you move into those chapters, the goal is that the fields in the input files no longer feel arbitrary. They should feel like natural answers to the questions that this introduction has raised one step at a time.</p>
 
 
 

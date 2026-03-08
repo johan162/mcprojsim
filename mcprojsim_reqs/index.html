@@ -1206,10 +1206,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#63-critical-path-identification" class="md-nav__link">
+  <a href="#63-how-project-duration-is-calculated" class="md-nav__link">
     <span class="md-ellipsis">
       
-        6.3 Critical Path Identification
+        6.3 How project duration is calculated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-critical-path-identification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Critical Path Identification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Limitations
       
     </span>
   </a>
@@ -1820,8 +1842,39 @@
 </span></code></pre></div>
 <h3 id="62-dependency-resolution-topological-sort">6.2 Dependency Resolution (Topological Sort)<a class="headerlink" href="#62-dependency-resolution-topological-sort" title="Permanent link">&para;</a></h3>
 <p>Uses Kahn's algorithm for topological sorting to determine task execution order while respecting precedence constraints.</p>
-<h3 id="63-critical-path-identification">6.3 Critical Path Identification<a class="headerlink" href="#63-critical-path-identification" title="Permanent link">&para;</a></h3>
+<h3 id="63-how-project-duration-is-calculated">6.3 How project duration is calculated<a class="headerlink" href="#63-how-project-duration-is-calculated" title="Permanent link">&para;</a></h3>
+<ul>
+<li>In engine.py, each iteration first samples every task duration from its estimate distribution.</li>
+<li>The engine then adjusts each sampled duration with uncertainty factors and task-level risks before scheduling.</li>
+<li>After that, scheduler.py computes an earliest-start schedule using only dependency constraints: </li>
+<li>tasks with no dependencies start at time 0,</li>
+<li>a task starts at the maximum end time of its predecessors,</li>
+<li>independent tasks therefore do run in parallel today.</li>
+<li>Project duration is then computed as the maximum end time in the schedule, not as the sum of all task durations. That directly contradicts the idea that the engine just adds all task efforts together.</li>
+<li>Only after the scheduled project duration is known does the engine apply project-level risks. This means project-wide risk penalties affect final duration, but they do not affect critical-path membership for that iteration.</li>
+<li>The scheduler then identifies the critical path for that iteration by:</li>
+<li>finding every task that ends exactly at project completion,</li>
+<li>recursively walking backward through predecessors whose end time exactly matches the successor’s start time,</li>
+<li>collecting all such tasks into a set.</li>
+</ul>
+<h3 id="64-critical-path-identification">6.4 Critical Path Identification<a class="headerlink" href="#64-critical-path-identification" title="Permanent link">&para;</a></h3>
 <p>For each iteration, identify the longest path through the task network. Track frequency of each task appearing on critical path.</p>
+<ul>
+<li>This is a dependency-only critical path, not a resource-constrained critical chain.</li>
+<li>A task is counted as critical in an iteration if it lies on at least one longest dependency path in that specific sampled schedule.</li>
+<li>Across all iterations, the engine increments a counter per task in the results field critical_path_frequency in simulation.py.</li>
+<li>The method get_critical_path then converts those counts into a criticality index by dividing by the number of iterations.</li>
+<li>So the exported number is really: “how often was this task on a critical path across the Monte Carlo runs?”</li>
+</ul>
+<h3 id="65-limitations">6.5 Limitations<a class="headerlink" href="#65-limitations" title="Permanent link">&para;</a></h3>
+<ul>
+<li>No resource constraints are used in scheduling today. The scheduler ignores task resources, project resources, and calendars.</li>
+<li>That means the current critical path is purely precedence-based.</li>
+<li>Top-level resources and calendars are parsed into the project model, but they are <strong>NOT</strong> used in scheduling (yet)</li>
+<li>Task-level resources are also present in the model, but not consumed by the scheduler.</li>
+<li>Project-level risks are applied after schedule calculation, so they can make the project finish later without changing which tasks were counted as critical.</li>
+<li>If multiple terminal tasks finish at the same project end time, the code traces all of them, so one iteration can contribute multiple branches rather than one single canonical path.</li>
+</ul>
 <hr />
 <h2 id="7-technology-stack">7. Technology Stack<a class="headerlink" href="#7-technology-stack" title="Permanent link">&para;</a></h2>
 <h3 id="71-core-dependencies">7.1 Core Dependencies<a class="headerlink" href="#71-core-dependencies" title="Permanent link">&para;</a></h3>
