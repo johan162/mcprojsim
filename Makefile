@@ -365,7 +365,7 @@ clean: ## Clean up build artifacts, caches, and timestamp files. Keep the .venv 
 	@rm -rf htmlcov
 	@rm -rf site dist
 	@rm -rf .mypy_cache
-	@rm -f $(FORMAT_STAMP) $(LINT_STAMP) $(TYPECHECK_STAMP) $(DOC_STAMP) $(TEST_STAMP)
+	@rm -f $(FORMAT_STAMP) $(LINT_STAMP) $(TYPECHECK_STAMP) $(DOC_STAMP) $(TEST_STAMP) $(CONTAINER_STAMP) $(GHCR_LOGIN_STAMP)
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.pyc" -delete
 	@echo -e "$(GREEN)✓ Clean completed$(NC)"
