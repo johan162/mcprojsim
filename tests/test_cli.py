@@ -146,3 +146,30 @@ class TestCli:
         assert captured["project"].project.name == "CLI Test"
         assert captured["html_config"] is captured["engine_config"]
         assert captured["html_config"].get_t_shirt_size("M").most_likely == 20
+
+        def test_validate_shows_line_numbers_and_suggestions(self) -> None:
+                """The validate command should surface source-aware parser errors."""
+                runner = CliRunner()
+
+                with runner.isolated_filesystem():
+                        project_file = Path("project.yaml")
+                        project_file.write_text(
+                                """
+project:
+    name: CLI Test
+    start_date: 2025-01-01
+tasks:
+    - id: task_001
+        name: Task
+        estimate:
+            min: 1
+            mostlikely: 2
+            max: 3
+""".strip()
+                        )
+
+                        result = runner.invoke(cli, ["validate", str(project_file)])
+
+                assert result.exit_code != 0
+                assert "line 9" in result.output
+                assert "most_likely" in result.output
