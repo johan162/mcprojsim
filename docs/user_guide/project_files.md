@@ -109,7 +109,7 @@ The `project` section is required. It contains project-level metadata and report
 | `description` | No | string | `null` | Optional descriptive text |
 | `start_date` | Yes | ISO date string | — | Must parse as `YYYY-MM-DD` |
 | `currency` | No | string | `"USD"` | Stored as metadata |
-| `confidence_levels` | No | list of integers | `[50, 75, 80, 85, 90, 95]` | Controls reported percentiles |
+| `confidence_levels` | No | list of integers | `[25, 50, 75, 80, 85, 90, 95, 99]` | Controls reported percentiles |
 | `probability_red_threshold` | No | float | `0.50` | Must be between `0.0` and `1.0` |
 | `probability_green_threshold` | No | float | `0.90` | Must be between `0.0` and `1.0` |
 
@@ -129,7 +129,7 @@ project:
   description: "Next-generation customer portal with enhanced features"
   start_date: "2025-11-01"
   currency: "USD"
-  confidence_levels: [50, 75, 80, 85, 90, 95]
+  confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
   probability_red_threshold: 0.50
   probability_green_threshold: 0.90
 ```
@@ -142,7 +142,7 @@ name = "Customer Portal Redesign"
 description = "Next-generation customer portal with enhanced features"
 start_date = "2025-11-01"
 currency = "USD"
-confidence_levels = [50, 75, 80, 85, 90, 95]
+confidence_levels = [25, 50, 75, 80, 85, 90, 95, 99]
 probability_red_threshold = 0.50
 probability_green_threshold = 0.90
 ```

@@ -2,7 +2,7 @@ project:
   name: "Mobile App Development"
   description: "Example project using T-shirt sizing for effort estimates"
   start_date: "2025-11-01"
-  confidence_levels: [50, 75, 80, 85, 90, 95]
+  confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
   probability_red_threshold: 0.50
   probability_green_threshold: 0.90
 

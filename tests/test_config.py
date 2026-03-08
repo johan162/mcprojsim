@@ -3,7 +3,12 @@
 import pytest
 import yaml
 
-from mcprojsim.config import Config, SimulationConfig, OutputConfig
+from mcprojsim.config import (
+    Config,
+    DEFAULT_CONFIDENCE_LEVELS,
+    OutputConfig,
+    SimulationConfig,
+)
 
 
 class TestConfig:
@@ -17,6 +22,10 @@ class TestConfig:
         assert "requirements_maturity" in config.uncertainty_factors
         assert "technical_complexity" in config.uncertainty_factors
         assert config.simulation.default_iterations == 10000
+
+    def test_default_confidence_levels_include_p25_and_p99(self):
+        """Test the shared default confidence levels include P25 and P99."""
+        assert DEFAULT_CONFIDENCE_LEVELS == [25, 50, 75, 80, 85, 90, 95, 99]
 
     def test_get_uncertainty_multiplier(self):
         """Test getting uncertainty multiplier."""

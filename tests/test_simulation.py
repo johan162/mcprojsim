@@ -311,6 +311,20 @@ class TestSimulationEngine:
         assert results.mean > 0
         assert results.median > 0
 
+    def test_run_simulation_computes_updated_default_percentiles(self, simple_project):
+        """Test simulation computes P25 and P99 for projects using default levels."""
+        engine = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
+        results = engine.run(simple_project)
+
+        assert 25 in results.percentiles
+        assert 99 in results.percentiles
+        assert results.percentiles[25] == pytest.approx(
+            float(np.percentile(results.durations, 25))
+        )
+        assert results.percentiles[99] == pytest.approx(
+            float(np.percentile(results.durations, 99))
+        )
+
     def test_simulation_reproducibility(self, simple_project):
         """Test simulation reproducibility with same seed."""
         engine1 = SimulationEngine(iterations=10, random_seed=42, show_progress=False)

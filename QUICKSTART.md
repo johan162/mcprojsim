@@ -328,9 +328,14 @@ poetry run mcprojsim simulate examples/sample_project.yaml --seed 42
 # Project: Customer Portal Redesign
 # Mean: 72.38 days
 # Median (P50): 71.87 days
+# P25: 66.91 days
+# P50: 71.87 days
+# P75: 77.42 days
 # P80: 80.07 days
+# P85: 82.11 days
 # P90: 84.31 days
 # P95: 88.42 days
+# P99: 94.76 days
 
 # View HTML report
 open "Customer Portal Redesign_results.html"

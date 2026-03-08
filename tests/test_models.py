@@ -3,6 +3,7 @@
 import pytest
 from datetime import date
 
+from mcprojsim.config import DEFAULT_CONFIDENCE_LEVELS
 from mcprojsim.models.project import (
     Project,
     ProjectMetadata,
@@ -215,6 +216,12 @@ class TestTask:
 
 class TestProject:
     """Tests for Project model."""
+
+    def test_project_metadata_uses_updated_default_confidence_levels(self):
+        """Test project metadata defaults include the expanded percentile range."""
+        metadata = ProjectMetadata(name="Test Project", start_date=date(2025, 1, 1))
+
+        assert metadata.confidence_levels == DEFAULT_CONFIDENCE_LEVELS
 
     def test_project_creation(self):
         """Test basic project creation."""

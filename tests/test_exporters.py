@@ -42,8 +42,10 @@ def sample_results():
         random_seed=42,
     )
     results.calculate_statistics()
+    results.percentile(25)
     results.percentile(50)
     results.percentile(90)
+    results.percentile(99)
     return results
 
 
@@ -64,6 +66,8 @@ class TestJSONExporter:
         assert data["simulation"]["iterations"] == 5
         assert "statistics" in data
         assert "percentiles" in data
+        assert "25" in data["percentiles"]
+        assert "99" in data["percentiles"]
         assert "critical_path" in data
         assert "critical_path_sequences" in data
 
@@ -139,6 +143,8 @@ class TestCSVExporter:
         assert "Mean" in content
         assert "Median" in content
         assert "Percentile" in content or "P50" in content
+        assert "P25" in content
+        assert "P99" in content
 
     def test_csv_contains_critical_path_sequences(self, sample_results, tmp_path):
         """Test that CSV contains full critical path sequence reporting."""
@@ -213,6 +219,8 @@ class TestHTMLExporter:
 
         assert "Mean" in content or "mean" in content
         assert "Median" in content or "median" in content
+        assert "P25" in content
+        assert "P99" in content
 
     def test_html_contains_thermometer(self, sample_results, tmp_path):
         """Test that HTML contains thermometer visualization."""
