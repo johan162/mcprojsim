@@ -197,7 +197,7 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(TYPECHECK_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running type checker...$(NC)"
-	@poetry run mypy --explicit-package-bases src/
+	@poetry run mypy src/
 	@touch $(TYPECHECK_STAMP)
 	@echo -e "$(GREEN)✓ Typecheck target runs successfully$(NC)"
 
@@ -335,7 +335,7 @@ lint: $(LINT_STAMP) ## Run linting checks with flake8
 format: $(FORMAT_STAMP) ## Format code with black
 	@:
 
-typecheck: $(TYPECHECK_STAMP) ## Run type checking with mypy
+typecheck: $(TYPECHECK_STAMP) ## Run strict type checking with mypy
 	@:
 
 pre-commit: $(INSTALL_STAMP) ## Run pre-commit checks (format, lint, typecheck)

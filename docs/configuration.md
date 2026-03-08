@@ -2,7 +2,7 @@
 
 ## Configuration File
 
-Create a `config.yaml` file to customize uncertainty factors and simulation settings:
+Create a `config.yaml` file to customize uncertainty factors, symbolic estimate mappings, and simulation settings:
 
 ```yaml
 uncertainty_factors:
@@ -29,6 +29,30 @@ uncertainty_factors:
     low: 1.0
     medium: 1.15
     high: 1.35
+
+t_shirt_sizes:
+  XS:
+    min: 0.5
+    most_likely: 1
+    max: 2
+  M:
+    min: 3
+    most_likely: 5
+    max: 8
+
+story_points:
+  1:
+    min: 0.5
+    most_likely: 1
+    max: 3
+  5:
+    min: 3
+    most_likely: 5
+    max: 8
+  8:
+    min: 5
+    most_likely: 8
+    max: 15
 
 simulation:
   default_iterations: 10000
@@ -75,10 +99,12 @@ Uncertainty factors are multipliers applied to base task estimates. A value of 1
 
 ## Using Configuration
 
+If you provide only a subset of `t_shirt_sizes` or `story_points`, the built-in defaults remain available for the values you did not override.
+
 ### Command Line
 
 ```bash
-mc-estimate simulate project.yaml --config config.yaml
+mcprojsim simulate project.yaml --config config.yaml
 ```
 
 ### Python API
@@ -94,9 +120,54 @@ engine = SimulationEngine(iterations=10000, config=config)
 ## Viewing Current Configuration
 
 ```bash
-mc-estimate config show
-mc-estimate config show --config-file config.yaml
+mcprojsim config show
+mcprojsim config show --config-file config.yaml
 ```
+
+## Symbolic Estimate Mappings
+
+### T-shirt sizes
+
+Tasks may use `t_shirt_size` instead of an explicit numeric range. Those labels are resolved through the `t_shirt_sizes` section in the active configuration.
+
+Default built-in mappings:
+
+- `XS`: `(0.5, 1, 2)`
+- `S`: `(1, 2, 4)`
+- `M`: `(3, 5, 8)`
+- `L`: `(5, 8, 13)`
+- `XL`: `(8, 13, 21)`
+- `XXL`: `(13, 21, 34)`
+
+### Story Points
+
+Tasks may also use `story_points` for agile-style relative sizing. Story Points are resolved to day ranges through the `story_points` section in the active configuration.
+
+Default built-in mappings:
+
+- `1`: `(0.5, 1, 3)`
+- `2`: `(1, 2, 4)`
+- `3`: `(1.5, 3, 5)`
+- `5`: `(3, 5, 8)`
+- `8`: `(5, 8, 15)`
+- `13`: `(8, 13, 21)`
+- `21`: `(13, 21, 34)`
+
+Example Story Point override:
+
+```yaml
+story_points:
+  5:
+    min: 4
+    most_likely: 6
+    max: 9
+  8:
+    min: 6
+    most_likely: 9
+    max: 16
+```
+
+Use `unit: "storypoint"` in the project file when expressing a task as Story Points.
 
 ## Probability Thresholds for Thermometer Visualization
 

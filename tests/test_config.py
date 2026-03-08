@@ -66,6 +66,28 @@ class TestConfig:
         config = Config.load_from_file(config_file)
         assert config.simulation.default_iterations == 5000
         assert config.simulation.random_seed == 42
+        assert config.get_t_shirt_size("M") is not None
+        assert config.get_story_point(5) is not None
+
+    def test_load_from_file_merges_symbolic_defaults(self, tmp_path):
+        """Test loading config preserves built-in symbolic defaults not overridden."""
+        config_data = {
+            "story_points": {5: {"min": 4, "most_likely": 6, "max": 9}},
+            "t_shirt_sizes": {"M": {"min": 4, "most_likely": 6, "max": 9}},
+        }
+
+        config_file = tmp_path / "config.yaml"
+        with open(config_file, "w") as f:
+            yaml.dump(config_data, f)
+
+        config = Config.load_from_file(config_file)
+
+        assert config.get_story_point(5) is not None
+        assert config.get_story_point(5).most_likely == 6
+        assert config.get_story_point(8) is not None
+        assert config.get_t_shirt_size("M") is not None
+        assert config.get_t_shirt_size("M").most_likely == 6
+        assert config.get_t_shirt_size("XL") is not None
 
     def test_load_from_nonexistent_file(self):
         """Test loading from non-existent file."""
@@ -126,6 +148,45 @@ class TestTShirtSizes:
 
         size = config.get_t_shirt_size("XXXL")
         assert size is None
+
+
+class TestStoryPoints:
+    """Tests for Story Point configuration."""
+
+    def test_default_story_points(self):
+        """Test default Story Point mappings are defined."""
+        config = Config.get_default()
+
+        for value in (1, 2, 3, 5, 8, 13, 21):
+            assert config.get_story_point(value) is not None
+
+    def test_story_point_values(self):
+        """Test Story Point ranges are correctly configured."""
+        config = Config.get_default()
+
+        sp1 = config.get_story_point(1)
+        assert sp1 is not None
+        assert sp1.min == 0.5
+        assert sp1.most_likely == 1
+        assert sp1.max == 3
+
+        sp8 = config.get_story_point(8)
+        assert sp8 is not None
+        assert sp8.min == 5
+        assert sp8.most_likely == 8
+        assert sp8.max == 15
+
+        sp21 = config.get_story_point(21)
+        assert sp21 is not None
+        assert sp21.min == 13
+        assert sp21.most_likely == 21
+        assert sp21.max == 34
+
+    def test_get_unknown_story_point(self):
+        """Test getting unknown Story Point value returns None."""
+        config = Config.get_default()
+
+        assert config.get_story_point(34) is None
 
 
 class TestOutputConfig:

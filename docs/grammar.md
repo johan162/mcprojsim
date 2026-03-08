@@ -74,7 +74,7 @@ This document provides a complete formal grammar specification for Monte Carlo P
 # Estimate Section
 <estimate> ::= "estimate:" <estimate_spec>
 
-<estimate_spec> ::= <triangular_estimate> | <lognormal_estimate> | <tshirt_estimate>
+<estimate_spec> ::= <triangular_estimate> | <lognormal_estimate> | <tshirt_estimate> | <story_point_estimate>
 
 <triangular_estimate> ::= <min_value>
                          <most_likely_value>
@@ -91,6 +91,11 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <tshirt_size> ::= "XS" | "S" | "M" | "L" | "XL" | "XXL"
 
+<story_point_estimate> ::= "story_points:" <story_point_value>
+                          [<story_point_unit>]
+
+<story_point_value> ::= "1" | "2" | "3" | "5" | "8" | "13" | "21"
+
 <min_value> ::= "min:" <positive_number>
 
 <most_likely_value> ::= "most_likely:" <positive_number>
@@ -102,6 +107,8 @@ This document provides a complete formal grammar specification for Monte Carlo P
 <unit> ::= "unit:" <time_unit>
 
 <time_unit> ::= "days" | "hours" | "weeks"
+
+<story_point_unit> ::= "unit:" "storypoint"
 
 # Dependencies
 <dependencies> ::= "dependencies:" <dependency_list>
@@ -219,11 +226,23 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
      * `L`: min=5, most_likely=8, max=13
      * `XL`: min=8, most_likely=13, max=21
      * `XXL`: min=13, most_likely=21, max=34
-5. **Dependencies**: 
+  5. **Estimate Validity** (Story Points):
+    - Must be one of: `1`, `2`, `3`, `5`, `8`, `13`, `21`
+    - `unit` defaults to `storypoint` when omitted
+    - Values are resolved from configuration file to day ranges
+    - Default values (in days):
+      * `1`: min=0.5, most_likely=1, max=3
+      * `2`: min=1, most_likely=2, max=4
+      * `3`: min=1.5, most_likely=3, max=5
+      * `5`: min=3, most_likely=5, max=8
+      * `8`: min=5, most_likely=8, max=15
+      * `13`: min=8, most_likely=13, max=21
+      * `21`: min=13, most_likely=21, max=34
+  6. **Dependencies**: 
    - Referenced task IDs must exist
    - No circular dependencies allowed
    - Dependencies must form a Directed Acyclic Graph (DAG)
-6. **Uncertainty Factors**: Custom factor names allowed beyond predefined set
+  7. **Uncertainty Factors**: Custom factor names allowed beyond predefined set
 
 ### Risk Constraints
 
@@ -280,6 +299,13 @@ tasks:
       unit: "days"
     dependencies: []
 
+  - id: "task_004"
+    name: "Backlog Item"
+    estimate:
+      story_points: 5
+      unit: "storypoint"
+    dependencies: []
+
 project_risks:
   - id: "resource_loss"
     name: "Team member leaves"
@@ -321,6 +347,11 @@ project:
 estimate:
   t_shirt_size: "XXXL"  # ERROR: not a valid size (XS, S, M, L, XL, XXL)
   unit: "days"
+
+# INVALID: unsupported Story Point value
+estimate:
+  story_points: 4  # ERROR: must be one of 1, 2, 3, 5, 8, 13, 21
+  unit: "storypoint"
 ```
 
 ## Format Support
@@ -374,10 +405,50 @@ t_shirt_sizes:
     max: 34
 ```
 
-These values can be customized in a configuration file and passed using `--config` option. To view current configuration including T-shirt sizes, use:
+These values can be customized in a configuration file and passed using `--config` option.
+
+## Story Point Configuration
+
+Story Point mappings can be customized via configuration file in the same way. The default values are:
+
+```yaml
+story_points:
+  1:
+    min: 0.5
+    most_likely: 1
+    max: 3
+  2:
+    min: 1
+    most_likely: 2
+    max: 4
+  3:
+    min: 1.5
+    most_likely: 3
+    max: 5
+  5:
+    min: 3
+    most_likely: 5
+    max: 8
+  8:
+    min: 5
+    most_likely: 8
+    max: 15
+  13:
+    min: 8
+    most_likely: 13
+    max: 21
+  21:
+    min: 13
+    most_likely: 21
+    max: 34
+```
+
+These values can also be customized in a configuration file and passed using `--config`.
+
+To view current configuration including T-shirt sizes and Story Point mappings, use:
 
 ```bash
-mc-estimate config show
+mcprojsim config show
 ```
 
 ## Related Documentation

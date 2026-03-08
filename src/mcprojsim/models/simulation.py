@@ -5,6 +5,11 @@ from typing import Any, Dict
 import numpy as np
 from pydantic import BaseModel, Field
 
+from mcprojsim.config import (
+    DEFAULT_PROBABILITY_GREEN_THRESHOLD,
+    DEFAULT_PROBABILITY_RED_THRESHOLD,
+)
+
 
 class SimulationResults(BaseModel):
     """Results from Monte Carlo simulation."""
@@ -17,8 +22,8 @@ class SimulationResults(BaseModel):
     task_durations: Dict[str, np.ndarray] = Field(default_factory=dict)
     critical_path_frequency: Dict[str, int] = Field(default_factory=dict)
     random_seed: int | None = None
-    probability_red_threshold: float = 0.50
-    probability_green_threshold: float = 0.90
+    probability_red_threshold: float = DEFAULT_PROBABILITY_RED_THRESHOLD
+    probability_green_threshold: float = DEFAULT_PROBABILITY_GREEN_THRESHOLD
 
     mean: float = 0.0
     median: float = 0.0

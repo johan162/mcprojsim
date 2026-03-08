@@ -47,7 +47,7 @@ for task_id, criticality in sorted(critical_path.items(), key=lambda x: x[1], re
 # Export results
 print("\nExporting results...")
 JSONExporter.export(results, "api_example_results.json")
-HTMLExporter.export(results, "api_example_results.html")
+HTMLExporter.export(results, "api_example_results.html", project=project, config=config)
 print("  ✓ api_example_results.json")
 print("  ✓ api_example_results.html")
 

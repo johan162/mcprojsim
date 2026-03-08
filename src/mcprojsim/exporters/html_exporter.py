@@ -9,6 +9,8 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 from jinja2 import Template
 
+from mcprojsim.config import Config
+from mcprojsim.config import DEFAULT_CONFIDENCE_LEVELS
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.models.project import Project
 
@@ -194,7 +196,7 @@ HTML_TEMPLATE = """
                     </thead>
                     <tbody>
                         {% for p, value in percentiles %}
-                        <tr class="{% if p in [50, 75, 80, 85, 90, 95] %}highlight{% endif %}">
+                        <tr class="{% if p in highlighted_percentiles %}highlight{% endif %}">
                             <td>P{{ p }}</td>
                             <td class="value">{{ "%.2f"|format(value) }}</td>
                         </tr>
@@ -294,6 +296,7 @@ class HTMLExporter:
         results: SimulationResults,
         output_path: Path | str,
         project: Project | None = None,
+        config: Config | None = None,
     ) -> None:
         """Export results to HTML file.
 
@@ -301,6 +304,7 @@ class HTMLExporter:
             results: Simulation results
             output_path: Path to output file
             project: Original project data (optional, for enhanced effort display)
+            config: Active simulation configuration (optional, for T-shirt sizing display)
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -318,7 +322,7 @@ class HTMLExporter:
         for task_id, criticality in critical_path:
             # Get original task estimate if project data is available
             effort_display = HTMLExporter._format_effort_display(
-                task_id, results, project
+                task_id, results, project, config
             )
             critical_path_with_effort.append((task_id, criticality, effort_display))
 
@@ -345,6 +349,7 @@ class HTMLExporter:
             max_duration=results.max_duration,
             cv=cv,
             percentiles=percentiles,
+            highlighted_percentiles=DEFAULT_CONFIDENCE_LEVELS,
             critical_path=critical_path,
             critical_path_with_effort=critical_path_with_effort,
             thermometer_segments=thermometer_segments,
@@ -453,7 +458,10 @@ class HTMLExporter:
 
     @staticmethod
     def _format_effort_display(
-        task_id: str, results: SimulationResults, project: Project | None
+        task_id: str,
+        results: SimulationResults,
+        project: Project | None,
+        config: Config | None,
     ) -> str:
         """Format the effort display for a task.
 
@@ -461,6 +469,7 @@ class HTMLExporter:
             task_id: Task identifier
             results: Simulation results
             project: Original project data (optional)
+            config: Active simulation configuration (optional)
 
         Returns:
             Formatted effort string
@@ -488,26 +497,32 @@ class HTMLExporter:
             else:
                 return "N/A"
 
+        effective_config = config if config is not None else Config.get_default()
+
         # Check if it's a T-shirt size estimate
         if hasattr(task.estimate, "t_shirt_size") and task.estimate.t_shirt_size:
             # T-shirt size format: "M (2, 5, 8)"
             t_shirt = task.estimate.t_shirt_size
 
-            # Use the default T-shirt size mappings from the system
-            tshirt_mappings = {
-                "XS": (0.5, 1, 2),
-                "S": (1, 2, 4),
-                "M": (3, 5, 8),
-                "L": (5, 8, 13),
-                "XL": (8, 13, 21),
-                "XXL": (13, 21, 34),
-            }
+            size_config = effective_config.get_t_shirt_size(t_shirt)
+            if size_config is not None:
+                return (
+                    f"{t_shirt} ({size_config.min}, "
+                    f"{size_config.most_likely}, {size_config.max})"
+                )
+            return f"{t_shirt} (unknown)"
 
-            if t_shirt in tshirt_mappings:
-                low, nominal, high = tshirt_mappings[t_shirt]
-                return f"{t_shirt} ({low}, {nominal}, {high})"
-            else:
-                return f"{t_shirt} (unknown)"
+        # Check if it's a Story Point estimate
+        if hasattr(task.estimate, "story_points") and task.estimate.story_points:
+            story_points = task.estimate.story_points
+
+            points_config = effective_config.get_story_point(story_points)
+            if points_config is not None:
+                return (
+                    f"SP {story_points} ({points_config.min}, "
+                    f"{points_config.most_likely}, {points_config.max})"
+                )
+            return f"SP {story_points} (unknown)"
 
         # Check if it's a triangular distribution (min, most_likely, max)
         elif (

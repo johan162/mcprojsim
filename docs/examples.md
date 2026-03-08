@@ -161,19 +161,56 @@ T-shirt sizes map to default effort ranges (configurable):
 
 See `examples/tshirt_sizing_project.yaml` for a complete example.
 
+## Using Story Points
+
+For agile-style relative estimation using calibrated Story Point mappings:
+
+```yaml
+project:
+  name: "Sprint Backlog"
+  start_date: "2025-11-01"
+
+tasks:
+  - id: "story_001"
+    name: "Login flow"
+    estimate:
+      story_points: 3
+      unit: "storypoint"
+    dependencies: []
+
+  - id: "story_002"
+    name: "Profile page"
+    estimate:
+      story_points: 5
+      unit: "storypoint"
+    dependencies: ["story_001"]
+```
+
+Default Story Point mappings (configurable) are:
+
+- `1`: 0.5-3 days (most likely: 1 day)
+- `2`: 1-4 days (most likely: 2 days)
+- `3`: 1.5-5 days (most likely: 3 days)
+- `5`: 3-8 days (most likely: 5 days)
+- `8`: 5-15 days (most likely: 8 days)
+- `13`: 8-21 days (most likely: 13 days)
+- `21`: 13-34 days (most likely: 21 days)
+
+See `examples/story_points_walkthrough_project.yaml` for a complete example.
+
 ## Running Examples
 
 ```bash
 # Run the sample project
-mc-estimate simulate examples/sample_project.yaml
+mcprojsim simulate examples/sample_project.yaml
 
 # With custom config
-mc-estimate simulate examples/sample_project.yaml \
+mcprojsim simulate examples/sample_project.yaml \
   --config examples/sample_config.yaml
 
 # With specific seed for reproducibility
-mc-estimate simulate examples/sample_project.yaml --seed 42
+mcprojsim simulate examples/sample_project.yaml --seed 42
 
 # More iterations for higher accuracy
-mc-estimate simulate examples/sample_project.yaml --iterations 50000
+mcprojsim simulate examples/sample_project.yaml --iterations 50000
 ```

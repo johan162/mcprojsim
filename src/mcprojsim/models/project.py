@@ -6,6 +6,14 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from mcprojsim.config import (
+    DEFAULT_CONFIDENCE_LEVELS,
+    DEFAULT_PROBABILITY_GREEN_THRESHOLD,
+    DEFAULT_PROBABILITY_RED_THRESHOLD,
+    DEFAULT_STORY_POINT_VALUES,
+    DEFAULT_UNCERTAINTY_FACTOR_LEVELS,
+)
+
 
 class DistributionType(str, Enum):
     """Types of probability distributions."""
@@ -30,19 +38,49 @@ class TaskEstimate(BaseModel):
     max: Optional[float] = Field(default=None, ge=0)
     standard_deviation: Optional[float] = Field(default=None, gt=0)
     t_shirt_size: Optional[str] = Field(default=None)
+    story_points: Optional[int] = Field(default=None, gt=0)
     unit: str = Field(default="days")
 
     @model_validator(mode="after")
     def validate_distribution(self) -> "TaskEstimate":
         """Validate distribution parameters."""
-        # If T-shirt size is specified, skip other validations
-        # The actual values will be populated from config during simulation
+        symbolic_modes = [
+            self.t_shirt_size is not None,
+            self.story_points is not None,
+        ]
+
+        if sum(symbolic_modes) > 1:
+            raise ValueError(
+                "Only one symbolic estimate may be specified: "
+                "choose either 't_shirt_size' or 'story_points'"
+            )
+
+        # If a symbolic estimate is specified, skip numeric validation.
+        # The actual values will be populated from config during simulation.
         if self.t_shirt_size is not None:
+            return self
+
+        if self.story_points is not None:
+            allowed_story_points = set(DEFAULT_STORY_POINT_VALUES.keys())
+            if self.story_points not in allowed_story_points:
+                allowed = ", ".join(
+                    str(value) for value in sorted(allowed_story_points)
+                )
+                raise ValueError(
+                    f"Story Points must be one of: {allowed}; got {self.story_points}"
+                )
+
+            if "unit" not in self.model_fields_set:
+                self.unit = "storypoint"
+            elif self.unit != "storypoint":
+                raise ValueError("Story Point estimates must use unit 'storypoint'")
             return self
 
         # For explicit estimates, most_likely is required
         if self.most_likely is None:
-            raise ValueError("Either 't_shirt_size' or 'most_likely' must be specified")
+            raise ValueError(
+                "Either 't_shirt_size', 'story_points', or 'most_likely' must be specified"
+            )
 
         if self.distribution == DistributionType.TRIANGULAR:
             if self.min is None or self.max is None:
@@ -116,11 +154,21 @@ class Risk(BaseModel):
 class UncertaintyFactors(BaseModel):
     """Uncertainty factors affecting task estimates."""
 
-    team_experience: Optional[str] = Field(default="medium")
-    requirements_maturity: Optional[str] = Field(default="medium")
-    technical_complexity: Optional[str] = Field(default="medium")
-    team_distribution: Optional[str] = Field(default="colocated")
-    integration_complexity: Optional[str] = Field(default="medium")
+    team_experience: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["team_experience"]
+    )
+    requirements_maturity: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["requirements_maturity"]
+    )
+    technical_complexity: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["technical_complexity"]
+    )
+    team_distribution: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["team_distribution"]
+    )
+    integration_complexity: Optional[str] = Field(
+        default=DEFAULT_UNCERTAINTY_FACTOR_LEVELS["integration_complexity"]
+    )
 
 
 class Task(BaseModel):
@@ -150,16 +198,16 @@ class ProjectMetadata(BaseModel):
     start_date: date
     currency: Optional[str] = Field(default="USD")
     confidence_levels: List[int] = Field(
-        default_factory=lambda: [50, 75, 80, 85, 90, 95]
+        default_factory=lambda: list(DEFAULT_CONFIDENCE_LEVELS)
     )
     probability_red_threshold: float = Field(
-        default=0.50,
+        default=DEFAULT_PROBABILITY_RED_THRESHOLD,
         ge=0.0,
         le=1.0,
         description="Probability threshold below which is shown as red (default 50%)",
     )
     probability_green_threshold: float = Field(
-        default=0.90,
+        default=DEFAULT_PROBABILITY_GREEN_THRESHOLD,
         ge=0.0,
         le=1.0,
         description="Probability threshold above which is shown as green (default 90%)",
