@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import difflib
 from pathlib import Path
@@ -11,7 +12,6 @@ from typing import Any, TypeAlias
 from pydantic import ValidationError
 import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
-
 
 LocationPath: TypeAlias = tuple[str | int, ...]
 
@@ -147,23 +147,27 @@ def _construct_yaml_node(
     path_lines: dict[LocationPath, int],
 ) -> Any:
     if isinstance(node, MappingNode):
-        result: dict[Any, Any] = {}
+        mapping_result: dict[Any, Any] = {}
         path_lines.setdefault(path, _line_from_node(node))
         for key_node, value_node in node.value:
             key = loader.construct_object(key_node, deep=False)
             child_path = path + (key,)
             path_lines[child_path] = _line_from_node(key_node)
-            result[key] = _construct_yaml_node(loader, value_node, child_path, path_lines)
-        return result
+            mapping_result[key] = _construct_yaml_node(
+                loader, value_node, child_path, path_lines
+            )
+        return mapping_result
 
     if isinstance(node, SequenceNode):
-        result: list[Any] = []
+        sequence_result: list[Any] = []
         path_lines.setdefault(path, _line_from_node(node))
         for index, item_node in enumerate(node.value):
             child_path = path + (index,)
             path_lines[child_path] = _line_from_node(item_node)
-            result.append(_construct_yaml_node(loader, item_node, child_path, path_lines))
-        return result
+            sequence_result.append(
+                _construct_yaml_node(loader, item_node, child_path, path_lines)
+            )
+        return sequence_result
 
     if isinstance(node, ScalarNode):
         path_lines.setdefault(path, _line_from_node(node))
@@ -405,11 +409,14 @@ def _collect_missing_dependency_issues(
     if not isinstance(tasks, list):
         return
 
-    valid_task_ids = [
-        task.get("id")
-        for task in tasks
-        if isinstance(task, dict) and isinstance(task.get("id"), str)
-    ]
+    valid_task_ids: list[str] = []
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        task_id = task.get("id")
+        if isinstance(task_id, str):
+            valid_task_ids.append(task_id)
+
     valid_task_id_set = set(valid_task_ids)
 
     for task_index, task in enumerate(tasks):
@@ -481,7 +488,12 @@ def _collect_circular_dependency_issues(
                     if dep_position is not None:
                         issues.append(
                             ValidationIssue(
-                                path=("tasks", task_index, "dependencies", dep_position),
+                                path=(
+                                    "tasks",
+                                    task_index,
+                                    "dependencies",
+                                    dep_position,
+                                ),
                                 message=(
                                     "Circular dependency detected: "
                                     + " -> ".join(cycle)
@@ -660,14 +672,16 @@ def _format_path(path: LocationPath) -> str:
     return ".".join(parts)
 
 
-def _suggest_for_validation_error(error: dict[str, Any], data: Any) -> str | None:
+def _suggest_for_validation_error(error: Mapping[str, Any], data: Any) -> str | None:
     loc = tuple(part for part in error.get("loc", ()) if isinstance(part, (str, int)))
     error_type = error.get("type")
 
     if error_type == "missing" and loc:
         parent = _get_value_at_path(data, loc[:-1])
         if isinstance(parent, dict) and isinstance(loc[-1], str):
-            suggestion_key = _close_match(str(loc[-1]), [str(key) for key in parent.keys()])
+            suggestion_key = _close_match(
+                str(loc[-1]), [str(key) for key in parent.keys()]
+            )
             if suggestion_key is not None:
                 return f"Did you mean '{suggestion_key}' instead of '{loc[-1]}'"
 
@@ -679,7 +693,10 @@ def _suggest_for_validation_error(error: dict[str, Any], data: Any) -> str | Non
         tasks = data.get("tasks") if isinstance(data, dict) else None
         if isinstance(tasks, list):
             task_ids = [task.get("id") for task in tasks if isinstance(task, dict)]
-            suggestion = _close_match(dependency, [task_id for task_id in task_ids if isinstance(task_id, str)])
+            suggestion = _close_match(
+                dependency,
+                [task_id for task_id in task_ids if isinstance(task_id, str)],
+            )
             if suggestion is not None:
                 return f"Did you mean '{suggestion}'"
 
@@ -710,7 +727,10 @@ def _close_match(value: str, choices: list[str]) -> str | None:
 def _suggest_for_parse_message(message: str, file_format: str) -> str:
     lower = message.lower()
 
-    if "expected '<document start>'" in lower or "mapping values are not allowed" in lower:
+    if (
+        "expected '<document start>'" in lower
+        or "mapping values are not allowed" in lower
+    ):
         return "Check indentation and make sure each key is followed by a colon"
     if "could not find expected ':'" in lower:
         return "Add the missing ':' after the key name"
