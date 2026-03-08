@@ -38,9 +38,9 @@
   - [Command-Line Interface](#command-line-interface)
     - [Commands](#commands)
     - [Options](#options)
-  - [Python API](#python-api)
   - [Configuration](#configuration)
   - [Examples](#examples)
+    - [Documentation Server Options](#documentation-server-options)
   - [Development](#development)
     - [Setup Development Environment](#setup-development-environment)
     - [Run Tests](#run-tests)
@@ -347,31 +347,6 @@ docker run --rm -v "$PWD:/work" mcprojsim validate project.yaml
 - `--output-format, -f` - Output formats: json, csv, html (comma-separated)
 - `--quiet, -q` - Suppress progress output
 
-## Python API
-
-```python
-from mcprojsim import Project, SimulationEngine
-from mcprojsim.parsers import YAMLParser
-
-# Load project
-parser = YAMLParser()
-project = parser.parse_file("project.yaml")
-
-# Run simulation
-engine = SimulationEngine(iterations=10000, random_seed=42)
-results = engine.run(project)
-
-# Access results
-print(f"P50 (Median): {results.percentile(50)} days")
-print(f"P90: {results.percentile(90)} days")
-print(f"Mean: {results.mean} days")
-print(f"Std Dev: {results.std_dev} days")
-
-# Get critical path
-critical_tasks = results.get_critical_path()
-for task_id, criticality in critical_tasks.items():
-    print(f"{task_id}: {criticality*100:.1f}% critical")
-```
 
 ## Configuration
 
@@ -543,7 +518,6 @@ mcprojsim/
 - Python 3.14+
 - Poetry 2.0+
 - NumPy 2.3.4+
-- Pandas 2.0+
 - PyYAML 6.0+
 - Pydantic 2.0+
 - Click 8.0+
@@ -577,7 +551,7 @@ If you use this tool in your research or project management, please cite:
 @software{mcprojsim,
   title = {Monte Carlo Project Simulator},
   author = {Johan Persson},
-  year = {2025},
+  year = {2026},
   url = {https://github.com/johan162/mcprojsim},
   version = {0.2.0rc6}
 }
