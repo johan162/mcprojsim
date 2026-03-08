@@ -4,6 +4,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
+from mcprojsim.config import Config
 from mcprojsim.models.simulation import SimulationResults
 
 
@@ -11,15 +12,26 @@ class CSVExporter:
     """Exporter for CSV format."""
 
     @staticmethod
-    def export(results: SimulationResults, output_path: Path | str) -> None:
+    def export(
+        results: SimulationResults,
+        output_path: Path | str,
+        config: Config | None = None,
+        critical_path_limit: int | None = None,
+    ) -> None:
         """Export results to CSV file.
 
         Args:
             results: Simulation results
             output_path: Path to output file
+            config: Active configuration
+            critical_path_limit: Maximum number of critical path sequences to include
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        effective_config = config or Config.get_default()
+        report_limit = (
+            critical_path_limit or effective_config.output.critical_path_report_limit
+        )
 
         with open(output_path, "w", newline="") as f:
             writer = csv.writer(f)
@@ -59,6 +71,20 @@ class CSVExporter:
                 critical_path.items(), key=lambda x: x[1], reverse=True
             ):
                 writer.writerow([task_id, f"{criticality:.4f}"])
+            writer.writerow([])
+
+            writer.writerow(
+                ["Critical Path Sequences", "Count", "Frequency", "Percentage"]
+            )
+            for record in results.get_critical_path_sequences(report_limit):
+                writer.writerow(
+                    [
+                        record.format_path(),
+                        record.count,
+                        f"{record.frequency:.4f}",
+                        f"{record.frequency * 100:.1f}%",
+                    ]
+                )
             writer.writerow([])
 
             # Write histogram

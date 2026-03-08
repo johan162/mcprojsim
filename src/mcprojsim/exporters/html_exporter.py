@@ -232,6 +232,26 @@ HTML_TEMPLATE = """
                     </tbody>
                 </table>
 
+                {% if critical_path_sequences %}
+                <h4>Most Frequent Critical Paths</h4>
+                <table>
+                    <thead>
+                        <tr><th>Rank</th><th>Path</th><th class="header-center">Count</th><th class="header-center">Frequency</th><th class="header-center">Percentage</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for rank, path_display, count, frequency in critical_path_sequences %}
+                        <tr>
+                            <td class="value-center">{{ rank }}</td>
+                            <td>{{ path_display }}</td>
+                            <td class="value-center">{{ count }}</td>
+                            <td class="value-center">{{ "%.4f"|format(frequency) }}</td>
+                            <td class="value-center">{{ "%.1f"|format(frequency * 100) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
                 <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #4CAF50; border-radius: 4px;">
                     <p style="margin: 0; font-size: 14px; line-height: 1.5;">
                         <strong>About Criticality Index:</strong> This metric represents the probability that a task lies on the critical path
@@ -297,6 +317,7 @@ class HTMLExporter:
         output_path: Path | str,
         project: Project | None = None,
         config: Config | None = None,
+        critical_path_limit: int | None = None,
     ) -> None:
         """Export results to HTML file.
 
@@ -305,11 +326,16 @@ class HTMLExporter:
             output_path: Path to output file
             project: Original project data (optional, for enhanced effort display)
             config: Active simulation configuration (optional, for T-shirt sizing display)
+            critical_path_limit: Maximum number of critical path sequences to include
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         template = Template(HTML_TEMPLATE)
+        effective_config = config if config is not None else Config.get_default()
+        report_limit = (
+            critical_path_limit or effective_config.output.critical_path_report_limit
+        )
 
         # Prepare data
         cv = results.std_dev / results.mean if results.mean > 0 else 0
@@ -325,6 +351,14 @@ class HTMLExporter:
                 task_id, results, project, config
             )
             critical_path_with_effort.append((task_id, criticality, effort_display))
+
+        critical_path_sequences = [
+            (index, record.format_path(), record.count, record.frequency)
+            for index, record in enumerate(
+                results.get_critical_path_sequences(report_limit),
+                start=1,
+            )
+        ]
 
         percentiles = sorted(results.percentiles.items())
 
@@ -352,6 +386,7 @@ class HTMLExporter:
             highlighted_percentiles=DEFAULT_CONFIDENCE_LEVELS,
             critical_path=critical_path,
             critical_path_with_effort=critical_path_with_effort,
+            critical_path_sequences=critical_path_sequences,
             thermometer_segments=thermometer_segments,
             histogram_image=histogram_image,
         )

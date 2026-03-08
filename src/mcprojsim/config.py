@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field
 DEFAULT_SIMULATION_ITERATIONS = 10000
 DEFAULT_OUTPUT_FORMATS = ["json", "csv", "html"]
 DEFAULT_HISTOGRAM_BINS = 50
+DEFAULT_MAX_STORED_CRITICAL_PATHS = 20
+DEFAULT_CRITICAL_PATH_REPORT_LIMIT = 2
 DEFAULT_CONFIDENCE_LEVELS = [50, 75, 80, 85, 90, 95]
 DEFAULT_PROBABILITY_RED_THRESHOLD = 0.50
 DEFAULT_PROBABILITY_GREEN_THRESHOLD = 0.90
@@ -67,11 +69,13 @@ def _build_default_config_data() -> dict:
         "simulation": {
             "default_iterations": DEFAULT_SIMULATION_ITERATIONS,
             "random_seed": None,
+            "max_stored_critical_paths": DEFAULT_MAX_STORED_CRITICAL_PATHS,
         },
         "output": {
             "formats": list(DEFAULT_OUTPUT_FORMATS),
             "include_histogram": True,
             "histogram_bins": DEFAULT_HISTOGRAM_BINS,
+            "critical_path_report_limit": DEFAULT_CRITICAL_PATH_REPORT_LIMIT,
         },
     }
 
@@ -102,6 +106,10 @@ class SimulationConfig(BaseModel):
 
     default_iterations: int = Field(default=DEFAULT_SIMULATION_ITERATIONS, gt=0)
     random_seed: Optional[int] = None
+    max_stored_critical_paths: int = Field(
+        default=DEFAULT_MAX_STORED_CRITICAL_PATHS,
+        gt=0,
+    )
 
 
 class OutputConfig(BaseModel):
@@ -110,6 +118,10 @@ class OutputConfig(BaseModel):
     formats: list[str] = Field(default_factory=lambda: list(DEFAULT_OUTPUT_FORMATS))
     include_histogram: bool = True
     histogram_bins: int = Field(default=DEFAULT_HISTOGRAM_BINS, gt=0)
+    critical_path_report_limit: int = Field(
+        default=DEFAULT_CRITICAL_PATH_REPORT_LIMIT,
+        gt=0,
+    )
 
 
 class EstimateRangeConfig(BaseModel):

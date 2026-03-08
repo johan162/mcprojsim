@@ -142,11 +142,47 @@ Confidence Intervals:
   P50: 8.90 days
   P80: 10.12 days
   P90: 10.75 days
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_002 (5000/5000, 100.0%)
 ```
 
 Compared with the first example, the schedule is now longer because the project contains more work. More importantly, the dependency means the tasks form a chain rather than happening independently. This is the beginning of a project network.
 
 This is also the point where the input file starts to describe more than estimates. It now describes project structure.
+
+### Understanding the critical path output
+
+Starting from this step, the CLI and exports also report full critical path sequences.
+
+That means the tool now shows:
+
+- **task-level criticality**, which answers: “how often was this task on a critical path?”
+- **full path sequences**, which answer: “which complete dependency chains were most often critical?”
+
+For this small example there is only one dependency chain, so the reported path is always:
+
+```text
+task_001 -> task_002
+```
+
+In larger projects, several different paths may become critical across the Monte Carlo iterations. The simulator aggregates those paths and shows the most common ones.
+
+You can request more than the default two paths in the CLI:
+
+```bash
+mcprojsim simulate first-project-step-2.yaml --iterations 5000 --seed 42 --critical-paths 4
+```
+
+And you can control how many are stored and reported by default through `config.yaml`:
+
+```yaml
+simulation:
+  max_stored_critical_paths: 20
+
+output:
+  critical_path_report_limit: 2
+```
 
 ## Add organizational knowledge with a configuration file
 

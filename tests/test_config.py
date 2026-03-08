@@ -66,6 +66,7 @@ class TestConfig:
         config = Config.load_from_file(config_file)
         assert config.simulation.default_iterations == 5000
         assert config.simulation.random_seed == 42
+        assert config.simulation.max_stored_critical_paths == 20
         assert config.get_t_shirt_size("M") is not None
         assert config.get_story_point(5) is not None
 
@@ -103,6 +104,7 @@ class TestSimulationConfig:
         config = SimulationConfig()
         assert config.default_iterations == 10000
         assert config.random_seed is None
+        assert config.max_stored_critical_paths == 20
 
 
 class TestTShirtSizes:
@@ -200,3 +202,9 @@ class TestOutputConfig:
         assert "html" in config.formats
         assert config.include_histogram is True
         assert config.histogram_bins == 50
+        assert config.critical_path_report_limit == 2
+
+    def test_output_config_custom_critical_path_report_limit(self):
+        """Test custom critical path report limit."""
+        config = OutputConfig(critical_path_report_limit=4)
+        assert config.critical_path_report_limit == 4

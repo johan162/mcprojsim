@@ -8,7 +8,7 @@ import csv
 from mcprojsim.exporters import JSONExporter, CSVExporter, HTMLExporter
 from mcprojsim.config import Config
 from mcprojsim.models.project import Project, ProjectMetadata, Task, TaskEstimate
-from mcprojsim.models.simulation import SimulationResults
+from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
 import numpy as np
 
 
@@ -27,6 +27,18 @@ def sample_results():
         durations=durations,
         task_durations=task_durations,
         critical_path_frequency={"task_001": 5, "task_002": 3},
+        critical_path_sequences=[
+            CriticalPathRecord(
+                path=("task_001", "task_002"),
+                count=3,
+                frequency=0.6,
+            ),
+            CriticalPathRecord(
+                path=("task_001", "task_003"),
+                count=2,
+                frequency=0.4,
+            ),
+        ],
         random_seed=42,
     )
     results.calculate_statistics()
@@ -53,6 +65,7 @@ class TestJSONExporter:
         assert "statistics" in data
         assert "percentiles" in data
         assert "critical_path" in data
+        assert "critical_path_sequences" in data
 
     def test_json_contains_statistics(self, sample_results, tmp_path):
         """Test that JSON contains statistics."""
@@ -126,6 +139,17 @@ class TestCSVExporter:
         assert "Mean" in content
         assert "Median" in content
         assert "Percentile" in content or "P50" in content
+
+    def test_csv_contains_critical_path_sequences(self, sample_results, tmp_path):
+        """Test that CSV contains full critical path sequence reporting."""
+        output_file = tmp_path / "results.csv"
+        CSVExporter.export(sample_results, output_file)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Critical Path Sequences" in content
+        assert "task_001 -> task_002" in content
 
     def test_csv_contains_histogram(self, sample_results, tmp_path):
         """Test that CSV contains histogram data."""
@@ -201,6 +225,27 @@ class TestHTMLExporter:
         assert "thermometer" in content.lower()
         assert "Probability of Success" in content
         assert "thermometer-segment" in content
+
+    def test_html_contains_critical_path_sequences(self, sample_results, tmp_path):
+        """Test that HTML contains full critical path sequence reporting."""
+        output_file = tmp_path / "results.html"
+        HTMLExporter.export(sample_results, output_file)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Most Frequent Critical Paths" in content
+        assert "task_001 -&gt; task_002" in content or "task_001 -> task_002" in content
+
+    def test_json_critical_path_limit(self, sample_results, tmp_path):
+        """Test JSON export respects critical path report limits."""
+        output_file = tmp_path / "results.json"
+        JSONExporter.export(sample_results, output_file, critical_path_limit=1)
+
+        with open(output_file, "r") as f:
+            data = json.load(f)
+
+        assert len(data["critical_path_sequences"]) == 1
 
     def test_html_uses_active_config_for_tshirt_display(self, tmp_path):
         """Test that HTML uses the provided config for T-shirt size effort display."""

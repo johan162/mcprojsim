@@ -189,6 +189,43 @@ class TestTaskScheduler:
         assert "task_001" in critical_path
         assert "task_002" in critical_path
 
+    def test_get_critical_paths_returns_full_sequences(self):
+        """Test tracing all full critical path sequences in a branching schedule."""
+        project = Project(
+            project=ProjectMetadata(name="Branching", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Start",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                ),
+                Task(
+                    id="task_002",
+                    name="Branch A",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    dependencies=["task_001"],
+                ),
+                Task(
+                    id="task_003",
+                    name="Branch B",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    dependencies=["task_001"],
+                ),
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        schedule = scheduler.schedule_tasks(
+            {"task_001": 1.0, "task_002": 1.0, "task_003": 1.0}
+        )
+
+        critical_paths = scheduler.get_critical_paths(schedule)
+
+        assert critical_paths == [
+            ("task_001", "task_002"),
+            ("task_001", "task_003"),
+        ]
+
     def test_get_critical_path_empty_schedule(self):
         """Test critical path with empty schedule."""
         project = Project(
@@ -283,6 +320,49 @@ class TestSimulationEngine:
         results2 = engine2.run(simple_project)
 
         assert np.allclose(results1.durations, results2.durations)
+
+    def test_run_simulation_stores_full_critical_paths(self, monkeypatch):
+        """Test that simulation stores aggregated critical path sequences."""
+        project = Project(
+            project=ProjectMetadata(name="Branching", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Start",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=3),
+                ),
+                Task(
+                    id="task_002",
+                    name="Branch A",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=3),
+                    dependencies=["task_001"],
+                ),
+                Task(
+                    id="task_003",
+                    name="Branch B",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=3),
+                    dependencies=["task_001"],
+                ),
+            ],
+        )
+
+        config = Config(simulation={"max_stored_critical_paths": 1})
+        engine = SimulationEngine(
+            iterations=5,
+            random_seed=42,
+            config=config,
+            show_progress=False,
+        )
+        monkeypatch.setattr(engine.sampler, "sample", lambda estimate: 1.0)
+
+        results = engine.run(project)
+
+        assert len(results.critical_path_sequences) == 1
+        assert results.critical_path_sequences[0].path == (
+            "task_001",
+            "task_002",
+        )
+        assert results.critical_path_sequences[0].count == 5
 
     def test_apply_uncertainty_factors(self):
         """Test applying uncertainty factors."""

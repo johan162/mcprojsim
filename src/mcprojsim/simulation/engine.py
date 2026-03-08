@@ -1,5 +1,6 @@
 """Monte Carlo simulation engine."""
 
+from collections import Counter
 from typing import Dict, Optional
 
 import numpy as np
@@ -10,7 +11,7 @@ from mcprojsim.config import (
     EstimateRangeConfig,
 )
 from mcprojsim.models.project import Project, Task, TaskEstimate
-from mcprojsim.models.simulation import SimulationResults
+from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
 from mcprojsim.simulation.distributions import DistributionSampler
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
 from mcprojsim.simulation.scheduler import TaskScheduler
@@ -63,6 +64,7 @@ class SimulationEngine:
             task.id: [] for task in project.tasks
         }
         critical_path_frequency: Dict[str, int] = {task.id: 0 for task in project.tasks}
+        critical_path_sequences: Counter[tuple[str, ...]] = Counter()
 
         # Run iterations
         for iteration in range(self.iterations):
@@ -71,8 +73,8 @@ class SimulationEngine:
                 print(f"Progress: {progress:.1f}% ({iteration + 1}/{self.iterations})")
 
             # Run single iteration
-            duration, task_durations, critical_path = self._run_iteration(
-                project, scheduler
+            duration, task_durations, critical_path, critical_paths = (
+                self._run_iteration(project, scheduler)
             )
 
             project_durations[iteration] = duration
@@ -85,6 +87,21 @@ class SimulationEngine:
             for task_id in critical_path:
                 critical_path_frequency[task_id] += 1
 
+            # Update full critical path sequence frequency
+            critical_path_sequences.update(critical_paths)
+
+        stored_critical_paths = [
+            CriticalPathRecord(
+                path=path,
+                count=count,
+                frequency=count / self.iterations,
+            )
+            for path, count in sorted(
+                critical_path_sequences.items(),
+                key=lambda item: (-item[1], item[0]),
+            )[: self.config.simulation.max_stored_critical_paths]
+        ]
+
         # Create results object
         results = SimulationResults(
             iterations=self.iterations,
@@ -95,6 +112,7 @@ class SimulationEngine:
                 for task_id, durations in task_durations_all.items()
             },
             critical_path_frequency=critical_path_frequency,
+            critical_path_sequences=stored_critical_paths,
             random_seed=self.random_seed,
             probability_red_threshold=project.project.probability_red_threshold,
             probability_green_threshold=project.project.probability_green_threshold,
@@ -111,7 +129,7 @@ class SimulationEngine:
 
     def _run_iteration(
         self, project: Project, scheduler: TaskScheduler
-    ) -> tuple[float, Dict[str, float], set[str]]:
+    ) -> tuple[float, Dict[str, float], set[str], list[tuple[str, ...]]]:
         """Run a single simulation iteration.
 
         Args:
@@ -119,7 +137,7 @@ class SimulationEngine:
             scheduler: Task scheduler
 
         Returns:
-            Tuple of (project_duration, task_durations, critical_path)
+            Tuple of (project_duration, task_durations, critical_path_tasks, critical_paths)
         """
         task_durations: Dict[str, float] = {}
 
@@ -155,9 +173,10 @@ class SimulationEngine:
         project_duration += project_risk_impact
 
         # Identify critical path
-        critical_path = scheduler.get_critical_path(schedule)
+        critical_paths = scheduler.get_critical_paths(schedule)
+        critical_path = {task_id for path in critical_paths for task_id in path}
 
-        return project_duration, task_durations, critical_path
+        return project_duration, task_durations, critical_path, critical_paths
 
     def _apply_uncertainty_factors(self, task: Task, base_duration: float) -> float:
         """Apply uncertainty factors to base duration.

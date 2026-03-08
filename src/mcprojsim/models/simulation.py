@@ -11,6 +11,18 @@ from mcprojsim.config import (
 )
 
 
+class CriticalPathRecord(BaseModel):
+    """Aggregated full critical path sequence information."""
+
+    path: tuple[str, ...]
+    count: int
+    frequency: float
+
+    def format_path(self) -> str:
+        """Format the path as a readable arrow-separated string."""
+        return " -> ".join(self.path)
+
+
 class SimulationResults(BaseModel):
     """Results from Monte Carlo simulation."""
 
@@ -21,6 +33,7 @@ class SimulationResults(BaseModel):
     durations: np.ndarray = Field(description="Array of project durations")
     task_durations: Dict[str, np.ndarray] = Field(default_factory=dict)
     critical_path_frequency: Dict[str, int] = Field(default_factory=dict)
+    critical_path_sequences: list[CriticalPathRecord] = Field(default_factory=list)
     random_seed: int | None = None
     probability_red_threshold: float = DEFAULT_PROBABILITY_RED_THRESHOLD
     probability_green_threshold: float = DEFAULT_PROBABILITY_GREEN_THRESHOLD
@@ -67,6 +80,29 @@ class SimulationResults(BaseModel):
             for task_id, count in self.critical_path_frequency.items()
         }
 
+    def get_critical_path_sequences(
+        self, top_n: int | None = None
+    ) -> list[CriticalPathRecord]:
+        """Get the most frequent full critical path sequences.
+
+        Args:
+            top_n: Maximum number of paths to return. If omitted, return all stored.
+
+        Returns:
+            List of aggregated critical path records in descending frequency order.
+        """
+        if top_n is None:
+            return list(self.critical_path_sequences)
+
+        return list(self.critical_path_sequences[:top_n])
+
+    def get_most_frequent_critical_path(self) -> CriticalPathRecord | None:
+        """Get the single most frequent full critical path sequence."""
+        if not self.critical_path_sequences:
+            return None
+
+        return self.critical_path_sequences[0]
+
     def get_histogram_data(self, bins: int = 50) -> tuple[np.ndarray, np.ndarray]:
         """Get histogram data for visualization.
 
@@ -97,4 +133,12 @@ class SimulationResults(BaseModel):
             },
             "percentiles": self.percentiles,
             "critical_path": self.get_critical_path(),
+            "critical_path_sequences": [
+                {
+                    "path": list(record.path),
+                    "count": record.count,
+                    "frequency": record.frequency,
+                }
+                for record in self.critical_path_sequences
+            ],
         }

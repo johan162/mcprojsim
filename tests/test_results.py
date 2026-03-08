@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 
-from mcprojsim.models.simulation import SimulationResults
+from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
 
 
 class TestSimulationResults:
@@ -28,6 +28,18 @@ class TestSimulationResults:
             durations=durations,
             task_durations=task_durations,
             critical_path_frequency={"task_001": 10, "task_002": 7, "task_003": 3},
+            critical_path_sequences=[
+                CriticalPathRecord(
+                    path=("task_001", "task_002"),
+                    count=7,
+                    frequency=0.7,
+                ),
+                CriticalPathRecord(
+                    path=("task_001", "task_003"),
+                    count=3,
+                    frequency=0.3,
+                ),
+            ],
             random_seed=42,
         )
         return results
@@ -97,3 +109,33 @@ class TestSimulationResults:
         cv = data["statistics"]["coefficient_of_variation"]
         expected_cv = sample_results.std_dev / sample_results.mean
         assert cv == pytest.approx(expected_cv, abs=0.01)
+
+    def test_get_critical_path_sequences(self, sample_results):
+        """Test retrieving stored critical path sequences."""
+        paths = sample_results.get_critical_path_sequences()
+
+        assert len(paths) == 2
+        assert paths[0].path == ("task_001", "task_002")
+        assert paths[0].count == 7
+
+    def test_get_critical_path_sequences_with_limit(self, sample_results):
+        """Test limiting the number of reported critical path sequences."""
+        paths = sample_results.get_critical_path_sequences(top_n=1)
+
+        assert len(paths) == 1
+        assert paths[0].path == ("task_001", "task_002")
+
+    def test_get_most_frequent_critical_path(self, sample_results):
+        """Test retrieving the most frequent critical path sequence."""
+        record = sample_results.get_most_frequent_critical_path()
+
+        assert record is not None
+        assert record.path == ("task_001", "task_002")
+
+    def test_to_dict_includes_critical_path_sequences(self, sample_results):
+        """Test critical path sequences are included in the exported dictionary."""
+        sample_results.calculate_statistics()
+        data = sample_results.to_dict()
+
+        assert "critical_path_sequences" in data
+        assert data["critical_path_sequences"][0]["path"] == ["task_001", "task_002"]

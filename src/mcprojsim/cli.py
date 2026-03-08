@@ -40,6 +40,11 @@ def cli() -> None:
     default="",
     help="Output formats (comma-separated: json,csv,html). If not specified, only CLI output is shown.",
 )
+@click.option(
+    "--critical-paths",
+    type=int,
+    help="Number of full critical path sequences to include in CLI output and exports.",
+)
 @click.option("--quiet", "-q", is_flag=True, help="Suppress progress output")
 def simulate(
     project_file: str,
@@ -48,6 +53,7 @@ def simulate(
     seed: Optional[int],
     output: Optional[str],
     output_format: str,
+    critical_paths: Optional[int],
     quiet: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
@@ -88,6 +94,7 @@ def simulate(
             show_progress=not quiet,
         )
         results = engine.run(project)
+        critical_path_limit = critical_paths or cfg.output.critical_path_report_limit
 
         if not quiet:
             click.echo("\n=== Simulation Results ===")
@@ -99,6 +106,18 @@ def simulate(
             for p in sorted(results.percentiles.keys()):
                 click.echo(f"  P{p}: {results.percentiles[p]:.2f} days")
 
+            critical_path_records = results.get_critical_path_sequences(
+                critical_path_limit
+            )
+            if critical_path_records:
+                click.echo("\nMost Frequent Critical Paths:")
+                for index, record in enumerate(critical_path_records, start=1):
+                    click.echo(
+                        "  "
+                        f"{index}. {record.format_path()} "
+                        f"({record.count}/{results.iterations}, {record.frequency * 100:.1f}%)"
+                    )
+
         # Export results (only if formats are explicitly specified)
         if output_format.strip():
             formats = [f.strip().lower() for f in output_format.split(",") if f.strip()]
@@ -109,12 +128,22 @@ def simulate(
             for fmt in formats:
                 if fmt == "json":
                     output_file = base_output.with_suffix(".json")
-                    JSONExporter.export(results, output_file)
+                    JSONExporter.export(
+                        results,
+                        output_file,
+                        config=cfg,
+                        critical_path_limit=critical_path_limit,
+                    )
                     if not quiet:
                         click.echo(f"\nResults exported to {output_file}")
                 elif fmt == "csv":
                     output_file = base_output.with_suffix(".csv")
-                    CSVExporter.export(results, output_file)
+                    CSVExporter.export(
+                        results,
+                        output_file,
+                        config=cfg,
+                        critical_path_limit=critical_path_limit,
+                    )
                     if not quiet:
                         click.echo(f"Results exported to {output_file}")
                 elif fmt == "html":
@@ -123,7 +152,8 @@ def simulate(
                         results,
                         output_file,
                         project=project,
-                        config=cfg if config else None,
+                        config=cfg,
+                        critical_path_limit=critical_path_limit,
                     )
                     if not quiet:
                         click.echo(f"Results exported to {output_file}")
@@ -195,11 +225,17 @@ def show_config(config_file: Optional[str]) -> None:
     click.echo("\nSimulation:")
     click.echo(f"  Default iterations: {cfg.simulation.default_iterations}")
     click.echo(f"  Random seed: {cfg.simulation.random_seed}")
+    click.echo(
+        "  Max stored critical paths: " f"{cfg.simulation.max_stored_critical_paths}"
+    )
 
     click.echo("\nOutput:")
     click.echo(f"  Formats: {', '.join(cfg.output.formats)}")
     click.echo(f"  Include histogram: {cfg.output.include_histogram}")
     click.echo(f"  Histogram bins: {cfg.output.histogram_bins}")
+    click.echo(
+        "  Critical path report limit: " f"{cfg.output.critical_path_report_limit}"
+    )
 
 
 if __name__ == "__main__":
