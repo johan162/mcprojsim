@@ -9,9 +9,15 @@ import numpy as np
 from mcprojsim.config import (
     Config,
     DEFAULT_SIMULATION_ITERATIONS,
+    EffortUnit,
     EstimateRangeConfig,
 )
-from mcprojsim.models.project import Project, Task, TaskEstimate
+from mcprojsim.models.project import (
+    Project,
+    Task,
+    TaskEstimate,
+    _convert_to_hours,
+)
 from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
 from mcprojsim.simulation.distributions import DistributionSampler
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
@@ -60,6 +66,7 @@ class SimulationEngine:
             Simulation results
         """
         scheduler = TaskScheduler(project)
+        hours_per_day = project.project.hours_per_day
 
         # Storage for results
         project_durations = np.zeros(self.iterations)
@@ -74,7 +81,7 @@ class SimulationEngine:
         for iteration in range(self.iterations):
             # Run single iteration
             duration, task_durations, critical_path, critical_paths = (
-                self._run_iteration(project, scheduler)
+                self._run_iteration(project, scheduler, hours_per_day)
             )
 
             project_durations[iteration] = duration
@@ -139,6 +146,8 @@ class SimulationEngine:
             random_seed=self.random_seed,
             probability_red_threshold=project.project.probability_red_threshold,
             probability_green_threshold=project.project.probability_green_threshold,
+            hours_per_day=hours_per_day,
+            start_date=project.project.start_date,
         )
 
         # Calculate statistics
@@ -171,13 +180,16 @@ class SimulationEngine:
         self.progress_stream.flush()
 
     def _run_iteration(
-        self, project: Project, scheduler: TaskScheduler
+        self, project: Project, scheduler: TaskScheduler, hours_per_day: float
     ) -> tuple[float, Dict[str, float], set[str], list[tuple[str, ...]]]:
         """Run a single simulation iteration.
+
+        All durations are computed in hours (the canonical internal unit).
 
         Args:
             project: Project to simulate
             scheduler: Task scheduler
+            hours_per_day: Working hours per day
 
         Returns:
             Tuple of (project_duration, task_durations, critical_path_tasks, critical_paths)
@@ -186,32 +198,38 @@ class SimulationEngine:
 
         # Sample and adjust task durations
         for task in project.tasks:
-            # Resolve T-shirt size to actual estimate if needed
+            # Resolve T-shirt size / story points to actual estimate if needed
             estimate = self._resolve_estimate(task.estimate)
 
-            # Sample base duration
+            # Sample base duration (in the estimate's native unit)
             base_duration = self.sampler.sample(estimate)
 
-            # Apply uncertainty factors
-            adjusted_duration = self._apply_uncertainty_factors(task, base_duration)
+            # Convert to hours (the canonical internal unit)
+            unit = estimate.unit or EffortUnit.HOURS
+            base_duration_hours = _convert_to_hours(base_duration, unit, hours_per_day)
 
-            # Apply task-level risks
+            # Apply uncertainty factors
+            adjusted_duration = self._apply_uncertainty_factors(
+                task, base_duration_hours
+            )
+
+            # Apply task-level risks (impacts converted to hours)
             risk_impact = self.risk_evaluator.evaluate_risks(
-                task.risks, adjusted_duration
+                task.risks, adjusted_duration, hours_per_day
             )
             final_duration = adjusted_duration + risk_impact
 
             task_durations[task.id] = final_duration
 
-        # Schedule tasks
+        # Schedule tasks (all durations in hours)
         schedule = scheduler.schedule_tasks(task_durations)
 
         # Calculate project duration (max end time)
         project_duration = max(info["end"] for info in schedule.values())
 
-        # Apply project-level risks
+        # Apply project-level risks (impacts converted to hours)
         project_risk_impact = self.risk_evaluator.evaluate_risks(
-            project.project_risks, project_duration
+            project.project_risks, project_duration, hours_per_day
         )
         project_duration += project_risk_impact
 
@@ -266,7 +284,10 @@ class SimulationEngine:
         return base_duration * multiplier
 
     def _resolve_estimate(self, estimate: TaskEstimate) -> TaskEstimate:
-        """Resolve symbolic estimates to actual day-based estimate values.
+        """Resolve symbolic estimates to actual estimate values.
+
+        For T-shirt sizes and story points, the numeric ranges and unit
+        come from the configuration.
 
         Args:
             estimate: TaskEstimate object
@@ -277,6 +298,7 @@ class SimulationEngine:
         from mcprojsim.models.project import TaskEstimate
 
         resolved_config: EstimateRangeConfig | None = None
+        resolved_unit: EffortUnit | None = None
 
         if estimate.t_shirt_size is not None:
             resolved_config = self.config.get_t_shirt_size(estimate.t_shirt_size)
@@ -285,6 +307,7 @@ class SimulationEngine:
                     f"Unknown T-shirt size: {estimate.t_shirt_size}. "
                     f"Available sizes: {', '.join(self.config.t_shirt_sizes.keys())}"
                 )
+            resolved_unit = self.config.t_shirt_size_unit
 
         elif estimate.story_points is not None:
             resolved_config = self.config.get_story_point(estimate.story_points)
@@ -293,15 +316,16 @@ class SimulationEngine:
                     f"Unknown Story Point value: {estimate.story_points}. "
                     f"Available Story Points: {', '.join(str(value) for value in sorted(self.config.story_points.keys()))}"
                 )
+            resolved_unit = self.config.story_point_unit
 
         else:
             return estimate
 
-        # Create new estimate with resolved values
+        # Create new estimate with resolved values and config unit
         return TaskEstimate(
             distribution=estimate.distribution,
             min=resolved_config.min,
             most_likely=resolved_config.most_likely,
             max=resolved_config.max,
-            unit="days",
+            unit=resolved_unit,
         )

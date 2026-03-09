@@ -80,40 +80,43 @@ class TestTaskEstimate:
         assert estimate.most_likely is None
         assert estimate.max is None
 
-    def test_tshirt_size_with_unit(self):
-        """Test T-shirt size with custom unit."""
-        estimate = TaskEstimate(
-            t_shirt_size="L",
-            unit="weeks",
-        )
-        assert estimate.t_shirt_size == "L"
-        assert estimate.unit == "weeks"
+    def test_tshirt_size_with_unit_rejected(self):
+        """Test T-shirt size rejects unit in project file."""
+        with pytest.raises(
+            ValueError, match="T-shirt size estimates must not specify 'unit'"
+        ):
+            TaskEstimate(
+                t_shirt_size="L",
+                unit="weeks",
+            )
 
     def test_story_points_valid(self):
         """Test Story Point specification."""
         estimate = TaskEstimate(story_points=5)
 
         assert estimate.story_points == 5
-        assert estimate.unit == "storypoint"
+        assert estimate.unit is None
         assert estimate.min is None
         assert estimate.most_likely is None
         assert estimate.max is None
 
-    def test_story_points_with_explicit_unit(self):
-        """Test Story Points with explicit storypoint unit."""
-        estimate = TaskEstimate(story_points=8, unit="storypoint")
-
-        assert estimate.story_points == 8
-        assert estimate.unit == "storypoint"
+    def test_story_points_with_explicit_unit_rejected(self):
+        """Test Story Points reject unit in project file."""
+        with pytest.raises(
+            ValueError, match="Story Point estimates must not specify 'unit'"
+        ):
+            TaskEstimate(story_points=8, unit="days")
 
     def test_story_points_invalid_value(self):
         """Test Story Points must use supported agile sequence values."""
         with pytest.raises(ValueError, match="Story Points must be one of"):
             TaskEstimate(story_points=4)
 
-    def test_story_points_invalid_unit(self):
-        """Test Story Points reject non-storypoint units."""
-        with pytest.raises(ValueError, match="must use unit 'storypoint'"):
+    def test_story_points_with_any_unit_rejected(self):
+        """Test Story Points reject any unit specification."""
+        with pytest.raises(
+            ValueError, match="Story Point estimates must not specify 'unit'"
+        ):
             TaskEstimate(story_points=5, unit="days")
 
     def test_multiple_symbolic_estimates_invalid(self):

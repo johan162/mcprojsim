@@ -96,14 +96,25 @@ def simulate(
         critical_path_limit = critical_paths or cfg.output.critical_path_report_limit
 
         if not quiet:
+            import math
+
+            hours_per_day = results.hours_per_day
+            mean_wd = math.ceil(results.mean / hours_per_day)
             click.echo("\n=== Simulation Results ===")
             click.echo(f"Project: {results.project_name}")
-            click.echo(f"Mean: {results.mean:.2f} days")
-            click.echo(f"Median (P50): {results.median:.2f} days")
-            click.echo(f"Std Dev: {results.std_dev:.2f} days")
+            click.echo(f"Hours per Day: {hours_per_day}")
+            click.echo(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
+            click.echo(f"Median (P50): {results.median:.2f} hours")
+            click.echo(f"Std Dev: {results.std_dev:.2f} hours")
             click.echo("\nConfidence Intervals:")
             for p in sorted(results.percentiles.keys()):
-                click.echo(f"  P{p}: {results.percentiles[p]:.2f} days")
+                hours = results.percentiles[p]
+                wd = math.ceil(hours / hours_per_day)
+                delivery = results.delivery_date(hours)
+                date_str = f"  ({delivery.isoformat()})" if delivery else ""
+                click.echo(
+                    f"  P{p}: {hours:.2f} hours" f" ({wd} working days){date_str}"
+                )
 
             critical_path_records = results.get_critical_path_sequences(
                 critical_path_limit
@@ -214,11 +225,18 @@ def show_config(config_file: Optional[str]) -> None:
         for level, value in levels.items():
             click.echo(f"    {level}: {value}")
 
-    click.echo("\nT-Shirt Sizes (effort estimates in days):")
+    click.echo(f"\nT-Shirt Sizes (unit: {cfg.t_shirt_size_unit.value}):")
     for size, config in cfg.t_shirt_sizes.items():
         click.echo(f"  {size}:")
         click.echo(
             f"    min: {config.min}, most_likely: {config.most_likely}, max: {config.max}"
+        )
+
+    click.echo(f"\nStory Points (unit: {cfg.story_point_unit.value}):")
+    for points, sp_config in sorted(cfg.story_points.items()):
+        click.echo(f"  {points}:")
+        click.echo(
+            f"    min: {sp_config.min}, most_likely: {sp_config.most_likely}, max: {sp_config.max}"
         )
 
     click.echo("\nSimulation:")

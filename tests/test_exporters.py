@@ -80,11 +80,11 @@ class TestJSONExporter:
             data = json.load(f)
 
         stats = data["statistics"]
-        assert "mean" in stats
-        assert "median" in stats
-        assert "std_dev" in stats
-        assert "min" in stats
-        assert "max" in stats
+        assert "mean_hours" in stats
+        assert "median_hours" in stats
+        assert "std_dev_hours" in stats
+        assert "min_hours" in stats
+        assert "max_hours" in stats
 
     def test_numpy_encoder_integer(self):
         """Test NumpyEncoder handles numpy integers."""
@@ -166,7 +166,7 @@ class TestCSVExporter:
             content = f.read()
 
         assert "Histogram Data" in content
-        assert "Bin Edge (days)" in content
+        assert "Bin Edge (hours)" in content
         assert "Count" in content
         assert "Cumulative %" in content
 

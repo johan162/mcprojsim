@@ -1,6 +1,8 @@
 """Simulation result models."""
 
-from typing import Any, Dict
+import math
+from datetime import date, timedelta
+from typing import Any, Dict, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -37,6 +39,8 @@ class SimulationResults(BaseModel):
     random_seed: int | None = None
     probability_red_threshold: float = DEFAULT_PROBABILITY_RED_THRESHOLD
     probability_green_threshold: float = DEFAULT_PROBABILITY_GREEN_THRESHOLD
+    hours_per_day: float = 8.0
+    start_date: Optional[date] = None
 
     mean: float = 0.0
     median: float = 0.0
@@ -121,6 +125,7 @@ class SimulationResults(BaseModel):
             "project_name": self.project_name,
             "iterations": self.iterations,
             "random_seed": self.random_seed,
+            "hours_per_day": self.hours_per_day,
             "statistics": {
                 "mean": self.mean,
                 "median": self.median,
@@ -142,3 +147,50 @@ class SimulationResults(BaseModel):
                 for record in self.critical_path_sequences
             ],
         }
+
+    def hours_to_working_days(self, hours: float) -> int:
+        """Convert hours to working days using ceiling rounding.
+
+        Args:
+            hours: Effort in hours
+
+        Returns:
+            Number of working days (ceiling)
+        """
+        return math.ceil(hours / self.hours_per_day)
+
+    def delivery_date(self, effort_hours: float) -> date | None:
+        """Calculate the delivery date from effort hours.
+
+        Adds the required number of working days to start_date,
+        skipping weekends (Saturday and Sunday).
+
+        Args:
+            effort_hours: Total effort in hours
+
+        Returns:
+            Projected delivery date, or None if no start_date
+        """
+        if self.start_date is None:
+            return None
+        working_days_needed = self.hours_to_working_days(effort_hours)
+        return _add_working_days(self.start_date, working_days_needed)
+
+
+def _add_working_days(start: date, working_days: int) -> date:
+    """Add working days to a date, skipping weekends.
+
+    Args:
+        start: Start date
+        working_days: Number of working days to add
+
+    Returns:
+        Target date after adding the working days
+    """
+    current = start
+    added = 0
+    while added < working_days:
+        current += timedelta(days=1)
+        if current.weekday() < 5:  # Monday=0 .. Friday=4
+            added += 1
+    return current

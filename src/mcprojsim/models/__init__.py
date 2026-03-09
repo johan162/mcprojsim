@@ -9,6 +9,7 @@ from mcprojsim.models.project import (
     RiskImpact,
     UncertaintyFactors,
     DistributionType,
+    EffortUnit,
     ImpactType,
 )
 from mcprojsim.models.simulation import SimulationResults
@@ -22,6 +23,7 @@ __all__ = [
     "RiskImpact",
     "UncertaintyFactors",
     "DistributionType",
+    "EffortUnit",
     "ImpactType",
     "SimulationResults",
 ]

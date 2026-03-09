@@ -1,11 +1,21 @@
 """Configuration management for uncertainty factors and simulation settings."""
 
 from copy import deepcopy
+from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional
 
 import yaml
 from pydantic import BaseModel, Field
+
+
+class EffortUnit(str, Enum):
+    """Supported effort units."""
+
+    HOURS = "hours"
+    DAYS = "days"
+    WEEKS = "weeks"
+
 
 # This file defines the configuration schema and default values for the Monte Carlo Project Simulator.
 # This is where we centralize all configurable parameters, including uncertainty factors, T-shirt size mappings,
@@ -62,10 +72,12 @@ def _build_default_config_data() -> dict:
             size: deepcopy(values)
             for size, values in DEFAULT_T_SHIRT_SIZE_VALUES.items()
         },
+        "t_shirt_size_unit": EffortUnit.HOURS.value,
         "story_points": {
             points: deepcopy(values)
             for points, values in DEFAULT_STORY_POINT_VALUES.items()
         },
+        "story_point_unit": EffortUnit.DAYS.value,
         "simulation": {
             "default_iterations": DEFAULT_SIMULATION_ITERATIONS,
             "random_seed": None,
@@ -145,7 +157,9 @@ class Config(BaseModel):
 
     uncertainty_factors: Dict[str, Dict[str, float]] = Field(default_factory=dict)
     t_shirt_sizes: Dict[str, TShirtSizeConfig] = Field(default_factory=dict)
+    t_shirt_size_unit: EffortUnit = Field(default=EffortUnit.HOURS)
     story_points: Dict[int, StoryPointConfig] = Field(default_factory=dict)
+    story_point_unit: EffortUnit = Field(default=EffortUnit.DAYS)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
 

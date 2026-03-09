@@ -18,33 +18,45 @@ class RiskEvaluator:
         """
         self.random_state = random_state or np.random.RandomState()
 
-    def evaluate_risk(self, risk: Risk, base_duration: float = 0.0) -> float:
+    def evaluate_risk(
+        self,
+        risk: Risk,
+        base_duration: float = 0.0,
+        hours_per_day: float = 8.0,
+    ) -> float:
         """Evaluate a risk and return its impact if triggered.
 
         Args:
             risk: Risk to evaluate
-            base_duration: Base duration for percentage-based impacts
+            base_duration: Base duration in hours for percentage-based impacts
+            hours_per_day: Working hours per day for unit conversion
 
         Returns:
-            Impact value (0 if not triggered, impact value if triggered)
+            Impact value in hours (0 if not triggered)
         """
         # Roll the dice
         if self.random_state.random() < risk.probability:
             # Risk triggered!
-            return risk.get_impact_value(base_duration)
+            return risk.get_impact_value(base_duration, hours_per_day)
         return 0.0
 
-    def evaluate_risks(self, risks: list[Risk], base_duration: float = 0.0) -> float:
+    def evaluate_risks(
+        self,
+        risks: list[Risk],
+        base_duration: float = 0.0,
+        hours_per_day: float = 8.0,
+    ) -> float:
         """Evaluate multiple risks and return cumulative impact.
 
         Args:
             risks: List of risks to evaluate
-            base_duration: Base duration for percentage-based impacts
+            base_duration: Base duration in hours for percentage-based impacts
+            hours_per_day: Working hours per day for unit conversion
 
         Returns:
-            Total impact from all triggered risks
+            Total impact in hours from all triggered risks
         """
         total_impact = 0.0
         for risk in risks:
-            total_impact += self.evaluate_risk(risk, base_duration)
+            total_impact += self.evaluate_risk(risk, base_duration, hours_per_day)
         return total_impact

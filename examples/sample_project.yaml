@@ -44,7 +44,10 @@ tasks:
       - id: "task_risk_001"
         name: "Schema migration issues"
         probability: 0.20
-        impact: 2
+        impact:
+          type: "absolute"
+          value: 2
+          unit: "days"
 
   - id: "task_002"
     name: "API endpoint implementation"
@@ -82,7 +85,10 @@ tasks:
       - id: "task_risk_002"
         name: "Browser compatibility issues"
         probability: 0.25
-        impact: 3
+        impact:
+          type: "absolute"
+          value: 3
+          unit: "days"
 
   - id: "task_004"
     name: "Authentication & Authorization"
@@ -103,7 +109,10 @@ tasks:
       - id: "task_risk_003"
         name: "Security audit findings"
         probability: 0.30
-        impact: 5
+        impact:
+          type: "absolute"
+          value: 5
+          unit: "days"
 
   - id: "task_005"
     name: "Integration testing"
@@ -141,7 +150,10 @@ tasks:
       - id: "task_risk_004"
         name: "Performance targets not met"
         probability: 0.35
-        impact: 4
+        impact:
+          type: "absolute"
+          value: 4
+          unit: "days"
 
   - id: "task_007"
     name: "Documentation"
@@ -179,4 +191,7 @@ tasks:
       - id: "task_risk_005"
         name: "Infrastructure issues"
         probability: 0.20
-        impact: 3
+        impact:
+          type: "absolute"
+          value: 3
+          unit: "days"

@@ -1,6 +1,7 @@
 """CSV exporter for simulation results."""
 
 import csv
+import math
 from datetime import datetime
 from pathlib import Path
 
@@ -45,15 +46,22 @@ class CSVExporter:
             writer.writerow(["Simulation Date", simulation_date])
             writer.writerow(["Iterations", results.iterations])
             writer.writerow(["Random Seed", results.random_seed])
+            writer.writerow(["Hours per Day", results.hours_per_day])
             writer.writerow([])
 
             # Write statistics
             writer.writerow(["Statistics", ""])
-            writer.writerow(["Mean", f"{results.mean:.2f}"])
-            writer.writerow(["Median", f"{results.median:.2f}"])
-            writer.writerow(["Std Dev", f"{results.std_dev:.2f}"])
-            writer.writerow(["Min", f"{results.min_duration:.2f}"])
-            writer.writerow(["Max", f"{results.max_duration:.2f}"])
+            writer.writerow(["Mean (hours)", f"{results.mean:.2f}"])
+            writer.writerow(
+                [
+                    "Mean (working days)",
+                    math.ceil(results.mean / results.hours_per_day),
+                ]
+            )
+            writer.writerow(["Median (hours)", f"{results.median:.2f}"])
+            writer.writerow(["Std Dev (hours)", f"{results.std_dev:.2f}"])
+            writer.writerow(["Min (hours)", f"{results.min_duration:.2f}"])
+            writer.writerow(["Max (hours)", f"{results.max_duration:.2f}"])
             cv = results.std_dev / results.mean if results.mean > 0 else 0
             writer.writerow(["Coefficient of Variation", f"{cv:.4f}"])
             writer.writerow([])
@@ -61,7 +69,17 @@ class CSVExporter:
             # Write percentiles
             writer.writerow(["Percentiles", ""])
             for percentile, value in sorted(results.percentiles.items()):
-                writer.writerow([f"P{percentile}", f"{value:.2f}"])
+                working_days = math.ceil(value / results.hours_per_day)
+                delivery = results.delivery_date(value)
+                date_str = delivery.isoformat() if delivery else ""
+                writer.writerow(
+                    [
+                        f"P{percentile}",
+                        f"{value:.2f} hours",
+                        f"{working_days} working days",
+                        date_str,
+                    ]
+                )
             writer.writerow([])
 
             # Write critical path
@@ -90,7 +108,7 @@ class CSVExporter:
             # Write histogram
             writer.writerow(["Histogram Data", ""])
             bin_edges, counts = results.get_histogram_data(bins=50)
-            writer.writerow(["Bin Edge (days)", "Count", "Cumulative %"])
+            writer.writerow(["Bin Edge (hours)", "Count", "Cumulative %"])
 
             cumulative_count = 0
             total_count = sum(counts)

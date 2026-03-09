@@ -18,6 +18,7 @@ tasks:
       min: 5
       most_likely: 8
       max: 15
+      unit: "days"
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "high"
@@ -30,6 +31,7 @@ tasks:
       min: 10
       most_likely: 20
       max: 35
+      unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
       team_experience: "medium"
@@ -42,6 +44,7 @@ tasks:
       min: 5
       most_likely: 10
       max: 20
+      unit: "days"
     dependencies: ["task_002"]
     uncertainty_factors:
       technical_complexity: "high"
