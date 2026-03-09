@@ -12,7 +12,7 @@
 
 ## Overview
 
-`mcprojsim` is a Monte Carlo simulation tool for software project estimation.
+`mcprojsim` is a Monte Carlo simulation tool for project with empahsis on agile software project estimation.
 Instead of producing a single deadline, it models uncertainty in task duration, dependencies, risks, and other schedule drivers to produce confidence-based forecast ranges.
 
 It is intended for teams that want answers such as:
@@ -53,7 +53,7 @@ mcprojsim --help
 mcprojsim --version
 ```
 
-For a first-run walkthrough, see [QUICKSTART.md](QUICKSTART.md).
+For a first-run walkthrough, see the 10-min [QUICKSTART.md](QUICKSTART.md). After this we recommend going through the [User Guide](https://johan162.github.io/mcprojsim/)
 
 ## Minimal example
 
@@ -93,7 +93,7 @@ Run a simulation:
 mcprojsim simulate project.yaml --seed 12345
 ```
 
-Typical outputs include:
+Typical outputs (see the `--help` for how to specify output) include:
 
 - `*_results.json` for full machine-readable output
 - `*_results.csv` for tabular summaries
@@ -101,7 +101,7 @@ Typical outputs include:
 
 ## Documentation map
 
-Use the document that matches your goal:
+Use the local document that matches your goal:
 
 - [QUICKSTART.md](QUICKSTART.md) — installation paths, first commands, container usage, and local setup
 - [docs/getting_started.md](docs/getting_started.md) — first simulation walkthrough
@@ -112,7 +112,7 @@ Use the document that matches your goal:
 - [docs/examples.md](docs/examples.md) — example projects and usage patterns
 - [docs/api_reference.md](docs/api_reference.md) — Python API usage
 
-Full published documentation is available at <https://johan162.github.io/mcprojsim/>.
+The full published documentation is also available at <https://johan162.github.io/mcprojsim/>.
 
 ## Example commands
 
@@ -138,6 +138,10 @@ If you want to work from a source checkout, run tests, build docs, or use contai
 - [scripts/README.md](scripts/README.md)
 - [docs/index.md](docs/index.md)
 
+The deatiled developer documentation (including how to configure and build the container) is available at
+
+- [docs/development.md](docs/development.md)
+
 ## Contributing
 
 Contributions are welcome.
@@ -152,6 +156,7 @@ Contributions are welcome.
 
 - GitHub Issues: <https://github.com/johan162/mcprojsim/issues>
 - Documentation site: <https://johan162.github.io/mcprojsim/>
+
 
 ## Citation
 
