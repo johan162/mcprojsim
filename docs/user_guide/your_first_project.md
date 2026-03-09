@@ -77,17 +77,18 @@ Example result summary:
 ```text
 === Simulation Results ===
 Project: Tiny Landing Page
-Mean: 5.28 days
-Median (P50): 5.19 days
-Std Dev: 0.99 days
+Hours per Day: 8.0
+Mean: 42.26 hours (6 working days)
+Median (P50): 41.52 hours
+Std Dev: 7.93 hours
 
 Confidence Intervals:
-  P50: 5.19 days
-  P80: 6.20 days
-  P90: 6.68 days
+  P50: 41.52 hours (6 working days)
+  P80: 49.60 hours (7 working days)
+  P90: 53.44 hours (7 working days)
 ```
 
-The important thing here is not the exact numbers. The important thing is that even a one-task project produces a range of likely outcomes rather than one fixed answer.
+The important thing here is not the exact numbers. The important thing is that even a one-task project produces a range of likely outcomes rather than one fixed answer. Results are reported in hours (the canonical internal unit) with working days shown alongside.
 
 ## Add structure: a second task and a dependency
 
@@ -134,14 +135,15 @@ Example result summary:
 ```text
 === Simulation Results ===
 Project: Tiny Landing Page
-Mean: 8.95 days
-Median (P50): 8.90 days
-Std Dev: 1.37 days
+Hours per Day: 8.0
+Mean: 71.58 hours (9 working days)
+Median (P50): 71.20 hours
+Std Dev: 10.96 hours
 
 Confidence Intervals:
-  P50: 8.90 days
-  P80: 10.12 days
-  P90: 10.75 days
+  P50: 71.20 hours (9 working days)
+  P80: 80.96 hours (11 working days)
+  P90: 86.00 hours (11 working days)
 
 Most Frequent Critical Paths:
   1. task_001 -> task_002 (5000/5000, 100.0%)
@@ -269,14 +271,15 @@ Example result summary:
 ```text
 === Simulation Results ===
 Project: Tiny Landing Page
-Mean: 6.72 days
-Median (P50): 6.68 days
-Std Dev: 1.04 days
+Hours per Day: 8.0
+Mean: 53.76 hours (7 working days)
+Median (P50): 53.44 hours
+Std Dev: 8.32 hours
 
 Confidence Intervals:
-  P50: 6.68 days
-  P80: 7.61 days
-  P90: 8.08 days
+  P50: 53.44 hours (7 working days)
+  P80: 60.88 hours (8 working days)
+  P90: 64.64 hours (9 working days)
 ```
 
 This is an important modeling step.
@@ -353,14 +356,15 @@ Example result summary:
 ```text
 === Simulation Results ===
 Project: Tiny Landing Page
-Mean: 7.36 days
-Median (P50): 7.25 days
-Std Dev: 1.42 days
+Hours per Day: 8.0
+Mean: 58.88 hours (8 working days)
+Median (P50): 58.00 hours
+Std Dev: 11.36 hours
 
 Confidence Intervals:
-  P50: 7.25 days
-  P80: 8.57 days
-  P90: 9.29 days
+  P50: 58.00 hours (8 working days)
+  P80: 68.56 hours (9 working days)
+  P90: 74.32 hours (10 working days)
 ```
 
 Notice what happened relative to Step 3:
@@ -385,6 +389,8 @@ In the source code, a task estimate may specify `t_shirt_size` instead of `most_
 
 That means a T-shirt-sized task still becomes an ordinary probabilistic range during simulation. The symbolic label is just a more convenient way to express the estimate in the input file.
 
+**Important:** T-shirt size estimates must not include a `unit` field in the project file. The unit is determined by the configuration file's `t_shirt_size_unit` setting (default: `"hours"`).
+
 Here is a small example:
 
 ```yaml
@@ -399,7 +405,6 @@ tasks:
     name: "Design page"
     estimate:
       t_shirt_size: "S"
-      unit: "days"
     dependencies: []
     uncertainty_factors:
       team_experience: "high"
@@ -409,7 +414,6 @@ tasks:
     name: "Build page"
     estimate:
       t_shirt_size: "M"
-      unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
       team_experience: "medium"
@@ -419,9 +423,10 @@ tasks:
     name: "Deploy page"
     estimate:
       t_shirt_size: "XS"
-      unit: "days"
     dependencies: ["task_002"]
 ```
+
+Note that no `unit` field appears on any task — the unit is taken from the configuration.
 
 The same example is also available as [examples/tshirt_walkthrough_project.yaml](examples/tshirt_walkthrough_project.yaml), with a matching configuration file at [examples/tshirt_walkthrough_config.yaml](examples/tshirt_walkthrough_config.yaml).
 
@@ -482,14 +487,15 @@ Example result summary:
 ```text
 === Simulation Results ===
 Project: Tiny Landing Page
-Mean: 11.46 days
-Median (P50): 11.37 days
-Std Dev: 1.63 days
+Hours per Day: 8.0
+Mean: 11.46 hours (2 working days)
+Median (P50): 11.37 hours
+Std Dev: 1.63 hours
 
 Confidence Intervals:
-  P50: 11.37 days
-  P80: 12.87 days
-  P90: 13.67 days
+  P50: 11.37 hours (2 working days)
+  P80: 12.87 hours (2 working days)
+  P90: 13.67 hours (2 working days)
 ```
 
 The interpretation is exactly the same as for explicit ranges. The only difference is how the task effort was expressed in the input file.
@@ -500,7 +506,9 @@ T-shirt sizes are especially useful early in planning, when the team can compare
 
 Some teams prefer to estimate backlog items in Story Points rather than T-shirt sizes or explicit day ranges.
 
-`mcprojsim` supports that style as another symbolic estimate form. In the input file you provide a `story_points` value, and during simulation the active configuration resolves it to a day-based `(min, most_likely, max)` range.
+`mcprojsim` supports that style as another symbolic estimate form. In the input file you provide a `story_points` value, and during simulation the active configuration resolves it to a numeric `(min, most_likely, max)` range in the configured unit (default: days).
+
+**Important:** Story point estimates must not include a `unit` field in the project file. The unit is determined by the configuration file's `story_point_unit` setting (default: `"days"`).
 
 ### Step 6: use `story_points`
 
@@ -518,23 +526,22 @@ tasks:
     name: "Design page"
     estimate:
       story_points: 2
-      unit: "storypoint"
     dependencies: []
 
   - id: "task_002"
     name: "Build page"
     estimate:
       story_points: 5
-      unit: "storypoint"
     dependencies: ["task_001"]
 
   - id: "task_003"
     name: "Deploy page"
     estimate:
       story_points: 1
-      unit: "storypoint"
     dependencies: ["task_002"]
 ```
+
+Note that no `unit` field appears on any task — the unit is taken from the configuration.
 
 The same example is also available as [examples/story_points_walkthrough_project.yaml](examples/story_points_walkthrough_project.yaml), with a matching configuration file at [examples/story_points_walkthrough_config.yaml](examples/story_points_walkthrough_config.yaml).
 
@@ -577,7 +584,7 @@ mcprojsim simulate examples/story_points_walkthrough_project.yaml \
   --seed 42
 ```
 
-Story Points are useful when the team has a stable internal understanding of what `1`, `2`, `3`, `5`, or `8` mean, but that understanding does not translate directly to raw uninterrupted days. The config file is where that team-specific calibration belongs.
+Story Points are useful when the team has a stable internal understanding of what `1`, `2`, `3`, `5`, or `8` mean, but that understanding does not translate directly to raw hours or days. The config file is where that team-specific calibration belongs.
 
 ## What each stage added
 
@@ -616,7 +623,7 @@ The tiny examples in this chapter are teaching examples. The files in the `examp
 - `examples/sample_project.yaml` shows a more complete project with several tasks, dependencies, uncertainty factors, and risks.
 - `examples/sample_config.yaml` shows a fuller configuration with reusable uncertainty-factor mappings and output settings.
 - `examples/tshirt_sizing_project.yaml` shows an alternative style where tasks use T-shirt sizes instead of explicit `min`, `most_likely`, and `max` values.
-- `examples/story_points_walkthrough_project.yaml` shows the same symbolic-estimate idea using Story Points and a configuration mapping in days.
+- `examples/story_points_walkthrough_project.yaml` shows the same symbolic-estimate idea using Story Points and a configuration mapping.
 - `examples/project_with_custom_thresholds.yaml` shows how project-level reporting thresholds can be tuned for stricter or more conservative decision-making.
 
 If you have understood the stages in this chapter, those larger example files should now feel much easier to read.

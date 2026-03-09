@@ -99,14 +99,15 @@ Progress: 100.0% (10000/10000)
 
 === Simulation Results ===
 Project: Website Refresh
-Mean: 15.85 days
-Median (P50): 15.67 days
-Std Dev: 2.25 days
+Hours per Day: 8.0
+Mean: 126.78 hours (16 working days)
+Median (P50): 125.36 hours
+Std Dev: 18.01 hours
 
 Confidence Intervals:
-  P50: 15.67 days
-  P80: 17.88 days
-  P90: 18.97 days
+  P50: 125.36 hours (16 working days)  (2026-04-22)
+  P80: 143.08 hours (18 working days)  (2026-04-24)
+  P90: 151.74 hours (19 working days)  (2026-04-27)
 
 Most Frequent Critical Paths:
   1. task_001 -> task_002 (10000/10000, 100.0%)
@@ -144,9 +145,10 @@ What this does:
 
 You should see a summary with values such as:
 
-- mean duration
+- mean duration (in hours and working days)
 - median (`P50`)
 - higher-confidence targets such as `P80` and `P90`
+- projected delivery dates (weekends excluded)
 
 ## 5. Open the generated results
 
@@ -189,9 +191,11 @@ mcprojsim simulate project.yaml --quiet
 
 ## What the main results mean
 
-- `P50`: about a 50% chance of finishing within this duration
+- `P50`: about a 50% chance of finishing within this many hours of effort
 - `P80`: a more conservative planning target
 - `P90`: a high-confidence planning target
+
+The simulator reports all results in **hours** (the canonical internal unit). It also shows **working days** (hours ÷ hours_per_day, rounded up) and **projected delivery dates** (skipping weekends from the project's `start_date`).
 
 A common practical pattern is:
 

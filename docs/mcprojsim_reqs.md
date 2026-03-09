@@ -57,6 +57,8 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - Project risks SHALL apply time penalties to the overall project duration
 - Project risks SHALL be evaluated once per iteration
 - Project risk impacts MAY be specified as percentage or absolute time values
+- Absolute risk impacts expressed as plain numbers SHALL be treated as hours
+- Structured absolute risk impacts MAY specify a unit (hours, days, weeks) which SHALL be converted to hours
 
 **FR-006: Uncertainty Factor Application**
 - The system SHALL support configurable uncertainty factors via configuration file
@@ -183,6 +185,7 @@ project:
   name: "Project Apollo"
   description: "Next-generation customer portal"
   start_date: "2025-11-01"
+  hours_per_day: 8.0  # Optional, default 8.0; used for unit conversion and working-day reporting
   currency: "USD"  # Optional
   confidence_levels: [50, 80, 90, 95]  # Optional, percentiles to report
 ```
@@ -195,7 +198,7 @@ project_risks:
     probability: 0.15
     impact:
       type: "percentage"  # or "absolute"
-      value: 20  # 20% delay or 20 days if absolute
+      value: 20  # 20% delay or 20 hours if absolute
     description: "Risk of losing senior developer mid-project"
   
   - id: "risk_002"
@@ -204,7 +207,7 @@ project_risks:
     impact:
       type: "absolute"
       value: 10
-      unit: "days"
+      unit: "days"  # Explicit unit; converted to hours internally
 ```
 
 #### 4.1.3 Task Definitions
@@ -217,7 +220,7 @@ tasks:
       min: 3
       most_likely: 5
       max: 10
-      unit: "days"  # or "hours"
+      unit: "days"  # "hours" (default), "days", or "weeks"; converted to hours internally
     
     dependencies: []  # No predecessors
     
@@ -234,7 +237,7 @@ tasks:
       - id: "task_risk_001"
         name: "Schema migration issues"
         probability: 0.20
-        impact: 2  # days
+        impact: 2  # hours (plain numbers are always hours)
     
   - id: "task_002"
     name: "API endpoint implementation"
@@ -242,7 +245,7 @@ tasks:
       min: 5
       most_likely: 8
       max: 15
-      unit: "days"
+      unit: "days"  # Converted to hours using hours_per_day
     dependencies: ["task_001"]  # Depends on task_001
     uncertainty_factors:
       team_experience: "medium"
@@ -557,10 +560,10 @@ engine = SimulationEngine(iterations=10000, random_seed=42)
 results = engine.run(project)
 
 # Access results
-print(f"P50 (Median): {results.percentile(50)} days")
-print(f"P90: {results.percentile(90)} days")
-print(f"Mean: {results.mean} days")
-print(f"Std Dev: {results.std_dev} days")
+print(f"P50 (Median): {results.percentile(50):.1f} hours")
+print(f"P90: {results.percentile(90):.1f} hours")
+print(f"Mean: {results.mean:.1f} hours")
+print(f"Std Dev: {results.std_dev:.1f} hours")
 
 # Get critical path
 critical_tasks = results.get_critical_path()

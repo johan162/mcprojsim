@@ -216,7 +216,7 @@ This is the default and most common form.
 | `min` | Yes for triangular | number ≥ 0 | `null` |
 | `most_likely` | Yes | number > 0 | `null` |
 | `max` | Yes for triangular | number ≥ 0 | `null` |
-| `unit` | No | string | `"days"` |
+| `unit` | No | `"hours"`, `"days"`, or `"weeks"` | `"hours"` |
 
 #### Validation rules
 
@@ -226,6 +226,7 @@ For a triangular estimate:
 - `min` must be present,
 - `max` must be present,
 - `min <= most_likely <= max`.
+- `unit` must be one of `"hours"`, `"days"`, or `"weeks"` if specified.
 
 #### YAML example
 
@@ -258,7 +259,7 @@ The implementation also supports log-normal estimates.
 | `distribution` | Yes | `"lognormal"` | Must be set explicitly |
 | `most_likely` | Yes | number > 0 | Required |
 | `standard_deviation` | Yes | number > 0 | Required |
-| `unit` | No | string | Defaults to `"days"` |
+| `unit` | No | `"hours"`, `"days"`, or `"weeks"` | `"hours"` |
 
 #### Validation rules
 
@@ -267,6 +268,7 @@ For a log-normal estimate:
 - `distribution` must be `lognormal`,
 - `most_likely` must be present,
 - `standard_deviation` must be present.
+- `unit` must be one of `"hours"`, `"days"`, or `"weeks"` if specified.
 
 `min` and `max` are not required in this mode.
 
@@ -299,7 +301,6 @@ This form lets the task refer to a symbolic size such as `XS`, `M`, or `XL`.
 | Field | Required | Type | Default |
 |---|---|---|---|
 | `t_shirt_size` | Yes | string | — |
-| `unit` | No | string | `"days"` |
 | `distribution` | No | enum | Defaults to `triangular` |
 
 #### Validation behavior
@@ -308,6 +309,7 @@ When `t_shirt_size` is present:
 
 - the `TaskEstimate` validator accepts the estimate immediately,
 - explicit `min`, `most_likely`, `max`, and `standard_deviation` are not required,
+- **`unit` must not be specified** — the unit comes from the configuration file's `t_shirt_size_unit` setting (default: `"hours"`),
 - the simulation engine resolves the size to actual `min`, `most_likely`, and `max` values from the active configuration.
 
 If the chosen size does not exist in the active configuration, simulation raises an error.
@@ -317,7 +319,6 @@ If the chosen size does not exist in the active configuration, simulation raises
 ```yaml
 estimate:
   t_shirt_size: "M"
-  unit: "days"
 ```
 
 #### TOML example
@@ -325,7 +326,6 @@ estimate:
 ```toml
 [tasks.estimate]
 t_shirt_size = "M"
-unit = "days"
 ```
 
 #### Important precedence note
@@ -346,14 +346,13 @@ But it should be treated as ambiguous and avoided in real project files. If you 
 
 ### 4. Story Point estimate
 
-This form lets a task use agile-style relative sizing while still simulating an effort range in days.
+This form lets a task use agile-style relative sizing while still simulating an effort range.
 
 #### Supported fields
 
 | Field | Required | Type | Default |
 |---|---|---|---|
 | `story_points` | Yes | integer | — |
-| `unit` | No | string | `"storypoint"` |
 | `distribution` | No | enum | Defaults to `triangular` |
 
 #### Validation behavior
@@ -361,8 +360,8 @@ This form lets a task use agile-style relative sizing while still simulating an 
 When `story_points` is present:
 
 - the value must currently be one of `1`, `2`, `3`, `5`, `8`, `13`, or `21`,
-- `unit` defaults to `"storypoint"` if omitted,
-- the simulation engine resolves the Story Point value to actual `min`, `most_likely`, and `max` values in days from the active configuration.
+- **`unit` must not be specified** — the unit comes from the configuration file's `story_point_unit` setting (default: `"days"`),
+- the simulation engine resolves the Story Point value to actual `min`, `most_likely`, and `max` values from the active configuration.
 
 If the chosen Story Point value does not exist in the active configuration, simulation raises an error.
 
@@ -371,7 +370,6 @@ If the chosen Story Point value does not exist in the active configuration, simu
 ```yaml
 estimate:
   story_points: 5
-  unit: "storypoint"
 ```
 
 #### TOML example
@@ -379,12 +377,11 @@ estimate:
 ```toml
 [tasks.estimate]
 story_points = 5
-unit = "storypoint"
 ```
 
 ### Symbolic estimate mappings in configuration
 
-Both `t_shirt_size` and `story_points` are symbolic estimate forms. They are converted to day-based ranges by the active configuration.
+Both `t_shirt_size` and `story_points` are symbolic estimate forms. They are converted to numeric ranges by the active configuration, using the unit specified by `t_shirt_size_unit` (default: `"hours"`) and `story_point_unit` (default: `"days"`) respectively. All values are then converted to hours internally.
 
 Built-in defaults exist for both styles, and a custom configuration file may override all or only some of those mappings.
 

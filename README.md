@@ -6,7 +6,7 @@
 |**Documentation**|[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://johan162.github.io/mcprojsim/)|
 |**License**|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)|
 |**Release**|[![GitHub release](https://img.shields.io/github/v/release/johan162/mcprojsim?include_prereleases)](https://github.com/johan162/mcprojsim/releases)|
-|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen.svg)](coverage.svg)|
+|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](coverage.svg)|
 |**Code Quality**|[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/) [![Linting: flake8](https://img.shields.io/badge/linting-flake8-yellowgreen)](https://flake8.pycqa.org/)|
 |Repo URL|[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat-square&logo=github&logoColor=white)](https://github.com/johan162/mcprojsim)|
 
@@ -26,9 +26,12 @@ It is intended for teams that want answers such as:
 
 - Monte Carlo schedule simulation with configurable iteration counts
 - Range-based task estimates using triangular and log-normal distributions
+- Unit-aware estimation: supports hours, days, and weeks with automatic conversion to a canonical hours-based internal representation
+- Configurable `hours_per_day` per project, with working-day and delivery-date reporting
 - Task dependencies and schedule-aware project duration calculation
 - Task-level and project-level risk modeling
 - Configurable uncertainty factors such as team experience and requirements maturity
+- T-shirt size and story point symbolic estimates with configurable unit defaults
 - Exported results in JSON, CSV, and HTML formats
 - Critical path and sensitivity-oriented analysis outputs
 - Reproducible runs with explicit random seeds
