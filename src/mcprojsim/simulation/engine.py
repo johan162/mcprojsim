@@ -102,7 +102,9 @@ class SimulationEngine:
                 )
                 if should_report:
                     reported_progress = (
-                        100 if completed_iterations == self.iterations else progress_bucket
+                        100
+                        if completed_iterations == self.iterations
+                        else progress_bucket
                     )
                     self._report_progress(reported_progress, completed_iterations)
                     last_reported_progress = reported_progress
@@ -159,8 +161,7 @@ class SimulationEngine:
             completed_iterations: Number of completed iterations
         """
         message = (
-            f"Progress: {progress:.1f}% "
-            f"({completed_iterations}/{self.iterations})"
+            f"Progress: {progress:.1f}% " f"({completed_iterations}/{self.iterations})"
         )
 
         if self._progress_is_tty:
