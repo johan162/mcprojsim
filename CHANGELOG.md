@@ -1,3 +1,18 @@
+## [v0.2.1] - 2026-03-09
+
+Release Type: patch
+
+### 📋 Summary 
+- Focus on making the README and QUICKSTART guide more focused and smaller
+
+### 🚀 Improvements
+- Shorter README and QUICKSTART docs
+- Added a developer section in docs
+
+### 🛠 Internal
+- Clean all timestampe with `make clean`
+
+
 ## [v0.2.0] - 2026-03-08
 
 Release Type: minor
