@@ -1,7 +1,8 @@
 """Monte Carlo simulation engine."""
 
 from collections import Counter
-from typing import Dict, Optional
+import sys
+from typing import Dict, Optional, TextIO
 
 import numpy as np
 
@@ -39,6 +40,8 @@ class SimulationEngine:
         self.random_seed = random_seed
         self.config = config or Config.get_default()
         self.show_progress = show_progress
+        self.progress_stream: TextIO = sys.stdout
+        self._progress_is_tty = self.progress_stream.isatty()
 
         # Initialize random state
         self.random_state = np.random.RandomState(random_seed)
@@ -65,13 +68,10 @@ class SimulationEngine:
         }
         critical_path_frequency: Dict[str, int] = {task.id: 0 for task in project.tasks}
         critical_path_sequences: Counter[tuple[str, ...]] = Counter()
+        last_reported_progress = -1
 
         # Run iterations
         for iteration in range(self.iterations):
-            if self.show_progress and (iteration + 1) % 1000 == 0:
-                progress = (iteration + 1) / self.iterations * 100
-                print(f"Progress: {progress:.1f}% ({iteration + 1}/{self.iterations})")
-
             # Run single iteration
             duration, task_durations, critical_path, critical_paths = (
                 self._run_iteration(project, scheduler)
@@ -89,6 +89,27 @@ class SimulationEngine:
 
             # Update full critical path sequence frequency
             critical_path_sequences.update(critical_paths)
+
+            if self.show_progress:
+                completed_iterations = iteration + 1
+                current_progress = (completed_iterations * 100) // self.iterations
+                progress_bucket = (current_progress // 10) * 10
+                should_report = (
+                    progress_bucket > last_reported_progress and progress_bucket > 0
+                ) or (
+                    completed_iterations == self.iterations
+                    and last_reported_progress < 100
+                )
+                if should_report:
+                    reported_progress = (
+                        100 if completed_iterations == self.iterations else progress_bucket
+                    )
+                    self._report_progress(reported_progress, completed_iterations)
+                    last_reported_progress = reported_progress
+
+        if self.show_progress and self._progress_is_tty:
+            self.progress_stream.write("\n")
+            self.progress_stream.flush()
 
         stored_critical_paths = [
             CriticalPathRecord(
@@ -126,6 +147,27 @@ class SimulationEngine:
             results.percentile(p)
 
         return results
+
+    def _report_progress(self, progress: int, completed_iterations: int) -> None:
+        """Report simulation progress.
+
+        When writing to a terminal, update a single line in place.
+        When output is redirected, emit one line per progress update.
+
+        Args:
+            progress: Progress percentage to report
+            completed_iterations: Number of completed iterations
+        """
+        message = (
+            f"Progress: {progress:.1f}% "
+            f"({completed_iterations}/{self.iterations})"
+        )
+
+        if self._progress_is_tty:
+            self.progress_stream.write(f"\r\033[K{message}")
+        else:
+            self.progress_stream.write(f"{message}\n")
+        self.progress_stream.flush()
 
     def _run_iteration(
         self, project: Project, scheduler: TaskScheduler

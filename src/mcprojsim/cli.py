@@ -57,6 +57,7 @@ def simulate(
     quiet: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
+    click.echo(f"mcprojsim, version {__version__}")
     logger = setup_logging()
 
     try:
@@ -79,14 +80,12 @@ def simulate(
             click.echo(f"Error: Unsupported file format {project_path.suffix}")
             return
 
-        if not quiet:
-            click.echo(f"Loading project from {project_file}...")
+        logger.info(f"Loading project from {project_file}")
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
         # Run simulation
-        if not quiet:
-            click.echo(f"Running simulation with {iterations} iterations...")
+        logger.info(f"Running simulation with {iterations} iterations")
         engine = SimulationEngine(
             iterations=iterations,
             random_seed=seed,
