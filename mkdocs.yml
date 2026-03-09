@@ -41,8 +41,6 @@ theme:
     repo: fontawesome/brands/github
 nav:
   - Home: index.md
-  - Getting Started: getting_started.md
-  - Configuration: configuration.md
   - User Guide:
       - Introduction: user_guide/introduction.md
       - Your first project: user_guide/your_first_project.md
@@ -52,9 +50,11 @@ nav:
       - Project Files: user_guide/project_files.md
       - Running Simulations: user_guide/running_simulations.md
       - Interpreting Results: user_guide/interpreting_results.md
+      - Examples: examples.md
+  - Development: development.md
+  - Configuration: configuration.md
   - API Reference: api_reference.md
   - Formal Grammar: grammar.md
-  - Examples: examples.md
 
 plugins:
   - search

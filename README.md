@@ -50,7 +50,7 @@ mcprojsim --help
 mcprojsim --version
 ```
 
-For container usage, source installs, pre-releases, and development setup, see [QUICKSTART.md](QUICKSTART.md).
+For a first-run walkthrough, see [QUICKSTART.md](QUICKSTART.md).
 
 ## Minimal example
 
