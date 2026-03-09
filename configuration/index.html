@@ -585,7 +585,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/project_risks/" class="md-nav__link">
+      <a href="../user_guide/risks/" class="md-nav__link">
         
   
   
@@ -1557,7 +1557,7 @@
 </ul>
 <h2 id="symbolic-estimate-mappings">Symbolic Estimate Mappings<a class="headerlink" href="#symbolic-estimate-mappings" title="Permanent link">&para;</a></h2>
 <h3 id="t-shirt-sizes">T-shirt sizes<a class="headerlink" href="#t-shirt-sizes" title="Permanent link">&para;</a></h3>
-<p>Tasks may use <code>t_shirt_size</code> instead of an explicit numeric range. Those labels are resolved through the <code>t_shirt_sizes</code> section in the active configuration.</p>
+<p>Tasks may use <code>t_shirt_size</code> instead of an explicit numeric range. Those labels are resolved through the <code>t_shirt_sizes</code> section in the active configuration. The unit for T-shirt size values is controlled by <code>t_shirt_size_unit</code> in the configuration (default: <code>"hours"</code>).</p>
 <p>Default built-in mappings:</p>
 <ul>
 <li><code>XS</code>: <code>(0.5, 1, 2)</code></li>
@@ -1568,7 +1568,7 @@
 <li><code>XXL</code>: <code>(13, 21, 34)</code></li>
 </ul>
 <h3 id="story-points">Story Points<a class="headerlink" href="#story-points" title="Permanent link">&para;</a></h3>
-<p>Tasks may also use <code>story_points</code> for agile-style relative sizing. Story Points are resolved to day ranges through the <code>story_points</code> section in the active configuration.</p>
+<p>Tasks may also use <code>story_points</code> for agile-style relative sizing. Story Points are resolved to numeric ranges through the <code>story_points</code> section in the active configuration. The unit for story point values is controlled by <code>story_point_unit</code> in the configuration (default: <code>"days"</code>).</p>
 <p>Default built-in mappings:</p>
 <ul>
 <li><code>1</code>: <code>(0.5, 1, 3)</code></li>
@@ -1590,7 +1590,7 @@
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
 </span></code></pre></div>
-<p>Use <code>unit: "storypoint"</code> in the project file when expressing a task as Story Points.</p>
+<p>Story point estimates must <strong>not</strong> include a <code>unit</code> field in the project file. The unit is determined by <code>story_point_unit</code> in the configuration. Similarly, T-shirt size estimates must not include a <code>unit</code> field — the unit is determined by <code>t_shirt_size_unit</code> (default: <code>"hours"</code>).</p>
 <h2 id="probability-thresholds-for-thermometer-visualization">Probability Thresholds for Thermometer Visualization<a class="headerlink" href="#probability-thresholds-for-thermometer-visualization" title="Permanent link">&para;</a></h2>
 <p>Configure color thresholds for the HTML thermometer visualization in your project file:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">project</span><span class="p">:</span>
@@ -1618,7 +1618,7 @@
 </span></code></pre></div></p>
 <h3 id="thermometer-visualization">Thermometer Visualization<a class="headerlink" href="#thermometer-visualization" title="Permanent link">&para;</a></h3>
 <p>The HTML export displays a vertical thermometer showing:
-- <strong>Effort levels</strong> (in days) on the right
+- <strong>Effort levels</strong> (in hours) on the right
 - <strong>Probability of success</strong> for each effort level in colored segments
 - <strong>Color gradient</strong>:
   - 🔴 <strong>Bright Red</strong>: Probability below red threshold (high risk)

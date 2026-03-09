@@ -891,7 +891,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../project_risks/" class="md-nav__link">
+      <a href="../risks/" class="md-nav__link">
         
   
   
@@ -1495,16 +1495,17 @@
 <p>Example result summary:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>=== Simulation Results ===
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Project: Tiny Landing Page
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Mean: 5.28 days
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>Median (P50): 5.19 days
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>Std Dev: 0.99 days
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>Confidence Intervals:
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>  P50: 5.19 days
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>  P80: 6.20 days
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>  P90: 6.68 days
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Hours per Day: 8.0
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>Mean: 42.26 hours (6 working days)
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>Median (P50): 41.52 hours
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>Std Dev: 7.93 hours
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>Confidence Intervals:
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>  P50: 41.52 hours (6 working days)
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>  P80: 49.60 hours (7 working days)
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>  P90: 53.44 hours (7 working days)
 </span></code></pre></div>
-<p>The important thing here is not the exact numbers. The important thing is that even a one-task project produces a range of likely outcomes rather than one fixed answer.</p>
+<p>The important thing here is not the exact numbers. The important thing is that even a one-task project produces a range of likely outcomes rather than one fixed answer. Results are reported in hours (the canonical internal unit) with working days shown alongside.</p>
 <h2 id="add-structure-a-second-task-and-a-dependency">Add structure: a second task and a dependency<a class="headerlink" href="#add-structure-a-second-task-and-a-dependency" title="Permanent link">&para;</a></h2>
 <p>A one-task example is useful for learning the mechanics, but real projects are interesting because tasks interact. The next step is therefore to add a second task that depends on the first one.</p>
 <h3 id="step-2-sequence-the-work">Step 2: sequence the work<a class="headerlink" href="#step-2-sequence-the-work" title="Permanent link">&para;</a></h3>
@@ -1539,17 +1540,18 @@
 <p>Example result summary:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>=== Simulation Results ===
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Project: Tiny Landing Page
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Mean: 8.95 days
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Median (P50): 8.90 days
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Std Dev: 1.37 days
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>Confidence Intervals:
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>  P50: 8.90 days
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>  P80: 10.12 days
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>  P90: 10.75 days
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>Most Frequent Critical Paths:
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>  1. task_001 -&gt; task_002 (5000/5000, 100.0%)
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Hours per Day: 8.0
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>Mean: 71.58 hours (9 working days)
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Median (P50): 71.20 hours
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>Std Dev: 10.96 hours
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>Confidence Intervals:
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>  P50: 71.20 hours (9 working days)
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>  P80: 80.96 hours (11 working days)
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>  P90: 86.00 hours (11 working days)
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>Most Frequent Critical Paths:
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>  1. task_001 -&gt; task_002 (5000/5000, 100.0%)
 </span></code></pre></div>
 <p>Compared with the first example, the schedule is now longer because the project contains more work. More importantly, the dependency means the tasks form a chain rather than happening independently. This is the beginning of a project network.</p>
 <p>This is also the point where the input file starts to describe more than estimates. It now describes project structure.</p>
@@ -1644,14 +1646,15 @@
 <p>Example result summary:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>=== Simulation Results ===
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>Project: Tiny Landing Page
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Mean: 6.72 days
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>Median (P50): 6.68 days
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>Std Dev: 1.04 days
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>Confidence Intervals:
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>  P50: 6.68 days
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>  P80: 7.61 days
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>  P90: 8.08 days
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Hours per Day: 8.0
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>Mean: 53.76 hours (7 working days)
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>Median (P50): 53.44 hours
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>Std Dev: 8.32 hours
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>Confidence Intervals:
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>  P50: 53.44 hours (7 working days)
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>  P80: 60.88 hours (8 working days)
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>  P90: 64.64 hours (9 working days)
 </span></code></pre></div>
 <p>This is an important modeling step.</p>
 <p>The project file still contains the project-specific facts: tasks, estimates, and dependencies. The configuration file now contains the organization’s shared interpretation of labels such as <code>high team_experience</code> or <code>medium technical_complexity</code>.</p>
@@ -1713,14 +1716,15 @@
 <p>Example result summary:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>=== Simulation Results ===
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>Project: Tiny Landing Page
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>Mean: 7.36 days
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>Median (P50): 7.25 days
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>Std Dev: 1.42 days
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>Confidence Intervals:
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>  P50: 7.25 days
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>  P80: 8.57 days
-</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>  P90: 9.29 days
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>Hours per Day: 8.0
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>Mean: 58.88 hours (8 working days)
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>Median (P50): 58.00 hours
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>Std Dev: 11.36 hours
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>Confidence Intervals:
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>  P50: 58.00 hours (8 working days)
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>  P80: 68.56 hours (9 working days)
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>  P90: 74.32 hours (10 working days)
 </span></code></pre></div>
 <p>Notice what happened relative to Step 3:</p>
 <ul>
@@ -1736,6 +1740,7 @@
 <h3 id="step-5-use-t_shirt_size-instead-of-explicit-ranges">Step 5: use <code>t_shirt_size</code> instead of explicit ranges<a class="headerlink" href="#step-5-use-t_shirt_size-instead-of-explicit-ranges" title="Permanent link">&para;</a></h3>
 <p>In the source code, a task estimate may specify <code>t_shirt_size</code> instead of <code>most_likely</code> and the related range values. Validation accepts that form, and the simulation engine later resolves the symbolic size to concrete <code>min</code>, <code>most_likely</code>, and <code>max</code> values from the active configuration.</p>
 <p>That means a T-shirt-sized task still becomes an ordinary probabilistic range during simulation. The symbolic label is just a more convenient way to express the estimate in the input file.</p>
+<p><strong>Important:</strong> T-shirt size estimates must not include a <code>unit</code> field in the project file. The unit is determined by the configuration file's <code>t_shirt_size_unit</code> setting (default: <code>"hours"</code>).</p>
 <p>Here is a small example:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="nt">project</span><span class="p">:</span>
 </span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Tiny</span><span class="nv"> </span><span class="s">Landing</span><span class="nv"> </span><span class="s">Page&quot;</span>
@@ -1748,29 +1753,27 @@
 </span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Design</span><span class="nv"> </span><span class="s">page&quot;</span>
 </span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
 </span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">      </span><span class="nt">t_shirt_size</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;S&quot;</span>
-</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
-</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
-</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">    </span><span class="nt">uncertainty_factors</span><span class="p">:</span>
-</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">      </span><span class="nt">team_experience</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
-</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">      </span><span class="nt">requirements_maturity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
-</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>
-</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_002&quot;</span>
-</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Build</span><span class="nv"> </span><span class="s">page&quot;</span>
-</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="w">      </span><span class="nt">t_shirt_size</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;M&quot;</span>
-</span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
-</span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_001&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="w">    </span><span class="nt">uncertainty_factors</span><span class="p">:</span>
-</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="w">      </span><span class="nt">team_experience</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
-</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="w">      </span><span class="nt">technical_complexity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
-</span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a>
-</span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_003&quot;</span>
-</span><span id="__span-18-29"><a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Deploy</span><span class="nv"> </span><span class="s">page&quot;</span>
-</span><span id="__span-18-30"><a id="__codelineno-18-30" name="__codelineno-18-30" href="#__codelineno-18-30"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-18-31"><a id="__codelineno-18-31" name="__codelineno-18-31" href="#__codelineno-18-31"></a><span class="w">      </span><span class="nt">t_shirt_size</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;XS&quot;</span>
-</span><span id="__span-18-32"><a id="__codelineno-18-32" name="__codelineno-18-32" href="#__codelineno-18-32"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
-</span><span id="__span-18-33"><a id="__codelineno-18-33" name="__codelineno-18-33" href="#__codelineno-18-33"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_002&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">    </span><span class="nt">uncertainty_factors</span><span class="p">:</span>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">      </span><span class="nt">team_experience</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">      </span><span class="nt">requirements_maturity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_002&quot;</span>
+</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Build</span><span class="nv"> </span><span class="s">page&quot;</span>
+</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="w">      </span><span class="nt">t_shirt_size</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;M&quot;</span>
+</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_001&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="w">    </span><span class="nt">uncertainty_factors</span><span class="p">:</span>
+</span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a><span class="w">      </span><span class="nt">team_experience</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
+</span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="w">      </span><span class="nt">technical_complexity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
+</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a>
+</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_003&quot;</span>
+</span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Deploy</span><span class="nv"> </span><span class="s">page&quot;</span>
+</span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-18-29"><a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a><span class="w">      </span><span class="nt">t_shirt_size</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;XS&quot;</span>
+</span><span id="__span-18-30"><a id="__codelineno-18-30" name="__codelineno-18-30" href="#__codelineno-18-30"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_002&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
+<p>Note that no <code>unit</code> field appears on any task — the unit is taken from the configuration.</p>
 <p>The same example is also available as <a href="examples/tshirt_walkthrough_project.yaml">examples/tshirt_walkthrough_project.yaml</a>, with a matching configuration file at <a href="examples/tshirt_walkthrough_config.yaml">examples/tshirt_walkthrough_config.yaml</a>.</p>
 <h3 id="how-t-shirt-sizes-are-configured">How T-shirt sizes are configured<a class="headerlink" href="#how-t-shirt-sizes-are-configured" title="Permanent link">&para;</a></h3>
 <p>If you want to use a custom configuration file with T-shirt estimates, add a <code>t_shirt_sizes</code> section like this:</p>
@@ -1817,20 +1820,22 @@
 <p>Example result summary:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>=== Simulation Results ===
 </span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>Project: Tiny Landing Page
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>Mean: 11.46 days
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>Median (P50): 11.37 days
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>Std Dev: 1.63 days
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
-</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>Confidence Intervals:
-</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>  P50: 11.37 days
-</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>  P80: 12.87 days
-</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>  P90: 13.67 days
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>Hours per Day: 8.0
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>Mean: 11.46 hours (2 working days)
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>Median (P50): 11.37 hours
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>Std Dev: 1.63 hours
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>Confidence Intervals:
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>  P50: 11.37 hours (2 working days)
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>  P80: 12.87 hours (2 working days)
+</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>  P90: 13.67 hours (2 working days)
 </span></code></pre></div>
 <p>The interpretation is exactly the same as for explicit ranges. The only difference is how the task effort was expressed in the input file.</p>
 <p>T-shirt sizes are especially useful early in planning, when the team can compare tasks relative to each other more easily than they can assign precise numeric ranges. Later, if needed, the team can replace those symbolic sizes with explicit estimate ranges for finer control.</p>
 <h2 id="another-alternative-style-story-point-estimates">Another alternative style: Story Point estimates<a class="headerlink" href="#another-alternative-style-story-point-estimates" title="Permanent link">&para;</a></h2>
 <p>Some teams prefer to estimate backlog items in Story Points rather than T-shirt sizes or explicit day ranges.</p>
-<p><code>mcprojsim</code> supports that style as another symbolic estimate form. In the input file you provide a <code>story_points</code> value, and during simulation the active configuration resolves it to a day-based <code>(min, most_likely, max)</code> range.</p>
+<p><code>mcprojsim</code> supports that style as another symbolic estimate form. In the input file you provide a <code>story_points</code> value, and during simulation the active configuration resolves it to a numeric <code>(min, most_likely, max)</code> range in the configured unit (default: days).</p>
+<p><strong>Important:</strong> Story point estimates must not include a <code>unit</code> field in the project file. The unit is determined by the configuration file's <code>story_point_unit</code> setting (default: <code>"days"</code>).</p>
 <h3 id="step-6-use-story_points">Step 6: use <code>story_points</code><a class="headerlink" href="#step-6-use-story_points" title="Permanent link">&para;</a></h3>
 <p>Here is a small Story Point example:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="nt">project</span><span class="p">:</span>
@@ -1844,23 +1849,21 @@
 </span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Design</span><span class="nv"> </span><span class="s">page&quot;</span>
 </span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
 </span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;storypoint&quot;</span>
-</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
-</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a>
-</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_002&quot;</span>
-</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Build</span><span class="nv"> </span><span class="s">page&quot;</span>
-</span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-22-18"><a id="__codelineno-22-18" name="__codelineno-22-18" href="#__codelineno-22-18"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-22-19"><a id="__codelineno-22-19" name="__codelineno-22-19" href="#__codelineno-22-19"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;storypoint&quot;</span>
-</span><span id="__span-22-20"><a id="__codelineno-22-20" name="__codelineno-22-20" href="#__codelineno-22-20"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_001&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-22-21"><a id="__codelineno-22-21" name="__codelineno-22-21" href="#__codelineno-22-21"></a>
-</span><span id="__span-22-22"><a id="__codelineno-22-22" name="__codelineno-22-22" href="#__codelineno-22-22"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_003&quot;</span>
-</span><span id="__span-22-23"><a id="__codelineno-22-23" name="__codelineno-22-23" href="#__codelineno-22-23"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Deploy</span><span class="nv"> </span><span class="s">page&quot;</span>
-</span><span id="__span-22-24"><a id="__codelineno-22-24" name="__codelineno-22-24" href="#__codelineno-22-24"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-22-25"><a id="__codelineno-22-25" name="__codelineno-22-25" href="#__codelineno-22-25"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-</span><span id="__span-22-26"><a id="__codelineno-22-26" name="__codelineno-22-26" href="#__codelineno-22-26"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;storypoint&quot;</span>
-</span><span id="__span-22-27"><a id="__codelineno-22-27" name="__codelineno-22-27" href="#__codelineno-22-27"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_002&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>
+</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_002&quot;</span>
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Build</span><span class="nv"> </span><span class="s">page&quot;</span>
+</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-22-18"><a id="__codelineno-22-18" name="__codelineno-22-18" href="#__codelineno-22-18"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_001&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-22-19"><a id="__codelineno-22-19" name="__codelineno-22-19" href="#__codelineno-22-19"></a>
+</span><span id="__span-22-20"><a id="__codelineno-22-20" name="__codelineno-22-20" href="#__codelineno-22-20"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_003&quot;</span>
+</span><span id="__span-22-21"><a id="__codelineno-22-21" name="__codelineno-22-21" href="#__codelineno-22-21"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Deploy</span><span class="nv"> </span><span class="s">page&quot;</span>
+</span><span id="__span-22-22"><a id="__codelineno-22-22" name="__codelineno-22-22" href="#__codelineno-22-22"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-22-23"><a id="__codelineno-22-23" name="__codelineno-22-23" href="#__codelineno-22-23"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-22-24"><a id="__codelineno-22-24" name="__codelineno-22-24" href="#__codelineno-22-24"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_002&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
+<p>Note that no <code>unit</code> field appears on any task — the unit is taken from the configuration.</p>
 <p>The same example is also available as <a href="examples/story_points_walkthrough_project.yaml">examples/story_points_walkthrough_project.yaml</a>, with a matching configuration file at <a href="examples/story_points_walkthrough_config.yaml">examples/story_points_walkthrough_config.yaml</a>.</p>
 <h3 id="how-story-points-are-configured">How Story Points are configured<a class="headerlink" href="#how-story-points-are-configured" title="Permanent link">&para;</a></h3>
 <p>If you want to customize Story Point mappings, add a <code>story_points</code> section to the configuration file:</p>
@@ -1893,7 +1896,7 @@
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">  </span>--iterations<span class="w"> </span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">  </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
-<p>Story Points are useful when the team has a stable internal understanding of what <code>1</code>, <code>2</code>, <code>3</code>, <code>5</code>, or <code>8</code> mean, but that understanding does not translate directly to raw uninterrupted days. The config file is where that team-specific calibration belongs.</p>
+<p>Story Points are useful when the team has a stable internal understanding of what <code>1</code>, <code>2</code>, <code>3</code>, <code>5</code>, or <code>8</code> mean, but that understanding does not translate directly to raw hours or days. The config file is where that team-specific calibration belongs.</p>
 <h2 id="what-each-stage-added">What each stage added<a class="headerlink" href="#what-each-stage-added" title="Permanent link">&para;</a></h2>
 <p>It is useful to summarize what changed at each step:</p>
 <table>
@@ -1957,7 +1960,7 @@
 <li><code>examples/sample_project.yaml</code> shows a more complete project with several tasks, dependencies, uncertainty factors, and risks.</li>
 <li><code>examples/sample_config.yaml</code> shows a fuller configuration with reusable uncertainty-factor mappings and output settings.</li>
 <li><code>examples/tshirt_sizing_project.yaml</code> shows an alternative style where tasks use T-shirt sizes instead of explicit <code>min</code>, <code>most_likely</code>, and <code>max</code> values.</li>
-<li><code>examples/story_points_walkthrough_project.yaml</code> shows the same symbolic-estimate idea using Story Points and a configuration mapping in days.</li>
+<li><code>examples/story_points_walkthrough_project.yaml</code> shows the same symbolic-estimate idea using Story Points and a configuration mapping.</li>
 <li><code>examples/project_with_custom_thresholds.yaml</code> shows how project-level reporting thresholds can be tuned for stricter or more conservative decision-making.</li>
 </ul>
 <p>If you have understood the stages in this chapter, those larger example files should now feel much easier to read.</p>

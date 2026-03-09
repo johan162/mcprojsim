@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://johan162.github.io/mcprojsim/user_guide/project_files/">
       
       
-        <link rel="prev" href="../project_risks/">
+        <link rel="prev" href="../risks/">
       
       
         <link rel="next" href="../running_simulations/">
@@ -588,7 +588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../project_risks/" class="md-nav__link">
+      <a href="../risks/" class="md-nav__link">
         
   
   
@@ -2955,8 +2955,8 @@
 <tr>
 <td><code>unit</code></td>
 <td>No</td>
-<td>string</td>
-<td><code>"days"</code></td>
+<td><code>"hours"</code>, <code>"days"</code>, or <code>"weeks"</code></td>
+<td><code>"hours"</code></td>
 </tr>
 </tbody>
 </table>
@@ -2967,6 +2967,7 @@
 <li><code>min</code> must be present,</li>
 <li><code>max</code> must be present,</li>
 <li><code>min &lt;= most_likely &lt;= max</code>.</li>
+<li><code>unit</code> must be one of <code>"hours"</code>, <code>"days"</code>, or <code>"weeks"</code> if specified.</li>
 </ul>
 <h4 id="yaml-example_1">YAML example<a class="headerlink" href="#yaml-example_1" title="Permanent link">&para;</a></h4>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">estimate</span><span class="p">:</span>
@@ -3016,8 +3017,8 @@
 <tr>
 <td><code>unit</code></td>
 <td>No</td>
-<td>string</td>
-<td>Defaults to <code>"days"</code></td>
+<td><code>"hours"</code>, <code>"days"</code>, or <code>"weeks"</code></td>
+<td><code>"hours"</code></td>
 </tr>
 </tbody>
 </table>
@@ -3027,6 +3028,7 @@
 <li><code>distribution</code> must be <code>lognormal</code>,</li>
 <li><code>most_likely</code> must be present,</li>
 <li><code>standard_deviation</code> must be present.</li>
+<li><code>unit</code> must be one of <code>"hours"</code>, <code>"days"</code>, or <code>"weeks"</code> if specified.</li>
 </ul>
 <p><code>min</code> and <code>max</code> are not required in this mode.</p>
 <h4 id="yaml-example_2">YAML example<a class="headerlink" href="#yaml-example_2" title="Permanent link">&para;</a></h4>
@@ -3063,12 +3065,6 @@
 <td>—</td>
 </tr>
 <tr>
-<td><code>unit</code></td>
-<td>No</td>
-<td>string</td>
-<td><code>"days"</code></td>
-</tr>
-<tr>
 <td><code>distribution</code></td>
 <td>No</td>
 <td>enum</td>
@@ -3081,18 +3077,17 @@
 <ul>
 <li>the <code>TaskEstimate</code> validator accepts the estimate immediately,</li>
 <li>explicit <code>min</code>, <code>most_likely</code>, <code>max</code>, and <code>standard_deviation</code> are not required,</li>
+<li><strong><code>unit</code> must not be specified</strong> — the unit comes from the configuration file's <code>t_shirt_size_unit</code> setting (default: <code>"hours"</code>),</li>
 <li>the simulation engine resolves the size to actual <code>min</code>, <code>most_likely</code>, and <code>max</code> values from the active configuration.</li>
 </ul>
 <p>If the chosen size does not exist in the active configuration, simulation raises an error.</p>
 <h4 id="yaml-example_3">YAML example<a class="headerlink" href="#yaml-example_3" title="Permanent link">&para;</a></h4>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">estimate</span><span class="p">:</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">t_shirt_size</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;M&quot;</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span></code></pre></div>
 <h4 id="toml-example_3">TOML example<a class="headerlink" href="#toml-example_3" title="Permanent link">&para;</a></h4>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">[tasks.estimate]</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">t_shirt_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;M&quot;</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;days&quot;</span>
 </span></code></pre></div>
 <h4 id="important-precedence-note">Important precedence note<a class="headerlink" href="#important-precedence-note" title="Permanent link">&para;</a></h4>
 <p>As implemented today, if <code>t_shirt_size</code> is present together with explicit numeric estimate fields, the T-shirt-size path takes precedence during validation and resolution.</p>
@@ -3105,7 +3100,7 @@
 </span></code></pre></div>
 <p>But it should be treated as ambiguous and avoided in real project files. If you use <code>t_shirt_size</code>, prefer to omit the explicit numeric range fields.</p>
 <h3 id="4-story-point-estimate">4. Story Point estimate<a class="headerlink" href="#4-story-point-estimate" title="Permanent link">&para;</a></h3>
-<p>This form lets a task use agile-style relative sizing while still simulating an effort range in days.</p>
+<p>This form lets a task use agile-style relative sizing while still simulating an effort range.</p>
 <h4 id="supported-fields_4">Supported fields<a class="headerlink" href="#supported-fields_4" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
@@ -3124,12 +3119,6 @@
 <td>—</td>
 </tr>
 <tr>
-<td><code>unit</code></td>
-<td>No</td>
-<td>string</td>
-<td><code>"storypoint"</code></td>
-</tr>
-<tr>
 <td><code>distribution</code></td>
 <td>No</td>
 <td>enum</td>
@@ -3141,22 +3130,20 @@
 <p>When <code>story_points</code> is present:</p>
 <ul>
 <li>the value must currently be one of <code>1</code>, <code>2</code>, <code>3</code>, <code>5</code>, <code>8</code>, <code>13</code>, or <code>21</code>,</li>
-<li><code>unit</code> defaults to <code>"storypoint"</code> if omitted,</li>
-<li>the simulation engine resolves the Story Point value to actual <code>min</code>, <code>most_likely</code>, and <code>max</code> values in days from the active configuration.</li>
+<li><strong><code>unit</code> must not be specified</strong> — the unit comes from the configuration file's <code>story_point_unit</code> setting (default: <code>"days"</code>),</li>
+<li>the simulation engine resolves the Story Point value to actual <code>min</code>, <code>most_likely</code>, and <code>max</code> values from the active configuration.</li>
 </ul>
 <p>If the chosen Story Point value does not exist in the active configuration, simulation raises an error.</p>
 <h4 id="yaml-example_4">YAML example<a class="headerlink" href="#yaml-example_4" title="Permanent link">&para;</a></h4>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nt">estimate</span><span class="p">:</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">  </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;storypoint&quot;</span>
 </span></code></pre></div>
 <h4 id="toml-example_4">TOML example<a class="headerlink" href="#toml-example_4" title="Permanent link">&para;</a></h4>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">[tasks.estimate]</span>
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">story_points</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="n">unit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;storypoint&quot;</span>
 </span></code></pre></div>
 <h3 id="symbolic-estimate-mappings-in-configuration">Symbolic estimate mappings in configuration<a class="headerlink" href="#symbolic-estimate-mappings-in-configuration" title="Permanent link">&para;</a></h3>
-<p>Both <code>t_shirt_size</code> and <code>story_points</code> are symbolic estimate forms. They are converted to day-based ranges by the active configuration.</p>
+<p>Both <code>t_shirt_size</code> and <code>story_points</code> are symbolic estimate forms. They are converted to numeric ranges by the active configuration, using the unit specified by <code>t_shirt_size_unit</code> (default: <code>"hours"</code>) and <code>story_point_unit</code> (default: <code>"days"</code>) respectively. All values are then converted to hours internally.</p>
 <p>Built-in defaults exist for both styles, and a custom configuration file may override all or only some of those mappings.</p>
 <h4 id="example-configuration">Example configuration<a class="headerlink" href="#example-configuration" title="Permanent link">&para;</a></h4>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nt">t_shirt_sizes</span><span class="p">:</span>
