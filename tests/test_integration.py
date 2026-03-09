@@ -316,6 +316,7 @@ class TestCLIIntegration:
         assert task_sp1_durations.mean() < task_sp5_durations.mean()
         assert task_sp5_durations.mean() < task_sp13_durations.mean()
 
-        assert 0.5 <= task_sp1_durations.min() <= 3.0
-        assert 3.0 <= task_sp5_durations.min() <= 8.0
-        assert 8.0 <= task_sp13_durations.min() <= 21.0
+        # Durations are now in hours (story points default to days, converted at 8 hours/day)
+        assert 0.5 * 8 <= task_sp1_durations.min() <= 3.0 * 8
+        assert 3.0 * 8 <= task_sp5_durations.min() <= 8.0 * 8
+        assert 8.0 * 8 <= task_sp13_durations.min() <= 21.0 * 8

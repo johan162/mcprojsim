@@ -25,6 +25,7 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <project_metadata> ::= <project_name>
                        <start_date>
+                       [<hours_per_day>]
                        [<confidence_levels>]
                        [<probability_thresholds>]
 
@@ -34,6 +35,9 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <date_string> ::= <year> "-" <month> "-" <day>
                 # YYYY-MM-DD format
+
+<hours_per_day> ::= "hours_per_day:" <positive_number>
+                  # Default: 8.0. Controls conversion between days/weeks and hours.
 
 <confidence_levels> ::= "confidence_levels:" "[" <percentile_list> "]"
 
@@ -87,12 +91,12 @@ This document provides a complete formal grammar specification for Monte Carlo P
                         <unit>
 
 <tshirt_estimate> ::= "t_shirt_size:" <tshirt_size>
-                     [<unit>]
+                     # unit must NOT be specified; it comes from configuration
 
 <tshirt_size> ::= "XS" | "S" | "M" | "L" | "XL" | "XXL"
 
 <story_point_estimate> ::= "story_points:" <story_point_value>
-                          [<story_point_unit>]
+                          # unit must NOT be specified; it comes from configuration
 
 <story_point_value> ::= "1" | "2" | "3" | "5" | "8" | "13" | "21"
 
@@ -106,9 +110,8 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <unit> ::= "unit:" <time_unit>
 
-<time_unit> ::= "days" | "hours" | "weeks"
-
-<story_point_unit> ::= "unit:" "storypoint"
+<time_unit> ::= "hours" | "days" | "weeks"
+               # Only valid for explicit estimates (triangular and lognormal)
 
 # Dependencies
 <dependencies> ::= "dependencies:" <dependency_list>
@@ -219,7 +222,8 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
 4. **Estimate Validity** (T-Shirt Size):
    - Must be one of: `XS`, `S`, `M`, `L`, `XL`, `XXL`
    - Values are resolved from configuration file
-   - Default values (in days):
+   - `unit` must NOT be specified in the project file; unit comes from `t_shirt_size_unit` in config (default: `"hours"`)
+   - Default values (in hours):
      * `XS`: min=0.5, most_likely=1, max=2
      * `S`: min=1, most_likely=2, max=4
      * `M`: min=3, most_likely=5, max=8
@@ -228,8 +232,8 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
      * `XXL`: min=13, most_likely=21, max=34
   5. **Estimate Validity** (Story Points):
     - Must be one of: `1`, `2`, `3`, `5`, `8`, `13`, `21`
-    - `unit` defaults to `storypoint` when omitted
-    - Values are resolved from configuration file to day ranges
+    - `unit` must NOT be specified in the project file; unit comes from `story_point_unit` in config (default: `"days"`)
+    - Values are resolved from configuration file to numeric ranges
     - Default values (in days):
       * `1`: min=0.5, most_likely=1, max=3
       * `2`: min=1, most_likely=2, max=4
@@ -249,7 +253,8 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
 1. **Risk IDs**: Must be unique within their scope (task-level or project-level)
 2. **Probability Range**: 0.0 ≤ probability ≤ 1.0
 3. **Impact Values**:
-   - Fixed impact: positive number in days
+   - Fixed impact: positive number; plain numbers are treated as hours
+   - Structured absolute impact: `type: "absolute"`, `value`, and `unit` (`"hours"`, `"days"`, or `"weeks"`)
    - Percentage impact: positive number (percentage of task/project duration)
 4. **Impact Type**: If `type: percentage` is specified, `value` must be present
 
@@ -296,14 +301,12 @@ tasks:
     name: "Quick Fix"
     estimate:
       t_shirt_size: "S"
-      unit: "days"
     dependencies: []
 
   - id: "task_004"
     name: "Backlog Item"
     estimate:
       story_points: 5
-      unit: "storypoint"
     dependencies: []
 
 project_risks:
@@ -346,12 +349,20 @@ project:
 # INVALID: unknown T-shirt size
 estimate:
   t_shirt_size: "XXXL"  # ERROR: not a valid size (XS, S, M, L, XL, XXL)
-  unit: "days"
+
+# INVALID: unit specified on T-shirt size estimate
+estimate:
+  t_shirt_size: "M"
+  unit: "days"  # ERROR: T-shirt size estimates must not specify 'unit'
 
 # INVALID: unsupported Story Point value
 estimate:
   story_points: 4  # ERROR: must be one of 1, 2, 3, 5, 8, 13, 21
-  unit: "storypoint"
+
+# INVALID: unit specified on Story Point estimate
+estimate:
+  story_points: 5
+  unit: "days"  # ERROR: Story Point estimates must not specify 'unit'
 ```
 
 ## Format Support

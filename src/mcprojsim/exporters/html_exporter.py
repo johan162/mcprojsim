@@ -1,6 +1,7 @@
 """HTML exporter for simulation results."""
 
 import base64
+import math
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -173,17 +174,18 @@ HTML_TEMPLATE = """
                     <tr><td class="metric">Simulation Date</td><td class="value">{{ simulation_date }}</td></tr>
                     <tr><td class="metric">Iterations</td><td class="value">{{ iterations }}</td></tr>
                     <tr><td class="metric">Random Seed</td><td class="value">{{ random_seed }}</td></tr>
+                    <tr><td class="metric">Hours per Day</td><td class="value">{{ hours_per_day }}</td></tr>
                 </table>
             </div>
 
             <div class="section statistical-summary">
                 <h3>Statistical Summary</h3>
                 <table>
-                    <tr><td class="metric">Mean</td><td class="value">{{ "%.2f"|format(mean) }} days</td></tr>
-                    <tr><td class="metric">Median</td><td class="value">{{ "%.2f"|format(median) }} days</td></tr>
-                    <tr><td class="metric">Standard Deviation</td><td class="value">{{ "%.2f"|format(std_dev) }} days</td></tr>
-                    <tr><td class="metric">Minimum</td><td class="value">{{ "%.2f"|format(min_duration) }} days</td></tr>
-                    <tr><td class="metric">Maximum</td><td class="value">{{ "%.2f"|format(max_duration) }} days</td></tr>
+                    <tr><td class="metric">Mean</td><td class="value">{{ "%.2f"|format(mean) }} hours ({{ mean_working_days }} working days)</td></tr>
+                    <tr><td class="metric">Median</td><td class="value">{{ "%.2f"|format(median) }} hours</td></tr>
+                    <tr><td class="metric">Standard Deviation</td><td class="value">{{ "%.2f"|format(std_dev) }} hours</td></tr>
+                    <tr><td class="metric">Minimum</td><td class="value">{{ "%.2f"|format(min_duration) }} hours</td></tr>
+                    <tr><td class="metric">Maximum</td><td class="value">{{ "%.2f"|format(max_duration) }} hours</td></tr>
                     <tr><td class="metric">Coefficient of Variation</td><td class="value">{{ "%.4f"|format(cv) }}</td></tr>
                 </table>
             </div>
@@ -192,13 +194,15 @@ HTML_TEMPLATE = """
                 <h3>Confidence Intervals</h3>
                 <table>
                     <thead>
-                        <tr><th>Percentile</th><th>Duration (days)</th></tr>
+                        <tr><th>Percentile</th><th>Effort (hours)</th><th>Working Days</th><th>Delivery Date</th></tr>
                     </thead>
                     <tbody>
-                        {% for p, value in percentiles %}
+                        {% for p, value, working_days, delivery_date in percentiles %}
                         <tr class="{% if p in highlighted_percentiles %}highlight{% endif %}">
                             <td>P{{ p }}</td>
                             <td class="value">{{ "%.2f"|format(value) }}</td>
+                            <td class="value">{{ working_days }}</td>
+                            <td class="value">{{ delivery_date }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -218,7 +222,7 @@ HTML_TEMPLATE = """
                 <h3>Critical Path Analysis</h3>
                 <table>
                     <thead>
-                        <tr><th>Task ID</th><th class="header-center">Effort (days)</th><th class="header-center">Criticality Index</th><th class="header-center">Percentage</th></tr>
+                        <tr><th>Task ID</th><th class="header-center">Effort (hours)</th><th class="header-center">Criticality Index</th><th class="header-center">Percentage</th></tr>
                     </thead>
                     <tbody>
                         {% for task_id, criticality, effort in critical_path_with_effort %}
@@ -273,7 +277,7 @@ HTML_TEMPLATE = """
                 <div class="thermometer-display">
                     <div class="thermometer-bar">
                         {% for segment in thermometer_segments %}
-                        <div class="thermometer-segment" style="background-color: {{ segment.color }}; color: {{ segment.text_color }};" title="{{ segment.effort|round(1) }} days: {{ segment.probability|round(0)|int }}% success">
+                        <div class="thermometer-segment" style="background-color: {{ segment.color }}; color: {{ segment.text_color }};" title="{{ segment.effort|round(1) }} hours: {{ segment.probability|round(0)|int }}% success">
                             {{ segment.probability|round(0)|int }}%
                         </div>
                         {% endfor %}
@@ -281,7 +285,7 @@ HTML_TEMPLATE = """
                     <div class="thermometer-labels">
                         {% for segment in thermometer_segments %}
                         <div class="thermometer-label">
-                            {{ segment.effort|round(1) }} days
+                            {{ segment.effort|round(1) }} hours
                         </div>
                         {% endfor %}
                     </div>
@@ -360,7 +364,19 @@ class HTMLExporter:
             )
         ]
 
-        percentiles = sorted(results.percentiles.items())
+        percentiles = [
+            (
+                p,
+                v,
+                math.ceil(v / results.hours_per_day),
+                (
+                    dd.isoformat()
+                    if (dd := results.delivery_date(v)) is not None
+                    else ""
+                ),
+            )
+            for p, v in sorted(results.percentiles.items())
+        ]
 
         # Calculate thermometer data
         thermometer_segments = HTMLExporter._calculate_thermometer(results)
@@ -376,7 +392,9 @@ class HTMLExporter:
             simulation_date=simulation_date,
             iterations=results.iterations,
             random_seed=results.random_seed or "None",
+            hours_per_day=results.hours_per_day,
             mean=results.mean,
+            mean_working_days=math.ceil(results.mean / results.hours_per_day),
             median=results.median,
             std_dev=results.std_dev,
             min_duration=results.min_duration,
@@ -618,14 +636,14 @@ class HTMLExporter:
                 color="#FF5722",
                 linestyle="--",
                 linewidth=2,
-                label=f"Mean: {results.mean:.1f} days",
+                label=f"Mean: {results.mean:.1f} hours",
             )
             ax.axvline(
                 results.median,
                 color="#2196F3",
                 linestyle="--",
                 linewidth=2,
-                label=f"Median: {results.median:.1f} days",
+                label=f"Median: {results.median:.1f} hours",
             )
 
             # Add percentile lines
@@ -637,14 +655,14 @@ class HTMLExporter:
                         linestyle=":",
                         linewidth=1.5,
                         alpha=0.7,
-                        label=f"P{p}: {results.percentiles[p]:.1f} days",
+                        label=f"P{p}: {results.percentiles[p]:.1f} hours",
                     )
 
             # Styling
-            ax.set_xlabel("Duration (days)", fontsize=12, fontweight="bold")
+            ax.set_xlabel("Effort (hours)", fontsize=12, fontweight="bold")
             ax.set_ylabel("Frequency", fontsize=12, fontweight="bold")
             ax.set_title(
-                f"Project Duration Distribution ({results.iterations:,} simulations)",
+                f"Project Effort Distribution ({results.iterations:,} simulations)",
                 fontsize=14,
                 fontweight="bold",
                 pad=20,

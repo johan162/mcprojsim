@@ -170,7 +170,7 @@ The `config show` output now includes:
 
 ### T-shirt sizes
 
-Tasks may use `t_shirt_size` instead of an explicit numeric range. Those labels are resolved through the `t_shirt_sizes` section in the active configuration.
+Tasks may use `t_shirt_size` instead of an explicit numeric range. Those labels are resolved through the `t_shirt_sizes` section in the active configuration. The unit for T-shirt size values is controlled by `t_shirt_size_unit` in the configuration (default: `"hours"`).
 
 Default built-in mappings:
 
@@ -183,7 +183,7 @@ Default built-in mappings:
 
 ### Story Points
 
-Tasks may also use `story_points` for agile-style relative sizing. Story Points are resolved to day ranges through the `story_points` section in the active configuration.
+Tasks may also use `story_points` for agile-style relative sizing. Story Points are resolved to numeric ranges through the `story_points` section in the active configuration. The unit for story point values is controlled by `story_point_unit` in the configuration (default: `"days"`).
 
 Default built-in mappings:
 
@@ -209,7 +209,7 @@ story_points:
     max: 16
 ```
 
-Use `unit: "storypoint"` in the project file when expressing a task as Story Points.
+Story point estimates must **not** include a `unit` field in the project file. The unit is determined by `story_point_unit` in the configuration. Similarly, T-shirt size estimates must not include a `unit` field — the unit is determined by `t_shirt_size_unit` (default: `"hours"`).
 
 ## Probability Thresholds for Thermometer Visualization
 
@@ -249,7 +249,7 @@ probability_green_threshold: 0.80  # Above 80%: green
 ### Thermometer Visualization
 
 The HTML export displays a vertical thermometer showing:
-- **Effort levels** (in days) on the right
+- **Effort levels** (in hours) on the right
 - **Probability of success** for each effort level in colored segments
 - **Color gradient**:
   - 🔴 **Bright Red**: Probability below red threshold (high risk)

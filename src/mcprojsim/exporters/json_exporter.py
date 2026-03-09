@@ -1,6 +1,7 @@
 """JSON exporter for simulation results."""
 
 import json
+import math
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict
@@ -81,18 +82,31 @@ class JSONExporter:
                 "date": simulation_date,
                 "iterations": results.iterations,
                 "random_seed": results.random_seed,
+                "hours_per_day": results.hours_per_day,
             },
             "statistics": {
-                "mean": results.mean,
-                "median": results.median,
-                "std_dev": results.std_dev,
-                "min": results.min_duration,
-                "max": results.max_duration,
+                "mean_hours": results.mean,
+                "mean_working_days": math.ceil(results.mean / results.hours_per_day),
+                "median_hours": results.median,
+                "std_dev_hours": results.std_dev,
+                "min_hours": results.min_duration,
+                "max_hours": results.max_duration,
                 "coefficient_of_variation": (
                     results.std_dev / results.mean if results.mean > 0 else 0
                 ),
             },
-            "percentiles": results.percentiles,
+            "percentiles": {
+                str(p): {
+                    "hours": v,
+                    "working_days": math.ceil(v / results.hours_per_day),
+                    "delivery_date": (
+                        dd.isoformat()
+                        if (dd := results.delivery_date(v)) is not None
+                        else None
+                    ),
+                }
+                for p, v in sorted(results.percentiles.items())
+            },
             "critical_path": results.get_critical_path(),
             "critical_path_sequences": [
                 {

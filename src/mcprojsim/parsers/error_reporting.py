@@ -535,6 +535,7 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "name",
             "description",
             "start_date",
+            "hours_per_day",
             "currency",
             "confidence_levels",
             "probability_red_threshold",

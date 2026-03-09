@@ -9,7 +9,6 @@ tasks:
     name: "Design page"
     estimate:
       t_shirt_size: "S"
-      unit: "days"
     dependencies: []
     uncertainty_factors:
       team_experience: "high"
@@ -19,7 +18,6 @@ tasks:
     name: "Build page"
     estimate:
       t_shirt_size: "M"
-      unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
       team_experience: "medium"
@@ -29,5 +27,4 @@ tasks:
     name: "Deploy page"
     estimate:
       t_shirt_size: "XS"
-      unit: "days"
     dependencies: ["task_002"]

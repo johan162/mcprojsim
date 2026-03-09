@@ -1,3 +1,22 @@
+## [v0.3.0] - 2026-03-09
+
+Release Type: minor
+
+### 📋 Summary 
+- Much improved documentation.
+- Handle units in task range estimates
+
+### 🚀 Improvements
+- The unit field can now be used to specify "hours", "days", or "weeks"
+- The User Guide is now complete
+- Added a new "Development" section in the docs
+- Days have a configurable number of working hours
+- Improved progress indicator in terminal
+
+### 🛠 Internal
+- Added randomized end-to-end tests by automating generation of valid project files which are used for estimation validation. This adds around 300 new full tests.
+
+
 ## [v0.2.1] - 2026-03-09
 
 Release Type: patch

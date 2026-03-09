@@ -12,6 +12,7 @@ from mcprojsim.config import (
     DEFAULT_PROBABILITY_RED_THRESHOLD,
     DEFAULT_STORY_POINT_VALUES,
     DEFAULT_UNCERTAINTY_FACTOR_LEVELS,
+    EffortUnit,
 )
 
 
@@ -39,7 +40,7 @@ class TaskEstimate(BaseModel):
     standard_deviation: Optional[float] = Field(default=None, gt=0)
     t_shirt_size: Optional[str] = Field(default=None)
     story_points: Optional[int] = Field(default=None, gt=0)
-    unit: str = Field(default="days")
+    unit: Optional[EffortUnit] = Field(default=None)
 
     @model_validator(mode="after")
     def validate_distribution(self) -> "TaskEstimate":
@@ -57,7 +58,13 @@ class TaskEstimate(BaseModel):
 
         # If a symbolic estimate is specified, skip numeric validation.
         # The actual values will be populated from config during simulation.
+        # Unit must NOT be set by the user; it comes from config.
         if self.t_shirt_size is not None:
+            if "unit" in self.model_fields_set:
+                raise ValueError(
+                    "T-shirt size estimates must not specify 'unit' in the project file. "
+                    "The unit is defined in the configuration."
+                )
             return self
 
         if self.story_points is not None:
@@ -70,10 +77,11 @@ class TaskEstimate(BaseModel):
                     f"Story Points must be one of: {allowed}; got {self.story_points}"
                 )
 
-            if "unit" not in self.model_fields_set:
-                self.unit = "storypoint"
-            elif self.unit != "storypoint":
-                raise ValueError("Story Point estimates must use unit 'storypoint'")
+            if "unit" in self.model_fields_set:
+                raise ValueError(
+                    "Story Point estimates must not specify 'unit' in the project file. "
+                    "The unit is defined in the configuration."
+                )
             return self
 
         # For explicit estimates, most_likely is required
@@ -81,6 +89,10 @@ class TaskEstimate(BaseModel):
             raise ValueError(
                 "Either 't_shirt_size', 'story_points', or 'most_likely' must be specified"
             )
+
+        # Default unit for explicit estimates is hours
+        if self.unit is None:
+            self.unit = EffortUnit.HOURS
 
         if self.distribution == DistributionType.TRIANGULAR:
             if self.min is None or self.max is None:
@@ -100,12 +112,33 @@ class TaskEstimate(BaseModel):
         return self
 
 
+def _convert_to_hours(value: float, unit: EffortUnit, hours_per_day: float) -> float:
+    """Convert a value from the given unit to hours.
+
+    Args:
+        value: Numeric value to convert
+        unit: Source unit
+        hours_per_day: Working hours per day
+
+    Returns:
+        Value in hours
+    """
+    if unit == EffortUnit.HOURS:
+        return value
+    elif unit == EffortUnit.DAYS:
+        return value * hours_per_day
+    elif unit == EffortUnit.WEEKS:
+        return value * hours_per_day * 5
+    else:
+        raise ValueError(f"Unknown effort unit: {unit}")
+
+
 class RiskImpact(BaseModel):
     """Impact specification for a risk."""
 
     type: ImpactType
     value: float = Field(gt=0)
-    unit: Optional[str] = Field(default="days")
+    unit: Optional[EffortUnit] = Field(default=None)
 
 
 class Risk(BaseModel):
@@ -115,7 +148,7 @@ class Risk(BaseModel):
     name: str
     probability: float = Field(ge=0.0, le=1.0)
     impact: float | RiskImpact = Field(
-        description="Time penalty as float (days) or RiskImpact object"
+        description="Time penalty as float (hours) or RiskImpact object"
     )
     description: Optional[str] = None
 
@@ -134,19 +167,25 @@ class Risk(BaseModel):
                 f"Invalid impact value: {v}. Must be a number or RiskImpact object."
             )
 
-    def get_impact_value(self, base_duration: float = 0.0) -> float:
-        """Get the impact value in absolute time units.
+    def get_impact_value(
+        self, base_duration: float = 0.0, hours_per_day: float = 8.0
+    ) -> float:
+        """Get the impact value converted to hours.
 
         Args:
-            base_duration: Base duration for percentage calculations
+            base_duration: Base duration in hours for percentage calculations
+            hours_per_day: Working hours per day for unit conversion
 
         Returns:
-            Impact in absolute time units (e.g., days)
+            Impact in hours
         """
         if isinstance(self.impact, (int, float)):
+            # Raw float impacts are in hours (the canonical unit)
             return float(self.impact)
         elif self.impact.type == ImpactType.ABSOLUTE:
-            return self.impact.value
+            value = self.impact.value
+            unit = self.impact.unit or EffortUnit.HOURS
+            return _convert_to_hours(value, unit, hours_per_day)
         else:  # PERCENTAGE
             return base_duration * (self.impact.value / 100.0)
 
@@ -196,6 +235,11 @@ class ProjectMetadata(BaseModel):
     name: str
     description: Optional[str] = None
     start_date: date
+    hours_per_day: float = Field(
+        default=8.0,
+        gt=0,
+        description="Working hours per day (default 8)",
+    )
     currency: Optional[str] = Field(default="USD")
     confidence_levels: List[int] = Field(
         default_factory=lambda: list(DEFAULT_CONFIDENCE_LEVELS)

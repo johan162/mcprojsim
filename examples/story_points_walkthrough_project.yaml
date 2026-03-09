@@ -9,7 +9,6 @@ tasks:
     name: "Design page"
     estimate:
       story_points: 2
-      unit: "storypoint"
     dependencies: []
     uncertainty_factors:
       team_experience: "high"
@@ -19,7 +18,6 @@ tasks:
     name: "Build page"
     estimate:
       story_points: 5
-      unit: "storypoint"
     dependencies: ["task_001"]
     uncertainty_factors:
       team_experience: "medium"
@@ -29,5 +27,4 @@ tasks:
     name: "Deploy page"
     estimate:
       story_points: 1
-      unit: "storypoint"
     dependencies: ["task_002"]

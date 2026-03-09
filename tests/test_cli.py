@@ -47,9 +47,13 @@ class TestCli:
                     median = 1.0
                     std_dev = 0.0
                     percentiles = {50: 1.0}
+                    hours_per_day = 8.0
 
                     def get_critical_path_sequences(self, top_n=None):
                         return []
+
+                    def delivery_date(self, hours):
+                        return None
 
                 return FakeResults()
 
@@ -94,9 +98,13 @@ class TestCli:
                     median = 1.0
                     std_dev = 0.0
                     percentiles = {50: 1.0}
+                    hours_per_day = 8.0
 
                     def get_critical_path_sequences(self, top_n=None):
                         return []
+
+                    def delivery_date(self, hours):
+                        return None
 
                 return FakeResults()
 
@@ -186,6 +194,7 @@ class TestCli:
                     std_dev = 0.0
                     percentiles = {50: 1.0}
                     iterations = 10
+                    hours_per_day = 8.0
 
                     def get_critical_path_sequences(self, top_n=None):
                         return [
@@ -195,6 +204,9 @@ class TestCli:
                                 0.7,
                             )
                         ]
+
+                    def delivery_date(self, hours):
+                        return None
 
                 return FakeResults()
 

@@ -28,17 +28,17 @@ results = engine.run(project)
 
 # Display results
 print("\n=== Results ===")
-print(f"Mean: {results.mean:.2f} days")
-print(f"Median (P50): {results.median:.2f} days")
-print(f"Std Dev: {results.std_dev:.2f} days")
+print(f"Mean: {results.mean:.2f} hours")
+print(f"Median (P50): {results.median:.2f} hours")
+print(f"Std Dev: {results.std_dev:.2f} hours")
 print(f"\nConfidence Intervals:")
-print(f"  P25: {results.percentile(25):.2f} days")
-print(f"  P50: {results.percentile(50):.2f} days")
-print(f"  P75: {results.percentile(75):.2f} days")
-print(f"  P80: {results.percentile(80):.2f} days")
-print(f"  P90: {results.percentile(90):.2f} days")
-print(f"  P95: {results.percentile(95):.2f} days")
-print(f"  P99: {results.percentile(99):.2f} days")
+print(f"  P25: {results.percentile(25):.2f} hours")
+print(f"  P50: {results.percentile(50):.2f} hours")
+print(f"  P75: {results.percentile(75):.2f} hours")
+print(f"  P80: {results.percentile(80):.2f} hours")
+print(f"  P90: {results.percentile(90):.2f} hours")
+print(f"  P95: {results.percentile(95):.2f} hours")
+print(f"  P99: {results.percentile(99):.2f} hours")
 
 # Critical path
 print(f"\nCritical Path Analysis:")
@@ -46,6 +46,14 @@ critical_path = results.get_critical_path()
 for task_id, criticality in sorted(critical_path.items(), key=lambda x: x[1], reverse=True):
     if criticality > 0.5:
         print(f"  {task_id}: {criticality*100:.1f}% critical")
+
+# Delivery dates
+print(f"\nDelivery Date Projections:")
+for p in [50, 80, 90, 95]:
+    hours = results.percentile(p)
+    delivery = results.delivery_date(hours)
+    if delivery:
+        print(f"  P{p}: {delivery.isoformat()} ({results.hours_to_working_days(hours)} working days)")
 
 # Export results
 print("\nExporting results...")

@@ -1,3 +1,4 @@
+t_shirt_size_unit: "hours"
 t_shirt_sizes:
   XS:
     min: 0.5

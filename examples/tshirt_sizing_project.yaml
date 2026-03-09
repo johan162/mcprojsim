@@ -11,7 +11,6 @@ tasks:
     name: "UI/UX Design"
     estimate:
       t_shirt_size: "M"
-      unit: "days"
     dependencies: []
     uncertainty_factors:
       team_experience: "high"
@@ -21,7 +20,6 @@ tasks:
     name: "Backend Infrastructure Setup"
     estimate:
       t_shirt_size: "L"
-      unit: "days"
     dependencies: []
     uncertainty_factors:
       team_experience: "medium"
@@ -31,7 +29,6 @@ tasks:
     name: "REST API Development"
     estimate:
       t_shirt_size: "XL"
-      unit: "days"
     dependencies: ["setup_backend"]
     uncertainty_factors:
       team_experience: "medium"
@@ -40,13 +37,15 @@ tasks:
       - id: "api_complexity"
         name: "API complexity higher than expected"
         probability: 0.30
-        impact: 5
+        impact:
+          type: "absolute"
+          value: 5
+          unit: "hours"
 
   - id: "mobile_app_dev"
     name: "Mobile App Development"
     estimate:
       t_shirt_size: "XXL"
-      unit: "days"
     dependencies: ["design_ui", "api_development"]
     uncertainty_factors:
       team_experience: "low"
@@ -56,7 +55,6 @@ tasks:
     name: "Integration Testing"
     estimate:
       t_shirt_size: "M"
-      unit: "days"
     dependencies: ["mobile_app_dev"]
     uncertainty_factors:
       requirements_maturity: "high"
@@ -65,7 +63,6 @@ tasks:
     name: "Deployment and Go-Live"
     estimate:
       t_shirt_size: "S"
-      unit: "days"
     dependencies: ["integration_testing"]
     uncertainty_factors:
       integration_complexity: "medium"

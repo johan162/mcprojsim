@@ -46,7 +46,7 @@ nav:
       - Your first project: user_guide/your_first_project.md
       - Uncertainty Factors: user_guide/uncertainty_factors.md
       - Task Estimation: user_guide/task_estimation.md
-      - Project Risks: user_guide/project_risks.md
+      - Project Risks: user_guide/risks.md
       - Project Files: user_guide/project_files.md
       - Running Simulations: user_guide/running_simulations.md
       - Interpreting Results: user_guide/interpreting_results.md

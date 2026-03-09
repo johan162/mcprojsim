@@ -49,10 +49,10 @@ tasks:
 mc-estimate simulate project.yaml --iterations 10000
 
 # Output
-Mean: 42.3 days
-P50 (Median): 40.5 days
-P80: 48.2 days
-P90: 52.7 days
+Mean: 338.4 hours (43 working days)
+P50 (Median): 324.0 hours (41 working days)
+P80: 385.6 hours (49 working days)
+P90: 421.6 hours (53 working days)
 ```
 
 ## Installation
