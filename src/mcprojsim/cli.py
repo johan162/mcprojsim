@@ -255,5 +255,81 @@ def show_config(config_file: Optional[str]) -> None:
     )
 
 
+@cli.command()
+@click.argument("input_file", type=click.Path(exists=True))
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(),
+    default=None,
+    help="Output YAML file path (default: print to stdout)",
+)
+@click.option(
+    "--validate-only",
+    is_flag=True,
+    help="Only validate the description, do not generate YAML",
+)
+def generate(input_file: str, output: Optional[str], validate_only: bool) -> None:
+    """Generate a project YAML file from a natural language description.
+
+    Reads a plain-text project description from INPUT_FILE and produces
+    a syntactically correct mcprojsim project specification in YAML format.
+    """
+    from mcprojsim.nl_parser import NLProjectParser
+
+    logger = setup_logging()
+    input_path = Path(input_file)
+    text = input_path.read_text(encoding="utf-8")
+
+    parser = NLProjectParser()
+
+    try:
+        project = parser.parse(text)
+    except ValueError as e:
+        click.echo(f"Error: {e}", err=True)
+        logger.error(f"Failed to parse {input_file}: {e}")
+        raise click.Abort()
+
+    if validate_only:
+        issues: list[str] = []
+        if project.name == "Untitled Project":
+            issues.append("No project name found (will default to 'Untitled Project')")
+        if not project.start_date:
+            issues.append("No start date specified")
+        task_nums = {t.number for t in project.tasks}
+        for task in project.tasks:
+            has_estimate = (
+                task.t_shirt_size is not None
+                or task.story_points is not None
+                or task.min_estimate is not None
+            )
+            if not has_estimate:
+                issues.append(f"Task {task.number} ('{task.name}') has no estimate")
+            for ref in task.dependency_refs:
+                if int(ref) not in task_nums:
+                    issues.append(
+                        f"Task {task.number} depends on Task {ref}, which does not exist"
+                    )
+        if issues:
+            click.echo("Validation issues:")
+            for issue in issues:
+                click.echo(f"  ⚠ {issue}")
+        else:
+            click.echo(
+                f"✓ Valid: '{project.name}' with {len(project.tasks)} task(s)"
+            )
+        return
+
+    yaml_output = parser.to_yaml(project)
+
+    if output:
+        output_path = Path(output)
+        output_path.write_text(yaml_output, encoding="utf-8")
+        click.echo(f"✓ Generated {output_path} ({len(project.tasks)} tasks)")
+        logger.info(f"Generated project file {output_path} from {input_file}")
+    else:
+        click.echo(yaml_output)
+
+
 if __name__ == "__main__":
     cli()

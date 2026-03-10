@@ -57,8 +57,15 @@ mkdocs = ">=1.5.0"
 mkdocs-material = ">=9.7.4"
 mkdocstrings = {extras = ["python"], version = ">=0.22.0"}
 
+[tool.poetry.group.mcp]
+optional = true
+
+[tool.poetry.group.mcp.dependencies]
+mcp = {version = ">=1.0.0", extras = ["cli"]}
+
 [tool.poetry.scripts]
 mcprojsim = "mcprojsim.cli:cli"
+mcprojsim-mcp = "mcprojsim.mcp_server:main"
 
 [tool.black]
 line-length = 88

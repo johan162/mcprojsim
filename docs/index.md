@@ -6,6 +6,7 @@ Monte Carlo Project Simulator (mcprojsim) is a powerful tool for probabilistic s
 
 ## Key Features
 
+- **Natural Language Project Input** — generate valid project files from plain-text descriptions with `mcprojsim generate`
 - **Triangular & Log-Normal Distributions** for realistic task duration modeling
 - **Risk Analysis** at both project and task levels
 - **Dependency Management** with automatic critical path identification

@@ -10,6 +10,67 @@ The parser layer is intentionally simple:
 
 Because of that design, the logical schema is the same regardless of whether you write the file in YAML or TOML.
 
+## Creating project files
+
+There are three ways to create a project file:
+
+| Method | Best for |
+|--------|----------|
+| **Write YAML or TOML by hand** | Full control over every field |
+| **`mcprojsim generate`** | Quick creation from a natural language description |
+| **MCP server** | AI-assisted generation through an MCP client |
+
+The `generate` command converts a plain-text project description into a valid YAML file without requiring any AI service — it runs locally using a built-in pattern-based parser.
+
+### Using `mcprojsim generate`
+
+Write a description in a text file (e.g., `description.txt`):
+
+```text
+Project name: Website Redesign
+Start date: 2026-04-15
+Task 1:
+- Gather requirements
+- Size: S
+Task 2:
+- Create wireframes
+- Depends on Task 1
+- Size: M
+Task 3:
+- Build frontend
+- Depends on Task 2
+- Size: XL
+```
+
+Generate the YAML project file:
+
+```bash
+mcprojsim generate description.txt -o project.yaml
+```
+
+Expected result:
+
+```text
+✓ Generated project.yaml (3 tasks)
+```
+
+The generated file is ready for `mcprojsim validate` and `mcprojsim simulate`.
+
+You can also print to stdout (omit `-o`), or validate without generating:
+
+```bash
+# Print YAML to stdout
+mcprojsim generate description.txt
+
+# Check for issues without generating
+mcprojsim generate --validate-only description.txt
+```
+
+The parser understands T-shirt sizes (`Size: M`, `Size XL`), story points (`Story points: 5`), explicit ranges (`Estimate: 3/5/10 days`), and dependencies (`Depends on Task 1`). It is tolerant of minor formatting variations such as missing colons and inconsistent spacing. See [MCP Server & Natural Language Project Input](mcp-server.md) for the full input format reference and more examples.
+
+!!! note
+    The `generate` command creates a minimal but valid project file. After generating, you can manually add uncertainty factors, risks, resources, and other fields documented in this chapter.
+
 ## Supported file formats
 
 The validator and CLI currently recognize these project file extensions:

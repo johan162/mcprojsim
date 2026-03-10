@@ -24,6 +24,7 @@ It is intended for teams that want answers such as:
 
 ## Key features
 
+- **Natural language project input** — generate valid project files from plain-text descriptions using `mcprojsim generate`
 - Monte Carlo schedule simulation with configurable iteration counts
 - Range-based task estimates using triangular and log-normal distributions
 - Unit-aware estimation: supports hours, days, and weeks with automatic conversion to a canonical hours-based internal representation
@@ -117,6 +118,9 @@ The full published documentation is also available at <https://johan162.github.i
 ## Example commands
 
 ```bash
+# Generate a project file from a natural language description
+mcprojsim generate examples/nl_example.txt -o my_project.yaml
+
 # Validate an input file
 mcprojsim validate examples/sample_project.yaml
 

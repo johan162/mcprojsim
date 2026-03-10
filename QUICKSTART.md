@@ -40,45 +40,69 @@ mcprojsim --help
 
 ## 2. Create your first project file
 
-Create a file named `project.yaml` with this content:
+The quickest way to create a project file is to describe your project in plain text and let `mcprojsim generate` produce the YAML for you.
 
-```yaml
-project:
-  name: "Website Refresh"
-  description: "Small example project"
-  start_date: "2026-04-01"
-  confidence_levels: [50, 80, 90]
+Create a file named `description.txt`:
 
-tasks:
-  - id: "task_001"
-    name: "Design updates"
-    estimate:
-      min: 2
-      most_likely: 3
-      max: 5
-      unit: "days"
+```text
+Project name: Website Refresh
+Description: Small example project
+Start date: 2026-04-01
 
-  - id: "task_002"
-    name: "Frontend changes"
-    estimate:
-      min: 4
-      most_likely: 6
-      max: 10
-      unit: "days"
-    dependencies: ["task_001"]
-    uncertainty_factors:
-      team_experience: "medium"
-      technical_complexity: "medium"
+Task 1:
+- Design updates
+- Size: S
+
+Task 2:
+- Frontend changes
+- Depends on Task 1
+- Size: M
 ```
 
-This example is intentionally small:
+Generate the project file:
 
-- one project
-- two tasks
-- one dependency
-- one uncertainty profile
+```bash
+mcprojsim generate description.txt -o project.yaml
+```
 
-That is enough for a meaningful first simulation and the output will be
+That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `min/most_likely/max` estimates. See the [MCP Server & Natural Language Input](docs/user_guide/mcp-server.md) guide for the full input format.
+
+??? tip "Alternative: write the YAML by hand"
+
+    If you prefer full control, create `project.yaml` manually:
+
+    ```yaml
+    project:
+      name: "Website Refresh"
+      description: "Small example project"
+      start_date: "2026-04-01"
+      confidence_levels: [50, 80, 90]
+
+    tasks:
+      - id: "task_001"
+        name: "Design updates"
+        estimate:
+          min: 2
+          most_likely: 3
+          max: 5
+          unit: "days"
+
+      - id: "task_002"
+        name: "Frontend changes"
+        estimate:
+          min: 4
+          most_likely: 6
+          max: 10
+          unit: "days"
+        dependencies: ["task_001"]
+        uncertainty_factors:
+          team_experience: "medium"
+          technical_complexity: "medium"
+    ```
+
+    See the [project file reference](docs/user_guide/project_files.md) for all available fields.
+
+This example is intentionally small — two tasks, one dependency. That is enough for a meaningful first simulation and the output will be
 
 ```bash
 % mcprojsim simulate quickstart_example.yaml 
