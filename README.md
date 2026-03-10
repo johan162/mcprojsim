@@ -12,7 +12,7 @@
 
 ## Overview
 
-`mcprojsim` is a Monte Carlo simulation tool for project with empahsis on agile software project estimation.
+`mcprojsim` is a Monte Carlo simulation tool for project with emphasis on agile software project estimation.
 Instead of producing a single deadline, it models uncertainty in task duration, dependencies, risks, and other schedule drivers to produce confidence-based forecast ranges.
 
 It is intended for teams that want answers such as:
