@@ -66,9 +66,7 @@ class ParsedProject:
     description: str | None = None
     hours_per_day: float = 8.0
     tasks: list[ParsedTask] = field(default_factory=list)
-    confidence_levels: list[int] = field(
-        default_factory=lambda: [50, 80, 90, 95]
-    )
+    confidence_levels: list[int] = field(default_factory=lambda: [50, 80, 90, 95])
 
 
 class NLProjectParser:
@@ -80,15 +78,11 @@ class NLProjectParser:
     """
 
     # -- Project-level patterns ------------------------------------------------
-    _PROJECT_NAME_RE = re.compile(
-        r"project\s*(?:name)?\s*[:.=]\s*(.+)", re.IGNORECASE
-    )
+    _PROJECT_NAME_RE = re.compile(r"project\s*(?:name)?\s*[:.=]\s*(.+)", re.IGNORECASE)
     _START_DATE_RE = re.compile(
         r"start\s*date\s*[:.=]\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE
     )
-    _DESCRIPTION_RE = re.compile(
-        r"description\s*[:.=]\s*(.+)", re.IGNORECASE
-    )
+    _DESCRIPTION_RE = re.compile(r"description\s*[:.=]\s*(.+)", re.IGNORECASE)
     _HOURS_PER_DAY_RE = re.compile(
         r"hours?\s*per\s*day\s*[:.=]\s*([\d.]+)", re.IGNORECASE
     )
@@ -97,18 +91,14 @@ class NLProjectParser:
     )
 
     # -- Task header -----------------------------------------------------------
-    _TASK_HEADER_RE = re.compile(
-        r"task\s*(\d+)\s*[:.=]?\s*(.*)", re.IGNORECASE
-    )
+    _TASK_HEADER_RE = re.compile(r"task\s*(\d+)\s*[:.=]?\s*(.*)", re.IGNORECASE)
 
     # -- Task bullet patterns --------------------------------------------------
     _SIZE_RE = re.compile(r"size\s*[:.=]?\s*(.+)", re.IGNORECASE)
     _STORY_POINTS_RE = re.compile(
         r"(?:story\s*)?points?\s*[:.=]?\s*(\d+)", re.IGNORECASE
     )
-    _DEPENDS_RE = re.compile(
-        r"depends?\s*(?:on)?\s*[:.=]?\s*(.+)", re.IGNORECASE
-    )
+    _DEPENDS_RE = re.compile(r"depends?\s*(?:on)?\s*[:.=]?\s*(.+)", re.IGNORECASE)
     _ESTIMATE_RE = re.compile(
         r"estimate\s*[:.=]?\s*([\d.]+)\s*[-/,]\s*([\d.]+)\s*[-/,]\s*([\d.]+)"
         r"(?:\s+(hours?|days?|weeks?|h|d|w))?",
@@ -207,15 +197,11 @@ class NLProjectParser:
         lines.append("project:")
         lines.append(f"  name: {self._yaml_str(project.name)}")
         if project.description:
-            lines.append(
-                f"  description: {self._yaml_str(project.description)}"
-            )
+            lines.append(f"  description: {self._yaml_str(project.description)}")
         if project.start_date:
             lines.append(f'  start_date: "{project.start_date}"')
         if project.hours_per_day != 8.0:
-            lines.append(
-                f"  hours_per_day: {self._fmt_num(project.hours_per_day)}"
-            )
+            lines.append(f"  hours_per_day: {self._fmt_num(project.hours_per_day)}")
         cl = ", ".join(str(c) for c in project.confidence_levels)
         lines.append(f"  confidence_levels: [{cl}]")
         lines.append("")
@@ -228,9 +214,7 @@ class NLProjectParser:
             lines.append(f'  - id: "{tid}"')
             lines.append(f"    name: {self._yaml_str(task.name)}")
             if task.description:
-                lines.append(
-                    f"    description: {self._yaml_str(task.description)}"
-                )
+                lines.append(f"    description: {self._yaml_str(task.description)}")
 
             # Estimate section
             if task.t_shirt_size:
@@ -241,18 +225,14 @@ class NLProjectParser:
                 lines.append(f"      story_points: {task.story_points}")
             elif task.min_estimate is not None:
                 lines.append("    estimate:")
-                lines.append(
-                    f"      min: {self._fmt_num(task.min_estimate)}"
-                )
+                lines.append(f"      min: {self._fmt_num(task.min_estimate)}")
                 if task.most_likely_estimate is not None:
                     lines.append(
                         f"      most_likely:"
                         f" {self._fmt_num(task.most_likely_estimate)}"
                     )
                 if task.max_estimate is not None:
-                    lines.append(
-                        f"      max: {self._fmt_num(task.max_estimate)}"
-                    )
+                    lines.append(f"      max: {self._fmt_num(task.max_estimate)}")
                 lines.append(f'      unit: "{task.estimate_unit}"')
 
             # Dependencies
@@ -286,9 +266,7 @@ class NLProjectParser:
 
     # -- Private helpers -------------------------------------------------------
 
-    def _try_parse_project_metadata(
-        self, line: str, project: ParsedProject
-    ) -> bool:
+    def _try_parse_project_metadata(self, line: str, project: ParsedProject) -> bool:
         m = self._PROJECT_NAME_RE.match(line)
         if m:
             project.name = m.group(1).strip()
@@ -311,11 +289,7 @@ class NLProjectParser:
 
         m = self._CONFIDENCE_RE.match(line)
         if m:
-            levels = [
-                int(x.strip())
-                for x in m.group(1).split(",")
-                if x.strip()
-            ]
+            levels = [int(x.strip()) for x in m.group(1).split(",") if x.strip()]
             if levels:
                 project.confidence_levels = sorted(levels)
             return True
@@ -332,9 +306,7 @@ class NLProjectParser:
             words = raw.split()
             full_upper = raw.upper()
             first_upper = words[0].upper()
-            normalized = _SIZE_ALIASES.get(full_upper) or _SIZE_ALIASES.get(
-                first_upper
-            )
+            normalized = _SIZE_ALIASES.get(full_upper) or _SIZE_ALIASES.get(first_upper)
             if normalized and normalized in _VALID_SIZES:
                 task.t_shirt_size = normalized
                 return True

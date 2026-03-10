@@ -315,9 +315,7 @@ def generate(input_file: str, output: Optional[str], validate_only: bool) -> Non
             for issue in issues:
                 click.echo(f"  ⚠ {issue}")
         else:
-            click.echo(
-                f"✓ Valid: '{project.name}' with {len(project.tasks)} task(s)"
-            )
+            click.echo(f"✓ Valid: '{project.name}' with {len(project.tasks)} task(s)")
         return
 
     yaml_output = parser.to_yaml(project)

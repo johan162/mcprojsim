@@ -254,8 +254,7 @@ class TestNLProjectParserYAML:
 
     def test_yaml_dependencies_mapped(self) -> None:
         text = (
-            "Task 1:\n- A\n- Size: S\n"
-            "Task 2:\n- B\n- Depends on Task 1\n- Size: M"
+            "Task 1:\n- A\n- Size: S\n" "Task 2:\n- B\n- Depends on Task 1\n- Size: M"
         )
         data = yaml.safe_load(self.parser.parse_and_generate(text))
         assert data["tasks"][0]["dependencies"] == []

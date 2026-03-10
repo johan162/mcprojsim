@@ -108,8 +108,7 @@ def validate_project_description(description: str) -> str:
 
     if project.name == "Untitled Project":
         issues.append(
-            "WARNING: No project name found. "
-            "Defaulting to 'Untitled Project'."
+            "WARNING: No project name found. " "Defaulting to 'Untitled Project'."
         )
     if not project.start_date:
         issues.append("WARNING: No start date specified.")
@@ -123,8 +122,7 @@ def validate_project_description(description: str) -> str:
         )
         if not has_estimate:
             issues.append(
-                f"WARNING: Task {task.number} ('{task.name}') "
-                f"has no estimate."
+                f"WARNING: Task {task.number} ('{task.name}') " f"has no estimate."
             )
 
         for ref in task.dependency_refs:
@@ -135,9 +133,7 @@ def validate_project_description(description: str) -> str:
                 )
 
     if issues:
-        return "Validation issues:\n" + "\n".join(
-            f"  - {issue}" for issue in issues
-        )
+        return "Validation issues:\n" + "\n".join(f"  - {issue}" for issue in issues)
 
     return f"Valid: '{project.name}' with {len(project.tasks)} task(s)."
 
@@ -185,9 +181,7 @@ def simulate_project(
 
     # Load config
     if config_yaml:
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(config_yaml)
             config_path = f.name
         try:
@@ -225,9 +219,7 @@ def simulate_project(
     lines.append(f"Project: {results.project_name}")
     lines.append(f"Iterations: {results.iterations}")
     lines.append(f"Hours per Day: {hours_per_day}")
-    lines.append(
-        f"Mean: {results.mean:.2f} hours ({mean_wd} working days)"
-    )
+    lines.append(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
     lines.append(f"Median (P50): {results.median:.2f} hours")
     lines.append(f"Std Dev: {results.std_dev:.2f} hours")
     lines.append("")
@@ -237,13 +229,9 @@ def simulate_project(
         wd = math.ceil(hours / hours_per_day)
         delivery = results.delivery_date(hours)
         date_str = f"  ({delivery.isoformat()})" if delivery else ""
-        lines.append(
-            f"  P{p}: {hours:.2f} hours ({wd} working days){date_str}"
-        )
+        lines.append(f"  P{p}: {hours:.2f} hours ({wd} working days){date_str}")
 
-    critical_path_records = results.get_critical_path_sequences(
-        critical_path_limit
-    )
+    critical_path_records = results.get_critical_path_sequences(critical_path_limit)
     if critical_path_records:
         lines.append("")
         lines.append("Most Frequent Critical Paths:")
