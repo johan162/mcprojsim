@@ -1,3 +1,16 @@
+## [v0.4.4] - 2026-03-12
+
+Release Type: patch
+
+### 📋 Summary 
+- Review test cases for type completeness and update the main CI/CD pipeline
+
+### 🛠 Internal
+- Fix errors for missing type annotations for tests
+- Don't use the mkbld.sh script in pipeline.
+- Setup pipeline to use multiple jobs instead of a single job. Makes it possible for some parallellization
+
+
 ## [v0.4.3] - 2026-03-11
 
 Release Type: patch
