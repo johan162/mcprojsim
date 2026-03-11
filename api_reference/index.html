@@ -250,7 +250,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../user_guide/introduction/" class="md-tabs__link">
+        <a href="../user_guide/getting_started/" class="md-tabs__link">
           
   
   
@@ -473,6 +473,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/introduction/" class="md-nav__link">
         
   
@@ -677,6 +705,34 @@
     
   
     Interpreting Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guide/mcp-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
   
 
     
@@ -1196,13 +1252,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-is-not-a-stable-user-facing-api" class="md-nav__link">
+  <a href="#not-a-stable-user-facing-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Is Not a Stable User-Facing API?
+        Not a Stable User-Facing API?
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#natural-language-parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Natural Language Parser
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Natural Language Parser">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nlprojectparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NLProjectParser
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1618,13 +1713,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-is-not-a-stable-user-facing-api" class="md-nav__link">
+  <a href="#not-a-stable-user-facing-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Is Not a Stable User-Facing API?
+        Not a Stable User-Facing API?
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#natural-language-parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Natural Language Parser
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Natural Language Parser">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#nlprojectparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NLProjectParser
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1966,15 +2100,56 @@
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">is_valid</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">Validator</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h2 id="what-is-not-a-stable-user-facing-api">What Is Not a Stable User-Facing API?<a class="headerlink" href="#what-is-not-a-stable-user-facing-api" title="Permanent link">&para;</a></h2>
-<p>The following modules are useful implementation details, but they should usually not be the first things documented for end users:</p>
+<h2 id="not-a-stable-user-facing-api">Not a Stable User-Facing API?<a class="headerlink" href="#not-a-stable-user-facing-api" title="Permanent link">&para;</a></h2>
+<p>The following modules are currently imported in <code>mcprojsim.simulation</code> and <code>mcprojsim.utils</code>, but they are more internal and subject to change without deprecation. They are not intended for direct use by library consumers, but they are technically accessible if you want to experiment or build on top of them.</p>
 <ul>
 <li><code>mcprojsim.simulation.distributions</code></li>
 <li><code>mcprojsim.simulation.scheduler</code></li>
 <li><code>mcprojsim.simulation.risk_evaluator</code></li>
 <li><code>mcprojsim.utils.logging</code></li>
 </ul>
-<p>They can still be documented later if you want a fuller developer reference.</p>
+<h2 id="natural-language-parser">Natural Language Parser<a class="headerlink" href="#natural-language-parser" title="Permanent link">&para;</a></h2>
+<h3 id="nlprojectparser"><code>NLProjectParser</code><a class="headerlink" href="#nlprojectparser" title="Permanent link">&para;</a></h3>
+<p>Converts semi-structured, plain-text project descriptions into valid mcprojsim YAML project files. Also available via the <code>mcprojsim generate</code> CLI command and the MCP server's <code>generate_project_file</code> tool.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.nl_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">NLProjectParser</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">NLProjectParser</span><span class="p">()</span>
+</span></code></pre></div>
+<p>Methods:</p>
+<ul>
+<li><code>parse(text: str) -&gt; ParsedProject</code> — extract project metadata and tasks from a text description</li>
+<li><code>to_yaml(project: ParsedProject) -&gt; str</code> — render a <code>ParsedProject</code> as a valid YAML project file</li>
+<li><code>parse_and_generate(text: str) -&gt; str</code> — convenience wrapper that calls <code>parse</code> then <code>to_yaml</code></li>
+</ul>
+<p>Supported input patterns:</p>
+<ul>
+<li><code>Project name: My Project</code></li>
+<li><code>Start date: 2026-04-01</code></li>
+<li><code>Task 1: Backend API</code> followed by bullet points</li>
+<li><code>Size: M</code> or <code>Size XL</code> (T-shirt sizes)</li>
+<li><code>Story points: 5</code></li>
+<li><code>Estimate: 3/5/10 days</code> (min/most_likely/max)</li>
+<li><code>Depends on Task 1, Task 3</code></li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="s2">Project name: Website Redesign</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="s2">Start date: 2026-06-01</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="s2">Task 1: Design mockups</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="s2">- Size: M</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="s2">Task 2: Frontend implementation</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="s2">- Size: L</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="s2">- Depends on Task 1</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="n">yaml_output</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_and_generate</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="data-classes">Data classes<a class="headerlink" href="#data-classes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>ParsedProject</code> — extracted project-level data (<code>name</code>, <code>start_date</code>, <code>hours_per_day</code>, <code>tasks</code>, <code>confidence_levels</code>)</li>
+<li><code>ParsedTask</code> — extracted task data (<code>name</code>, <code>t_shirt_size</code>, <code>story_points</code>, <code>min_estimate</code>/<code>most_likely_estimate</code>/<code>max_estimate</code>, <code>dependency_refs</code>)</li>
+</ul>
 
 
 

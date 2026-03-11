@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://johan162.github.io/mcprojsim/user_guide/introduction/">
       
       
-        <link rel="prev" href="../..">
+        <link rel="prev" href="../getting_started/">
       
       
         <link rel="next" href="../your_first_project/">
@@ -252,7 +252,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+        <a href="../getting_started/" class="md-tabs__link">
           
   
   
@@ -468,6 +468,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1010,6 +1038,34 @@
     
   
     Interpreting Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
   
 
     
@@ -1739,39 +1795,33 @@
 <tr>
 <th>Factor</th>
 <th>What it captures</th>
-<th>Example levels</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>team_experience</code></td>
 <td>Familiarity with the technology and domain</td>
-<td><code>high</code> (0.90×), <code>medium</code> (1.0×), <code>low</code> (1.30×)</td>
 </tr>
 <tr>
 <td><code>requirements_maturity</code></td>
 <td>How well-defined and stable requirements are</td>
-<td><code>high</code> (1.0×), <code>medium</code> (1.15×), <code>low</code> (1.40×)</td>
 </tr>
 <tr>
 <td><code>technical_complexity</code></td>
 <td>How technically challenging the work is</td>
-<td><code>low</code> (1.0×), <code>medium</code> (1.20×), <code>high</code> (1.50×)</td>
 </tr>
 <tr>
 <td><code>team_distribution</code></td>
 <td>Colocated vs. distributed teams</td>
-<td><code>colocated</code> (1.0×), <code>distributed</code> (1.25×)</td>
 </tr>
 <tr>
 <td><code>integration_complexity</code></td>
 <td>Degree of integration with other systems</td>
-<td><code>low</code> (1.0×), <code>medium</code> (1.15×), <code>high</code> (1.35×)</td>
 </tr>
 </tbody>
 </table>
 <p>These factors are multiplicative. When a task specifies several of them, the multipliers are combined by multiplication. This means adverse factors compound — even moderate individual adjustments can produce a significant combined effect.</p>
-<p>The numeric multipliers are defined in a separate configuration file, not in the project file. This allows teams to calibrate the meaning of labels like "high complexity" or "low maturity" to match their own experience, without changing the project definition.</p>
+<p>The numeric multipliers are defined in a separate configuration file, not in the project file. This allows teams to calibrate the meaning of labels like "high complexity" or "low maturity" to match their own experience, without changing the project definition. See <a href="../uncertainty_factors/">Uncertainty Factors</a> for the full list of default multiplier values and guidance on calibration.</p>
 <h3 id="risks">Risks<a class="headerlink" href="#risks" title="Permanent link">&para;</a></h3>
 <p>Risks describe events that may or may not happen. Unlike uncertainty factors, which always apply, a risk triggers probabilistically in each simulation iteration. If it triggers, its impact is added to the duration.</p>
 <p>Risks can be defined at two levels:</p>

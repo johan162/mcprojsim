@@ -250,7 +250,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../user_guide/introduction/" class="md-tabs__link">
+        <a href="../user_guide/getting_started/" class="md-tabs__link">
           
   
   
@@ -473,6 +473,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/introduction/" class="md-nav__link">
         
   
@@ -677,6 +705,34 @@
     
   
     Interpreting Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guide/mcp-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
   
 
     
@@ -4642,13 +4698,13 @@ It brings together the operational detail that does not belong in the end-user q
 <li>the local Python and Poetry workflow</li>
 <li>when to use <code>make</code> and when to call <code>poetry</code> directly</li>
 <li>the project structure and where the major responsibilities live</li>
-<li>build and validation scripts in <a href="../scripts/README.md">scripts/README.md</a></li>
+<li>build and validation scripts in <a href="https://github.com/johan162/mcprojsim/blob/main/scripts/README.md">scripts/README.md</a></li>
 <li>building and running the main application container</li>
 <li>building and serving the documentation container</li>
 <li>release preparation with <code>mkrelease.sh</code></li>
 <li>GitHub release publication with <code>mkghrelease.sh</code></li>
 <li>corporate proxy / custom CA handling in both Dockerfiles</li>
-<li>the GitHub Actions CI/CD workflows in <a href="../.github/workflows">.github/workflows</a></li>
+<li>the GitHub Actions CI/CD workflows in <a href="https://github.com/johan162/mcprojsim/tree/main/.github/workflows">.github/workflows</a></li>
 </ul>
 <h2 id="development-model-at-a-glance">Development model at a glance<a class="headerlink" href="#development-model-at-a-glance" title="Permanent link">&para;</a></h2>
 <p>There are four primary ways to work with this repository:</p>
@@ -4674,7 +4730,7 @@ It brings together the operational detail that does not belong in the end-user q
 <li>version management</li>
 <li>CLI entry point registration</li>
 </ul>
-<p>Relevant configuration is in <a href="../pyproject.toml">pyproject.toml</a>.</p>
+<p>Relevant configuration is in <a href="https://github.com/johan162/mcprojsim/blob/main/pyproject.toml">pyproject.toml</a>.</p>
 <p>Key points from the current setup:</p>
 <ul>
 <li>Python requirement: <code>&gt;=3.14</code></li>
@@ -4834,7 +4890,7 @@ Examples include:</p>
 </ul>
 <h4 id="bin"><code>bin/</code><a class="headerlink" href="#bin" title="Permanent link">&para;</a></h4>
 <p>This holds user-facing helper wrappers.
-In particular, <a href="../bin/mcprojsim.sh">bin/mcprojsim.sh</a> allows running the CLI through a container while mounting the host working directory into <code>/work</code>.</p>
+In particular, <a href="https://github.com/johan162/mcprojsim/blob/main/bin/mcprojsim.sh">bin/mcprojsim.sh</a> allows running the CLI through a container while mounting the host working directory into <code>/work</code>.</p>
 <h2 id="local-development-workflow">Local development workflow<a class="headerlink" href="#local-development-workflow" title="Permanent link">&para;</a></h2>
 <p>A typical local development session looks like this:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev,docs
@@ -4918,7 +4974,7 @@ When updating it, preserve working behavior first and simplify inconsistencies i
 For new contributors, the safest approach is to rely on the documented targets above rather than infer intent from every variable name.</p>
 <h2 id="build-scripts">Build scripts<a class="headerlink" href="#build-scripts" title="Permanent link">&para;</a></h2>
 <p>The <code>scripts/</code> directory contains the more detailed automation.
-For a script-by-script overview, see <a href="../scripts/README.md">scripts/README.md</a>.</p>
+For a script-by-script overview, see <a href="https://github.com/johan162/mcprojsim/blob/main/scripts/README.md">scripts/README.md</a>.</p>
 <p>Below is the developer interpretation of the most important scripts.</p>
 <h3 id="mkbldsh"><code>mkbld.sh</code><a class="headerlink" href="#mkbldsh" title="Permanent link">&para;</a></h3>
 <p>Purpose:</p>
@@ -4960,7 +5016,7 @@ It is also the main quality gate invoked by the CI workflow.</p>
 <h3 id="docs-contctlsh"><code>docs-contctl.sh</code><a class="headerlink" href="#docs-contctlsh" title="Permanent link">&para;</a></h3>
 <p>Purpose:</p>
 <ul>
-<li>lifecycle manager for the docs container image built from <a href="../Dockerfile.docs">Dockerfile.docs</a></li>
+<li>lifecycle manager for the docs container image built from <a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs">Dockerfile.docs</a></li>
 </ul>
 <p>Typical usage:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>./scripts/docs-contctl.sh<span class="w"> </span>start
@@ -4990,7 +5046,7 @@ It is also the main quality gate invoked by the CI workflow.</p>
 </ul>
 <p>This is the script that bridges local release preparation with the GitHub Release UI/API step.</p>
 <h2 id="main-application-container">Main application container<a class="headerlink" href="#main-application-container" title="Permanent link">&para;</a></h2>
-<p>The main runtime image is defined in <a href="../Dockerfile">Dockerfile</a>.
+<p>The main runtime image is defined in <a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile">Dockerfile</a>.
 It is a multi-stage build.</p>
 <h3 id="build-structure">Build structure<a class="headerlink" href="#build-structure" title="Permanent link">&para;</a></h3>
 <h4 id="builder-stage">Builder stage<a class="headerlink" href="#builder-stage" title="Permanent link">&para;</a></h4>
@@ -5065,7 +5121,7 @@ It auto-detects whether a proxy-aware build should be used.</p>
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
 <h3 id="run-through-the-wrapper-script">Run through the wrapper script<a class="headerlink" href="#run-through-the-wrapper-script" title="Permanent link">&para;</a></h3>
-<p>The wrapper in <a href="../bin/mcprojsim.sh">bin/mcprojsim.sh</a> provides a more convenient interface for both users and developers.
+<p>The wrapper in <a href="https://github.com/johan162/mcprojsim/blob/main/bin/mcprojsim.sh">bin/mcprojsim.sh</a> provides a more convenient interface for both users and developers.
 It:</p>
 <ul>
 <li>auto-detects Podman or Docker</li>
@@ -5106,7 +5162,7 @@ It:</p>
 </span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>./scripts/docs-contctl.sh<span class="w"> </span>stop
 </span></code></pre></div>
 <h2 id="documentation-container-in-detail">Documentation container in detail<a class="headerlink" href="#documentation-container-in-detail" title="Permanent link">&para;</a></h2>
-<p>The docs image is defined in <a href="../Dockerfile.docs">Dockerfile.docs</a>.
+<p>The docs image is defined in <a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs">Dockerfile.docs</a>.
 It is separate from the main CLI image.</p>
 <h3 id="build-structure_1">Build structure<a class="headerlink" href="#build-structure_1" title="Permanent link">&para;</a></h3>
 <h4 id="builder-stage_1">Builder stage<a class="headerlink" href="#builder-stage_1" title="Permanent link">&para;</a></h4>
@@ -5171,7 +5227,7 @@ That difference is worth understanding.</p>
 </ul>
 <p>The fix is usually to trust the company CA during the image build.</p>
 <h2 id="main-container-certificate-handling">Main container certificate handling<a class="headerlink" href="#main-container-certificate-handling" title="Permanent link">&para;</a></h2>
-<p>The main image in <a href="../Dockerfile">Dockerfile</a> uses a <strong>build secret</strong>.</p>
+<p>The main image in <a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile">Dockerfile</a> uses a <strong>build secret</strong>.</p>
 <h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
 <p>The Dockerfile defines:</p>
 <ul>
@@ -5210,7 +5266,7 @@ That difference is worth understanding.</p>
 </ul>
 <p>The proxy-specific target validates that the CA file exists and then passes the secret correctly.</p>
 <h2 id="documentation-container-certificate-handling">Documentation container certificate handling<a class="headerlink" href="#documentation-container-certificate-handling" title="Permanent link">&para;</a></h2>
-<p>The docs image in <a href="../Dockerfile.docs">Dockerfile.docs</a> currently uses a different mechanism.
+<p>The docs image in <a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs">Dockerfile.docs</a> currently uses a different mechanism.
 It expects a CA file in the build context when proxy support is enabled.</p>
 <h3 id="how-it-works_1">How it works<a class="headerlink" href="#how-it-works_1" title="Permanent link">&para;</a></h3>
 <p>The docs Dockerfile defines:</p>
@@ -5276,7 +5332,7 @@ Use the filename convention expected by the tooling, but keep the actual certifi
 <p>This is intentionally more explicit than a single black-box release command.
 It lets the maintainer confirm local state, branch state, and workflow success before publishing the GitHub release entry.</p>
 <h2 id="mkreleasesh-in-detail"><code>mkrelease.sh</code> in detail<a class="headerlink" href="#mkreleasesh-in-detail" title="Permanent link">&para;</a></h2>
-<p>Script: <a href="../scripts/mkrelease.sh">scripts/mkrelease.sh</a></p>
+<p>Script: <a href="https://github.com/johan162/mcprojsim/blob/main/scripts/mkrelease.sh">scripts/mkrelease.sh</a></p>
 <h3 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h3>
 <p>This is the local maintainer release script.
 It:</p>
@@ -5375,7 +5431,7 @@ That is the safest way to confirm:</p>
 <li>the release type</li>
 </ul>
 <h2 id="mkghreleasesh-in-detail"><code>mkghrelease.sh</code> in detail<a class="headerlink" href="#mkghreleasesh-in-detail" title="Permanent link">&para;</a></h2>
-<p>Script: <a href="../scripts/mkghrelease.sh">scripts/mkghrelease.sh</a></p>
+<p>Script: <a href="https://github.com/johan162/mcprojsim/blob/main/scripts/mkghrelease.sh">scripts/mkghrelease.sh</a></p>
 <h3 id="purpose_1">Purpose<a class="headerlink" href="#purpose_1" title="Permanent link">&para;</a></h3>
 <p>This script creates the GitHub Release object after the tag already exists and CI has completed.
 It is a separate step from <code>mkrelease.sh</code>.</p>
@@ -5478,12 +5534,12 @@ The actual package publishing is then handled by the GitHub Actions release work
 <h2 id="github-actions-and-cicd-workflows">GitHub Actions and CI/CD workflows<a class="headerlink" href="#github-actions-and-cicd-workflows" title="Permanent link">&para;</a></h2>
 <p>The repository currently contains three workflows:</p>
 <ul>
-<li><a href="../.github/workflows/ci.yml">.github/workflows/ci.yml</a></li>
-<li><a href="../.github/workflows/docs.yml">.github/workflows/docs.yml</a></li>
-<li><a href="../.github/workflows/publish-to-pypi.yml">.github/workflows/publish-to-pypi.yml</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/ci.yml">.github/workflows/ci.yml</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/docs.yml">.github/workflows/docs.yml</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/publish-to-pypi.yml">.github/workflows/publish-to-pypi.yml</a></li>
 </ul>
 <h3 id="1-continuous-integration-workflow">1. Continuous integration workflow<a class="headerlink" href="#1-continuous-integration-workflow" title="Permanent link">&para;</a></h3>
-<p>File: <a href="../.github/workflows/ci.yml">ci.yml</a></p>
+<p>File: <a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/ci.yml">ci.yml</a></p>
 <h4 id="triggers">Triggers<a class="headerlink" href="#triggers" title="Permanent link">&para;</a></h4>
 <ul>
 <li>pushes to <code>develop</code></li>
@@ -5518,7 +5574,7 @@ The actual package publishing is then handled by the GitHub Actions release work
 <p>This workflow is the main quality gate.
 If you want to reproduce CI locally, <code>./scripts/mkbld.sh</code> is the closest equivalent.</p>
 <h3 id="2-documentation-workflow">2. Documentation workflow<a class="headerlink" href="#2-documentation-workflow" title="Permanent link">&para;</a></h3>
-<p>File: <a href="../.github/workflows/docs.yml">docs.yml</a></p>
+<p>File: <a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/docs.yml">docs.yml</a></p>
 <h4 id="triggers_1">Triggers<a class="headerlink" href="#triggers_1" title="Permanent link">&para;</a></h4>
 <ul>
 <li>pushes to <code>main</code> or <code>develop</code> affecting <code>docs/**</code>, <code>mkdocs.yml</code>, or the workflow file itself</li>
@@ -5555,7 +5611,7 @@ If you want to reproduce CI locally, <code>./scripts/mkbld.sh</code> is the clos
 <li><code>main</code> is the source of truth for GitHub Pages deployment</li>
 </ul>
 <h3 id="3-publish-to-pypi-workflow">3. Publish-to-PyPI workflow<a class="headerlink" href="#3-publish-to-pypi-workflow" title="Permanent link">&para;</a></h3>
-<p>File: <a href="../.github/workflows/publish-to-pypi.yml">publish-to-pypi.yml</a></p>
+<p>File: <a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/publish-to-pypi.yml">publish-to-pypi.yml</a></p>
 <h4 id="trigger">Trigger<a class="headerlink" href="#trigger" title="Permanent link">&para;</a></h4>
 <ul>
 <li>GitHub Release published</li>
@@ -5739,16 +5795,16 @@ The release automation is intentionally conservative and stops rather than guess
 </span></code></pre></div>
 <h2 id="related-references">Related references<a class="headerlink" href="#related-references" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../README.md">README.md</a></li>
-<li><a href="../QUICKSTART.md">QUICKSTART.md</a></li>
-<li><a href="../scripts/README.md">scripts/README.md</a></li>
-<li><a href="../pyproject.toml">pyproject.toml</a></li>
-<li><a href="../Makefile">Makefile</a></li>
-<li><a href="../Dockerfile">Dockerfile</a></li>
-<li><a href="../Dockerfile.docs">Dockerfile.docs</a></li>
-<li><a href="../.github/workflows/ci.yml">ci.yml</a></li>
-<li><a href="../.github/workflows/docs.yml">docs.yml</a></li>
-<li><a href="../.github/workflows/publish-to-pypi.yml">publish-to-pypi.yml</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/README.md">README.md</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/QUICKSTART.md">QUICKSTART.md</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/scripts/README.md">scripts/README.md</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/pyproject.toml">pyproject.toml</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/Makefile">Makefile</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile">Dockerfile</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs">Dockerfile.docs</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/ci.yml">ci.yml</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/docs.yml">docs.yml</a></li>
+<li><a href="https://github.com/johan162/mcprojsim/blob/main/.github/workflows/publish-to-pypi.yml">publish-to-pypi.yml</a></li>
 </ul>
 
 

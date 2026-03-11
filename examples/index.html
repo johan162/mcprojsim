@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://johan162.github.io/mcprojsim/examples/">
       
       
-        <link rel="prev" href="../user_guide/interpreting_results/">
+        <link rel="prev" href="../user_guide/mcp-server/">
       
       
         <link rel="next" href="../development/">
@@ -252,7 +252,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../user_guide/introduction/" class="md-tabs__link">
+        <a href="../user_guide/getting_started/" class="md-tabs__link">
           
   
   
@@ -476,6 +476,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/introduction/" class="md-nav__link">
         
   
@@ -680,6 +708,34 @@
     
   
     Interpreting Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guide/mcp-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
   
 
     
@@ -1211,13 +1267,7 @@
 </span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">      </span><span class="nt">t_shirt_size</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;S&quot;</span>
 </span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;mobile_app&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
-<p>T-shirt sizes map to default effort ranges (configurable). The unit is determined by <code>t_shirt_size_unit</code> in the configuration (default: <code>"hours"</code>):
-- <strong>XS</strong>: 0.5-2 hours (most likely: 1 hour)
-- <strong>S</strong>: 1-4 hours (most likely: 2 hours)
-- <strong>M</strong>: 3-8 hours (most likely: 5 hours)
-- <strong>L</strong>: 5-13 hours (most likely: 8 hours)
-- <strong>XL</strong>: 8-21 hours (most likely: 13 hours)
-- <strong>XXL</strong>: 13-34 hours (most likely: 21 hours)</p>
+<p>T-shirt sizes map to default effort ranges (configurable via the configuration file). See <a href="../user_guide/task_estimation/#t-shirt-size-estimates">Task Estimation</a> for the default mapping table and customization options.</p>
 <p>See <code>examples/tshirt_sizing_project.yaml</code> for a complete example.</p>
 <h2 id="using-story-points">Using Story Points<a class="headerlink" href="#using-story-points" title="Permanent link">&para;</a></h2>
 <p>For agile-style relative estimation using calibrated Story Point mappings:</p>
@@ -1238,16 +1288,7 @@
 </span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 </span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;story_001&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
-<p>Default Story Point mappings (configurable). The unit is determined by <code>story_point_unit</code> in the configuration (default: <code>"days"</code>):</p>
-<ul>
-<li><code>1</code>: 0.5-3 days (most likely: 1 day)</li>
-<li><code>2</code>: 1-4 days (most likely: 2 days)</li>
-<li><code>3</code>: 1.5-5 days (most likely: 3 days)</li>
-<li><code>5</code>: 3-8 days (most likely: 5 days)</li>
-<li><code>8</code>: 5-15 days (most likely: 8 days)</li>
-<li><code>13</code>: 8-21 days (most likely: 13 days)</li>
-<li><code>21</code>: 13-34 days (most likely: 21 days)</li>
-</ul>
+<p>Default Story Point mappings are configurable via the configuration file. See <a href="../user_guide/task_estimation/#story-point-estimates">Task Estimation</a> for the default mapping table and customization options.</p>
 <p>Note that T-shirt size and story point estimates must <strong>not</strong> include a <code>unit</code> field in the project file. The unit is controlled by the configuration.</p>
 <p>See <code>examples/story_points_walkthrough_project.yaml</code> for a complete example.</p>
 <h2 id="running-examples">Running Examples<a class="headerlink" href="#running-examples" title="Permanent link">&para;</a></h2>
