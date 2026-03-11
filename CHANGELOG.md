@@ -1,3 +1,26 @@
+## [v0.4.0] - 2026-03-11
+
+Release Type: minor
+
+### 📋 Summary 
+Major improvements to the documentation and added a new natural language project description tool with an MCP server interface.
+In addition more analysis metrics have been added (skewness and kurtosis) and the handling of edge cases in the analysis has been improved. A new "Sensitivity Analysis" section has also been added to the documentation.
+
+### ✨ Additions
+- Added natural language project description tool 
+- Added MCP server interface to allow both creation of project files and running simulations from natural language descriptions in any MCP-compatible client (e.g. GitHub Copilot, Claude Desktop, etc.)
+- Added support for units in task estimates (hours/days/weeks)
+- Improved documentation and added a new "Development" section
+- Added more analysis metrics (skewness and kurtosis) and improved handling of edge cases in analysis
+- Added a new "Sensitivity Analysis" section to the documentation
+
+### 🚀 Improvements
+- Added Table output option for CLI results
+
+### 🛠 Internal
+- Sanitize artifact names in CI/CD pipeline to avoid issues with special characters
+
+
 ## [v0.3.0] - 2026-03-09
 
 Release Type: minor
