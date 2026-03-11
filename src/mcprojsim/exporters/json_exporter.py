@@ -94,6 +94,8 @@ class JSONExporter:
                 "coefficient_of_variation": (
                     results.std_dev / results.mean if results.mean > 0 else 0
                 ),
+                "skewness": results.skewness,
+                "kurtosis": results.kurtosis,
             },
             "percentiles": {
                 str(p): {
@@ -121,6 +123,16 @@ class JSONExporter:
                     start=1,
                 )
             ],
+            "sensitivity": {
+                task_id: corr
+                for task_id, corr in sorted(
+                    results.sensitivity.items(),
+                    key=lambda x: abs(x[1]),
+                    reverse=True,
+                )
+            },
+            "schedule_slack": results.task_slack,
+            "risk_impact": results.get_risk_impact_summary(),
             "histogram": {
                 "bin_edges": bin_edges.tolist(),
                 "counts": counts.tolist(),

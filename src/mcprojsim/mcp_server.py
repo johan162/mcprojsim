@@ -222,6 +222,10 @@ def simulate_project(
     lines.append(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
     lines.append(f"Median (P50): {results.median:.2f} hours")
     lines.append(f"Std Dev: {results.std_dev:.2f} hours")
+    cv = results.std_dev / results.mean if results.mean > 0 else 0
+    lines.append(f"Coefficient of Variation: {cv:.4f}")
+    lines.append(f"Skewness: {results.skewness:.4f}")
+    lines.append(f"Excess Kurtosis: {results.kurtosis:.4f}")
     lines.append("")
     lines.append("Confidence Intervals:")
     for p in sorted(results.percentiles.keys()):
@@ -230,6 +234,42 @@ def simulate_project(
         delivery = results.delivery_date(hours)
         date_str = f"  ({delivery.isoformat()})" if delivery else ""
         lines.append(f"  P{p}: {hours:.2f} hours ({wd} working days){date_str}")
+
+    # Sensitivity analysis
+    if results.sensitivity:
+        lines.append("")
+        lines.append("Sensitivity Analysis (top contributors):")
+        sorted_sens = sorted(
+            results.sensitivity.items(),
+            key=lambda x: abs(x[1]),
+            reverse=True,
+        )
+        for task_id, corr in sorted_sens[:10]:
+            lines.append(f"  {task_id}: {corr:+.4f}")
+
+    # Schedule slack
+    if results.task_slack:
+        lines.append("")
+        lines.append("Schedule Slack:")
+        for task_id, slack_val in sorted(
+            results.task_slack.items(), key=lambda x: x[1]
+        ):
+            status = "Critical" if slack_val < 0.01 else f"{slack_val:.1f}h buffer"
+            lines.append(f"  {task_id}: {slack_val:.2f} hours ({status})")
+
+    # Risk impact summary
+    risk_summary = results.get_risk_impact_summary()
+    has_risk_data = any(s["trigger_rate"] > 0 for s in risk_summary.values())
+    if has_risk_data:
+        lines.append("")
+        lines.append("Risk Impact Analysis:")
+        for task_id, stats in sorted(risk_summary.items()):
+            if stats["trigger_rate"] > 0:
+                lines.append(
+                    f"  {task_id}: mean={stats['mean_impact']:.2f}h, "
+                    f"triggers={stats['trigger_rate']*100:.1f}%, "
+                    f"mean_when_triggered={stats['mean_when_triggered']:.2f}h"
+                )
 
     critical_path_records = results.get_critical_path_sequences(critical_path_limit)
     if critical_path_records:

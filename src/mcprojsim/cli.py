@@ -46,6 +46,18 @@ def cli() -> None:
     help="Number of full critical path sequences to include in CLI output and exports.",
 )
 @click.option("--quiet", "-q", is_flag=True, help="Suppress progress output")
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Show detailed informational messages.",
+)
+@click.option(
+    "--target-date",
+    type=str,
+    default=None,
+    help="Target completion date (YYYY-MM-DD) to calculate probability of meeting.",
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -55,10 +67,12 @@ def simulate(
     output_format: str,
     critical_paths: Optional[int],
     quiet: bool,
+    verbose: bool,
+    target_date: Optional[str],
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     click.echo(f"mcprojsim, version {__version__}")
-    logger = setup_logging()
+    logger = setup_logging(level="INFO" if verbose else "WARNING")
 
     try:
         # Load configuration
@@ -106,6 +120,10 @@ def simulate(
             click.echo(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
             click.echo(f"Median (P50): {results.median:.2f} hours")
             click.echo(f"Std Dev: {results.std_dev:.2f} hours")
+            cv = results.std_dev / results.mean if results.mean > 0 else 0
+            click.echo(f"Coefficient of Variation: {cv:.4f}")
+            click.echo(f"Skewness: {results.skewness:.4f}")
+            click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
             click.echo("\nConfidence Intervals:")
             for p in sorted(results.percentiles.keys()):
                 hours = results.percentiles[p]
@@ -115,6 +133,70 @@ def simulate(
                 click.echo(
                     f"  P{p}: {hours:.2f} hours" f" ({wd} working days){date_str}"
                 )
+
+            # Sensitivity analysis
+            if results.sensitivity:
+                click.echo("\nSensitivity Analysis (top contributors):")
+                sorted_sens = sorted(
+                    results.sensitivity.items(),
+                    key=lambda x: abs(x[1]),
+                    reverse=True,
+                )
+                for task_id, corr in sorted_sens[:10]:
+                    click.echo(f"  {task_id}: {corr:+.4f}")
+
+            # Schedule slack
+            if results.task_slack:
+                click.echo("\nSchedule Slack:")
+                for task_id, slack_val in sorted(
+                    results.task_slack.items(), key=lambda x: x[1]
+                ):
+                    status = (
+                        "Critical" if slack_val < 0.01 else f"{slack_val:.1f}h buffer"
+                    )
+                    click.echo(f"  {task_id}: {slack_val:.2f} hours ({status})")
+
+            # Risk impact summary
+            risk_summary = results.get_risk_impact_summary()
+            has_risk_data = any(s["trigger_rate"] > 0 for s in risk_summary.values())
+            if has_risk_data:
+                click.echo("\nRisk Impact Analysis:")
+                for task_id, stats in sorted(risk_summary.items()):
+                    if stats["trigger_rate"] > 0:
+                        click.echo(
+                            f"  {task_id}: mean={stats['mean_impact']:.2f}h, "
+                            f"triggers={stats['trigger_rate']*100:.1f}%, "
+                            f"mean_when_triggered={stats['mean_when_triggered']:.2f}h"
+                        )
+
+            # Probability of target date
+            if target_date:
+                from datetime import date as date_type
+
+                try:
+                    target = date_type.fromisoformat(target_date)
+                    if results.start_date:
+                        # Count working days between start and target
+                        working_days = 0
+                        current = results.start_date
+                        from datetime import timedelta
+
+                        while current < target:
+                            current += timedelta(days=1)
+                            if current.weekday() < 5:
+                                working_days += 1
+                        target_hours = working_days * hours_per_day
+                        prob = results.probability_of_completion(target_hours)
+                        click.echo(
+                            f"\nProbability of completing by {target_date}: "
+                            f"{prob*100:.1f}% ({working_days} working days, {target_hours:.0f} hours)"
+                        )
+                    else:
+                        click.echo(
+                            f"\nCannot compute probability for {target_date}: no start_date in project"
+                        )
+                except ValueError:
+                    click.echo(f"\nInvalid target date format: {target_date}")
 
             critical_path_records = results.get_critical_path_sequences(
                 critical_path_limit
@@ -184,9 +266,15 @@ def simulate(
 
 @cli.command()
 @click.argument("project_file", type=click.Path(exists=True))
-def validate(project_file: str) -> None:
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Show detailed informational messages.",
+)
+def validate(project_file: str, verbose: bool) -> None:
     """Validate a project definition file."""
-    logger = setup_logging()
+    logger = setup_logging(level="INFO" if verbose else "WARNING")
 
     click.echo(f"Validating {project_file}...")
 
@@ -269,7 +357,18 @@ def show_config(config_file: Optional[str]) -> None:
     is_flag=True,
     help="Only validate the description, do not generate YAML",
 )
-def generate(input_file: str, output: Optional[str], validate_only: bool) -> None:
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Show detailed informational messages.",
+)
+def generate(
+    input_file: str,
+    output: Optional[str],
+    validate_only: bool,
+    verbose: bool,
+) -> None:
     """Generate a project YAML file from a natural language description.
 
     Reads a plain-text project description from INPUT_FILE and produces
@@ -277,7 +376,7 @@ def generate(input_file: str, output: Optional[str], validate_only: bool) -> Non
     """
     from mcprojsim.nl_parser import NLProjectParser
 
-    logger = setup_logging()
+    logger = setup_logging(level="INFO" if verbose else "WARNING")
     input_path = Path(input_file)
     text = input_path.read_text(encoding="utf-8")
 

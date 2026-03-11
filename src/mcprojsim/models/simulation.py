@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
+from scipy import stats as scipy_stats
 
 from mcprojsim.config import (
     DEFAULT_PROBABILITY_GREEN_THRESHOLD,
@@ -42,11 +43,23 @@ class SimulationResults(BaseModel):
     hours_per_day: float = 8.0
     start_date: Optional[date] = None
 
+    # Sensitivity analysis (Spearman rank correlations)
+    sensitivity: Dict[str, float] = Field(default_factory=dict)
+
+    # Schedule slack (mean total float per task across iterations)
+    task_slack: Dict[str, float] = Field(default_factory=dict)
+
+    # Risk impact tracking
+    risk_impacts: Dict[str, np.ndarray] = Field(default_factory=dict)
+    project_risk_impacts: np.ndarray = Field(default_factory=lambda: np.array([]))
+
     mean: float = 0.0
     median: float = 0.0
     std_dev: float = 0.0
     min_duration: float = 0.0
     max_duration: float = 0.0
+    skewness: float = 0.0
+    kurtosis: float = 0.0
     percentiles: Dict[int, float] = Field(default_factory=dict)
 
     def calculate_statistics(self) -> None:
@@ -56,6 +69,8 @@ class SimulationResults(BaseModel):
         self.std_dev = float(np.std(self.durations))
         self.min_duration = float(np.min(self.durations))
         self.max_duration = float(np.max(self.durations))
+        self.skewness = float(scipy_stats.skew(self.durations))
+        self.kurtosis = float(scipy_stats.kurtosis(self.durations))
 
     def percentile(self, p: int) -> float:
         """Get percentile value.
@@ -119,6 +134,41 @@ class SimulationResults(BaseModel):
         counts, bin_edges = np.histogram(self.durations, bins=bins)
         return bin_edges, counts
 
+    def probability_of_completion(self, target_hours: float) -> float:
+        """Calculate the probability of completing within target hours.
+
+        Args:
+            target_hours: Target duration in hours
+
+        Returns:
+            Probability (0.0 to 1.0) of completing within the target
+        """
+        return float(np.mean(self.durations <= target_hours))
+
+    def get_risk_impact_summary(self) -> Dict[str, Dict[str, float]]:
+        """Get summary statistics for risk impacts per task.
+
+        Returns:
+            Dictionary mapping task IDs to their risk impact statistics:
+            mean, trigger_rate (fraction of iterations where risk > 0),
+            mean_when_triggered (mean impact excluding zero-impact iterations)
+        """
+        summary: Dict[str, Dict[str, float]] = {}
+        for task_id, impacts in self.risk_impacts.items():
+            arr = np.asarray(impacts)
+            triggered = arr > 0
+            trigger_rate = float(np.mean(triggered))
+            mean_impact = float(np.mean(arr))
+            mean_when_triggered = (
+                float(np.mean(arr[triggered])) if np.any(triggered) else 0.0
+            )
+            summary[task_id] = {
+                "mean_impact": mean_impact,
+                "trigger_rate": trigger_rate,
+                "mean_when_triggered": mean_when_triggered,
+            }
+        return summary
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert results to dictionary for export."""
         return {
@@ -135,8 +185,11 @@ class SimulationResults(BaseModel):
                 "coefficient_of_variation": (
                     self.std_dev / self.mean if self.mean > 0 else 0
                 ),
+                "skewness": self.skewness,
+                "kurtosis": self.kurtosis,
             },
             "percentiles": self.percentiles,
+            "sensitivity": self.sensitivity,
             "critical_path": self.get_critical_path(),
             "critical_path_sequences": [
                 {

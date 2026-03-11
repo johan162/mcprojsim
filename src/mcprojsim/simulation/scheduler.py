@@ -87,6 +87,51 @@ class TaskScheduler:
 
         return sorted_tasks
 
+    def calculate_slack(
+        self, schedule: Dict[str, Dict[str, float]]
+    ) -> Dict[str, float]:
+        """Calculate total float (slack) for each task.
+
+        Total float is the amount of time a task can be delayed without
+        delaying the project. Computed via a backward pass from the
+        project end time.
+
+        Args:
+            schedule: Task schedule from schedule_tasks()
+
+        Returns:
+            Dictionary mapping task IDs to their total float in hours
+        """
+        if not schedule:
+            return {}
+
+        project_end = max(info["end"] for info in schedule.values())
+
+        # Build successor map
+        successors: Dict[str, List[str]] = {tid: [] for tid in schedule}
+        for task in self.project.tasks:
+            for dep_id in task.dependencies:
+                if dep_id in successors:
+                    successors[dep_id].append(task.id)
+
+        # Backward pass: compute latest start
+        latest_start: Dict[str, float] = {}
+        for task_id in reversed(self._topological_sort()):
+            if not successors[task_id]:
+                # No successors: latest finish = project end
+                latest_start[task_id] = project_end - schedule[task_id]["duration"]
+            else:
+                # Latest start = earliest latest-start of successors minus nothing
+                # Actually: LF = min(LS of successors), LS = LF - duration
+                min_succ_ls = min(latest_start[succ] for succ in successors[task_id])
+                latest_start[task_id] = min_succ_ls - schedule[task_id]["duration"]
+
+        slack: Dict[str, float] = {}
+        for task_id, info in schedule.items():
+            slack[task_id] = max(0.0, latest_start[task_id] - info["start"])
+
+        return slack
+
     def get_critical_path(self, schedule: Dict[str, Dict[str, float]]) -> Set[str]:
         """Identify critical path tasks.
 

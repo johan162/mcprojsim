@@ -187,6 +187,8 @@ HTML_TEMPLATE = """
                     <tr><td class="metric">Minimum</td><td class="value">{{ "%.2f"|format(min_duration) }} hours</td></tr>
                     <tr><td class="metric">Maximum</td><td class="value">{{ "%.2f"|format(max_duration) }} hours</td></tr>
                     <tr><td class="metric">Coefficient of Variation</td><td class="value">{{ "%.4f"|format(cv) }}</td></tr>
+                    <tr><td class="metric">Skewness</td><td class="value">{{ "%.4f"|format(skewness) }}</td></tr>
+                    <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(kurtosis) }}</td></tr>
                 </table>
             </div>
 
@@ -215,6 +217,70 @@ HTML_TEMPLATE = """
                 <div style="text-align: center;">
                     <img src="data:image/png;base64,{{ histogram_image }}" alt="Duration Histogram" style="max-width: 100%; height: auto;">
                 </div>
+            </div>
+            {% endif %}
+
+            {% if sensitivity_image %}
+            <div class="section">
+                <h3>Sensitivity Analysis (Tornado Chart)</h3>
+                <div style="text-align: center;">
+                    <img src="data:image/png;base64,{{ sensitivity_image }}" alt="Sensitivity Tornado Chart" style="max-width: 100%; height: auto;">
+                </div>
+                <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
+                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                        <strong>About Sensitivity Analysis:</strong> Spearman rank correlation between each task's
+                        sampled duration and the total project duration. Higher absolute values indicate tasks
+                        whose duration variability has the greatest influence on project schedule uncertainty.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if schedule_slack %}
+            <div class="section">
+                <h3>Schedule Slack (Total Float)</h3>
+                <table>
+                    <thead>
+                        <tr><th>Task ID</th><th class="header-center">Mean Slack (hours)</th><th class="header-center">Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for task_id, slack_val in schedule_slack %}
+                        <tr>
+                            <td>{{ task_id }}</td>
+                            <td class="value-center">{{ "%.2f"|format(slack_val) }}</td>
+                            <td class="value-center">{% if slack_val < 0.01 %}Critical{% else %}{{ "%.1f"|format(slack_val) }}h buffer{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #FF9800; border-radius: 4px;">
+                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                        <strong>About Schedule Slack:</strong> Mean total float across all simulation iterations.
+                        Tasks with zero slack are on the critical path and any delay will extend the project.
+                        Tasks with positive slack have schedule buffer.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if risk_impact_data %}
+            <div class="section">
+                <h3>Risk Impact Analysis</h3>
+                <table>
+                    <thead>
+                        <tr><th>Task ID</th><th class="header-center">Mean Impact (hours)</th><th class="header-center">Trigger Rate</th><th class="header-center">Mean When Triggered (hours)</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for task_id, mean_impact, trigger_rate, mean_when_triggered in risk_impact_data %}
+                        <tr>
+                            <td>{{ task_id }}</td>
+                            <td class="value-center">{{ "%.2f"|format(mean_impact) }}</td>
+                            <td class="value-center">{{ "%.1f"|format(trigger_rate * 100) }}%</td>
+                            <td class="value-center">{{ "%.2f"|format(mean_when_triggered) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
             {% endif %}
 
@@ -384,6 +450,24 @@ class HTMLExporter:
         # Generate histogram image
         histogram_image = HTMLExporter._generate_histogram_image(results)
 
+        # Generate sensitivity tornado chart
+        sensitivity_image = HTMLExporter._generate_sensitivity_image(results)
+
+        # Prepare schedule slack data (sorted by slack ascending)
+        schedule_slack = (
+            sorted(results.task_slack.items(), key=lambda x: x[1])
+            if results.task_slack
+            else []
+        )
+
+        # Prepare risk impact data (only tasks with triggered risks)
+        risk_summary = results.get_risk_impact_summary()
+        risk_impact_data = [
+            (task_id, s["mean_impact"], s["trigger_rate"], s["mean_when_triggered"])
+            for task_id, s in sorted(risk_summary.items())
+            if s["trigger_rate"] > 0
+        ]
+
         # Get current date and time for simulation timestamp
         simulation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -400,6 +484,8 @@ class HTMLExporter:
             min_duration=results.min_duration,
             max_duration=results.max_duration,
             cv=cv,
+            skewness=results.skewness,
+            kurtosis=results.kurtosis,
             percentiles=percentiles,
             highlighted_percentiles=DEFAULT_CONFIDENCE_LEVELS,
             critical_path=critical_path,
@@ -407,6 +493,9 @@ class HTMLExporter:
             critical_path_sequences=critical_path_sequences,
             thermometer_segments=thermometer_segments,
             histogram_image=histogram_image,
+            sensitivity_image=sensitivity_image,
+            schedule_slack=schedule_slack,
+            risk_impact_data=risk_impact_data,
         )
 
         with open(output_path, "w") as f:
@@ -687,4 +776,62 @@ class HTMLExporter:
 
         except Exception:
             # If anything goes wrong, return empty string
+            return ""
+
+    @staticmethod
+    def _generate_sensitivity_image(results: SimulationResults) -> str:
+        """Generate a base64-encoded tornado chart for sensitivity analysis.
+
+        Args:
+            results: Simulation results
+
+        Returns:
+            Base64-encoded PNG image string, or empty string if unavailable
+        """
+        if not MATPLOTLIB_AVAILABLE or not results.sensitivity:
+            return ""
+
+        try:
+            # Sort by absolute correlation, take top 15
+            sorted_items = sorted(
+                results.sensitivity.items(),
+                key=lambda x: abs(x[1]),
+            )
+            # Show at most 15 tasks
+            if len(sorted_items) > 15:
+                sorted_items = sorted_items[-15:]
+
+            task_ids = [item[0] for item in sorted_items]
+            correlations = [item[1] for item in sorted_items]
+
+            fig, ax = plt.subplots(figsize=(10, max(4, len(task_ids) * 0.4 + 1)))
+
+            colors = ["#4CAF50" if c >= 0 else "#FF5722" for c in correlations]
+            y_pos = range(len(task_ids))
+            ax.barh(y_pos, correlations, color=colors, edgecolor="#333", linewidth=0.5)
+
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(task_ids, fontsize=10)
+            ax.set_xlabel("Spearman Rank Correlation", fontsize=12, fontweight="bold")
+            ax.set_title(
+                "Sensitivity Analysis — Task Impact on Project Duration",
+                fontsize=14,
+                fontweight="bold",
+                pad=20,
+            )
+            ax.axvline(0, color="#333", linewidth=0.8)
+            ax.grid(True, axis="x", alpha=0.3, linestyle="--")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+            plt.tight_layout()
+
+            buffer = BytesIO()
+            plt.savefig(buffer, format="png", dpi=100, bbox_inches="tight")
+            plt.close(fig)
+            buffer.seek(0)
+
+            return base64.b64encode(buffer.read()).decode("utf-8")
+
+        except Exception:
             return ""

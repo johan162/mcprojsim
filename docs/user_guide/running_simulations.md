@@ -24,7 +24,7 @@ Converts a plain-text project description into a syntactically correct YAML proj
 ### Usage
 
 ```bash
-mcprojsim generate INPUT_FILE [-o OUTPUT_FILE] [--validate-only]
+mcprojsim generate INPUT_FILE [-o OUTPUT_FILE] [--validate-only] [-v]
 ```
 
 ### Options
@@ -34,6 +34,7 @@ mcprojsim generate INPUT_FILE [-o OUTPUT_FILE] [--validate-only]
 | `INPUT_FILE` | Path to a plain-text file containing the project description (required) |
 | `-o`, `--output FILE` | Write the generated YAML to a file. If omitted, the YAML is printed to stdout |
 | `--validate-only` | Check the description for issues without generating output |
+| `-v`, `--verbose` | Show detailed informational messages (e.g. file loaded, tasks parsed) |
 
 ### Examples
 
@@ -78,8 +79,14 @@ Checks a YAML or TOML project file for structural and semantic errors.
 ### Usage
 
 ```bash
-mcprojsim validate PROJECT_FILE
+mcprojsim validate PROJECT_FILE [-v]
 ```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-v`, `--verbose` | Show detailed informational messages |
 
 ### Examples
 
@@ -125,6 +132,8 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-f`, `--output-format FORMATS` | Comma-separated export formats: `json`, `csv`, `html` | none |
 | `--critical-paths N` | Number of critical paths to display | 2 |
 | `-q`, `--quiet` | Suppress progress output | off |
+| `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
+| `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
 
 ### Examples
 
@@ -146,6 +155,9 @@ mcprojsim simulate project.yaml -f json,csv,html -o results/my_project
 
 # Quiet mode (suppress progress bars)
 mcprojsim simulate project.yaml --quiet
+
+# Verbose mode (show config/project loading details)
+mcprojsim simulate project.yaml --verbose
 ```
 
 ### Output
