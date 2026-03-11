@@ -58,6 +58,12 @@ def cli() -> None:
     default=None,
     help="Target completion date (YYYY-MM-DD) to calculate probability of meeting.",
 )
+@click.option(
+    "--table",
+    "-t",
+    is_flag=True,
+    help="Format tabular output sections as ASCII tables.",
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -69,6 +75,7 @@ def simulate(
     quiet: bool,
     verbose: bool,
     target_date: Optional[str],
+    table: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     click.echo(f"mcprojsim, version {__version__}")
@@ -124,50 +131,153 @@ def simulate(
             click.echo(f"Coefficient of Variation: {cv:.4f}")
             click.echo(f"Skewness: {results.skewness:.4f}")
             click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
-            click.echo("\nConfidence Intervals:")
-            for p in sorted(results.percentiles.keys()):
-                hours = results.percentiles[p]
-                wd = math.ceil(hours / hours_per_day)
-                delivery = results.delivery_date(hours)
-                date_str = f"  ({delivery.isoformat()})" if delivery else ""
+
+            if table:
+                from tabulate import tabulate as _tabulate
+
+                # Confidence Intervals table
+                ci_rows = []
+                for p in sorted(results.percentiles.keys()):
+                    hours = results.percentiles[p]
+                    wd = math.ceil(hours / hours_per_day)
+                    delivery = results.delivery_date(hours)
+                    date_str = delivery.isoformat() if delivery else ""
+                    ci_rows.append([f"P{p}", f"{hours:.2f}", wd, date_str])
+                click.echo("\nConfidence Intervals:")
                 click.echo(
-                    f"  P{p}: {hours:.2f} hours" f" ({wd} working days){date_str}"
-                )
-
-            # Sensitivity analysis
-            if results.sensitivity:
-                click.echo("\nSensitivity Analysis (top contributors):")
-                sorted_sens = sorted(
-                    results.sensitivity.items(),
-                    key=lambda x: abs(x[1]),
-                    reverse=True,
-                )
-                for task_id, corr in sorted_sens[:10]:
-                    click.echo(f"  {task_id}: {corr:+.4f}")
-
-            # Schedule slack
-            if results.task_slack:
-                click.echo("\nSchedule Slack:")
-                for task_id, slack_val in sorted(
-                    results.task_slack.items(), key=lambda x: x[1]
-                ):
-                    status = (
-                        "Critical" if slack_val < 0.01 else f"{slack_val:.1f}h buffer"
+                    _tabulate(
+                        ci_rows,
+                        headers=["Percentile", "Hours", "Working Days", "Date"],
+                        tablefmt="simple_outline",
                     )
-                    click.echo(f"  {task_id}: {slack_val:.2f} hours ({status})")
+                )
 
-            # Risk impact summary
-            risk_summary = results.get_risk_impact_summary()
-            has_risk_data = any(s["trigger_rate"] > 0 for s in risk_summary.values())
-            if has_risk_data:
-                click.echo("\nRisk Impact Analysis:")
-                for task_id, stats in sorted(risk_summary.items()):
-                    if stats["trigger_rate"] > 0:
-                        click.echo(
-                            f"  {task_id}: mean={stats['mean_impact']:.2f}h, "
-                            f"triggers={stats['trigger_rate']*100:.1f}%, "
-                            f"mean_when_triggered={stats['mean_when_triggered']:.2f}h"
+                # Sensitivity analysis table
+                if results.sensitivity:
+                    sorted_sens = sorted(
+                        results.sensitivity.items(),
+                        key=lambda x: abs(x[1]),
+                        reverse=True,
+                    )
+                    sens_rows = [
+                        [tid, f"{corr:+.4f}"]
+                        for tid, corr in sorted_sens[:10]
+                    ]
+                    click.echo("\nSensitivity Analysis (top contributors):")
+                    click.echo(
+                        _tabulate(
+                            sens_rows,
+                            headers=["Task", "Correlation"],
+                            tablefmt="simple_outline",
+                            disable_numparse=True,
                         )
+                    )
+
+                # Schedule slack table
+                if results.task_slack:
+                    slack_rows = []
+                    for task_id, slack_val in sorted(
+                        results.task_slack.items(), key=lambda x: x[1]
+                    ):
+                        status = (
+                            "Critical"
+                            if slack_val < 0.01
+                            else f"{slack_val:.1f}h buffer"
+                        )
+                        slack_rows.append(
+                            [task_id, f"{slack_val:.2f}", status]
+                        )
+                    click.echo("\nSchedule Slack:")
+                    click.echo(
+                        _tabulate(
+                            slack_rows,
+                            headers=["Task", "Slack (hours)", "Status"],
+                            tablefmt="simple_outline",
+                        )
+                    )
+
+                # Risk impact table
+                risk_summary = results.get_risk_impact_summary()
+                has_risk_data = any(
+                    s["trigger_rate"] > 0 for s in risk_summary.values()
+                )
+                if has_risk_data:
+                    risk_rows = []
+                    for task_id, stats in sorted(risk_summary.items()):
+                        if stats["trigger_rate"] > 0:
+                            risk_rows.append([
+                                task_id,
+                                f"{stats['mean_impact']:.2f}",
+                                f"{stats['trigger_rate']*100:.1f}%",
+                                f"{stats['mean_when_triggered']:.2f}",
+                            ])
+                    click.echo("\nRisk Impact Analysis:")
+                    click.echo(
+                        _tabulate(
+                            risk_rows,
+                            headers=[
+                                "Task",
+                                "Mean (hours)",
+                                "Trigger Rate",
+                                "Mean When Triggered (hours)",
+                            ],
+                            tablefmt="simple_outline",
+                        )
+                    )
+
+            else:
+                # Plain text output
+                click.echo("\nConfidence Intervals:")
+                for p in sorted(results.percentiles.keys()):
+                    hours = results.percentiles[p]
+                    wd = math.ceil(hours / hours_per_day)
+                    delivery = results.delivery_date(hours)
+                    date_str = f"  ({delivery.isoformat()})" if delivery else ""
+                    click.echo(
+                        f"  P{p}: {hours:.2f} hours"
+                        f" ({wd} working days){date_str}"
+                    )
+
+                # Sensitivity analysis
+                if results.sensitivity:
+                    click.echo("\nSensitivity Analysis (top contributors):")
+                    sorted_sens = sorted(
+                        results.sensitivity.items(),
+                        key=lambda x: abs(x[1]),
+                        reverse=True,
+                    )
+                    for task_id, corr in sorted_sens[:10]:
+                        click.echo(f"  {task_id}: {corr:+.4f}")
+
+                # Schedule slack
+                if results.task_slack:
+                    click.echo("\nSchedule Slack:")
+                    for task_id, slack_val in sorted(
+                        results.task_slack.items(), key=lambda x: x[1]
+                    ):
+                        status = (
+                            "Critical"
+                            if slack_val < 0.01
+                            else f"{slack_val:.1f}h buffer"
+                        )
+                        click.echo(
+                            f"  {task_id}: {slack_val:.2f} hours ({status})"
+                        )
+
+                # Risk impact summary
+                risk_summary = results.get_risk_impact_summary()
+                has_risk_data = any(
+                    s["trigger_rate"] > 0 for s in risk_summary.values()
+                )
+                if has_risk_data:
+                    click.echo("\nRisk Impact Analysis:")
+                    for task_id, stats in sorted(risk_summary.items()):
+                        if stats["trigger_rate"] > 0:
+                            click.echo(
+                                f"  {task_id}: mean={stats['mean_impact']:.2f}h, "
+                                f"triggers={stats['trigger_rate']*100:.1f}%, "
+                                f"mean_when_triggered={stats['mean_when_triggered']:.2f}h"
+                            )
 
             # Probability of target date
             if target_date:

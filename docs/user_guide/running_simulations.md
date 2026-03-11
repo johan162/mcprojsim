@@ -133,6 +133,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `--critical-paths N` | Number of critical paths to display | 2 |
 | `-q`, `--quiet` | Suppress progress output | off |
 | `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
+| `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact) as ASCII tables | off |
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
 
 ### Examples
@@ -158,11 +159,28 @@ mcprojsim simulate project.yaml --quiet
 
 # Verbose mode (show config/project loading details)
 mcprojsim simulate project.yaml --verbose
+
+# Table mode (ASCII tables for tabular sections)
+mcprojsim simulate project.yaml --table
 ```
 
 ### Output
 
-The simulation prints a summary to the terminal:
+By default, the simulation prints a plain-text summary. With `--table` (`-t`), the confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are formatted as ASCII tables with column headers and box-drawing borders:
+
+```text
+Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P25          │  522.75 │             66 │ 2026-02-02 │
+│ P50          │  571.84 │             72 │ 2026-02-10 │
+│ P90          │  682.94 │             86 │ 2026-03-02 │
+│ P99          │  790.61 │             99 │ 2026-03-19 │
+└──────────────┴─────────┴────────────────┴────────────┘
+```
+
+Without `--table`, the same data is printed as indented text:
 
 ```text
 === Simulation Results ===
