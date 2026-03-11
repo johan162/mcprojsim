@@ -35,6 +35,26 @@ runs:
         poetry config virtualenvs.in-project true
         poetry --version
 
+    - name: Normalize cache key inputs
+      id: normalize
+      shell: bash
+      run: |
+        SANITIZED_GROUPS="${{ inputs.dependency-groups }}"
+        SANITIZED_GROUPS="${SANITIZED_GROUPS//,/-}"
+        SANITIZED_GROUPS="${SANITIZED_GROUPS// /-}"
+        SANITIZED_GROUPS="${SANITIZED_GROUPS//[^a-zA-Z0-9._-]/-}"
+        while [[ "${SANITIZED_GROUPS}" == *--* ]]; do
+          SANITIZED_GROUPS="${SANITIZED_GROUPS//--/-}"
+        done
+        SANITIZED_GROUPS="${SANITIZED_GROUPS#-}"
+        SANITIZED_GROUPS="${SANITIZED_GROUPS%-}"
+
+        if [[ -z "${SANITIZED_GROUPS}" ]]; then
+          SANITIZED_GROUPS="default"
+        fi
+
+        echo "dependency-groups-key=${SANITIZED_GROUPS}" >> "$GITHUB_OUTPUT"
+
     - name: Cache Poetry download cache
       uses: actions/cache@v4
       with:
@@ -48,9 +68,9 @@ runs:
       with:
         path: .venv
         key: >-
-          ${{ runner.os }}-py${{ inputs.python-version }}-groups-${{ inputs.dependency-groups }}-root-${{ inputs.install-root }}-${{ hashFiles('**/poetry.lock') }}
+          ${{ runner.os }}-py${{ inputs.python-version }}-groups-${{ steps.normalize.outputs.dependency-groups-key }}-root-${{ inputs.install-root }}-${{ hashFiles('**/poetry.lock') }}
         restore-keys: |
-          ${{ runner.os }}-py${{ inputs.python-version }}-groups-${{ inputs.dependency-groups }}-root-${{ inputs.install-root }}-
+          ${{ runner.os }}-py${{ inputs.python-version }}-groups-${{ steps.normalize.outputs.dependency-groups-key }}-root-${{ inputs.install-root }}-
           ${{ runner.os }}-py${{ inputs.python-version }}-
 
     - name: Install dependencies
