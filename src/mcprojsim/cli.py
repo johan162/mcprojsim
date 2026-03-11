@@ -121,20 +121,42 @@ def simulate(
 
             hours_per_day = results.hours_per_day
             mean_wd = math.ceil(results.mean / hours_per_day)
-            click.echo("\n=== Simulation Results ===")
-            click.echo(f"Project: {results.project_name}")
-            click.echo(f"Hours per Day: {hours_per_day}")
-            click.echo(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
-            click.echo(f"Median (P50): {results.median:.2f} hours")
-            click.echo(f"Std Dev: {results.std_dev:.2f} hours")
             cv = results.std_dev / results.mean if results.mean > 0 else 0
-            click.echo(f"Coefficient of Variation: {cv:.4f}")
-            click.echo(f"Skewness: {results.skewness:.4f}")
-            click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
+
+            click.echo("\n=== Simulation Results ===")
 
             if table:
                 from tabulate import tabulate as _tabulate
 
+                summary_rows = [
+                    ["Project", results.project_name],
+                    ["Hours per Day", f"{hours_per_day}"],
+                    ["Mean", f"{results.mean:.2f} hours ({mean_wd} working days)"],
+                    ["Median (P50)", f"{results.median:.2f} hours"],
+                    ["Std Dev", f"{results.std_dev:.2f} hours"],
+                    ["Coefficient of Variation", f"{cv:.4f}"],
+                    ["Skewness", f"{results.skewness:.4f}"],
+                    ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
+                ]
+                click.echo(
+                    _tabulate(
+                        summary_rows,
+                        headers=["Parameter", "Value"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+            else:
+                click.echo(f"Project: {results.project_name}")
+                click.echo(f"Hours per Day: {hours_per_day}")
+                click.echo(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
+                click.echo(f"Median (P50): {results.median:.2f} hours")
+                click.echo(f"Std Dev: {results.std_dev:.2f} hours")
+                click.echo(f"Coefficient of Variation: {cv:.4f}")
+                click.echo(f"Skewness: {results.skewness:.4f}")
+                click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
+
+            if table:
                 # Confidence Intervals table
                 ci_rows = []
                 for p in sorted(results.percentiles.keys()):
@@ -160,8 +182,7 @@ def simulate(
                         reverse=True,
                     )
                     sens_rows = [
-                        [tid, f"{corr:+.4f}"]
-                        for tid, corr in sorted_sens[:10]
+                        [tid, f"{corr:+.4f}"] for tid, corr in sorted_sens[:10]
                     ]
                     click.echo("\nSensitivity Analysis (top contributors):")
                     click.echo(
@@ -184,9 +205,7 @@ def simulate(
                             if slack_val < 0.01
                             else f"{slack_val:.1f}h buffer"
                         )
-                        slack_rows.append(
-                            [task_id, f"{slack_val:.2f}", status]
-                        )
+                        slack_rows.append([task_id, f"{slack_val:.2f}", status])
                     click.echo("\nSchedule Slack:")
                     click.echo(
                         _tabulate(
@@ -205,12 +224,14 @@ def simulate(
                     risk_rows = []
                     for task_id, stats in sorted(risk_summary.items()):
                         if stats["trigger_rate"] > 0:
-                            risk_rows.append([
-                                task_id,
-                                f"{stats['mean_impact']:.2f}",
-                                f"{stats['trigger_rate']*100:.1f}%",
-                                f"{stats['mean_when_triggered']:.2f}",
-                            ])
+                            risk_rows.append(
+                                [
+                                    task_id,
+                                    f"{stats['mean_impact']:.2f}",
+                                    f"{stats['trigger_rate']*100:.1f}%",
+                                    f"{stats['mean_when_triggered']:.2f}",
+                                ]
+                            )
                     click.echo("\nRisk Impact Analysis:")
                     click.echo(
                         _tabulate(
@@ -234,8 +255,7 @@ def simulate(
                     delivery = results.delivery_date(hours)
                     date_str = f"  ({delivery.isoformat()})" if delivery else ""
                     click.echo(
-                        f"  P{p}: {hours:.2f} hours"
-                        f" ({wd} working days){date_str}"
+                        f"  P{p}: {hours:.2f} hours" f" ({wd} working days){date_str}"
                     )
 
                 # Sensitivity analysis
@@ -260,9 +280,7 @@ def simulate(
                             if slack_val < 0.01
                             else f"{slack_val:.1f}h buffer"
                         )
-                        click.echo(
-                            f"  {task_id}: {slack_val:.2f} hours ({status})"
-                        )
+                        click.echo(f"  {task_id}: {slack_val:.2f} hours ({status})")
 
                 # Risk impact summary
                 risk_summary = results.get_risk_impact_summary()
