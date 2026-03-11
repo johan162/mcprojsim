@@ -1,3 +1,14 @@
+## [v0.4.3] - 2026-03-11
+
+Release Type: patch
+
+### 📋 Summary 
+- CI/CD Updates
+
+### 🛠 Internal
+- Don't use mkbld.sh in the CI/CD pipeline. Only pure Poetry commands
+  
+
 ## [v0.4.2] - 2026-03-11
 
 Release Type: minor
