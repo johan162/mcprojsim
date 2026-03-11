@@ -449,6 +449,7 @@ def _resolve_estimate_range(
     # Resolve symbolic estimates
     if est.t_shirt_size is not None:
         rc = config.get_t_shirt_size(est.t_shirt_size)
+        assert rc is not None
         unit = config.t_shirt_size_unit
         return (
             _convert_to_hours(rc.min, unit, hours_per_day),
@@ -456,17 +457,19 @@ def _resolve_estimate_range(
         )
 
     if est.story_points is not None:
-        rc = config.get_story_point(est.story_points)
+        sp = config.get_story_point(est.story_points)
+        assert sp is not None
         unit = config.story_point_unit
         return (
-            _convert_to_hours(rc.min, unit, hours_per_day),
-            _convert_to_hours(rc.max, unit, hours_per_day),
+            _convert_to_hours(sp.min, unit, hours_per_day),
+            _convert_to_hours(sp.max, unit, hours_per_day),
         )
 
     # Explicit estimate
     unit = est.unit or EffortUnit.HOURS
 
     if est.distribution == DistributionType.TRIANGULAR:
+        assert est.min is not None and est.max is not None
         return (
             _convert_to_hours(est.min, unit, hours_per_day),
             _convert_to_hours(est.max, unit, hours_per_day),
@@ -474,6 +477,7 @@ def _resolve_estimate_range(
 
     # Lognormal: mode = most_likely, sigma = standard_deviation
     # mu = ln(mode) + sigma^2   (same formula as DistributionSampler)
+    assert est.most_likely is not None and est.standard_deviation is not None
     sigma = est.standard_deviation
     mu = math.log(est.most_likely) + sigma**2
     # Practical lower bound: exp(mu - K*sigma) — vanishingly unlikely below

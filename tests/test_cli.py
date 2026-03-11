@@ -1,6 +1,7 @@
 """Tests for the command-line interface."""
 
 from pathlib import Path
+from typing import Any
 
 import yaml
 from click.testing import CliRunner
@@ -25,7 +26,7 @@ class TestCli:
     def test_simulate_uses_default_iteration_constant(self, monkeypatch) -> None:
         """The simulate command should use the shared default iteration constant."""
         runner = CliRunner()
-        captured: dict[str, object] = {}
+        captured: dict[str, Any] = {}
 
         class FakeEngine:
             def __init__(
@@ -92,7 +93,7 @@ class TestCli:
     def test_simulate_passes_loaded_config_to_html_export(self, monkeypatch) -> None:
         """The simulate command should pass the loaded config to HTML export."""
         runner = CliRunner()
-        captured: dict[str, object] = {}
+        captured: dict[str, Any] = {}
 
         class FakeEngine:
             def __init__(self, iterations, random_seed, config, show_progress) -> None:
