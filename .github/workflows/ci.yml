@@ -42,7 +42,7 @@ jobs:
     
     - name: Install package and dependencies
       run: |
-        poetry install --with dev
+        poetry install --with dev,mcp
     
     - name: Run build script
       run: |
