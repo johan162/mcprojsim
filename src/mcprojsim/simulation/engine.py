@@ -73,6 +73,13 @@ class SimulationEngine:
         task_durations_all: Dict[str, list[float]] = {
             task.id: [] for task in project.tasks
         }
+        task_risk_impacts_all: Dict[str, list[float]] = {
+            task.id: [] for task in project.tasks
+        }
+        project_risk_impacts_all: list[float] = []
+        task_slack_accum: Dict[str, list[float]] = {
+            task.id: [] for task in project.tasks
+        }
         critical_path_frequency: Dict[str, int] = {task.id: 0 for task in project.tasks}
         critical_path_sequences: Counter[tuple[str, ...]] = Counter()
         last_reported_progress = -1
@@ -80,15 +87,28 @@ class SimulationEngine:
         # Run iterations
         for iteration in range(self.iterations):
             # Run single iteration
-            duration, task_durations, critical_path, critical_paths = (
-                self._run_iteration(project, scheduler, hours_per_day)
-            )
+            (
+                duration,
+                task_durations,
+                critical_path,
+                critical_paths,
+                task_risk_impacts,
+                project_risk_impact,
+                slack,
+            ) = self._run_iteration(project, scheduler, hours_per_day)
 
             project_durations[iteration] = duration
 
-            # Store task durations
+            # Store task durations and risk impacts
             for task_id, task_duration in task_durations.items():
                 task_durations_all[task_id].append(task_duration)
+            for task_id, impact in task_risk_impacts.items():
+                task_risk_impacts_all[task_id].append(impact)
+            project_risk_impacts_all.append(project_risk_impact)
+
+            # Store slack
+            for task_id, slack_val in slack.items():
+                task_slack_accum[task_id].append(slack_val)
 
             # Update critical path frequency
             for task_id in critical_path:
@@ -132,15 +152,22 @@ class SimulationEngine:
             )[: self.config.simulation.max_stored_critical_paths]
         ]
 
+        # Compute mean slack per task
+        mean_slack = {
+            task_id: float(np.mean(values))
+            for task_id, values in task_slack_accum.items()
+        }
+
         # Create results object
+        task_durations_arrays = {
+            task_id: np.array(durations)
+            for task_id, durations in task_durations_all.items()
+        }
         results = SimulationResults(
             iterations=self.iterations,
             project_name=project.project.name,
             durations=project_durations,
-            task_durations={
-                task_id: np.array(durations)
-                for task_id, durations in task_durations_all.items()
-            },
+            task_durations=task_durations_arrays,
             critical_path_frequency=critical_path_frequency,
             critical_path_sequences=stored_critical_paths,
             random_seed=self.random_seed,
@@ -148,6 +175,12 @@ class SimulationEngine:
             probability_green_threshold=project.project.probability_green_threshold,
             hours_per_day=hours_per_day,
             start_date=project.project.start_date,
+            task_slack=mean_slack,
+            risk_impacts={
+                task_id: np.array(impacts)
+                for task_id, impacts in task_risk_impacts_all.items()
+            },
+            project_risk_impacts=np.array(project_risk_impacts_all),
         )
 
         # Calculate statistics
@@ -156,6 +189,11 @@ class SimulationEngine:
         # Calculate percentiles
         for p in project.project.confidence_levels:
             results.percentile(p)
+
+        # Calculate sensitivity correlations
+        from mcprojsim.analysis.sensitivity import SensitivityAnalyzer
+
+        results.sensitivity = SensitivityAnalyzer.calculate_correlations(results)
 
         return results
 
@@ -181,7 +219,15 @@ class SimulationEngine:
 
     def _run_iteration(
         self, project: Project, scheduler: TaskScheduler, hours_per_day: float
-    ) -> tuple[float, Dict[str, float], set[str], list[tuple[str, ...]]]:
+    ) -> tuple[
+        float,
+        Dict[str, float],
+        set[str],
+        list[tuple[str, ...]],
+        Dict[str, float],
+        float,
+        Dict[str, float],
+    ]:
         """Run a single simulation iteration.
 
         All durations are computed in hours (the canonical internal unit).
@@ -192,9 +238,11 @@ class SimulationEngine:
             hours_per_day: Working hours per day
 
         Returns:
-            Tuple of (project_duration, task_durations, critical_path_tasks, critical_paths)
+            Tuple of (project_duration, task_durations, critical_path_tasks,
+            critical_paths, task_risk_impacts, project_risk_impact, slack)
         """
         task_durations: Dict[str, float] = {}
+        task_risk_impacts: Dict[str, float] = {}
 
         # Sample and adjust task durations
         for task in project.tasks:
@@ -220,9 +268,13 @@ class SimulationEngine:
             final_duration = adjusted_duration + risk_impact
 
             task_durations[task.id] = final_duration
+            task_risk_impacts[task.id] = risk_impact
 
         # Schedule tasks (all durations in hours)
         schedule = scheduler.schedule_tasks(task_durations)
+
+        # Calculate schedule slack
+        slack = scheduler.calculate_slack(schedule)
 
         # Calculate project duration (max end time)
         project_duration = max(info["end"] for info in schedule.values())
@@ -237,7 +289,15 @@ class SimulationEngine:
         critical_paths = scheduler.get_critical_paths(schedule)
         critical_path = {task_id for path in critical_paths for task_id in path}
 
-        return project_duration, task_durations, critical_path, critical_paths
+        return (
+            project_duration,
+            task_durations,
+            critical_path,
+            critical_paths,
+            task_risk_impacts,
+            project_risk_impact,
+            slack,
+        )
 
     def _apply_uncertainty_factors(self, task: Task, base_duration: float) -> float:
         """Apply uncertainty factors to base duration.

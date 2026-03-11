@@ -10,6 +10,49 @@ The parser layer is intentionally simple:
 
 Because of that design, the logical schema is the same regardless of whether you write the file in YAML or TOML.
 
+## Creating project files
+
+There are three ways to create a project file:
+
+| Method | Best for |
+|--------|----------|
+| **Write YAML or TOML by hand** | Full control over every field |
+| **`mcprojsim generate`** | Quick creation from a natural language description |
+| **MCP server** | AI-assisted generation through an MCP client |
+
+The `generate` command converts a plain-text project description into a valid YAML file without requiring any AI service — it runs locally using a built-in pattern-based parser.
+
+### Using `mcprojsim generate`
+
+Write a description in a text file (e.g., `description.txt`):
+
+```text
+Project name: Website Redesign
+Start date: 2026-04-15
+Task 1:
+- Gather requirements
+- Size: S
+Task 2:
+- Create wireframes
+- Depends on Task 1
+- Size: M
+Task 3:
+- Build frontend
+- Depends on Task 2
+- Size: XL
+```
+
+Generate the YAML project file:
+
+```bash
+mcprojsim generate description.txt -o project.yaml
+```
+
+See [Running Simulations — `mcprojsim generate`](running_simulations.md#mcprojsim-generate) for the full command reference and all options. The [MCP Server](mcp-server.md) page covers the complete input format and more examples.
+
+!!! note
+    The `generate` command creates a minimal but valid project file. After generating, you can manually add uncertainty factors, risks, resources, and other fields documented in this chapter.
+
 ## Supported file formats
 
 The validator and CLI currently recognize these project file extensions:
@@ -110,6 +153,7 @@ The `project` section is required. It contains project-level metadata and report
 | `start_date` | Yes | ISO date string | — | Must parse as `YYYY-MM-DD` |
 | `currency` | No | string | `"USD"` | Stored as metadata |
 | `confidence_levels` | No | list of integers | `[25, 50, 75, 80, 85, 90, 95, 99]` | Controls reported percentiles |
+| `hours_per_day` | No | float | `8.0` | Hours in a working day; used for day/week conversion |
 | `probability_red_threshold` | No | float | `0.50` | Must be between `0.0` and `1.0` |
 | `probability_green_threshold` | No | float | `0.90` | Must be between `0.0` and `1.0` |
 
@@ -708,7 +752,6 @@ tasks:
     name: "Deployment"
     estimate:
       t_shirt_size: "S"
-      unit: "days"
     dependencies: ["task_002"]
 
 resources:
@@ -797,7 +840,6 @@ dependencies = ["task_002"]
 
 [tasks.estimate]
 t_shirt_size = "S"
-unit = "days"
 
 [[resources]]
 id = "designer"
@@ -853,4 +895,4 @@ Although multiple forms are accepted, the clearest project files usually follow 
 - use structured risk impacts when you need `percentage` or explicit units,
 - treat `resources` and `calendars` as advanced sections whose detailed internal schema may evolve.
 
-If you want to see the reference syntax used in practice, compare this chapter with [examples/sample_project.yaml](examples/sample_project.yaml), [examples/tshirt_walkthrough_project.yaml](examples/tshirt_walkthrough_project.yaml), [examples/story_points_walkthrough_project.yaml](examples/story_points_walkthrough_project.yaml), and [examples/project_with_custom_thresholds.yaml](examples/project_with_custom_thresholds.yaml).
+If you want to see the reference syntax used in practice, compare this chapter with `examples/sample_project.yaml`, `examples/tshirt_walkthrough_project.yaml`, `examples/story_points_walkthrough_project.yaml`, and `examples/project_with_custom_thresholds.yaml`.

@@ -64,6 +64,8 @@ class CSVExporter:
             writer.writerow(["Max (hours)", f"{results.max_duration:.2f}"])
             cv = results.std_dev / results.mean if results.mean > 0 else 0
             writer.writerow(["Coefficient of Variation", f"{cv:.4f}"])
+            writer.writerow(["Skewness", f"{results.skewness:.4f}"])
+            writer.writerow(["Kurtosis", f"{results.kurtosis:.4f}"])
             writer.writerow([])
 
             # Write percentiles
@@ -119,3 +121,50 @@ class CSVExporter:
                     (cumulative_count / total_count * 100) if total_count > 0 else 0
                 )
                 writer.writerow([f"{edge:.2f}", int(count), f"{cumulative_pct:.2f}"])
+
+            # Write sensitivity analysis
+            if results.sensitivity:
+                writer.writerow([])
+                writer.writerow(
+                    ["Sensitivity Analysis", "Correlation", "Abs Correlation"]
+                )
+                for task_id, corr in sorted(
+                    results.sensitivity.items(),
+                    key=lambda x: abs(x[1]),
+                    reverse=True,
+                ):
+                    writer.writerow([task_id, f"{corr:.4f}", f"{abs(corr):.4f}"])
+
+            # Write schedule slack
+            if results.task_slack:
+                writer.writerow([])
+                writer.writerow(["Schedule Slack", "Mean Slack (hours)"])
+                for task_id, slack_val in sorted(
+                    results.task_slack.items(),
+                    key=lambda x: x[1],
+                ):
+                    writer.writerow([task_id, f"{slack_val:.2f}"])
+
+            # Write risk impact summary
+            risk_summary = results.get_risk_impact_summary()
+            has_risk_data = any(s["trigger_rate"] > 0 for s in risk_summary.values())
+            if has_risk_data:
+                writer.writerow([])
+                writer.writerow(
+                    [
+                        "Risk Impact",
+                        "Mean Impact (hours)",
+                        "Trigger Rate",
+                        "Mean When Triggered (hours)",
+                    ]
+                )
+                for task_id, stats in sorted(risk_summary.items()):
+                    if stats["trigger_rate"] > 0:
+                        writer.writerow(
+                            [
+                                task_id,
+                                f"{stats['mean_impact']:.2f}",
+                                f"{stats['trigger_rate']:.4f}",
+                                f"{stats['mean_when_triggered']:.2f}",
+                            ]
+                        )

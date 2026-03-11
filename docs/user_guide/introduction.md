@@ -146,17 +146,17 @@ Uncertainty factors describe conditions. Risks describe events. A difficult arch
 
 Uncertainty factors are known characteristics of the working environment that systematically affect how long work takes. `mcprojsim` supports five configurable factors:
 
-| Factor | What it captures | Example levels |
-|--------|-----------------|---------------|
-| `team_experience` | Familiarity with the technology and domain | `high` (0.90×), `medium` (1.0×), `low` (1.30×) |
-| `requirements_maturity` | How well-defined and stable requirements are | `high` (1.0×), `medium` (1.15×), `low` (1.40×) |
-| `technical_complexity` | How technically challenging the work is | `low` (1.0×), `medium` (1.20×), `high` (1.50×) |
-| `team_distribution` | Colocated vs. distributed teams | `colocated` (1.0×), `distributed` (1.25×) |
-| `integration_complexity` | Degree of integration with other systems | `low` (1.0×), `medium` (1.15×), `high` (1.35×) |
+| Factor | What it captures |
+|--------|-----------------|
+| `team_experience` | Familiarity with the technology and domain |
+| `requirements_maturity` | How well-defined and stable requirements are |
+| `technical_complexity` | How technically challenging the work is |
+| `team_distribution` | Colocated vs. distributed teams |
+| `integration_complexity` | Degree of integration with other systems |
 
 These factors are multiplicative. When a task specifies several of them, the multipliers are combined by multiplication. This means adverse factors compound — even moderate individual adjustments can produce a significant combined effect.
 
-The numeric multipliers are defined in a separate configuration file, not in the project file. This allows teams to calibrate the meaning of labels like "high complexity" or "low maturity" to match their own experience, without changing the project definition.
+The numeric multipliers are defined in a separate configuration file, not in the project file. This allows teams to calibrate the meaning of labels like "high complexity" or "low maturity" to match their own experience, without changing the project definition. See [Uncertainty Factors](uncertainty_factors.md) for the full list of default multiplier values and guidance on calibration.
 
 ### Risks
 

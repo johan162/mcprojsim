@@ -6,13 +6,13 @@
 |**Documentation**|[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://johan162.github.io/mcprojsim/)|
 |**License**|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)|
 |**Release**|[![GitHub release](https://img.shields.io/github/v/release/johan162/mcprojsim?include_prereleases)](https://github.com/johan162/mcprojsim/releases)|
-|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](coverage.svg)|
+|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-82%25-brightgreen.svg)](coverage.svg)|
 |**Code Quality**|[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/) [![Linting: flake8](https://img.shields.io/badge/linting-flake8-yellowgreen)](https://flake8.pycqa.org/)|
 |Repo URL|[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat-square&logo=github&logoColor=white)](https://github.com/johan162/mcprojsim)|
 
 ## Overview
 
-`mcprojsim` is a Monte Carlo simulation tool for project with empahsis on agile software project estimation.
+`mcprojsim` is a Monte Carlo simulation tool for project with emphasis on agile software project estimation.
 Instead of producing a single deadline, it models uncertainty in task duration, dependencies, risks, and other schedule drivers to produce confidence-based forecast ranges.
 
 It is intended for teams that want answers such as:
@@ -24,6 +24,7 @@ It is intended for teams that want answers such as:
 
 ## Key features
 
+- **Natural language project input** — generate valid project files from plain-text descriptions using `mcprojsim generate`
 - Monte Carlo schedule simulation with configurable iteration counts
 - Range-based task estimates using triangular and log-normal distributions
 - Unit-aware estimation: supports hours, days, and weeks with automatic conversion to a canonical hours-based internal representation
@@ -34,6 +35,12 @@ It is intended for teams that want answers such as:
 - T-shirt size and story point symbolic estimates with configurable unit defaults
 - Exported results in JSON, CSV, and HTML formats
 - Critical path and sensitivity-oriented analysis outputs
+- **Sensitivity analysis** — Spearman rank correlation identifies which tasks most influence total duration
+- **Schedule slack** — CPM-based total float calculation highlights critical vs. buffered tasks
+- **Risk impact analysis** — per-task trigger rates, mean impact, and mean-when-triggered statistics
+- **Statistical distribution metrics** — skewness, excess kurtosis, and coefficient of variation for the overall schedule distribution
+- **Probability-of-date** — calculate the likelihood of finishing by a given target date (`--target-date`)
+- **ASCII table output** — optional `--table` flag formats CLI results as bordered tables for easier reading
 - Reproducible runs with explicit random seeds
 
 ## Recommended installation
@@ -117,6 +124,9 @@ The full published documentation is also available at <https://johan162.github.i
 ## Example commands
 
 ```bash
+# Generate a project file from a natural language description
+mcprojsim generate examples/nl_example.txt -o my_project.yaml
+
 # Validate an input file
 mcprojsim validate examples/sample_project.yaml
 
@@ -128,7 +138,52 @@ mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.
 
 # Reproduce a run exactly
 mcprojsim simulate examples/sample_project.yaml --seed 42
+
+# Format output as ASCII tables
+mcprojsim simulate examples/sample_project.yaml --table
+
+# Calculate probability of meeting a target date
+mcprojsim simulate examples/sample_project.yaml --target-date 2026-06-01
+
+# Combine options
+mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml --table --verbose --seed 42
 ```
+
+## MCP server integration
+
+`mcprojsim` can run as a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server, letting AI assistants such as GitHub Copilot, Claude Desktop, or any MCP-compatible client generate project files, validate descriptions, and run simulations conversationally.
+
+Install with the optional MCP dependency group:
+
+```bash
+pipx install "mcprojsim[mcp]"
+```
+
+Or, from a source checkout:
+
+```bash
+poetry install --with mcp
+```
+
+Add the server to your MCP client configuration (e.g. VS Code `settings.json` or Claude Desktop `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "mcprojsim": {
+      "command": "mcprojsim-mcp"
+    }
+  }
+}
+```
+
+The server exposes three tools:
+
+| Tool | Description |
+|------|-------------|
+| `generate_project_file` | Convert a natural-language project description into a valid YAML project file |
+| `validate_project_description` | Check a description for missing data or inconsistencies without generating a file |
+| `simulate_project` | Generate, validate, and simulate in one step — returns full statistical results |
 
 ## For developers
 
@@ -168,7 +223,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.3.0}
+  version = {0.4.0}
 }
 ```
 

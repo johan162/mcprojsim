@@ -1,6 +1,6 @@
 # Risks
 
-This chapter explains how `mcprojsim` models schedule variation due to **risks**. (The other schedule variation comes from **uncertainty factors** See [uncertainty_factors](uncertainty_factors.md)). Both influence the simulated project duration, but they represent fundamentally different ideas and are handled differently by the simulation engine.
+This chapter explains how `mcprojsim` models schedule variation due to **risks**. (The other source of schedule variation comes from **uncertainty factors** — see [Uncertainty Factors](uncertainty_factors.md).) Both influence the simulated project duration, but they represent fundamentally different ideas and are handled differently by the simulation engine.
 
 **Risks** are discrete events that may or may not happen. A failed security audit, the departure of a key developer, or a sudden change in requirements are all risks. Each risk has a probability of occurring and an impact if it does.
 

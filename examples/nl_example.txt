@@ -1,0 +1,13 @@
+Project name: Rework Web Interface
+Start date: 2026-06-02
+Task 1:
+- Analyse existing UI
+- Size: M
+Task 2:
+- Refine requirements
+- Depends on Task1
+- Size XL
+Task 3:
+- Design solution
+- Depends on Task 2
+- Size. XL

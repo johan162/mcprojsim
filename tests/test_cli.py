@@ -46,6 +46,10 @@ class TestCli:
                     mean = 1.0
                     median = 1.0
                     std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
                     percentiles = {50: 1.0}
                     hours_per_day = 8.0
 
@@ -54,6 +58,9 @@ class TestCli:
 
                     def delivery_date(self, hours):
                         return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
 
                 return FakeResults()
 
@@ -97,6 +104,10 @@ class TestCli:
                     mean = 1.0
                     median = 1.0
                     std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
                     percentiles = {50: 1.0}
                     hours_per_day = 8.0
 
@@ -105,6 +116,9 @@ class TestCli:
 
                     def delivery_date(self, hours):
                         return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
 
                 return FakeResults()
 
@@ -192,6 +206,10 @@ class TestCli:
                     mean = 1.0
                     median = 1.0
                     std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
                     percentiles = {50: 1.0}
                     iterations = 10
                     hours_per_day = 8.0
@@ -207,6 +225,9 @@ class TestCli:
 
                     def delivery_date(self, hours):
                         return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
 
                 return FakeResults()
 

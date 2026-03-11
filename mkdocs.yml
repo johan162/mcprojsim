@@ -42,6 +42,7 @@ theme:
 nav:
   - Home: index.md
   - User Guide:
+      - Getting Started: user_guide/getting_started.md
       - Introduction: user_guide/introduction.md
       - Your first project: user_guide/your_first_project.md
       - Uncertainty Factors: user_guide/uncertainty_factors.md
@@ -50,6 +51,7 @@ nav:
       - Project Files: user_guide/project_files.md
       - Running Simulations: user_guide/running_simulations.md
       - Interpreting Results: user_guide/interpreting_results.md
+      - MCP Server: user_guide/mcp-server.md
       - Examples: examples.md
   - Development: development.md
   - Configuration: configuration.md

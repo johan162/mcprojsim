@@ -285,8 +285,15 @@ if [ "$DRY_RUN" = false ] && [ -f "coverage.xml" ]; then
     print_sub_step "Recorded existing coverage.xml checksum"
 fi
 
+# Build the quiet flag for CI
+if [ "$CI_MODE" = true ]; then
+    PYTEST_QUIET="-q"
+else
+    PYTEST_QUIET=""
+fi
+
 # Step 3.1: Run tests with coverage
-run_command "poetry run pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}" "Running tests with coverage"
+run_command "poetry run pytest tests/ ${PYTEST_QUIET} --cov-fail-under=${COVERAGE}" "Running tests with coverage"
 
 # Step 3.2: Update coverage badge in README
 if [ "$CI_MODE" = false ] && [ "$DRY_RUN" = false ]; then

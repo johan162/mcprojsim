@@ -428,7 +428,7 @@ tasks:
 
 Note that no `unit` field appears on any task — the unit is taken from the configuration.
 
-The same example is also available as [examples/tshirt_walkthrough_project.yaml](examples/tshirt_walkthrough_project.yaml), with a matching configuration file at [examples/tshirt_walkthrough_config.yaml](examples/tshirt_walkthrough_config.yaml).
+The same example is also available as `examples/tshirt_walkthrough_project.yaml`, with a matching configuration file at `examples/tshirt_walkthrough_config.yaml`.
 
 ### How T-shirt sizes are configured
 
@@ -543,7 +543,7 @@ tasks:
 
 Note that no `unit` field appears on any task — the unit is taken from the configuration.
 
-The same example is also available as [examples/story_points_walkthrough_project.yaml](examples/story_points_walkthrough_project.yaml), with a matching configuration file at [examples/story_points_walkthrough_config.yaml](examples/story_points_walkthrough_config.yaml).
+The same example is also available as `examples/story_points_walkthrough_project.yaml`, with a matching configuration file at `examples/story_points_walkthrough_config.yaml`.
 
 ### How Story Points are configured
 

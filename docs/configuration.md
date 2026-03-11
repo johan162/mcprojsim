@@ -172,28 +172,13 @@ The `config show` output now includes:
 
 Tasks may use `t_shirt_size` instead of an explicit numeric range. Those labels are resolved through the `t_shirt_sizes` section in the active configuration. The unit for T-shirt size values is controlled by `t_shirt_size_unit` in the configuration (default: `"hours"`).
 
-Default built-in mappings:
-
-- `XS`: `(0.5, 1, 2)`
-- `S`: `(1, 2, 4)`
-- `M`: `(3, 5, 8)`
-- `L`: `(5, 8, 13)`
-- `XL`: `(8, 13, 21)`
-- `XXL`: `(13, 21, 34)`
+See [Task Estimation](user_guide/task_estimation.md#t-shirt-size-estimates) for the full default mapping table and guidance on choosing values.
 
 ### Story Points
 
 Tasks may also use `story_points` for agile-style relative sizing. Story Points are resolved to numeric ranges through the `story_points` section in the active configuration. The unit for story point values is controlled by `story_point_unit` in the configuration (default: `"days"`).
 
-Default built-in mappings:
-
-- `1`: `(0.5, 1, 3)`
-- `2`: `(1, 2, 4)`
-- `3`: `(1.5, 3, 5)`
-- `5`: `(3, 5, 8)`
-- `8`: `(5, 8, 15)`
-- `13`: `(8, 13, 21)`
-- `21`: `(13, 21, 34)`
+See [Task Estimation](user_guide/task_estimation.md#story-point-estimates) for the full default mapping table.
 
 Example Story Point override:
 

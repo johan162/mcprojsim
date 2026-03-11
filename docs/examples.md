@@ -147,13 +147,7 @@ tasks:
     dependencies: ["mobile_app"]
 ```
 
-T-shirt sizes map to default effort ranges (configurable). The unit is determined by `t_shirt_size_unit` in the configuration (default: `"hours"`):
-- **XS**: 0.5-2 hours (most likely: 1 hour)
-- **S**: 1-4 hours (most likely: 2 hours)
-- **M**: 3-8 hours (most likely: 5 hours)
-- **L**: 5-13 hours (most likely: 8 hours)
-- **XL**: 8-21 hours (most likely: 13 hours)
-- **XXL**: 13-34 hours (most likely: 21 hours)
+T-shirt sizes map to default effort ranges (configurable via the configuration file). See [Task Estimation](user_guide/task_estimation.md#t-shirt-size-estimates) for the default mapping table and customization options.
 
 See `examples/tshirt_sizing_project.yaml` for a complete example.
 
@@ -180,15 +174,7 @@ tasks:
     dependencies: ["story_001"]
 ```
 
-Default Story Point mappings (configurable). The unit is determined by `story_point_unit` in the configuration (default: `"days"`):
-
-- `1`: 0.5-3 days (most likely: 1 day)
-- `2`: 1-4 days (most likely: 2 days)
-- `3`: 1.5-5 days (most likely: 3 days)
-- `5`: 3-8 days (most likely: 5 days)
-- `8`: 5-15 days (most likely: 8 days)
-- `13`: 8-21 days (most likely: 13 days)
-- `21`: 13-34 days (most likely: 21 days)
+Default Story Point mappings are configurable via the configuration file. See [Task Estimation](user_guide/task_estimation.md#story-point-estimates) for the default mapping table and customization options.
 
 Note that T-shirt size and story point estimates must **not** include a `unit` field in the project file. The unit is controlled by the configuration.
 

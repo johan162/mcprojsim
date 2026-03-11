@@ -64,7 +64,7 @@ jobs:
       id: metadata
       run: |
         echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-        echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+        echo "branch=$(echo '${GITHUB_REF#refs/heads/}' | tr '/' '-')" >> $GITHUB_OUTPUT
         echo "timestamp=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
 
     - name: Upload builds on success

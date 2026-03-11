@@ -6,6 +6,7 @@ Monte Carlo Project Simulator (mcprojsim) is a powerful tool for probabilistic s
 
 ## Key Features
 
+- **Natural Language Project Input** — generate valid project files from plain-text descriptions with `mcprojsim generate`
 - **Triangular & Log-Normal Distributions** for realistic task duration modeling
 - **Risk Analysis** at both project and task levels
 - **Dependency Management** with automatic critical path identification
@@ -46,7 +47,7 @@ tasks:
 
 ```bash
 # Run simulation
-mc-estimate simulate project.yaml --iterations 10000
+mcprojsim simulate project.yaml --iterations 10000
 
 # Output
 Mean: 338.4 hours (43 working days)
@@ -71,11 +72,11 @@ pip install -e .
 
 ## Next Steps
 
-- [Getting Started Guide](user_guide/introduction.md) - Learn how to create your first project
-- [Formal Grammar](grammar.md) - Complete specification in EBNF notation
+- [Getting Started](user_guide/getting_started.md) - Install and run your first simulation
 - [Examples](examples.md) - Working examples and use cases
 - [Configuration](configuration.md) - Customize uncertainty factors
 - [API Reference](api_reference.md) - Integrate into your tools
+- [Formal Grammar](grammar.md) - Complete specification in EBNF notation
 
 ## License
 
