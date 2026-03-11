@@ -35,6 +35,12 @@ It is intended for teams that want answers such as:
 - T-shirt size and story point symbolic estimates with configurable unit defaults
 - Exported results in JSON, CSV, and HTML formats
 - Critical path and sensitivity-oriented analysis outputs
+- **Sensitivity analysis** — Spearman rank correlation identifies which tasks most influence total duration
+- **Schedule slack** — CPM-based total float calculation highlights critical vs. buffered tasks
+- **Risk impact analysis** — per-task trigger rates, mean impact, and mean-when-triggered statistics
+- **Statistical distribution metrics** — skewness, excess kurtosis, and coefficient of variation for the overall schedule distribution
+- **Probability-of-date** — calculate the likelihood of finishing by a given target date (`--target-date`)
+- **ASCII table output** — optional `--table` flag formats CLI results as bordered tables for easier reading
 - Reproducible runs with explicit random seeds
 
 ## Recommended installation
@@ -132,7 +138,52 @@ mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.
 
 # Reproduce a run exactly
 mcprojsim simulate examples/sample_project.yaml --seed 42
+
+# Format output as ASCII tables
+mcprojsim simulate examples/sample_project.yaml --table
+
+# Calculate probability of meeting a target date
+mcprojsim simulate examples/sample_project.yaml --target-date 2026-06-01
+
+# Combine options
+mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml --table --verbose --seed 42
 ```
+
+## MCP server integration
+
+`mcprojsim` can run as a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server, letting AI assistants such as GitHub Copilot, Claude Desktop, or any MCP-compatible client generate project files, validate descriptions, and run simulations conversationally.
+
+Install with the optional MCP dependency group:
+
+```bash
+pipx install "mcprojsim[mcp]"
+```
+
+Or, from a source checkout:
+
+```bash
+poetry install --with mcp
+```
+
+Add the server to your MCP client configuration (e.g. VS Code `settings.json` or Claude Desktop `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "mcprojsim": {
+      "command": "mcprojsim-mcp"
+    }
+  }
+}
+```
+
+The server exposes three tools:
+
+| Tool | Description |
+|------|-------------|
+| `generate_project_file` | Convert a natural-language project description into a valid YAML project file |
+| `validate_project_description` | Check a description for missing data or inconsistencies without generating a file |
+| `simulate_project` | Generate, validate, and simulate in one step — returns full statistical results |
 
 ## For developers
 
