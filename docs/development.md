@@ -12,13 +12,13 @@ This guide covers:
 - the local Python and Poetry workflow
 - when to use `make` and when to call `poetry` directly
 - the project structure and where the major responsibilities live
-- build and validation scripts in [scripts/README.md](../scripts/README.md)
+- build and validation scripts in [scripts/README.md](https://github.com/johan162/mcprojsim/blob/main/scripts/README.md)
 - building and running the main application container
 - building and serving the documentation container
 - release preparation with `mkrelease.sh`
 - GitHub release publication with `mkghrelease.sh`
 - corporate proxy / custom CA handling in both Dockerfiles
-- the GitHub Actions CI/CD workflows in [.github/workflows](../.github/workflows)
+- the GitHub Actions CI/CD workflows in [.github/workflows](https://github.com/johan162/mcprojsim/tree/main/.github/workflows)
 
 ## Development model at a glance
 
@@ -48,7 +48,7 @@ The project uses Poetry as the source of truth for:
 - version management
 - CLI entry point registration
 
-Relevant configuration is in [pyproject.toml](../pyproject.toml).
+Relevant configuration is in [pyproject.toml](https://github.com/johan162/mcprojsim/blob/main/pyproject.toml).
 
 Key points from the current setup:
 
@@ -202,7 +202,7 @@ Examples include:
 
 #### `bin/`
 This holds user-facing helper wrappers.
-In particular, [bin/mcprojsim.sh](../bin/mcprojsim.sh) allows running the CLI through a container while mounting the host working directory into `/work`.
+In particular, [bin/mcprojsim.sh](https://github.com/johan162/mcprojsim/blob/main/bin/mcprojsim.sh) allows running the CLI through a container while mounting the host working directory into `/work`.
 
 ## Local development workflow
 
@@ -313,7 +313,7 @@ For new contributors, the safest approach is to rely on the documented targets a
 ## Build scripts
 
 The `scripts/` directory contains the more detailed automation.
-For a script-by-script overview, see [scripts/README.md](../scripts/README.md).
+For a script-by-script overview, see [scripts/README.md](https://github.com/johan162/mcprojsim/blob/main/scripts/README.md).
 
 Below is the developer interpretation of the most important scripts.
 
@@ -369,7 +369,7 @@ Typical usage:
 
 Purpose:
 
-- lifecycle manager for the docs container image built from [Dockerfile.docs](../Dockerfile.docs)
+- lifecycle manager for the docs container image built from [Dockerfile.docs](https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs)
 
 Typical usage:
 
@@ -407,7 +407,7 @@ This is the script that bridges local release preparation with the GitHub Releas
 
 ## Main application container
 
-The main runtime image is defined in [Dockerfile](../Dockerfile).
+The main runtime image is defined in [Dockerfile](https://github.com/johan162/mcprojsim/blob/main/Dockerfile).
 It is a multi-stage build.
 
 ### Build structure
@@ -513,7 +513,7 @@ docker run --rm -v "$PWD:/work" mcprojsim simulate examples/sample_project.yaml 
 
 ### Run through the wrapper script
 
-The wrapper in [bin/mcprojsim.sh](../bin/mcprojsim.sh) provides a more convenient interface for both users and developers.
+The wrapper in [bin/mcprojsim.sh](https://github.com/johan162/mcprojsim/blob/main/bin/mcprojsim.sh) provides a more convenient interface for both users and developers.
 It:
 
 - auto-detects Podman or Docker
@@ -574,7 +574,7 @@ Or directly:
 
 ## Documentation container in detail
 
-The docs image is defined in [Dockerfile.docs](../Dockerfile.docs).
+The docs image is defined in [Dockerfile.docs](https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs).
 It is separate from the main CLI image.
 
 ### Build structure
@@ -669,7 +669,7 @@ The fix is usually to trust the company CA during the image build.
 
 ## Main container certificate handling
 
-The main image in [Dockerfile](../Dockerfile) uses a **build secret**.
+The main image in [Dockerfile](https://github.com/johan162/mcprojsim/blob/main/Dockerfile) uses a **build secret**.
 
 ### How it works
 
@@ -717,7 +717,7 @@ The proxy-specific target validates that the CA file exists and then passes the 
 
 ## Documentation container certificate handling
 
-The docs image in [Dockerfile.docs](../Dockerfile.docs) currently uses a different mechanism.
+The docs image in [Dockerfile.docs](https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs) currently uses a different mechanism.
 It expects a CA file in the build context when proxy support is enabled.
 
 ### How it works
@@ -800,7 +800,7 @@ It lets the maintainer confirm local state, branch state, and workflow success b
 
 ## `mkrelease.sh` in detail
 
-Script: [scripts/mkrelease.sh](../scripts/mkrelease.sh)
+Script: [scripts/mkrelease.sh](https://github.com/johan162/mcprojsim/blob/main/scripts/mkrelease.sh)
 
 ### Purpose
 
@@ -908,7 +908,7 @@ That is the safest way to confirm:
 
 ## `mkghrelease.sh` in detail
 
-Script: [scripts/mkghrelease.sh](../scripts/mkghrelease.sh)
+Script: [scripts/mkghrelease.sh](https://github.com/johan162/mcprojsim/blob/main/scripts/mkghrelease.sh)
 
 ### Purpose
 
@@ -1035,13 +1035,13 @@ Use this checklist before creating a release.
 
 The repository currently contains three workflows:
 
-- [.github/workflows/ci.yml](../.github/workflows/ci.yml)
-- [.github/workflows/docs.yml](../.github/workflows/docs.yml)
-- [.github/workflows/publish-to-pypi.yml](../.github/workflows/publish-to-pypi.yml)
+- [.github/workflows/ci.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/ci.yml)
+- [.github/workflows/docs.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/docs.yml)
+- [.github/workflows/publish-to-pypi.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/publish-to-pypi.yml)
 
 ### 1. Continuous integration workflow
 
-File: [ci.yml](../.github/workflows/ci.yml)
+File: [ci.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/ci.yml)
 
 #### Triggers
 
@@ -1082,7 +1082,7 @@ If you want to reproduce CI locally, `./scripts/mkbld.sh` is the closest equival
 
 ### 2. Documentation workflow
 
-File: [docs.yml](../.github/workflows/docs.yml)
+File: [docs.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/docs.yml)
 
 #### Triggers
 
@@ -1124,7 +1124,7 @@ In practice, this means:
 
 ### 3. Publish-to-PyPI workflow
 
-File: [publish-to-pypi.yml](../.github/workflows/publish-to-pypi.yml)
+File: [publish-to-pypi.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/publish-to-pypi.yml)
 
 #### Trigger
 
@@ -1379,13 +1379,13 @@ make ghcr-logout
 
 ## Related references
 
-- [README.md](../README.md)
-- [QUICKSTART.md](../QUICKSTART.md)
-- [scripts/README.md](../scripts/README.md)
-- [pyproject.toml](../pyproject.toml)
-- [Makefile](../Makefile)
-- [Dockerfile](../Dockerfile)
-- [Dockerfile.docs](../Dockerfile.docs)
-- [ci.yml](../.github/workflows/ci.yml)
-- [docs.yml](../.github/workflows/docs.yml)
-- [publish-to-pypi.yml](../.github/workflows/publish-to-pypi.yml)
+- [README.md](https://github.com/johan162/mcprojsim/blob/main/README.md)
+- [QUICKSTART.md](https://github.com/johan162/mcprojsim/blob/main/QUICKSTART.md)
+- [scripts/README.md](https://github.com/johan162/mcprojsim/blob/main/scripts/README.md)
+- [pyproject.toml](https://github.com/johan162/mcprojsim/blob/main/pyproject.toml)
+- [Makefile](https://github.com/johan162/mcprojsim/blob/main/Makefile)
+- [Dockerfile](https://github.com/johan162/mcprojsim/blob/main/Dockerfile)
+- [Dockerfile.docs](https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs)
+- [ci.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/ci.yml)
+- [docs.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/docs.yml)
+- [publish-to-pypi.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/publish-to-pypi.yml)

@@ -386,13 +386,61 @@ from mcprojsim.utils import Validator
 is_valid, error = Validator.validate_file("project.yaml")
 ```
 
-## What Is Not a Stable User-Facing API?
+## Not a Stable User-Facing API?
 
-The following modules are useful implementation details, but they should usually not be the first things documented for end users:
+The following modules are currently imported in `mcprojsim.simulation` and `mcprojsim.utils`, but they are more internal and subject to change without deprecation. They are not intended for direct use by library consumers, but they are technically accessible if you want to experiment or build on top of them.
 
 - `mcprojsim.simulation.distributions`
 - `mcprojsim.simulation.scheduler`
 - `mcprojsim.simulation.risk_evaluator`
 - `mcprojsim.utils.logging`
 
-They can still be documented later if you want a fuller developer reference.
+
+## Natural Language Parser
+
+### `NLProjectParser`
+
+Converts semi-structured, plain-text project descriptions into valid mcprojsim YAML project files. Also available via the `mcprojsim generate` CLI command and the MCP server's `generate_project_file` tool.
+
+```python
+from mcprojsim.nl_parser import NLProjectParser
+
+parser = NLProjectParser()
+```
+
+Methods:
+
+- `parse(text: str) -> ParsedProject` — extract project metadata and tasks from a text description
+- `to_yaml(project: ParsedProject) -> str` — render a `ParsedProject` as a valid YAML project file
+- `parse_and_generate(text: str) -> str` — convenience wrapper that calls `parse` then `to_yaml`
+
+Supported input patterns:
+
+- `Project name: My Project`
+- `Start date: 2026-04-01`
+- `Task 1: Backend API` followed by bullet points
+- `Size: M` or `Size XL` (T-shirt sizes)
+- `Story points: 5`
+- `Estimate: 3/5/10 days` (min/most_likely/max)
+- `Depends on Task 1, Task 3`
+
+```python
+description = """
+Project name: Website Redesign
+Start date: 2026-06-01
+
+Task 1: Design mockups
+- Size: M
+
+Task 2: Frontend implementation
+- Size: L
+- Depends on Task 1
+"""
+
+yaml_output = parser.parse_and_generate(description)
+```
+
+### Data classes
+
+- `ParsedProject` — extracted project-level data (`name`, `start_date`, `hours_per_day`, `tasks`, `confidence_levels`)
+- `ParsedTask` — extracted task data (`name`, `t_shirt_size`, `story_points`, `min_estimate`/`most_likely_estimate`/`max_estimate`, `dependency_refs`)

@@ -483,34 +483,10 @@ Task 3:
 You do not need an MCP client or an AI service to use the natural language parser. The `mcprojsim generate` command runs the same parser directly from the terminal:
 
 ```bash
-# Write a description to a text file
-cat > description.txt << 'EOF'
-Project name: My Project
-Start date: 2026-01-15
-Task 1:
-- Design phase
-- Size: M
-Task 2:
-- Implementation
-- Depends on Task 1
-- Size: XL
-EOF
-
-# Generate the project YAML
 mcprojsim generate description.txt -o my_project.yaml
-
-# Validate and simulate in one go
-mcprojsim validate my_project.yaml && mcprojsim simulate my_project.yaml
 ```
 
-The `generate` command supports these options:
-
-| Option | Effect |
-|--------|--------|
-| `-o FILE` | Write YAML to a file instead of stdout |
-| `--validate-only` | Check for issues without generating output |
-
-This is the fastest path from a rough idea to a simulation result — no YAML authoring required.
+See [Running Simulations — `mcprojsim generate`](running_simulations.md#mcprojsim-generate) for the full command reference and all options.
 
 ## Using the MCP tools directly from Python
 

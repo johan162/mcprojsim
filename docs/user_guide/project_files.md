@@ -48,25 +48,7 @@ Generate the YAML project file:
 mcprojsim generate description.txt -o project.yaml
 ```
 
-Expected result:
-
-```text
-✓ Generated project.yaml (3 tasks)
-```
-
-The generated file is ready for `mcprojsim validate` and `mcprojsim simulate`.
-
-You can also print to stdout (omit `-o`), or validate without generating:
-
-```bash
-# Print YAML to stdout
-mcprojsim generate description.txt
-
-# Check for issues without generating
-mcprojsim generate --validate-only description.txt
-```
-
-The parser understands T-shirt sizes (`Size: M`, `Size XL`), story points (`Story points: 5`), explicit ranges (`Estimate: 3/5/10 days`), and dependencies (`Depends on Task 1`). It is tolerant of minor formatting variations such as missing colons and inconsistent spacing. See [MCP Server & Natural Language Project Input](mcp-server.md) for the full input format reference and more examples.
+See [Running Simulations — `mcprojsim generate`](running_simulations.md#mcprojsim-generate) for the full command reference and all options. The [MCP Server](mcp-server.md) page covers the complete input format and more examples.
 
 !!! note
     The `generate` command creates a minimal but valid project file. After generating, you can manually add uncertainty factors, risks, resources, and other fields documented in this chapter.
@@ -171,6 +153,7 @@ The `project` section is required. It contains project-level metadata and report
 | `start_date` | Yes | ISO date string | — | Must parse as `YYYY-MM-DD` |
 | `currency` | No | string | `"USD"` | Stored as metadata |
 | `confidence_levels` | No | list of integers | `[25, 50, 75, 80, 85, 90, 95, 99]` | Controls reported percentiles |
+| `hours_per_day` | No | float | `8.0` | Hours in a working day; used for day/week conversion |
 | `probability_red_threshold` | No | float | `0.50` | Must be between `0.0` and `1.0` |
 | `probability_green_threshold` | No | float | `0.90` | Must be between `0.0` and `1.0` |
 
@@ -769,7 +752,6 @@ tasks:
     name: "Deployment"
     estimate:
       t_shirt_size: "S"
-      unit: "days"
     dependencies: ["task_002"]
 
 resources:
@@ -858,7 +840,6 @@ dependencies = ["task_002"]
 
 [tasks.estimate]
 t_shirt_size = "S"
-unit = "days"
 
 [[resources]]
 id = "designer"
@@ -914,4 +895,4 @@ Although multiple forms are accepted, the clearest project files usually follow 
 - use structured risk impacts when you need `percentage` or explicit units,
 - treat `resources` and `calendars` as advanced sections whose detailed internal schema may evolve.
 
-If you want to see the reference syntax used in practice, compare this chapter with [examples/sample_project.yaml](examples/sample_project.yaml), [examples/tshirt_walkthrough_project.yaml](examples/tshirt_walkthrough_project.yaml), [examples/story_points_walkthrough_project.yaml](examples/story_points_walkthrough_project.yaml), and [examples/project_with_custom_thresholds.yaml](examples/project_with_custom_thresholds.yaml).
+If you want to see the reference syntax used in practice, compare this chapter with `examples/sample_project.yaml`, `examples/tshirt_walkthrough_project.yaml`, `examples/story_points_walkthrough_project.yaml`, and `examples/project_with_custom_thresholds.yaml`.

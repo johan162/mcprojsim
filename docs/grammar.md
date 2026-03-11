@@ -131,8 +131,6 @@ This document provides a complete formal grammar specification for Monte Carlo P
                 | "requirements_maturity"
                 | "technical_complexity"
                 | "integration_complexity"
-                | "testing_requirements"
-                | "deployment_complexity"
                 | "team_distribution"
                 | <custom_factor_name>
 
@@ -386,77 +384,13 @@ See `src/mcprojsim/models/` for the complete Pydantic model definitions that enf
 
 ## T-Shirt Size Configuration
 
-T-shirt sizes can be customized via configuration file. The default values are defined as Fibonacci-like sequences:
-
-```yaml
-t_shirt_sizes:
-  XS:
-    min: 0.5
-    most_likely: 1
-    max: 2
-  S:
-    min: 1
-    most_likely: 2
-    max: 4
-  M:
-    min: 3
-    most_likely: 5
-    max: 8
-  L:
-    min: 5
-    most_likely: 8
-    max: 13
-  XL:
-    min: 8
-    most_likely: 13
-    max: 21
-  XXL:
-    min: 13
-    most_likely: 21
-    max: 34
-```
-
-These values can be customized in a configuration file and passed using `--config` option.
+T-shirt sizes can be customized via a configuration file. The default values (listed in the [Semantic Constraints](#semantic-constraints) section above) follow a Fibonacci-like progression. See [Task Estimation — T-Shirt Size Estimates](user_guide/task_estimation.md#t-shirt-size-estimates) for the full default mapping table and customization guidance, and [Configuration](configuration.md) for the configuration file format.
 
 ## Story Point Configuration
 
-Story Point mappings can be customized via configuration file in the same way. The default values are:
+Story Point mappings can be customized via a configuration file in the same way. The default values are listed in the [Semantic Constraints](#semantic-constraints) section above. See [Task Estimation — Story Point Estimates](user_guide/task_estimation.md#story-point-estimates) for the full default mapping table and customization guidance.
 
-```yaml
-story_points:
-  1:
-    min: 0.5
-    most_likely: 1
-    max: 3
-  2:
-    min: 1
-    most_likely: 2
-    max: 4
-  3:
-    min: 1.5
-    most_likely: 3
-    max: 5
-  5:
-    min: 3
-    most_likely: 5
-    max: 8
-  8:
-    min: 5
-    most_likely: 8
-    max: 15
-  13:
-    min: 8
-    most_likely: 13
-    max: 21
-  21:
-    min: 13
-    most_likely: 21
-    max: 34
-```
-
-These values can also be customized in a configuration file and passed using `--config`.
-
-To view current configuration including T-shirt sizes and Story Point mappings, use:
+To view the current configuration including T-shirt sizes and Story Point mappings, use:
 
 ```bash
 mcprojsim config show
@@ -464,7 +398,7 @@ mcprojsim config show
 
 ## Related Documentation
 
-- [Getting Started](getting_started.md) - Basic usage examples
+- [Getting Started](user_guide/getting_started.md) - Install and run your first simulation
 - [Examples](examples.md) - Complete working examples
 - [API Reference](api_reference.md) - Detailed API documentation
 - [Configuration](configuration.md) - Configuration options

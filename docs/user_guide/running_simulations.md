@@ -1,6 +1,6 @@
 # Running simulations
 
-This chapter is a reference for the `mcprojsim` command-line interface. It covers all three commands: `generate`, `validate`, and `simulate`.
+This chapter is a reference for the `mcprojsim` command-line interface. It covers all four commands: `generate`, `validate`, `simulate`, and `config show`.
 
 ---
 
