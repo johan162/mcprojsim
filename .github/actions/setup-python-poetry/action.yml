@@ -22,7 +22,6 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
-        cache: poetry
 
     - name: Install Poetry
       shell: bash
@@ -35,6 +34,14 @@ runs:
       run: |
         poetry config virtualenvs.in-project true
         poetry --version
+
+    - name: Cache Poetry download cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pypoetry
+        key: ${{ runner.os }}-pypoetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pypoetry-
 
     - name: Cache virtual environment
       uses: actions/cache@v4
