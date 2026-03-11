@@ -4,16 +4,17 @@ These tests call the tool functions directly as regular Python functions,
 bypassing MCP transport.
 """
 
-import pytest
-
-# The mcp package is an optional dependency – skip all tests when missing.
-mcp = pytest.importorskip("mcp")
-
 from mcprojsim.mcp_server import (
     generate_project_file,
     simulate_project,
     validate_project_description,
 )
+
+import pytest
+
+# The mcp package is an optional dependency – skip all tests when missing.
+mcp = pytest.importorskip("mcp")
+
 
 _SIMPLE_DESC = """\
 Project name: MCP Test

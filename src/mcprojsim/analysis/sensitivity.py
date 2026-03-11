@@ -27,6 +27,11 @@ class SensitivityAnalyzer:
             x: np.ndarray = np.asarray(task_durations)
             y: np.ndarray = np.asarray(results.durations)
 
+            # Skip constant arrays where correlation is undefined
+            if np.ptp(x) == 0 or np.ptp(y) == 0:
+                correlations[task_id] = 0.0
+                continue
+
             # stats.spearmanr returns a tuple (correlation, p-value)
             correlation_coeff, _ = stats.spearmanr(x, y)
             # Explicit cast to handle scipy type inference issues

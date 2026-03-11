@@ -8,7 +8,6 @@ from click.testing import CliRunner
 
 from mcprojsim.cli import cli
 
-
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
@@ -222,9 +221,7 @@ class TestSimulateTargetDate:
         runner = CliRunner()
         with runner.isolated_filesystem():
             pf = _write_project(None)
-            result = runner.invoke(
-                cli, ["simulate", pf, "--target-date", "2026-03-01"]
-            )
+            result = runner.invoke(cli, ["simulate", pf, "--target-date", "2026-03-01"])
         assert result.exit_code == 0
         assert "Probability of completing by 2026-03-01" in result.output
 
@@ -246,9 +243,7 @@ class TestSimulateTargetDate:
         runner = CliRunner()
         with runner.isolated_filesystem():
             pf = _write_project(None)
-            result = runner.invoke(
-                cli, ["simulate", pf, "--target-date", "2026-03-01"]
-            )
+            result = runner.invoke(cli, ["simulate", pf, "--target-date", "2026-03-01"])
         assert "Cannot compute probability" in result.output
 
     def test_target_date_invalid_format(self, monkeypatch):
@@ -256,9 +251,7 @@ class TestSimulateTargetDate:
         runner = CliRunner()
         with runner.isolated_filesystem():
             pf = _write_project(None)
-            result = runner.invoke(
-                cli, ["simulate", pf, "--target-date", "not-a-date"]
-            )
+            result = runner.invoke(cli, ["simulate", pf, "--target-date", "not-a-date"])
         assert "Invalid target date format" in result.output
 
 
@@ -269,7 +262,9 @@ class TestSimulateExports:
         monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
         captured = {}
 
-        def fake_json_export(results, output_path, config=None, critical_path_limit=None):
+        def fake_json_export(
+            results, output_path, config=None, critical_path_limit=None
+        ):
             captured["path"] = str(output_path)
 
         monkeypatch.setattr("mcprojsim.cli.JSONExporter.export", fake_json_export)
@@ -286,7 +281,9 @@ class TestSimulateExports:
         monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
         captured = {}
 
-        def fake_csv_export(results, output_path, config=None, critical_path_limit=None):
+        def fake_csv_export(
+            results, output_path, config=None, critical_path_limit=None
+        ):
             captured["path"] = str(output_path)
 
         monkeypatch.setattr("mcprojsim.cli.CSVExporter.export", fake_csv_export)

@@ -69,8 +69,12 @@ class SimulationResults(BaseModel):
         self.std_dev = float(np.std(self.durations))
         self.min_duration = float(np.min(self.durations))
         self.max_duration = float(np.max(self.durations))
-        self.skewness = float(scipy_stats.skew(self.durations))
-        self.kurtosis = float(scipy_stats.kurtosis(self.durations))
+        if self.std_dev > 0:
+            self.skewness = float(scipy_stats.skew(self.durations))
+            self.kurtosis = float(scipy_stats.kurtosis(self.durations))
+        else:
+            self.skewness = 0.0
+            self.kurtosis = 0.0
 
     def percentile(self, p: int) -> float:
         """Get percentile value.
