@@ -62,14 +62,14 @@ Task 2:
 Generate the project file:
 
 ```bash
-mcprojsim generate description.txt -o project.yaml
+mcprojsim generate description.txt -o quickstart_project.yaml
 ```
 
 That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `min/most_likely/max` estimates. See the [MCP Server & Natural Language Input](docs/user_guide/mcp-server.md) guide for the full input format.
 
 ??? tip "Alternative: write the YAML by hand"
 
-    If you prefer full control, create `project.yaml` manually:
+    If you prefer full control, create `quickstart_project.yaml` manually where you can specify all available fields. The minimum required fields are `project.name`, `project.start_date`, and at least one task with an estimate. In the previous we used T-shirt sizes for the estimates, but here is the same project with explicit `min/most_likely/max` estimates in days:
 
     ```yaml
     project:
@@ -95,56 +95,19 @@ That is it — the generated `project.yaml` is ready for validation and simulati
           max: 10
           unit: "days"
         dependencies: ["task_001"]
-        uncertainty_factors:
-          team_experience: "medium"
-          technical_complexity: "medium"
     ```
 
-    See the [project file reference](docs/user_guide/project_files.md) for all available fields.
+See the [project file reference](docs/user_guide/project_files.md) for all available fields.
 
-This example is intentionally small — two tasks, one dependency. That is enough for a meaningful first simulation and the output will be
+This example is intentionally small — two tasks, one dependency, but that is enough for a meaningful first simulation!
 
-```bash
-% mcprojsim simulate quickstart_example.yaml 
-2026-03-09 06:18:07,536 - mcprojsim - INFO - Using default configuration
-Loading project from quickstart_example.yaml...
-2026-03-09 06:18:07,538 - mcprojsim - INFO - Loaded project: Website Refresh
-Running simulation with 10000 iterations...
-Progress: 10.0% (1000/10000)
-Progress: 20.0% (2000/10000)
-Progress: 30.0% (3000/10000)
-Progress: 40.0% (4000/10000)
-Progress: 50.0% (5000/10000)
-Progress: 60.0% (6000/10000)
-Progress: 70.0% (7000/10000)
-Progress: 80.0% (8000/10000)
-Progress: 90.0% (9000/10000)
-Progress: 100.0% (10000/10000)
-
-=== Simulation Results ===
-Project: Website Refresh
-Hours per Day: 8.0
-Mean: 126.78 hours (16 working days)
-Median (P50): 125.36 hours
-Std Dev: 18.01 hours
-
-Confidence Intervals:
-  P50: 125.36 hours (16 working days)  (2026-04-22)
-  P80: 143.08 hours (18 working days)  (2026-04-24)
-  P90: 151.74 hours (19 working days)  (2026-04-27)
-
-Most Frequent Critical Paths:
-  1. task_001 -> task_002 (10000/10000, 100.0%)
-
-No export formats specified. Use -f to export results to files.
-```
-
+`
 ## 3. Validate the file
 
 Before simulating, validate the input:
 
 ```bash
-mcprojsim validate project.yaml
+mcprojsim validate quickstart_project.yaml
 ```
 
 Expected result:
@@ -158,7 +121,7 @@ If validation fails, read the reported field name and fix the YAML file before c
 ## 4. Run your first simulation
 
 ```bash
-mcprojsim simulate project.yaml --seed 42
+mcprojsim simulate quickstart_project.yaml --seed 42 --table
 ```
 
 What this does:
@@ -174,37 +137,105 @@ You should see a summary with values such as:
 - higher-confidence targets such as `P80` and `P90`
 - projected delivery dates (weekends excluded)
 
-## 5. Open the generated results
+The output will now be the following:
 
-After the run finishes, look for files like these:
+```bash
+% mcprojsim simulate quickstart_example.yaml --seed 42 --table
+mcprojsim, version 0.4.7
+Progress: 100.0% (10000/10000)
 
-```text
-Website Refresh_results.json
-Website Refresh_results.csv
-Website Refresh_results.html
+=== Simulation Results ===
+┌──────────────────────────┬────────────────────────────────┐
+│ Parameter                │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Project                  │ Website Refresh                │
+│ Hours per Day            │ 8.0                            │
+│ Mean                     │ 126.93 hours (16 working days) │
+│ Median (P50)             │ 125.74 hours                   │
+│ Std Dev                  │ 17.68 hours                    │
+│ Coefficient of Variation │ 0.1393                         │
+│ Skewness                 │ 0.2267                         │
+│ Excess Kurtosis          │ -0.4206                        │
+└──────────────────────────┴────────────────────────────────┘
+
+Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │  125.74 │             16 │ 2026-04-23 │
+│ P80          │  142.59 │             18 │ 2026-04-27 │
+│ P90          │  151.18 │             19 │ 2026-04-28 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Sensitivity Analysis (top contributors):
+┌──────────┬───────────────┐
+│ Task     │ Correlation   │
+├──────────┼───────────────┤
+│ task_002 │ +0.8911       │
+│ task_001 │ +0.4236       │
+└──────────┴───────────────┘
+
+Schedule Slack:
+┌──────────┬─────────────────┬──────────┐
+│ Task     │   Slack (hours) │ Status   │
+├──────────┼─────────────────┼──────────┤
+│ task_001 │               0 │ Critical │
+│ task_002 │               0 │ Critical │
+└──────────┴─────────────────┴──────────┘
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_002 (10000/10000, 100.0%)
+
+No export formats specified. Use -f to export results to files.
 ```
 
-The most useful file for a first look is the HTML report.
-Open it in your browser.
 
-On macOS you can use:
+## 5. Generate HTML report and open it
+
+By default, no export formats are specified, so the results are only printed to the terminal. 
+To get the full report with all details, use the `-f` flag.
+
+The supported formats are `json`, `csv`, and `html`. The HTML report is the most user-friendly for a first look, as it includes all the details and visualizations.
+
+```bash
+mcprojsim simulate quickstart_project.yaml --seed 42 -f html
+```
+
+Opening the generated HTML report (`Website Refresh_results.html`) will give you a detailed view of the results, including:
+
+- project summary
+- confidence intervals
+- the full distribution of outcomes
+- sensitivity analysis showing which tasks contribute most to uncertainty
+- schedule slack information
+- critical path analysis
+- risk impact analysis
+- statistical distribution metrics such as skewness and kurtosis
+- and more!
+
+On macOS you can open the HTML report using the following command:
 
 ```bash
 open "Website Refresh_results.html"
 ```
+
+The first part of the generated HTML is shown below to give you a preview of what to expect:
+
+<img src="examples/quickstart_html.png" alt="Preview of the HTML report" width="800"/>
+
 
 ## 6. Useful next commands
 
 Run again with more iterations:
 
 ```bash
-mcprojsim simulate project.yaml --iterations 50000 --seed 42
+mcprojsim simulate project.yaml --iterations 50000 --seed 42 --table
 ```
 
 Use a custom configuration file:
 
 ```bash
-mcprojsim simulate project.yaml --config my_config.yaml --seed 42
+mcprojsim simulate project.yaml --config my_config.yaml --seed 42 --table
 ```
 
 Suppress progress output:
@@ -244,5 +275,7 @@ This guide intentionally focuses on the fastest end-user path.
 If `pipx` is not the right fit, see:
 
 - [README.md](README.md) for the project overview
-- [docs/getting_started.md](docs/getting_started.md) for basic install and first-run material
-- [scripts/README.md](scripts/README.md) if you are working from a source checkout
+- [docs/user_guide/getting_started.md](docs/user_guide/getting_started.md) for basic install and first-run material
+- [scripts/README.md](scripts/README.md) if you are working from a source checkout here is a description for how ti use the helper scripts to set up a local development environment and run tests.
+
+If you are a developer, see the [Development Guide](docs/development_guide.md) for instructions on setting up a local development environment, running tests, and contributing to the project.

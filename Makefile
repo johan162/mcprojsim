@@ -6,7 +6,7 @@
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
 pre-commit clean maintainer-clean docs docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
-container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean
+container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all
 
 
 # Make behavior
@@ -280,6 +280,7 @@ help: ## Show this help message
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
+	@$(call print_section,Git Operations,pull-all)
 	@echo ""
 
 # ============================================================================================
@@ -536,6 +537,29 @@ ghcr-logout: ## Logout from GitHub Container Registry
 
 ghcr-clean: ghcr-logout container-clean-images ## Clean up GHCR login and local images
 	@:
+
+
+# ============================================================================================
+# Git Operations Targets
+# ============================================================================================
+pull-all: ## Pull all local branches that exist on origin
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo -e "$(RED)✗ Error: Working directory is not clean. Please commit or stash your changes before pulling.$(NC)"; \
+		exit 1; \
+	fi
+	@echo -e "$(DARKYELLOW)- Fetching latest from origin...$(NC)"
+	@git fetch --prune origin
+	@current_branch=$$(git rev-parse --abbrev-ref HEAD); \
+	for branch in $$(git branch --format='%(refname:short)'); do \
+		if git show-ref --verify --quiet refs/remotes/origin/$$branch; then \
+			echo -e "$(BLUE)  Pulling $$branch...$(NC)"; \
+			git checkout $$branch && git pull origin $$branch || echo -e "$(RED)  ✗ Failed to pull $$branch$(NC)"; \
+		else \
+			echo -e "$(YELLOW)  ⚠ Skipping $$branch (not on origin)$(NC)"; \
+		fi; \
+	done; \
+	git checkout $$current_branch
+	@echo -e "$(GREEN)✓ All branches pulled$(NC)"
 
 
 ### End of Makefile
