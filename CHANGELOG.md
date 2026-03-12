@@ -1,3 +1,14 @@
+## [v0.4.6] - 2026-03-12
+
+Release Type: patch
+
+### 📋 Summary 
+- Pipeline work
+
+### 🛠 Internal
+- Only run Docs pipeline on main branch
+
+
 ## [v0.4.5] - 2026-03-12
 
 Release Type: patch
