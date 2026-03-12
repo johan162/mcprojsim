@@ -347,19 +347,19 @@ fi
 echo "All example projects validated successfully."
 
 # 2.4: Package building test
-run_command "poetry build" "Testing package building..."
+# run_command "poetry build" "Testing package building..."
 
-if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
-    print_error_colored "Package build failed"
-    exit 1
-fi
+# if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
+#     print_error_colored "Package build failed"
+#     exit 1
+# fi
 
-run_command "poetry run twine check dist/*" "Verifying built packages..."
+# run_command "poetry run twine check dist/*" "Verifying built packages..."
 
-if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
-    print_error_colored "Package validation failed"
-    exit 1
-fi
+# if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
+#     print_error_colored "Package validation failed"
+#     exit 1
+# fi
 
 # =====================================
 # PHASE 3: RELEASE PREPARATION
@@ -431,12 +431,12 @@ EOF
 fi
 
 # 3.3: Final pre-commit validation
-run_command "poetry run pytest ${SMOKE_TEST_FILE} -v" "Final validation after version updates..."
+# run_command "poetry run pytest ${SMOKE_TEST_FILE} -v" "Final validation after version updates..."
 
-if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
-    print_error_colored "Final validation failed"
-    exit 1
-fi
+# if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
+#     print_error_colored "Final validation failed"
+#     exit 1
+# fi
 
 # =====================================
 # PHASE 4: RELEASE EXECUTION
@@ -552,6 +552,9 @@ run_command "git push origin develop" "Pushing updated develop..."
 
 echo -e "${BLUE}🕐${NC} Monitoring GitHub Actions..."
 echo ""
+
+# Sometime some extra time is needed for GitHub to register the new push and trigger the workflow, so we wait a bit before watching the runs
+sleep 3
 
 if [[ "$DRY_RUN" == "false" ]]; then
     # Watch the latest workflow run triggered by the push

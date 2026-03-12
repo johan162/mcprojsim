@@ -147,20 +147,36 @@ What this does:
 You should see output like:
 
 ```text
+mcprojsim, version 0.4.4
+Progress: 100.0% (10000/10000)
+
 === Simulation Results ===
 Project: Website Refresh
 Hours per Day: 8.0
-Mean: 126.78 hours (16 working days)
-Median (P50): 125.36 hours
-Std Dev: 18.01 hours
+Mean: 126.93 hours (16 working days)
+Median (P50): 125.74 hours
+Std Dev: 17.68 hours
+Coefficient of Variation: 0.1393
+Skewness: 0.2267
+Excess Kurtosis: -0.4206
 
 Confidence Intervals:
-  P50: 125.36 hours (16 working days)  (2026-04-22)
-  P80: 143.08 hours (18 working days)  (2026-04-24)
-  P90: 151.74 hours (19 working days)  (2026-04-27)
+  P50: 125.74 hours (16 working days)  (2026-04-23)
+  P80: 142.59 hours (18 working days)  (2026-04-27)
+  P90: 151.18 hours (19 working days)  (2026-04-28)
+
+Sensitivity Analysis (top contributors):
+  task_002: +0.8911
+  task_001: +0.4236
+
+Schedule Slack:
+  task_001: 0.00 hours (Critical)
+  task_002: 0.00 hours (Critical)
 
 Most Frequent Critical Paths:
   1. task_001 -> task_002 (10000/10000, 100.0%)
+
+No export formats specified. Use -f to export results to files.
 ```
 
 ---
