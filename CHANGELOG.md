@@ -1,3 +1,21 @@
+## [v0.4.8] - 2026-03-12
+
+Release Type: patch
+
+### 📋 Summary 
+- Minor overhaul of documentation landing page and use stricter type checking for all source and tests.
+
+### 🚀 Improvements
+- Add `--strict` for `mypy` type checking and run on both `src/` and `tests/` 
+- Update Quickstart Guide with latest changes in console output
+
+### 🐛 Bug Fixes
+- Fix all type related warnings and errors
+
+### 🛠 Internal
+- Add `pull-all` Makefile target
+
+
 ## [v0.4.7] - 2026-03-12
 
 Release Type: patch
