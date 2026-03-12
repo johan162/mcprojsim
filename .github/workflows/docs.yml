@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - develop
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
@@ -12,7 +11,6 @@ on:
   pull_request:
     branches:
       - main
-      - develop
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
@@ -61,7 +59,7 @@ jobs:
   publish-docs:
     needs: build-docs
     runs-on: ubuntu-latest
-    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
