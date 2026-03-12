@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "mcprojsim"
-version = "0.4.6"
+version = "0.4.7"
 description = "Monte Carlo simulation system for software development effort estimation"
 readme = "README.md"
 authors = ["Johan Persson <johan162@gmail.com>"]

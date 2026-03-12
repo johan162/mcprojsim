@@ -197,7 +197,7 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(TYPECHECK_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running type checker...$(NC)"
-	@poetry run mypy src/
+	@poetry run mypy src/ tests/ --strict
 	@touch $(TYPECHECK_STAMP)
 	@echo -e "$(GREEN)✓ Typecheck target runs successfully$(NC)"
 

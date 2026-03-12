@@ -93,10 +93,14 @@ class TestConfig:
         config = Config.load_from_file(config_file)
 
         assert config.get_story_point(5) is not None
-        assert config.get_story_point(5).most_likely == 6
+        sp5 = config.get_story_point(5)
+        assert sp5 is not None
+        assert sp5.most_likely == 6
         assert config.get_story_point(8) is not None
         assert config.get_t_shirt_size("M") is not None
-        assert config.get_t_shirt_size("M").most_likely == 6
+        ts_m = config.get_t_shirt_size("M")
+        assert ts_m is not None
+        assert ts_m.most_likely == 6
         assert config.get_t_shirt_size("XL") is not None
 
     def test_load_from_nonexistent_file(self):

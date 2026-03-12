@@ -1,32 +1,54 @@
-# Welcome to Monte Carlo Project Simulator
+# Monte Carlo Project Simulator
 
-## Overview
+**Stop guessing deadlines. Start simulating them.**
 
-Monte Carlo Project Simulator (mcprojsim) is a powerful tool for probabilistic software project estimation. Instead of giving you a single, often unreliable deadline, it provides a range of possible outcomes with confidence levels.
+MCProjSim runs thousands of Monte Carlo simulations on your project plan and turns uncertain task estimates into confidence-based delivery forecasts — so you can tell stakeholders *"we have a 90 % chance of finishing by March 2nd"* instead of *"it'll take about 10 weeks"*.
 
-## Key Features
+---
 
-- **Natural Language Project Input** — generate valid project files from plain-text descriptions with `mcprojsim generate`
-- **Triangular & Log-Normal Distributions** for realistic task duration modeling
-- **Risk Analysis** at both project and task levels
-- **Dependency Management** with automatic critical path identification
-- **Uncertainty Factors** to account for team experience, requirements maturity, and more
-- **Multiple Output Formats** including JSON, CSV, and HTML reports
-- **Reproducible Results** with random seed support
+## Why MCProjSim?
 
-## Why Monte Carlo Simulation?
+Traditional estimation produces a single number that is almost always wrong.
+Monte Carlo simulation replaces that number with a **probability distribution** that honestly reflects what you know — and what you don't:
 
-Traditional project estimation often fails because it provides a single point estimate that doesn't account for uncertainty. Monte Carlo simulation:
+| Traditional estimate | MCProjSim forecast |
+|---|---|
+| "The project will take 72 days." | "There is a 50 % chance of finishing in 72 days, and a 90 % chance of finishing in 86 days." |
 
-1. **Acknowledges Uncertainty** - Uses probability distributions instead of single values
-2. **Quantifies Risk** - Shows the probability of meeting different deadlines
-3. **Identifies Critical Paths** - Highlights which tasks most impact the schedule
-4. **Improves Communication** - Provides stakeholders with realistic expectations
+Beyond schedule ranges, MCProjSim also tells you **why** a schedule might slip:
 
-## Quick Example
+- **Sensitivity analysis** — which tasks drive the most variance (Spearman rank correlation)
+- **Schedule slack** — which tasks are on the critical path and which have float
+- **Risk impact analysis** — how often each risk fires and how much time it costs
+- **Probability-of-date** — the likelihood of meeting a specific target date
+
+## Quick start
+
+### 1. Install
+
+Install as a CLI tool with `pipx`:
+
+```bash
+# If `pipx` is not installed:
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# Install MCProjSim as a CLI tool:
+pipx install mcprojsim         
+```
+
+Then verify the installation:
+
+```bash
+mcprojsim --help
+mcprojsim --version
+```
+
+### 2. Describe your project
+
+Create a file `project.yaml` (or let MCProjSim [generate one from plain text](user_guide/running_simulations.md)):
 
 ```yaml
-# project.yaml
 project:
   name: "My Project"
   start_date: "2025-11-01"
@@ -39,122 +61,97 @@ tasks:
       most_likely: 8
       max: 15
       unit: "days"
-    dependencies: []
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "high"
 ```
 
+### 3. Run & read the results
+
 ```bash
-# Run simulation
-% mcprojsim simulate examples/sample_project.yaml --iterations 10000 --table
+mcprojsim simulate project.yaml --table
+```
 
-# Output
-mcprojsim, version 0.4.4
-Progress: 100.0% (10000/10000)
-
+```text
 === Simulation Results ===
 ┌──────────────────────────┬────────────────────────────────┐
 │ Parameter                │ Value                          │
 ├──────────────────────────┼────────────────────────────────┤
-│ Project                  │ Customer Portal Redesign       │
-│ Hours per Day            │ 8.0                            │
+│ Project                  │ My Project                     │
 │ Mean                     │ 579.93 hours (73 working days) │
-│ Median (P50)             │ 572.84 hours                   │
 │ Std Dev                  │ 78.50 hours                    │
 │ Coefficient of Variation │ 0.1354                         │
-│ Skewness                 │ 0.5283                         │
-│ Excess Kurtosis          │ 0.3507                         │
 └──────────────────────────┴────────────────────────────────┘
 
 Confidence Intervals:
-┌──────────────┬─────────┬────────────────┬────────────┐
-│ Percentile   │   Hours │   Working Days │ Date       │
-├──────────────┼─────────┼────────────────┼────────────┤
-│ P25          │  524.8  │             66 │ 2026-02-02 │
-│ P50          │  572.84 │             72 │ 2026-02-10 │
-│ P75          │  628.3  │             79 │ 2026-02-19 │
-│ P80          │  642.91 │             81 │ 2026-02-23 │
-│ P85          │  660    │             83 │ 2026-02-25 │
-│ P90          │  684.51 │             86 │ 2026-03-02 │
-│ P95          │  721.71 │             91 │ 2026-03-09 │
-│ P99          │  791.99 │             99 │ 2026-03-19 │
-└──────────────┴─────────┴────────────────┴────────────┘
-
-Sensitivity Analysis (top contributors):
-┌──────────┬───────────────┐
-│ Task     │ Correlation   │
-├──────────┼───────────────┤
-│ task_004 │ +0.4268       │
-│ task_008 │ +0.3250       │
-│ task_002 │ +0.2914       │
-│ task_006 │ +0.2904       │
-│ task_001 │ +0.1686       │
-│ task_005 │ +0.1649       │
-│ task_007 │ -0.0098       │
-│ task_003 │ -0.0031       │
-└──────────┴───────────────┘
-
-Schedule Slack:
-┌──────────┬─────────────────┬───────────────┐
-│ Task     │   Slack (hours) │ Status        │
-├──────────┼─────────────────┼───────────────┤
-│ task_008 │            0    │ Critical      │
-│ task_006 │            0    │ Critical      │
-│ task_005 │            0    │ Critical      │
-│ task_004 │            0    │ Critical      │
-│ task_001 │            0    │ Critical      │
-│ task_002 │            0    │ Critical      │
-│ task_003 │          165.14 │ 165.1h buffer │
-│ task_007 │          356.32 │ 356.3h buffer │
-└──────────┴─────────────────┴───────────────┘
-
-Risk Impact Analysis:
-┌──────────┬────────────────┬────────────────┬───────────────────────────────┐
-│ Task     │   Mean (hours) │ Trigger Rate   │   Mean When Triggered (hours) │
-├──────────┼────────────────┼────────────────┼───────────────────────────────┤
-│ task_001 │           3.33 │ 20.8%          │                            16 │
-│ task_003 │           5.97 │ 24.9%          │                            24 │
-│ task_004 │          12.08 │ 30.2%          │                            40 │
-│ task_006 │          11.25 │ 35.1%          │                            32 │
-│ task_008 │           4.89 │ 20.4%          │                            24 │
-└──────────┴────────────────┴────────────────┴───────────────────────────────┘
-
-Most Frequent Critical Paths:
-  1. task_001 -> task_002 -> task_004 -> task_005 -> task_006 -> task_008 (10000/10000, 100.0%)
-
+┌────────────┬─────────┬────────────────┬────────────┐
+│ Percentile │   Hours │   Working Days │ Date       │
+├────────────┼─────────┼────────────────┼────────────┤
+│ P50        │  572.84 │             72 │ 2026-02-10 │
+│ P80        │  642.91 │             81 │ 2026-02-23 │
+│ P90        │  684.51 │             86 │ 2026-03-02 │
+└────────────┴─────────┴────────────────┴────────────┘
 ```
 
-## Installation
+The full output also includes sensitivity analysis, schedule slack, risk impact, and critical path information.
+See [Interpreting Results](user_guide/interpreting_results.md) for a detailed walkthrough of every output section.
 
-The easiest way is to intall from PyPi repository with:
+## Key features
 
-```bash
-pipx install mcprojsim
-```
+| Category | Highlights |
+|---|---|
+| **Estimation** | Three-point estimates (min / most likely / max), T-shirt sizes, story points — in hours, days, or weeks |
+| **Simulation** | Triangular & log-normal distributions, configurable iteration count, reproducible seeds |
+| **Dependencies & scheduling** | Automatic critical path detection, schedule slack calculation |
+| **Risk modeling** | Task-level and project-level risks with probability and impact |
+| **Uncertainty factors** | Team experience, requirements maturity, technical complexity, and more |
+| **Analysis** | Sensitivity (Spearman ρ), skewness, kurtosis, CV, probability-of-date |
+| **Output** | CLI (plain or `--table`), JSON, CSV, HTML reports |
+| **AI integration** | Built-in [MCP server](user_guide/mcp-server.md) for use with GitHub Copilot, Claude Desktop, and other MCP clients |
+| **NL input** | Generate project files from natural-language descriptions with `mcprojsim generate` |
 
-Or install from source:
+## Where to go next
 
-```bash
-git clone https://github.com/johan162/mcprojsim.git
-cd mcprojsim
-pip install -e .
-```
+<div class="grid cards" markdown>
 
-## Next Steps
+-   **:material-rocket-launch: Getting Started**
 
-- [Getting Started](user_guide/getting_started.md) - Install and run your first simulation
-- [Examples](examples.md) - Working examples and use cases
-- [Configuration](configuration.md) - Customize uncertainty factors
-- [API Reference](api_reference.md) - Integrate into your tools
-- [Formal Grammar](grammar.md) - Complete specification in EBNF notation
+    Install MCProjSim, create your first project file, and run a simulation in under 10 minutes.
 
-## Development
+    [:octicons-arrow-right-24: Getting Started](user_guide/getting_started.md)
 
-For more details how to setup a development environment,use containers, build documentation and architecture description see
+-   **:material-book-open-variant: User Guide**
 
-- [Development](development.md)
+    Everything from task estimation and risk modeling to interpreting output and configuring uncertainty factors.
+
+    [:octicons-arrow-right-24: Your First Project](user_guide/your_first_project.md)
+
+-   **:material-file-document-outline: Examples**
+
+    Ready-to-run example projects covering T-shirt sizing, story points, custom thresholds, and more.
+
+    [:octicons-arrow-right-24: Examples](examples.md)
+
+-   **:material-cog: Configuration**
+
+    Customize uncertainty factors, T-shirt size mappings, story point scales, and output settings.
+
+    [:octicons-arrow-right-24: Configuration](configuration.md)
+
+</div>
+
+### Additional resources
+
+| Resource | Description |
+|---|---|
+| [Running Simulations](user_guide/running_simulations.md) | CLI options: `--table`, `--verbose`, `--target-date`, export formats |
+| [Interpreting Results](user_guide/interpreting_results.md) | How to read confidence intervals, sensitivity, slack, and risk impact |
+| [MCP Server](user_guide/mcp-server.md) | Use MCProjSim as an AI-powered simulation tool from your editor |
+| [API Reference](api_reference.md) | Integrate MCProjSim into your own Python scripts |
+| [Formal Grammar](grammar.md) | Full EBNF specification for project files |
+| [Development](development.md) | Set up a dev environment, run tests, build docs, and use containers |
+| [Changelog](CHANGELOG.md) | Release history and migration notes |
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License — see [LICENSE](https://github.com/johan162/mcprojsim/blob/main/LICENSE) for details.

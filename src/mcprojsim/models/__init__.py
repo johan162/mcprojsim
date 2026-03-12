@@ -9,9 +9,9 @@ from mcprojsim.models.project import (
     RiskImpact,
     UncertaintyFactors,
     DistributionType,
-    EffortUnit,
     ImpactType,
 )
+from mcprojsim.config import EffortUnit
 from mcprojsim.models.simulation import SimulationResults
 
 __all__ = [

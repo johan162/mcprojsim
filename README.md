@@ -12,7 +12,7 @@
 
 ## Overview
 
-`mcprojsim` is a Monte Carlo simulation tool for project with emphasis on agile software project estimation.
+`mcprojsim` is a Monte Carlo simulation tool for projects with emphasis on agile software project estimation.
 Instead of producing a single deadline, it models uncertainty in task duration, dependencies, risks, and other schedule drivers to produce confidence-based forecast ranges.
 
 It is intended for teams that want answers such as:
@@ -193,7 +193,7 @@ If you want to work from a source checkout, run tests, build docs, or use contai
 - [scripts/README.md](scripts/README.md)
 - [docs/index.md](docs/index.md)
 
-The deatiled developer documentation (including how to configure and build the container) is available at
+The detailed developer documentation (including how to configure and build the container) is available at
 
 - [docs/development.md](docs/development.md)
 
@@ -202,15 +202,16 @@ The deatiled developer documentation (including how to configure and build the c
 Contributions are welcome.
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes with tests
-4. Run the test suite
-5. Submit a pull request
+2. Read the [Developer Guide](docs/development.md) to set up your environment and understand the codebase
+3. Create a feature branch
+4. Make your changes with tests
+5. Use the `./scripts/mkbld.sh` script to build and test your changes locally
+6. Submit a pull request
 
 ## Support
 
-- GitHub Issues: <https://github.com/johan162/mcprojsim/issues>
-- Documentation site: <https://johan162.github.io/mcprojsim/>
+- Bug reports: [MCProjSim Issues](https://github.com/johan162/mcprojsim/issues)
+- Full documentation: [MCProjSim Documentation](https://johan162.github.io/mcprojsim/)
 
 
 ## Citation
@@ -223,7 +224,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.4.6}
+  version = {0.4.7}
 }
 ```
 
