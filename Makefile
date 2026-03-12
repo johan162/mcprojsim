@@ -543,6 +543,10 @@ ghcr-clean: ghcr-logout container-clean-images ## Clean up GHCR login and local 
 # Git Operations Targets
 # ============================================================================================
 pull-all: ## Pull all local branches that exist on origin
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo -e "$(RED)✗ Error: Working directory is not clean. Please commit or stash your changes before pulling.$(NC)"; \
+		exit 1; \
+	fi
 	@echo -e "$(DARKYELLOW)- Fetching latest from origin...$(NC)"
 	@git fetch --prune origin
 	@current_branch=$$(git rev-parse --abbrev-ref HEAD); \
