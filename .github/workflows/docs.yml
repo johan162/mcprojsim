@@ -22,7 +22,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-docs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -58,10 +58,10 @@ jobs:
           path: site/
           retention-days: 7
 
-  deploy:
-    needs: build
+  publish-docs:
+    needs: build-docs
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
