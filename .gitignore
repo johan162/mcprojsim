@@ -112,3 +112,5 @@ dmypy.json
 *~
 *.bak
 
+*.html
+*.json
