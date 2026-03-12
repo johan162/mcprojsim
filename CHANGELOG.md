@@ -1,3 +1,14 @@
+## [v0.4.9] - 2026-03-12
+
+Release Type: patch
+
+### 📋 Summary 
+- Build scripts improvement
+
+### 🛠 Internal
+- Reduce duplicate work in release scripts
+
+
 ## [v0.4.8] - 2026-03-12
 
 Release Type: patch
