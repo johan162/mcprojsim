@@ -553,6 +553,9 @@ run_command "git push origin develop" "Pushing updated develop..."
 echo -e "${BLUE}🕐${NC} Monitoring GitHub Actions..."
 echo ""
 
+# Sometime some extra time is needed for GitHub to register the new push and trigger the workflow, so we wait a bit before watching the runs
+sleep 3
+
 if [[ "$DRY_RUN" == "false" ]]; then
     # Watch the latest workflow run triggered by the push
     gh run watch --exit-status
