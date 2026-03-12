@@ -3,7 +3,7 @@
 from copy import deepcopy
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import yaml
 from pydantic import BaseModel, Field
@@ -64,7 +64,7 @@ DEFAULT_STORY_POINT_VALUES = {
 }
 
 
-def _build_default_config_data() -> dict:
+def _build_default_config_data() -> dict[str, Any]:
     """Build the default configuration payload."""
     return {
         "uncertainty_factors": deepcopy(DEFAULT_UNCERTAINTY_FACTORS),
@@ -92,7 +92,9 @@ def _build_default_config_data() -> dict:
     }
 
 
-def _merge_nested_dicts(base: dict, overrides: dict) -> dict:
+def _merge_nested_dicts(
+    base: dict[str, Any], overrides: dict[str, Any]
+) -> dict[str, Any]:
     """Recursively merge dictionaries, preserving defaults."""
     merged = deepcopy(base)
 

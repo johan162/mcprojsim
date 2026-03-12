@@ -46,7 +46,7 @@ def load_yaml_with_locations(text: str) -> ParsedDocument:
         data = _construct_yaml_node(loader, root, (), path_lines)
         return ParsedDocument(data=data, path_lines=path_lines)
     finally:
-        loader.dispose()
+        loader.dispose()  # type: ignore[no-untyped-call]
 
 
 def load_toml_with_locations(text: str, toml_loader: Any) -> ParsedDocument:
@@ -150,7 +150,7 @@ def _construct_yaml_node(
         mapping_result: dict[Any, Any] = {}
         path_lines.setdefault(path, _line_from_node(node))
         for key_node, value_node in node.value:
-            key = loader.construct_object(key_node, deep=False)
+            key = loader.construct_object(key_node, deep=False)  # type: ignore[no-untyped-call]
             child_path = path + (key,)
             path_lines[child_path] = _line_from_node(key_node)
             mapping_result[key] = _construct_yaml_node(
@@ -171,9 +171,9 @@ def _construct_yaml_node(
 
     if isinstance(node, ScalarNode):
         path_lines.setdefault(path, _line_from_node(node))
-        return loader.construct_object(node, deep=False)
+        return loader.construct_object(node, deep=False)  # type: ignore[no-untyped-call]
 
-    return loader.construct_object(node, deep=False)
+    return loader.construct_object(node, deep=False)  # type: ignore[no-untyped-call]
 
 
 def _line_from_node(node: Node) -> int:

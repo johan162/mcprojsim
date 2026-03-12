@@ -227,7 +227,7 @@ class TestSimulateTargetDate:
 
     def test_target_date_no_start_date(self, monkeypatch):
         class NoStartResults(_FakeResults):
-            start_date = None
+            start_date = None  # type: ignore[assignment]
 
             def delivery_date(self, hours):
                 return None
