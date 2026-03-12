@@ -1,3 +1,17 @@
+## [v0.4.7] - 2026-03-12
+
+Release Type: patch
+
+### 📋 Summary 
+- More improvement in the documentation site
+
+### 🚀 Improvements
+- Rewrote the landing page of the documentation site to be more focused and concise
+
+### 🛠 Internal
+- Run stricter type checks in `mkbld.sh` 
+
+
 ## [v0.4.6] - 2026-03-12
 
 Release Type: patch
