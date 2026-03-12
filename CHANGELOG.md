@@ -1,3 +1,11 @@
+## [v0.4.5] - 2026-03-12
+
+Release Type: patch
+
+### 📋 Summary 
+- Update landing page for documentation
+
+
 ## [v0.4.4] - 2026-03-12
 
 Release Type: patch
