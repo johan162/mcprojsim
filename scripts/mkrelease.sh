@@ -304,27 +304,20 @@ print_step_colored ""
 print_step_colored "🧪 PHASE 2: UNIT TESTING & STATIC ANALYSIS"
 print_step_colored ""
 
-# 2.1: Full test suite with coverage requirements
+
+# 2.1: Static analysis and code quality
+echo "  ✓ Checking code formatting..."
+run_command "poetry run black --check --diff src/ tests/" "Checking code formatting"
+run_command "poetry run flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
+run_command "poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy static analysis"
+
+
+# 2.2: Full test suite with coverage requirements
 run_command "poetry run pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Test suite failed - aborting release"
     exit 1
-fi
-
-# 2.2: Static analysis and code quality
-if [[ "$DRY_RUN" == "true" ]]; then 
-    echo "  [DRY-RUN] Would run mypy via Poetry"
-    echo "  [DRY-RUN] Would run black via Poetry"
-else
-    echo "  ✓ Running static analysis..."
-    poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports || echo "⚠️  Type check warnings found"
-
-    echo "  ✓ Checking code formatting..."
-    poetry run black --check --diff src/ tests/ || {
-        print_error_colored "Code formatting issues found. Run: poetry run black src/ tests/"
-        exit 1
-    }
 fi
 
 # 2.3: Integration testing with example projects
@@ -345,21 +338,6 @@ else
 fi
 
 echo "All example projects validated successfully."
-
-# 2.4: Package building test
-# run_command "poetry build" "Testing package building..."
-
-# if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
-#     print_error_colored "Package build failed"
-#     exit 1
-# fi
-
-# run_command "poetry run twine check dist/*" "Verifying built packages..."
-
-# if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
-#     print_error_colored "Package validation failed"
-#     exit 1
-# fi
 
 # =====================================
 # PHASE 3: RELEASE PREPARATION
@@ -398,20 +376,26 @@ else
 
 Release Type: $RELEASE_TYPE
 
-### 📋 Summary 
+### 📋 Summary
 - [Brief summary of the release]
 
+### ⚠️ Breaking Changes
+- [Breaking changes]
+
 ### ✨ Additions
-- [List new features added in this release]
+- [New features]
 
 ### 🚀 Improvements
-- [List improvements made in this release]
+- [Improvements]
 
 ### 🐛 Bug Fixes
-- [List bug fixes addressed in this release]
+- [Bug fixes]
+
+### 📚 Documentation
+- [Documentation changes]
 
 ### 🛠 Internal
-- [List internal changes, refactoring, etc.]
+- [Internal changes]
 
 EOF
 
@@ -430,14 +414,6 @@ EOF
     read -r
 fi
 
-# 3.3: Final pre-commit validation
-# run_command "poetry run pytest ${SMOKE_TEST_FILE} -v" "Final validation after version updates..."
-
-# if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
-#     print_error_colored "Final validation failed"
-#     exit 1
-# fi
-
 # =====================================
 # PHASE 4: RELEASE EXECUTION
 # =====================================
@@ -448,7 +424,6 @@ print_step_colored ""
 
 # 4.1: Commit version updates
 run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md" "Staging release files..."
-
 run_command "git commit -m \"chore(release): prepare $VERSION
 
 - Update version to $VERSION
@@ -511,7 +486,6 @@ print_step_colored ""
 
 # 5.1: Return to develop and merge back release changes
 run_command "git checkout develop" "Switching back to develop..."
-run_command "git pull origin develop" "Pulling latest develop changes..."
 
 # 5.2: Merge main into develop to reconcile squash merge
 if [[ "$DRY_RUN" == "true" ]]; then
@@ -601,7 +575,6 @@ fi
 # =====================================
 # PHASE 8: RELEASE SUMMARY
 # =====================================
-
 
 echo ""
 if [[ "$DRY_RUN" == "true" ]]; then
