@@ -407,8 +407,8 @@ HTML_TEMPLATE = """
                 {% for task_id, slack_val in schedule_slack %}
                 <tr>
                     <td>{{ task_id }}</td>
-                    <td class="value-center">{{ "%.2f"|format(slack_val) }}</td>
-                    <td class="value-center">{% if slack_val < 0.01 %}Critical{% else %}{{ "%.1f"|format(slack_val) }}h buffer{% endif %}</td>
+                    <td class="value-center">{{ slack_val }}</td>
+                    <td class="value-center">{% if slack_val < 1 %}Critical{% else %}{{ slack_val }}h buffer{% endif %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -637,9 +637,15 @@ class HTMLExporter:
         # Generate sensitivity tornado chart
         sensitivity_image = HTMLExporter._generate_sensitivity_image(results)
 
-        # Prepare schedule slack data (sorted by slack ascending)
+        # Prepare schedule slack data (sorted by slack ascending, hours ceiled)
         schedule_slack = (
-            sorted(results.task_slack.items(), key=lambda x: x[1])
+            sorted(
+                [
+                    (tid, math.ceil(val) if val >= 0.5 else 0)
+                    for tid, val in results.task_slack.items()
+                ],
+                key=lambda x: x[1],
+            )
             if results.task_slack
             else []
         )
