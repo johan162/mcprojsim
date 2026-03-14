@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 import numpy as np
 
+from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
 from mcprojsim.models.simulation import SimulationResults
 
@@ -97,7 +98,7 @@ class JSONExporter:
                 "skewness": results.skewness,
                 "kurtosis": results.kurtosis,
             },
-            "percentiles": {
+            "calendar_time_confidence_intervals": {
                 str(p): {
                     "hours": v,
                     "working_days": math.ceil(v / results.hours_per_day),
@@ -108,6 +109,13 @@ class JSONExporter:
                     ),
                 }
                 for p, v in sorted(results.percentiles.items())
+            },
+            "effort_confidence_intervals": {
+                str(p): {
+                    "person_hours": v,
+                    "person_days": math.ceil(v / results.hours_per_day),
+                }
+                for p, v in sorted(results.effort_percentiles.items())
             },
             "critical_path": results.get_critical_path(),
             "critical_path_sequences": [
@@ -137,4 +145,28 @@ class JSONExporter:
                 "bin_edges": bin_edges.tolist(),
                 "counts": counts.tolist(),
             },
+            "staffing": JSONExporter._prepare_staffing_data(results, effective_config),
+        }
+
+    @staticmethod
+    def _prepare_staffing_data(
+        results: SimulationResults,
+        config: Config,
+    ) -> Dict[str, Any]:
+        """Prepare staffing analysis data for JSON export."""
+        recommendations = StaffingAnalyzer.recommend_team_size(results, config)
+        table = StaffingAnalyzer.calculate_staffing_table(results, config)
+        effort_basis = recommendations[0].effort_basis if recommendations else "mean"
+        effort_hours_used = (
+            round(recommendations[0].total_effort_hours, 2)
+            if recommendations
+            else round(results.total_effort_hours(), 2)
+        )
+        return {
+            "effort_basis": effort_basis,
+            "total_effort_hours": round(results.total_effort_hours(), 2),
+            "effort_hours_used": effort_hours_used,
+            "max_parallel_tasks": results.max_parallel_tasks,
+            "recommendations": [r.to_dict() for r in recommendations],
+            "table": [r.to_dict() for r in table],
         }

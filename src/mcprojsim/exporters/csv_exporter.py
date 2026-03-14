@@ -5,6 +5,7 @@ import math
 from datetime import datetime
 from pathlib import Path
 
+from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
 from mcprojsim.models.simulation import SimulationResults
 
@@ -68,8 +69,8 @@ class CSVExporter:
             writer.writerow(["Kurtosis", f"{results.kurtosis:.4f}"])
             writer.writerow([])
 
-            # Write percentiles
-            writer.writerow(["Percentiles", ""])
+            # Write calendar time confidence intervals
+            writer.writerow(["Calendar Time Confidence Intervals", ""])
             for percentile, value in sorted(results.percentiles.items()):
                 working_days = math.ceil(value / results.hours_per_day)
                 delivery = results.delivery_date(value)
@@ -83,6 +84,20 @@ class CSVExporter:
                     ]
                 )
             writer.writerow([])
+
+            # Write effort confidence intervals
+            if results.effort_percentiles:
+                writer.writerow(["Effort Confidence Intervals", ""])
+                for percentile, value in sorted(results.effort_percentiles.items()):
+                    person_days = math.ceil(value / results.hours_per_day)
+                    writer.writerow(
+                        [
+                            f"P{percentile}",
+                            f"{value:.2f} person-hours",
+                            f"{person_days} person-days",
+                        ]
+                    )
+                writer.writerow([])
 
             # Write critical path
             writer.writerow(["Critical Path", "Criticality"])
@@ -115,7 +130,7 @@ class CSVExporter:
             cumulative_count = 0
             total_count = sum(counts)
 
-            for i, (edge, count) in enumerate(zip(bin_edges[1:], counts)):
+            for _, (edge, count) in enumerate(zip(bin_edges[1:], counts)):
                 cumulative_count += count
                 cumulative_pct = (
                     (cumulative_count / total_count * 100) if total_count > 0 else 0
@@ -168,3 +183,68 @@ class CSVExporter:
                                 f"{stats['mean_when_triggered']:.2f}",
                             ]
                         )
+
+            # Write staffing analysis
+            writer.writerow([])
+            recommendations = StaffingAnalyzer.recommend_team_size(
+                results, effective_config
+            )
+            effort_basis = (
+                recommendations[0].effort_basis if recommendations else "mean"
+            )
+            effort_hours_used = (
+                round(recommendations[0].total_effort_hours, 2)
+                if recommendations
+                else round(results.total_effort_hours(), 2)
+            )
+            writer.writerow(["Staffing Effort Basis", effort_basis])
+            writer.writerow(["Staffing Effort Hours Used", f"{effort_hours_used:.2f}"])
+            writer.writerow(
+                [
+                    "Staffing Recommendations",
+                    "Team Size",
+                    "Working Days",
+                    "Delivery Date",
+                    "Efficiency",
+                ]
+            )
+            for rec in recommendations:
+                date_str = rec.delivery_date.isoformat() if rec.delivery_date else ""
+                writer.writerow(
+                    [
+                        rec.profile,
+                        rec.recommended_team_size,
+                        rec.calendar_working_days,
+                        date_str,
+                        f"{rec.efficiency:.4f}",
+                    ]
+                )
+
+            writer.writerow([])
+            table_rows = StaffingAnalyzer.calculate_staffing_table(
+                results, effective_config
+            )
+            writer.writerow(
+                [
+                    "Staffing Table",
+                    "Team Size",
+                    "Profile",
+                    "Eff. Capacity",
+                    "Working Days",
+                    "Delivery Date",
+                    "Efficiency",
+                ]
+            )
+            for row in table_rows:
+                date_str = row.delivery_date.isoformat() if row.delivery_date else ""
+                writer.writerow(
+                    [
+                        "",
+                        row.team_size,
+                        row.profile,
+                        f"{row.effective_capacity:.2f}",
+                        row.calendar_working_days,
+                        date_str,
+                        f"{row.efficiency:.4f}",
+                    ]
+                )

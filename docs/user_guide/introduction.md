@@ -206,6 +206,10 @@ Even users who are not statistically trained can often read histograms effective
 
 One of the most useful questions in project planning is not only "how long will this take?" but "what drives the answer?" Sensitivity analysis identifies which tasks contribute most to schedule variation. Criticality analysis shows which tasks most often appear on the critical path. Together, these views tell you where to focus mitigation and management attention.
 
+### Staffing recommendations
+
+Simulation results also help answer the question "how many people should work on this?" Adding people to a project increases capacity but also increases communication overhead — a trade-off famously described by Brooks's Law. `mcprojsim` uses the simulated total effort, the critical-path duration, and the peak parallelism in the schedule to recommend an optimal team size for different experience profiles. The recommendation is an advisory layer on top of the simulation, not a constraint on the simulation itself.
+
 ### Reproducibility
 
 Although Monte Carlo simulation relies on randomness, it can be made reproducible. By setting a random seed, users can repeat the same simulation and obtain the same results. This is useful for analysis, review, automation, and auditability — it allows teams to discuss the same output without worrying that the numbers changed simply because the simulation was run again.

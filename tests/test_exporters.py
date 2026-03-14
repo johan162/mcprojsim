@@ -65,9 +65,9 @@ class TestJSONExporter:
         assert data["project"]["name"] == "Test Project"
         assert data["simulation"]["iterations"] == 5
         assert "statistics" in data
-        assert "percentiles" in data
-        assert "25" in data["percentiles"]
-        assert "99" in data["percentiles"]
+        assert "calendar_time_confidence_intervals" in data
+        assert "25" in data["calendar_time_confidence_intervals"]
+        assert "99" in data["calendar_time_confidence_intervals"]
         assert "critical_path" in data
         assert "critical_path_sequences" in data
 
@@ -398,3 +398,56 @@ class TestHTMLExporter:
             content = f.read()
 
         assert "SP 5 (3.0, 5.0, 8.0)" in content
+
+    def test_html_contains_max_parallel_tasks(self, sample_results, tmp_path):
+        """Test that HTML contains Max Parallel Tasks in the overview."""
+        output_file = tmp_path / "results.html"
+        HTMLExporter.export(sample_results, output_file)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Max Parallel Tasks" in content
+
+    def test_html_contains_staffing_section(self, sample_results, tmp_path):
+        """Test that HTML contains staffing recommendations and table."""
+        output_file = tmp_path / "results.html"
+        HTMLExporter.export(sample_results, output_file)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Staffing Analysis" in content
+        assert "Recommended Team Size" in content
+        assert "Eff. Capacity" in content
+        assert "Efficiency" in content
+        # Should contain at least one profile table
+        assert "team" in content.lower()
+
+    def test_html_staffing_shows_effort_basis(self, tmp_path):
+        """Test that HTML staffing section shows effort basis and hours."""
+        results = SimulationResults(
+            iterations=5,
+            project_name="Staffing Test",
+            durations=np.array([100.0, 120.0, 150.0, 180.0, 200.0]),
+            task_durations={
+                "task_a": np.array([50.0, 60.0, 75.0, 90.0, 100.0]),
+                "task_b": np.array([50.0, 60.0, 75.0, 90.0, 100.0]),
+            },
+            critical_path_frequency={"task_a": 5, "task_b": 3},
+        )
+        results.calculate_statistics()
+        results.percentile(50)
+        results.percentile(80)
+
+        config = Config.model_validate({"staffing": {"effort_percentile": 80}})
+
+        output_file = tmp_path / "staffing.html"
+        HTMLExporter.export(results, output_file, config=config)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "80 effort percentile" in content
+        assert "person-hours" in content
+        assert "critical-path hours" in content

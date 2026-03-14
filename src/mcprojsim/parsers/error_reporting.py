@@ -613,7 +613,13 @@ def _format_pydantic_validation_error(
 
     for item in error.errors(include_url=False):
         raw_loc = item.get("loc", ())
-        loc = tuple(part for part in raw_loc if isinstance(part, (str, int)))
+        loc = tuple(
+            part
+            for part in raw_loc
+            if isinstance(
+                part, (str, int)
+            )  # pyright: ignore[reportUnnecessaryIsInstance]
+        )
         message = str(item.get("msg", "Validation error"))
         if message.startswith("Value error, "):
             message = message[len("Value error, ") :]

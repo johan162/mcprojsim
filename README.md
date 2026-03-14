@@ -25,21 +25,22 @@ It is intended for teams that want answers such as:
 ## Key features
 
 - **Natural language project input** — generate valid project files from plain-text descriptions using `mcprojsim generate`
-- Monte Carlo schedule simulation with configurable iteration counts
-- Range-based task estimates using triangular and log-normal distributions
-- Unit-aware estimation: supports hours, days, and weeks with automatic conversion to a canonical hours-based internal representation
-- Configurable `hours_per_day` per project, with working-day and delivery-date reporting
-- Task dependencies and schedule-aware project duration calculation
-- Task-level and project-level risk modeling
-- Configurable uncertainty factors such as team experience and requirements maturity
-- T-shirt size and story point symbolic estimates with configurable unit defaults
-- Exported results in JSON, CSV, and HTML formats
-- Critical path and sensitivity-oriented analysis outputs
+- **Selectable iterations** - Monte Carlo schedule simulation with configurable iteration counts
+- **Multiple distributions** - Range-based task estimates using triangular and log-normal distributions
+- **Selection of units** - Unit-aware estimation: supports hours, days, and weeks with automatic conversion to a canonical hours-based internal representation
+- **Work hours per day** - Configurable `hours_per_day` per project, with working-day and delivery-date reporting
+- **Dependency scheduling** - Task dependencies and schedule-aware project duration calculation
+- **Risk modelling** - Task-level and project-level risk modeling
+- **Uncertainty factors** - Configurable uncertainty factors such as team experience and requirements maturity
+- **T-Shirt and Story Point** - T-shirt size and story point symbolic estimates with configurable unit defaults
+- **Multiple export formats** - Exported results in JSON, CSV, and HTML formats
+- **Result analysis** - Critical path and sensitivity-oriented analysis outputs
 - **Sensitivity analysis** — Spearman rank correlation identifies which tasks most influence total duration
 - **Schedule slack** — CPM-based total float calculation highlights critical vs. buffered tasks
 - **Risk impact analysis** — per-task trigger rates, mean impact, and mean-when-triggered statistics
 - **Statistical distribution metrics** — skewness, excess kurtosis, and coefficient of variation for the overall schedule distribution
 - **Probability-of-date** — calculate the likelihood of finishing by a given target date (`--target-date`)
+- **Staffing analysis** — Brooks's Law–aware team-size recommendations for multiple experience profiles (`--staffing`)
 - **ASCII table output** — optional `--table` flag formats CLI results as bordered tables for easier reading
 - Reproducible runs with explicit random seeds
 

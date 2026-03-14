@@ -16,7 +16,7 @@ from mcprojsim.models.project import (
     Project,
     Task,
     TaskEstimate,
-    _convert_to_hours,
+    convert_to_hours,
 )
 from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
 from mcprojsim.simulation.distributions import DistributionSampler
@@ -166,6 +166,15 @@ class SimulationEngine:
             task_id: np.array(durations)
             for task_id, durations in task_durations_all.items()
         }
+
+        # Compute per-iteration total effort (sum of all task durations)
+        if task_durations_arrays:
+            effort_durations = np.sum(
+                np.stack(list(task_durations_arrays.values())), axis=0
+            )
+        else:
+            effort_durations = project_durations.copy()
+
         results = SimulationResults(
             iterations=self.iterations,
             project_name=project.project.name,
@@ -185,6 +194,7 @@ class SimulationEngine:
             },
             project_risk_impacts=np.array(project_risk_impacts_all),
             max_parallel_tasks=max_parallel_overall,
+            effort_durations=effort_durations,
         )
 
         # Calculate statistics
@@ -193,6 +203,7 @@ class SimulationEngine:
         # Calculate percentiles
         for p in project.project.confidence_levels:
             results.percentile(p)
+            results.effort_percentile(p)
 
         # Calculate sensitivity correlations
         from mcprojsim.analysis.sensitivity import SensitivityAnalyzer
@@ -260,7 +271,7 @@ class SimulationEngine:
 
             # Convert to hours (the canonical internal unit)
             unit = estimate.unit or EffortUnit.HOURS
-            base_duration_hours = _convert_to_hours(base_duration, unit, hours_per_day)
+            base_duration_hours = convert_to_hours(base_duration, unit, hours_per_day)
 
             # Apply uncertainty factors
             adjusted_duration = self._apply_uncertainty_factors(
