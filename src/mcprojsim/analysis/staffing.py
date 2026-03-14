@@ -96,6 +96,7 @@ class StaffingRecommendation:
         "total_effort_hours",
         "critical_path_hours",
         "parallelism_ratio",
+        "effort_basis",
     )
 
     def __init__(
@@ -109,6 +110,7 @@ class StaffingRecommendation:
         total_effort_hours: float,
         critical_path_hours: float,
         parallelism_ratio: float,
+        effort_basis: str = "mean",
     ) -> None:
         self.profile = profile
         self.recommended_team_size = recommended_team_size
@@ -118,6 +120,7 @@ class StaffingRecommendation:
         self.total_effort_hours = total_effort_hours
         self.critical_path_hours = critical_path_hours
         self.parallelism_ratio = parallelism_ratio
+        self.effort_basis = effort_basis
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialise to a plain dictionary."""
@@ -132,6 +135,7 @@ class StaffingRecommendation:
             "total_effort_hours": round(self.total_effort_hours, 2),
             "critical_path_hours": round(self.critical_path_hours, 2),
             "parallelism_ratio": round(self.parallelism_ratio, 2),
+            "effort_basis": self.effort_basis,
         }
 
 
@@ -216,6 +220,31 @@ class StaffingAnalyzer:
         return max(critical_path_hours, effort_hours)
 
     @staticmethod
+    def _resolve_effort_and_cp(
+        results: SimulationResults,
+        config: Config,
+    ) -> tuple[float, float, str]:
+        """Resolve total effort, critical-path hours, and a human label.
+
+        When ``config.staffing.effort_percentile`` is set (e.g. 80), the
+        P80 effort and P80 elapsed time are used.  Otherwise the mean values
+        are used.
+
+        Returns:
+            (total_effort, cp_hours, effort_basis_label)
+        """
+        p = config.staffing.effort_percentile
+        if p is not None:
+            total_effort = results.effort_percentile(p)
+            cp_hours = results.percentile(p)
+            basis = f"P{p}"
+        else:
+            total_effort = results.total_effort_hours()
+            cp_hours = results.mean
+            basis = "mean"
+        return total_effort, cp_hours, basis
+
+    @staticmethod
     def calculate_staffing_table(
         results: SimulationResults,
         config: Config,
@@ -236,8 +265,9 @@ class StaffingAnalyzer:
             Flat list of ``StaffingRow`` objects (one per team-size
             per experience profile), sorted by profile then team size.
         """
-        total_effort = results.total_effort_hours()
-        cp_hours = results.mean  # elapsed critical-path time
+        total_effort, cp_hours, _basis = StaffingAnalyzer._resolve_effort_and_cp(
+            results, config
+        )
         hours_per_day = results.hours_per_day
         max_team = max(results.max_parallel_tasks, 1)
         min_prod = config.staffing.min_individual_productivity
@@ -313,8 +343,9 @@ class StaffingAnalyzer:
             One ``StaffingRecommendation`` per experience profile,
             sorted alphabetically by profile name.
         """
-        total_effort = results.total_effort_hours()
-        cp_hours = results.mean
+        total_effort, cp_hours, basis = StaffingAnalyzer._resolve_effort_and_cp(
+            results, config
+        )
         hours_per_day = results.hours_per_day
         max_team = max(results.max_parallel_tasks, 1)
         min_prod = config.staffing.min_individual_productivity
@@ -365,6 +396,7 @@ class StaffingAnalyzer:
                     total_effort_hours=total_effort,
                     critical_path_hours=cp_hours,
                     parallelism_ratio=parallelism_ratio,
+                    effort_basis=basis,
                 )
             )
         return recommendations

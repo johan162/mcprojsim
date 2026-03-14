@@ -62,3 +62,21 @@ output:
   include_histogram: true
   histogram_bins: 50
   critical_path_report_limit: 2  # show the two most common full paths by default
+
+# Staffing analysis settings
+# effort_percentile: use a specific percentile of the effort distribution
+#   instead of the mean.  Set to 80 or 90 for conservative planning.
+#   Omit or set to null to use the mean (default).
+staffing:
+  effort_percentile: null
+  min_individual_productivity: 0.25
+  experience_profiles:
+    senior:
+      productivity_factor: 1.0
+      communication_overhead: 0.04
+    mixed:
+      productivity_factor: 0.85
+      communication_overhead: 0.06
+    junior:
+      productivity_factor: 0.65
+      communication_overhead: 0.08

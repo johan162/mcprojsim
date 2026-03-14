@@ -165,6 +165,16 @@ class ExperienceProfileConfig(BaseModel):
 class StaffingConfig(BaseModel):
     """Staffing analysis settings."""
 
+    effort_percentile: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=99,
+        description=(
+            "Percentile of the effort distribution to use as the basis for "
+            "staffing calculations (e.g. 80 for P80). When None (the default), "
+            "the mean effort and mean elapsed time are used instead."
+        ),
+    )
     min_individual_productivity: float = Field(
         default=0.25,
         gt=0,

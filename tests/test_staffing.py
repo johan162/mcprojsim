@@ -311,6 +311,7 @@ class TestStaffingRowSerialization:
         assert d["total_effort_hours"] == 300.0
         assert d["critical_path_hours"] == 200.0
         assert d["parallelism_ratio"] == 1.5
+        assert d["effort_basis"] == "mean"
 
 
 class TestStaffingCLI:
@@ -324,12 +325,13 @@ class TestStaffingCLI:
             pf = _write_project()
             result = runner.invoke(cli, ["simulate", pf])
         assert result.exit_code == 0
-        assert "Staffing:" in result.output
+        assert "Staffing (based on" in result.output
         assert "recommended" in result.output
         assert "mixed team" in result.output
         assert "Total effort:" in result.output
         assert "person-hours" in result.output
         assert "Parallelism ratio:" in result.output
+        assert "mean effort" in result.output
 
     def test_staffing_flag_shows_table(self, monkeypatch) -> None:
         """--staffing flag should show the full staffing analysis table."""
@@ -343,6 +345,10 @@ class TestStaffingCLI:
         assert "senior" in result.output
         assert "mixed" in result.output
         assert "junior" in result.output
+        # Effort basis subtitle should appear under each profile header
+        assert "Effort basis: mean" in result.output
+        assert "person-hours" in result.output
+        assert "critical-path hours" in result.output
 
     def test_staffing_table_format(self, monkeypatch) -> None:
         """--staffing --table should use ASCII table formatting."""
@@ -554,8 +560,12 @@ class TestStaffingExporters:
             "total_effort_hours",
             "critical_path_hours",
             "parallelism_ratio",
+            "effort_basis",
         ):
             assert key in rec, f"Missing key '{key}' in recommendation"
+        assert staffing["effort_basis"] == "mean"
+        assert "effort_hours_used" in staffing
+        assert staffing["effort_hours_used"] == staffing["total_effort_hours"]
 
     def test_csv_export_includes_staffing(self, tmp_path) -> None:
         """CSV export should contain staffing section headers."""
@@ -571,6 +581,9 @@ class TestStaffingExporters:
         assert "senior" in content
         assert "mixed" in content
         assert "junior" in content
+        # Effort basis metadata rows
+        assert "Staffing Effort Basis" in content
+        assert "Staffing Effort Hours Used" in content
 
 
 class TestCustomProfile:
@@ -593,6 +606,88 @@ class TestCustomProfile:
         assert len(table) == 16
         contractor_rows = [r for r in table if r.profile == "contractor"]
         assert len(contractor_rows) == 4
+
+
+class TestEffortPercentileConfig:
+    """Tests for the configurable effort_percentile parameter."""
+
+    @staticmethod
+    def _make_varied_results(max_parallel: int = 3) -> SimulationResults:
+        """Build SimulationResults with varying durations so percentiles differ."""
+        # 100 values linearly spaced so P50 < P80 < P90 < max
+        durations = np.linspace(60.0, 140.0, 100)
+        task_durations = {
+            "t1": np.linspace(30.0, 70.0, 100),
+            "t2": np.linspace(20.0, 50.0, 100),
+            "t3": np.linspace(10.0, 30.0, 100),
+        }
+        results = SimulationResults(
+            iterations=100,
+            project_name="Percentile Test",
+            durations=durations,
+            task_durations=task_durations,
+            max_parallel_tasks=max_parallel,
+            hours_per_day=8.0,
+            start_date=date(2026, 1, 5),
+        )
+        results.calculate_statistics()
+        return results
+
+    def test_default_uses_mean(self) -> None:
+        """Without effort_percentile the basis should be 'mean'."""
+        results = self._make_varied_results()
+        config = Config.get_default()
+        assert config.staffing.effort_percentile is None
+        recs = StaffingAnalyzer.recommend_team_size(results, config)
+        for rec in recs:
+            assert rec.effort_basis == "mean"
+
+    def test_percentile_80_sets_basis(self) -> None:
+        """Setting effort_percentile=80 should label basis as 'P80'."""
+        results = self._make_varied_results()
+        config = Config.get_default()
+        config.staffing.effort_percentile = 80
+        recs = StaffingAnalyzer.recommend_team_size(results, config)
+        for rec in recs:
+            assert rec.effort_basis == "P80"
+
+    def test_percentile_produces_higher_effort(self) -> None:
+        """P80 effort should be >= mean effort for a right-skewed-ish spread."""
+        results = self._make_varied_results()
+        config_mean = Config.get_default()
+        config_p80 = Config.get_default()
+        config_p80.staffing.effort_percentile = 80
+
+        recs_mean = StaffingAnalyzer.recommend_team_size(results, config_mean)
+        recs_p80 = StaffingAnalyzer.recommend_team_size(results, config_p80)
+
+        for rm, rp in zip(recs_mean, recs_p80):
+            assert rp.total_effort_hours >= rm.total_effort_hours
+
+    def test_table_uses_percentile_effort(self) -> None:
+        """Staffing table rows should reflect the higher P80 effort."""
+        results = self._make_varied_results()
+        config_mean = Config.get_default()
+        config_p80 = Config.get_default()
+        config_p80.staffing.effort_percentile = 80
+
+        table_mean = StaffingAnalyzer.calculate_staffing_table(results, config_mean)
+        table_p80 = StaffingAnalyzer.calculate_staffing_table(results, config_p80)
+
+        # Same number of rows
+        assert len(table_mean) == len(table_p80)
+        # For the same profile/team-size combos, P80 rows should have >= calendar hours
+        for rm, rp in zip(table_mean, table_p80):
+            assert rp.calendar_hours >= rm.calendar_hours
+
+    def test_recommendation_to_dict_with_percentile(self) -> None:
+        """Recommendation to_dict should include the correct effort_basis."""
+        results = self._make_varied_results()
+        config = Config.get_default()
+        config.staffing.effort_percentile = 90
+        recs = StaffingAnalyzer.recommend_team_size(results, config)
+        d = recs[0].to_dict()
+        assert d["effort_basis"] == "P90"
 
 
 # --- Helpers for CLI tests ---
@@ -646,6 +741,9 @@ class _FakeStaffingResults:
 
     def total_effort_hours(self):
         return 80.0
+
+    def effort_percentile(self, p):
+        return self.effort_percentiles.get(p, self.total_effort_hours())
 
     def delivery_date(self, hours):
         import math

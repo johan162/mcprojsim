@@ -192,9 +192,25 @@ Confidence Intervals:
 A short staffing advisory is always included at the end of the output (unless `--quiet` is active):
 
 ```text
-Staffing: 3 people recommended (mixed team), 38 working days
-Total effort: 910.12 person-hours (113.8 person-days) | Parallelism ratio: 1.57
+Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
 ```
+
+By default the staffing analysis uses **mean** effort and elapsed time. To base it on a specific confidence level, set `staffing.effort_percentile` in your configuration file:
+
+```yaml
+staffing:
+  effort_percentile: 80  # use P80 effort and elapsed time
+```
+
+With this setting the output changes to:
+
+```text
+Staffing (based on P80 effort percentile): 3 people recommended (mixed team), 42 working days
+  Total effort: 1,024 person-hours (128 person-days) | Parallelism ratio: 1.6
+```
+
+Using a higher percentile produces more conservative staffing recommendations because it accounts for higher-effort scenarios.
 
 Pass `--staffing` to expand this into a full table for each experience profile (senior, mixed, junior). With `--table`:
 

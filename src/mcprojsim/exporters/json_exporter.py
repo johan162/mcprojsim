@@ -156,8 +156,16 @@ class JSONExporter:
         """Prepare staffing analysis data for JSON export."""
         recommendations = StaffingAnalyzer.recommend_team_size(results, config)
         table = StaffingAnalyzer.calculate_staffing_table(results, config)
+        effort_basis = recommendations[0].effort_basis if recommendations else "mean"
+        effort_hours_used = (
+            round(recommendations[0].total_effort_hours, 2)
+            if recommendations
+            else round(results.total_effort_hours(), 2)
+        )
         return {
+            "effort_basis": effort_basis,
             "total_effort_hours": round(results.total_effort_hours(), 2),
+            "effort_hours_used": effort_hours_used,
             "max_parallel_tasks": results.max_parallel_tasks,
             "recommendations": [r.to_dict() for r in recommendations],
             "table": [r.to_dict() for r in table],

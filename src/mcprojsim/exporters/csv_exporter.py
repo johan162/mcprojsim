@@ -189,6 +189,16 @@ class CSVExporter:
             recommendations = StaffingAnalyzer.recommend_team_size(
                 results, effective_config
             )
+            effort_basis = (
+                recommendations[0].effort_basis if recommendations else "mean"
+            )
+            effort_hours_used = (
+                round(recommendations[0].total_effort_hours, 2)
+                if recommendations
+                else round(results.total_effort_hours(), 2)
+            )
+            writer.writerow(["Staffing Effort Basis", effort_basis])
+            writer.writerow(["Staffing Effort Hours Used", f"{effort_hours_used:.2f}"])
             writer.writerow(
                 [
                     "Staffing Recommendations",

@@ -76,8 +76,8 @@ Most Frequent Critical Paths:
   1. task_001 -> task_002 -> task_004 -> task_005 -> task_006 -> task_008
      (10000/10000, 100.0%)
 
-Staffing: 3 people recommended (mixed team), 38 working days
-Total effort: 910.12 person-hours (113.8 person-days) | Parallelism ratio: 1.57
+Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
 
 No export formats specified. Use -f to export results to files.
 ```
@@ -473,8 +473,8 @@ The staffing advisory appears at the bottom of every simulation run. It answers 
 ### The advisory line
 
 ```
-Staffing: 3 people recommended (mixed team), 38 working days
-Total effort: 910.12 person-hours (113.8 person-days) | Parallelism ratio: 1.57
+Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
 ```
 
 This tells you:
@@ -484,6 +484,7 @@ This tells you:
 - **Working days**: Estimated calendar duration with the recommended team, accounting for communication overhead.
 - **Total effort**: The sum of mean task durations, measured in person-hours. This is the amount of *work* regardless of how many people do it.
 - **Parallelism ratio**: Total effort divided by critical-path duration. A ratio of 1.0 means the project is entirely serial; higher values indicate potential for parallel work.
+- **Effort basis**: Shown in parentheses after "Staffing". By default the analysis is based on **mean** effort and elapsed time. Set `staffing.effort_percentile` in configuration (e.g. `80`) to use a specific percentile instead — this produces more conservative recommendations for risk-averse planning.
 
 ### The `--staffing` flag
 
@@ -567,6 +568,7 @@ Profiles are fully configurable. In a YAML config, override or add profiles unde
 
 ```yaml
 staffing:
+  effort_percentile: 80  # use P80 effort for conservative staffing (omit for mean)
   min_individual_productivity: 0.25
   experience_profiles:
     senior:
@@ -579,6 +581,24 @@ staffing:
       productivity_factor: 0.90
       communication_overhead: 0.05
 ```
+
+### Choosing an effort basis
+
+By default, the staffing model operates on **mean** values — mean total effort and mean elapsed (critical-path) time. This gives a "most likely" recommendation.
+
+For risk-averse planning, set `staffing.effort_percentile` to a higher percentile (e.g. 80 or 90). When set, the model uses:
+
+- **P*N* total effort** instead of mean total effort
+- **P*N* elapsed time** instead of mean elapsed time
+
+This results in more people or more calendar time, but protects against schedules that only work in the average case. The chosen basis is always shown in the output so there is no ambiguity.
+
+| Setting | Behaviour | Use when |
+|---------|-----------|----------|
+| *(omitted or null)* | Mean effort and elapsed time | You want the most likely recommendation |
+| `effort_percentile: 50` | Median effort / elapsed time | Similar to mean for symmetric distributions |
+| `effort_percentile: 80` | P80 effort / elapsed time | Moderate risk aversion |
+| `effort_percentile: 90` | P90 effort / elapsed time | Conservative / high-stakes projects |
 
 ### How efficiency is calculated
 

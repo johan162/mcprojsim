@@ -446,9 +446,15 @@ def simulate(
                 advisory = mixed_recs[0] if mixed_recs else staffing_recs[0]
                 total_effort = advisory.total_effort_hours
                 total_effort_wd = math.ceil(total_effort / hours_per_day)
+                basis_label = (
+                    f"{advisory.effort_basis} effort"
+                    if advisory.effort_basis == "mean"
+                    else f"{advisory.effort_basis} effort percentile"
+                )
 
                 click.echo(
-                    f"\nStaffing: {advisory.recommended_team_size} people "
+                    f"\nStaffing (based on {basis_label}): "
+                    f"{advisory.recommended_team_size} people "
                     f"recommended ({advisory.profile} team), "
                     f"{advisory.calendar_working_days} working days"
                 )
@@ -470,6 +476,14 @@ def simulate(
                         f"overhead={cfg.staffing.experience_profiles[prof].communication_overhead:.0%}/person, "
                         f"productivity={cfg.staffing.experience_profiles[prof].productivity_factor:.0%}):"
                     )
+                    if rec:
+                        eb = rec.effort_basis
+                        eb_label = "mean" if eb == "mean" else f"{eb} percentile"
+                        click.echo(
+                            f"  Effort basis: {eb_label} "
+                            f"({rec.total_effort_hours:,.0f} person-hours, "
+                            f"{rec.critical_path_hours:,.0f} critical-path hours)"
+                        )
                     if table:
                         st_rows = []
                         for r in prof_rows:
