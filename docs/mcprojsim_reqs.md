@@ -116,6 +116,11 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL gracefully handle missing optional fields
 - The system SHALL validate date formats and numeric ranges
 
+**FR-016: Support for StoryPoints and T-Shirt Size Estimates**
+- The system shall support estimates specified as Story Points (1,2,3,5,8,11,21) which are converted to effort in configuration
+- The system shall support T-shirt sizes (S,M,L,XL) which are converted to effort in configuration
+ 
+
 ### 3.2 Non-Functional Requirements
 
 **NFR-001: Performance**
