@@ -859,6 +859,494 @@ working_days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
 holidays = ["2026-12-25"]
 ```
 
+## Configuration file reference
+
+The project file defines the work being simulated. The configuration file defines how `mcprojsim` interprets uncertainty, symbolic estimates, reporting defaults, and staffing analysis.
+
+Use a configuration file when you want to:
+
+- change uncertainty multipliers,
+- override T-shirt size mappings,
+- override Story Point mappings,
+- set simulation and report defaults,
+- tune staffing analysis behavior.
+
+Unlike project files, the configuration file is currently loaded as YAML.
+
+### How configuration loading works
+
+When you pass `--config config.yaml`, the loader:
+
+1. starts from the built-in default configuration,
+2. reads your YAML file,
+3. merges your values into the defaults recursively,
+4. validates the result against the `Config` model.
+
+That means you can override only the values you care about. For example, if you provide only `t_shirt_sizes.M`, the built-in definitions for `XS`, `S`, `L`, `XL`, and `XXL` remain available.
+
+### Top-level configuration structure
+
+The current configuration schema supports these top-level sections:
+
+- `uncertainty_factors`
+- `t_shirt_sizes`
+- `t_shirt_size_unit`
+- `story_points`
+- `story_point_unit`
+- `simulation`
+- `output`
+- `staffing`
+
+### Minimal configuration example
+
+```yaml
+simulation:
+  default_iterations: 5000
+
+staffing:
+  effort_percentile: 80
+```
+
+### Full configuration skeleton
+
+```yaml
+uncertainty_factors:
+  team_experience:
+    high: 0.90
+    medium: 1.0
+    low: 1.30
+  requirements_maturity:
+    high: 1.0
+    medium: 1.15
+    low: 1.40
+  technical_complexity:
+    low: 1.0
+    medium: 1.20
+    high: 1.50
+  team_distribution:
+    colocated: 1.0
+    distributed: 1.25
+  integration_complexity:
+    low: 1.0
+    medium: 1.15
+    high: 1.35
+
+t_shirt_sizes:
+  XS:
+    min: 0.5
+    most_likely: 1
+    max: 2
+  M:
+    min: 3
+    most_likely: 5
+    max: 8
+
+t_shirt_size_unit: "hours"
+
+story_points:
+  1:
+    min: 0.5
+    most_likely: 1
+    max: 3
+  5:
+    min: 3
+    most_likely: 5
+    max: 8
+
+story_point_unit: "days"
+
+simulation:
+  default_iterations: 10000
+  random_seed: null
+  max_stored_critical_paths: 20
+
+output:
+  formats: ["json", "csv", "html"]
+  include_histogram: true
+  histogram_bins: 50
+  critical_path_report_limit: 2
+
+staffing:
+  effort_percentile: null
+  min_individual_productivity: 0.25
+  experience_profiles:
+    senior:
+      productivity_factor: 1.0
+      communication_overhead: 0.04
+    mixed:
+      productivity_factor: 0.85
+      communication_overhead: 0.06
+    junior:
+      productivity_factor: 0.65
+      communication_overhead: 0.08
+```
+
+## The `uncertainty_factors` section
+
+This section maps uncertainty factor names to per-level multipliers.
+
+### Supported shape
+
+```yaml
+uncertainty_factors:
+  factor_name:
+    level_name: 1.0
+    another_level: 1.0
+```
+
+### Supported fields
+
+| Field | Required | Type | Default | Notes |
+|---|---|---|---|---|
+| factor name | No | mapping | built-in defaults | Outer keys are factor names |
+| level name | No | float | none at the schema level | Inner keys depend on the factor, for example `high`, `medium`, `low`, `colocated`, or `distributed` |
+
+### Built-in level names by factor
+
+| Factor | Built-in level names |
+|---|---|
+| `team_experience` | `high`, `medium`, `low` |
+| `requirements_maturity` | `high`, `medium`, `low` |
+| `technical_complexity` | `low`, `medium`, `high` |
+| `team_distribution` | `colocated`, `distributed` |
+| `integration_complexity` | `low`, `medium`, `high` |
+
+### Built-in factor names
+
+The default configuration defines these factor names:
+
+- `team_experience`
+- `requirements_maturity`
+- `technical_complexity`
+- `team_distribution`
+- `integration_complexity`
+
+These are also the names used by the current project-file model under `tasks[].uncertainty_factors`.
+
+### Built-in defaults
+
+| Factor | High / low-side values | Medium / baseline |
+|---|---|---|
+| `team_experience` | `high: 0.90`, `low: 1.30` | `medium: 1.0` |
+| `requirements_maturity` | `high: 1.0`, `low: 1.40` | `medium: 1.15` |
+| `technical_complexity` | `low: 1.0`, `high: 1.50` | `medium: 1.20` |
+| `team_distribution` | `colocated: 1.0`, `distributed: 1.25` | not applicable |
+| `integration_complexity` | `low: 1.0`, `high: 1.35` | `medium: 1.15` |
+
+!!! note
+    The configuration model can parse arbitrary nested dictionaries here, but the current project-file schema only exposes the recognized uncertainty-factor names listed above. Extra factor names in the config file are not useful unless the source model and simulation logic also reference them.
+
+## The `t_shirt_sizes` section
+
+This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric effort ranges.
+
+### Supported fields for each size
+
+| Field | Required | Type | Default | Constraints |
+|---|---|---|---|---|
+| `min` | Yes when that size is defined | float | — | `> 0` |
+| `most_likely` | Yes | float | — | `> 0` |
+| `max` | Yes | float | — | `> 0` |
+
+### Built-in size keys
+
+- `XS`
+- `S`
+- `M`
+- `L`
+- `XL`
+- `XXL`
+
+### Built-in defaults
+
+| Size | `min` | `most_likely` | `max` |
+|---|---:|---:|---:|
+| `XS` | 0.5 | 1 | 2 |
+| `S` | 1 | 2 | 4 |
+| `M` | 3 | 5 | 8 |
+| `L` | 5 | 8 | 13 |
+| `XL` | 8 | 13 | 21 |
+| `XXL` | 13 | 21 | 34 |
+
+### Example override
+
+```yaml
+t_shirt_sizes:
+  M:
+    min: 4
+    most_likely: 6
+    max: 9
+```
+
+With this override, only `M` changes. The other built-in sizes remain available.
+
+## The `t_shirt_size_unit` field
+
+This field controls the unit used for all values in `t_shirt_sizes`.
+
+### Supported values
+
+- `"hours"`
+- `"days"`
+- `"weeks"`
+
+### Default
+
+`"hours"`
+
+### Example
+
+```yaml
+t_shirt_size_unit: "days"
+```
+
+If a task uses `estimate.t_shirt_size: "M"`, the simulator resolves that size using the configured range and then converts the chosen unit to internal hours.
+
+## The `story_points` section
+
+This section maps Story Point values to numeric effort ranges.
+
+### Supported fields for each point value
+
+| Field | Required | Type | Default | Constraints |
+|---|---|---|---|---|
+| `min` | Yes when that point value is defined | float | — | `> 0` |
+| `most_likely` | Yes | float | — | `> 0` |
+| `max` | Yes | float | — | `> 0` |
+
+### Built-in point values
+
+- `1`
+- `2`
+- `3`
+- `5`
+- `8`
+- `13`
+- `21`
+
+### Built-in defaults
+
+| Points | `min` | `most_likely` | `max` |
+|---|---:|---:|---:|
+| `1` | 0.5 | 1 | 3 |
+| `2` | 1 | 2 | 4 |
+| `3` | 1.5 | 3 | 5 |
+| `5` | 3 | 5 | 8 |
+| `8` | 5 | 8 | 15 |
+| `13` | 8 | 13 | 21 |
+| `21` | 13 | 21 | 34 |
+
+### Example override
+
+```yaml
+story_points:
+  8:
+    min: 6
+    most_likely: 9
+    max: 16
+```
+
+## The `story_point_unit` field
+
+This field controls the unit used for all values in `story_points`.
+
+### Supported values
+
+- `"hours"`
+- `"days"`
+- `"weeks"`
+
+### Default
+
+`"days"`
+
+## The `simulation` section
+
+This section controls default simulation behavior.
+
+### Supported fields
+
+| Field | Required | Type | Default | Constraints | Notes |
+|---|---|---|---|---|---|
+| `default_iterations` | No | integer | `10000` | `> 0` | Used by commands that rely on config defaults |
+| `random_seed` | No | integer or `null` | `null` | none | Set for reproducible runs |
+| `max_stored_critical_paths` | No | integer | `20` | `> 0` | Number of full critical path sequences retained in results |
+
+### Example
+
+```yaml
+simulation:
+  default_iterations: 20000
+  random_seed: 42
+  max_stored_critical_paths: 50
+```
+
+## The `output` section
+
+This section controls reporting and export defaults.
+
+### Supported fields
+
+| Field | Required | Type | Default | Constraints | Notes |
+|---|---|---|---|---|---|
+| `formats` | No | list of strings | `["json", "csv", "html"]` | none in the config model | Default export formats for config-driven workflows |
+| `include_histogram` | No | boolean | `true` | — | Whether histogram data should be included where supported |
+| `histogram_bins` | No | integer | `50` | `> 0` | Number of bins for histogram generation |
+| `critical_path_report_limit` | No | integer | `2` | `> 0` | Number of stored full critical paths shown in reports by default |
+
+### Example
+
+```yaml
+output:
+  formats: ["json", "html"]
+  include_histogram: true
+  histogram_bins: 80
+  critical_path_report_limit: 5
+```
+
+## The `staffing` section
+
+This section controls the staffing analysis added to CLI output and exports.
+
+### Supported fields
+
+| Field | Required | Type | Default | Constraints | Notes |
+|---|---|---|---|---|---|
+| `effort_percentile` | No | integer or `null` | `null` | `1..99` when set | Uses that effort percentile instead of the mean for staffing calculations |
+| `min_individual_productivity` | No | float | `0.25` | `> 0`, `<= 1` | Lower bound on each person's productivity after communication overhead is applied |
+| `experience_profiles` | No | mapping | built-in defaults | profile values validated individually | Defines named team profiles |
+
+When `effort_percentile` is `null`, staffing uses the mean total effort and mean elapsed time. When it is set, staffing uses the matching percentile for both effort and elapsed time, for example P80 effort with P80 elapsed time.
+
+### How `min_individual_productivity` affects team-size efficiency
+
+The staffing model assumes that each additional person creates some communication overhead. For a team of size $n$, the model first calculates a raw per-person productivity:
+
+$$
+P_{raw}(n) = 1 - c(n - 1)
+$$
+
+where $c$ is the `communication_overhead` for the selected experience profile.
+
+That raw value is then floored by `min_individual_productivity`:
+
+$$
+P(n) = \max(P_{min}, P_{raw}(n))
+$$
+
+where $P_{min}$ is `min_individual_productivity`.
+
+This means `min_individual_productivity` is not a bonus. It is a safety floor. It prevents the model from predicting that people become almost useless, or literally zero-productivity, as team size increases.
+
+The model then converts per-person productivity into total effective capacity:
+
+$$
+E(n) = n \cdot P(n) \cdot f
+$$
+
+where $f$ is the profile's `productivity_factor`.
+
+Calendar duration for that team size is then:
+
+$$
+T(n) = \max\left(T_{cp}, \frac{W}{E(n)}\right)
+$$
+
+where:
+
+- $T_{cp}$ is the critical-path elapsed time,
+- $W$ is the total effort in person-hours,
+- $E(n)$ is the effective capacity of the team.
+
+Finally, the **Efficiency** shown in the staffing table is calculated relative to the fastest team size found for that profile:
+
+$$
+	ext{Efficiency}(n) = \frac{T_{min}}{T(n)}
+$$
+
+So `min_individual_productivity` affects efficiency indirectly:
+
+- if the floor is **lower**, very large teams lose more effective capacity as communication overhead grows,
+- if the floor is **higher**, large teams retain more capacity and the efficiency drop-off on the right side of the staffing table is less severe,
+- if the project is already near the critical-path floor, changing this value may have little visible effect, because no team can compress the schedule below $T_{cp}$ anyway.
+
+### Practical interpretation
+
+- **Small team sizes**: `min_individual_productivity` usually does nothing, because raw productivity is still above the floor.
+- **Medium team sizes**: the value may begin to matter if communication overhead becomes significant.
+- **Large team sizes**: this setting determines how harshly the model penalises oversized teams.
+
+For example, with `communication_overhead: 0.06`, raw individual productivity is:
+
+- 1 person: $1.00$
+- 3 people: $1 - 0.06 \cdot 2 = 0.88$
+- 8 people: $1 - 0.06 \cdot 7 = 0.58$
+- 15 people: $1 - 0.06 \cdot 14 = 0.16$
+
+If `min_individual_productivity` is `0.25`, the 15-person team is floored to $0.25$ instead of dropping to $0.16$. That keeps the team from looking unrealistically ineffective, while still showing diminishing returns.
+
+In practice:
+
+- use a **lower** value when you want the model to penalise oversized teams more aggressively,
+- use a **higher** value when you believe communication overhead is real but should not collapse individual output too sharply,
+- keep in mind that this value mainly shapes the **right-hand side** of the efficiency curve, where teams are larger than the optimal size.
+
+### The `experience_profiles` subsection
+
+Each profile name maps to an object with these fields:
+
+| Field | Required | Type | Default | Constraints |
+|---|---|---|---|---|
+| `productivity_factor` | Yes when that profile is defined | float | — | `> 0` |
+| `communication_overhead` | Yes when that profile is defined | float | — | `0..1` |
+
+### Built-in profile defaults
+
+| Profile | `productivity_factor` | `communication_overhead` |
+|---|---:|---:|
+| `senior` | 1.00 | 0.04 |
+| `mixed` | 0.85 | 0.06 |
+| `junior` | 0.65 | 0.08 |
+
+### Example
+
+```yaml
+staffing:
+  effort_percentile: 80
+  min_individual_productivity: 0.30
+  experience_profiles:
+    senior:
+      productivity_factor: 1.0
+      communication_overhead: 0.03
+    contractor:
+      productivity_factor: 0.75
+      communication_overhead: 0.05
+```
+
+### Configuration validation summary
+
+The current configuration model validates these rules directly:
+
+- `t_shirt_size_unit` must be one of `hours`, `days`, or `weeks`,
+- `story_point_unit` must be one of `hours`, `days`, or `weeks`,
+- all configured estimate ranges require positive `min`, `most_likely`, and `max`,
+- `simulation.default_iterations` must be greater than 0,
+- `simulation.max_stored_critical_paths` must be greater than 0,
+- `output.histogram_bins` must be greater than 0,
+- `output.critical_path_report_limit` must be greater than 0,
+- `staffing.effort_percentile`, when set, must be between 1 and 99,
+- `staffing.min_individual_productivity` must be greater than 0 and at most 1,
+- `experience_profiles[*].productivity_factor` must be greater than 0,
+- `experience_profiles[*].communication_overhead` must be between 0 and 1.
+
+### Recommended authoring style for configuration files
+
+- override only the values you need,
+- keep symbolic estimate mappings consistent with your team's estimation conventions,
+- set `random_seed` only when you want reproducible runs,
+- use `effort_percentile` when staffing recommendations should be conservative,
+- add custom experience profiles only when they correspond to real planning scenarios.
+
 ## Validation summary
 
 The current implementation validates the following rules directly:

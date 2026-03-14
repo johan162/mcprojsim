@@ -171,6 +171,7 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL display a short staffing advisory in default CLI output when not in quiet mode
 - The system SHALL display the full staffing analysis table when the `--staffing` CLI flag is specified
 - The system SHALL include staffing recommendations and table data in JSON and CSV exports
+- The system SHALL offer configuration to decide which effort percentile to base staffing suggestion on
  
 
 ### 3.2 Non-Functional Requirements
