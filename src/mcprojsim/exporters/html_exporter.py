@@ -327,15 +327,15 @@ HTML_TEMPLATE = """
         <h3>Calendar Time Confidence Intervals</h3>
         <table>
             <thead>
-                <tr><th>Percentile</th><th>Hours</th><th>Working Days</th><th>Delivery Date</th></tr>
+                <tr><th>Percentile</th><th class="header-center">Hours</th><th class="header-center">Working Days</th><th class="header-center">Delivery Date</th></tr>
             </thead>
             <tbody>
                 {% for p, value, working_days, delivery_date in percentiles %}
                 <tr class="{% if p in highlighted_percentiles %}highlight{% endif %}">
                     <td>P{{ p }}</td>
-                    <td class="value">{{ "%.2f"|format(value) }}</td>
-                    <td class="value">{{ working_days }}</td>
-                    <td class="value">{{ delivery_date }}</td>
+                    <td class="value-center">{{ value }}</td>
+                    <td class="value-center">{{ working_days }}</td>
+                    <td class="value-center">{{ delivery_date }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -347,14 +347,14 @@ HTML_TEMPLATE = """
         <h3>Effort Confidence Intervals</h3>
         <table>
             <thead>
-                <tr><th>Percentile</th><th>Person-Hours</th><th>Person-Days</th></tr>
+                <tr><th>Percentile</th><th class="header-center">Person-Hours</th><th class="header-center">Person-Days</th></tr>
             </thead>
             <tbody>
                 {% for p, person_hours, person_days in effort_percentiles %}
                 <tr class="{% if p in highlighted_percentiles %}highlight{% endif %}">
                     <td>P{{ p }}</td>
-                    <td class="value">{{ "%.2f"|format(person_hours) }}</td>
-                    <td class="value">{{ person_days }}</td>
+                    <td class="value-center">{{ person_hours }}</td>
+                    <td class="value-center">{{ person_days }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -616,7 +616,7 @@ class HTMLExporter:
         percentiles = [
             (
                 p,
-                v,
+                math.ceil(v),
                 math.ceil(v / results.hours_per_day),
                 (
                     dd.isoformat()
@@ -674,7 +674,7 @@ class HTMLExporter:
             effort_percentiles=[
                 (
                     p,
-                    v,
+                    math.ceil(v),
                     math.ceil(v / results.hours_per_day),
                 )
                 for p, v in sorted(results.effort_percentiles.items())
