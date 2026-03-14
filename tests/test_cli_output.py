@@ -45,6 +45,7 @@ class _FakeResults:
     sensitivity = {"task_001": 0.85, "task_002": -0.42}
     task_slack = {"task_001": 0.0, "task_002": 4.5}
     percentiles = {50: 38.0, 80: 44.0, 90: 48.0}
+    max_parallel_tasks = 2
 
     def delivery_date(self, hours):
         if self.start_date is None:

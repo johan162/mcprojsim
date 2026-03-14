@@ -11,6 +11,9 @@ A typical CLI run (using `examples/sample_project.yaml`) produces output like th
 ```
 mcprojsim, version 0.3.0
 Progress: 100.0% (10000/10000)
+Simulation time: 3.42 seconds
+Peak simulation memory: 18.72 MiB
+Max parallel tasks: 3
 
 === Simulation Results ===
 Project: Customer Portal Redesign
@@ -374,6 +377,35 @@ If multiple tasks share high criticality, the project has several competing bott
 
 ---
 
+## Max parallel tasks
+
+The **Max parallel tasks** line reports the highest number of tasks that were scheduled to run at the same time in any single simulation iteration. The scheduler places every task at the earliest moment its dependencies allow, so two tasks without a dependency relationship can overlap.
+
+### How it is calculated
+
+After each iteration schedules tasks, a sweep-line algorithm scans through the start and end events of every task. A task is considered active during the half-open interval $[\text{start}, \text{end})$, so a task ending at the exact moment another begins does **not** count as concurrent. The peak concurrent count from each iteration is recorded, and the overall maximum across all iterations is reported.
+
+### Interpretation
+
+| Value | Meaning |
+|------|---------|
+| 1 | All tasks form a single serial chain — no parallelism. |
+| 2–3 | Limited parallelism. A small team can handle the concurrent work. |
+| 4+ | Significant parallelism. Verify that you actually have enough people or capacity to run this many tasks simultaneously. |
+
+In the sample output, `Max parallel tasks: 3` means the scheduler assumed up to three tasks running at the same time in at least one iteration.
+
+### Why this matters
+
+The simulation does **not** model resource constraints — it assumes unlimited capacity. If the reported peak parallelism exceeds your actual team size, the real schedule will be longer than the simulation predicts because some parallel tasks will have to wait for a free resource.
+
+Use this number as a sanity check:
+
+- If **max parallel tasks ≤ team size**: the simulation's parallelism assumption is realistic.
+- If **max parallel tasks > team size**: the simulation is optimistic. Consider adding explicit dependencies to serialise tasks that share a resource, or mentally adjust the percentiles upward.
+
+---
+
 ## Combining the analyses
 
 The real power of these metrics comes from reading them together. Here is a decision framework:
@@ -443,5 +475,6 @@ The most useful thing you can do over time is *calibrate*: compare the simulatio
 | Risk impact | How often and how much each task's risks fire | Identifying high-impact risk events to mitigate |
 | Criticality index | How often a task is on the critical path | Focusing management attention |
 | Critical path sequences | Which chains of tasks dominate | Dependency restructuring |
+| Max parallel tasks | Peak number of tasks running simultaneously | Validating resource assumptions |
 | Thermometer | Visual probability-to-effort mapping | Stakeholder communication |
 | Delivery dates | Calendar dates at each percentile | Scheduling and milestone setting |

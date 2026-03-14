@@ -200,6 +200,7 @@ def simulate(
                     ["Coefficient of Variation", f"{cv:.4f}"],
                     ["Skewness", f"{results.skewness:.4f}"],
                     ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
+                    ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
                 ]
                 click.echo(
                     _tabulate(
@@ -218,6 +219,7 @@ def simulate(
                 click.echo(f"Coefficient of Variation: {cv:.4f}")
                 click.echo(f"Skewness: {results.skewness:.4f}")
                 click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
+                click.echo(f"Max Parallel Tasks: {results.max_parallel_tasks}")
 
             if table:
                 # Confidence Intervals table

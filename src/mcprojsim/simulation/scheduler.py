@@ -132,6 +132,42 @@ class TaskScheduler:
 
         return slack
 
+    def max_parallel_tasks(self, schedule: Dict[str, Dict[str, float]]) -> int:
+        """Compute the peak number of concurrently running tasks.
+
+        Uses a sweep-line over task start/end events.  At a given point in
+        time a task is considered active during the half-open interval
+        ``[start, end)`` so that a task ending exactly when another begins
+        does not count as concurrent.
+
+        Args:
+            schedule: Task schedule from schedule_tasks()
+
+        Returns:
+            Maximum number of tasks active at any single point in time
+        """
+        if not schedule:
+            return 0
+
+        # Build event list: +1 for a task starting, -1 for a task ending.
+        events: list[tuple[float, int]] = []
+        for info in schedule.values():
+            events.append((info["start"], 1))
+            events.append((info["end"], -1))
+
+        # Sort by time; at equal times process end events before start
+        # events so that back-to-back tasks are not counted as parallel.
+        events.sort(key=lambda e: (e[0], e[1]))
+
+        current = 0
+        peak = 0
+        for _, delta in events:
+            current += delta
+            if current > peak:
+                peak = current
+
+        return peak
+
     def get_critical_path(self, schedule: Dict[str, Dict[str, float]]) -> Set[str]:
         """Identify critical path tasks.
 

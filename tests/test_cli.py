@@ -53,6 +53,7 @@ class TestCli:
                     task_slack = {}
                     percentiles = {50: 1.0}
                     hours_per_day = 8.0
+                    max_parallel_tasks = 0
 
                     def get_critical_path_sequences(self, top_n=None):
                         return []
@@ -111,6 +112,7 @@ class TestCli:
                     task_slack = {}
                     percentiles = {50: 1.0}
                     hours_per_day = 8.0
+                    max_parallel_tasks = 0
 
                     def get_critical_path_sequences(self, top_n=None):
                         return []
@@ -214,6 +216,7 @@ class TestCli:
                     percentiles = {50: 1.0}
                     iterations = 10
                     hours_per_day = 8.0
+                    max_parallel_tasks = 0
 
                     def get_critical_path_sequences(self, top_n=None):
                         return [
@@ -276,6 +279,7 @@ class TestCli:
             task_slack: dict[str, float] = {}
             percentiles: dict[int, float] = {50: 1.0}
             hours_per_day = 8.0
+            max_parallel_tasks = 0
 
             def get_critical_path_sequences(self, top_n=None):
                 return []

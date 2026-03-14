@@ -49,6 +49,9 @@ class SimulationResults(BaseModel):
     # Schedule slack (mean total float per task across iterations)
     task_slack: Dict[str, float] = Field(default_factory=dict)
 
+    # Peak parallelism observed across all iterations
+    max_parallel_tasks: int = 0
+
     # Risk impact tracking
     risk_impacts: Dict[str, np.ndarray] = Field(default_factory=dict)
     project_risk_impacts: np.ndarray = Field(default_factory=lambda: np.array([]))
@@ -203,6 +206,7 @@ class SimulationResults(BaseModel):
                 }
                 for record in self.critical_path_sequences
             ],
+            "max_parallel_tasks": self.max_parallel_tasks,
         }
 
     def hours_to_working_days(self, hours: float) -> int:
