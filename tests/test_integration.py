@@ -245,7 +245,7 @@ class TestCLIIntegration:
         assert results.std_dev > 0
 
         # Check that task durations are reasonable for their sizes
-        # XS: 0.5-2 days, M: 3-8 days, L: 5-13 days
+        # XS: 3-15 hours, M: 40-120 hours, L: 160-500 hours
         task_xs_durations = results.task_durations["task_xs"]
         task_m_durations = results.task_durations["task_m"]
         task_l_durations = results.task_durations["task_l"]
@@ -255,9 +255,9 @@ class TestCLIIntegration:
         assert task_m_durations.mean() < task_l_durations.mean()
 
         # Check reasonable ranges
-        assert 0.5 <= task_xs_durations.min() <= 2.0
-        assert 3.0 <= task_m_durations.min() <= 8.0
-        assert 5.0 <= task_l_durations.min() <= 13.0
+        assert 3.0 <= task_xs_durations.min() <= 15.0
+        assert 40.0 <= task_m_durations.min() <= 120.0
+        assert 160.0 <= task_l_durations.min() <= 500.0
 
     def test_story_point_sizing_simulation(self, tmp_path):
         """Test simulation with Story Point estimates."""

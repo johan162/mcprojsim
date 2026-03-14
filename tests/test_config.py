@@ -141,21 +141,21 @@ class TestTShirtSizes:
         # Test a few sizes
         xs = config.get_t_shirt_size("XS")
         assert xs is not None
-        assert xs.min == 0.5
-        assert xs.most_likely == 1
-        assert xs.max == 2
+        assert xs.min == 3
+        assert xs.most_likely == 5
+        assert xs.max == 15
 
         m = config.get_t_shirt_size("M")
         assert m is not None
-        assert m.min == 3
-        assert m.most_likely == 5
-        assert m.max == 8
+        assert m.min == 40
+        assert m.most_likely == 60
+        assert m.max == 120
 
         xxl = config.get_t_shirt_size("XXL")
         assert xxl is not None
-        assert xxl.min == 13
-        assert xxl.most_likely == 21
-        assert xxl.max == 34
+        assert xxl.min == 400
+        assert xxl.most_likely == 500
+        assert xxl.max == 1200
 
     def test_get_unknown_tshirt_size(self):
         """Test getting unknown T-shirt size returns None."""
