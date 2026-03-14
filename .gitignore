@@ -112,5 +112,7 @@ dmypy.json
 *~
 *.bak
 
+# Generated reports
 *.html
 *.json
+*.csv
