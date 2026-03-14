@@ -152,6 +152,21 @@ class SimulationResults(BaseModel):
         """
         return float(np.mean(self.durations <= target_hours))
 
+    def total_effort_hours(self) -> float:
+        """Compute the total person-effort across all tasks in hours.
+
+        This is the sum of per-task mean durations and represents the total
+        amount of work regardless of parallelism.  It differs from
+        :pyattr:`mean` which is the *elapsed* project duration (critical-path
+        time).
+
+        Returns:
+            Total person-hours of effort.
+        """
+        if not self.task_durations:
+            return self.mean
+        return float(sum(np.mean(d) for d in self.task_durations.values()))
+
     def get_risk_impact_summary(self) -> Dict[str, Dict[str, float]]:
         """Get summary statistics for risk impacts per task.
 

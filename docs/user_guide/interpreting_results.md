@@ -66,6 +66,9 @@ Most Frequent Critical Paths:
   1. task_001 -> task_002 -> task_004 -> task_005 -> task_006 -> task_008
      (10000/10000, 100.0%)
 
+Staffing: 3 people recommended (mixed team), 38 working days
+Total effort: 910.12 person-hours (113.8 person-days) | Parallelism ratio: 1.57
+
 No export formats specified. Use -f to export results to files.
 ```
 
@@ -406,6 +409,133 @@ Use this number as a sanity check:
 
 ---
 
+## Staffing recommendations
+
+The staffing advisory appears at the bottom of every simulation run. It answers the question: *"Given this project's parallelism and effort, how many people should work on it?"*
+
+### The advisory line
+
+```
+Staffing: 3 people recommended (mixed team), 38 working days
+Total effort: 910.12 person-hours (113.8 person-days) | Parallelism ratio: 1.57
+```
+
+This tells you:
+
+- **Recommended team size**: The smallest number of people where adding one more would reduce calendar time by less than 5%.
+- **Experience profile**: The profile used for the quick advisory ("mixed" by default). See below for a comparison of all profiles.
+- **Working days**: Estimated calendar duration with the recommended team, accounting for communication overhead.
+- **Total effort**: The sum of mean task durations, measured in person-hours. This is the amount of *work* regardless of how many people do it.
+- **Parallelism ratio**: Total effort divided by critical-path duration. A ratio of 1.0 means the project is entirely serial; higher values indicate potential for parallel work.
+
+### The `--staffing` flag
+
+Pass `--staffing` to see a detailed table for each experience profile:
+
+```
+=== Staffing Analysis ===
+
+--- senior ---
+Team Size  Eff. Capacity  Working Days  Delivery Date  Efficiency
+        1           1.00            114     2026-06-15      100.0%
+        2           1.92             60     2026-03-27       96.0%
+        3*          2.76             42     2026-03-02       92.2%   <-- recommended
+
+--- mixed ---
+Team Size  Eff. Capacity  Working Days  Delivery Date  Efficiency
+        1           0.85            134     2026-07-14      100.0%
+        2           1.60             72     2026-04-13       94.1%
+        3*          2.24             51     2026-03-16       87.7%   <-- recommended
+
+--- junior ---
+...
+```
+
+Each column is explained below.
+
+### Communication overhead model (Brooks's Law)
+
+Adding people to a project increases communication overhead — a concept famously expressed in Fred Brooks's *The Mythical Man-Month*. `mcprojsim` models this with a simple formula:
+
+$$
+E(n) = n \cdot \max(p_{\min},\; 1 - c \cdot (n - 1)) \cdot f
+$$
+
+where:
+
+| Symbol | Meaning | Default values |
+|--------|---------|----------------|
+| $n$ | Team size | — |
+| $c$ | Per-person communication overhead | 0.04 (senior), 0.06 (mixed), 0.08 (junior) |
+| $f$ | Productivity factor for the experience profile | 1.00, 0.85, 0.65 |
+| $p_{\min}$ | Floor on individual productivity | 0.25 |
+| $E(n)$ | Effective capacity in "ideal-person" units | — |
+
+The individual productivity of one person on an $n$-person team is $\max(p_{\min},\; 1 - c \cdot (n - 1))$. This decreases linearly with team size until it hits the floor.
+
+Calendar duration is then:
+
+$$
+T(n) = \max\!\left(T_{\text{CP}},\; \frac{W}{E(n)}\right)
+$$
+
+where $W$ is total effort (person-hours) and $T_{\text{CP}}$ is the critical-path duration — an irreducible lower bound that no amount of parallelism can shorten.
+
+### Understanding the table columns
+
+| Column | Meaning |
+|--------|---------|
+| **Team Size** | Number of people |
+| **Eff. Capacity** | $E(n)$ — the team's output in "ideal-person" equivalents after overhead |
+| **Working Days** | Calendar working days at this team size |
+| **Delivery Date** | Projected date (weekends excluded), or blank if no `start_date` |
+| **Efficiency** | Effective capacity ÷ team size. 100% means no overhead; lower values mean more time lost to communication |
+
+The row marked with `*` or `<-- recommended` is the optimal team size for that profile.
+
+### Experience profiles
+
+Three built-in profiles model different team compositions:
+
+| Profile | Productivity factor ($f$) | Overhead ($c$) | Description |
+|---------|--------------------------|----------------|-------------|
+| **senior** | 1.00 | 0.04 | Experienced team — high output, low overhead |
+| **mixed** | 0.85 | 0.06 | Typical blend of senior and junior — moderate overhead |
+| **junior** | 0.65 | 0.08 | Less experienced team — higher coordination cost |
+
+Profiles are fully configurable. In a YAML config, override or add profiles under `staffing.experience_profiles`:
+
+```yaml
+staffing:
+  min_individual_productivity: 0.25
+  experience_profiles:
+    senior:
+      productivity_factor: 1.0
+      communication_overhead: 0.04
+    mixed:
+      productivity_factor: 0.85
+      communication_overhead: 0.06
+    my_custom_team:
+      productivity_factor: 0.90
+      communication_overhead: 0.05
+```
+
+### Interpreting the results
+
+- **Recommended size = 1**: The project is almost entirely serial (parallelism ratio near 1.0) or the total effort is small. Adding people just adds overhead.
+- **Recommended size = max parallel tasks**: The project has enough parallelism to keep everyone busy. This is the ideal scenario.
+- **Senior team recommends more people than junior**: A senior team has lower overhead per person, so it can grow larger before the overhead outweighs the benefit.
+- **Efficiency drops below 70%**: Adding more people is subject to strongly diminishing returns. Consider splitting the project into independent work streams instead.
+
+### Caveats
+
+- The model assumes all team members can work on any task. In practice, specialisation may constrain who does what.
+- It does not account for ramp-up time: a new team member joining mid-project may take weeks to reach full productivity.
+- The communication overhead is linear in team size. Real-world overhead grows faster (some models use $n(n-1)/2$ communication channels); the linear model is a conservative simplification.
+- The simulation already assumes unlimited parallelism, so the staffing recommendation does not change the simulated durations — it is an advisory layer on top of the existing results.
+
+---
+
 ## Combining the analyses
 
 The real power of these metrics comes from reading them together. Here is a decision framework:
@@ -476,5 +606,6 @@ The most useful thing you can do over time is *calibrate*: compare the simulatio
 | Criticality index | How often a task is on the critical path | Focusing management attention |
 | Critical path sequences | Which chains of tasks dominate | Dependency restructuring |
 | Max parallel tasks | Peak number of tasks running simultaneously | Validating resource assumptions |
+| Staffing advisory | Recommended team size per experience profile | Team sizing, hiring decisions |
 | Thermometer | Visual probability-to-effort mapping | Stakeholder communication |
 | Delivery dates | Calendar dates at each percentile | Scheduling and milestone setting |

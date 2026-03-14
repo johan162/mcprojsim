@@ -47,6 +47,9 @@ class _FakeResults:
     percentiles = {50: 38.0, 80: 44.0, 90: 48.0}
     max_parallel_tasks = 2
 
+    def total_effort_hours(self):
+        return 60.0
+
     def delivery_date(self, hours):
         if self.start_date is None:
             return None

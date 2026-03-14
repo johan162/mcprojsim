@@ -120,6 +120,11 @@ def cli() -> None:
     is_flag=True,
     help="Format tabular output sections as ASCII tables.",
 )
+@click.option(
+    "--staffing",
+    is_flag=True,
+    help="Show full staffing analysis table with team-size recommendations.",
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -132,6 +137,7 @@ def simulate(
     verbose: bool,
     target_date: Optional[str],
     table: bool,
+    staffing: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     click.echo(f"mcprojsim, version {__version__}")
@@ -402,6 +408,89 @@ def simulate(
                         f"{index}. {record.format_path()} "
                         f"({record.count}/{results.iterations}, {record.frequency * 100:.1f}%)"
                     )
+
+            # --- Staffing advisory (always shown) and full table (--staffing) ---
+            from mcprojsim.analysis.staffing import StaffingAnalyzer
+
+            staffing_recs = StaffingAnalyzer.recommend_team_size(results, cfg)
+            if staffing_recs:
+                # Default advisory uses the 'mixed' profile if present,
+                # otherwise the first profile alphabetically.
+                mixed_recs = [r for r in staffing_recs if r.profile == "mixed"]
+                advisory = mixed_recs[0] if mixed_recs else staffing_recs[0]
+                total_effort = advisory.total_effort_hours
+                total_effort_wd = math.ceil(total_effort / hours_per_day)
+
+                click.echo(
+                    f"\nStaffing: {advisory.recommended_team_size} people "
+                    f"recommended ({advisory.profile} team), "
+                    f"{advisory.calendar_working_days} working days"
+                )
+                click.echo(
+                    f"  Total effort: {total_effort:,.0f} person-hours "
+                    f"({total_effort_wd} person-days) | "
+                    f"Parallelism ratio: {advisory.parallelism_ratio:.1f}"
+                )
+
+            if staffing and staffing_recs:
+                staffing_table = StaffingAnalyzer.calculate_staffing_table(results, cfg)
+                profiles_sorted = sorted({r.profile for r in staffing_recs})
+                for prof in profiles_sorted:
+                    prof_rows = [r for r in staffing_table if r.profile == prof]
+                    rec = next((r for r in staffing_recs if r.profile == prof), None)
+                    rec_n = rec.recommended_team_size if rec else 0
+                    click.echo(
+                        f"\nStaffing Analysis ({prof} team, "
+                        f"overhead={cfg.staffing.experience_profiles[prof].communication_overhead:.0%}/person, "
+                        f"productivity={cfg.staffing.experience_profiles[prof].productivity_factor:.0%}):"
+                    )
+                    if table:
+                        from tabulate import tabulate as _tabulate
+
+                        st_rows = []
+                        for r in prof_rows:
+                            marker = " *" if r.team_size == rec_n else ""
+                            date_str = (
+                                r.delivery_date.isoformat() if r.delivery_date else ""
+                            )
+                            st_rows.append(
+                                [
+                                    f"{r.team_size}{marker}",
+                                    f"{r.effective_capacity:.2f}",
+                                    f"{r.calendar_working_days}",
+                                    date_str,
+                                    f"{r.efficiency * 100:.1f}%",
+                                ]
+                            )
+                        click.echo(
+                            _tabulate(
+                                st_rows,
+                                headers=[
+                                    "Team Size",
+                                    "Eff. Capacity",
+                                    "Working Days",
+                                    "Delivery Date",
+                                    "Efficiency",
+                                ],
+                                tablefmt="simple_outline",
+                                disable_numparse=True,
+                            )
+                        )
+                    else:
+                        for r in prof_rows:
+                            marker = "  <-- recommended" if r.team_size == rec_n else ""
+                            date_str = (
+                                f"  ({r.delivery_date.isoformat()})"
+                                if r.delivery_date
+                                else ""
+                            )
+                            click.echo(
+                                f"  {r.team_size} people: "
+                                f"{r.calendar_working_days} working days, "
+                                f"eff. capacity {r.effective_capacity:.2f}, "
+                                f"efficiency {r.efficiency * 100:.1f}%"
+                                f"{date_str}{marker}"
+                            )
 
         # Export results (only if formats are explicitly specified)
         if output_format.strip():

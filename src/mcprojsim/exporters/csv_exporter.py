@@ -5,6 +5,7 @@ import math
 from datetime import datetime
 from pathlib import Path
 
+from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
 from mcprojsim.models.simulation import SimulationResults
 
@@ -168,3 +169,58 @@ class CSVExporter:
                                 f"{stats['mean_when_triggered']:.2f}",
                             ]
                         )
+
+            # Write staffing analysis
+            writer.writerow([])
+            recommendations = StaffingAnalyzer.recommend_team_size(
+                results, effective_config
+            )
+            writer.writerow(
+                [
+                    "Staffing Recommendations",
+                    "Team Size",
+                    "Working Days",
+                    "Delivery Date",
+                    "Efficiency",
+                ]
+            )
+            for rec in recommendations:
+                date_str = rec.delivery_date.isoformat() if rec.delivery_date else ""
+                writer.writerow(
+                    [
+                        rec.profile,
+                        rec.recommended_team_size,
+                        rec.calendar_working_days,
+                        date_str,
+                        f"{rec.efficiency:.4f}",
+                    ]
+                )
+
+            writer.writerow([])
+            table_rows = StaffingAnalyzer.calculate_staffing_table(
+                results, effective_config
+            )
+            writer.writerow(
+                [
+                    "Staffing Table",
+                    "Team Size",
+                    "Profile",
+                    "Eff. Capacity",
+                    "Working Days",
+                    "Delivery Date",
+                    "Efficiency",
+                ]
+            )
+            for row in table_rows:
+                date_str = row.delivery_date.isoformat() if row.delivery_date else ""
+                writer.writerow(
+                    [
+                        "",
+                        row.team_size,
+                        row.profile,
+                        f"{row.effective_capacity:.2f}",
+                        row.calendar_working_days,
+                        date_str,
+                        f"{row.efficiency:.4f}",
+                    ]
+                )

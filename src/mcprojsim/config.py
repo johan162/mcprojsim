@@ -89,6 +89,23 @@ def _build_default_config_data() -> dict[str, Any]:
             "histogram_bins": DEFAULT_HISTOGRAM_BINS,
             "critical_path_report_limit": DEFAULT_CRITICAL_PATH_REPORT_LIMIT,
         },
+        "staffing": {
+            "min_individual_productivity": 0.25,
+            "experience_profiles": {
+                "senior": {
+                    "productivity_factor": 1.0,
+                    "communication_overhead": 0.04,
+                },
+                "mixed": {
+                    "productivity_factor": 0.85,
+                    "communication_overhead": 0.06,
+                },
+                "junior": {
+                    "productivity_factor": 0.65,
+                    "communication_overhead": 0.08,
+                },
+            },
+        },
     }
 
 
@@ -138,6 +155,43 @@ class OutputConfig(BaseModel):
     )
 
 
+class ExperienceProfileConfig(BaseModel):
+    """Productivity and overhead parameters for an experience profile."""
+
+    productivity_factor: float = Field(default=1.0, gt=0)
+    communication_overhead: float = Field(default=0.06, ge=0, le=1)
+
+
+class StaffingConfig(BaseModel):
+    """Staffing analysis settings."""
+
+    min_individual_productivity: float = Field(
+        default=0.25,
+        gt=0,
+        le=1,
+        description=(
+            "Floor for individual productivity after communication overhead. "
+            "Prevents the model from predicting zero-productivity teams."
+        ),
+    )
+    experience_profiles: Dict[str, ExperienceProfileConfig] = Field(
+        default_factory=lambda: {
+            "senior": ExperienceProfileConfig(
+                productivity_factor=1.0,
+                communication_overhead=0.04,
+            ),
+            "mixed": ExperienceProfileConfig(
+                productivity_factor=0.85,
+                communication_overhead=0.06,
+            ),
+            "junior": ExperienceProfileConfig(
+                productivity_factor=0.65,
+                communication_overhead=0.08,
+            ),
+        }
+    )
+
+
 class EstimateRangeConfig(BaseModel):
     """Range configuration for a symbolic estimate."""
 
@@ -164,6 +218,7 @@ class Config(BaseModel):
     story_point_unit: EffortUnit = Field(default=EffortUnit.DAYS)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
+    staffing: StaffingConfig = Field(default_factory=StaffingConfig)
 
     @classmethod
     def load_from_file(cls, config_path: Path | str) -> "Config":

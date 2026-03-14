@@ -55,6 +55,9 @@ class TestCli:
                     hours_per_day = 8.0
                     max_parallel_tasks = 0
 
+                    def total_effort_hours(self):
+                        return 1.0
+
                     def get_critical_path_sequences(self, top_n=None):
                         return []
 
@@ -113,6 +116,9 @@ class TestCli:
                     percentiles = {50: 1.0}
                     hours_per_day = 8.0
                     max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
 
                     def get_critical_path_sequences(self, top_n=None):
                         return []
@@ -218,6 +224,9 @@ class TestCli:
                     hours_per_day = 8.0
                     max_parallel_tasks = 0
 
+                    def total_effort_hours(self):
+                        return 1.0
+
                     def get_critical_path_sequences(self, top_n=None):
                         return [
                             CriticalPathRecord(
@@ -280,6 +289,9 @@ class TestCli:
             percentiles: dict[int, float] = {50: 1.0}
             hours_per_day = 8.0
             max_parallel_tasks = 0
+
+            def total_effort_hours(self):
+                return 1.0
 
             def get_critical_path_sequences(self, top_n=None):
                 return []

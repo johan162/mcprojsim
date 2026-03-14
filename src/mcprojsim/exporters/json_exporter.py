@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 import numpy as np
 
+from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
 from mcprojsim.models.simulation import SimulationResults
 
@@ -137,4 +138,20 @@ class JSONExporter:
                 "bin_edges": bin_edges.tolist(),
                 "counts": counts.tolist(),
             },
+            "staffing": JSONExporter._prepare_staffing_data(results, effective_config),
+        }
+
+    @staticmethod
+    def _prepare_staffing_data(
+        results: SimulationResults,
+        config: Config,
+    ) -> Dict[str, Any]:
+        """Prepare staffing analysis data for JSON export."""
+        recommendations = StaffingAnalyzer.recommend_team_size(results, config)
+        table = StaffingAnalyzer.calculate_staffing_table(results, config)
+        return {
+            "total_effort_hours": round(results.total_effort_hours(), 2),
+            "max_parallel_tasks": results.max_parallel_tasks,
+            "recommendations": [r.to_dict() for r in recommendations],
+            "table": [r.to_dict() for r in table],
         }
