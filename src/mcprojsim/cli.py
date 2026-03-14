@@ -101,7 +101,15 @@ def cli() -> None:
     type=int,
     help="Number of full critical path sequences to include in CLI output and exports.",
 )
-@click.option("--quiet", "-q", is_flag=True, help="Suppress progress output")
+@click.option(
+    "--quiet",
+    "-q",
+    count=True,
+    help=(
+        "Reduce CLI output verbosity. Use -q to suppress detailed output and "
+        "-qq to suppress all normal output."
+    ),
+)
 @click.option(
     "--verbose",
     "-v",
@@ -133,14 +141,15 @@ def simulate(
     output: Optional[str],
     output_format: str,
     critical_paths: Optional[int],
-    quiet: bool,
+    quiet: int,
     verbose: bool,
     target_date: Optional[str],
     table: bool,
     staffing: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
-    click.echo(f"mcprojsim, version {__version__}")
+    if quiet < 2:
+        click.echo(f"mcprojsim, version {__version__}")
     logger = setup_logging(level="INFO" if verbose else "WARNING")
 
     try:
@@ -173,19 +182,20 @@ def simulate(
             iterations=iterations,
             random_seed=seed,
             config=cfg,
-            show_progress=not quiet,
+            show_progress=quiet == 0,
         )
         results, elapsed_seconds, peak_memory_bytes = _run_simulation_with_metrics(
             engine, project
         )
         critical_path_limit = critical_paths or cfg.output.critical_path_report_limit
 
-        click.echo(f"Simulation time: {elapsed_seconds:.2f} seconds")
-        click.echo(
-            "Peak simulation memory: " f"{_format_memory_size(peak_memory_bytes)}"
-        )
+        if quiet < 2:
+            click.echo(f"Simulation time: {elapsed_seconds:.2f} seconds")
+            click.echo(
+                "Peak simulation memory: " f"{_format_memory_size(peak_memory_bytes)}"
+            )
 
-        if not quiet:
+        if quiet == 0:
             import math
 
             from tabulate import tabulate as _tabulate
@@ -547,7 +557,7 @@ def simulate(
                         config=cfg,
                         critical_path_limit=critical_path_limit,
                     )
-                    if not quiet:
+                    if quiet == 0:
                         click.echo(f"\nResults exported to {output_file}")
                 elif fmt == "csv":
                     output_file = base_output.with_suffix(".csv")
@@ -557,7 +567,7 @@ def simulate(
                         config=cfg,
                         critical_path_limit=critical_path_limit,
                     )
-                    if not quiet:
+                    if quiet == 0:
                         click.echo(f"Results exported to {output_file}")
                 elif fmt == "html":
                     output_file = base_output.with_suffix(".html")
@@ -568,13 +578,13 @@ def simulate(
                         config=cfg,
                         critical_path_limit=critical_path_limit,
                     )
-                    if not quiet:
+                    if quiet == 0:
                         click.echo(f"Results exported to {output_file}")
                 else:
-                    if not quiet:
+                    if quiet == 0:
                         click.echo(f"Warning: Unknown format '{fmt}' ignored")
         else:
-            if not quiet:
+            if quiet == 0:
                 click.echo(
                     "\nNo export formats specified. Use -f to export results to files."
                 )

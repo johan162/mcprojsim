@@ -131,7 +131,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-o`, `--output PATH` | Output file base path (without extension) | project name |
 | `-f`, `--output-format FORMATS` | Comma-separated export formats: `json`, `csv`, `html` | none |
 | `--critical-paths N` | Number of critical paths to display | 2 |
-| `-q`, `--quiet` | Suppress progress output | off |
+| `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
 | `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
@@ -157,6 +157,9 @@ mcprojsim simulate project.yaml -f json,csv,html -o results/my_project
 
 # Quiet mode (suppress progress bars)
 mcprojsim simulate project.yaml --quiet
+
+# Fully quiet mode (suppress all normal CLI output)
+mcprojsim simulate project.yaml -qq
 
 # Verbose mode (show config/project loading details)
 mcprojsim simulate project.yaml --verbose
