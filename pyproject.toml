@@ -32,7 +32,7 @@ include = ["src/mcprojsim/py.typed"]
 
 [tool.poetry.dependencies]
 python = ">=3.14"
-numpy = ">=2.4.2"
+numpy = ">=2.4.3"
 pyyaml = ">=6.0"
 tomli-w = ">=1.0.0"
 pydantic = ">=2.0.0"
@@ -46,7 +46,7 @@ tabulate = "^0.10.0"
 pytest = ">=9.0.1"
 pytest-cov = ">=7.0.0"
 pytest-xdist = ">=3.8.0"
-black = ">=26.3.0"
+black = ">=26.3.1"
 mypy = ">=1.0.0"
 flake8 = ">=7.3.0"
 pre-commit = ">=4.3.0"
@@ -56,7 +56,7 @@ types-tabulate = "^0.10.0.20260308"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = ">=1.5.0"
-mkdocs-material = ">=9.7.4"
+mkdocs-material = ">=9.7.5"
 mkdocstrings = {extras = ["python"], version = ">=0.22.0"}
 
 [tool.poetry.group.mcp]
