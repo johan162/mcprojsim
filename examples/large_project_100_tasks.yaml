@@ -1,0 +1,646 @@
+project:
+  name: Enterprise Platform Modernization Benchmark
+  description: Synthetic 100-task benchmark project for stress-testing mcprojsim time
+    and memory usage.
+  start_date: '2026-04-06'
+  hours_per_day: 8.0
+  confidence_levels:
+  - 50
+  - 80
+  - 90
+  - 95
+tasks:
+- id: task_001
+  name: Integrate identity service security controls for self-service onboarding
+  estimate:
+    t_shirt_size: XS
+- id: task_002
+  name: Document notification hub migration plan for multi-region rollout
+  estimate:
+    t_shirt_size: M
+- id: task_003
+  name: Design release automation service contracts for support automation
+  estimate:
+    t_shirt_size: M
+- id: task_004
+  name: Automate admin portal monitoring baseline for enterprise tenants
+  estimate:
+    t_shirt_size: S
+- id: task_005
+  name: Document billing engine domain model for release readiness
+  estimate:
+    t_shirt_size: XS
+- id: task_006
+  name: Optimize billing engine deployment workflow for phased migration
+  estimate:
+    t_shirt_size: L
+- id: task_007
+  name: Automate API gateway architecture for phased migration
+  estimate:
+    t_shirt_size: L
+- id: task_008
+  name: Validate customer profile store operational runbook for enterprise tenants
+  estimate:
+    t_shirt_size: M
+- id: task_009
+  name: Validate data retention service regression suite for phased migration
+  estimate:
+    t_shirt_size: S
+- id: task_010
+  name: Define reporting API domain model for peak traffic handling
+  estimate:
+    t_shirt_size: S
+- id: task_011
+  name: Document search platform regression suite for peak traffic handling
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_010
+- id: task_012
+  name: Optimize reporting API security controls for peak traffic handling
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_003
+- id: task_013
+  name: Optimize workflow orchestration operational runbook for peak traffic handling
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_006
+- id: task_014
+  name: Define API gateway performance tuning for support automation
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_003
+  - task_004
+- id: task_015
+  name: Document tenant management performance tuning for partner integrations
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_002
+- id: task_016
+  name: Automate mobile sync layer migration plan for release readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_004
+  - task_007
+  - task_009
+- id: task_017
+  name: Implement reporting API migration plan for multi-region rollout
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_002
+- id: task_018
+  name: Automate reporting API regression suite for multi-region rollout
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_005
+- id: task_019
+  name: Design customer profile store migration plan for release readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_009
+- id: task_020
+  name: Roll out notification hub architecture for partner integrations
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_006
+- id: task_021
+  name: Roll out customer profile store service contracts for self-service onboarding
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_013
+- id: task_022
+  name: Automate data retention service security controls for support automation
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_012
+  - task_017
+  - task_020
+- id: task_023
+  name: Document document storage monitoring baseline for enterprise tenants
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_015
+- id: task_024
+  name: Automate data retention service operational runbook for peak traffic handling
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_018
+- id: task_025
+  name: Optimize admin portal domain model for audit readiness
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_011
+- id: task_026
+  name: Roll out search platform operational runbook for multi-region rollout
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_016
+- id: task_027
+  name: Automate document storage regression suite for support automation
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_005
+  - task_017
+- id: task_028
+  name: Define integration broker migration plan for peak traffic handling
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_004
+  - task_009
+  - task_013
+- id: task_029
+  name: Document integration broker security controls for audit readiness
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_015
+- id: task_030
+  name: Roll out permissions engine regression suite for enterprise tenants
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_011
+  - task_017
+- id: task_031
+  name: Automate integration broker migration plan for support automation
+  estimate:
+    t_shirt_size: XL
+  dependencies:
+  - task_028
+- id: task_032
+  name: Integrate document storage deployment workflow for enterprise tenants
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_029
+- id: task_033
+  name: Harden notification hub security controls for peak traffic handling
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_021
+  - task_022
+- id: task_034
+  name: Roll out permissions engine deployment workflow for partner integrations
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_025
+- id: task_035
+  name: Validate audit trail service service contracts for phased migration
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_030
+- id: task_036
+  name: Roll out customer profile store security controls for zero-downtime delivery
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_025
+- id: task_037
+  name: Integrate customer profile store monitoring baseline for peak traffic handling
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_030
+- id: task_038
+  name: Harden tenant management architecture for release readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_024
+- id: task_039
+  name: Integrate integration broker migration plan for multi-region rollout
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_022
+  - task_023
+- id: task_040
+  name: Implement data retention service deployment workflow for self-service onboarding
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_025
+- id: task_041
+  name: Automate data retention service deployment workflow for zero-downtime delivery
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_033
+  - task_039
+- id: task_042
+  name: Roll out API gateway architecture for release readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_040
+- id: task_043
+  name: Define identity service regression suite for zero-downtime delivery
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_036
+- id: task_044
+  name: Implement document storage monitoring baseline for zero-downtime delivery
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_031
+  - task_038
+- id: task_045
+  name: Roll out data retention service deployment workflow for peak traffic handling
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_033
+- id: task_046
+  name: Validate analytics pipeline architecture for zero-downtime delivery
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_035
+  - task_038
+- id: task_047
+  name: Roll out customer profile store security controls for peak traffic handling
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_035
+- id: task_048
+  name: Roll out observability stack monitoring baseline for self-service onboarding
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_034
+- id: task_049
+  name: Validate audit trail service deployment workflow for partner integrations
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_031
+- id: task_050
+  name: Implement analytics pipeline operational runbook for phased migration
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_037
+- id: task_051
+  name: Roll out API gateway service contracts for zero-downtime delivery
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_041
+- id: task_052
+  name: Integrate identity service deployment workflow for release readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_041
+  - task_045
+  - task_050
+- id: task_053
+  name: Implement audit trail service migration plan for support automation
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_043
+- id: task_054
+  name: Implement tenant management service contracts for self-service onboarding
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_041
+- id: task_055
+  name: Validate feature flag service monitoring baseline for audit readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_045
+- id: task_056
+  name: Validate admin portal monitoring baseline for partner integrations
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_044
+- id: task_057
+  name: Define workflow orchestration migration plan for release readiness
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_041
+  - task_046
+- id: task_058
+  name: Define workflow orchestration security controls for self-service onboarding
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_041
+  - task_049
+  - task_050
+- id: task_059
+  name: Validate mobile sync layer regression suite for peak traffic handling
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_045
+  - task_047
+  - task_049
+- id: task_060
+  name: Optimize reporting API architecture for audit readiness
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_001
+  - task_043
+  - task_044
+- id: task_061
+  name: Validate mobile sync layer deployment workflow for partner integrations
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_051
+  - task_056
+- id: task_062
+  name: Define audit trail service performance tuning for self-service onboarding
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_053
+- id: task_063
+  name: Design admin portal regression suite for release readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_051
+  - task_056
+  - task_057
+- id: task_064
+  name: Define data retention service domain model for audit readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_059
+- id: task_065
+  name: Design search platform security controls for self-service onboarding
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_058
+- id: task_066
+  name: Optimize search platform service contracts for support automation
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_051
+- id: task_067
+  name: Automate API gateway monitoring baseline for partner integrations
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_052
+  - task_053
+  - task_055
+- id: task_068
+  name: Integrate analytics pipeline security controls for audit readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_041
+  - task_058
+  - task_060
+- id: task_069
+  name: Define workflow orchestration architecture for zero-downtime delivery
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_059
+- id: task_070
+  name: Roll out integration broker performance tuning for partner integrations
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_022
+  - task_050
+- id: task_071
+  name: Automate search platform performance tuning for partner integrations
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_067
+  - task_069
+- id: task_072
+  name: Define release automation service contracts for phased migration
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_064
+- id: task_073
+  name: Harden customer profile store security controls for partner integrations
+  estimate:
+    t_shirt_size: XL
+  dependencies:
+  - task_069
+- id: task_074
+  name: Design permissions engine security controls for peak traffic handling
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_065
+- id: task_075
+  name: Automate search platform deployment workflow for audit readiness
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_070
+- id: task_076
+  name: Integrate notification hub domain model for zero-downtime delivery
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_064
+- id: task_077
+  name: Integrate data retention service monitoring baseline for enterprise tenants
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_065
+- id: task_078
+  name: Validate tenant management security controls for partner integrations
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_004
+  - task_064
+- id: task_079
+  name: Roll out reporting API security controls for phased migration
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_050
+- id: task_080
+  name: Validate notification hub service contracts for release readiness
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_061
+  - task_064
+  - task_069
+- id: task_081
+  name: Implement feature flag service operational runbook for zero-downtime delivery
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_075
+- id: task_082
+  name: Integrate identity service monitoring baseline for enterprise tenants
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_041
+  - task_068
+- id: task_083
+  name: Define integration broker security controls for enterprise tenants
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_071
+  - task_073
+  - task_074
+- id: task_084
+  name: Validate workflow orchestration performance tuning for partner integrations
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_075
+  - task_079
+- id: task_085
+  name: Automate identity service deployment workflow for self-service onboarding
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_073
+  - task_076
+- id: task_086
+  name: Design audit trail service architecture for peak traffic handling
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_073
+  - task_077
+- id: task_087
+  name: Roll out analytics pipeline regression suite for audit readiness
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_007
+  - task_071
+  - task_076
+- id: task_088
+  name: Harden notification hub monitoring baseline for support automation
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_076
+- id: task_089
+  name: Integrate permissions engine domain model for phased migration
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_075
+  - task_079
+- id: task_090
+  name: Roll out integration broker security controls for release readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_074
+- id: task_091
+  name: Integrate notification hub migration plan for phased migration
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_082
+  - task_090
+- id: task_092
+  name: Document integration broker domain model for zero-downtime delivery
+  estimate:
+    t_shirt_size: L
+  dependencies:
+  - task_084
+- id: task_093
+  name: Implement notification hub deployment workflow for audit readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_074
+  - task_082
+  - task_090
+- id: task_094
+  name: Define release automation security controls for audit readiness
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_081
+- id: task_095
+  name: Design identity service operational runbook for peak traffic handling
+  estimate:
+    t_shirt_size: XS
+  dependencies:
+  - task_072
+  - task_089
+- id: task_096
+  name: Implement release automation deployment workflow for phased migration
+  estimate:
+    t_shirt_size: XL
+  dependencies:
+  - task_086
+  - task_087
+- id: task_097
+  name: Integrate analytics pipeline migration plan for partner integrations
+  estimate:
+    t_shirt_size: S
+  dependencies:
+  - task_084
+  - task_085
+  - task_090
+- id: task_098
+  name: Harden permissions engine architecture for release readiness
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_090
+- id: task_099
+  name: Implement admin portal domain model for peak traffic handling
+  estimate:
+    t_shirt_size: XL
+  dependencies:
+  - task_084
+  - task_088
+  - task_090
+- id: task_100
+  name: Design permissions engine service contracts for self-service onboarding
+  estimate:
+    t_shirt_size: M
+  dependencies:
+  - task_085
+  - task_090

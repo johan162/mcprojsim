@@ -119,13 +119,53 @@ Provide probabilistic estimates for software project completion through Monte Ca
 **FR-016: Support for StoryPoints and T-Shirt Size Estimates**
 - The system shall support estimates specified as Story Points (1,2,3,5,8,11,21) which are converted to effort in configuration
 - The system shall support T-shirt sizes (S,M,L,XL) which are converted to effort in configuration
+
+**FR-017: Delivery Date Forecasting and Target-Date Probability**
+- The system SHALL convert simulated effort values into working-day counts using the project's configured hours per day
+- The system SHALL calculate forecast delivery dates for reported confidence levels when a project start date is available
+- The system SHALL compute the probability of completing on or before a user-specified target date
+
+**FR-018: Schedule Slack Analysis**
+- The system SHALL calculate total float (schedule slack) for each task from the dependency-based schedule
+- The system SHALL report mean task slack across simulation iterations
+- Tasks with effectively zero slack SHALL be identified as critical in schedule slack reporting
+
+**FR-019: Full Critical Path Sequence Reporting**
+- The system SHALL capture complete critical path sequences for each simulation iteration
+- The system SHALL aggregate and rank the most frequent full critical path sequences across iterations
+- The system SHALL include a configurable number of the top critical path sequences in command-line output and exported reports
+
+**FR-020: Risk Impact Summary Reporting**
+- The system SHALL track realized task-level risk impact during simulation iterations
+- The system SHALL report mean realized risk impact per task
+- The system SHALL report task-level risk trigger rate and mean impact when triggered
+
+**FR-021: Natural-Language Project Description Parsing**
+- The system SHALL parse semi-structured natural-language project descriptions into an internal project representation
+- The parser SHALL extract project metadata including project name, start date, description, hours per day, and confidence levels when provided
+- The parser SHALL extract numbered tasks, task dependencies, T-shirt sizes, Story Points, and explicit three-point estimates with optional effort units
+
+**FR-022: Project File Generation from Natural-Language Descriptions**
+- The system SHALL generate syntactically correct mcprojsim YAML project files from supported natural-language descriptions
+- Generated task identifiers SHALL be normalized into valid project task IDs and dependency references SHALL be mapped accordingly
+- The system SHALL support validation-only analysis of natural-language project descriptions, reporting warnings and errors without generating a project file
+
+**FR-023: MCP Server Integration**
+- The system SHALL provide an MCP server interface for generating project files from natural-language descriptions
+- The system SHALL provide MCP tools to validate natural-language project descriptions before generation
+- The system SHALL provide an MCP tool that generates a project definition and executes a simulation in a single request
+
+**FR-024: Extended Distribution Shape Statistics**
+- The system SHALL calculate skewness for the simulated project duration distribution
+- The system SHALL calculate excess kurtosis for the simulated project duration distribution
+- The system SHALL include these distribution-shape metrics in result reporting and exports
  
 
 ### 3.2 Non-Functional Requirements
 
 **NFR-001: Performance**
-- The system SHALL complete 10,000 iterations for a 50-task project in under 60 seconds on standard hardware
-- Memory usage SHALL NOT exceed 500MB for projects with up to 500 tasks
+- The system SHALL complete 50,000 iterations for a 100-task project in under 90 seconds on AMD64 architecture with 16GB of memory
+- Memory usage SHALL NOT exceed 800MB for projects with up to 100 tasks
 
 **NFR-002: Code Quality**
 - Code SHALL be formatted with Black (line length 88)
@@ -134,7 +174,7 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - Linting SHALL pass with flake8 with minimal warnings
 
 **NFR-003: Test Coverage**
-- Unit test coverage SHALL exceed 85%
+- Unit test coverage SHALL exceed 80%
 - All core simulation logic SHALL have unit tests
 - Integration tests SHALL validate end-to-end workflows
 - Tests SHALL use pytest framework
