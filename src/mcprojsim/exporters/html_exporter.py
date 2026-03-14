@@ -139,7 +139,7 @@ HTML_TEMPLATE = """
             text-align: center;
             font-weight: bold;
             margin-bottom: 10px;
-            font-size: 14px;
+            font-size: 21px;
         }
         .thermometer-display {
             display: flex;
@@ -218,10 +218,12 @@ HTML_TEMPLATE = """
                     <span>95%+ (Dark Green - Lower Risk)</span>
                 </div>
             </div>
-            <p style="margin: 10px 0 0 0; font-size: 12px; color: #666; line-height: 1.4;">
-                <em>Note: Calendar time assumes that all resources required for maximum parallelism are available
-                (Max Parallel Tasks: {{ max_parallel_tasks }}).</em>
-            </p>
+            <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
+                <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                    <strong>Note:</strong> Calendar time assumes that all resources required for maximum parallelism
+                    are available (Max Parallel Tasks: {{ max_parallel_tasks }}).
+                </p>
+            </div>
         </div>
 
         {% if effort_thermometer_segments %}
@@ -239,7 +241,7 @@ HTML_TEMPLATE = """
                     <div class="thermometer-labels">
                         {% for segment in effort_thermometer_segments %}
                         <div class="thermometer-label">
-                            {{ segment.person_days }} days, ({{ segment.effort|round(0)|int }}h)
+                            {{ segment.person_days }} man-days, ({{ segment.effort|round(0)|int }}h)
                         </div>
                         {% endfor %}
                     </div>
@@ -276,6 +278,18 @@ HTML_TEMPLATE = """
             <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(kurtosis) }}</td></tr>
             <tr><td class="metric">Max Parallel Tasks</td><td class="value">{{ max_parallel_tasks }}</td></tr>
         </table>
+        <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                <strong>About these metrics:</strong> <strong>Coefficient of Variation</strong> is relative spread
+                (standard deviation divided by mean); higher values mean more uncertainty relative to the expected duration.
+                <strong>Skewness</strong> shows whether the distribution has a longer tail on the high side or low side;
+                positive skew often means more risk of overruns than the mean alone suggests. <strong>Excess Kurtosis</strong>
+                indicates tail heaviness and outlier-proneness; higher positive values mean more extreme outcomes may occur
+                than in a normal distribution. <strong>Max Parallel Tasks</strong> is the peak number of tasks that can run at
+                the same time in the schedule logic; watch out because achieving the calendar-time results may require enough
+                people and skills to support that level of parallel execution.
+            </p>
+        </div>
     </div>
 
     <div class="section">
