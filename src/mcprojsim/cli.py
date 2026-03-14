@@ -299,6 +299,7 @@ def simulate(
                             slack_rows,
                             headers=["Task", "Slack (hours)", "Status"],
                             tablefmt="simple_outline",
+                            disable_numparse=True,
                         )
                     )
 
