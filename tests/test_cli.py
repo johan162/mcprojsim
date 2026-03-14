@@ -52,6 +52,7 @@ class TestCli:
                     sensitivity = {}
                     task_slack = {}
                     percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
                     hours_per_day = 8.0
                     max_parallel_tasks = 0
 
@@ -114,6 +115,7 @@ class TestCli:
                     sensitivity = {}
                     task_slack = {}
                     percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
                     hours_per_day = 8.0
                     max_parallel_tasks = 0
 
@@ -220,6 +222,7 @@ class TestCli:
                     sensitivity = {}
                     task_slack = {}
                     percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
                     iterations = 10
                     hours_per_day = 8.0
                     max_parallel_tasks = 0
@@ -287,6 +290,7 @@ class TestCli:
             sensitivity: dict[str, float] = {}
             task_slack: dict[str, float] = {}
             percentiles: dict[int, float] = {50: 1.0}
+            effort_percentiles: dict[int, float] = {}
             hours_per_day = 8.0
             max_parallel_tasks = 0
 

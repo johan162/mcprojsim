@@ -85,6 +85,20 @@ class CSVExporter:
                 )
             writer.writerow([])
 
+            # Write effort percentiles
+            if results.effort_percentiles:
+                writer.writerow(["Effort Percentiles", ""])
+                for percentile, value in sorted(results.effort_percentiles.items()):
+                    person_days = math.ceil(value / results.hours_per_day)
+                    writer.writerow(
+                        [
+                            f"P{percentile}",
+                            f"{value:.2f} person-hours",
+                            f"{person_days} person-days",
+                        ]
+                    )
+                writer.writerow([])
+
             # Write critical path
             writer.writerow(["Critical Path", "Criticality"])
             critical_path = results.get_critical_path()
@@ -116,7 +130,7 @@ class CSVExporter:
             cumulative_count = 0
             total_count = sum(counts)
 
-            for i, (edge, count) in enumerate(zip(bin_edges[1:], counts)):
+            for _, (edge, count) in enumerate(zip(bin_edges[1:], counts)):
                 cumulative_count += count
                 cumulative_pct = (
                     (cumulative_count / total_count * 100) if total_count > 0 else 0

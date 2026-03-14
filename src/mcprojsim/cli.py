@@ -188,6 +188,8 @@ def simulate(
         if not quiet:
             import math
 
+            from tabulate import tabulate as _tabulate
+
             hours_per_day = results.hours_per_day
             mean_wd = math.ceil(results.mean / hours_per_day)
             cv = results.std_dev / results.mean if results.mean > 0 else 0
@@ -195,8 +197,6 @@ def simulate(
             click.echo("\n=== Simulation Results ===")
 
             if table:
-                from tabulate import tabulate as _tabulate
-
                 summary_rows = [
                     ["Project", results.project_name],
                     ["Hours per Day", f"{hours_per_day}"],
@@ -236,7 +236,7 @@ def simulate(
                     delivery = results.delivery_date(hours)
                     date_str = delivery.isoformat() if delivery else ""
                     ci_rows.append([f"P{p}", f"{hours:.2f}", wd, date_str])
-                click.echo("\nConfidence Intervals:")
+                click.echo("\nCalendar Time Confidence Intervals:")
                 click.echo(
                     _tabulate(
                         ci_rows,
@@ -244,6 +244,22 @@ def simulate(
                         tablefmt="simple_outline",
                     )
                 )
+
+                # Effort confidence intervals table
+                if results.effort_percentiles:
+                    effort_rows = []
+                    for p in sorted(results.effort_percentiles.keys()):
+                        eh = results.effort_percentiles[p]
+                        epd = math.ceil(eh / hours_per_day)
+                        effort_rows.append([f"P{p}", f"{eh:.2f}", epd])
+                    click.echo("\nEffort Confidence Intervals:")
+                    click.echo(
+                        _tabulate(
+                            effort_rows,
+                            headers=["Percentile", "Person-Hours", "Person-Days"],
+                            tablefmt="simple_outline",
+                        )
+                    )
 
                 # Sensitivity analysis table
                 if results.sensitivity:
@@ -319,7 +335,7 @@ def simulate(
 
             else:
                 # Plain text output
-                click.echo("\nConfidence Intervals:")
+                click.echo("\nCalendar Time Confidence Intervals:")
                 for p in sorted(results.percentiles.keys()):
                     hours = results.percentiles[p]
                     wd = math.ceil(hours / hours_per_day)
@@ -328,6 +344,16 @@ def simulate(
                     click.echo(
                         f"  P{p}: {hours:.2f} hours" f" ({wd} working days){date_str}"
                     )
+
+                # Effort confidence intervals (plain-text)
+                if results.effort_percentiles:
+                    click.echo("\nEffort Confidence Intervals:")
+                    for p in sorted(results.effort_percentiles.keys()):
+                        eh = results.effort_percentiles[p]
+                        epd = math.ceil(eh / hours_per_day)
+                        click.echo(
+                            f"  P{p}: {eh:.2f} person-hours" f" ({epd} person-days)"
+                        )
 
                 # Sensitivity analysis
                 if results.sensitivity:
@@ -445,8 +471,6 @@ def simulate(
                         f"productivity={cfg.staffing.experience_profiles[prof].productivity_factor:.0%}):"
                     )
                     if table:
-                        from tabulate import tabulate as _tabulate
-
                         st_rows = []
                         for r in prof_rows:
                             marker = " *" if r.team_size == rec_n else ""

@@ -110,6 +110,13 @@ class JSONExporter:
                 }
                 for p, v in sorted(results.percentiles.items())
             },
+            "effort_percentiles": {
+                str(p): {
+                    "person_hours": v,
+                    "person_days": math.ceil(v / results.hours_per_day),
+                }
+                for p, v in sorted(results.effort_percentiles.items())
+            },
             "critical_path": results.get_critical_path(),
             "critical_path_sequences": [
                 {

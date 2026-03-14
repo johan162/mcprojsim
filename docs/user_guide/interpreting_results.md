@@ -35,6 +35,16 @@ Confidence Intervals:
   P95: 715.57 hours (90 working days)  (2026-03-06)
   P99: 790.61 hours (99 working days)  (2026-03-19)
 
+Effort Confidence Intervals:
+  P25: 854.12 person-hours (107 person-days)
+  P50: 910.15 person-hours (114 person-days)
+  P75: 972.47 person-hours (122 person-days)
+  P80: 992.18 person-hours (125 person-days)
+  P85: 1015.33 person-hours (127 person-days)
+  P90: 1046.80 person-hours (131 person-days)
+  P95: 1091.24 person-hours (137 person-days)
+  P99: 1182.57 person-hours (148 person-days)
+
 Sensitivity Analysis (top contributors):
   task_004: +0.4322
   task_008: +0.3244
@@ -105,6 +115,53 @@ A useful rule of thumb: commit externally at the P85–P90 level, plan internall
 ### Working days and delivery dates
 
 Each percentile also shows working days (hours ÷ hours_per_day, rounded up) and a projected delivery date that counts forward from `start_date`, skipping weekends. These are calculated from the hours figure — they are not separate estimates.
+
+---
+
+## Effort confidence intervals
+
+The **Effort Confidence Intervals** section appears immediately after the calendar confidence intervals. While the calendar percentiles answer *"how long will this project take?"*, the effort percentiles answer *"how much total work will this project require?"*
+
+```
+Effort Confidence Intervals:
+  P50: 910.15 person-hours (114 person-days)
+  P80: 992.18 person-hours (125 person-days)
+  P90: 1046.80 person-hours (131 person-days)
+  P95: 1091.24 person-hours (137 person-days)
+```
+
+### What is total effort?
+
+Total effort is the sum of all task durations in a single simulation iteration — the total person-hours of *work* required. This differs from calendar/elapsed time because tasks that run in parallel still each consume their full person-hours.
+
+For example, if two 40-hour tasks run at the same time, the elapsed time is 40 hours but the total effort is 80 person-hours. In projects with high parallelism, effort is always larger than elapsed time.
+
+### Why effort varies across iterations
+
+Each Monte Carlo iteration samples different task durations from the estimate ranges. Some iterations draw longer durations (more total work), others draw shorter ones. Risks that fire in some iterations add extra effort. The effort percentiles capture this variation:
+
+- **P50 effort**: Half the simulations needed less than this much total work, half needed more.
+- **P80–P90 effort**: A high-confidence estimate of total person-hours required.
+- **P95–P99 effort**: Near-worst-case total work, driven by wide estimate ranges and risk events firing.
+
+### Effort vs. calendar time
+
+The **parallelism ratio** connects the two:
+
+$$
+\text{Parallelism ratio} = \frac{\text{Mean total effort}}{\text{Mean elapsed time}}
+$$
+
+A ratio of 1.0 means all tasks are serial (effort = elapsed time). A ratio above 1.0 means tasks overlap, so effort exceeds elapsed time. The sample output shows a parallelism ratio of 1.57, meaning about 57% more work is done than the wall clock suggests because of concurrent tasks.
+
+### Practical use
+
+| Use case | Which metric to use |
+|----------|--------------------|
+| **Scheduling and deadlines** | Calendar confidence intervals (P80–P90 elapsed hours) |
+| **Budgeting and cost estimation** | Effort confidence intervals (P80–P90 person-hours) |
+| **Staffing decisions** | Effort percentiles tell you how many person-hours to fund; the staffing table maps that to team sizes |
+| **Comparing estimates to actuals** | Track both: actual elapsed time against calendar P50, and actual time-sheet hours against effort P50 |
 
 ---
 
@@ -422,7 +479,7 @@ Total effort: 910.12 person-hours (113.8 person-days) | Parallelism ratio: 1.57
 
 This tells you:
 
-- **Recommended team size**: The smallest number of people where adding one more would reduce calendar time by less than 5%.
+- **Recommended team size**: The team size that achieves the shortest calendar duration for this profile. The search stops at the first local minimum: if adding one more person would make the schedule longer (because communication overhead outweighs the extra capacity — a manifestation of Brooks's Law), the current size is chosen. If all team sizes within the display range keep improving, the largest shown size is recommended.
 - **Experience profile**: The profile used for the quick advisory ("mixed" by default). See below for a comparison of all profiles.
 - **Working days**: Estimated calendar duration with the recommended team, accounting for communication overhead.
 - **Total effort**: The sum of mean task durations, measured in person-hours. This is the amount of *work* regardless of how many people do it.
@@ -437,18 +494,21 @@ Pass `--staffing` to see a detailed table for each experience profile:
 
 --- senior ---
 Team Size  Eff. Capacity  Working Days  Delivery Date  Efficiency
-        1           1.00            114     2026-06-15      100.0%
-        2           1.92             60     2026-03-27       96.0%
-        3*          2.76             42     2026-03-02       92.2%   <-- recommended
+        1           1.00            114     2026-06-15       36.9%
+        2           1.92             60     2026-03-27       70.9%
+        3*          2.76             42     2026-03-02      100.0%   <-- recommended
 
 --- mixed ---
 Team Size  Eff. Capacity  Working Days  Delivery Date  Efficiency
-        1           0.85            134     2026-07-14      100.0%
-        2           1.60             72     2026-04-13       94.1%
-        3*          2.24             51     2026-03-16       87.7%   <-- recommended
+        1           0.85            134     2026-07-14       37.9%
+        2           1.60             72     2026-04-13       71.2%
+        3*          2.24             51     2026-03-16      100.0%   <-- recommended
 
 --- junior ---
-...
+Team Size  Eff. Capacity  Working Days  Delivery Date  Efficiency
+        1           0.65            176     2026-10-08       39.7%
+        2           1.20             96     2026-06-12       73.0%
+        3*          1.64             70     2026-05-06      100.0%   <-- recommended
 ```
 
 Each column is explained below.
@@ -489,7 +549,7 @@ where $W$ is total effort (person-hours) and $T_{\text{CP}}$ is the critical-pat
 | **Eff. Capacity** | $E(n)$ — the team's output in "ideal-person" equivalents after overhead |
 | **Working Days** | Calendar working days at this team size |
 | **Delivery Date** | Projected date (weekends excluded), or blank if no `start_date` |
-| **Efficiency** | Effective capacity ÷ team size. 100% means no overhead; lower values mean more time lost to communication |
+| **Efficiency** | How close this team size is to the fastest possible schedule for this profile, expressed as a percentage. Calculated as $\text{min calendar hours} / \text{this row's calendar hours}$. **100 %** means this team achieves the minimum calendar duration (it is the optimal size or tied at the critical-path floor). Values below 100 % indicate the team is either too small (parallelism is underutilised) or too large (communication overhead has exceeded the gain from extra capacity). |
 
 The row marked with `*` or `<-- recommended` is the optimal team size for that profile.
 
@@ -520,7 +580,30 @@ staffing:
       communication_overhead: 0.05
 ```
 
-### Interpreting the results
+### How efficiency is calculated
+
+The **Efficiency** column answers: *"How close is this team size to the best achievable schedule for this profile?"*
+
+$$
+\text{Efficiency}(n) = \frac{T_{\min}}{T(n)}
+$$
+
+where $T_{\min}$ is the shortest calendar duration found across all team sizes for this profile, and $T(n)$ is the calendar duration at team size $n$.
+
+- **100 %**: This team size achieves the minimum calendar duration. The recommended team (`*`) always shows 100 %.
+- **Below 100 %**: The schedule is longer than the optimum. Two different situations can cause this:
+  - **Too few people** (left of the optimal): The project is *effort-bound* — parallelism is underutilised and adding more people would shorten the schedule.
+  - **Too many people** (right of the optimal): The project is in the *Brooks's Law diminishing-returns zone* — communication overhead now outweighs the benefit of extra capacity, so the schedule actually lengthens.
+
+### Interpreting the profile tables together
+
+A typical profile shows a "U-shaped" efficiency curve (when viewed from left to right): low efficiency at team size 1, rising as team size grows, peaking at 100 % at the recommended size, then potentially falling if the overhead regime kicks in.
+
+| Efficiency pattern | What it means |
+|--------------------|---------------|
+| Monotonically rising to 100 % (no drop) | The project never enters the overhead regime within the displayed range. All shown team sizes are effort-bound; the last is the fastest. |
+| Peaks at 100 % then drops | The optimal team is in the middle of the range. Teams beyond the peak are actively slowed by overhead. |
+| All rows near 100 % | The project is dominated by the critical path; adding people makes little difference to calendar time. |
 
 - **Recommended size = 1**: The project is almost entirely serial (parallelism ratio near 1.0) or the total effort is small. Adding people just adds overhead.
 - **Recommended size = max parallel tasks**: The project has enough parallelism to keep everyone busy. This is the ideal scenario.
@@ -606,6 +689,7 @@ The most useful thing you can do over time is *calibrate*: compare the simulatio
 | Criticality index | How often a task is on the critical path | Focusing management attention |
 | Critical path sequences | Which chains of tasks dominate | Dependency restructuring |
 | Max parallel tasks | Peak number of tasks running simultaneously | Validating resource assumptions |
+| Effort confidence intervals | Total person-hours at each probability level | Budgeting, cost estimation, staffing |
 | Staffing advisory | Recommended team size per experience profile | Team sizing, hiring decisions |
 | Thermometer | Visual probability-to-effort mapping | Stakeholder communication |
 | Delivery dates | Calendar dates at each percentile | Scheduling and milestone setting |

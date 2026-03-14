@@ -25,10 +25,12 @@ from __future__ import annotations
 
 import math
 from datetime import date
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, TypeAlias
 
 from mcprojsim.config import Config
 from mcprojsim.models.simulation import SimulationResults
+
+_RawRow: TypeAlias = Tuple[str, int, float, float, float, int, "date | None"]
 
 
 class StaffingRow:
@@ -220,6 +222,12 @@ class StaffingAnalyzer:
     ) -> List[StaffingRow]:
         """Build a staffing table for team sizes 1 .. max_parallel_tasks.
 
+        Efficiency is reported as a *calendar-time optimality* metric:
+        100 % means this team size achieves the minimum calendar duration
+        for its profile; lower values indicate the team is either too small
+        (effort-bound, slow because of limited parallelism) or too large
+        (communication overhead outweighs the extra capacity).
+
         Args:
             results: Simulation results.
             config: Active configuration (provides staffing parameters).
@@ -234,8 +242,11 @@ class StaffingAnalyzer:
         max_team = max(results.max_parallel_tasks, 1)
         min_prod = config.staffing.min_individual_productivity
 
-        rows: List[StaffingRow] = []
+        # First pass: compute raw values per profile.
+        # Each entry is (prof_name, team_size, ip, cap, cal_hours, cal_wd, delivery).
+        raw_by_profile: Dict[str, List[_RawRow]] = {}
         for prof_name, prof in sorted(config.staffing.experience_profiles.items()):
+            entries: List[_RawRow] = []
             for n in range(1, max_team + 1):
                 ip = StaffingAnalyzer.individual_productivity(
                     n, prof.communication_overhead, min_prod
@@ -257,17 +268,19 @@ class StaffingAnalyzer:
                 )
                 cal_wd = math.ceil(cal_hours / hours_per_day)
                 delivery = results.delivery_date(cal_hours)
-                # Efficiency = ideal single-person time / actual person-hours
-                actual_person_hours = cal_hours * cap if cap > 0 else total_effort
-                efficiency = (
-                    total_effort / actual_person_hours
-                    if actual_person_hours > 0
-                    else 0.0
-                )
+                entries.append((prof_name, n, ip, cap, cal_hours, cal_wd, delivery))
+            raw_by_profile[prof_name] = entries
+
+        # Second pass: find minimum calendar hours per profile, then set efficiency.
+        rows: List[StaffingRow] = []
+        for prof_name, entries in raw_by_profile.items():
+            min_cal = min(e[4] for e in entries)  # index 4 = cal_hours
+            for prof_name2, n, ip, cap, cal_hours, cal_wd, delivery in entries:
+                efficiency = min_cal / cal_hours if cal_hours > 0 else 0.0
                 rows.append(
                     StaffingRow(
                         team_size=n,
-                        profile=prof_name,
+                        profile=prof_name2,
                         individual_productivity=ip,
                         effective_capacity=cap,
                         calendar_hours=cal_hours,
@@ -285,8 +298,12 @@ class StaffingAnalyzer:
     ) -> List[StaffingRecommendation]:
         """Find the optimal team size for each experience profile.
 
-        Optimal is defined as the smallest *n* where adding one more
-        person reduces calendar time by less than 5%.
+        Optimal is defined as the team size that produces the shortest
+        calendar duration.  The search stops as soon as adding one more
+        person would make the schedule longer (i.e. it finds the first
+        local minimum of the calendar-time curve).  This naturally handles
+        projects where communication overhead eventually outweighs the
+        benefit of extra capacity (Brooks's Law diminishing returns).
 
         Args:
             results: Simulation results.
@@ -302,12 +319,11 @@ class StaffingAnalyzer:
         max_team = max(results.max_parallel_tasks, 1)
         min_prod = config.staffing.min_individual_productivity
         parallelism_ratio = total_effort / cp_hours if cp_hours > 0 else 1.0
-        threshold = 0.05  # 5 % improvement threshold
 
         recommendations: List[StaffingRecommendation] = []
         for prof_name, prof in sorted(config.staffing.experience_profiles.items()):
             best_n = 1
-            prev_cal = StaffingAnalyzer.calendar_hours(
+            best_cal = StaffingAnalyzer.calendar_hours(
                 total_effort,
                 cp_hours,
                 1,
@@ -326,31 +342,18 @@ class StaffingAnalyzer:
                     min_prod,
                     hours_per_day,
                 )
-                improvement = (prev_cal - cur_cal) / prev_cal if prev_cal > 0 else 0.0
-                if improvement < threshold:
+                if cur_cal < best_cal:
+                    best_cal = cur_cal
+                    best_n = n
+                else:
+                    # Schedule no longer improves; we have found the minimum.
                     break
-                best_n = n
-                prev_cal = cur_cal
 
-            final_cal = StaffingAnalyzer.calendar_hours(
-                total_effort,
-                cp_hours,
-                best_n,
-                prof.communication_overhead,
-                prof.productivity_factor,
-                min_prod,
-                hours_per_day,
-            )
-            final_wd = math.ceil(final_cal / hours_per_day)
-            delivery = results.delivery_date(final_cal)
-            cap = StaffingAnalyzer.effective_capacity(
-                best_n,
-                prof.communication_overhead,
-                prof.productivity_factor,
-                min_prod,
-            )
-            actual_ph = final_cal * cap if cap > 0 else total_effort
-            efficiency = total_effort / actual_ph if actual_ph > 0 else 0.0
+            final_wd = math.ceil(best_cal / hours_per_day)
+            delivery = results.delivery_date(best_cal)
+            # The recommended team always achieves 100 % calendar efficiency
+            # by definition (it IS the minimum-calendar-time team).
+            efficiency = 1.0
 
             recommendations.append(
                 StaffingRecommendation(

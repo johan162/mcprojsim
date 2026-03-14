@@ -198,7 +198,13 @@ class TestStaffingTable:
         num_profiles = len(config.staffing.experience_profiles)
         assert len(table) == 4 * num_profiles
 
-    def test_efficiency_decreases_with_team_size(self) -> None:
+    def test_efficiency_increases_toward_optimal(self) -> None:
+        """Efficiency (calendar optimality) rises as team approaches the minimum.
+
+        With effort=300, CP=100, max_parallel=5, mixed profile:
+        n=1..4 are effort-bound with decreasing cal_hours;
+        n=5 is CP-bound (cal=100, the minimum) and must reach 100 %.
+        """
         results = _make_results(
             mean=100.0,
             task_means={"a": 120.0, "b": 100.0, "c": 80.0},
@@ -207,12 +213,13 @@ class TestStaffingTable:
         config = Config.get_default()
         table = StaffingAnalyzer.calculate_staffing_table(results, config)
         mixed_rows = [r for r in table if r.profile == "mixed"]
-        # First row (n=1, effort-bound) must have efficiency = 1.0
-        assert abs(mixed_rows[0].efficiency - 1.0) < 1e-9
+        # Efficiency must be non-decreasing as team grows toward the optimal.
         for i in range(1, len(mixed_rows)):
-            assert mixed_rows[i].efficiency <= mixed_rows[i - 1].efficiency + 1e-9
-        # Last row (n=5, CP-bound): cap=3.23, eff=300/(100*3.23)≈0.9288
-        assert abs(mixed_rows[-1].efficiency - 300.0 / (100.0 * 3.23)) < 1e-3
+            assert mixed_rows[i].efficiency >= mixed_rows[i - 1].efficiency - 1e-9
+        # Last row (n=5, CP-bound) achieves the minimum calendar → 100 % efficiency.
+        assert abs(mixed_rows[-1].efficiency - 1.0) < 1e-9
+        # First row (n=1, effort-bound, worst schedule) has the lowest efficiency.
+        assert mixed_rows[0].efficiency < mixed_rows[-1].efficiency
 
     def test_calendar_days_decrease_with_team_size(self) -> None:
         results = _make_results(
@@ -378,38 +385,48 @@ class TestRecommendExactValues:
         for rec in recs:
             assert abs(rec.parallelism_ratio - 1.8) < 1e-9
 
-        # Senior (c=0.04, f=1.0): n=2, wd=13, eff=180/192=0.9375
+        # Senior (c=0.04, f=1.0): n=2, wd=13
+        # n=2 first hits CP floor (cal=100), which is the minimum → eff=1.0
         sr = by_prof["senior"]
         assert sr.recommended_team_size == 2
         assert sr.calendar_working_days == 13
-        assert abs(sr.efficiency - 180.0 / 192.0) < 1e-4
+        assert abs(sr.efficiency - 1.0) < 1e-9
 
-        # Mixed (c=0.06, f=0.85): n=3, wd=13, eff=180/224.4≈0.8021
+        # Mixed (c=0.06, f=0.85): n=3, wd=13
+        # n=3 first hits CP floor (cal=100) → eff=1.0
         mx = by_prof["mixed"]
         assert mx.recommended_team_size == 3
         assert mx.calendar_working_days == 13
-        assert abs(mx.efficiency - 180.0 / 224.4) < 1e-3
+        assert abs(mx.efficiency - 1.0) < 1e-9
 
-        # Junior (c=0.08, f=0.65): n=3, wd=14, eff≈1.0 (effort-bound)
+        # Junior (c=0.08, f=0.65): n=3, wd=14 (still effort-bound, cal≈109.9)
+        # n=3 is the minimum within max_parallel=3 → eff=1.0 by definition
         jr = by_prof["junior"]
         assert jr.recommended_team_size == 3
         assert jr.calendar_working_days == 14
-        assert abs(jr.efficiency - 1.0) < 1e-4
+        assert abs(jr.efficiency - 1.0) < 1e-9
 
 
 class TestThresholdBoundary:
-    """Verify the 5% improvement stopping logic."""
+    """Verify the minimum-calendar stopping logic."""
 
-    def test_stops_at_correct_boundary(self) -> None:
-        """With effort=1000, CP=50, c=0.06, f=0.85: optimal is n=7.
+    def test_stops_at_minimum_calendar_team(self) -> None:
+        """With effort=1000, CP=50, c=0.06, f=0.85: optimal is n=9.
 
-        At n=6→7 the improvement is ~6.3%, above the 5% threshold.
-        At n=7→8 the improvement is only ~3.5%, below the 5% threshold.
+        Effective capacity peaks around n=9 (formula maximum for c=0.06):
+          n=9:  cap≈3.978, cal≈251.4 h (minimum)
+          n=10: cap≈3.910, cal≈255.8 h (worse → algorithm stops)
+        The algorithm stops at the first local minimum, not at a fixed
+        percentage threshold.
+
+        max_parallel=12 keeps all rows below the productivity floor (floor
+        kicks in at n≥14 for c=0.06), so the first local minimum at n=9
+        is also the global minimum within the table.
         """
         results = _make_results(
             mean=50.0,
             task_means={"big": 1000.0},
-            max_parallel=20,
+            max_parallel=12,
         )
         # Use a single-profile config to isolate the test
         config = Config.get_default()
@@ -422,7 +439,17 @@ class TestThresholdBoundary:
         recs = StaffingAnalyzer.recommend_team_size(results, config)
         assert len(recs) == 1
         assert recs[0].profile == "test"
-        assert recs[0].recommended_team_size == 7
+        assert recs[0].recommended_team_size == 9
+        # All team sizes should have efficiency = min_cal / cal_hours
+        table = StaffingAnalyzer.calculate_staffing_table(results, config)
+        test_rows = sorted(
+            [r for r in table if r.profile == "test"], key=lambda r: r.team_size
+        )
+        # n=9 has the minimum calendar hours and must have efficiency=1.0
+        row_9 = next(r for r in test_rows if r.team_size == 9)
+        assert abs(row_9.efficiency - 1.0) < 1e-9
+        # n=1 has a long schedule → efficiency much less than 1.0
+        assert test_rows[0].efficiency < 0.5
 
 
 class TestEdgeCases:
@@ -452,21 +479,34 @@ class TestEdgeCases:
         ):
             assert r6.calendar_working_days >= r8.calendar_working_days
 
-    def test_efficiency_one_at_team_size_one_effort_bound(self) -> None:
-        """For effort-bound cases, team_size=1 must have eff=1.0."""
-        # Ensure effort > CP * f for all profiles (effort=180, CP=100)
-        # senior (f=1.0): 180/1.0=180 > 100 → effort-bound ✓
-        # mixed  (f=0.85): 180/0.85=211.8 > 100 → effort-bound ✓
-        # junior (f=0.65): 180/0.65=276.9 > 100 → effort-bound ✓
-        results = _make_results()
+    def test_efficiency_optimal_row_is_one(self) -> None:
+        """The row with minimum calendar hours per profile must have efficiency=1.0.
+
+        With effort=180, CP=100, max_parallel=3:
+        - senior: n=2 is CP-bound (cal=100), n=3 also CP-bound → min=100, n=2 first
+        - mixed:  n=3 is CP-bound (cal=100) → min=100
+        - junior: n=3 is effort-bound (cal≈109.9) → min≈109.9
+        All optimal rows must have efficiency=1.0; n=1 must have efficiency<1.0.
+        """
+        results = _make_results()  # effort=180, CP=100, max_parallel=3
         config = Config.get_default()
         table = StaffingAnalyzer.calculate_staffing_table(results, config)
-        for row in table:
-            if row.team_size == 1:
-                assert abs(row.efficiency - 1.0) < 1e-9, (
-                    f"team_size=1 {row.profile} expected eff=1.0, "
-                    f"got {row.efficiency}"
+        for profile in ("senior", "mixed", "junior"):
+            prof_rows = sorted(
+                [r for r in table if r.profile == profile],
+                key=lambda r: r.team_size,
+            )
+            min_cal = min(r.calendar_hours for r in prof_rows)
+            for row in prof_rows:
+                expected_eff = min_cal / row.calendar_hours
+                assert abs(row.efficiency - expected_eff) < 1e-9, (
+                    f"{profile} n={row.team_size}: expected {expected_eff:.6f}, "
+                    f"got {row.efficiency:.6f}"
                 )
+            # n=1 is always effort-bound and slower than the optimal → eff < 1.0
+            assert (
+                prof_rows[0].efficiency < 1.0 - 1e-9
+            ), f"{profile} n=1 should be sub-optimal but got eff={prof_rows[0].efficiency}"
 
     def test_max_parallel_tasks_zero(self) -> None:
         """max_parallel_tasks=0 should be clamped to 1."""
@@ -597,10 +637,11 @@ class _FakeStaffingResults:
     kurtosis = 0.3
     iterations = 100
     hours_per_day = 8.0
-    start_date = date(2026, 1, 5)
+    start_date: date | None = date(2026, 1, 5)
     sensitivity = {"task_001": 0.85}
     task_slack = {"task_001": 0.0, "task_002": 4.5}
     percentiles = {50: 38.0, 80: 44.0, 90: 48.0}
+    effort_percentiles: dict[int, float] = {}
     max_parallel_tasks = 3
 
     def total_effort_hours(self):

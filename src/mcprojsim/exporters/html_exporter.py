@@ -26,7 +26,7 @@ try:
 
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
-    MATPLOTLIB_AVAILABLE = False
+    MATPLOTLIB_AVAILABLE = False  # pyright: ignore[reportConstantRedefinition]
 
 
 HTML_TEMPLATE = """
