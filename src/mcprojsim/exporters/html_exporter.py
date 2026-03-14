@@ -74,6 +74,16 @@ HTML_TEMPLATE = """
         .section.statistical-summary {
             margin-top: 0px;
         }
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin: 20px 0;
+        }
+        .stats-row .section {
+            flex: 1;
+            margin: 0;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -265,31 +275,56 @@ HTML_TEMPLATE = """
         {% endif %}
     </div>
 
-    <div class="section statistical-summary">
-        <h3>Statistical Summary</h3>
-        <table>
-            <tr><td class="metric">Mean</td><td class="value">{{ "%.2f"|format(mean) }} hours ({{ mean_working_days }} working days)</td></tr>
-            <tr><td class="metric">Median</td><td class="value">{{ "%.2f"|format(median) }} hours</td></tr>
-            <tr><td class="metric">Standard Deviation</td><td class="value">{{ "%.2f"|format(std_dev) }} hours</td></tr>
-            <tr><td class="metric">Minimum</td><td class="value">{{ "%.2f"|format(min_duration) }} hours</td></tr>
-            <tr><td class="metric">Maximum</td><td class="value">{{ "%.2f"|format(max_duration) }} hours</td></tr>
-            <tr><td class="metric">Coefficient of Variation</td><td class="value">{{ "%.4f"|format(cv) }}</td></tr>
-            <tr><td class="metric">Skewness</td><td class="value">{{ "%.4f"|format(skewness) }}</td></tr>
-            <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(kurtosis) }}</td></tr>
-            <tr><td class="metric">Max Parallel Tasks</td><td class="value">{{ max_parallel_tasks }}</td></tr>
-        </table>
-        <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
-            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-                <strong>About these metrics:</strong> <strong>Coefficient of Variation</strong> is relative spread
-                (standard deviation divided by mean); higher values mean more uncertainty relative to the expected duration.
-                <strong>Skewness</strong> shows whether the distribution has a longer tail on the high side or low side;
-                positive skew often means more risk of overruns than the mean alone suggests. <strong>Excess Kurtosis</strong>
-                indicates tail heaviness and outlier-proneness; higher positive values mean more extreme outcomes may occur
-                than in a normal distribution. <strong>Max Parallel Tasks</strong> is the peak number of tasks that can run at
-                the same time in the schedule logic; watch out because achieving the calendar-time results may require enough
-                people and skills to support that level of parallel execution.
-            </p>
+    <div class="stats-row">
+        <div class="section statistical-summary">
+            <h3>Calendar Time Statistical Summary</h3>
+            <table>
+                <tr><td class="metric">Mean</td><td class="value">{{ mean|round(0)|int }} hours ({{ mean_working_days }} working days)</td></tr>
+                <tr><td class="metric">Median</td><td class="value">{{ median|round(0)|int }} hours</td></tr>
+                <tr><td class="metric">Standard Deviation</td><td class="value">{{ std_dev|round(0)|int }} hours</td></tr>
+                <tr><td class="metric">Minimum</td><td class="value">{{ min_duration|round(0)|int }} hours</td></tr>
+                <tr><td class="metric">Maximum</td><td class="value">{{ max_duration|round(0)|int }} hours</td></tr>
+                <tr><td class="metric">Coefficient of Variation</td><td class="value">{{ "%.4f"|format(cv) }}</td></tr>
+                <tr><td class="metric">Skewness</td><td class="value">{{ "%.4f"|format(skewness) }}</td></tr>
+                <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(kurtosis) }}</td></tr>
+                <tr><td class="metric">Max Parallel Tasks</td><td class="value">{{ max_parallel_tasks }}</td></tr>
+            </table>
+            <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
+                <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                    <strong>About these metrics:</strong> <strong>Coefficient of Variation</strong> is relative spread
+                    (standard deviation divided by mean); higher values mean more uncertainty relative to the expected duration.
+                    <strong>Skewness</strong> shows whether the distribution has a longer tail on the high side or low side;
+                    positive skew often means more risk of overruns than the mean alone suggests. <strong>Excess Kurtosis</strong>
+                    indicates tail heaviness and outlier-proneness; higher positive values mean more extreme outcomes may occur
+                    than in a normal distribution. <strong>Max Parallel Tasks</strong> is the peak number of tasks that can run at
+                    the same time in the schedule logic; watch out because achieving the calendar-time results may require enough
+                    people and skills to support that level of parallel execution.
+                </p>
+            </div>
         </div>
+
+        {% if effort_stats %}
+        <div class="section statistical-summary">
+            <h3>Project Effort Statistical Summary</h3>
+            <table>
+                <tr><td class="metric">Mean</td><td class="value">{{ effort_stats.mean|round(0)|int }} person-hours ({{ effort_stats.mean_working_days }} person-days)</td></tr>
+                <tr><td class="metric">Median</td><td class="value">{{ effort_stats.median|round(0)|int }} person-hours</td></tr>
+                <tr><td class="metric">Standard Deviation</td><td class="value">{{ effort_stats.std_dev|round(0)|int }} person-hours</td></tr>
+                <tr><td class="metric">Minimum</td><td class="value">{{ effort_stats.min_val|round(0)|int }} person-hours</td></tr>
+                <tr><td class="metric">Maximum</td><td class="value">{{ effort_stats.max_val|round(0)|int }} person-hours</td></tr>
+                <tr><td class="metric">Coefficient of Variation</td><td class="value">{{ "%.4f"|format(effort_stats.cv) }}</td></tr>
+                <tr><td class="metric">Skewness</td><td class="value">{{ "%.4f"|format(effort_stats.skewness) }}</td></tr>
+                <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(effort_stats.kurtosis) }}</td></tr>
+            </table>
+            <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
+                <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                    <strong>About these metrics:</strong> Project effort measures total person-hours
+                    across all tasks regardless of parallelism. Compare with calendar time to gauge
+                    how much work is happening concurrently.
+                </p>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <div class="section">
@@ -662,11 +697,42 @@ class HTMLExporter:
             schedule_slack=schedule_slack,
             risk_impact_data=risk_impact_data,
             max_parallel_tasks=results.max_parallel_tasks,
+            effort_stats=HTMLExporter._compute_effort_stats(results),
             **HTMLExporter._prepare_staffing_context(results, effective_config),
         )
 
         with open(output_path, "w") as f:
             f.write(html)
+
+    @staticmethod
+    def _compute_effort_stats(
+        results: SimulationResults,
+    ) -> dict[str, Any] | None:
+        """Compute descriptive statistics for total project effort.
+
+        Returns a dict with mean, median, std_dev, min_val, max_val, cv,
+        skewness, kurtosis and mean_working_days, or ``None`` when no
+        per-iteration effort data is available.
+        """
+        if len(results.effort_durations) == 0:
+            return None
+
+        from scipy import stats as scipy_stats
+
+        effort = results.effort_durations
+        mean = float(np.mean(effort))
+        std_dev = float(np.std(effort))
+        return {
+            "mean": mean,
+            "median": float(np.median(effort)),
+            "std_dev": std_dev,
+            "min_val": float(np.min(effort)),
+            "max_val": float(np.max(effort)),
+            "cv": std_dev / mean if mean > 0 else 0.0,
+            "skewness": float(scipy_stats.skew(effort)) if std_dev > 0 else 0.0,
+            "kurtosis": float(scipy_stats.kurtosis(effort)) if std_dev > 0 else 0.0,
+            "mean_working_days": math.ceil(mean / results.hours_per_day),
+        }
 
     @staticmethod
     def _prepare_staffing_context(
