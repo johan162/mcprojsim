@@ -289,18 +289,6 @@ HTML_TEMPLATE = """
                 <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(kurtosis) }}</td></tr>
                 <tr><td class="metric">Max Parallel Tasks</td><td class="value">{{ max_parallel_tasks }}</td></tr>
             </table>
-            <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
-                <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-                    <strong>About these metrics:</strong> <strong>Coefficient of Variation</strong> is relative spread
-                    (standard deviation divided by mean); higher values mean more uncertainty relative to the expected duration.
-                    <strong>Skewness</strong> shows whether the distribution has a longer tail on the high side or low side;
-                    positive skew often means more risk of overruns than the mean alone suggests. <strong>Excess Kurtosis</strong>
-                    indicates tail heaviness and outlier-proneness; higher positive values mean more extreme outcomes may occur
-                    than in a normal distribution. <strong>Max Parallel Tasks</strong> is the peak number of tasks that can run at
-                    the same time in the schedule logic; watch out because achieving the calendar-time results may require enough
-                    people and skills to support that level of parallel execution.
-                </p>
-            </div>
         </div>
 
         {% if effort_stats %}
@@ -316,15 +304,23 @@ HTML_TEMPLATE = """
                 <tr><td class="metric">Skewness</td><td class="value">{{ "%.4f"|format(effort_stats.skewness) }}</td></tr>
                 <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(effort_stats.kurtosis) }}</td></tr>
             </table>
-            <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
-                <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-                    <strong>About these metrics:</strong> Project effort measures total person-hours
-                    across all tasks regardless of parallelism. Compare with calendar time to gauge
-                    how much work is happening concurrently.
-                </p>
-            </div>
         </div>
         {% endif %}
+    </div>
+
+    <div style="margin-top: 0; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
+        <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+            <strong>About these metrics:</strong><br> <strong>Coefficient of Variation</strong> is relative spread
+            (standard deviation divided by mean); higher values mean more uncertainty relative to the expected duration.
+            <br><strong>Skewness</strong> shows whether the distribution has a longer tail on the high side or low side;
+            positive skew often means more risk of overruns than the mean alone suggests. <br><strong>Excess Kurtosis</strong>
+            indicates tail heaviness and outlier-proneness; higher positive values mean more extreme outcomes may occur
+            than in a normal distribution. <br><strong>Max Parallel Tasks</strong> is the peak number of tasks that can run at
+            the same time in the schedule logic; watch out because achieving the calendar-time results may require enough
+            people and skills to support that level of parallel execution.
+            <br><strong>Project effort</strong> measures total person-hours across all tasks regardless of parallelism.
+            Compare with calendar time to gauge how much work is happening concurrently.
+        </p>
     </div>
 
     <div class="section">
