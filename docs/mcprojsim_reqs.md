@@ -159,6 +159,18 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL calculate skewness for the simulated project duration distribution
 - The system SHALL calculate excess kurtosis for the simulated project duration distribution
 - The system SHALL include these distribution-shape metrics in result reporting and exports
+
+**FR-025: Staffing Analysis and Team-Size Recommendations**
+- The system SHALL compute total effort as the sum of mean task durations across simulation iterations
+- The system SHALL model communication overhead using a linear per-person penalty clamped to a configurable minimum individual productivity floor
+- The system SHALL compute effective team capacity as the product of team size, individual productivity, and a per-profile productivity factor
+- The system SHALL compute calendar duration as the maximum of the critical-path duration and total effort divided by effective capacity
+- The system SHALL determine the recommended team size as the smallest number of people where adding one more reduces calendar time by less than 5%
+- The system SHALL provide three configurable experience profiles (senior, mixed, junior), each with an independent productivity factor and communication overhead coefficient
+- The system SHALL produce a staffing table showing team size, effective capacity, calendar working days, projected delivery date, and efficiency for each profile up to the maximum parallel task count
+- The system SHALL display a short staffing advisory in default CLI output when not in quiet mode
+- The system SHALL display the full staffing analysis table when the `--staffing` CLI flag is specified
+- The system SHALL include staffing recommendations and table data in JSON and CSV exports
  
 
 ### 3.2 Non-Functional Requirements
