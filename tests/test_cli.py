@@ -257,6 +257,67 @@ class TestCli:
         assert "Most Frequent Critical Paths" in result.output
         assert "task_001 -> task_002" in result.output
 
+    def test_simulate_reports_time_and_memory(self, monkeypatch) -> None:
+        """The simulate command should print elapsed time and memory usage."""
+        runner = CliRunner()
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+        class FakeResults:
+            project_name = "CLI Test"
+            mean = 1.0
+            median = 1.0
+            std_dev = 0.0
+            skewness = 0.0
+            kurtosis = 0.0
+            sensitivity: dict[str, float] = {}
+            task_slack: dict[str, float] = {}
+            percentiles: dict[int, float] = {50: 1.0}
+            hours_per_day = 8.0
+
+            def get_critical_path_sequences(self, top_n=None):
+                return []
+
+            def delivery_date(self, hours):
+                return None
+
+            def get_risk_impact_summary(self):
+                return {}
+
+        def fake_run_simulation_with_metrics(engine, project):
+            return FakeResults(), 12.34, 64 * 1024 * 1024
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr(
+            "mcprojsim.cli._run_simulation_with_metrics",
+            fake_run_simulation_with_metrics,
+        )
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file), "--quiet"])
+
+        assert result.exit_code == 0
+        assert "Simulation time: 12.34 seconds" in result.output
+        assert "Peak simulation memory: 64.00 MiB" in result.output
+
     def test_validate_shows_line_numbers_and_suggestions(self) -> None:
         """The validate command should surface source-aware parser errors."""
         runner = CliRunner()

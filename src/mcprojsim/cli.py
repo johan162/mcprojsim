@@ -1,6 +1,8 @@
 """Command-line interface for Monte Carlo Project Simulator."""
 
 from pathlib import Path
+import sys
+import time
 from typing import Optional, Union
 
 import click
@@ -8,9 +10,63 @@ import click
 from mcprojsim import __version__
 from mcprojsim.config import Config, DEFAULT_SIMULATION_ITERATIONS
 from mcprojsim.exporters import CSVExporter, HTMLExporter, JSONExporter
+from mcprojsim.models.project import Project
+from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.parsers import TOMLParser, YAMLParser
 from mcprojsim.simulation import SimulationEngine
 from mcprojsim.utils import Validator, setup_logging
+
+
+def _get_max_rss_bytes() -> int | None:
+    """Return the process peak resident set size in bytes when available."""
+    try:
+        import resource
+    except ImportError:
+        return None
+
+    max_rss = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    if max_rss < 0:
+        return None
+
+    # macOS reports bytes, while Linux and several other Unix platforms
+    # report kibibytes.
+    if sys.platform == "darwin":
+        return max_rss
+
+    return max_rss * 1024
+
+
+def _format_memory_size(num_bytes: int | None) -> str:
+    """Format a memory size in human-readable binary units."""
+    if num_bytes is None:
+        return "unavailable"
+
+    value = float(num_bytes)
+    units = ["B", "KiB", "MiB", "GiB", "TiB"]
+    for unit in units:
+        if value < 1024.0 or unit == units[-1]:
+            return f"{value:.2f} {unit}"
+        value /= 1024.0
+
+    return f"{value:.2f} TiB"
+
+
+def _run_simulation_with_metrics(
+    engine: SimulationEngine,
+    project: Project,
+) -> tuple[SimulationResults, float, int | None]:
+    """Run a simulation and collect elapsed time and peak memory delta."""
+    rss_before = _get_max_rss_bytes()
+    started_at = time.perf_counter()
+    results = engine.run(project)
+    elapsed_seconds = time.perf_counter() - started_at
+    rss_after = _get_max_rss_bytes()
+
+    peak_memory_bytes = None
+    if rss_before is not None and rss_after is not None:
+        peak_memory_bytes = max(0, rss_after - rss_before)
+
+    return results, elapsed_seconds, peak_memory_bytes
 
 
 @click.group()
@@ -113,8 +169,15 @@ def simulate(
             config=cfg,
             show_progress=not quiet,
         )
-        results = engine.run(project)
+        results, elapsed_seconds, peak_memory_bytes = _run_simulation_with_metrics(
+            engine, project
+        )
         critical_path_limit = critical_paths or cfg.output.critical_path_report_limit
+
+        click.echo(f"Simulation time: {elapsed_seconds:.2f} seconds")
+        click.echo(
+            "Peak simulation memory: " f"{_format_memory_size(peak_memory_bytes)}"
+        )
 
         if not quiet:
             import math
