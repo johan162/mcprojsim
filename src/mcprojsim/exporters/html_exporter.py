@@ -128,7 +128,7 @@ HTML_TEMPLATE = """
             flex: 1;
             display: flex;
             align-items: center;
-            font-size: 12px;
+            font-size: 18px;
             padding-left: 5px;
         }
         .thermometer-legend {
@@ -218,6 +218,10 @@ HTML_TEMPLATE = """
                     <span>95%+ (Dark Green - Lower Risk)</span>
                 </div>
             </div>
+            <p style="margin: 10px 0 0 0; font-size: 12px; color: #666; line-height: 1.4;">
+                <em>Note: Calendar time assumes that all resources required for maximum parallelism are available
+                (Max Parallel Tasks: {{ max_parallel_tasks }}).</em>
+            </p>
         </div>
 
         {% if effort_thermometer_segments %}
