@@ -98,7 +98,7 @@ class JSONExporter:
                 "skewness": results.skewness,
                 "kurtosis": results.kurtosis,
             },
-            "percentiles": {
+            "calendar_time_confidence_intervals": {
                 str(p): {
                     "hours": v,
                     "working_days": math.ceil(v / results.hours_per_day),
@@ -110,7 +110,7 @@ class JSONExporter:
                 }
                 for p, v in sorted(results.percentiles.items())
             },
-            "effort_percentiles": {
+            "effort_confidence_intervals": {
                 str(p): {
                     "person_hours": v,
                     "person_days": math.ceil(v / results.hours_per_day),

@@ -69,8 +69,8 @@ class CSVExporter:
             writer.writerow(["Kurtosis", f"{results.kurtosis:.4f}"])
             writer.writerow([])
 
-            # Write percentiles
-            writer.writerow(["Percentiles", ""])
+            # Write calendar time confidence intervals
+            writer.writerow(["Calendar Time Confidence Intervals", ""])
             for percentile, value in sorted(results.percentiles.items()):
                 working_days = math.ceil(value / results.hours_per_day)
                 delivery = results.delivery_date(value)
@@ -85,9 +85,9 @@ class CSVExporter:
                 )
             writer.writerow([])
 
-            # Write effort percentiles
+            # Write effort confidence intervals
             if results.effort_percentiles:
-                writer.writerow(["Effort Percentiles", ""])
+                writer.writerow(["Effort Confidence Intervals", ""])
                 for percentile, value in sorted(results.effort_percentiles.items()):
                     person_days = math.ceil(value / results.hours_per_day)
                     writer.writerow(

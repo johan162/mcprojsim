@@ -10,6 +10,7 @@ from typing import Any, TYPE_CHECKING
 import numpy as np
 from jinja2 import Template
 
+from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
 from mcprojsim.config import DEFAULT_CONFIDENCE_LEVELS
 from mcprojsim.models.simulation import SimulationResults
@@ -45,21 +46,18 @@ HTML_TEMPLATE = """
             background-color: #f5f5f5;
         }
         h1, h2 { color: #333; }
-        .container {
+        .thermometer-row {
             display: flex;
             gap: 20px;
             align-items: flex-start;
-        }
-        .main-content {
-            flex: 1;
+            margin: 20px 0;
         }
         .thermometer-container {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            min-width: 300px;
-            margin: 20px 0;
+            flex: 1;
             display: flex;
             flex-direction: column;
         }
@@ -160,190 +158,39 @@ HTML_TEMPLATE = """
             border: 1px solid #ccc;
             border-radius: 3px;
         }
+        .staffing-rec-marker {
+            font-weight: bold;
+            color: #2E7D32;
+        }
+        .staffing-meta {
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
     <h1>Monte Carlo Simulation Results</h1>
     <h2>{{ project_name }}</h2>
 
-    <div class="container">
-        <div class="main-content">
-            <div class="section simulation-params">
-                <h3>Simulation Parameters</h3>
-                <table>
-                    <tr><td class="metric">Simulation Date</td><td class="value">{{ simulation_date }}</td></tr>
-                    <tr><td class="metric">Iterations</td><td class="value">{{ iterations }}</td></tr>
-                    <tr><td class="metric">Random Seed</td><td class="value">{{ random_seed }}</td></tr>
-                    <tr><td class="metric">Hours per Day</td><td class="value">{{ hours_per_day }}</td></tr>
-                </table>
-            </div>
+    <div class="section simulation-params">
+        <h3>Simulation Parameters</h3>
+        <table>
+            <tr><td class="metric">Simulation Date</td><td class="value">{{ simulation_date }}</td></tr>
+            <tr><td class="metric">Iterations</td><td class="value">{{ iterations }}</td></tr>
+            <tr><td class="metric">Random Seed</td><td class="value">{{ random_seed }}</td></tr>
+            <tr><td class="metric">Hours per Day</td><td class="value">{{ hours_per_day }}</td></tr>
+        </table>
+    </div>
 
-            <div class="section statistical-summary">
-                <h3>Statistical Summary</h3>
-                <table>
-                    <tr><td class="metric">Mean</td><td class="value">{{ "%.2f"|format(mean) }} hours ({{ mean_working_days }} working days)</td></tr>
-                    <tr><td class="metric">Median</td><td class="value">{{ "%.2f"|format(median) }} hours</td></tr>
-                    <tr><td class="metric">Standard Deviation</td><td class="value">{{ "%.2f"|format(std_dev) }} hours</td></tr>
-                    <tr><td class="metric">Minimum</td><td class="value">{{ "%.2f"|format(min_duration) }} hours</td></tr>
-                    <tr><td class="metric">Maximum</td><td class="value">{{ "%.2f"|format(max_duration) }} hours</td></tr>
-                    <tr><td class="metric">Coefficient of Variation</td><td class="value">{{ "%.4f"|format(cv) }}</td></tr>
-                    <tr><td class="metric">Skewness</td><td class="value">{{ "%.4f"|format(skewness) }}</td></tr>
-                    <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(kurtosis) }}</td></tr>
-                </table>
-            </div>
-
-            <div class="section">
-                <h3>Confidence Intervals</h3>
-                <table>
-                    <thead>
-                        <tr><th>Percentile</th><th>Effort (hours)</th><th>Working Days</th><th>Delivery Date</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for p, value, working_days, delivery_date in percentiles %}
-                        <tr class="{% if p in highlighted_percentiles %}highlight{% endif %}">
-                            <td>P{{ p }}</td>
-                            <td class="value">{{ "%.2f"|format(value) }}</td>
-                            <td class="value">{{ working_days }}</td>
-                            <td class="value">{{ delivery_date }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% if histogram_image %}
-            <div class="section">
-                <h3>Duration Distribution</h3>
-                <div style="text-align: center;">
-                    <img src="data:image/png;base64,{{ histogram_image }}" alt="Duration Histogram" style="max-width: 100%; height: auto;">
-                </div>
-            </div>
-            {% endif %}
-
-            {% if sensitivity_image %}
-            <div class="section">
-                <h3>Sensitivity Analysis (Tornado Chart)</h3>
-                <div style="text-align: center;">
-                    <img src="data:image/png;base64,{{ sensitivity_image }}" alt="Sensitivity Tornado Chart" style="max-width: 100%; height: auto;">
-                </div>
-                <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
-                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-                        <strong>About Sensitivity Analysis:</strong> Spearman rank correlation between each task's
-                        sampled duration and the total project duration. Higher absolute values indicate tasks
-                        whose duration variability has the greatest influence on project schedule uncertainty.
-                    </p>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if schedule_slack %}
-            <div class="section">
-                <h3>Schedule Slack (Total Float)</h3>
-                <table>
-                    <thead>
-                        <tr><th>Task ID</th><th class="header-center">Mean Slack (hours)</th><th class="header-center">Status</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for task_id, slack_val in schedule_slack %}
-                        <tr>
-                            <td>{{ task_id }}</td>
-                            <td class="value-center">{{ "%.2f"|format(slack_val) }}</td>
-                            <td class="value-center">{% if slack_val < 0.01 %}Critical{% else %}{{ "%.1f"|format(slack_val) }}h buffer{% endif %}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #FF9800; border-radius: 4px;">
-                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-                        <strong>About Schedule Slack:</strong> Mean total float across all simulation iterations.
-                        Tasks with zero slack are on the critical path and any delay will extend the project.
-                        Tasks with positive slack have schedule buffer.
-                    </p>
-                </div>
-            </div>
-            {% endif %}
-
-            {% if risk_impact_data %}
-            <div class="section">
-                <h3>Risk Impact Analysis</h3>
-                <table>
-                    <thead>
-                        <tr><th>Task ID</th><th class="header-center">Mean Impact (hours)</th><th class="header-center">Trigger Rate</th><th class="header-center">Mean When Triggered (hours)</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for task_id, mean_impact, trigger_rate, mean_when_triggered in risk_impact_data %}
-                        <tr>
-                            <td>{{ task_id }}</td>
-                            <td class="value-center">{{ "%.2f"|format(mean_impact) }}</td>
-                            <td class="value-center">{{ "%.1f"|format(trigger_rate * 100) }}%</td>
-                            <td class="value-center">{{ "%.2f"|format(mean_when_triggered) }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-
-            <div class="section">
-                <h3>Critical Path Analysis</h3>
-                <table>
-                    <thead>
-                        <tr><th>Task ID</th><th class="header-center">Effort (hours)</th><th class="header-center">Criticality Index</th><th class="header-center">Percentage</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for task_id, criticality, effort in critical_path_with_effort %}
-                        <tr>
-                            <td>{{ task_id }}</td>
-                            <td class="value-center">{{ effort }}</td>
-                            <td class="value-center">{{ "%.4f"|format(criticality) }}</td>
-                            <td class="value-center">{{ "%.1f"|format(criticality * 100) }}%</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                {% if critical_path_sequences %}
-                <h4>Most Frequent Critical Paths</h4>
-                <table>
-                    <thead>
-                        <tr><th>Rank</th><th>Path</th><th class="header-center">Count</th><th class="header-center">Frequency</th><th class="header-center">Percentage</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for rank, path_display, count, frequency in critical_path_sequences %}
-                        <tr>
-                            <td class="value-center">{{ rank }}</td>
-                            <td>{{ path_display }}</td>
-                            <td class="value-center">{{ count }}</td>
-                            <td class="value-center">{{ "%.4f"|format(frequency) }}</td>
-                            <td class="value-center">{{ "%.1f"|format(frequency * 100) }}%</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% endif %}
-
-                <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #4CAF50; border-radius: 4px;">
-                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">
-                        <strong>About Criticality Index:</strong> This metric represents the probability that a task lies on the critical path
-                        across all simulation iterations. A value of 1.0 (100%) means the task was always on the critical path,
-                        while 0.0 (0%) means it never was. Tasks with higher criticality indices are more likely to delay the project
-                        if their duration increases.
-                    </p>
-                </div>
-            </div>
-
-            <div class="section">
-                <p><em>Report generated by Monte Carlo Project Simulator (mcprojsim)</em></p>
-            </div>
-        </div>
-
+    <div class="thermometer-row">
         <div class="thermometer-container">
-            <div class="thermometer-title">Probability of Success</div>
+            <div class="thermometer-title">Calendar Time Probability of Success</div>
             <div class="thermometer">
                 <div class="thermometer-display">
                     <div class="thermometer-bar">
                         {% for segment in thermometer_segments %}
-                        <div class="thermometer-segment" style="background-color: {{ segment.color }}; color: {{ segment.text_color }};" title="{{ segment.effort|round(1) }} hours: {{ segment.probability|round(0)|int }}% success">
+                        <div class="thermometer-segment" style="background-color: {{ segment.color }}; color: {{ segment.text_color }};" title="{{ segment.effort|round(0)|int }} hours: {{ segment.probability|round(0)|int }}% success">
                             {{ segment.probability|round(0)|int }}%
                         </div>
                         {% endfor %}
@@ -351,7 +198,7 @@ HTML_TEMPLATE = """
                     <div class="thermometer-labels">
                         {% for segment in thermometer_segments %}
                         <div class="thermometer-label">
-                            {{ segment.effort|round(1) }} hours
+                            {% if segment.delivery_date %}{{ segment.delivery_date }}, {% endif %}{{ segment.working_days }} days, ({{ segment.effort|round(0)|int }}h)
                         </div>
                         {% endfor %}
                     </div>
@@ -372,6 +219,293 @@ HTML_TEMPLATE = """
                 </div>
             </div>
         </div>
+
+        {% if effort_thermometer_segments %}
+        <div class="thermometer-container">
+            <div class="thermometer-title">Project Effort Probability of Success</div>
+            <div class="thermometer">
+                <div class="thermometer-display">
+                    <div class="thermometer-bar">
+                        {% for segment in effort_thermometer_segments %}
+                        <div class="thermometer-segment" style="background-color: {{ segment.color }}; color: {{ segment.text_color }};" title="{{ segment.effort|round(0)|int }} person-hours: {{ segment.probability|round(0)|int }}% success">
+                            {{ segment.probability|round(0)|int }}%
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="thermometer-labels">
+                        {% for segment in effort_thermometer_segments %}
+                        <div class="thermometer-label">
+                            {{ segment.person_days }} days, ({{ segment.effort|round(0)|int }}h)
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="thermometer-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #CC6600;"></div>
+                    <span>50% (Dark Orange - Higher Risk)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #996633;"></div>
+                    <span>~75% (Medium Risk)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #006633;"></div>
+                    <span>95%+ (Dark Green - Lower Risk)</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="section statistical-summary">
+        <h3>Statistical Summary</h3>
+        <table>
+            <tr><td class="metric">Mean</td><td class="value">{{ "%.2f"|format(mean) }} hours ({{ mean_working_days }} working days)</td></tr>
+            <tr><td class="metric">Median</td><td class="value">{{ "%.2f"|format(median) }} hours</td></tr>
+            <tr><td class="metric">Standard Deviation</td><td class="value">{{ "%.2f"|format(std_dev) }} hours</td></tr>
+            <tr><td class="metric">Minimum</td><td class="value">{{ "%.2f"|format(min_duration) }} hours</td></tr>
+            <tr><td class="metric">Maximum</td><td class="value">{{ "%.2f"|format(max_duration) }} hours</td></tr>
+            <tr><td class="metric">Coefficient of Variation</td><td class="value">{{ "%.4f"|format(cv) }}</td></tr>
+            <tr><td class="metric">Skewness</td><td class="value">{{ "%.4f"|format(skewness) }}</td></tr>
+            <tr><td class="metric">Excess Kurtosis</td><td class="value">{{ "%.4f"|format(kurtosis) }}</td></tr>
+            <tr><td class="metric">Max Parallel Tasks</td><td class="value">{{ max_parallel_tasks }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Calendar Time Confidence Intervals</h3>
+        <table>
+            <thead>
+                <tr><th>Percentile</th><th>Hours</th><th>Working Days</th><th>Delivery Date</th></tr>
+            </thead>
+            <tbody>
+                {% for p, value, working_days, delivery_date in percentiles %}
+                <tr class="{% if p in highlighted_percentiles %}highlight{% endif %}">
+                    <td>P{{ p }}</td>
+                    <td class="value">{{ "%.2f"|format(value) }}</td>
+                    <td class="value">{{ working_days }}</td>
+                    <td class="value">{{ delivery_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if effort_percentiles %}
+    <div class="section">
+        <h3>Effort Confidence Intervals</h3>
+        <table>
+            <thead>
+                <tr><th>Percentile</th><th>Person-Hours</th><th>Person-Days</th></tr>
+            </thead>
+            <tbody>
+                {% for p, person_hours, person_days in effort_percentiles %}
+                <tr class="{% if p in highlighted_percentiles %}highlight{% endif %}">
+                    <td>P{{ p }}</td>
+                    <td class="value">{{ "%.2f"|format(person_hours) }}</td>
+                    <td class="value">{{ person_days }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if histogram_image %}
+    <div class="section">
+        <h3>Calendar Time Distribution</h3>
+        <div style="text-align: center;">
+            <img src="data:image/png;base64,{{ histogram_image }}" alt="Calendar Time Distribution" style="max-width: 100%; height: auto;">
+        </div>
+    </div>
+    {% endif %}
+
+    {% if effort_histogram_image %}
+    <div class="section">
+        <h3>Project Effort Distribution</h3>
+        <div style="text-align: center;">
+            <img src="data:image/png;base64,{{ effort_histogram_image }}" alt="Project Effort Distribution" style="max-width: 100%; height: auto;">
+        </div>
+    </div>
+    {% endif %}
+
+    {% if sensitivity_image %}
+    <div class="section">
+        <h3>Sensitivity Analysis (Tornado Chart)</h3>
+        <div style="text-align: center;">
+            <img src="data:image/png;base64,{{ sensitivity_image }}" alt="Sensitivity Tornado Chart" style="max-width: 100%; height: auto;">
+        </div>
+        <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #2196F3; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                <strong>About Sensitivity Analysis:</strong> Spearman rank correlation between each task's
+                sampled duration and the total project duration. Higher absolute values indicate tasks
+                whose duration variability has the greatest influence on project schedule uncertainty.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if schedule_slack %}
+    <div class="section">
+        <h3>Schedule Slack (Total Float)</h3>
+        <table>
+            <thead>
+                <tr><th>Task ID</th><th class="header-center">Mean Slack (hours)</th><th class="header-center">Status</th></tr>
+            </thead>
+            <tbody>
+                {% for task_id, slack_val in schedule_slack %}
+                <tr>
+                    <td>{{ task_id }}</td>
+                    <td class="value-center">{{ "%.2f"|format(slack_val) }}</td>
+                    <td class="value-center">{% if slack_val < 0.01 %}Critical{% else %}{{ "%.1f"|format(slack_val) }}h buffer{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #FF9800; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                <strong>About Schedule Slack:</strong> Mean total float across all simulation iterations.
+                Tasks with zero slack are on the critical path and any delay will extend the project.
+                Tasks with positive slack have schedule buffer.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if risk_impact_data %}
+    <div class="section">
+        <h3>Risk Impact Analysis</h3>
+        <table>
+            <thead>
+                <tr><th>Task ID</th><th class="header-center">Mean Impact (hours)</th><th class="header-center">Trigger Rate</th><th class="header-center">Mean When Triggered (hours)</th></tr>
+            </thead>
+            <tbody>
+                {% for task_id, mean_impact, trigger_rate, mean_when_triggered in risk_impact_data %}
+                <tr>
+                    <td>{{ task_id }}</td>
+                    <td class="value-center">{{ "%.2f"|format(mean_impact) }}</td>
+                    <td class="value-center">{{ "%.1f"|format(trigger_rate * 100) }}%</td>
+                    <td class="value-center">{{ "%.2f"|format(mean_when_triggered) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <h3>Critical Path Analysis</h3>
+        <table>
+            <thead>
+                <tr><th>Task ID</th><th class="header-center">Effort (hours)</th><th class="header-center">Criticality Index</th><th class="header-center">Percentage</th></tr>
+            </thead>
+            <tbody>
+                {% for task_id, criticality, effort in critical_path_with_effort %}
+                <tr>
+                    <td>{{ task_id }}</td>
+                    <td class="value-center">{{ effort }}</td>
+                    <td class="value-center">{{ "%.4f"|format(criticality) }}</td>
+                    <td class="value-center">{{ "%.1f"|format(criticality * 100) }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if critical_path_sequences %}
+        <h4>Most Frequent Critical Paths</h4>
+        <table>
+            <thead>
+                <tr><th>Rank</th><th>Path</th><th class="header-center">Count</th><th class="header-center">Frequency</th><th class="header-center">Percentage</th></tr>
+            </thead>
+            <tbody>
+                {% for rank, path_display, count, frequency in critical_path_sequences %}
+                <tr>
+                    <td class="value-center">{{ rank }}</td>
+                    <td>{{ path_display }}</td>
+                    <td class="value-center">{{ count }}</td>
+                    <td class="value-center">{{ "%.4f"|format(frequency) }}</td>
+                    <td class="value-center">{{ "%.1f"|format(frequency * 100) }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #4CAF50; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                <strong>About Criticality Index:</strong> This metric represents the probability that a task lies on the critical path
+                across all simulation iterations. A value of 1.0 (100%) means the task was always on the critical path,
+                while 0.0 (0%) means it never was. Tasks with higher criticality indices are more likely to delay the project
+                if their duration increases.
+            </p>
+        </div>
+    </div>
+
+    {% if staffing_recommendations %}
+    <div class="section">
+        <h3>Staffing Analysis</h3>
+        <p class="staffing-meta">
+            Effort basis: <strong>{{ staffing_effort_basis }}</strong>
+            ({{ "%.0f"|format(staffing_effort_hours_used) }} person-hours,
+            {{ "%.0f"|format(staffing_cp_hours) }} critical-path hours)
+            | Max parallel tasks: {{ max_parallel_tasks }}
+        </p>
+
+        <h4>Recommended Team Size</h4>
+        <table>
+            <thead>
+                <tr><th>Profile</th><th class="header-center">Team Size</th><th class="header-center">Working Days</th><th class="header-center">Delivery Date</th><th class="header-center">Efficiency</th><th class="header-center">Parallelism Ratio</th></tr>
+            </thead>
+            <tbody>
+                {% for rec in staffing_recommendations %}
+                <tr>
+                    <td>{{ rec.profile }}</td>
+                    <td class="value-center">{{ rec.recommended_team_size }}</td>
+                    <td class="value-center">{{ rec.calendar_working_days }}</td>
+                    <td class="value-center">{{ rec.delivery_date if rec.delivery_date else "" }}</td>
+                    <td class="value-center">{{ "%.1f"|format(rec.efficiency * 100) }}%</td>
+                    <td class="value-center">{{ "%.1f"|format(rec.parallelism_ratio) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% for prof_name, prof_rows in staffing_table_by_profile %}
+        <h4>{{ prof_name }} team</h4>
+        <table>
+            <thead>
+                <tr><th class="header-center">Team Size</th><th class="header-center">Eff. Capacity</th><th class="header-center">Working Days</th><th class="header-center">Delivery Date</th><th class="header-center">Efficiency</th></tr>
+            </thead>
+            <tbody>
+                {% for row in prof_rows %}
+                <tr>
+                    <td class="value-center">{% if row.is_recommended %}<span class="staffing-rec-marker">{{ row.team_size }} ★</span>{% else %}{{ row.team_size }}{% endif %}</td>
+                    <td class="value-center">{{ "%.2f"|format(row.effective_capacity) }}</td>
+                    <td class="value-center">{{ row.calendar_working_days }}</td>
+                    <td class="value-center">{{ row.delivery_date if row.delivery_date else "" }}</td>
+                    <td class="value-center">{{ "%.1f"|format(row.efficiency * 100) }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endfor %}
+
+        <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #9C27B0; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                <strong>About Staffing Analysis:</strong> Team-size recommendations use a
+                Brooks's-Law communication-overhead model. <em>Eff. Capacity</em> is the
+                number of person-equivalents after accounting for overhead.
+                <em>Efficiency</em> is effective capacity divided by nominal team size.
+                The ★ marker indicates the recommended team size for each profile.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <p><em>Report generated by Monte Carlo Project Simulator (mcprojsim)</em></p>
     </div>
 </body>
 </html>
@@ -447,8 +581,9 @@ class HTMLExporter:
         # Calculate thermometer data
         thermometer_segments = HTMLExporter._calculate_thermometer(results)
 
-        # Generate histogram image
+        # Generate histogram images
         histogram_image = HTMLExporter._generate_histogram_image(results)
+        effort_histogram_image = HTMLExporter._generate_effort_histogram_image(results)
 
         # Generate sensitivity tornado chart
         sensitivity_image = HTMLExporter._generate_sensitivity_image(results)
@@ -487,19 +622,96 @@ class HTMLExporter:
             skewness=results.skewness,
             kurtosis=results.kurtosis,
             percentiles=percentiles,
+            effort_percentiles=[
+                (
+                    p,
+                    v,
+                    math.ceil(v / results.hours_per_day),
+                )
+                for p, v in sorted(results.effort_percentiles.items())
+            ],
             highlighted_percentiles=DEFAULT_CONFIDENCE_LEVELS,
             critical_path=critical_path,
             critical_path_with_effort=critical_path_with_effort,
             critical_path_sequences=critical_path_sequences,
             thermometer_segments=thermometer_segments,
+            effort_thermometer_segments=HTMLExporter._calculate_effort_thermometer(
+                results
+            ),
             histogram_image=histogram_image,
+            effort_histogram_image=effort_histogram_image,
             sensitivity_image=sensitivity_image,
             schedule_slack=schedule_slack,
             risk_impact_data=risk_impact_data,
+            max_parallel_tasks=results.max_parallel_tasks,
+            **HTMLExporter._prepare_staffing_context(results, effective_config),
         )
 
         with open(output_path, "w") as f:
             f.write(html)
+
+    @staticmethod
+    def _prepare_staffing_context(
+        results: SimulationResults,
+        config: Config,
+    ) -> dict[str, Any]:
+        """Build the template context dict for the staffing section.
+
+        Returns keys: staffing_recommendations, staffing_table_by_profile,
+        staffing_effort_basis, staffing_effort_hours_used, staffing_cp_hours.
+        """
+        recommendations = StaffingAnalyzer.recommend_team_size(results, config)
+        if not recommendations:
+            return {
+                "staffing_recommendations": [],
+                "staffing_table_by_profile": [],
+                "staffing_effort_basis": "mean",
+                "staffing_effort_hours_used": results.total_effort_hours(),
+                "staffing_cp_hours": 0.0,
+            }
+
+        effort_basis = recommendations[0].effort_basis
+        basis_label = (
+            f"{effort_basis} effort"
+            if effort_basis == "mean"
+            else f"{effort_basis} effort percentile"
+        )
+        effort_hours_used = recommendations[0].total_effort_hours
+        cp_hours = recommendations[0].critical_path_hours
+
+        # Build per-profile tables with a recommended marker
+        table_rows = StaffingAnalyzer.calculate_staffing_table(results, config)
+        rec_sizes: dict[str, int] = {
+            r.profile: r.recommended_team_size for r in recommendations
+        }
+        profiles_sorted = sorted({r.profile for r in recommendations})
+        table_by_profile: list[tuple[str, list[dict[str, Any]]]] = []
+        for prof in profiles_sorted:
+            prof_rows = [r for r in table_rows if r.profile == prof]
+            rec_n = rec_sizes.get(prof, 0)
+            enriched = []
+            for r in prof_rows:
+                enriched.append(
+                    {
+                        "team_size": r.team_size,
+                        "effective_capacity": r.effective_capacity,
+                        "calendar_working_days": r.calendar_working_days,
+                        "delivery_date": (
+                            r.delivery_date.isoformat() if r.delivery_date else ""
+                        ),
+                        "efficiency": r.efficiency,
+                        "is_recommended": r.team_size == rec_n,
+                    }
+                )
+            table_by_profile.append((prof, enriched))
+
+        return {
+            "staffing_recommendations": recommendations,
+            "staffing_table_by_profile": table_by_profile,
+            "staffing_effort_basis": basis_label,
+            "staffing_effort_hours_used": effort_hours_used,
+            "staffing_cp_hours": cp_hours,
+        }
 
     @staticmethod
     def _calculate_thermometer(
@@ -546,12 +758,53 @@ class HTMLExporter:
                 prob_target
             )
 
+            working_days = math.ceil(effort / results.hours_per_day)
+            dd = results.delivery_date(effort)
             segments.append(
                 {
                     "effort": effort,
                     "probability": prob_target,
                     "color": color,
                     "text_color": text_color,
+                    "working_days": working_days,
+                    "delivery_date": dd.isoformat() if dd else "",
+                }
+            )
+
+        return segments
+
+    @staticmethod
+    def _calculate_effort_thermometer(
+        results: SimulationResults,
+    ) -> list[dict[str, Any]]:
+        """Calculate thermometer segments for total project effort.
+
+        Uses ``effort_percentiles`` (person-hours) when per-iteration effort
+        data is available. Returns an empty list otherwise so the template
+        can skip rendering.
+        """
+        if len(results.effort_durations) == 0:
+            return []
+
+        probability_bins = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 99]
+        segments: list[dict[str, Any]] = []
+
+        for prob_target in probability_bins:
+            # Ensure the percentile is computed
+            effort = results.effort_percentile(prob_target)
+
+            color, text_color = HTMLExporter._get_probability_color_and_text(
+                prob_target
+            )
+
+            person_days = math.ceil(effort / results.hours_per_day)
+            segments.append(
+                {
+                    "effort": effort,
+                    "probability": prob_target,
+                    "color": color,
+                    "text_color": text_color,
+                    "person_days": person_days,
                 }
             )
 
@@ -748,10 +1001,10 @@ class HTMLExporter:
                     )
 
             # Styling
-            ax.set_xlabel("Effort (hours)", fontsize=12, fontweight="bold")
+            ax.set_xlabel("Duration (hours)", fontsize=12, fontweight="bold")
             ax.set_ylabel("Frequency", fontsize=12, fontweight="bold")
             ax.set_title(
-                f"Project Effort Distribution ({results.iterations:,} simulations)",
+                f"Calendar Time Distribution ({results.iterations:,} simulations)",
                 fontsize=14,
                 fontweight="bold",
                 pad=20,
@@ -776,6 +1029,90 @@ class HTMLExporter:
 
         except Exception:
             # If anything goes wrong, return empty string
+            return ""
+
+    @staticmethod
+    def _generate_effort_histogram_image(results: SimulationResults) -> str:
+        """Generate a base64-encoded histogram of per-iteration total effort.
+
+        Args:
+            results: Simulation results
+
+        Returns:
+            Base64-encoded PNG image string, or empty string if unavailable
+        """
+        if not MATPLOTLIB_AVAILABLE or len(results.effort_durations) == 0:
+            return ""
+
+        try:
+            effort = results.effort_durations
+            counts, bin_edges = np.histogram(effort, bins=50)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+            fig, ax = plt.subplots(figsize=(10, 6))
+
+            ax.bar(
+                bin_centers,
+                counts,
+                width=np.diff(bin_edges),
+                color="#2196F3",
+                alpha=0.7,
+                edgecolor="#1565C0",
+                linewidth=1.5,
+            )
+
+            effort_mean = float(np.mean(effort))
+            effort_median = float(np.median(effort))
+
+            ax.axvline(
+                effort_mean,
+                color="#FF5722",
+                linestyle="--",
+                linewidth=2,
+                label=f"Mean: {effort_mean:.1f} person-hours",
+            )
+            ax.axvline(
+                effort_median,
+                color="#4CAF50",
+                linestyle="--",
+                linewidth=2,
+                label=f"Median: {effort_median:.1f} person-hours",
+            )
+
+            for p in [80, 90, 95]:
+                if p in results.effort_percentiles:
+                    ax.axvline(
+                        results.effort_percentiles[p],
+                        color="#9E9E9E",
+                        linestyle=":",
+                        linewidth=1.5,
+                        alpha=0.7,
+                        label=f"P{p}: {results.effort_percentiles[p]:.1f} person-hours",
+                    )
+
+            ax.set_xlabel("Effort (person-hours)", fontsize=12, fontweight="bold")
+            ax.set_ylabel("Frequency", fontsize=12, fontweight="bold")
+            ax.set_title(
+                f"Project Effort Distribution ({results.iterations:,} simulations)",
+                fontsize=14,
+                fontweight="bold",
+                pad=20,
+            )
+            ax.legend(loc="upper right", framealpha=0.9, fontsize=10)
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+            plt.tight_layout()
+
+            buffer = BytesIO()
+            plt.savefig(buffer, format="png", dpi=100, bbox_inches="tight")
+            plt.close(fig)
+            buffer.seek(0)
+
+            return base64.b64encode(buffer.read()).decode("utf-8")
+
+        except Exception:
             return ""
 
     @staticmethod
