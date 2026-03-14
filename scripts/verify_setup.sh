@@ -6,19 +6,47 @@
 
 set -e
 
-echo "=== mcprojsim Setup Verification ==="
+echo "=== mcprojsim Environment Setup & Verification ==="
 echo ""
 
 # Ensure Poetry is available
 if ! command -v poetry &> /dev/null; then
     echo "❌ Poetry not found. Install with: pip install poetry"
-    exit 1
+    # Asks user if he wants to isatll poetry if not found
+    read -p "Would you like to install Poetry now? (y/n) " -n -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        pip install poetry
+    else
+        exit 1
+    fi
 fi
 echo "✅ Poetry is available"
 
+# Make sure a local virtual environment is used
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "❌ No virtual environment detected. Please create one with: python -m venv .venv"
+    # Automatically create and activate a virtual environment if not present
+    # If user answers "y", we will create and activate a virtual environment
+    read -p "Would you like to create and activate a virtual environment now? (y/n) " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        poetry config virtualenvs.in-project true --local
+        poetry env remove --all
+        rm -rf .venv
+        poetry install
+        source .venv/bin/activate
+        echo "✅ Virtual environment created and activated"
+    else
+        exit 1  
+    fi
+fi
+echo "✅ Activated virtual environment detected"
+
 # Install project dependencies via Poetry
 echo "Installing dependencies with Poetry..."
-poetry install --with dev
+poetry lock 
+poetry install --with dev,docs,mcp
 echo "✅ Dependencies installed"
 
 # Check if package is installed
@@ -77,12 +105,9 @@ echo "==================================="
 echo "✅ All checks passed!"
 echo "==================================="
 echo ""
-echo "mcprojsim is ready to use!"
+echo "Full development environment for mcprojsim is ready to use!"
 echo ""
-echo "Quick commands:"
-echo "  poetry run mcprojsim --help"
-echo "  poetry run mcprojsim validate examples/sample_project.yaml"
-echo "  poetry run mcprojsim simulate examples/sample_project.yaml"
-echo "  poetry run mcprojsim config show"
-echo ""
-echo "See QUICKSTART.md for more information."
+echo "See development.md for more information on how to contribute and run tests."
+
+# End of script
+

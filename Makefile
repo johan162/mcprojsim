@@ -83,7 +83,7 @@ else ifeq ($(DOCKER_RUNNING),yes)
     CONTAINER_COMPOSE_CMD := ${DOCKER_COMPOSE}
     $(info Using Docker as the container engine)
 else
-    $(error Neither Podman nor Docker engine is running. Please start one of them.)
+    $(info **WARNING** Neither Podman nor Docker engine is running. Please start one of them to use container-related targets.)
 endif
 
 # Check if we're behind a proxy (detect proxy environment variables and CA cert)

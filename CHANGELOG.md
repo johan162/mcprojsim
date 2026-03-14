@@ -1,3 +1,19 @@
+## [v0.4.10] - 2026-03-14
+
+Release Type: patch
+
+### 📋 Summary
+- Internal cleanup and dependencies bump
+
+### 🛠 Internal
+- Bump versions of numpy, black, etc.
+- Improve verify_setup.sh script to give options to install
+- Generate updated poetry.lock
+- Ignore all generated reports in gitignore
+- Don't require a running podman/docker to use Makefile targets
+- Add poetry.toml
+
+
 ## [v0.4.9] - 2026-03-12
 
 Release Type: patch
