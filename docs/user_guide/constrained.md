@@ -78,12 +78,53 @@ Before Example 2, here is a quick reference for the `resources` fields used thro
 | `sickness_prob` | No | `0.0` | Daily sickness probability for stochastic absence |
 | `planned_absence` | No | `[]` | Explicit non-working dates for that resource |
 
+
 ### First two fields introduced in Example 2
 
 - `experience_level`: the resource's capability tier (`1`, `2`, `3`).
 - `productivity_level`: how quickly the resource converts effort into progress relative to baseline `1.0`.
 
 In Example 2, Alice (`3`, `1.0`) is modeled as more senior baseline-capacity, while Bob (`2`, `0.9`) is slightly less productive.
+
+
+## Task fields related to resources introduced in this chapter
+
+| Field | Required | Default | What it controls |
+|---|---|---|---|
+| `max_resources` | No | 1 | Maximum number of resources assigned to a task |
+
+
+### `max_resources` semantics (important)
+
+`max_resources` is an upper bound on concurrent assignees for a task.
+
+- If `resources` lists multiple names and `max_resources` is smaller than that list,
+  only up to `max_resources` resources are assigned at task start.
+- Effective assignment count at start is:
+
+  `min(max_resources, currently_available_eligible_resources)`
+
+- If `max_resources` is omitted, the default is `1`.
+
+### Assignment timing model
+
+Resource assignment is performed only when the task starts.
+
+- Assigned resources remain fixed for that task run (non-preemptive execution).
+- The scheduler does not swap or add resources mid-task.
+
+### Start-now vs wait-for-more-resources behavior
+
+Current automatic assignment is greedy:
+
+- If at least one eligible resource is available, the task can start immediately.
+- The scheduler does not delay task start to wait for additional resources that might become
+  available later.
+
+This is a deliberate trade-off for deterministic and scalable simulation on large projects.
+This avoids combinatorial explosion and keeps runtime predictable for large projects. 
+It is a heuristic, not globally optimal schedule optimization.
+
 
 ---
 

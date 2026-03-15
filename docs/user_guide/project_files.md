@@ -208,6 +208,8 @@ Each task is validated as a `Task` object with the following fields.
 | `dependencies` | No | list of strings | `[]` | Each entry must match another task `id` |
 | `uncertainty_factors` | No | object | defaults applied | Recognized factor fields described below |
 | `resources` | No | list of strings | `[]` | Task-level resource names |
+| `max_resources` | No | integer | `1` | Max number of resources that may be assigned concurrently |
+| `min_experience_level` | No | integer | `1` | Minimum resource experience allowed (`1`, `2`, `3`) |
 | `risks` | No | list of risk objects | `[]` | Task-level probabilistic risks |
 
 ### Minimal task example
@@ -549,6 +551,21 @@ resources: ["backend_dev", "database_admin"]
 ```
 
 Task-level `resources` is typed as a list of strings in the current model.
+
+### Resource assignment rule with `max_resources`
+
+When `resources` lists multiple names, the scheduler may still assign fewer resources:
+
+- assignment at task start is capped by `max_resources` (default `1`),
+- effective start-time assignment is `min(max_resources, eligible_available_resources_now)`.
+
+Important behavior for schema users:
+
+- assignment happens at task start only,
+- assigned resources remain fixed for the task execution,
+- no mid-task reassignment/swapping is performed.
+
+Also, if you explicitly list resource names and set `min_experience_level`, each named resource must meet that minimum or validation fails.
 
 ## The `risks` field inside a task
 

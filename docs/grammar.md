@@ -153,12 +153,15 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 # Task Resource Constraints
 <task_resources> ::= "resources:" <identifier_list_bracketed>
+           # Optional explicit resource-name allowlist for the task
 
 <identifier_list_bracketed> ::= "[]" | "[" <identifier_list> "]"
 
 <task_max_resources> ::= "max_resources:" <positive_integer>
+             # Default: 1
 
 <task_min_experience_level> ::= "min_experience_level:" <experience_level>
+                # Default: 1
 
 <experience_level> ::= "1" | "2" | "3"
 
@@ -314,48 +317,51 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
      * `L`: min=160, most_likely=240, max=500
      * `XL`: min=320, most_likely=400, max=750
      * `XXL`: min=400, most_likely=500, max=1200
-  5. **Estimate Validity** (Story Points):
-    - Must be one of: `1`, `2`, `3`, `5`, `8`, `13`, `21`
-    - `unit` must NOT be specified in the project file; unit comes from `story_point_unit` in config (default: `"days"`)
-    - Values are resolved from configuration file to numeric ranges
-    - Default values (in days):
-      * `1`: min=0.5, most_likely=1, max=3
-      * `2`: min=1, most_likely=2, max=4
-      * `3`: min=1.5, most_likely=3, max=5
-      * `5`: min=3, most_likely=5, max=8
-      * `8`: min=5, most_likely=8, max=15
-
-  6. **Task Resource Constraints**:
-    - `max_resources` must be an integer >= 1 (default: 1)
-    - `min_experience_level` must be one of `1`, `2`, `3` (default: 1)
-
-  ### Resource and Calendar Constraints
-
-  1. **Resource Name Uniqueness**:
-    - Resolved resource names must be unique within a project
-    - If `name` is omitted, a generated name (`resource_001`, `resource_002`, ...) is assigned
-  2. **Resource Defaults**:
-    - `experience_level` default: 2
-    - `productivity_level` default: 1.0
-    - `sickness_prob` default: 0.0
-  3. **Resource Bounds**:
-    - `experience_level` must be one of `1`, `2`, `3`
-    - `productivity_level` must be in range [0.1, 2.0]
-    - `sickness_prob` must be in range [0.0, 1.0]
-  4. **Calendar Constraints**:
-    - Calendar IDs must be unique
-    - `work_days` entries must be integers in range `1..7`
-    - Holiday and planned-absence dates must be valid ISO-8601 dates
-  5. **Reference Integrity**:
-    - Task-level `resources` entries must reference existing resource names
-    - Resource `calendar` must reference an existing calendar ID, or `default` if no explicit calendars are defined
-      * `13`: min=8, most_likely=13, max=21
-      * `21`: min=13, most_likely=21, max=34
-  6. **Dependencies**: 
+5. **Estimate Validity** (Story Points):
+   - Must be one of: `1`, `2`, `3`, `5`, `8`, `13`, `21`
+   - `unit` must NOT be specified in the project file; unit comes from `story_point_unit` in config (default: `"days"`)
+   - Values are resolved from configuration file to numeric ranges
+   - Default values (in days):
+     * `1`: min=0.5, most_likely=1, max=3
+     * `2`: min=1, most_likely=2, max=4
+     * `3`: min=1.5, most_likely=3, max=5
+     * `5`: min=3, most_likely=5, max=8
+     * `8`: min=5, most_likely=8, max=15
+     * `13`: min=8, most_likely=13, max=21
+     * `21`: min=13, most_likely=21, max=34
+6. **Dependencies**:
    - Referenced task IDs must exist
    - No circular dependencies allowed
    - Dependencies must form a Directed Acyclic Graph (DAG)
-  7. **Uncertainty Factors**: Custom factor names allowed beyond predefined set
+7. **Uncertainty Factors**: Custom factor names allowed beyond predefined set
+8. **Task Resource Constraints**:
+   - `max_resources` must be an integer >= 1 (default: 1)
+   - `min_experience_level` must be one of `1`, `2`, `3` (default: 1)
+   - If task `resources` is omitted, the task may draw from all project resources
+   - If task `resources` lists names, they must reference existing resources
+   - If task `resources` lists names and `min_experience_level` is set, each named resource must satisfy that minimum or validation fails
+   - Start-time assignment count is capped by `max_resources`
+
+### Resource and Calendar Constraints
+
+1. **Resource Name Uniqueness**:
+   - Resolved resource names must be unique within a project
+   - If `name` is omitted, a generated name (`resource_001`, `resource_002`, ...) is assigned
+2. **Resource Defaults**:
+   - `experience_level` default: 2
+   - `productivity_level` default: 1.0
+   - `sickness_prob` default: 0.0
+3. **Resource Bounds**:
+   - `experience_level` must be one of `1`, `2`, `3`
+   - `productivity_level` must be in range [0.1, 2.0]
+   - `sickness_prob` must be in range [0.0, 1.0]
+4. **Calendar Constraints**:
+   - Calendar IDs must be unique
+   - `work_days` entries must be integers in range `1..7`
+   - Holiday and planned-absence dates must be valid ISO-8601 dates
+5. **Reference Integrity**:
+   - Task-level `resources` entries must reference existing resource names
+   - Resource `calendar` must reference an existing calendar ID, or `default` if no explicit calendars are defined
 
 ### Risk Constraints
 
