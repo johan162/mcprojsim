@@ -1,3 +1,34 @@
+## [v0.5.0] - 2026-03-15
+
+Release Type: minor
+
+### 📋 Summary
+Major improvements to the reports with additional information and automatically calculated suggested staffing based on Brook's law. The effort to be used in the staffing suggestion is controlled in the config file (default is P50). The staffing suggestion will also take into account the added overhead and complexity and use that when determining the efficiency of a team size.
+
+### ⚠️ Breaking Changes
+- The default ranges for T-Shirt sizes have been updated
+
+### ✨ Additions
+- New calculation of suggested staffing requirements
+- Addition of Project Effort percentiles in addition to the existing calendar time
+- Added thermometer for effort percentiles in HTML report
+- Added `-qq` for really silent simulations
+
+### 🚀 Improvements
+- The HTML report formatting is easier to read and hours are presented as cealings
+- All reports overhauled to use sam terminilogy and same headers
+- All reports present statistical summary for both Calendar time and effort man-hours
+- Add timing and memory information in the console output
+
+### 📚 Documentation
+- Added detailed description of config file syntax'
+- Added information about how to interpret the staff suggestions
+
+### 🛠 Internal
+- Tighten several tests
+- Added a large example with 100 task
+
+
 ## [v0.4.10] - 2026-03-14
 
 Release Type: patch
