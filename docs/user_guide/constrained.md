@@ -52,6 +52,16 @@ mcprojsim simulate baseline.yaml --seed 42 --table
 
 You should see `Schedule Mode: dependency_only`.
 
+Sample output excerpt (seed `42`, `200` iterations):
+
+```text
+Schedule Mode: dependency_only
+Calendar Time Confidence Intervals:
+  P50: 129.86 hours (17 working days)  (2026-04-24)
+  P90: 155.97 hours (20 working days)  (2026-04-29)
+  P99: 170.61 hours (22 working days)  (2026-05-01)
+```
+
 ---
 
 ## Resource fields introduced in this chapter
@@ -111,6 +121,19 @@ Run:
 
 ```bash
 mcprojsim simulate resources-basic.yaml --seed 42 --table
+```
+
+Sample output excerpt (seed `42`, `200` iterations):
+
+```text
+Schedule Mode: resource_constrained
+Calendar Time Confidence Intervals:
+  P50: 529.86 hours (67 working days)  (2026-07-03)
+  P90: 651.97 hours (82 working days)  (2026-07-24)
+  P99: 698.61 hours (88 working days)  (2026-08-03)
+
+Constrained Schedule Diagnostics:
+  Calendar Delay Contribution: 404.16 hours
 ```
 
 ### How resources are used in Example 2
@@ -209,6 +232,33 @@ calendars:
 
 This introduces calendar-driven delays automatically (weekends, holidays, shorter days).
 
+Sample output excerpt (seed `42`, `200` iterations):
+
+```text
+Schedule Mode: resource_constrained
+Calendar Time Confidence Intervals:
+  P50: 553.86 hours (70 working days)  (2026-07-08)
+  P90: 675.97 hours (85 working days)  (2026-07-29)
+  P99: 722.61 hours (91 working days)  (2026-08-06)
+
+Constrained Schedule Diagnostics:
+  Calendar Delay Contribution: 437.28 hours
+```
+
+Compared with Example 2, the added holiday and part-time calendar increase calendar-time percentiles and calendar-delay contribution.
+
+### Quick comparison (Examples 1 → 3)
+
+The table below compares calendar-time percentiles from the sample runs above (seed `42`, `200` iterations):
+
+| Example | Schedule Mode | P50 (hours) | P90 (hours) | P99 (hours) |
+|---|---|---:|---:|---:|
+| Example 1 (dependency-only) | `dependency_only` | 129.86 | 155.97 | 170.61 |
+| Example 2 (resources only) | `resource_constrained` | 529.86 | 651.97 | 698.61 |
+| Example 3 (resources + calendars) | `resource_constrained` | 553.86 | 675.97 | 722.61 |
+
+This progression highlights how resource constraints and then calendar constraints increase elapsed calendar time, even when effort distributions are unchanged.
+
 ---
 
 ## Example 4: Add sickness and planned absence
@@ -233,7 +283,7 @@ resources:
 ```
 
 !!! note
-    `sickness_prob` is currently configured in the **project file** (per resource), not in the global config file.
+    `sickness_prob` is currently configured in the **project file** (per resource), not in the global config file as it is based an individal assessment. If not specified it is the same as specifying sick probability as `0.0`
 
 ---
 
