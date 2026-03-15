@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
@@ -875,10 +875,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#configuration-file" class="md-nav__link">
+  <a href="#configuration-file-format" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration File
+        Configuration file format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-configuration-loading-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How configuration loading works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#top-level-configuration-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Top-level configuration structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full example
       
     </span>
   </a>
@@ -889,19 +922,31 @@
   <a href="#uncertainty-factors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Uncertainty Factors
+        Uncertainty factors
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Uncertainty Factors">
+    <nav class="md-nav" aria-label="Uncertainty factors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defaults
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Defaults">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#team-experience" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Team Experience
+        Team experience
       
     </span>
   </a>
@@ -912,7 +957,7 @@
   <a href="#requirements-maturity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Requirements Maturity
+        Requirements maturity
       
     </span>
   </a>
@@ -923,7 +968,7 @@
   <a href="#technical-complexity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Technical Complexity
+        Technical complexity
       
     </span>
   </a>
@@ -934,7 +979,7 @@
   <a href="#team-distribution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Team Distribution
+        Team distribution
       
     </span>
   </a>
@@ -945,7 +990,23 @@
   <a href="#integration-complexity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Integration Complexity
+        Integration complexity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
       
     </span>
   </a>
@@ -958,22 +1019,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-configuration" class="md-nav__link">
+  <a href="#symbolic-estimate-mappings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Using Configuration
+        Symbolic estimate mappings
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Using Configuration">
+    <nav class="md-nav" aria-label="Symbolic estimate mappings">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#command-line" class="md-nav__link">
+  <a href="#t-shirt-sizes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Line
+        T-shirt sizes
       
     </span>
   </a>
@@ -981,15 +1042,65 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#python-api" class="md-nav__link">
+  <a href="#t_shirt_size_unit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Python API
+        t_shirt_size_unit
       
     </span>
   </a>
   
 </li>
+        
+          <li class="md-nav__item">
+  <a href="#story-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Story Points
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#story_point_unit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        story_point_unit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important note
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simulation-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation settings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Simulation settings">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#critical-path-reporting" class="md-nav__link">
@@ -1008,10 +1119,71 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#output-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#staffing-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Staffing settings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Staffing settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#effort_percentile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        effort_percentile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#min_individual_productivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        min_individual_productivity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experience_profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        experience_profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#viewing-current-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Viewing Current Configuration
+        Viewing current configuration
       
     </span>
   </a>
@@ -1019,99 +1191,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#symbolic-estimate-mappings" class="md-nav__link">
+  <a href="#validation-rules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Symbolic Estimate Mappings
+        Validation rules
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Symbolic Estimate Mappings">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#t-shirt-sizes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        T-shirt sizes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#story-points" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Story Points
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#probability-thresholds-for-thermometer-visualization" class="md-nav__link">
+  <a href="#related-settings-in-the-project-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Probability Thresholds for Thermometer Visualization
+        Related settings in the project file
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Probability Thresholds for Thermometer Visualization">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#default-values" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Default Values
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#custom-thresholds" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Custom Thresholds
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#thermometer-visualization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Thermometer Visualization
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#calibrating-uncertainty-factors" class="md-nav__link">
+  <a href="#calibrating-configuration-values" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Calibrating Uncertainty Factors
+        Calibrating configuration values
       
     </span>
   </a>
@@ -1207,10 +1312,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#configuration-file" class="md-nav__link">
+  <a href="#configuration-file-format" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration File
+        Configuration file format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-configuration-loading-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How configuration loading works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#top-level-configuration-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Top-level configuration structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full example
       
     </span>
   </a>
@@ -1221,19 +1359,31 @@
   <a href="#uncertainty-factors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Uncertainty Factors
+        Uncertainty factors
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Uncertainty Factors">
+    <nav class="md-nav" aria-label="Uncertainty factors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defaults
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Defaults">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#team-experience" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Team Experience
+        Team experience
       
     </span>
   </a>
@@ -1244,7 +1394,7 @@
   <a href="#requirements-maturity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Requirements Maturity
+        Requirements maturity
       
     </span>
   </a>
@@ -1255,7 +1405,7 @@
   <a href="#technical-complexity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Technical Complexity
+        Technical complexity
       
     </span>
   </a>
@@ -1266,7 +1416,7 @@
   <a href="#team-distribution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Team Distribution
+        Team distribution
       
     </span>
   </a>
@@ -1277,7 +1427,23 @@
   <a href="#integration-complexity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Integration Complexity
+        Integration complexity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
       
     </span>
   </a>
@@ -1290,22 +1456,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-configuration" class="md-nav__link">
+  <a href="#symbolic-estimate-mappings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Using Configuration
+        Symbolic estimate mappings
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Using Configuration">
+    <nav class="md-nav" aria-label="Symbolic estimate mappings">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#command-line" class="md-nav__link">
+  <a href="#t-shirt-sizes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Command Line
+        T-shirt sizes
       
     </span>
   </a>
@@ -1313,15 +1479,65 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#python-api" class="md-nav__link">
+  <a href="#t_shirt_size_unit" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Python API
+        t_shirt_size_unit
       
     </span>
   </a>
   
 </li>
+        
+          <li class="md-nav__item">
+  <a href="#story-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Story Points
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#story_point_unit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        story_point_unit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important note
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simulation-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulation settings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Simulation settings">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#critical-path-reporting" class="md-nav__link">
@@ -1340,10 +1556,71 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#output-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#staffing-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Staffing settings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Staffing settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#effort_percentile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        effort_percentile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#min_individual_productivity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        min_individual_productivity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#experience_profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        experience_profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#viewing-current-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Viewing Current Configuration
+        Viewing current configuration
       
     </span>
   </a>
@@ -1351,99 +1628,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#symbolic-estimate-mappings" class="md-nav__link">
+  <a href="#validation-rules" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Symbolic Estimate Mappings
+        Validation rules
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Symbolic Estimate Mappings">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#t-shirt-sizes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        T-shirt sizes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#story-points" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Story Points
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#probability-thresholds-for-thermometer-visualization" class="md-nav__link">
+  <a href="#related-settings-in-the-project-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Probability Thresholds for Thermometer Visualization
+        Related settings in the project file
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Probability Thresholds for Thermometer Visualization">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#default-values" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Default Values
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#custom-thresholds" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Custom Thresholds
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#thermometer-visualization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Thermometer Visualization
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#calibrating-uncertainty-factors" class="md-nav__link">
+  <a href="#calibrating-configuration-values" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Calibrating Uncertainty Factors
+        Calibrating configuration values
       
     </span>
   </a>
@@ -1471,213 +1681,637 @@
 
 
 <h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
-<h2 id="configuration-file">Configuration File<a class="headerlink" href="#configuration-file" title="Permanent link">&para;</a></h2>
-<p>Create a <code>config.yaml</code> file to customize uncertainty factors, symbolic estimate mappings, and simulation settings:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">uncertainty_factors</span><span class="p">:</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">team_experience</span><span class="p">:</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.90</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.30</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">requirements_maturity</span><span class="p">:</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.15</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.40</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="nt">technical_complexity</span><span class="p">:</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.20</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.50</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="nt">team_distribution</span><span class="p">:</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="nt">colocated</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="nt">distributed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.25</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">  </span><span class="nt">integration_complexity</span><span class="p">:</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.15</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.35</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="nt">t_shirt_sizes</span><span class="p">:</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">  </span><span class="nt">XS</span><span class="p">:</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">  </span><span class="nt">M</span><span class="p">:</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="nt">story_points</span><span class="p">:</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="w">  </span><span class="nt">1</span><span class="p">:</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="w">  </span><span class="nt">5</span><span class="p">:</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="w">  </span><span class="nt">8</span><span class="p">:</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="nt">simulation</span><span class="p">:</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="w">  </span><span class="nt">default_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">  </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span><span class="w">  </span><span class="c1"># For reproducibility</span>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="w">  </span><span class="nt">max_stored_critical_paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span><span class="w">  </span><span class="c1"># Keep the 20 most common full critical paths</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="nt">output</span><span class="p">:</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="w">  </span><span class="nt">formats</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;json&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;csv&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;html&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="w">  </span><span class="nt">include_histogram</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">  </span><span class="nt">histogram_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="w">  </span><span class="nt">critical_path_report_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">  </span><span class="c1"># Show the two most common paths in reports by default</span>
+<p>This page documents the application configuration file used by <code>mcprojsim</code>.</p>
+<p>The configuration file controls:</p>
+<ul>
+<li>uncertainty multipliers,</li>
+<li>symbolic estimate mappings such as T-shirt sizes and Story Points,</li>
+<li>default simulation settings,</li>
+<li>output and reporting defaults,</li>
+<li>staffing-analysis behavior.</li>
+</ul>
+<h2 id="configuration-file-format">Configuration file format<a class="headerlink" href="#configuration-file-format" title="Permanent link">&para;</a></h2>
+<p>The configuration file is currently loaded as <strong>YAML</strong>.</p>
+<p>Typical usage:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml
 </span></code></pre></div>
-<h2 id="uncertainty-factors">Uncertainty Factors<a class="headerlink" href="#uncertainty-factors" title="Permanent link">&para;</a></h2>
-<p>Uncertainty factors are multipliers applied to base task estimates. A value of 1.0 is baseline, values less than 1.0 speed up tasks, and values greater than 1.0 slow them down.</p>
-<h3 id="team-experience">Team Experience<a class="headerlink" href="#team-experience" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>high (0.90)</strong>: Experienced team, 10% faster than baseline</li>
-<li><strong>medium (1.0)</strong>: Average experience, baseline speed</li>
-<li><strong>low (1.30)</strong>: Inexperienced team, 30% slower than baseline</li>
-</ul>
-<h3 id="requirements-maturity">Requirements Maturity<a class="headerlink" href="#requirements-maturity" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>high (1.0)</strong>: Well-defined, stable requirements</li>
-<li><strong>medium (1.15)</strong>: Some ambiguity, minor changes expected</li>
-<li><strong>low (1.40)</strong>: High ambiguity, significant changes likely</li>
-</ul>
-<h3 id="technical-complexity">Technical Complexity<a class="headerlink" href="#technical-complexity" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>low (1.0)</strong>: Simple, well-understood technology</li>
-<li><strong>medium (1.20)</strong>: Moderate complexity</li>
-<li><strong>high (1.50)</strong>: Cutting-edge or complex technology</li>
-</ul>
-<h3 id="team-distribution">Team Distribution<a class="headerlink" href="#team-distribution" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>colocated (1.0)</strong>: Team in same location</li>
-<li><strong>distributed (1.25)</strong>: Distributed team with communication overhead</li>
-</ul>
-<h3 id="integration-complexity">Integration Complexity<a class="headerlink" href="#integration-complexity" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>low (1.0)</strong>: Minimal integration with other systems</li>
-<li><strong>medium (1.15)</strong>: Moderate integration</li>
-<li><strong>high (1.35)</strong>: Complex integration with multiple systems</li>
-</ul>
-<h2 id="using-configuration">Using Configuration<a class="headerlink" href="#using-configuration" title="Permanent link">&para;</a></h2>
-<p>If you provide only a subset of <code>t_shirt_sizes</code> or <code>story_points</code>, the built-in defaults remain available for the values you did not override.</p>
-<h3 id="command-line">Command Line<a class="headerlink" href="#command-line" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml
+<p>You can also load it directly from Python:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEngine</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">load_from_file</span><span class="p">(</span><span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">SimulationEngine</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="python-api">Python API<a class="headerlink" href="#python-api" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEngine</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">load_from_file</span><span class="p">(</span><span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">SimulationEngine</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<h2 id="how-configuration-loading-works">How configuration loading works<a class="headerlink" href="#how-configuration-loading-works" title="Permanent link">&para;</a></h2>
+<p>When <code>mcprojsim</code> loads a configuration file, it does <strong>not</strong> replace the built-in defaults wholesale. Instead, it:</p>
+<ol>
+<li>starts from the built-in default configuration,</li>
+<li>reads your YAML file,</li>
+<li>recursively merges your values into those defaults,</li>
+<li>validates the merged result against the <code>Config</code> model.</li>
+</ol>
+<p>This means you can override only the values you care about.</p>
+<p>For example, if you define only <code>t_shirt_sizes.M</code>, the built-in mappings for <code>XS</code>, <code>S</code>, <code>L</code>, <code>XL</code>, and <code>XXL</code> remain available.</p>
+<h2 id="top-level-configuration-structure">Top-level configuration structure<a class="headerlink" href="#top-level-configuration-structure" title="Permanent link">&para;</a></h2>
+<p>The current configuration schema supports these top-level keys:</p>
+<ul>
+<li><code>uncertainty_factors</code></li>
+<li><code>t_shirt_sizes</code></li>
+<li><code>t_shirt_size_unit</code></li>
+<li><code>story_points</code></li>
+<li><code>story_point_unit</code></li>
+<li><code>simulation</code></li>
+<li><code>output</code></li>
+<li><code>staffing</code></li>
+</ul>
+<h2 id="full-example">Full example<a class="headerlink" href="#full-example" title="Permanent link">&para;</a></h2>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">uncertainty_factors</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">team_experience</span><span class="p">:</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.90</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.30</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">requirements_maturity</span><span class="p">:</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.15</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.40</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">technical_complexity</span><span class="p">:</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.20</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.50</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">  </span><span class="nt">team_distribution</span><span class="p">:</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="nt">colocated</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="nt">distributed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.25</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">  </span><span class="nt">integration_complexity</span><span class="p">:</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.15</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.35</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="nt">t_shirt_sizes</span><span class="p">:</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">  </span><span class="nt">XS</span><span class="p">:</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">  </span><span class="nt">M</span><span class="p">:</span>
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="nt">t_shirt_size_unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;hours&quot;</span>
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="nt">story_points</span><span class="p">:</span>
+</span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="w">  </span><span class="nt">1</span><span class="p">:</span>
+</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-2-42"><a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-2-43"><a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="w">  </span><span class="nt">5</span><span class="p">:</span>
+</span><span id="__span-2-44"><a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-2-45"><a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-2-46"><a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-2-47"><a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a><span class="w">  </span><span class="nt">8</span><span class="p">:</span>
+</span><span id="__span-2-48"><a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-2-49"><a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-2-50"><a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+</span><span id="__span-2-51"><a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>
+</span><span id="__span-2-52"><a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a><span class="nt">story_point_unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
+</span><span id="__span-2-53"><a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>
+</span><span id="__span-2-54"><a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a><span class="nt">simulation</span><span class="p">:</span>
+</span><span id="__span-2-55"><a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a><span class="w">  </span><span class="nt">default_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
+</span><span id="__span-2-56"><a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a><span class="w">  </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+</span><span id="__span-2-57"><a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a><span class="w">  </span><span class="nt">max_stored_critical_paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+</span><span id="__span-2-58"><a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>
+</span><span id="__span-2-59"><a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a><span class="nt">output</span><span class="p">:</span>
+</span><span id="__span-2-60"><a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a><span class="w">  </span><span class="nt">formats</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;json&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;csv&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;html&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-61"><a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a><span class="w">  </span><span class="nt">include_histogram</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-2-62"><a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a><span class="w">  </span><span class="nt">histogram_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+</span><span id="__span-2-63"><a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a><span class="w">  </span><span class="nt">critical_path_report_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-2-64"><a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>
+</span><span id="__span-2-65"><a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a><span class="nt">staffing</span><span class="p">:</span>
+</span><span id="__span-2-66"><a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span id="__span-2-67"><a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a><span class="w">  </span><span class="nt">min_individual_productivity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25</span>
+</span><span id="__span-2-68"><a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a><span class="w">  </span><span class="nt">experience_profiles</span><span class="p">:</span>
+</span><span id="__span-2-69"><a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a><span class="w">    </span><span class="nt">senior</span><span class="p">:</span>
+</span><span id="__span-2-70"><a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a><span class="w">      </span><span class="nt">productivity_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span id="__span-2-71"><a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a><span class="w">      </span><span class="nt">communication_overhead</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.04</span>
+</span><span id="__span-2-72"><a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a><span class="w">    </span><span class="nt">mixed</span><span class="p">:</span>
+</span><span id="__span-2-73"><a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a><span class="w">      </span><span class="nt">productivity_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.85</span>
+</span><span id="__span-2-74"><a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a><span class="w">      </span><span class="nt">communication_overhead</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.06</span>
+</span><span id="__span-2-75"><a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a><span class="w">    </span><span class="nt">junior</span><span class="p">:</span>
+</span><span id="__span-2-76"><a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a><span class="w">      </span><span class="nt">productivity_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.65</span>
+</span><span id="__span-2-77"><a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a><span class="w">      </span><span class="nt">communication_overhead</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.08</span>
+</span></code></pre></div>
+<h2 id="uncertainty-factors">Uncertainty factors<a class="headerlink" href="#uncertainty-factors" title="Permanent link">&para;</a></h2>
+<p>Uncertainty factors are multipliers applied to base task estimates. A value of <code>1.0</code> is the baseline. Values below <code>1.0</code> make work faster; values above <code>1.0</code> make work slower.</p>
+<p>The built-in configuration defines these factor names:</p>
+<ul>
+<li><code>team_experience</code></li>
+<li><code>requirements_maturity</code></li>
+<li><code>technical_complexity</code></li>
+<li><code>team_distribution</code></li>
+<li><code>integration_complexity</code></li>
+</ul>
+<h3 id="defaults">Defaults<a class="headerlink" href="#defaults" title="Permanent link">&para;</a></h3>
+<h4 id="team-experience">Team experience<a class="headerlink" href="#team-experience" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>high (<code>0.90</code>)</strong>: experienced team, about 10% faster than baseline</li>
+<li><strong>medium (<code>1.0</code>)</strong>: baseline</li>
+<li><strong>low (<code>1.30</code>)</strong>: inexperienced team, about 30% slower than baseline</li>
+</ul>
+<h4 id="requirements-maturity">Requirements maturity<a class="headerlink" href="#requirements-maturity" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>high (<code>1.0</code>)</strong>: stable, well-defined requirements</li>
+<li><strong>medium (<code>1.15</code>)</strong>: moderate ambiguity</li>
+<li><strong>low (<code>1.40</code>)</strong>: substantial ambiguity and likely change</li>
+</ul>
+<h4 id="technical-complexity">Technical complexity<a class="headerlink" href="#technical-complexity" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>low (<code>1.0</code>)</strong>: straightforward technology or architecture</li>
+<li><strong>medium (<code>1.20</code>)</strong>: moderate complexity</li>
+<li><strong>high (<code>1.50</code>)</strong>: difficult or novel technology</li>
+</ul>
+<h4 id="team-distribution">Team distribution<a class="headerlink" href="#team-distribution" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>colocated (<code>1.0</code>)</strong>: team in one place</li>
+<li><strong>distributed (<code>1.25</code>)</strong>: coordination and communication slow delivery</li>
+</ul>
+<h4 id="integration-complexity">Integration complexity<a class="headerlink" href="#integration-complexity" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>low (<code>1.0</code>)</strong>: little external integration</li>
+<li><strong>medium (<code>1.15</code>)</strong>: moderate integration effort</li>
+<li><strong>high (<code>1.35</code>)</strong>: many integration points or fragile dependencies</li>
+</ul>
+<h3 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The configuration model accepts nested dictionaries here.</li>
+<li>The current project-file model uses the built-in factor names listed above.</li>
+<li>Extra factor names in the configuration file are not useful unless the source model and simulation logic also reference them.</li>
+</ul>
+<h2 id="symbolic-estimate-mappings">Symbolic estimate mappings<a class="headerlink" href="#symbolic-estimate-mappings" title="Permanent link">&para;</a></h2>
+<p><code>mcprojsim</code> supports two symbolic estimate systems:</p>
+<ul>
+<li><code>t_shirt_size</code></li>
+<li><code>story_points</code></li>
+</ul>
+<p>Tasks using those symbolic forms are resolved through the active configuration.</p>
+<p>If you override only part of either mapping table, the remaining built-in defaults stay available.</p>
+<h3 id="t-shirt-sizes">T-shirt sizes<a class="headerlink" href="#t-shirt-sizes" title="Permanent link">&para;</a></h3>
+<p>Tasks may use <code>t_shirt_size</code> instead of explicit <code>min</code> / <code>most_likely</code> / <code>max</code> values.</p>
+<p>Built-in size keys:</p>
+<ul>
+<li><code>XS</code></li>
+<li><code>S</code></li>
+<li><code>M</code></li>
+<li><code>L</code></li>
+<li><code>XL</code></li>
+<li><code>XXL</code></li>
+</ul>
+<p>Built-in defaults:</p>
+<table>
+<thead>
+<tr>
+<th>Size</th>
+<th style="text-align: right;"><code>min</code></th>
+<th style="text-align: right;"><code>most_likely</code></th>
+<th style="text-align: right;"><code>max</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>XS</code></td>
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td><code>M</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr>
+<td><code>L</code></td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">13</td>
+</tr>
+<tr>
+<td><code>XL</code></td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">21</td>
+</tr>
+<tr>
+<td><code>XXL</code></td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">34</td>
+</tr>
+</tbody>
+</table>
+<p>Example override:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">t_shirt_sizes</span><span class="p">:</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">M</span><span class="p">:</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+</span></code></pre></div>
+<h3 id="t_shirt_size_unit"><code>t_shirt_size_unit</code><a class="headerlink" href="#t_shirt_size_unit" title="Permanent link">&para;</a></h3>
+<p>This field controls the unit used for all values in <code>t_shirt_sizes</code>.</p>
+<p>Supported values:</p>
+<ul>
+<li><code>"hours"</code></li>
+<li><code>"days"</code></li>
+<li><code>"weeks"</code></li>
+</ul>
+<p>Default: <code>"hours"</code></p>
+<p>Example:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">t_shirt_size_unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
+</span></code></pre></div>
+<h3 id="story-points">Story Points<a class="headerlink" href="#story-points" title="Permanent link">&para;</a></h3>
+<p>Tasks may also use <code>story_points</code> for agile-style relative sizing.</p>
+<p>Built-in point values:</p>
+<ul>
+<li><code>1</code></li>
+<li><code>2</code></li>
+<li><code>3</code></li>
+<li><code>5</code></li>
+<li><code>8</code></li>
+<li><code>13</code></li>
+<li><code>21</code></li>
+</ul>
+<p>Built-in defaults:</p>
+<table>
+<thead>
+<tr>
+<th>Points</th>
+<th style="text-align: right;"><code>min</code></th>
+<th style="text-align: right;"><code>most_likely</code></th>
+<th style="text-align: right;"><code>max</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>1</code></td>
+<td style="text-align: right;">0.5</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td><code>3</code></td>
+<td style="text-align: right;">1.5</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td><code>5</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">8</td>
+</tr>
+<tr>
+<td><code>8</code></td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">15</td>
+</tr>
+<tr>
+<td><code>13</code></td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">21</td>
+</tr>
+<tr>
+<td><code>21</code></td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">34</td>
+</tr>
+</tbody>
+</table>
+<p>Example override:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">story_points</span><span class="p">:</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">5</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">8</span><span class="p">:</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+</span></code></pre></div>
+<h3 id="story_point_unit"><code>story_point_unit</code><a class="headerlink" href="#story_point_unit" title="Permanent link">&para;</a></h3>
+<p>This field controls the unit used for all values in <code>story_points</code>.</p>
+<p>Supported values:</p>
+<ul>
+<li><code>"hours"</code></li>
+<li><code>"days"</code></li>
+<li><code>"weeks"</code></li>
+</ul>
+<p>Default: <code>"days"</code></p>
+<h3 id="important-note">Important note<a class="headerlink" href="#important-note" title="Permanent link">&para;</a></h3>
+<p>Story Point and T-shirt-size estimates in the <strong>project file</strong> must <strong>not</strong> include their own <code>unit</code> field. The unit comes from the configuration via <code>story_point_unit</code> and <code>t_shirt_size_unit</code>.</p>
+<p>See <a href="../user_guide/task_estimation/#t-shirt-size-estimates">Task Estimation</a> and <a href="../user_guide/task_estimation/#story-point-estimates">Task Estimation</a> for more guidance.</p>
+<h2 id="simulation-settings">Simulation settings<a class="headerlink" href="#simulation-settings" title="Permanent link">&para;</a></h2>
+<p>The <code>simulation</code> section controls default run behavior.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default_iterations</code></td>
+<td>integer</td>
+<td><code>10000</code></td>
+<td>Default number of Monte Carlo iterations</td>
+</tr>
+<tr>
+<td><code>random_seed</code></td>
+<td>integer or <code>null</code></td>
+<td><code>null</code></td>
+<td>Seed for reproducible runs</td>
+</tr>
+<tr>
+<td><code>max_stored_critical_paths</code></td>
+<td>integer</td>
+<td><code>20</code></td>
+<td>Number of full critical path sequences retained in memory</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">simulation</span><span class="p">:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">default_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20000</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">max_stored_critical_paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
 </span></code></pre></div>
 <h3 id="critical-path-reporting">Critical path reporting<a class="headerlink" href="#critical-path-reporting" title="Permanent link">&para;</a></h3>
-<p>The simulation can now keep track of full critical path sequences, not just task-level criticality.</p>
+<p>The simulator can retain full critical path sequences, not just task-level criticality.</p>
 <ul>
 <li><code>simulation.max_stored_critical_paths</code> controls how many of the most common full paths are retained in the results object.</li>
 <li><code>output.critical_path_report_limit</code> controls how many of those stored paths are shown in CLI summaries and exports by default.</li>
 </ul>
 <p>Example:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">simulation</span><span class="p">:</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">default_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">max_stored_critical_paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="nt">output</span><span class="p">:</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">formats</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;json&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;html&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">include_histogram</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="nt">histogram_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span><span class="nt">critical_path_report_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">simulation</span><span class="p">:</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">default_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">random_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nt">max_stored_critical_paths</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nt">output</span><span class="p">:</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">  </span><span class="nt">formats</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;json&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;html&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="nt">include_histogram</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nt">histogram_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nt">critical_path_report_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
 </span></code></pre></div>
-<p>With that configuration, the simulation stores up to 50 unique full critical path sequences and shows the top 3 most common ones in the CLI, JSON, CSV, and HTML outputs.</p>
-<p>You can override the report count from the CLI:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml<span class="w"> </span>--critical-paths<span class="w"> </span><span class="m">5</span>
+<p>With that configuration, the simulation stores up to 50 unique full critical path sequences and shows the top 3 in the CLI, JSON, CSV, and HTML outputs.</p>
+<p>You can still override the report count from the CLI:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml<span class="w"> </span>--critical-paths<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
-<p>This affects reporting only. Storage remains controlled by <code>simulation.max_stored_critical_paths</code>.</p>
-<h2 id="viewing-current-configuration">Viewing Current Configuration<a class="headerlink" href="#viewing-current-configuration" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span>--config-file<span class="w"> </span>config.yaml
+<p>That affects reporting only. Storage remains controlled by <code>simulation.max_stored_critical_paths</code>.</p>
+<h2 id="output-settings">Output settings<a class="headerlink" href="#output-settings" title="Permanent link">&para;</a></h2>
+<p>The <code>output</code> section controls reporting and export defaults.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>formats</code></td>
+<td>list of strings</td>
+<td><code>["json", "csv", "html"]</code></td>
+<td>Default export formats</td>
+</tr>
+<tr>
+<td><code>include_histogram</code></td>
+<td>boolean</td>
+<td><code>true</code></td>
+<td>Include histogram data where supported</td>
+</tr>
+<tr>
+<td><code>histogram_bins</code></td>
+<td>integer</td>
+<td><code>50</code></td>
+<td>Number of bins used for histograms</td>
+</tr>
+<tr>
+<td><code>critical_path_report_limit</code></td>
+<td>integer</td>
+<td><code>2</code></td>
+<td>Number of stored full critical paths shown by default</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">output</span><span class="p">:</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">formats</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;json&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;html&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nt">include_histogram</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nt">histogram_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="nt">critical_path_report_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 </span></code></pre></div>
-<p>The <code>config show</code> output now includes:</p>
+<h2 id="staffing-settings">Staffing settings<a class="headerlink" href="#staffing-settings" title="Permanent link">&para;</a></h2>
+<p>The <code>staffing</code> section controls the staffing analysis shown in CLI output and exports.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>effort_percentile</code></td>
+<td>integer or <code>null</code></td>
+<td><code>null</code></td>
+<td>Use a specific effort percentile such as P80 instead of the mean</td>
+</tr>
+<tr>
+<td><code>min_individual_productivity</code></td>
+<td>float</td>
+<td><code>0.25</code></td>
+<td>Lower bound on per-person productivity after communication overhead</td>
+</tr>
+<tr>
+<td><code>experience_profiles</code></td>
+<td>mapping</td>
+<td>built-in defaults</td>
+<td>Named team profiles used for staffing recommendations</td>
+</tr>
+</tbody>
+</table>
+<h3 id="effort_percentile"><code>effort_percentile</code><a class="headerlink" href="#effort_percentile" title="Permanent link">&para;</a></h3>
+<p>When <code>effort_percentile</code> is <code>null</code>, staffing uses mean total effort and mean elapsed time.</p>
+<p>When it is set, staffing uses the matching percentile for both:</p>
 <ul>
-<li>default iteration count</li>
-<li>random seed</li>
-<li>max stored critical paths</li>
-<li>output histogram settings</li>
-<li>critical path report limit</li>
+<li>total effort, and</li>
+<li>elapsed time / critical-path basis.</li>
 </ul>
-<h2 id="symbolic-estimate-mappings">Symbolic Estimate Mappings<a class="headerlink" href="#symbolic-estimate-mappings" title="Permanent link">&para;</a></h2>
-<h3 id="t-shirt-sizes">T-shirt sizes<a class="headerlink" href="#t-shirt-sizes" title="Permanent link">&para;</a></h3>
-<p>Tasks may use <code>t_shirt_size</code> instead of an explicit numeric range. Those labels are resolved through the <code>t_shirt_sizes</code> section in the active configuration. The unit for T-shirt size values is controlled by <code>t_shirt_size_unit</code> in the configuration (default: <code>"hours"</code>).</p>
-<p>See <a href="../user_guide/task_estimation/#t-shirt-size-estimates">Task Estimation</a> for the full default mapping table and guidance on choosing values.</p>
-<h3 id="story-points">Story Points<a class="headerlink" href="#story-points" title="Permanent link">&para;</a></h3>
-<p>Tasks may also use <code>story_points</code> for agile-style relative sizing. Story Points are resolved to numeric ranges through the <code>story_points</code> section in the active configuration. The unit for story point values is controlled by <code>story_point_unit</code> in the configuration (default: <code>"days"</code>).</p>
-<p>See <a href="../user_guide/task_estimation/#story-point-estimates">Task Estimation</a> for the full default mapping table.</p>
-<p>Example Story Point override:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">story_points</span><span class="p">:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">5</span><span class="p">:</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nt">8</span><span class="p">:</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
-</span></code></pre></div>
-<p>Story point estimates must <strong>not</strong> include a <code>unit</code> field in the project file. The unit is determined by <code>story_point_unit</code> in the configuration. Similarly, T-shirt size estimates must not include a <code>unit</code> field — the unit is determined by <code>t_shirt_size_unit</code> (default: <code>"hours"</code>).</p>
-<h2 id="probability-thresholds-for-thermometer-visualization">Probability Thresholds for Thermometer Visualization<a class="headerlink" href="#probability-thresholds-for-thermometer-visualization" title="Permanent link">&para;</a></h2>
-<p>Configure color thresholds for the HTML thermometer visualization in your project file:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">project</span><span class="p">:</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;My</span><span class="nv"> </span><span class="s">Project&quot;</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">start_date</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2025-01-01&quot;</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="c1"># Probability thresholds for visual risk indicators</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">  </span><span class="nt">probability_red_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.50</span><span class="w">    </span><span class="c1"># Below 50%: High risk (red)</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">  </span><span class="nt">probability_green_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.90</span><span class="w">  </span><span class="c1"># Above 90%: Low risk (green)</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">                                     </span><span class="c1"># Between: Medium risk (gradient red→yellow→green)</span>
-</span></code></pre></div>
-<h3 id="default-values">Default Values<a class="headerlink" href="#default-values" title="Permanent link">&para;</a></h3>
+<p>For example, <code>80</code> means the staffing recommendation is based on P80 effort and P80 elapsed time.</p>
+<p>This is useful when you want conservative staffing guidance rather than a mean-based plan.</p>
+<h3 id="min_individual_productivity"><code>min_individual_productivity</code><a class="headerlink" href="#min_individual_productivity" title="Permanent link">&para;</a></h3>
+<p>The staffing model assumes each additional person introduces communication overhead. Raw per-person productivity declines with team size and is then floored by <code>min_individual_productivity</code>.</p>
+<p>Conceptually:</p>
+<p>$$
+P(n) = \max(P_{min}, 1 - c(n - 1))
+$$</p>
+<p>where:</p>
 <ul>
-<li><strong>probability_red_threshold</strong>: 0.50 (50%)</li>
-<li><strong>probability_green_threshold</strong>: 0.90 (90%)</li>
+<li>$n$ is team size,</li>
+<li>$c$ is the profile's <code>communication_overhead</code>,</li>
+<li>$P_{min}$ is <code>min_individual_productivity</code>.</li>
 </ul>
-<h3 id="custom-thresholds">Custom Thresholds<a class="headerlink" href="#custom-thresholds" title="Permanent link">&para;</a></h3>
-<p>Adjust thresholds based on project risk tolerance:</p>
-<p><strong>Conservative (low-risk tolerance)</strong>:
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">probability_red_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.70</span><span class="w">    </span><span class="c1"># Below 70%: red</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nt">probability_green_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.95</span><span class="w">  </span><span class="c1"># Above 95%: green</span>
-</span></code></pre></div></p>
-<p><strong>Aggressive (high-risk tolerance)</strong>:
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">probability_red_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.30</span><span class="w">    </span><span class="c1"># Below 30%: red</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">probability_green_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.80</span><span class="w">  </span><span class="c1"># Above 80%: green</span>
-</span></code></pre></div></p>
-<h3 id="thermometer-visualization">Thermometer Visualization<a class="headerlink" href="#thermometer-visualization" title="Permanent link">&para;</a></h3>
-<p>The HTML export displays a vertical thermometer showing:
-- <strong>Effort levels</strong> (in hours) on the right
-- <strong>Probability of success</strong> for each effort level in colored segments
-- <strong>Color gradient</strong>:
-  - 🔴 <strong>Bright Red</strong>: Probability below red threshold (high risk)
-  - 🟡 <strong>Yellow/Orange</strong>: Between thresholds (medium risk)
-  - 🟢 <strong>Bright Green</strong>: Above green threshold (low risk)</p>
-<p>This helps stakeholders quickly understand:
-- What effort level gives desired probability of success
-- Risk levels at different commitment levels
-- Where the project falls on the risk spectrum</p>
-<h2 id="calibrating-uncertainty-factors">Calibrating Uncertainty Factors<a class="headerlink" href="#calibrating-uncertainty-factors" title="Permanent link">&para;</a></h2>
-<p>To calibrate factors for your organization:</p>
+<p>This prevents the model from predicting unrealistically close-to-zero productivity for very large teams.</p>
+<p>Lower values penalize oversized teams more aggressively. Higher values produce a softer diminishing-returns curve.</p>
+<h3 id="experience_profiles"><code>experience_profiles</code><a class="headerlink" href="#experience_profiles" title="Permanent link">&para;</a></h3>
+<p>Each named profile contains:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>productivity_factor</code></td>
+<td>float</td>
+<td>Base multiplier for that team's effectiveness</td>
+</tr>
+<tr>
+<td><code>communication_overhead</code></td>
+<td>float</td>
+<td>Per-person overhead penalty as team size grows</td>
+</tr>
+</tbody>
+</table>
+<p>Built-in profiles:</p>
+<table>
+<thead>
+<tr>
+<th>Profile</th>
+<th style="text-align: right;"><code>productivity_factor</code></th>
+<th style="text-align: right;"><code>communication_overhead</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>senior</code></td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.04</td>
+</tr>
+<tr>
+<td><code>mixed</code></td>
+<td style="text-align: right;">0.85</td>
+<td style="text-align: right;">0.06</td>
+</tr>
+<tr>
+<td><code>junior</code></td>
+<td style="text-align: right;">0.65</td>
+<td style="text-align: right;">0.08</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">staffing</span><span class="p">:</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="nt">min_individual_productivity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.30</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">  </span><span class="nt">experience_profiles</span><span class="p">:</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="nt">senior</span><span class="p">:</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">      </span><span class="nt">productivity_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">      </span><span class="nt">communication_overhead</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.03</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span><span class="nt">contractor</span><span class="p">:</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">      </span><span class="nt">productivity_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.75</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">      </span><span class="nt">communication_overhead</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span>
+</span></code></pre></div>
+<h2 id="viewing-current-configuration">Viewing current configuration<a class="headerlink" href="#viewing-current-configuration" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span>--config-file<span class="w"> </span>config.yaml
+</span></code></pre></div>
+<p>The <code>config show</code> output includes the most relevant effective settings, including:</p>
+<ul>
+<li>default iteration count,</li>
+<li>random seed,</li>
+<li>max stored critical paths,</li>
+<li>output histogram settings,</li>
+<li>critical path report limit,</li>
+<li>staffing settings.</li>
+</ul>
+<h2 id="validation-rules">Validation rules<a class="headerlink" href="#validation-rules" title="Permanent link">&para;</a></h2>
+<p>The configuration model validates these constraints directly:</p>
+<ul>
+<li><code>t_shirt_size_unit</code> must be one of <code>hours</code>, <code>days</code>, or <code>weeks</code>,</li>
+<li><code>story_point_unit</code> must be one of <code>hours</code>, <code>days</code>, or <code>weeks</code>,</li>
+<li>all configured estimate ranges require positive <code>min</code>, <code>most_likely</code>, and <code>max</code>,</li>
+<li><code>simulation.default_iterations</code> must be greater than 0,</li>
+<li><code>simulation.max_stored_critical_paths</code> must be greater than 0,</li>
+<li><code>output.histogram_bins</code> must be greater than 0,</li>
+<li><code>output.critical_path_report_limit</code> must be greater than 0,</li>
+<li><code>staffing.effort_percentile</code>, when set, must be between 1 and 99,</li>
+<li><code>staffing.min_individual_productivity</code> must be greater than 0 and at most 1,</li>
+<li><code>experience_profiles[*].productivity_factor</code> must be greater than 0,</li>
+<li><code>experience_profiles[*].communication_overhead</code> must be between 0 and 1.</li>
+</ul>
+<h2 id="related-settings-in-the-project-file">Related settings in the project file<a class="headerlink" href="#related-settings-in-the-project-file" title="Permanent link">&para;</a></h2>
+<p>Some important reporting and visualization settings are <strong>not</strong> part of <code>config.yaml</code>. They belong in the project file instead.</p>
+<p>For example, the HTML thermometer visualization uses these project-level settings:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">project</span><span class="p">:</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;My</span><span class="nv"> </span><span class="s">Project&quot;</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">start_date</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2025-01-01&quot;</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="nt">probability_red_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.50</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">  </span><span class="nt">probability_green_threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.90</span>
+</span></code></pre></div>
+<p>Default values:</p>
+<ul>
+<li><code>probability_red_threshold</code>: <code>0.50</code></li>
+<li><code>probability_green_threshold</code>: <code>0.90</code></li>
+</ul>
+<p>These thresholds control how probabilities are colored in the HTML report:</p>
+<ul>
+<li>below the red threshold: high risk,</li>
+<li>above the green threshold: low risk,</li>
+<li>between them: intermediate risk.</li>
+</ul>
+<h2 id="calibrating-configuration-values">Calibrating configuration values<a class="headerlink" href="#calibrating-configuration-values" title="Permanent link">&para;</a></h2>
+<p>To calibrate the configuration for your organisation:</p>
 <ol>
-<li><strong>Collect Historical Data</strong>: Gather actual vs. estimated durations</li>
-<li><strong>Calculate Multipliers</strong>: Compare teams/projects with different characteristics</li>
-<li><strong>Update Configuration</strong>: Adjust factors based on observed differences</li>
-<li><strong>Iterate</strong>: Refine over multiple projects</li>
+<li>collect historical estimate-versus-actual data,</li>
+<li>derive realistic uncertainty multipliers,</li>
+<li>adjust symbolic estimate mappings to match your team's sizing habits,</li>
+<li>tune staffing profiles to reflect your real communication overhead,</li>
+<li>iterate over several completed projects.</li>
 </ol>
-<p>Example:
-- Projects with experienced teams took 85% of estimated time → set high to 0.85
-- Projects with distributed teams took 30% longer → set distributed to 1.30</p>
+<p>Examples:</p>
+<ul>
+<li>if experienced teams historically finish at about 85% of baseline effort, set <code>team_experience.high: 0.85</code>,</li>
+<li>if distributed teams typically take about 30% longer, set <code>team_distribution.distributed: 1.30</code>,</li>
+<li>if your team uses Story Point 8 for bigger work than the defaults assume, widen the <code>story_points.8</code> range.</li>
+</ul>
 
 
 

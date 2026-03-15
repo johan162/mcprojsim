@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.4">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
@@ -907,6 +907,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#staffing-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Staffing output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1363,6 +1380,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#staffing-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Staffing output
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1598,8 +1632,8 @@
 <td>2</td>
 </tr>
 <tr>
-<td><code>-q</code>, <code>--quiet</code></td>
-<td>Suppress progress output</td>
+<td><code>-q</code>, <code>-qq</code>, <code>--quiet</code></td>
+<td>Reduce CLI output verbosity. Use <code>-q</code> to suppress detailed output, or <code>-qq</code> to suppress all normal output</td>
 <td>off</td>
 </tr>
 <tr>
@@ -1609,7 +1643,12 @@
 </tr>
 <tr>
 <td><code>-t</code>, <code>--table</code></td>
-<td>Format tabular output sections (confidence intervals, sensitivity, slack, risk impact) as ASCII tables</td>
+<td>Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables</td>
+<td>off</td>
+</tr>
+<tr>
+<td><code>--staffing</code></td>
+<td>Show full staffing analysis table with team-size recommendations per experience profile</td>
 <td>off</td>
 </tr>
 <tr>
@@ -1638,11 +1677,20 @@
 </span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="c1"># Quiet mode (suppress progress bars)</span>
 </span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--quiet
 </span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
-</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="c1"># Verbose mode (show config/project loading details)</span>
-</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--verbose
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="c1"># Fully quiet mode (suppress all normal CLI output)</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>-qq
 </span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>
-</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="c1"># Table mode (ASCII tables for tabular sections)</span>
-</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--table
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="c1"># Verbose mode (show config/project loading details)</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--verbose
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="c1"># Table mode (ASCII tables for tabular sections)</span>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--table
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="c1"># Show staffing recommendations</span>
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing
+</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>
+</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="c1"># Staffing with table formatting</span>
+</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing<span class="w"> </span>--table
 </span></code></pre></div>
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>By default, the simulation prints a plain-text summary. With <code>--table</code> (<code>-t</code>), the confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are formatted as ASCII tables with column headers and box-drawing borders:</p>
@@ -1656,21 +1704,48 @@
 </span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>│ P99          │  790.61 │             99 │ 2026-03-19 │
 </span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>└──────────────┴─────────┴────────────────┴────────────┘
 </span></code></pre></div>
+<h4 id="staffing-output">Staffing output<a class="headerlink" href="#staffing-output" title="Permanent link">&para;</a></h4>
+<p>A short staffing advisory is always included at the end of the output (unless <code>--quiet</code> is active):</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
+</span></code></pre></div>
+<p>By default the staffing analysis uses <strong>mean</strong> effort and elapsed time. To base it on a specific confidence level, set <code>staffing.effort_percentile</code> in your configuration file:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">staffing</span><span class="p">:</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w">  </span><span class="c1"># use P80 effort and elapsed time</span>
+</span></code></pre></div>
+<p>With this setting the output changes to:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Staffing (based on P80 effort percentile): 3 people recommended (mixed team), 42 working days
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>  Total effort: 1,024 person-hours (128 person-days) | Parallelism ratio: 1.6
+</span></code></pre></div>
+<p>Using a higher percentile produces more conservative staffing recommendations because it accounts for higher-effort scenarios.</p>
+<p>Pass <code>--staffing</code> to expand this into a full table for each experience profile (senior, mixed, junior). With <code>--table</code>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>=== Staffing Analysis ===
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>--- senior ---
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>│   Team Size │   Eff. Capacity │   Working Days │ Delivery Date   │ Efficiency   │
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>│           1 │            1.00 │            114 │ 2026-06-15      │ 100.0%       │
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>│           2 │            1.92 │             60 │ 2026-03-27      │ 96.0%        │
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>│          *3 │            2.76 │             42 │ 2026-03-02      │ 92.2%        │
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+</span></code></pre></div>
+<p>The row marked with <code>*</code> is the recommended team size for that profile. Without <code>--table</code>, the same information appears in plain indented text with <code>&lt;-- recommended</code> annotations. See <a href="../interpreting_results/#staffing-recommendations">Interpreting Results — Staffing recommendations</a> for a detailed explanation of the model and columns.</p>
 <p>Without <code>--table</code>, the same data is printed as indented text:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>=== Simulation Results ===
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Project: Website Refresh
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>Hours per Day: 8.0
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>Mean: 126.78 hours (16 working days)
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>Median (P50): 125.36 hours
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>Std Dev: 18.01 hours
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>Confidence Intervals:
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>  P50: 125.36 hours (16 working days)  (2026-04-22)
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>  P80: 143.08 hours (18 working days)  (2026-04-24)
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>  P90: 151.74 hours (19 working days)  (2026-04-27)
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>Most Frequent Critical Paths:
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a>  1. task_001 -&gt; task_002 (10000/10000, 100.0%)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>=== Simulation Results ===
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>Project: Website Refresh
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Hours per Day: 8.0
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>Mean: 126.78 hours (16 working days)
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>Median (P50): 125.36 hours
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>Std Dev: 18.01 hours
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>Confidence Intervals:
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>  P50: 125.36 hours (16 working days)  (2026-04-22)
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>  P80: 143.08 hours (18 working days)  (2026-04-24)
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>  P90: 151.74 hours (19 working days)  (2026-04-27)
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>Most Frequent Critical Paths:
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>  1. task_001 -&gt; task_002 (10000/10000, 100.0%)
 </span></code></pre></div>
 <p>When export formats are specified with <code>-f</code>, the following files are created:</p>
 <table>
@@ -1699,14 +1774,14 @@
 <h2 id="mcprojsim-config-show"><code>mcprojsim config show</code><a class="headerlink" href="#mcprojsim-config-show" title="Permanent link">&para;</a></h2>
 <p>Displays the active configuration (uncertainty factor multipliers, T-shirt size mappings, story point mappings, simulation defaults).</p>
 <h3 id="usage_3">Usage<a class="headerlink" href="#usage_3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span><span class="o">[</span>--config-file<span class="w"> </span>FILE<span class="o">]</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span><span class="o">[</span>--config-file<span class="w"> </span>FILE<span class="o">]</span>
 </span></code></pre></div>
 <h3 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Show built-in defaults</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># Show a custom configuration merged with defaults</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span>--config-file<span class="w"> </span>my_config.yaml
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Show built-in defaults</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Show a custom configuration merged with defaults</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span>--config-file<span class="w"> </span>my_config.yaml
 </span></code></pre></div>
 
 
