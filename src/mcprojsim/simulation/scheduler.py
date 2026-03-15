@@ -2,7 +2,7 @@
 
 import math
 from datetime import date, timedelta
-from typing import Dict, List, Set
+from typing import Dict, List, Literal, Set, overload
 
 import numpy as np
 
@@ -20,6 +20,28 @@ class TaskScheduler:
         """
         self.project = project
         self.task_map = {task.id: task for task in project.tasks}
+
+    @overload
+    def schedule_tasks(
+        self,
+        task_durations: Dict[str, float],
+        *,
+        use_resource_constraints: bool = False,
+        return_diagnostics: Literal[False] = False,
+        start_date: date | None = None,
+        hours_per_day: float = 8.0,
+    ) -> Dict[str, Dict[str, float]]: ...
+
+    @overload
+    def schedule_tasks(
+        self,
+        task_durations: Dict[str, float],
+        *,
+        use_resource_constraints: bool = False,
+        return_diagnostics: Literal[True],
+        start_date: date | None = None,
+        hours_per_day: float = 8.0,
+    ) -> tuple[Dict[str, Dict[str, float]], Dict[str, float]]: ...
 
     def schedule_tasks(
         self,

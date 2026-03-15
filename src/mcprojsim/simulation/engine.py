@@ -319,15 +319,7 @@ class SimulationEngine:
             start_date=project.project.start_date,
             hours_per_day=hours_per_day,
         )
-        if not isinstance(schedule_with_diagnostics, tuple):
-            schedule = schedule_with_diagnostics
-            constrained_diagnostics = {
-                "resource_wait_time_hours": 0.0,
-                "resource_utilization": 0.0,
-                "calendar_delay_time_hours": 0.0,
-            }
-        else:
-            schedule, constrained_diagnostics = schedule_with_diagnostics
+        schedule, constrained_diagnostics = schedule_with_diagnostics
 
         # Compute peak parallelism for this iteration
         max_parallel = scheduler.max_parallel_tasks(schedule)
