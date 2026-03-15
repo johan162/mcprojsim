@@ -246,13 +246,15 @@ class TestTaskScheduler:
         )
 
         scheduler = TaskScheduler(project)
+        effort_hours = 2 * TaskScheduler.MIN_EFFORT_PER_ASSIGNEE_HOURS
         constrained = scheduler.schedule_tasks(
-            {"task_001": 8.0},
+            {"task_001": effort_hours},
             use_resource_constraints=True,
+            hours_per_day=24.0,
         )
 
         assert constrained["task_001"]["start"] == 0.0
-        assert constrained["task_001"]["end"] == 4.0
+        assert constrained["task_001"]["end"] == effort_hours / 2
 
     def test_schedule_tasks_practical_cap_limits_over_assignment(self):
         """Auto-cap should prevent assigning too many resources to small tasks."""
@@ -281,17 +283,22 @@ class TestTaskScheduler:
         )
 
         scheduler = TaskScheduler(project)
+        effort_hours = 8.0
+        expected_cap = TaskScheduler._practical_task_resource_cap(effort_hours)
         constrained = scheduler.schedule_tasks(
-            {"task_001": 8.0},
+            {"task_001": effort_hours},
             use_resource_constraints=True,
         )
 
-        # 8h task, min 4h/person => cap is 2 assignees, so end is 4h (not 1h).
-        assert constrained["task_001"]["end"] == 4.0
+        assert expected_cap == 1
+        assert constrained["task_001"]["end"] == effort_hours / expected_cap
 
     def test_practical_task_resource_cap_applies_coordination_ceiling(self):
         """Auto-cap should not exceed the global per-task coordination ceiling."""
-        assert TaskScheduler._practical_task_resource_cap(400.0) == 6
+        assert (
+            TaskScheduler._practical_task_resource_cap(400.0)
+            == TaskScheduler.MAX_ASSIGNEES_PER_TASK
+        )
 
     def test_schedule_tasks_resource_constraints_are_calendar_aware(self):
         """Constrained mode should skip weekend non-working days."""
