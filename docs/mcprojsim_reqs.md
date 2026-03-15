@@ -233,6 +233,81 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - In absence of explicit resource settings, behavior SHALL default to prior-compatible assumptions (task max resources=1, experience min=1, default calendar).
 - Migration guidance SHALL be documented for adopting explicit team/resource definitions.
 
+**FR-037: Resource and Calendar Schema Validation**
+- Team size SHALL be validated as an integer >= 1.
+- Team-member productivity SHALL be validated in the closed range [0.1, 2.0].
+- Team-member experience level SHALL be validated as one of {1, 2, 3}.
+- Task-level `max_resources` SHALL be validated as an integer >= 1.
+- Task-level `min_experience_level` SHALL be validated as one of {1, 2, 3}.
+- Calendar identifiers, resource identifiers, and task identifiers SHALL be unique within their namespaces.
+- References from tasks to resources/calendars SHALL be validated; unknown references SHALL fail validation.
+- Holiday, vacation, and day-off dates SHALL be validated as ISO 8601 dates.
+- Invalid sickness parameters (probability outside [0,1], invalid distribution parameters, or invalid start-day metadata) SHALL fail validation.
+
+**FR-038: Scheduling Semantics Under Resource Constraints**
+- Resource-constrained scheduling SHALL preserve dependency constraints as hard constraints.
+- A task SHALL start only when dependencies are met and required resources satisfying minimum experience are available.
+- Tasks SHALL be non-preemptive by default once started; optional preemption behavior MAY be added later behind configuration.
+- When multiple eligible tasks compete for the same resource pool, the assignment policy SHALL apply deterministic tie-breaking.
+- Reported calendar duration SHALL be the completion time of the resource-constrained schedule, not a dependency-only earliest-start schedule.
+
+**FR-039: Calendar Computation Rules**
+- Weekends, configured public holidays, individual vacations/days off, and sickness periods SHALL all be treated as non-working time for affected members.
+- Resource availability SHALL be computed at working-calendar granularity (working day and working hours per day).
+- Conversion between effort and elapsed calendar time SHALL use project `hours_per_day` and the active calendar/resource constraints.
+- Delivery-date forecasting SHALL use the resource- and calendar-constrained timeline.
+
+**FR-040: Sickness Configuration and Defaults**
+- The sickness model SHALL support per-member default probability and optional day-specific overrides.
+- When day-specific overrides are present, they SHALL take precedence over the default daily probability for matching dates.
+- The default sickness-duration distribution SHALL be log-normal with mode = 2 working days.
+- Configuration SHALL expose parameters needed to reproduce the duration distribution (at minimum mode and dispersion).
+
+**FR-041: Reporting and Export Contract for Resource-Constrained Runs**
+- CLI, JSON, CSV, and HTML outputs SHALL explicitly indicate whether resource/calendar constraints were active.
+- Outputs SHALL include resource-related diagnostics at minimum: average queue/wait time due to resource contention, effective utilization, and delay attributable to non-working periods.
+- Critical-path reporting SHALL document whether reported criticality reflects dependency-only paths or resource-constrained critical chains.
+- Comparative fields MAY include dependency-only baseline versus constrained schedule deltas when available.
+
+**FR-042: Two-Pass Mode Configuration and Acceptance Criteria**
+- Two-pass mode SHALL be configurable with default disabled.
+- Pass 1 SHALL compute baseline criticality indices under configured resource/calendar constraints.
+- Pass 2 SHALL prioritize assignments for tasks ranked by pass-1 criticality, then allocate remaining capacity to other ready tasks.
+- The system SHALL expose deterministic acceptance tests demonstrating that two-pass mode does not violate dependency or resource constraints.
+- The system SHALL report pass-1 versus pass-2 outcome deltas for traceability.
+
+### 3.1.2 Implementation Plan for Resource and Calendar-Constrained Scheduling
+
+**Phase A: Data Model and Schema Foundation**
+- Add/normalize schema for team size, team members, productivity, experience, calendars, holidays, vacations/days off, sickness configuration, and task resource limits.
+- Implement validation rules from FR-037 and FR-040 across parser and model layers.
+- Preserve backward compatibility defaults per FR-036.
+
+**Phase B: Resource/Calendar Scheduling Core**
+- Extend scheduler to enforce resource availability and minimum experience constraints while respecting dependencies.
+- Apply non-working calendar windows and member unavailability (holiday/vacation/sickness) during scheduling.
+- Ensure deterministic tie-breaking and reproducibility with fixed random seeds.
+
+**Phase C: Sickness and Availability Simulation**
+- Implement per-member sickness start process and log-normal duration sampling.
+- Integrate sickness episodes into member availability timelines used by the scheduler.
+- Add targeted unit tests for probability bounds, distribution parameters, and edge cases.
+
+**Phase D: Two-Pass Critical-Path Prioritization**
+- Implement configurable two-pass mode (default off).
+- Pass 1 computes constrained criticality; Pass 2 applies critical-path-prioritized assignment.
+- Add regression and determinism tests for pass-delta behavior.
+
+**Phase E: Metrics, Exports, and UX**
+- Add resource/calendar diagnostics required by FR-041 to CLI and all exporters.
+- Annotate reports with schedule mode (dependency-only vs constrained).
+- Keep existing fields stable unless explicitly versioned.
+
+**Phase F: Documentation and Rollout**
+- Update user/project file docs with canonical schema and migration examples.
+- Update algorithm and limitations sections to remove dependency-only caveats once implementation is complete.
+- Add end-to-end fixtures and performance checks for constrained schedules.
+
  
 
 ### 3.2 Non-Functional Requirements
