@@ -358,6 +358,9 @@ class Project(BaseModel):
     def _validate_resource_references(self) -> None:
         """Validate task and resource references to resources/calendars."""
         resource_names = {resource.name for resource in self.resources if resource.name}
+        resource_by_name = {
+            resource.name: resource for resource in self.resources if resource.name
+        }
         available_calendar_ids = {calendar.id for calendar in self.calendars} or {
             "default"
         }
@@ -367,6 +370,15 @@ class Project(BaseModel):
                 if resource_name not in resource_names:
                     raise ValueError(
                         f"Task {task.id} references unknown resource {resource_name}"
+                    )
+
+                resource = resource_by_name[resource_name]
+                if resource.experience_level < task.min_experience_level:
+                    raise ValueError(
+                        f"Task {task.id} requires min_experience_level "
+                        f"{task.min_experience_level}, but assigned resource "
+                        f"{resource_name} has experience_level "
+                        f"{resource.experience_level}"
                     )
 
         for resource in self.resources:

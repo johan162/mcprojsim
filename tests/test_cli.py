@@ -437,3 +437,77 @@ tasks:
         assert result.exit_code != 0
         assert "line 9" in result.output
         assert "most_likely" in result.output
+
+    def test_validate_fails_when_assigned_resource_is_underqualified(self) -> None:
+        """validate should fail when task resource assignment violates min experience."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Experience Test",
+                            "start_date": "2025-01-01",
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Senior Task",
+                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "resources": ["junior_dev"],
+                                "min_experience_level": 3,
+                            }
+                        ],
+                        "resources": [
+                            {
+                                "name": "junior_dev",
+                                "experience_level": 1,
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["validate", str(project_file)])
+
+        assert result.exit_code != 0
+        assert "requires min_experience_level" in result.output
+
+    def test_simulate_fails_when_assigned_resource_is_underqualified(self) -> None:
+        """simulate should fail when task resource assignment violates min experience."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Experience Test",
+                            "start_date": "2025-01-01",
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Senior Task",
+                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "resources": ["junior_dev"],
+                                "min_experience_level": 3,
+                            }
+                        ],
+                        "resources": [
+                            {
+                                "name": "junior_dev",
+                                "experience_level": 1,
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file)])
+
+        assert result.exit_code != 0
+        assert "requires min_experience_level" in result.output

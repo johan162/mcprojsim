@@ -326,6 +326,31 @@ class TestProject:
                 resources=[{"name": "existing_resource"}],
             )
 
+    def test_task_assigned_resource_must_meet_min_experience_level(self):
+        """Explicitly assigned resources must satisfy task min_experience_level."""
+        with pytest.raises(ValueError, match="requires min_experience_level"):
+            Project(
+                project=ProjectMetadata(
+                    name="Bad Experience Match",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Senior-only Task",
+                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        resources=["junior_resource"],
+                        min_experience_level=3,
+                    )
+                ],
+                resources=[
+                    {
+                        "name": "junior_resource",
+                        "experience_level": 1,
+                    }
+                ],
+            )
+
     def test_task_resource_constraints_defaults_and_validation(self):
         """Test task-level resource constraints defaults and validation."""
         task = Task(
