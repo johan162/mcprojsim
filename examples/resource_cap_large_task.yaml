@@ -1,0 +1,48 @@
+project:
+  name: "Resource Cap Large Task"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+
+tasks:
+  - id: "task_001"
+    name: "Large task with high requested parallelism"
+    estimate: { min: 160, most_likely: 200, max: 280 }
+    max_resources: 12
+
+resources:
+  - name: "res_01"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_02"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_03"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_04"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_05"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_06"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_07"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_08"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_09"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_10"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_11"
+    experience_level: 2
+    productivity_level: 1.0
+  - name: "res_12"
+    experience_level: 2
+    productivity_level: 1.0

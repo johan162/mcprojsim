@@ -1,0 +1,22 @@
+project:
+  name: "Team Size + Resources"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+  team_size: 20
+
+tasks:
+  - id: "task_001"
+    name: "Task 1"
+    estimate: { min: 8, most_likely: 16, max: 24 }
+  - id: "task_002"
+    name: "Task 2"
+    estimate: { min: 40, most_likely: 64, max: 96 }
+    dependencies: ["task_001"]
+
+resources:
+  - name: "alice"
+    experience_level: 3
+    productivity_level: 1.0
+  - name: "bob"
+    experience_level: 2
+    productivity_level: 0.9

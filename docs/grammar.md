@@ -44,7 +44,7 @@ This document provides a complete formal grammar specification for Monte Carlo P
 <hours_per_day> ::= "hours_per_day:" <positive_number>
                   # Default: 8.0. Controls conversion between days/weeks and hours.
 
-<team_size> ::= "team_size:" <positive_integer>
+<team_size> ::= "team_size:" <non_negative_integer>
 
 <confidence_levels> ::= "confidence_levels:" "[" <percentile_list> "]"
 
@@ -264,6 +264,8 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <positive_integer> ::= <integer>
 
+<non_negative_integer> ::= <integer>
+
 <integer> ::= <digit> { <digit> }
 
 <float> ::= <integer> "." <digit> { <digit> }
@@ -295,7 +297,11 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
 5. **Default Thresholds**: 
    - `probability_red_threshold`: 0.50 (50%)
    - `probability_green_threshold`: 0.90 (90%)
-6. **Team Size**: If provided, `team_size` must be a positive integer
+6. **Team Size**:
+  - If provided, `team_size` must be an integer >= 0
+  - If `team_size` is omitted or `0`, only explicitly listed resources are used
+  - If `team_size` > number of explicitly listed resources, default resources are generated up to `team_size`
+  - If `team_size` < number of explicitly listed resources, validation fails
 
 ### Task-Level Constraints
 
@@ -340,6 +346,7 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
    - If task `resources` is omitted, the task may draw from all project resources
    - If task `resources` lists names, they must reference existing resources
    - If task `resources` lists names and `min_experience_level` is set, each named resource must satisfy that minimum or validation fails
+  - Scheduler applies a practical auto-cap: `min(max_resources, floor(task_effort_hours/4), 6, eligible_available_resources)` with a minimum of 1 assignee
    - Start-time assignment count is capped by `max_resources`
 
 ### Resource and Calendar Constraints

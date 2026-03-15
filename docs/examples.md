@@ -182,6 +182,11 @@ See `examples/story_points_walkthrough_project.yaml` for a complete example.
 
 ## Running Examples
 
+Additional resource-cap examples:
+
+- `examples/resource_cap_small_task.yaml` demonstrates that short tasks are auto-capped to a small number of assignees even when many resources are available.
+- `examples/resource_cap_large_task.yaml` demonstrates the global coordination cap for large tasks.
+
 ```bash
 # Run the sample project
 mcprojsim simulate examples/sample_project.yaml

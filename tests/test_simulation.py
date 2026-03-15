@@ -254,6 +254,45 @@ class TestTaskScheduler:
         assert constrained["task_001"]["start"] == 0.0
         assert constrained["task_001"]["end"] == 4.0
 
+    def test_schedule_tasks_practical_cap_limits_over_assignment(self):
+        """Auto-cap should prevent assigning too many resources to small tasks."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Practical Cap Test", start_date=date(2025, 1, 1)
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    max_resources=8,
+                )
+            ],
+            resources=[
+                {"name": "res_a", "experience_level": 2, "productivity_level": 1.0},
+                {"name": "res_b", "experience_level": 2, "productivity_level": 1.0},
+                {"name": "res_c", "experience_level": 2, "productivity_level": 1.0},
+                {"name": "res_d", "experience_level": 2, "productivity_level": 1.0},
+                {"name": "res_e", "experience_level": 2, "productivity_level": 1.0},
+                {"name": "res_f", "experience_level": 2, "productivity_level": 1.0},
+                {"name": "res_g", "experience_level": 2, "productivity_level": 1.0},
+                {"name": "res_h", "experience_level": 2, "productivity_level": 1.0},
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        constrained = scheduler.schedule_tasks(
+            {"task_001": 8.0},
+            use_resource_constraints=True,
+        )
+
+        # 8h task, min 4h/person => cap is 2 assignees, so end is 4h (not 1h).
+        assert constrained["task_001"]["end"] == 4.0
+
+    def test_practical_task_resource_cap_applies_coordination_ceiling(self):
+        """Auto-cap should not exceed the global per-task coordination ceiling."""
+        assert TaskScheduler._practical_task_resource_cap(400.0) == 6
+
     def test_schedule_tasks_resource_constraints_are_calendar_aware(self):
         """Constrained mode should skip weekend non-working days."""
         project = Project(

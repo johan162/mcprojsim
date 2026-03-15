@@ -1,0 +1,14 @@
+project:
+  name: "Team Size Demo"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+  team_size: 10
+
+tasks:
+  - id: "task_001"
+    name: "Task 1"
+    estimate: { min: 8, most_likely: 16, max: 24 }
+  - id: "task_002"
+    name: "Task 2"
+    estimate: { min: 40, most_likely: 64, max: 96 }
+    dependencies: ["task_001"]

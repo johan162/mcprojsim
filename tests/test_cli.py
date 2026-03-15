@@ -511,3 +511,75 @@ tasks:
 
         assert result.exit_code != 0
         assert "requires min_experience_level" in result.output
+
+    def test_validate_fails_when_resources_exceed_team_size(self) -> None:
+        """validate should fail when explicit resources exceed team_size."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Team Size Test",
+                            "start_date": "2025-01-01",
+                            "team_size": 1,
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                            }
+                        ],
+                        "resources": [
+                            {"name": "alice"},
+                            {"name": "bob"},
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["validate", str(project_file)])
+
+        assert result.exit_code != 0
+        assert (
+            "team_size is smaller than explicitly specified resources" in result.output
+        )
+
+    def test_simulate_fails_when_resources_exceed_team_size(self) -> None:
+        """simulate should fail when explicit resources exceed team_size."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Team Size Test",
+                            "start_date": "2025-01-01",
+                            "team_size": 1,
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                            }
+                        ],
+                        "resources": [
+                            {"name": "alice"},
+                            {"name": "bob"},
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file)])
+
+        assert result.exit_code != 0
+        assert (
+            "team_size is smaller than explicitly specified resources" in result.output
+        )

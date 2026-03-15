@@ -515,8 +515,7 @@ def simulate(
                             eh = results.effort_percentiles[p]
                             epd = math.ceil(eh / hours_per_day)
                             click.echo(
-                                f"  P{p}: {eh:.2f} person-hours"
-                                f" ({epd} person-days)"
+                                f"  P{p}: {eh:.2f} person-hours" f" ({epd} person-days)"
                             )
 
                     # Sensitivity analysis
@@ -541,9 +540,7 @@ def simulate(
                                 if slack_val < 0.01
                                 else f"{slack_val:.1f}h buffer"
                             )
-                            click.echo(
-                                f"  {task_id}: {slack_val:.2f} hours ({status})"
-                            )
+                            click.echo(f"  {task_id}: {slack_val:.2f} hours ({status})")
 
                     # Risk impact summary
                     risk_summary = results.get_risk_impact_summary()
@@ -676,7 +673,9 @@ def simulate(
                             for r in prof_rows:
                                 marker = " *" if r.team_size == rec_n else ""
                                 date_str = (
-                                    r.delivery_date.isoformat() if r.delivery_date else ""
+                                    r.delivery_date.isoformat()
+                                    if r.delivery_date
+                                    else ""
                                 )
                                 st_rows.append(
                                     [
@@ -704,9 +703,7 @@ def simulate(
                         else:
                             for r in prof_rows:
                                 marker = (
-                                    "  <-- recommended"
-                                    if r.team_size == rec_n
-                                    else ""
+                                    "  <-- recommended" if r.team_size == rec_n else ""
                                 )
                                 date_str = (
                                     f"  ({r.delivery_date.isoformat()})"

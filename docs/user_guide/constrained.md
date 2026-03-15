@@ -2,7 +2,7 @@
 
 This chapter shows how to model and run **resource- and calendar-constrained** simulations in `mcprojsim`, starting from a simple project and building up to a full-featured example.
 
-Constrained scheduling is activated automatically when a project file contains a top-level `resources` section.
+Constrained scheduling is activated automatically when the validated project has resources available for assignment—either from a top-level `resources` section or from `project.team_size > 0` (which auto-generates default resources up to that size).
 
 ## What constrained scheduling changes
 
@@ -20,6 +20,119 @@ The CLI and exporters report this explicitly via:
 
 - `Schedule Mode` (`dependency_only` or `resource_constrained`),
 - constrained diagnostics (resource wait time, utilization, calendar delay contribution).
+
+---
+
+## How `team_size` affects scheduling
+
+`team_size` and top-level `resources` interact during validation before simulation starts.
+
+Current rules:
+
+- `team_size` omitted or `0`: use only explicitly listed `resources`.
+- `team_size > 0` and explicit resources **exceed** `team_size`: validation error.
+- `team_size > 0` and explicit resources are **fewer** than `team_size`: default resources are auto-created up to `team_size`.
+- no `resources` and no `team_size` (or `team_size: 0`): scheduler remains dependency-only.
+
+### Example A: tasks only (no `team_size`)
+
+```yaml
+project:
+  name: "Team Size Demo"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+
+tasks:
+  - id: "task_001"
+    name: "Task 1"
+    estimate: { min: 8, most_likely: 16, max: 24 }
+  - id: "task_002"
+    name: "Task 2"
+    estimate: { min: 40, most_likely: 64, max: 96 }
+    dependencies: ["task_001"]
+```
+
+### Example B: same tasks, with `team_size`
+
+```yaml
+project:
+  name: "Team Size Demo"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+  team_size: 10
+
+tasks:
+  - id: "task_001"
+    name: "Task 1"
+    estimate: { min: 8, most_likely: 16, max: 24 }
+  - id: "task_002"
+    name: "Task 2"
+    estimate: { min: 40, most_likely: 64, max: 96 }
+    dependencies: ["task_001"]
+```
+
+Sample output excerpt (seed `42`, `200` iterations):
+
+```text
+Schedule Mode: resource_constrained
+Median (P50): 529.86 hours
+```
+
+`team_size: 10` auto-creates 10 default resources, so this run is constrained.
+
+### Example C: explicit `resources` + `team_size` (smaller than resources)
+
+```yaml
+project:
+  name: "Team Size + Resources"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+  team_size: 1
+
+tasks:
+  - id: "task_001"
+    name: "Task 1"
+    estimate: { min: 8, most_likely: 16, max: 24 }
+  - id: "task_002"
+    name: "Task 2"
+    estimate: { min: 40, most_likely: 64, max: 96 }
+    dependencies: ["task_001"]
+
+resources:
+  - name: "alice"
+    experience_level: 3
+    productivity_level: 1.0
+  - name: "bob"
+    experience_level: 2
+    productivity_level: 0.9
+```
+
+Sample output excerpt:
+
+```text
+Error: Invalid project file format: 1 validation error for Project
+  Value error, team_size is smaller than explicitly specified resources: team_size=1, resources=2
+```
+
+### Example D: explicit `resources` + `team_size` (larger than resources)
+
+Same as Example C but with `team_size: 20`.
+
+Sample output excerpt (same run settings):
+
+```text
+Schedule Mode: resource_constrained
+Median (P50): 529.86 hours
+```
+
+`team_size: 20` is valid here: two explicit resources are kept and the remaining capacity is auto-filled with defaults.
+
+### Interpretation and policy
+
+- `team_size` is a capacity target when greater than zero.
+- Explicit `resources` can be combined with `team_size`, but they must not exceed it.
+- If explicit resources are fewer than `team_size`, generated defaults fill the gap.
+- If both are omitted (or `team_size: 0` with no resources), the run is dependency-only.
 
 ---
 
@@ -96,15 +209,42 @@ In Example 2, Alice (`3`, `1.0`) is modeled as more senior baseline-capacity, wh
 
 ### `max_resources` semantics (important)
 
-`max_resources` is an upper bound on concurrent assignees for a task.
+`max_resources` is an upper bound on concurrent assignees for a task, but the
+scheduler also applies an automatic practical cap.
 
 - If `resources` lists multiple names and `max_resources` is smaller than that list,
   only up to `max_resources` resources are assigned at task start.
-- Effective assignment count at start is:
 
-  `min(max_resources, currently_available_eligible_resources)`
+Automatic practical cap heuristic:
+
+- `granularity_cap = max(1, floor(task_effort_hours / 4.0))`
+- `coordination_cap = 6`
+- `practical_cap = min(granularity_cap, coordination_cap)`
+
+Effective assignment count at start is:
+
+  `min(max_resources, practical_cap, currently_available_eligible_resources)`
 
 - If `max_resources` is omitted, the default is `1`.
+
+Why this exists:
+
+- It prevents unrealistic compression of small tasks (for example, assigning eight people to an ~8–24 hour task).
+- It keeps behavior deterministic while limiting over-parallelization on large tasks.
+
+Practical examples:
+
+- Task effort `8h` → `granularity_cap = floor(8/4) = 2` → at most 2 assignees.
+- Task effort `24h` → `granularity_cap = floor(24/4) = 6` → at most 6 assignees.
+- Task effort `80h` → `granularity_cap = 20`, but coordination cap still limits to 6.
+
+Why these constants were selected:
+
+- `MIN_EFFORT_PER_ASSIGNEE_HOURS = 4.0` uses a half-day work chunk as a practical lower bound for productive splitting. It avoids pathological cases where many assignees are allocated to very small tasks.
+- `MAX_ASSIGNEES_PER_TASK = 6` is a conservative coordination ceiling. It reflects diminishing returns from communication/synchronization overhead when too many people are placed on one task.
+- The pair balances realism and runtime simplicity: the scheduler remains deterministic and fast while avoiding implausible near-linear speedups.
+
+If you need stricter or looser behavior in your environment, these constants can be adjusted in the scheduler implementation and validated with scenario-specific simulations.
 
 ### Assignment timing model
 

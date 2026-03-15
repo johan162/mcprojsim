@@ -266,7 +266,7 @@ class ProjectMetadata(BaseModel):
         le=1.0,
         description="Probability threshold above which is shown as green (default 90%)",
     )
-    team_size: Optional[int] = Field(default=None, gt=0)
+    team_size: Optional[int] = Field(default=None, ge=0)
 
     @field_validator("start_date", mode="before")
     @classmethod
@@ -333,6 +333,8 @@ class Project(BaseModel):
 
     def _normalize_and_validate_resources(self) -> None:
         """Normalize resource names and validate uniqueness/defaults."""
+        self._apply_team_size_resource_rules()
+
         used_names: set[str] = set()
         next_index = 1
 
@@ -348,6 +350,32 @@ class Project(BaseModel):
             if resource.name in used_names:
                 raise ValueError(f"Resource names must be unique: {resource.name}")
             used_names.add(resource.name)
+
+    def _apply_team_size_resource_rules(self) -> None:
+        """Apply validation and defaults for team_size vs explicit resources.
+
+        Rules:
+        - team_size is None or 0: keep explicitly specified resources only.
+        - team_size > 0 and explicit resources > team_size: validation error.
+        - team_size > 0 and explicit resources < team_size: append default
+          resources so total count equals team_size.
+        """
+        team_size = self.project.team_size
+        if team_size is None or team_size == 0:
+            return
+
+        explicit_count = len(self.resources)
+        if explicit_count > team_size:
+            raise ValueError(
+                "team_size is smaller than explicitly specified resources: "
+                f"team_size={team_size}, resources={explicit_count}"
+            )
+
+        missing = team_size - explicit_count
+        if missing <= 0:
+            return
+
+        self.resources.extend(ResourceSpec() for _ in range(missing))
 
     def _validate_calendars(self) -> None:
         """Validate calendar identifier uniqueness."""

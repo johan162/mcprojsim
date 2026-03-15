@@ -10,7 +10,28 @@ from mcprojsim.models.project import CalendarSpec, Project, ResourceSpec
 
 
 class TaskScheduler:
-    """Scheduler for tasks with dependencies."""
+    """Scheduler for tasks with dependencies.
+
+    Resource-cap heuristic constants:
+
+        - ``MIN_EFFORT_PER_ASSIGNEE_HOURS = 16.0``
+            Sets the minimum expected task effort per assigned resource when
+            auto-capping staffing. This prevents unrealistic compression of short
+            tasks by requiring each assignee to have a meaningful chunk of work.
+            Example: an 24h task is auto-capped to at most ``max(1, ceil(24/16))=2`` assignees.
+
+        - ``MAX_ASSIGNEES_PER_TASK = 3``
+            A global coordination ceiling to avoid over-parallelization on very large
+            tasks. Beyond this point, communication and synchronization overhead tend
+            to dominate and pure linear speedup assumptions become less realistic.
+
+    Together, the practical cap is:
+    ``min(floor(task_effort_hours / MIN_EFFORT_PER_ASSIGNEE_HOURS), MAX_ASSIGNEES_PER_TASK)``,
+    with a minimum of 1 assignee.
+    """
+
+    MIN_EFFORT_PER_ASSIGNEE_HOURS = 16.0
+    MAX_ASSIGNEES_PER_TASK = 3
 
     def __init__(self, project: Project):
         """Initialize scheduler with project.
@@ -202,7 +223,12 @@ class TaskScheduler:
                 if not eligible_free:
                     continue
 
-                assigned = eligible_free[: task.max_resources]
+                practical_cap = self._practical_task_resource_cap(
+                    task_durations[task_id]
+                )
+                effective_cap = min(task.max_resources, practical_cap)
+
+                assigned = eligible_free[:effective_cap]
                 if not assigned:
                     continue
 
@@ -299,6 +325,32 @@ class TaskScheduler:
             "resource_utilization": utilization,
             "calendar_delay_time_hours": calendar_delay_time_hours,
         }
+
+    @classmethod
+    def _practical_task_resource_cap(cls, effort_hours: float) -> int:
+        """Compute an automatic practical assignee cap for one task.
+
+        Heuristic:
+        - Every assignee should have at least ``MIN_EFFORT_PER_ASSIGNEE_HOURS``
+          of expected work.
+        - Even for large tasks, cap by ``MAX_ASSIGNEES_PER_TASK`` to avoid
+          unrealistic compression from pure parallelization assumptions.
+
+                Constant selection rationale:
+                - ``16.0`` hours is a one and a half-day granularity baseline that avoids assigning
+                    many people to tasks that are too small to split productively.
+                - ``3`` assignees is a conservative coordination ceiling that keeps
+                    schedules deterministic and realistic without introducing heavier
+                    optimization or communication-overhead models.
+        """
+        if effort_hours <= 0:
+            return 1
+
+        granularity_cap = max(
+            1,
+            int(math.floor(effort_hours / cls.MIN_EFFORT_PER_ASSIGNEE_HOURS)),
+        )
+        return max(1, min(cls.MAX_ASSIGNEES_PER_TASK, granularity_cap))
 
     @staticmethod
     def _estimate_sickness_horizon_days(

@@ -262,6 +262,92 @@ class TestProject:
         )
         assert project.project.team_size == 5
 
+    def test_team_size_zero_is_valid(self):
+        """team_size may be explicitly set to zero."""
+        metadata = ProjectMetadata(
+            name="Zero Team",
+            start_date=date(2025, 1, 1),
+            team_size=0,
+        )
+        assert metadata.team_size == 0
+
+    def test_team_size_smaller_than_explicit_resources_is_invalid(self):
+        """Validation should fail when explicit resources exceed team_size."""
+        with pytest.raises(
+            ValueError,
+            match="team_size is smaller than explicitly specified resources",
+        ):
+            Project(
+                project=ProjectMetadata(
+                    name="Too Many Resources",
+                    start_date=date(2025, 1, 1),
+                    team_size=1,
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    )
+                ],
+                resources=[
+                    {"name": "alice"},
+                    {"name": "bob"},
+                ],
+            )
+
+    def test_team_size_larger_than_explicit_resources_auto_fills_defaults(self):
+        """Missing resources should be auto-created up to team_size."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Auto Fill Team",
+                start_date=date(2025, 1, 1),
+                team_size=3,
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                )
+            ],
+            resources=[{"name": "alice", "experience_level": 3}],
+        )
+
+        assert len(project.resources) == 3
+        assert {r.name for r in project.resources} == {
+            "alice",
+            "resource_001",
+            "resource_002",
+        }
+
+        generated = [r for r in project.resources if r.name != "alice"]
+        for resource in generated:
+            assert resource.experience_level == 2
+            assert resource.productivity_level == 1.0
+            assert resource.sickness_prob == 0.0
+
+    def test_team_size_zero_does_not_expand_explicit_resources(self):
+        """team_size=0 should keep explicit resources unchanged."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Zero Team Explicit",
+                start_date=date(2025, 1, 1),
+                team_size=0,
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                )
+            ],
+            resources=[{"name": "alice"}],
+        )
+
+        assert len(project.resources) == 1
+        assert project.resources[0].name == "alice"
+
     def test_resource_defaults_and_generated_name(self):
         """Test resource defaults and auto-generated names."""
         project = Project(

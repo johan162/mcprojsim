@@ -73,6 +73,8 @@ At the highest level, a project file may contain the following sections:
 - `resources` — optional. When present, constrained scheduling is activated.
 - `calendars` — optional. Used by constrained scheduling when resources reference calendars.
 
+If `project.team_size` is greater than zero, default resources are generated up to that size (after validating explicit resources), which also makes scheduling resource-constrained.
+
 The smallest valid project file therefore looks like this:
 
 ```yaml
@@ -154,6 +156,7 @@ The `project` section is required. It contains project-level metadata and report
 | `currency` | No | string | `"USD"` | Stored as metadata |
 | `confidence_levels` | No | list of integers | `[25, 50, 75, 80, 85, 90, 95, 99]` | Controls reported percentiles |
 | `hours_per_day` | No | float | `8.0` | Hours in a working day; used for day/week conversion |
+| `team_size` | No | integer | `null` | If > `0`, target total resources after validation (may auto-create defaults) |
 | `probability_red_threshold` | No | float | `0.50` | Must be between `0.0` and `1.0` |
 | `probability_green_threshold` | No | float | `0.90` | Must be between `0.0` and `1.0` |
 
@@ -163,7 +166,10 @@ The implementation currently enforces these rules for `project`:
 
 - `start_date` must be a valid ISO-format date string or a date object,
 - `probability_red_threshold` must be less than `probability_green_threshold`,
-- both thresholds must be in the range `0.0` to `1.0`.
+- both thresholds must be in the range `0.0` to `1.0`,
+- if provided, `team_size` must be `>= 0`,
+- if `team_size > 0` and explicit `resources` are fewer, default resources are added up to `team_size`,
+- if explicit `resources` exceed `team_size`, validation fails.
 
 ### YAML example
 
@@ -557,7 +563,15 @@ Task-level `resources` is typed as a list of strings in the current model.
 When `resources` lists multiple names, the scheduler may still assign fewer resources:
 
 - assignment at task start is capped by `max_resources` (default `1`),
-- effective start-time assignment is `min(max_resources, eligible_available_resources_now)`.
+- scheduler applies an automatic practical cap:
+  - `granularity_cap = max(1, floor(task_effort_hours / 4.0))`
+  - `coordination_cap = 6`
+  - `practical_cap = min(granularity_cap, coordination_cap)`
+- effective start-time assignment is:
+  - `min(max_resources, practical_cap, eligible_available_resources_now)`.
+
+This avoids unrealistic over-assignment on short tasks while still permitting
+parallelization on larger tasks.
 
 Important behavior for schema users:
 
