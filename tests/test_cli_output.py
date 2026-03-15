@@ -289,6 +289,56 @@ class TestSimulateTargetDate:
         assert "Invalid target date format" in result.output
 
 
+class TestSimulateMinimalOutput:
+    """Minimal output mode (--minimal, -m)."""
+
+    def test_minimal_plain_shows_only_core_sections(self, monkeypatch):
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            pf = _write_project(None)
+            result = runner.invoke(cli, ["simulate", pf, "--minimal"])
+
+        assert result.exit_code == 0
+        assert "mcprojsim, version" in result.output
+        assert "Project Overview" in result.output
+        assert "Calendar Time Statistical Summary" in result.output
+        assert "Project Effort Statistical Summary" in result.output
+        assert "Calendar Time Confidence Intervals" in result.output
+
+        assert "Simulation time:" not in result.output
+        assert "Peak simulation memory:" not in result.output
+        assert "Effort Confidence Intervals" not in result.output
+        assert "Sensitivity Analysis" not in result.output
+        assert "Schedule Slack" not in result.output
+        assert "Risk Impact Analysis" not in result.output
+        assert "Constrained Schedule Diagnostics" not in result.output
+        assert "Most Frequent Critical Paths" not in result.output
+        assert "Staffing (based on" not in result.output
+        assert "No export formats specified" not in result.output
+
+    def test_minimal_table_shows_only_core_sections(self, monkeypatch):
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            pf = _write_project(None)
+            result = runner.invoke(cli, ["simulate", pf, "--minimal", "--table"])
+
+        assert result.exit_code == 0
+        assert "Project Overview" in result.output
+        assert "Calendar Time Statistical Summary" in result.output
+        assert "Project Effort Statistical Summary" in result.output
+        assert "Calendar Time Confidence Intervals" in result.output
+        assert "Percentile" in result.output
+        assert "Working Days" in result.output
+
+        assert "Effort Confidence Intervals" not in result.output
+        assert "Correlation" not in result.output
+        assert "Slack (hours)" not in result.output
+        assert "Trigger Rate" not in result.output
+        assert "Constrained Schedule Diagnostics" not in result.output
+
+
 class TestSimulateExports:
     """Export format dispatch."""
 

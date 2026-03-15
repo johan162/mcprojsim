@@ -133,6 +133,15 @@ def cli() -> None:
     is_flag=True,
     help="Show full staffing analysis table with team-size recommendations.",
 )
+@click.option(
+    "--minimal",
+    "-m",
+    is_flag=True,
+    help=(
+        "Show minimal output: version, project overview, calendar/effort "
+        "statistical summaries, and calendar confidence intervals only."
+    ),
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -146,6 +155,7 @@ def simulate(
     target_date: Optional[str],
     table: bool,
     staffing: bool,
+    minimal: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     if quiet < 2:
@@ -189,7 +199,7 @@ def simulate(
         )
         critical_path_limit = critical_paths or cfg.output.critical_path_report_limit
 
-        if quiet < 2:
+        if quiet < 2 and not minimal:
             click.echo(f"Simulation time: {elapsed_seconds:.2f} seconds")
             click.echo(
                 "Peak simulation memory: " f"{_format_memory_size(peak_memory_bytes)}"
@@ -370,119 +380,120 @@ def simulate(
                     )
                 )
 
-                # Effort confidence intervals table
-                if results.effort_percentiles:
-                    effort_rows = []
-                    for p in sorted(results.effort_percentiles.keys()):
-                        eh = results.effort_percentiles[p]
-                        epd = math.ceil(eh / hours_per_day)
-                        effort_rows.append([f"P{p}", f"{eh:.2f}", epd])
-                    click.echo("\nEffort Confidence Intervals:")
-                    click.echo(
-                        _tabulate(
-                            effort_rows,
-                            headers=["Percentile", "Person-Hours", "Person-Days"],
-                            tablefmt="simple_outline",
-                        )
-                    )
-
-                # Sensitivity analysis table
-                if results.sensitivity:
-                    sorted_sens = sorted(
-                        results.sensitivity.items(),
-                        key=lambda x: abs(x[1]),
-                        reverse=True,
-                    )
-                    sens_rows = [
-                        [tid, f"{corr:+.4f}"] for tid, corr in sorted_sens[:10]
-                    ]
-                    click.echo("\nSensitivity Analysis (top contributors):")
-                    click.echo(
-                        _tabulate(
-                            sens_rows,
-                            headers=["Task", "Correlation"],
-                            tablefmt="simple_outline",
-                            disable_numparse=True,
-                        )
-                    )
-
-                # Schedule slack table
-                if results.task_slack:
-                    slack_rows = []
-                    for task_id, slack_val in sorted(
-                        results.task_slack.items(), key=lambda x: x[1]
-                    ):
-                        status = (
-                            "Critical"
-                            if slack_val < 0.01
-                            else f"{slack_val:.1f}h buffer"
-                        )
-                        slack_rows.append([task_id, f"{slack_val:.2f}", status])
-                    click.echo("\nSchedule Slack:")
-                    click.echo(
-                        _tabulate(
-                            slack_rows,
-                            headers=["Task", "Slack (hours)", "Status"],
-                            tablefmt="simple_outline",
-                            disable_numparse=True,
-                        )
-                    )
-
-                # Risk impact table
-                risk_summary = results.get_risk_impact_summary()
-                has_risk_data = any(
-                    s["trigger_rate"] > 0 for s in risk_summary.values()
-                )
-                if has_risk_data:
-                    risk_rows = []
-                    for task_id, stats in sorted(risk_summary.items()):
-                        if stats["trigger_rate"] > 0:
-                            risk_rows.append(
-                                [
-                                    task_id,
-                                    f"{stats['mean_impact']:.2f}",
-                                    f"{stats['trigger_rate']*100:.1f}%",
-                                    f"{stats['mean_when_triggered']:.2f}",
-                                ]
+                if not minimal:
+                    # Effort confidence intervals table
+                    if results.effort_percentiles:
+                        effort_rows = []
+                        for p in sorted(results.effort_percentiles.keys()):
+                            eh = results.effort_percentiles[p]
+                            epd = math.ceil(eh / hours_per_day)
+                            effort_rows.append([f"P{p}", f"{eh:.2f}", epd])
+                        click.echo("\nEffort Confidence Intervals:")
+                        click.echo(
+                            _tabulate(
+                                effort_rows,
+                                headers=["Percentile", "Person-Hours", "Person-Days"],
+                                tablefmt="simple_outline",
                             )
-                    click.echo("\nRisk Impact Analysis:")
-                    click.echo(
-                        _tabulate(
-                            risk_rows,
-                            headers=[
-                                "Task",
-                                "Mean (hours)",
-                                "Trigger Rate",
-                                "Mean When Triggered (hours)",
-                            ],
-                            tablefmt="simple_outline",
                         )
-                    )
 
-                if constraints_active:
-                    diagnostics_rows = [
-                        [
-                            "Average Resource Wait (hours)",
-                            f"{resource_wait_time_hours:.2f}",
-                        ],
-                        [
-                            "Effective Resource Utilization",
-                            f"{resource_utilization*100:.1f}%",
-                        ],
-                        [
-                            "Calendar Delay Contribution (hours)",
-                            f"{calendar_delay_time_hours:.2f}",
-                        ],
-                    ]
-                    click.echo("\nConstrained Schedule Diagnostics:")
-                    click.echo(
-                        _tabulate(
-                            diagnostics_rows,
-                            headers=["Metric", "Value"],
-                            tablefmt="simple_outline",
-                            disable_numparse=True,
+                    # Sensitivity analysis table
+                    if results.sensitivity:
+                        sorted_sens = sorted(
+                            results.sensitivity.items(),
+                            key=lambda x: abs(x[1]),
+                            reverse=True,
                         )
+                        sens_rows = [
+                            [tid, f"{corr:+.4f}"] for tid, corr in sorted_sens[:10]
+                        ]
+                        click.echo("\nSensitivity Analysis (top contributors):")
+                        click.echo(
+                            _tabulate(
+                                sens_rows,
+                                headers=["Task", "Correlation"],
+                                tablefmt="simple_outline",
+                                disable_numparse=True,
+                            )
+                        )
+
+                    # Schedule slack table
+                    if results.task_slack:
+                        slack_rows = []
+                        for task_id, slack_val in sorted(
+                            results.task_slack.items(), key=lambda x: x[1]
+                        ):
+                            status = (
+                                "Critical"
+                                if slack_val < 0.01
+                                else f"{slack_val:.1f}h buffer"
+                            )
+                            slack_rows.append([task_id, f"{slack_val:.2f}", status])
+                        click.echo("\nSchedule Slack:")
+                        click.echo(
+                            _tabulate(
+                                slack_rows,
+                                headers=["Task", "Slack (hours)", "Status"],
+                                tablefmt="simple_outline",
+                                disable_numparse=True,
+                            )
+                        )
+
+                    # Risk impact table
+                    risk_summary = results.get_risk_impact_summary()
+                    has_risk_data = any(
+                        s["trigger_rate"] > 0 for s in risk_summary.values()
                     )
+                    if has_risk_data:
+                        risk_rows = []
+                        for task_id, stats in sorted(risk_summary.items()):
+                            if stats["trigger_rate"] > 0:
+                                risk_rows.append(
+                                    [
+                                        task_id,
+                                        f"{stats['mean_impact']:.2f}",
+                                        f"{stats['trigger_rate']*100:.1f}%",
+                                        f"{stats['mean_when_triggered']:.2f}",
+                                    ]
+                                )
+                        click.echo("\nRisk Impact Analysis:")
+                        click.echo(
+                            _tabulate(
+                                risk_rows,
+                                headers=[
+                                    "Task",
+                                    "Mean (hours)",
+                                    "Trigger Rate",
+                                    "Mean When Triggered (hours)",
+                                ],
+                                tablefmt="simple_outline",
+                            )
+                        )
+
+                    if constraints_active:
+                        diagnostics_rows = [
+                            [
+                                "Average Resource Wait (hours)",
+                                f"{resource_wait_time_hours:.2f}",
+                            ],
+                            [
+                                "Effective Resource Utilization",
+                                f"{resource_utilization*100:.1f}%",
+                            ],
+                            [
+                                "Calendar Delay Contribution (hours)",
+                                f"{calendar_delay_time_hours:.2f}",
+                            ],
+                        ]
+                        click.echo("\nConstrained Schedule Diagnostics:")
+                        click.echo(
+                            _tabulate(
+                                diagnostics_rows,
+                                headers=["Metric", "Value"],
+                                tablefmt="simple_outline",
+                                disable_numparse=True,
+                            )
+                        )
 
             else:
                 # Plain text output
@@ -496,72 +507,76 @@ def simulate(
                         f"  P{p}: {hours:.2f} hours" f" ({wd} working days){date_str}"
                     )
 
-                # Effort confidence intervals (plain-text)
-                if results.effort_percentiles:
-                    click.echo("\nEffort Confidence Intervals:")
-                    for p in sorted(results.effort_percentiles.keys()):
-                        eh = results.effort_percentiles[p]
-                        epd = math.ceil(eh / hours_per_day)
-                        click.echo(
-                            f"  P{p}: {eh:.2f} person-hours" f" ({epd} person-days)"
-                        )
-
-                # Sensitivity analysis
-                if results.sensitivity:
-                    click.echo("\nSensitivity Analysis (top contributors):")
-                    sorted_sens = sorted(
-                        results.sensitivity.items(),
-                        key=lambda x: abs(x[1]),
-                        reverse=True,
-                    )
-                    for task_id, corr in sorted_sens[:10]:
-                        click.echo(f"  {task_id}: {corr:+.4f}")
-
-                # Schedule slack
-                if results.task_slack:
-                    click.echo("\nSchedule Slack:")
-                    for task_id, slack_val in sorted(
-                        results.task_slack.items(), key=lambda x: x[1]
-                    ):
-                        status = (
-                            "Critical"
-                            if slack_val < 0.01
-                            else f"{slack_val:.1f}h buffer"
-                        )
-                        click.echo(f"  {task_id}: {slack_val:.2f} hours ({status})")
-
-                # Risk impact summary
-                risk_summary = results.get_risk_impact_summary()
-                has_risk_data = any(
-                    s["trigger_rate"] > 0 for s in risk_summary.values()
-                )
-                if has_risk_data:
-                    click.echo("\nRisk Impact Analysis:")
-                    for task_id, stats in sorted(risk_summary.items()):
-                        if stats["trigger_rate"] > 0:
+                if not minimal:
+                    # Effort confidence intervals (plain-text)
+                    if results.effort_percentiles:
+                        click.echo("\nEffort Confidence Intervals:")
+                        for p in sorted(results.effort_percentiles.keys()):
+                            eh = results.effort_percentiles[p]
+                            epd = math.ceil(eh / hours_per_day)
                             click.echo(
-                                f"  {task_id}: mean={stats['mean_impact']:.2f}h, "
-                                f"triggers={stats['trigger_rate']*100:.1f}%, "
-                                f"mean_when_triggered={stats['mean_when_triggered']:.2f}h"
+                                f"  P{p}: {eh:.2f} person-hours"
+                                f" ({epd} person-days)"
                             )
 
-                if constraints_active:
-                    click.echo("\nConstrained Schedule Diagnostics:")
-                    click.echo(
-                        "  Average Resource Wait: "
-                        f"{resource_wait_time_hours:.2f} hours"
+                    # Sensitivity analysis
+                    if results.sensitivity:
+                        click.echo("\nSensitivity Analysis (top contributors):")
+                        sorted_sens = sorted(
+                            results.sensitivity.items(),
+                            key=lambda x: abs(x[1]),
+                            reverse=True,
+                        )
+                        for task_id, corr in sorted_sens[:10]:
+                            click.echo(f"  {task_id}: {corr:+.4f}")
+
+                    # Schedule slack
+                    if results.task_slack:
+                        click.echo("\nSchedule Slack:")
+                        for task_id, slack_val in sorted(
+                            results.task_slack.items(), key=lambda x: x[1]
+                        ):
+                            status = (
+                                "Critical"
+                                if slack_val < 0.01
+                                else f"{slack_val:.1f}h buffer"
+                            )
+                            click.echo(
+                                f"  {task_id}: {slack_val:.2f} hours ({status})"
+                            )
+
+                    # Risk impact summary
+                    risk_summary = results.get_risk_impact_summary()
+                    has_risk_data = any(
+                        s["trigger_rate"] > 0 for s in risk_summary.values()
                     )
-                    click.echo(
-                        "  Effective Resource Utilization: "
-                        f"{resource_utilization*100:.1f}%"
-                    )
-                    click.echo(
-                        "  Calendar Delay Contribution: "
-                        f"{calendar_delay_time_hours:.2f} hours"
-                    )
+                    if has_risk_data:
+                        click.echo("\nRisk Impact Analysis:")
+                        for task_id, stats in sorted(risk_summary.items()):
+                            if stats["trigger_rate"] > 0:
+                                click.echo(
+                                    f"  {task_id}: mean={stats['mean_impact']:.2f}h, "
+                                    f"triggers={stats['trigger_rate']*100:.1f}%, "
+                                    f"mean_when_triggered={stats['mean_when_triggered']:.2f}h"
+                                )
+
+                    if constraints_active:
+                        click.echo("\nConstrained Schedule Diagnostics:")
+                        click.echo(
+                            "  Average Resource Wait: "
+                            f"{resource_wait_time_hours:.2f} hours"
+                        )
+                        click.echo(
+                            "  Effective Resource Utilization: "
+                            f"{resource_utilization*100:.1f}%"
+                        )
+                        click.echo(
+                            "  Calendar Delay Contribution: "
+                            f"{calendar_delay_time_hours:.2f} hours"
+                        )
 
             # Probability of target date
-            if target_date:
+            if target_date and not minimal:
                 from datetime import date as date_type
 
                 try:
@@ -589,112 +604,122 @@ def simulate(
                 except ValueError:
                     click.echo(f"\nInvalid target date format: {target_date}")
 
-            critical_path_records = results.get_critical_path_sequences(
-                critical_path_limit
-            )
-            if critical_path_records:
-                click.echo("\nMost Frequent Critical Paths:")
-                for index, record in enumerate(critical_path_records, start=1):
-                    click.echo(
-                        "  "
-                        f"{index}. {record.format_path()} "
-                        f"({record.count}/{results.iterations}, {record.frequency * 100:.1f}%)"
-                    )
+            if not minimal:
+                critical_path_records = results.get_critical_path_sequences(
+                    critical_path_limit
+                )
+                if critical_path_records:
+                    click.echo("\nMost Frequent Critical Paths:")
+                    for index, record in enumerate(critical_path_records, start=1):
+                        click.echo(
+                            "  "
+                            f"{index}. {record.format_path()} "
+                            f"({record.count}/{results.iterations}, {record.frequency * 100:.1f}%)"
+                        )
 
             # --- Staffing advisory (always shown) and full table (--staffing) ---
-            from mcprojsim.analysis.staffing import StaffingAnalyzer
+            if not minimal:
+                from mcprojsim.analysis.staffing import StaffingAnalyzer
 
-            staffing_recs = StaffingAnalyzer.recommend_team_size(results, cfg)
-            if staffing_recs:
-                # Default advisory uses the 'mixed' profile if present,
-                # otherwise the first profile alphabetically.
-                mixed_recs = [r for r in staffing_recs if r.profile == "mixed"]
-                advisory = mixed_recs[0] if mixed_recs else staffing_recs[0]
-                total_effort = advisory.total_effort_hours
-                total_effort_wd = math.ceil(total_effort / hours_per_day)
-                basis_label = (
-                    f"{advisory.effort_basis} effort"
-                    if advisory.effort_basis == "mean"
-                    else f"{advisory.effort_basis} effort percentile"
-                )
-
-                click.echo(
-                    f"\nStaffing (based on {basis_label}): "
-                    f"{advisory.recommended_team_size} people "
-                    f"recommended ({advisory.profile} team), "
-                    f"{advisory.calendar_working_days} working days"
-                )
-                click.echo(
-                    f"  Total effort: {total_effort:,.0f} person-hours "
-                    f"({total_effort_wd} person-days) | "
-                    f"Parallelism ratio: {advisory.parallelism_ratio:.1f}"
-                )
-
-            if staffing and staffing_recs:
-                staffing_table = StaffingAnalyzer.calculate_staffing_table(results, cfg)
-                profiles_sorted = sorted({r.profile for r in staffing_recs})
-                for prof in profiles_sorted:
-                    prof_rows = [r for r in staffing_table if r.profile == prof]
-                    rec = next((r for r in staffing_recs if r.profile == prof), None)
-                    rec_n = rec.recommended_team_size if rec else 0
-                    click.echo(
-                        f"\nStaffing Analysis ({prof} team, "
-                        f"overhead={cfg.staffing.experience_profiles[prof].communication_overhead:.0%}/person, "
-                        f"productivity={cfg.staffing.experience_profiles[prof].productivity_factor:.0%}):"
+                staffing_recs = StaffingAnalyzer.recommend_team_size(results, cfg)
+                if staffing_recs:
+                    # Default advisory uses the 'mixed' profile if present,
+                    # otherwise the first profile alphabetically.
+                    mixed_recs = [r for r in staffing_recs if r.profile == "mixed"]
+                    advisory = mixed_recs[0] if mixed_recs else staffing_recs[0]
+                    total_effort = advisory.total_effort_hours
+                    total_effort_wd = math.ceil(total_effort / hours_per_day)
+                    basis_label = (
+                        f"{advisory.effort_basis} effort"
+                        if advisory.effort_basis == "mean"
+                        else f"{advisory.effort_basis} effort percentile"
                     )
-                    if rec:
-                        eb = rec.effort_basis
-                        eb_label = "mean" if eb == "mean" else f"{eb} percentile"
-                        click.echo(
-                            f"  Effort basis: {eb_label} "
-                            f"({rec.total_effort_hours:,.0f} person-hours, "
-                            f"{rec.critical_path_hours:,.0f} critical-path hours)"
+
+                    click.echo(
+                        f"\nStaffing (based on {basis_label}): "
+                        f"{advisory.recommended_team_size} people "
+                        f"recommended ({advisory.profile} team), "
+                        f"{advisory.calendar_working_days} working days"
+                    )
+                    click.echo(
+                        f"  Total effort: {total_effort:,.0f} person-hours "
+                        f"({total_effort_wd} person-days) | "
+                        f"Parallelism ratio: {advisory.parallelism_ratio:.1f}"
+                    )
+
+                if staffing and staffing_recs:
+                    staffing_table = StaffingAnalyzer.calculate_staffing_table(
+                        results, cfg
+                    )
+                    profiles_sorted = sorted({r.profile for r in staffing_recs})
+                    for prof in profiles_sorted:
+                        prof_rows = [r for r in staffing_table if r.profile == prof]
+                        rec = next(
+                            (r for r in staffing_recs if r.profile == prof), None
                         )
-                    if table:
-                        st_rows = []
-                        for r in prof_rows:
-                            marker = " *" if r.team_size == rec_n else ""
-                            date_str = (
-                                r.delivery_date.isoformat() if r.delivery_date else ""
-                            )
-                            st_rows.append(
-                                [
-                                    f"{r.team_size}{marker}",
-                                    f"{r.effective_capacity:.2f}",
-                                    f"{r.calendar_working_days}",
-                                    date_str,
-                                    f"{r.efficiency * 100:.1f}%",
-                                ]
-                            )
+                        rec_n = rec.recommended_team_size if rec else 0
                         click.echo(
-                            _tabulate(
-                                st_rows,
-                                headers=[
-                                    "Team Size",
-                                    "Eff. Capacity",
-                                    "Working Days",
-                                    "Delivery Date",
-                                    "Efficiency",
-                                ],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
-                            )
+                            f"\nStaffing Analysis ({prof} team, "
+                            f"overhead={cfg.staffing.experience_profiles[prof].communication_overhead:.0%}/person, "
+                            f"productivity={cfg.staffing.experience_profiles[prof].productivity_factor:.0%}):"
                         )
-                    else:
-                        for r in prof_rows:
-                            marker = "  <-- recommended" if r.team_size == rec_n else ""
-                            date_str = (
-                                f"  ({r.delivery_date.isoformat()})"
-                                if r.delivery_date
-                                else ""
-                            )
+                        if rec:
+                            eb = rec.effort_basis
+                            eb_label = "mean" if eb == "mean" else f"{eb} percentile"
                             click.echo(
-                                f"  {r.team_size} people: "
-                                f"{r.calendar_working_days} working days, "
-                                f"eff. capacity {r.effective_capacity:.2f}, "
-                                f"efficiency {r.efficiency * 100:.1f}%"
-                                f"{date_str}{marker}"
+                                f"  Effort basis: {eb_label} "
+                                f"({rec.total_effort_hours:,.0f} person-hours, "
+                                f"{rec.critical_path_hours:,.0f} critical-path hours)"
                             )
+                        if table:
+                            st_rows = []
+                            for r in prof_rows:
+                                marker = " *" if r.team_size == rec_n else ""
+                                date_str = (
+                                    r.delivery_date.isoformat() if r.delivery_date else ""
+                                )
+                                st_rows.append(
+                                    [
+                                        f"{r.team_size}{marker}",
+                                        f"{r.effective_capacity:.2f}",
+                                        f"{r.calendar_working_days}",
+                                        date_str,
+                                        f"{r.efficiency * 100:.1f}%",
+                                    ]
+                                )
+                            click.echo(
+                                _tabulate(
+                                    st_rows,
+                                    headers=[
+                                        "Team Size",
+                                        "Eff. Capacity",
+                                        "Working Days",
+                                        "Delivery Date",
+                                        "Efficiency",
+                                    ],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                )
+                            )
+                        else:
+                            for r in prof_rows:
+                                marker = (
+                                    "  <-- recommended"
+                                    if r.team_size == rec_n
+                                    else ""
+                                )
+                                date_str = (
+                                    f"  ({r.delivery_date.isoformat()})"
+                                    if r.delivery_date
+                                    else ""
+                                )
+                                click.echo(
+                                    f"  {r.team_size} people: "
+                                    f"{r.calendar_working_days} working days, "
+                                    f"eff. capacity {r.effective_capacity:.2f}, "
+                                    f"efficiency {r.efficiency * 100:.1f}%"
+                                    f"{date_str}{marker}"
+                                )
 
         # Export results (only if formats are explicitly specified)
         if output_format.strip():
@@ -712,7 +737,7 @@ def simulate(
                         config=cfg,
                         critical_path_limit=critical_path_limit,
                     )
-                    if quiet == 0:
+                    if quiet == 0 and not minimal:
                         click.echo(f"\nResults exported to {output_file}")
                 elif fmt == "csv":
                     output_file = base_output.with_suffix(".csv")
@@ -722,7 +747,7 @@ def simulate(
                         config=cfg,
                         critical_path_limit=critical_path_limit,
                     )
-                    if quiet == 0:
+                    if quiet == 0 and not minimal:
                         click.echo(f"Results exported to {output_file}")
                 elif fmt == "html":
                     output_file = base_output.with_suffix(".html")
@@ -733,13 +758,13 @@ def simulate(
                         config=cfg,
                         critical_path_limit=critical_path_limit,
                     )
-                    if quiet == 0:
+                    if quiet == 0 and not minimal:
                         click.echo(f"Results exported to {output_file}")
                 else:
-                    if quiet == 0:
+                    if quiet == 0 and not minimal:
                         click.echo(f"Warning: Unknown format '{fmt}' ignored")
         else:
-            if quiet == 0:
+            if quiet == 0 and not minimal:
                 click.echo(
                     "\nNo export formats specified. Use -f to export results to files."
                 )

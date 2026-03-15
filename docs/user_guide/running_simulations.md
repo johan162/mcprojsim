@@ -134,6 +134,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
 | `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
+| `-m`, `--minimal` | Show minimal console output: version, project overview, calendar/effort statistical summaries, and calendar confidence intervals only | off |
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
 
@@ -166,6 +167,9 @@ mcprojsim simulate project.yaml --verbose
 
 # Table mode (ASCII tables for tabular sections)
 mcprojsim simulate project.yaml --table
+
+# Minimal output mode (core summaries only)
+mcprojsim simulate project.yaml --minimal
 
 # Show staffing recommendations
 mcprojsim simulate project.yaml --staffing
