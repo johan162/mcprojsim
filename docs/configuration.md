@@ -1,8 +1,62 @@
 # Configuration
 
-## Configuration File
+This page documents the application configuration file used by `mcprojsim`.
 
-Create a `config.yaml` file to customize uncertainty factors, symbolic estimate mappings, and simulation settings:
+The configuration file controls:
+
+- uncertainty multipliers,
+- symbolic estimate mappings such as T-shirt sizes and Story Points,
+- default simulation settings,
+- output and reporting defaults,
+- staffing-analysis behavior.
+
+## Configuration file format
+
+The configuration file is currently loaded as **YAML**.
+
+Typical usage:
+
+```bash
+mcprojsim simulate project.yaml --config config.yaml
+```
+
+You can also load it directly from Python:
+
+```python
+from mcprojsim import SimulationEngine
+from mcprojsim.config import Config
+
+config = Config.load_from_file("config.yaml")
+engine = SimulationEngine(iterations=10000, config=config)
+```
+
+## How configuration loading works
+
+When `mcprojsim` loads a configuration file, it does **not** replace the built-in defaults wholesale. Instead, it:
+
+1. starts from the built-in default configuration,
+2. reads your YAML file,
+3. recursively merges your values into those defaults,
+4. validates the merged result against the `Config` model.
+
+This means you can override only the values you care about.
+
+For example, if you define only `t_shirt_sizes.M`, the built-in mappings for `XS`, `S`, `L`, `XL`, and `XXL` remain available.
+
+## Top-level configuration structure
+
+The current configuration schema supports these top-level keys:
+
+- `uncertainty_factors`
+- `t_shirt_sizes`
+- `t_shirt_size_unit`
+- `story_points`
+- `story_point_unit`
+- `simulation`
+- `output`
+- `staffing`
+
+## Full example
 
 ```yaml
 uncertainty_factors:
@@ -10,21 +64,21 @@ uncertainty_factors:
     high: 0.90
     medium: 1.0
     low: 1.30
-  
+
   requirements_maturity:
     high: 1.0
     medium: 1.15
     low: 1.40
-  
+
   technical_complexity:
     low: 1.0
     medium: 1.20
     high: 1.50
-  
+
   team_distribution:
     colocated: 1.0
     distributed: 1.25
-  
+
   integration_complexity:
     low: 1.0
     medium: 1.15
@@ -40,6 +94,8 @@ t_shirt_sizes:
     most_likely: 5
     max: 8
 
+t_shirt_size_unit: "hours"
+
 story_points:
   1:
     min: 0.5
@@ -54,74 +110,226 @@ story_points:
     most_likely: 8
     max: 15
 
+story_point_unit: "days"
+
 simulation:
   default_iterations: 10000
-  random_seed: 42  # For reproducibility
-  max_stored_critical_paths: 20  # Keep the 20 most common full critical paths
+  random_seed: 42
+  max_stored_critical_paths: 20
 
 output:
   formats: ["json", "csv", "html"]
   include_histogram: true
   histogram_bins: 50
-  critical_path_report_limit: 2  # Show the two most common paths in reports by default
+  critical_path_report_limit: 2
+
+staffing:
+  effort_percentile: null
+  min_individual_productivity: 0.25
+  experience_profiles:
+    senior:
+      productivity_factor: 1.0
+      communication_overhead: 0.04
+    mixed:
+      productivity_factor: 0.85
+      communication_overhead: 0.06
+    junior:
+      productivity_factor: 0.65
+      communication_overhead: 0.08
 ```
 
-## Uncertainty Factors
+## Uncertainty factors
 
-Uncertainty factors are multipliers applied to base task estimates. A value of 1.0 is baseline, values less than 1.0 speed up tasks, and values greater than 1.0 slow them down.
+Uncertainty factors are multipliers applied to base task estimates. A value of `1.0` is the baseline. Values below `1.0` make work faster; values above `1.0` make work slower.
 
-### Team Experience
+The built-in configuration defines these factor names:
 
-- **high (0.90)**: Experienced team, 10% faster than baseline
-- **medium (1.0)**: Average experience, baseline speed
-- **low (1.30)**: Inexperienced team, 30% slower than baseline
+- `team_experience`
+- `requirements_maturity`
+- `technical_complexity`
+- `team_distribution`
+- `integration_complexity`
 
-### Requirements Maturity
+### Defaults
 
-- **high (1.0)**: Well-defined, stable requirements
-- **medium (1.15)**: Some ambiguity, minor changes expected
-- **low (1.40)**: High ambiguity, significant changes likely
+#### Team experience
 
-### Technical Complexity
+- **high (`0.90`)**: experienced team, about 10% faster than baseline
+- **medium (`1.0`)**: baseline
+- **low (`1.30`)**: inexperienced team, about 30% slower than baseline
 
-- **low (1.0)**: Simple, well-understood technology
-- **medium (1.20)**: Moderate complexity
-- **high (1.50)**: Cutting-edge or complex technology
+#### Requirements maturity
 
-### Team Distribution
+- **high (`1.0`)**: stable, well-defined requirements
+- **medium (`1.15`)**: moderate ambiguity
+- **low (`1.40`)**: substantial ambiguity and likely change
 
-- **colocated (1.0)**: Team in same location
-- **distributed (1.25)**: Distributed team with communication overhead
+#### Technical complexity
 
-### Integration Complexity
+- **low (`1.0`)**: straightforward technology or architecture
+- **medium (`1.20`)**: moderate complexity
+- **high (`1.50`)**: difficult or novel technology
 
-- **low (1.0)**: Minimal integration with other systems
-- **medium (1.15)**: Moderate integration
-- **high (1.35)**: Complex integration with multiple systems
+#### Team distribution
 
-## Using Configuration
+- **colocated (`1.0`)**: team in one place
+- **distributed (`1.25`)**: coordination and communication slow delivery
 
-If you provide only a subset of `t_shirt_sizes` or `story_points`, the built-in defaults remain available for the values you did not override.
+#### Integration complexity
 
-### Command Line
+- **low (`1.0`)**: little external integration
+- **medium (`1.15`)**: moderate integration effort
+- **high (`1.35`)**: many integration points or fragile dependencies
 
-```bash
-mcprojsim simulate project.yaml --config config.yaml
+### Notes
+
+- The configuration model accepts nested dictionaries here.
+- The current project-file model uses the built-in factor names listed above.
+- Extra factor names in the configuration file are not useful unless the source model and simulation logic also reference them.
+
+## Symbolic estimate mappings
+
+`mcprojsim` supports two symbolic estimate systems:
+
+- `t_shirt_size`
+- `story_points`
+
+Tasks using those symbolic forms are resolved through the active configuration.
+
+If you override only part of either mapping table, the remaining built-in defaults stay available.
+
+### T-shirt sizes
+
+Tasks may use `t_shirt_size` instead of explicit `min` / `most_likely` / `max` values.
+
+Built-in size keys:
+
+- `XS`
+- `S`
+- `M`
+- `L`
+- `XL`
+- `XXL`
+
+Built-in defaults:
+
+| Size | `min` | `most_likely` | `max` |
+|---|---:|---:|---:|
+| `XS` | 0.5 | 1 | 2 |
+| `S` | 1 | 2 | 4 |
+| `M` | 3 | 5 | 8 |
+| `L` | 5 | 8 | 13 |
+| `XL` | 8 | 13 | 21 |
+| `XXL` | 13 | 21 | 34 |
+
+Example override:
+
+```yaml
+t_shirt_sizes:
+  M:
+    min: 4
+    most_likely: 6
+    max: 9
 ```
 
-### Python API
+### `t_shirt_size_unit`
 
-```python
-from mcprojsim import SimulationEngine
-from mcprojsim.config import Config
+This field controls the unit used for all values in `t_shirt_sizes`.
 
-config = Config.load_from_file("config.yaml")
-engine = SimulationEngine(iterations=10000, config=config)
+Supported values:
+
+- `"hours"`
+- `"days"`
+- `"weeks"`
+
+Default: `"hours"`
+
+Example:
+
+```yaml
+t_shirt_size_unit: "days"
+```
+
+### Story Points
+
+Tasks may also use `story_points` for agile-style relative sizing.
+
+Built-in point values:
+
+- `1`
+- `2`
+- `3`
+- `5`
+- `8`
+- `13`
+- `21`
+
+Built-in defaults:
+
+| Points | `min` | `most_likely` | `max` |
+|---|---:|---:|---:|
+| `1` | 0.5 | 1 | 3 |
+| `2` | 1 | 2 | 4 |
+| `3` | 1.5 | 3 | 5 |
+| `5` | 3 | 5 | 8 |
+| `8` | 5 | 8 | 15 |
+| `13` | 8 | 13 | 21 |
+| `21` | 13 | 21 | 34 |
+
+Example override:
+
+```yaml
+story_points:
+  5:
+    min: 4
+    most_likely: 6
+    max: 9
+  8:
+    min: 6
+    most_likely: 9
+    max: 16
+```
+
+### `story_point_unit`
+
+This field controls the unit used for all values in `story_points`.
+
+Supported values:
+
+- `"hours"`
+- `"days"`
+- `"weeks"`
+
+Default: `"days"`
+
+### Important note
+
+Story Point and T-shirt-size estimates in the **project file** must **not** include their own `unit` field. The unit comes from the configuration via `story_point_unit` and `t_shirt_size_unit`.
+
+See [Task Estimation](user_guide/task_estimation.md#t-shirt-size-estimates) and [Task Estimation](user_guide/task_estimation.md#story-point-estimates) for more guidance.
+
+## Simulation settings
+
+The `simulation` section controls default run behavior.
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `default_iterations` | integer | `10000` | Default number of Monte Carlo iterations |
+| `random_seed` | integer or `null` | `null` | Seed for reproducible runs |
+| `max_stored_critical_paths` | integer | `20` | Number of full critical path sequences retained in memory |
+
+Example:
+
+```yaml
+simulation:
+  default_iterations: 20000
+  random_seed: 42
+  max_stored_critical_paths: 50
 ```
 
 ### Critical path reporting
 
-The simulation can now keep track of full critical path sequences, not just task-level criticality.
+The simulator can retain full critical path sequences, not just task-level criticality.
 
 - `simulation.max_stored_critical_paths` controls how many of the most common full paths are retained in the results object.
 - `output.critical_path_report_limit` controls how many of those stored paths are shown in CLI summaries and exports by default.
@@ -141,120 +349,181 @@ output:
   critical_path_report_limit: 3
 ```
 
-With that configuration, the simulation stores up to 50 unique full critical path sequences and shows the top 3 most common ones in the CLI, JSON, CSV, and HTML outputs.
+With that configuration, the simulation stores up to 50 unique full critical path sequences and shows the top 3 in the CLI, JSON, CSV, and HTML outputs.
 
-You can override the report count from the CLI:
+You can still override the report count from the CLI:
 
 ```bash
 mcprojsim simulate project.yaml --config config.yaml --critical-paths 5
 ```
 
-This affects reporting only. Storage remains controlled by `simulation.max_stored_critical_paths`.
+That affects reporting only. Storage remains controlled by `simulation.max_stored_critical_paths`.
 
-## Viewing Current Configuration
+## Output settings
+
+The `output` section controls reporting and export defaults.
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `formats` | list of strings | `["json", "csv", "html"]` | Default export formats |
+| `include_histogram` | boolean | `true` | Include histogram data where supported |
+| `histogram_bins` | integer | `50` | Number of bins used for histograms |
+| `critical_path_report_limit` | integer | `2` | Number of stored full critical paths shown by default |
+
+Example:
+
+```yaml
+output:
+  formats: ["json", "html"]
+  include_histogram: true
+  histogram_bins: 80
+  critical_path_report_limit: 5
+```
+
+## Staffing settings
+
+The `staffing` section controls the staffing analysis shown in CLI output and exports.
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `effort_percentile` | integer or `null` | `null` | Use a specific effort percentile such as P80 instead of the mean |
+| `min_individual_productivity` | float | `0.25` | Lower bound on per-person productivity after communication overhead |
+| `experience_profiles` | mapping | built-in defaults | Named team profiles used for staffing recommendations |
+
+### `effort_percentile`
+
+When `effort_percentile` is `null`, staffing uses mean total effort and mean elapsed time.
+
+When it is set, staffing uses the matching percentile for both:
+
+- total effort, and
+- elapsed time / critical-path basis.
+
+For example, `80` means the staffing recommendation is based on P80 effort and P80 elapsed time.
+
+This is useful when you want conservative staffing guidance rather than a mean-based plan.
+
+### `min_individual_productivity`
+
+The staffing model assumes each additional person introduces communication overhead. Raw per-person productivity declines with team size and is then floored by `min_individual_productivity`.
+
+Conceptually:
+
+$$
+P(n) = \max(P_{min}, 1 - c(n - 1))
+$$
+
+where:
+
+- $n$ is team size,
+- $c$ is the profile's `communication_overhead`,
+- $P_{min}$ is `min_individual_productivity`.
+
+This prevents the model from predicting unrealistically close-to-zero productivity for very large teams.
+
+Lower values penalize oversized teams more aggressively. Higher values produce a softer diminishing-returns curve.
+
+### `experience_profiles`
+
+Each named profile contains:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `productivity_factor` | float | Base multiplier for that team's effectiveness |
+| `communication_overhead` | float | Per-person overhead penalty as team size grows |
+
+Built-in profiles:
+
+| Profile | `productivity_factor` | `communication_overhead` |
+|---|---:|---:|
+| `senior` | 1.00 | 0.04 |
+| `mixed` | 0.85 | 0.06 |
+| `junior` | 0.65 | 0.08 |
+
+Example:
+
+```yaml
+staffing:
+  effort_percentile: 80
+  min_individual_productivity: 0.30
+  experience_profiles:
+    senior:
+      productivity_factor: 1.0
+      communication_overhead: 0.03
+    contractor:
+      productivity_factor: 0.75
+      communication_overhead: 0.05
+```
+
+## Viewing current configuration
 
 ```bash
 mcprojsim config show
 mcprojsim config show --config-file config.yaml
 ```
 
-The `config show` output now includes:
+The `config show` output includes the most relevant effective settings, including:
 
-- default iteration count
-- random seed
-- max stored critical paths
-- output histogram settings
-- critical path report limit
+- default iteration count,
+- random seed,
+- max stored critical paths,
+- output histogram settings,
+- critical path report limit,
+- staffing settings.
 
-## Symbolic Estimate Mappings
+## Validation rules
 
-### T-shirt sizes
+The configuration model validates these constraints directly:
 
-Tasks may use `t_shirt_size` instead of an explicit numeric range. Those labels are resolved through the `t_shirt_sizes` section in the active configuration. The unit for T-shirt size values is controlled by `t_shirt_size_unit` in the configuration (default: `"hours"`).
+- `t_shirt_size_unit` must be one of `hours`, `days`, or `weeks`,
+- `story_point_unit` must be one of `hours`, `days`, or `weeks`,
+- all configured estimate ranges require positive `min`, `most_likely`, and `max`,
+- `simulation.default_iterations` must be greater than 0,
+- `simulation.max_stored_critical_paths` must be greater than 0,
+- `output.histogram_bins` must be greater than 0,
+- `output.critical_path_report_limit` must be greater than 0,
+- `staffing.effort_percentile`, when set, must be between 1 and 99,
+- `staffing.min_individual_productivity` must be greater than 0 and at most 1,
+- `experience_profiles[*].productivity_factor` must be greater than 0,
+- `experience_profiles[*].communication_overhead` must be between 0 and 1.
 
-See [Task Estimation](user_guide/task_estimation.md#t-shirt-size-estimates) for the full default mapping table and guidance on choosing values.
+## Related settings in the project file
 
-### Story Points
+Some important reporting and visualization settings are **not** part of `config.yaml`. They belong in the project file instead.
 
-Tasks may also use `story_points` for agile-style relative sizing. Story Points are resolved to numeric ranges through the `story_points` section in the active configuration. The unit for story point values is controlled by `story_point_unit` in the configuration (default: `"days"`).
-
-See [Task Estimation](user_guide/task_estimation.md#story-point-estimates) for the full default mapping table.
-
-Example Story Point override:
-
-```yaml
-story_points:
-  5:
-    min: 4
-    most_likely: 6
-    max: 9
-  8:
-    min: 6
-    most_likely: 9
-    max: 16
-```
-
-Story point estimates must **not** include a `unit` field in the project file. The unit is determined by `story_point_unit` in the configuration. Similarly, T-shirt size estimates must not include a `unit` field — the unit is determined by `t_shirt_size_unit` (default: `"hours"`).
-
-## Probability Thresholds for Thermometer Visualization
-
-Configure color thresholds for the HTML thermometer visualization in your project file:
+For example, the HTML thermometer visualization uses these project-level settings:
 
 ```yaml
 project:
   name: "My Project"
   start_date: "2025-01-01"
-  # Probability thresholds for visual risk indicators
-  probability_red_threshold: 0.50    # Below 50%: High risk (red)
-  probability_green_threshold: 0.90  # Above 90%: Low risk (green)
-                                     # Between: Medium risk (gradient red→yellow→green)
+  probability_red_threshold: 0.50
+  probability_green_threshold: 0.90
 ```
 
-### Default Values
+Default values:
 
-- **probability_red_threshold**: 0.50 (50%)
-- **probability_green_threshold**: 0.90 (90%)
+- `probability_red_threshold`: `0.50`
+- `probability_green_threshold`: `0.90`
 
-### Custom Thresholds
+These thresholds control how probabilities are colored in the HTML report:
 
-Adjust thresholds based on project risk tolerance:
+- below the red threshold: high risk,
+- above the green threshold: low risk,
+- between them: intermediate risk.
 
-**Conservative (low-risk tolerance)**:
-```yaml
-probability_red_threshold: 0.70    # Below 70%: red
-probability_green_threshold: 0.95  # Above 95%: green
-```
+## Calibrating configuration values
 
-**Aggressive (high-risk tolerance)**:
-```yaml
-probability_red_threshold: 0.30    # Below 30%: red
-probability_green_threshold: 0.80  # Above 80%: green
-```
+To calibrate the configuration for your organisation:
 
-### Thermometer Visualization
+1. collect historical estimate-versus-actual data,
+2. derive realistic uncertainty multipliers,
+3. adjust symbolic estimate mappings to match your team's sizing habits,
+4. tune staffing profiles to reflect your real communication overhead,
+5. iterate over several completed projects.
 
-The HTML export displays a vertical thermometer showing:
-- **Effort levels** (in hours) on the right
-- **Probability of success** for each effort level in colored segments
-- **Color gradient**:
-  - 🔴 **Bright Red**: Probability below red threshold (high risk)
-  - 🟡 **Yellow/Orange**: Between thresholds (medium risk)
-  - 🟢 **Bright Green**: Above green threshold (low risk)
+Examples:
 
-This helps stakeholders quickly understand:
-- What effort level gives desired probability of success
-- Risk levels at different commitment levels
-- Where the project falls on the risk spectrum
-
-## Calibrating Uncertainty Factors
-
-To calibrate factors for your organization:
-
-1. **Collect Historical Data**: Gather actual vs. estimated durations
-2. **Calculate Multipliers**: Compare teams/projects with different characteristics
-3. **Update Configuration**: Adjust factors based on observed differences
-4. **Iterate**: Refine over multiple projects
-
-Example:
-- Projects with experienced teams took 85% of estimated time → set high to 0.85
-- Projects with distributed teams took 30% longer → set distributed to 1.30
+- if experienced teams historically finish at about 85% of baseline effort, set `team_experience.high: 0.85`,
+- if distributed teams typically take about 30% longer, set `team_distribution.distributed: 1.30`,
+- if your team uses Story Point 8 for bigger work than the defaults assume, widen the `story_points.8` range.

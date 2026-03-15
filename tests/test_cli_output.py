@@ -41,10 +41,15 @@ class _FakeResults:
     kurtosis = 0.3
     iterations = 100
     hours_per_day = 8.0
-    start_date = date(2026, 1, 5)
+    start_date: date | None = date(2026, 1, 5)
     sensitivity = {"task_001": 0.85, "task_002": -0.42}
     task_slack = {"task_001": 0.0, "task_002": 4.5}
     percentiles = {50: 38.0, 80: 44.0, 90: 48.0}
+    effort_percentiles: dict[int, float] = {}
+    max_parallel_tasks = 2
+
+    def total_effort_hours(self):
+        return 60.0
 
     def delivery_date(self, hours):
         if self.start_date is None:
@@ -227,7 +232,7 @@ class TestSimulateTargetDate:
 
     def test_target_date_no_start_date(self, monkeypatch):
         class NoStartResults(_FakeResults):
-            start_date = None  # type: ignore[assignment]
+            start_date = None
 
             def delivery_date(self, hours):
                 return None

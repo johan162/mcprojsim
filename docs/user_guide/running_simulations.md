@@ -131,9 +131,10 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-o`, `--output PATH` | Output file base path (without extension) | project name |
 | `-f`, `--output-format FORMATS` | Comma-separated export formats: `json`, `csv`, `html` | none |
 | `--critical-paths N` | Number of critical paths to display | 2 |
-| `-q`, `--quiet` | Suppress progress output | off |
+| `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
 | `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
-| `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact) as ASCII tables | off |
+| `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
+| `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
 
 ### Examples
@@ -157,11 +158,20 @@ mcprojsim simulate project.yaml -f json,csv,html -o results/my_project
 # Quiet mode (suppress progress bars)
 mcprojsim simulate project.yaml --quiet
 
+# Fully quiet mode (suppress all normal CLI output)
+mcprojsim simulate project.yaml -qq
+
 # Verbose mode (show config/project loading details)
 mcprojsim simulate project.yaml --verbose
 
 # Table mode (ASCII tables for tabular sections)
 mcprojsim simulate project.yaml --table
+
+# Show staffing recommendations
+mcprojsim simulate project.yaml --staffing
+
+# Staffing with table formatting
+mcprojsim simulate project.yaml --staffing --table
 ```
 
 ### Output
@@ -179,6 +189,48 @@ Confidence Intervals:
 │ P99          │  790.61 │             99 │ 2026-03-19 │
 └──────────────┴─────────┴────────────────┴────────────┘
 ```
+
+#### Staffing output
+
+A short staffing advisory is always included at the end of the output (unless `--quiet` is active):
+
+```text
+Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
+```
+
+By default the staffing analysis uses **mean** effort and elapsed time. To base it on a specific confidence level, set `staffing.effort_percentile` in your configuration file:
+
+```yaml
+staffing:
+  effort_percentile: 80  # use P80 effort and elapsed time
+```
+
+With this setting the output changes to:
+
+```text
+Staffing (based on P80 effort percentile): 3 people recommended (mixed team), 42 working days
+  Total effort: 1,024 person-hours (128 person-days) | Parallelism ratio: 1.6
+```
+
+Using a higher percentile produces more conservative staffing recommendations because it accounts for higher-effort scenarios.
+
+Pass `--staffing` to expand this into a full table for each experience profile (senior, mixed, junior). With `--table`:
+
+```text
+=== Staffing Analysis ===
+
+--- senior ---
+┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+│   Team Size │   Eff. Capacity │   Working Days │ Delivery Date   │ Efficiency   │
+├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+│           1 │            1.00 │            114 │ 2026-06-15      │ 100.0%       │
+│           2 │            1.92 │             60 │ 2026-03-27      │ 96.0%        │
+│          *3 │            2.76 │             42 │ 2026-03-02      │ 92.2%        │
+└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+```
+
+The row marked with `*` is the recommended team size for that profile. Without `--table`, the same information appears in plain indented text with `<-- recommended` annotations. See [Interpreting Results — Staffing recommendations](interpreting_results.md#staffing-recommendations) for a detailed explanation of the model and columns.
 
 Without `--table`, the same data is printed as indented text:
 

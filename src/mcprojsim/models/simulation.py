@@ -49,9 +49,18 @@ class SimulationResults(BaseModel):
     # Schedule slack (mean total float per task across iterations)
     task_slack: Dict[str, float] = Field(default_factory=dict)
 
+    # Peak parallelism observed across all iterations
+    max_parallel_tasks: int = 0
+
     # Risk impact tracking
     risk_impacts: Dict[str, np.ndarray] = Field(default_factory=dict)
     project_risk_impacts: np.ndarray = Field(default_factory=lambda: np.array([]))
+
+    # Per-iteration total effort (sum of all task durations per iteration)
+    effort_durations: np.ndarray = Field(
+        default_factory=lambda: np.array([]),
+        description="Per-iteration total person-effort in hours",
+    )
 
     mean: float = 0.0
     median: float = 0.0
@@ -61,6 +70,7 @@ class SimulationResults(BaseModel):
     skewness: float = 0.0
     kurtosis: float = 0.0
     percentiles: Dict[int, float] = Field(default_factory=dict)
+    effort_percentiles: Dict[int, float] = Field(default_factory=dict)
 
     def calculate_statistics(self) -> None:
         """Calculate statistical measures from simulation results."""
@@ -88,6 +98,27 @@ class SimulationResults(BaseModel):
         if p not in self.percentiles:
             self.percentiles[p] = float(np.percentile(self.durations, p))
         return self.percentiles[p]
+
+    def effort_percentile(self, p: int) -> float:
+        """Get percentile of total person-effort across iterations.
+
+        Args:
+            p: Percentile (0-100)
+
+        Returns:
+            Total effort value (person-hours) at the given percentile.
+            Falls back to :meth:`total_effort_hours` when the per-iteration
+            effort distribution is not available.
+        """
+        if p not in self.effort_percentiles:
+            if len(self.effort_durations) > 0:
+                self.effort_percentiles[p] = float(
+                    np.percentile(self.effort_durations, p)
+                )
+            else:
+                # Fallback: no per-iteration data; use the mean-based total.
+                self.effort_percentiles[p] = self.total_effort_hours()
+        return self.effort_percentiles[p]
 
     def get_critical_path(self) -> Dict[str, float]:
         """Get criticality index for each task.
@@ -149,6 +180,21 @@ class SimulationResults(BaseModel):
         """
         return float(np.mean(self.durations <= target_hours))
 
+    def total_effort_hours(self) -> float:
+        """Compute the total person-effort across all tasks in hours.
+
+        This is the sum of per-task mean durations and represents the total
+        amount of work regardless of parallelism.  It differs from
+        :pyattr:`mean` which is the *elapsed* project duration (critical-path
+        time).
+
+        Returns:
+            Total person-hours of effort.
+        """
+        if not self.task_durations:
+            return self.mean
+        return float(sum(np.mean(d) for d in self.task_durations.values()))
+
     def get_risk_impact_summary(self) -> Dict[str, Dict[str, float]]:
         """Get summary statistics for risk impacts per task.
 
@@ -203,6 +249,7 @@ class SimulationResults(BaseModel):
                 }
                 for record in self.critical_path_sequences
             ],
+            "max_parallel_tasks": self.max_parallel_tasks,
         }
 
     def hours_to_working_days(self, hours: float) -> int:

@@ -46,12 +46,12 @@ DEFAULT_UNCERTAINTY_FACTORS = {
     "integration_complexity": {"low": 1.0, "medium": 1.15, "high": 1.35},
 }
 DEFAULT_T_SHIRT_SIZE_VALUES = {
-    "XS": {"min": 0.5, "most_likely": 1, "max": 2},
-    "S": {"min": 1, "most_likely": 2, "max": 4},
-    "M": {"min": 3, "most_likely": 5, "max": 8},
-    "L": {"min": 5, "most_likely": 8, "max": 13},
-    "XL": {"min": 8, "most_likely": 13, "max": 21},
-    "XXL": {"min": 13, "most_likely": 21, "max": 34},
+    "XS": {"min": 3, "most_likely": 5, "max": 15},
+    "S": {"min": 5, "most_likely": 16, "max": 40},
+    "M": {"min": 40, "most_likely": 60, "max": 120},
+    "L": {"min": 160, "most_likely": 240, "max": 500},
+    "XL": {"min": 320, "most_likely": 400, "max": 750},
+    "XXL": {"min": 400, "most_likely": 500, "max": 1200},
 }
 DEFAULT_STORY_POINT_VALUES = {
     1: {"min": 0.5, "most_likely": 1, "max": 3},
@@ -88,6 +88,23 @@ def _build_default_config_data() -> dict[str, Any]:
             "include_histogram": True,
             "histogram_bins": DEFAULT_HISTOGRAM_BINS,
             "critical_path_report_limit": DEFAULT_CRITICAL_PATH_REPORT_LIMIT,
+        },
+        "staffing": {
+            "dividual_productivity": 0.25,
+            "experience_profiles": {
+                "senior": {
+                    "productivity_factor": 1.0,
+                    "communication_overhead": 0.04,
+                },
+                "mixed": {
+                    "productivity_factor": 0.85,
+                    "communication_overhead": 0.06,
+                },
+                "junior": {
+                    "productivity_factor": 0.65,
+                    "communication_overhead": 0.08,
+                },
+            },
         },
     }
 
@@ -138,6 +155,53 @@ class OutputConfig(BaseModel):
     )
 
 
+class ExperienceProfileConfig(BaseModel):
+    """Productivity and overhead parameters for an experience profile."""
+
+    productivity_factor: float = Field(default=1.0, gt=0)
+    communication_overhead: float = Field(default=0.06, ge=0, le=1)
+
+
+class StaffingConfig(BaseModel):
+    """Staffing analysis settings."""
+
+    effort_percentile: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=99,
+        description=(
+            "Percentile of the effort distribution to use as the basis for "
+            "staffing calculations (e.g. 80 for P80). When None (the default), "
+            "the mean effort and mean elapsed time are used instead."
+        ),
+    )
+    min_individual_productivity: float = Field(
+        default=0.25,
+        gt=0,
+        le=1,
+        description=(
+            "Floor for individual productivity after communication overhead. "
+            "Prevents the model from predicting zero-productivity teams."
+        ),
+    )
+    experience_profiles: Dict[str, ExperienceProfileConfig] = Field(
+        default_factory=lambda: {
+            "senior": ExperienceProfileConfig(
+                productivity_factor=1.0,
+                communication_overhead=0.04,
+            ),
+            "mixed": ExperienceProfileConfig(
+                productivity_factor=0.85,
+                communication_overhead=0.06,
+            ),
+            "junior": ExperienceProfileConfig(
+                productivity_factor=0.65,
+                communication_overhead=0.08,
+            ),
+        }
+    )
+
+
 class EstimateRangeConfig(BaseModel):
     """Range configuration for a symbolic estimate."""
 
@@ -164,6 +228,7 @@ class Config(BaseModel):
     story_point_unit: EffortUnit = Field(default=EffortUnit.DAYS)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
+    staffing: StaffingConfig = Field(default_factory=StaffingConfig)
 
     @classmethod
     def load_from_file(cls, config_path: Path | str) -> "Config":

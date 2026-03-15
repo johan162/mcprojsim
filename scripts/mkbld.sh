@@ -269,6 +269,12 @@ run_command "poetry run flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 -
 # Step 2.3: Type checking with mypy
 run_command "poetry run mypy src/ tests/ --strict --ignore-missing-imports" "Running mypy type checking"
 
+# Step 2.4: Run pyright for additional static analysis (optional, can be added if pyright is set up)
+if command -v pyright >/dev/null 2>&1; then
+    run_command "poetry run pyright src/ tests/" "Running pyright static analysis"
+else
+    print_warning "Pyright not found, skipping pyright static analysis. Install with 'pip install pyright' for enhanced linting."
+fi
 
 
 # =====================================

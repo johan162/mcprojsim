@@ -112,7 +112,7 @@ class TaskEstimate(BaseModel):
         return self
 
 
-def _convert_to_hours(value: float, unit: EffortUnit, hours_per_day: float) -> float:
+def convert_to_hours(value: float, unit: EffortUnit, hours_per_day: float) -> float:
     """Convert a value from the given unit to hours.
 
     Args:
@@ -185,7 +185,7 @@ class Risk(BaseModel):
         elif self.impact.type == ImpactType.ABSOLUTE:
             value = self.impact.value
             unit = self.impact.unit or EffortUnit.HOURS
-            return _convert_to_hours(value, unit, hours_per_day)
+            return convert_to_hours(value, unit, hours_per_day)
         else:  # PERCENTAGE
             return base_duration * (self.impact.value / 100.0)
 

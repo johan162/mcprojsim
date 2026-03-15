@@ -192,6 +192,18 @@ $(DOC_STAMP): $(DOC_FILES)
 $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running linter...$(NC)"
 	@poetry run flake8 $(SRC_DIR) $(TEST_DIR)
+# Run pyright as an additional linting step if available
+	@if command -v pyright >/dev/null 2>&1; then \
+		echo -e "$(DARKYELLOW)- Running pyright for additional linting...$(NC)"; \
+		if poetry run pyright $(SRC_DIR) $(TEST_DIR); then \
+			echo -e "$(GREEN)✓ Pyright linting passed$(NC)"; \
+		else \
+			echo -e "$(RED)✗ Error: Pyright linting failed$(NC)"; \
+			exit 1; \
+		fi \
+	else \
+		echo -e "$(YELLOW)⚠️  Warning: pyright not found, skipping pyright linting. Install with 'npm install -g pyright' for enhanced linting.$(NC)"; \
+	fi
 	@touch $(LINT_STAMP)
 	@echo -e "$(GREEN)✓ Lint run successfully$(NC)"
 

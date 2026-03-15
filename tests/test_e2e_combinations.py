@@ -35,7 +35,7 @@ from mcprojsim.models.project import (
     Project,
     Risk,
     Task,
-    _convert_to_hours,
+    convert_to_hours,
 )
 from mcprojsim.parsers.yaml_parser import YAMLParser
 from mcprojsim.simulation.engine import SimulationEngine
@@ -452,8 +452,8 @@ def _resolve_estimate_range(
         assert rc is not None
         unit = config.t_shirt_size_unit
         return (
-            _convert_to_hours(rc.min, unit, hours_per_day),
-            _convert_to_hours(rc.max, unit, hours_per_day),
+            convert_to_hours(rc.min, unit, hours_per_day),
+            convert_to_hours(rc.max, unit, hours_per_day),
         )
 
     if est.story_points is not None:
@@ -461,8 +461,8 @@ def _resolve_estimate_range(
         assert sp is not None
         unit = config.story_point_unit
         return (
-            _convert_to_hours(sp.min, unit, hours_per_day),
-            _convert_to_hours(sp.max, unit, hours_per_day),
+            convert_to_hours(sp.min, unit, hours_per_day),
+            convert_to_hours(sp.max, unit, hours_per_day),
         )
 
     # Explicit estimate
@@ -471,8 +471,8 @@ def _resolve_estimate_range(
     if est.distribution == DistributionType.TRIANGULAR:
         assert est.min is not None and est.max is not None
         return (
-            _convert_to_hours(est.min, unit, hours_per_day),
-            _convert_to_hours(est.max, unit, hours_per_day),
+            convert_to_hours(est.min, unit, hours_per_day),
+            convert_to_hours(est.max, unit, hours_per_day),
         )
 
     # Lognormal: mode = most_likely, sigma = standard_deviation
@@ -484,8 +484,8 @@ def _resolve_estimate_range(
     lo = math.exp(mu - _LOGNORMAL_K * sigma)
     hi = math.exp(mu + _LOGNORMAL_K * sigma)
     return (
-        _convert_to_hours(lo, unit, hours_per_day),
-        _convert_to_hours(hi, unit, hours_per_day),
+        convert_to_hours(lo, unit, hours_per_day),
+        convert_to_hours(hi, unit, hours_per_day),
     )
 
 
