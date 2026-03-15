@@ -172,6 +172,67 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL display the full staffing analysis table when the `--staffing` CLI flag is specified
 - The system SHALL include staffing recommendations and table data in JSON and CSV exports
 - The system SHALL offer configuration to decide which effort percentile to base staffing suggestion on
+
+### 3.1.1 Resource and Calendar-Constrained Scheduling
+
+**FR-026: Team Size and Member Model**
+- The system SHALL allow project-level team size as a positive integer.
+- The system SHALL materialize exactly that number of team members for each simulation iteration.
+- Team members SHALL be identifiable for assignment, availability, and sickness modeling.
+
+**FR-027: Productivity and Experience Attributes**
+- Each team member SHALL have default productivity 1.0 (1 person-hour per clock hour).
+- Productivity SHALL be configurable per member in the range 0.1 to 2.0.
+- Each team member SHALL have experience level 1, 2, or 3 (Junior, Mid, Expert).
+- Invalid productivity/experience values SHALL fail validation.
+
+**FR-028: Working Calendar Defaults and Holidays**
+- The default calendar SHALL include Monday–Friday as working days and exclude weekends.
+- Projects MAY define public holidays as non-working dates.
+- Holidays SHALL be applied to calendar-time simulation and delivery-date forecasting.
+
+**FR-029: Member Time-Off and Vacation**
+- The system SHALL support member-specific non-working dates (vacation/days off).
+- Member time off SHALL override default working-day availability for those dates.
+- Overlapping holidays/weekends/time-off SHALL not double-penalize availability.
+
+**FR-030: Calendar-Aware Percentiles and Dates**
+- Calendar-time percentiles SHALL account for all non-working periods (weekends, holidays, member days off).
+- Delivery-date forecasts SHALL be computed from constrained schedules, not dependency-only elapsed hours.
+
+**FR-031: Task Resource Constraints and Qualification**
+- Tasks SHALL support max concurrent assignees per task; default is 1 when unspecified.
+- Tasks SHALL support minimum experience requirement; default is level 1 when unspecified.
+- All members SHALL be eligible for all tasks unless constrained by minimum experience.
+- The scheduler SHALL never assign more than task max resources concurrently.
+
+**FR-032: Sickness Event Modeling**
+- Each member SHALL have a daily sickness-start probability in [0.0, 1.0].
+- Sickness start SHALL be modeled as independent Bernoulli trials per working day.
+- Sickness duration SHALL follow a log-normal distribution configured in config, with default mode 2 working days.
+- During sickness periods, member availability SHALL be zero.
+
+**FR-033: Resource Assignment Strategy**
+- The system SHALL support critical-path-prioritized assignment when resource contention exists.
+- The strategy SHALL be deterministic for a fixed seed and equal-priority ties.
+- Tie-breaking rules SHALL be defined (for example by earliest-ready then task id).
+
+**FR-034: Two-Pass Critical-Path-Aware Simulation Mode**
+- The system SHALL provide a configurable two-pass mode, default disabled.
+- Pass 1 SHALL run baseline resource-constrained simulation to estimate criticality.
+- Pass 2 SHALL prioritize resources to high-criticality tasks, then assign remaining resources to other ready tasks.
+- Outputs SHALL indicate whether two-pass mode was used.
+
+**FR-035: Resource/Calendar Reporting and Export**
+- The system SHALL report resource-constrained metrics: wait time due to resource contention, utilization, and calendar delay contribution.
+- JSON/CSV/HTML exports SHALL include these metrics when resource mode is active.
+- CLI output SHALL distinguish dependency-only vs resource-constrained schedule semantics.
+
+**FR-036: Backward Compatibility and Fallback Behavior**
+- Existing project files without resource/calendar/team fields SHALL remain valid.
+- In absence of explicit resource settings, behavior SHALL default to prior-compatible assumptions (task max resources=1, experience min=1, default calendar).
+- Migration guidance SHALL be documented for adopting explicit team/resource definitions.
+
  
 
 ### 3.2 Non-Functional Requirements
@@ -290,6 +351,8 @@ tasks:
       integration_complexity: "low"
     
     resources: ["backend_dev_1", "dba_1"]  # Optional
+    max_resources: 2
+    min_experience_level: 1
     
     risks:
       - id: "task_risk_001"
