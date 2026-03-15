@@ -203,6 +203,8 @@ def simulate(
             hours_per_day = results.hours_per_day
             mean_wd = math.ceil(results.mean / hours_per_day)
             cv = results.std_dev / results.mean if results.mean > 0 else 0
+            min_duration = getattr(results, "min_duration", results.mean)
+            max_duration = getattr(results, "max_duration", results.mean)
             schedule_mode = getattr(results, "schedule_mode", "dependency_only")
             constraints_active = getattr(
                 results,
@@ -217,40 +219,138 @@ def simulate(
                 0.0,
             )
 
+            effort_durations = getattr(results, "effort_durations", None)
+            effort_stats: dict[str, float | int]
+            if effort_durations is not None and len(effort_durations) > 0:
+                import numpy as np
+                from scipy import stats as scipy_stats
+
+                effort_arr = np.asarray(effort_durations)
+                effort_mean = float(np.mean(effort_arr))
+                effort_std = float(np.std(effort_arr))
+                effort_stats = {
+                    "mean": effort_mean,
+                    "median": float(np.median(effort_arr)),
+                    "std_dev": effort_std,
+                    "min": float(np.min(effort_arr)),
+                    "max": float(np.max(effort_arr)),
+                    "cv": effort_std / effort_mean if effort_mean > 0 else 0.0,
+                    "skewness": (
+                        float(scipy_stats.skew(effort_arr)) if effort_std > 0 else 0.0
+                    ),
+                    "kurtosis": (
+                        float(scipy_stats.kurtosis(effort_arr))
+                        if effort_std > 0
+                        else 0.0
+                    ),
+                    "mean_person_days": math.ceil(effort_mean / hours_per_day),
+                }
+            else:
+                effort_mean_fallback = float(results.total_effort_hours())
+                effort_stats = {
+                    "mean": effort_mean_fallback,
+                    "median": effort_mean_fallback,
+                    "std_dev": 0.0,
+                    "min": effort_mean_fallback,
+                    "max": effort_mean_fallback,
+                    "cv": 0.0,
+                    "skewness": 0.0,
+                    "kurtosis": 0.0,
+                    "mean_person_days": math.ceil(effort_mean_fallback / hours_per_day),
+                }
+
             click.echo("\n=== Simulation Results ===")
 
             if table:
-                summary_rows = [
+                common_rows = [
                     ["Project", results.project_name],
                     ["Hours per Day", f"{hours_per_day}"],
-                    ["Mean", f"{results.mean:.2f} hours ({mean_wd} working days)"],
-                    ["Median (P50)", f"{results.median:.2f} hours"],
-                    ["Std Dev", f"{results.std_dev:.2f} hours"],
-                    ["Coefficient of Variation", f"{cv:.4f}"],
-                    ["Skewness", f"{results.skewness:.4f}"],
-                    ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
                     ["Schedule Mode", schedule_mode],
                 ]
+                calendar_summary_rows = [
+                    ["Mean", f"{results.mean:.2f} hours ({mean_wd} working days)"],
+                    ["Median (P50)", f"{results.median:.2f} hours"],
+                    ["Std Dev", f"{results.std_dev:.2f} hours"],
+                    ["Minimum", f"{min_duration:.2f} hours"],
+                    ["Maximum", f"{max_duration:.2f} hours"],
+                    ["Coefficient of Variation", f"{cv:.4f}"],
+                    ["Skewness", f"{results.skewness:.4f}"],
+                    ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
+                ]
+                effort_summary_rows = [
+                    [
+                        "Mean",
+                        (
+                            f"{effort_stats['mean']:.2f} person-hours "
+                            f"({effort_stats['mean_person_days']} person-days)"
+                        ),
+                    ],
+                    ["Median (P50)", f"{effort_stats['median']:.2f} person-hours"],
+                    ["Std Dev", f"{effort_stats['std_dev']:.2f} person-hours"],
+                    ["Minimum", f"{effort_stats['min']:.2f} person-hours"],
+                    ["Maximum", f"{effort_stats['max']:.2f} person-hours"],
+                    ["Coefficient of Variation", f"{effort_stats['cv']:.4f}"],
+                    ["Skewness", f"{effort_stats['skewness']:.4f}"],
+                    ["Excess Kurtosis", f"{effort_stats['kurtosis']:.4f}"],
+                ]
+                click.echo("\nProject Overview:")
                 click.echo(
                     _tabulate(
-                        summary_rows,
-                        headers=["Parameter", "Value"],
+                        common_rows,
+                        headers=["Field", "Value"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+                click.echo("\nCalendar Time Statistical Summary:")
+                click.echo(
+                    _tabulate(
+                        calendar_summary_rows,
+                        headers=["Metric", "Value"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+                click.echo("\nProject Effort Statistical Summary:")
+                click.echo(
+                    _tabulate(
+                        effort_summary_rows,
+                        headers=["Metric", "Value"],
                         tablefmt="simple_outline",
                         disable_numparse=True,
                     )
                 )
             else:
+                click.echo("\nProject Overview:")
                 click.echo(f"Project: {results.project_name}")
                 click.echo(f"Hours per Day: {hours_per_day}")
+                click.echo(f"Max Parallel Tasks: {results.max_parallel_tasks}")
+                click.echo(f"Schedule Mode: {schedule_mode}")
+
+                click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
                 click.echo(f"Median (P50): {results.median:.2f} hours")
                 click.echo(f"Std Dev: {results.std_dev:.2f} hours")
+                click.echo(f"Minimum: {min_duration:.2f} hours")
+                click.echo(f"Maximum: {max_duration:.2f} hours")
                 click.echo(f"Coefficient of Variation: {cv:.4f}")
                 click.echo(f"Skewness: {results.skewness:.4f}")
                 click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
-                click.echo(f"Max Parallel Tasks: {results.max_parallel_tasks}")
-                click.echo(f"Schedule Mode: {schedule_mode}")
+
+                click.echo("\nProject Effort Statistical Summary:")
+                click.echo(
+                    "Mean: "
+                    f"{effort_stats['mean']:.2f} person-hours "
+                    f"({effort_stats['mean_person_days']} person-days)"
+                )
+                click.echo(f"Median (P50): {effort_stats['median']:.2f} person-hours")
+                click.echo(f"Std Dev: {effort_stats['std_dev']:.2f} person-hours")
+                click.echo(f"Minimum: {effort_stats['min']:.2f} person-hours")
+                click.echo(f"Maximum: {effort_stats['max']:.2f} person-hours")
+                click.echo(f"Coefficient of Variation: {effort_stats['cv']:.4f}")
+                click.echo(f"Skewness: {effort_stats['skewness']:.4f}")
+                click.echo(f"Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
 
             if table:
                 # Confidence Intervals table

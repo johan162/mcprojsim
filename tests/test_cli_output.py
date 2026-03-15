@@ -192,7 +192,10 @@ class TestSimulateTableOutput:
             pf = _write_project(None)
             result = runner.invoke(cli, ["simulate", pf, "--table"])
         assert result.exit_code == 0
-        assert "Parameter" in result.output
+        assert "Project Overview" in result.output
+        assert "Calendar Time Statistical Summary" in result.output
+        assert "Project Effort Statistical Summary" in result.output
+        assert "Field" in result.output
         assert "Value" in result.output
         assert "CLI Output Test" in result.output
 
