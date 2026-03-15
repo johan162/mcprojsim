@@ -244,6 +244,106 @@ class TestProject:
         assert project.project.name == "Test Project"
         assert len(project.tasks) == 1
 
+    def test_project_team_size_metadata(self):
+        """Test project metadata accepts team size."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Team Project",
+                start_date=date(2025, 1, 1),
+                team_size=5,
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                )
+            ],
+        )
+        assert project.project.team_size == 5
+
+    def test_resource_defaults_and_generated_name(self):
+        """Test resource defaults and auto-generated names."""
+        project = Project(
+            project=ProjectMetadata(name="Res Project", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                )
+            ],
+            resources=[
+                {"experience_level": 2},
+                {"name": "alice", "experience_level": 3},
+                {"id": "legacy_id"},
+            ],
+        )
+
+        assert project.resources[0].name == "resource_001"
+        assert project.resources[0].productivity_level == 1.0
+        assert project.resources[0].experience_level == 2
+        assert project.resources[1].name == "alice"
+        assert project.resources[2].name == "legacy_id"
+
+    def test_resource_unique_name_validation(self):
+        """Test duplicate resource names are rejected."""
+        with pytest.raises(ValueError, match="Resource names must be unique"):
+            Project(
+                project=ProjectMetadata(
+                    name="Dup Res Project",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    )
+                ],
+                resources=[
+                    {"name": "sam"},
+                    {"name": "sam"},
+                ],
+            )
+
+    def test_task_resource_reference_validation(self):
+        """Test unknown task resource references are rejected."""
+        with pytest.raises(ValueError, match="references unknown resource"):
+            Project(
+                project=ProjectMetadata(
+                    name="Bad Ref Project",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        resources=["missing_resource"],
+                    )
+                ],
+                resources=[{"name": "existing_resource"}],
+            )
+
+    def test_task_resource_constraints_defaults_and_validation(self):
+        """Test task-level resource constraints defaults and validation."""
+        task = Task(
+            id="task_001",
+            name="Task 1",
+            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+        )
+        assert task.max_resources == 1
+        assert task.min_experience_level == 1
+
+        with pytest.raises(ValueError, match="min_experience_level"):
+            Task(
+                id="task_002",
+                name="Task 2",
+                estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                min_experience_level=4,
+            )
+
     def test_project_duplicate_task_ids(self):
         """Test project with duplicate task IDs."""
         with pytest.raises(ValueError, match="Task IDs must be unique"):

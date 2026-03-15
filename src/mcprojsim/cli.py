@@ -203,6 +203,19 @@ def simulate(
             hours_per_day = results.hours_per_day
             mean_wd = math.ceil(results.mean / hours_per_day)
             cv = results.std_dev / results.mean if results.mean > 0 else 0
+            schedule_mode = getattr(results, "schedule_mode", "dependency_only")
+            constraints_active = getattr(
+                results,
+                "resource_constraints_active",
+                False,
+            )
+            resource_wait_time_hours = getattr(results, "resource_wait_time_hours", 0.0)
+            resource_utilization = getattr(results, "resource_utilization", 0.0)
+            calendar_delay_time_hours = getattr(
+                results,
+                "calendar_delay_time_hours",
+                0.0,
+            )
 
             click.echo("\n=== Simulation Results ===")
 
@@ -217,6 +230,7 @@ def simulate(
                     ["Skewness", f"{results.skewness:.4f}"],
                     ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
+                    ["Schedule Mode", schedule_mode],
                 ]
                 click.echo(
                     _tabulate(
@@ -236,6 +250,7 @@ def simulate(
                 click.echo(f"Skewness: {results.skewness:.4f}")
                 click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
                 click.echo(f"Max Parallel Tasks: {results.max_parallel_tasks}")
+                click.echo(f"Schedule Mode: {schedule_mode}")
 
             if table:
                 # Confidence Intervals table
@@ -344,6 +359,31 @@ def simulate(
                         )
                     )
 
+                if constraints_active:
+                    diagnostics_rows = [
+                        [
+                            "Average Resource Wait (hours)",
+                            f"{resource_wait_time_hours:.2f}",
+                        ],
+                        [
+                            "Effective Resource Utilization",
+                            f"{resource_utilization*100:.1f}%",
+                        ],
+                        [
+                            "Calendar Delay Contribution (hours)",
+                            f"{calendar_delay_time_hours:.2f}",
+                        ],
+                    ]
+                    click.echo("\nConstrained Schedule Diagnostics:")
+                    click.echo(
+                        _tabulate(
+                            diagnostics_rows,
+                            headers=["Metric", "Value"],
+                            tablefmt="simple_outline",
+                            disable_numparse=True,
+                        )
+                    )
+
             else:
                 # Plain text output
                 click.echo("\nCalendar Time Confidence Intervals:")
@@ -404,6 +444,21 @@ def simulate(
                                 f"triggers={stats['trigger_rate']*100:.1f}%, "
                                 f"mean_when_triggered={stats['mean_when_triggered']:.2f}h"
                             )
+
+                if constraints_active:
+                    click.echo("\nConstrained Schedule Diagnostics:")
+                    click.echo(
+                        "  Average Resource Wait: "
+                        f"{resource_wait_time_hours:.2f} hours"
+                    )
+                    click.echo(
+                        "  Effective Resource Utilization: "
+                        f"{resource_utilization*100:.1f}%"
+                    )
+                    click.echo(
+                        "  Calendar Delay Contribution: "
+                        f"{calendar_delay_time_hours:.2f} hours"
+                    )
 
             # Probability of target date
             if target_date:

@@ -189,6 +189,133 @@ class TestTaskScheduler:
         assert "task_001" in critical_path
         assert "task_002" in critical_path
 
+    def test_schedule_tasks_with_resource_constraints_serializes_work(self):
+        """Resource-constrained mode should serialize work with one shared member."""
+        project = Project(
+            project=ProjectMetadata(name="Res Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                ),
+            ],
+            resources=[
+                {"name": "res_a", "experience_level": 2, "productivity_level": 1.0}
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        unconstrained = scheduler.schedule_tasks(
+            {"task_001": 4.0, "task_002": 4.0},
+            use_resource_constraints=False,
+        )
+        constrained = scheduler.schedule_tasks(
+            {"task_001": 4.0, "task_002": 4.0},
+            use_resource_constraints=True,
+        )
+
+        unconstrained_end = max(info["end"] for info in unconstrained.values())
+        constrained_end = max(info["end"] for info in constrained.values())
+
+        assert unconstrained_end == 4.0
+        assert constrained_end == 8.0
+
+    def test_schedule_tasks_with_productivity_and_max_resources(self):
+        """Resource-constrained mode should scale elapsed duration by capacity."""
+        project = Project(
+            project=ProjectMetadata(name="Cap Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    max_resources=2,
+                    min_experience_level=2,
+                )
+            ],
+            resources=[
+                {"name": "res_a", "experience_level": 2, "productivity_level": 1.0},
+                {"name": "res_b", "experience_level": 3, "productivity_level": 1.0},
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        constrained = scheduler.schedule_tasks(
+            {"task_001": 8.0},
+            use_resource_constraints=True,
+        )
+
+        assert constrained["task_001"]["start"] == 0.0
+        assert constrained["task_001"]["end"] == 4.0
+
+    def test_schedule_tasks_resource_constraints_are_calendar_aware(self):
+        """Constrained mode should skip weekend non-working days."""
+        project = Project(
+            project=ProjectMetadata(name="Calendar Test", start_date=date(2025, 1, 3)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    resources=["res_a"],
+                )
+            ],
+            resources=[
+                {"name": "res_a", "experience_level": 2, "productivity_level": 1.0}
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        schedule = scheduler.schedule_tasks(
+            {"task_001": 16.0},
+            use_resource_constraints=True,
+            start_date=project.project.start_date,
+            hours_per_day=8.0,
+        )
+
+        # Friday 8h + weekend gap + Monday 8h => end at hour 80 from Friday 00:00
+        assert schedule["task_001"]["end"] == 80.0
+
+    def test_schedule_tasks_resource_constraints_respect_planned_absence(self):
+        """Constrained mode should treat planned_absence dates as non-working."""
+        project = Project(
+            project=ProjectMetadata(name="Absence Test", start_date=date(2025, 1, 6)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    resources=["res_a"],
+                )
+            ],
+            resources=[
+                {
+                    "name": "res_a",
+                    "experience_level": 2,
+                    "productivity_level": 1.0,
+                    "planned_absence": ["2025-01-06"],
+                }
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        schedule = scheduler.schedule_tasks(
+            {"task_001": 8.0},
+            use_resource_constraints=True,
+            start_date=project.project.start_date,
+            hours_per_day=8.0,
+        )
+
+        # Monday absent; task runs Tuesday 00:00-08:00 => end at hour 32
+        assert schedule["task_001"]["start"] == 24.0
+        assert schedule["task_001"]["end"] == 32.0
+
     def test_get_critical_paths_returns_full_sequences(self):
         """Test tracing all full critical path sequences in a branching schedule."""
         project = Project(
@@ -310,6 +437,42 @@ class TestSimulationEngine:
         assert len(results.durations) == 10
         assert results.mean > 0
         assert results.median > 0
+
+    def test_run_simulation_populates_constrained_diagnostics(self):
+        """Resource-constrained runs should include constrained diagnostics."""
+        project = Project(
+            project=ProjectMetadata(name="Constrained", start_date=date(2025, 1, 6)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(min=8, most_likely=9, max=10),
+                    resources=["res_a"],
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(min=8, most_likely=9, max=10),
+                    resources=["res_a"],
+                ),
+            ],
+            resources=[
+                {
+                    "name": "res_a",
+                    "experience_level": 2,
+                    "productivity_level": 1.0,
+                }
+            ],
+        )
+
+        engine = SimulationEngine(iterations=5, random_seed=42, show_progress=False)
+        results = engine.run(project)
+
+        assert results.resource_constraints_active is True
+        assert results.schedule_mode == "resource_constrained"
+        assert results.resource_wait_time_hours >= 0.0
+        assert results.calendar_delay_time_hours >= 0.0
+        assert 0.0 <= results.resource_utilization <= 1.0
 
     def test_run_simulation_computes_updated_default_percentiles(self, simple_project):
         """Test simulation computes P25 and P99 for projects using default levels."""

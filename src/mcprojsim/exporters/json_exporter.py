@@ -85,6 +85,10 @@ class JSONExporter:
                 "random_seed": results.random_seed,
                 "hours_per_day": results.hours_per_day,
             },
+            "schedule": {
+                "mode": results.schedule_mode,
+                "resource_constraints_active": results.resource_constraints_active,
+            },
             "statistics": {
                 "mean_hours": results.mean,
                 "mean_working_days": math.ceil(results.mean / results.hours_per_day),
@@ -141,6 +145,11 @@ class JSONExporter:
             },
             "schedule_slack": results.task_slack,
             "risk_impact": results.get_risk_impact_summary(),
+            "constrained_diagnostics": {
+                "resource_wait_time_hours": results.resource_wait_time_hours,
+                "resource_utilization": results.resource_utilization,
+                "calendar_delay_time_hours": results.calendar_delay_time_hours,
+            },
             "histogram": {
                 "bin_edges": bin_edges.tolist(),
                 "counts": counts.tolist(),

@@ -47,6 +47,11 @@ class _FakeResults:
     percentiles = {50: 38.0, 80: 44.0, 90: 48.0}
     effort_percentiles: dict[int, float] = {}
     max_parallel_tasks = 2
+    schedule_mode = "resource_constrained"
+    resource_constraints_active = True
+    resource_wait_time_hours = 1.5
+    resource_utilization = 0.7
+    calendar_delay_time_hours = 4.0
 
     def total_effort_hours(self):
         return 60.0
@@ -166,6 +171,16 @@ class TestSimulatePlainOutput:
         assert "Risk Impact Analysis" in result.output
         assert "triggers=25.0%" in result.output
 
+    def test_plain_constrained_diagnostics(self, monkeypatch):
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            pf = _write_project(None)
+            result = runner.invoke(cli, ["simulate", pf])
+        assert "Schedule Mode: resource_constrained" in result.output
+        assert "Constrained Schedule Diagnostics" in result.output
+        assert "Average Resource Wait" in result.output
+
 
 class TestSimulateTableOutput:
     """Table-formatted output (--table)."""
@@ -216,6 +231,17 @@ class TestSimulateTableOutput:
             result = runner.invoke(cli, ["simulate", pf, "--table"])
         assert "Trigger Rate" in result.output
         assert "25.0%" in result.output
+
+    def test_table_constrained_diagnostics(self, monkeypatch):
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            pf = _write_project(None)
+            result = runner.invoke(cli, ["simulate", pf, "--table"])
+        assert "Schedule Mode" in result.output
+        assert "resource_constrained" in result.output
+        assert "Constrained Schedule Diagnostics" in result.output
+        assert "Effective Resource Utilization" in result.output
 
 
 class TestSimulateTargetDate:

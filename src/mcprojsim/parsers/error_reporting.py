@@ -540,6 +540,7 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "confidence_levels",
             "probability_red_threshold",
             "probability_green_threshold",
+            "team_size",
         }
 
     if len(path) == 2 and path[0] == "tasks" and isinstance(path[1], int):
@@ -551,7 +552,29 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "dependencies",
             "uncertainty_factors",
             "resources",
+            "max_resources",
+            "min_experience_level",
             "risks",
+        }
+
+    if len(path) == 2 and path[0] == "resources" and isinstance(path[1], int):
+        return {
+            "name",
+            "id",
+            "availability",
+            "calendar",
+            "experience_level",
+            "productivity_level",
+            "sickness_prob",
+            "planned_absence",
+        }
+
+    if len(path) == 2 and path[0] == "calendars" and isinstance(path[1], int):
+        return {
+            "id",
+            "work_hours_per_day",
+            "work_days",
+            "holidays",
         }
 
     if (

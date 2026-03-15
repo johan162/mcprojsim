@@ -276,37 +276,73 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL expose deterministic acceptance tests demonstrating that two-pass mode does not violate dependency or resource constraints.
 - The system SHALL report pass-1 versus pass-2 outcome deltas for traceability.
 
+**FR-043: Unique Resource Naming and Defaulting Rules**
+- Reources SHALL be specified as a vector in the project specification
+- Each resource specified individually SHALL have a unique `name` within the project.
+- If `experience_level` is omitted for a resource, the system SHALL default it to level 2.
+- If `productivity_level` is omitted for a resource, the system SHALL default it to 1.0.
+- If a resource entry omits `name`, the system SHALL assign a generated name using the format `resource_nnn`.
+- Generated names SHALL use ordered, zero-padded three-digit suffixes (`resource_001`, `resource_002`, `resource_003`, ...).
+- Auto-generated names SHALL also be validated for uniqueness against explicitly provided names.
+
+**FR-044: Resource Specification Schema**
+- Each resource object SHALL support the fields `name`, `experience_level`, `productivity_level`, and `sickness_prob`.
+- Each resource object SHALL support `planned_absence` as a list of dates.
+- `planned_absence` dates SHALL be interpreted as non-working days for that resource.
+- `planned_absence` entries SHALL be validated as ISO 8601 dates.
+- Resource fields omitted by the user SHALL use defaults defined by FR-043 and FR-040.
+
 ### 3.1.2 Implementation Plan for Resource and Calendar-Constrained Scheduling
 
-**Phase A: Data Model and Schema Foundation**
+**Phase A: DONE! Data Model and Schema Foundation**
 - Add/normalize schema for team size, team members, productivity, experience, calendars, holidays, vacations/days off, sickness configuration, and task resource limits.
 - Implement validation rules from FR-037 and FR-040 across parser and model layers.
 - Preserve backward compatibility defaults per FR-036.
 
-**Phase B: Resource/Calendar Scheduling Core**
+**Phase B: DONE! Updated project file specification**
+- Add parsing of resource specification in the projects specification from FR-043, FR-044
+- The documentation SHALL be described in user guide `project_files.md`
+- The grammar SHALL be formalized in `docs/grammar.md` with EBNF grammar for the resource and calendar specification
+
+**Phase C: Resource/Calendar Scheduling Core**
 - Extend scheduler to enforce resource availability and minimum experience constraints while respecting dependencies.
 - Apply non-working calendar windows and member unavailability (holiday/vacation/sickness) during scheduling.
 - Ensure deterministic tie-breaking and reproducibility with fixed random seeds.
 
-**Phase C: Sickness and Availability Simulation**
+**Phase D: Sickness and Availability Simulation**
 - Implement per-member sickness start process and log-normal duration sampling.
 - Integrate sickness episodes into member availability timelines used by the scheduler.
 - Add targeted unit tests for probability bounds, distribution parameters, and edge cases.
 
-**Phase D: Two-Pass Critical-Path Prioritization**
+**Phase E: Two-Pass Critical-Path Prioritization**
 - Implement configurable two-pass mode (default off).
 - Pass 1 computes constrained criticality; Pass 2 applies critical-path-prioritized assignment.
 - Add regression and determinism tests for pass-delta behavior.
 
-**Phase E: Metrics, Exports, and UX**
+**Phase F: Metrics, Exports, and UX**
 - Add resource/calendar diagnostics required by FR-041 to CLI and all exporters.
 - Annotate reports with schedule mode (dependency-only vs constrained).
 - Keep existing fields stable unless explicitly versioned.
 
-**Phase F: Documentation and Rollout**
+**Phase G: Documentation and Rollout**
 - Update user/project file docs with canonical schema and migration examples.
 - Update algorithm and limitations sections to remove dependency-only caveats once implementation is complete.
 - Add end-to-end fixtures and performance checks for constrained schedules.
+
+### 3.1.3 Implementation Decisions and Selections (Current Baseline)
+
+- Resource-constrained scheduling is implemented as an explicit scheduler mode (`use_resource_constraints`) to preserve backward compatibility for existing dependency-only workflows.
+- Task execution in resource-constrained mode is non-preemptive in the current baseline.
+- Resource assignment is deterministic and stable (sorted task IDs and resource names) to preserve reproducibility with fixed random seeds.
+- Missing resource names are auto-generated in ordered format `resource_001`, `resource_002`, ... and validated for uniqueness.
+- Legacy top-level resource field `id` is accepted as a backward-compatible fallback for `name`.
+- Task-level resource references are validated against resolved resource names; unknown references fail fast during project validation.
+- Calendar validation is introduced at schema level (ID uniqueness, work-day range 1..7, ISO-8601 date parsing for holidays/absences), while full calendar-aware scheduling behavior is implemented incrementally in later phases.
+- Engine scheduling now enables resource-constrained mode automatically when top-level resources are present.
+- In constrained mode, elapsed task duration is integrated over calendar windows and time-varying capacity rather than computed as a simple static ratio.
+- Sickness episodes are generated per resource per iteration using an independent daily start probability and a log-normal duration model (default mode 2 days, baseline sigma 0.5).
+- Planned absences and sickness days are treated as non-working days for affected resources in constrained scheduling.
+- Working-time boundaries are currently modeled from day start with `work_hours_per_day` length; explicit shift start times are deferred to a later phase.
 
  
 

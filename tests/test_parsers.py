@@ -68,6 +68,40 @@ class TestYAMLParser:
         with pytest.raises(ValueError, match="Invalid project data"):
             parser.parse_dict({"invalid": "data"})
 
+    def test_parse_resources_with_defaults(self):
+        """Test parsing resource schema with defaults and generated names."""
+        parser = YAMLParser()
+        project = parser.parse_dict(
+            {
+                "project": {
+                    "name": "Res Parser Project",
+                    "start_date": "2025-01-01",
+                    "team_size": 3,
+                },
+                "tasks": [
+                    {
+                        "id": "task_001",
+                        "name": "Task 1",
+                        "estimate": {
+                            "min": 1,
+                            "most_likely": 2,
+                            "max": 5,
+                        },
+                        "resources": ["alice"],
+                    }
+                ],
+                "resources": [
+                    {"name": "alice", "experience_level": 3},
+                    {"experience_level": 1},
+                ],
+            }
+        )
+
+        assert project.project.team_size == 3
+        assert project.resources[0].name == "alice"
+        assert project.resources[1].name == "resource_001"
+        assert project.resources[1].productivity_level == 1.0
+
     def test_validate_file_valid(self, sample_yaml_file):
         """Test validating valid file."""
         parser = YAMLParser()

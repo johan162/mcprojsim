@@ -83,6 +83,9 @@ class SimulationEngine:
         critical_path_frequency: Dict[str, int] = {task.id: 0 for task in project.tasks}
         critical_path_sequences: Counter[tuple[str, ...]] = Counter()
         max_parallel_overall = 0
+        resource_wait_time_all: list[float] = []
+        resource_utilization_all: list[float] = []
+        calendar_delay_time_all: list[float] = []
         last_reported_progress = -1
 
         # Run iterations
@@ -97,6 +100,7 @@ class SimulationEngine:
                 project_risk_impact,
                 slack,
                 max_parallel,
+                constrained_diagnostics,
             ) = self._run_iteration(project, scheduler, hours_per_day)
 
             project_durations[iteration] = duration
@@ -108,6 +112,15 @@ class SimulationEngine:
             for task_id, impact in task_risk_impacts.items():
                 task_risk_impacts_all[task_id].append(impact)
             project_risk_impacts_all.append(project_risk_impact)
+            resource_wait_time_all.append(
+                constrained_diagnostics["resource_wait_time_hours"]
+            )
+            resource_utilization_all.append(
+                constrained_diagnostics["resource_utilization"]
+            )
+            calendar_delay_time_all.append(
+                constrained_diagnostics["calendar_delay_time_hours"]
+            )
 
             # Store slack
             for task_id, slack_val in slack.items():
@@ -195,6 +208,15 @@ class SimulationEngine:
             project_risk_impacts=np.array(project_risk_impacts_all),
             max_parallel_tasks=max_parallel_overall,
             effort_durations=effort_durations,
+            schedule_mode=(
+                "resource_constrained"
+                if len(project.resources) > 0
+                else "dependency_only"
+            ),
+            resource_constraints_active=len(project.resources) > 0,
+            resource_wait_time_hours=float(np.mean(resource_wait_time_all)),
+            resource_utilization=float(np.mean(resource_utilization_all)),
+            calendar_delay_time_hours=float(np.mean(calendar_delay_time_all)),
         )
 
         # Calculate statistics
@@ -243,6 +265,7 @@ class SimulationEngine:
         float,
         Dict[str, float],
         int,
+        Dict[str, float],
     ]:
         """Run a single simulation iteration.
 
@@ -256,7 +279,7 @@ class SimulationEngine:
         Returns:
             Tuple of (project_duration, task_durations, critical_path_tasks,
             critical_paths, task_risk_impacts, project_risk_impact, slack,
-            max_parallel_tasks)
+            max_parallel_tasks, constrained_diagnostics)
         """
         task_durations: Dict[str, float] = {}
         task_risk_impacts: Dict[str, float] = {}
@@ -288,7 +311,23 @@ class SimulationEngine:
             task_risk_impacts[task.id] = risk_impact
 
         # Schedule tasks (all durations in hours)
-        schedule = scheduler.schedule_tasks(task_durations)
+        use_resource_constraints = len(project.resources) > 0
+        schedule_with_diagnostics = scheduler.schedule_tasks(
+            task_durations,
+            use_resource_constraints=use_resource_constraints,
+            return_diagnostics=True,
+            start_date=project.project.start_date,
+            hours_per_day=hours_per_day,
+        )
+        if not isinstance(schedule_with_diagnostics, tuple):
+            schedule = schedule_with_diagnostics
+            constrained_diagnostics = {
+                "resource_wait_time_hours": 0.0,
+                "resource_utilization": 0.0,
+                "calendar_delay_time_hours": 0.0,
+            }
+        else:
+            schedule, constrained_diagnostics = schedule_with_diagnostics
 
         # Compute peak parallelism for this iteration
         max_parallel = scheduler.max_parallel_tasks(schedule)
@@ -318,6 +357,7 @@ class SimulationEngine:
             project_risk_impact,
             slack,
             max_parallel,
+            constrained_diagnostics,
         )
 
     def _apply_uncertainty_factors(self, task: Task, base_duration: float) -> float:

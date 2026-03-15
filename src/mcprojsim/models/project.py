@@ -222,7 +222,17 @@ class Task(BaseModel):
         default_factory=UncertaintyFactors
     )
     resources: List[str] = Field(default_factory=list)
+    max_resources: int = Field(default=1, ge=1)
+    min_experience_level: int = Field(default=1)
     risks: List[Risk] = Field(default_factory=list)
+
+    @field_validator("min_experience_level")
+    @classmethod
+    def validate_min_experience_level(cls, value: int) -> int:
+        """Validate minimum experience level."""
+        if value not in {1, 2, 3}:
+            raise ValueError("min_experience_level must be one of: 1, 2, 3")
+        return value
 
     def has_dependency(self, task_id: str) -> bool:
         """Check if this task depends on another task."""
@@ -256,6 +266,7 @@ class ProjectMetadata(BaseModel):
         le=1.0,
         description="Probability threshold above which is shown as green (default 90%)",
     )
+    team_size: Optional[int] = Field(default=None, gt=0)
 
     @field_validator("start_date", mode="before")
     @classmethod
@@ -287,8 +298,8 @@ class Project(BaseModel):
     project: ProjectMetadata
     tasks: List[Task]
     project_risks: List[Risk] = Field(default_factory=list)
-    resources: List[Dict[str, Any]] = Field(default_factory=list)
-    calendars: List[Dict[str, Any]] = Field(default_factory=list)
+    resources: List["ResourceSpec"] = Field(default_factory=list)
+    calendars: List["CalendarSpec"] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_project(self) -> "Project":
@@ -313,7 +324,56 @@ class Project(BaseModel):
         # Check for circular dependencies
         self._check_circular_dependencies()
 
+        # Validate and normalize resources
+        self._normalize_and_validate_resources()
+        self._validate_calendars()
+        self._validate_resource_references()
+
         return self
+
+    def _normalize_and_validate_resources(self) -> None:
+        """Normalize resource names and validate uniqueness/defaults."""
+        used_names: set[str] = set()
+        next_index = 1
+
+        for resource in self.resources:
+            if not resource.name:
+                while True:
+                    candidate = f"resource_{next_index:03d}"
+                    next_index += 1
+                    if candidate not in used_names:
+                        resource.name = candidate
+                        break
+
+            if resource.name in used_names:
+                raise ValueError(f"Resource names must be unique: {resource.name}")
+            used_names.add(resource.name)
+
+    def _validate_calendars(self) -> None:
+        """Validate calendar identifier uniqueness."""
+        calendar_ids = [calendar.id for calendar in self.calendars]
+        if len(calendar_ids) != len(set(calendar_ids)):
+            raise ValueError("Calendar IDs must be unique")
+
+    def _validate_resource_references(self) -> None:
+        """Validate task and resource references to resources/calendars."""
+        resource_names = {resource.name for resource in self.resources if resource.name}
+        available_calendar_ids = {calendar.id for calendar in self.calendars} or {
+            "default"
+        }
+
+        for task in self.tasks:
+            for resource_name in task.resources:
+                if resource_name not in resource_names:
+                    raise ValueError(
+                        f"Task {task.id} references unknown resource {resource_name}"
+                    )
+
+        for resource in self.resources:
+            if resource.calendar not in available_calendar_ids:
+                raise ValueError(
+                    f"Resource {resource.name} references unknown calendar {resource.calendar}"
+                )
 
     def _check_circular_dependencies(self) -> None:
         """Check for circular dependencies using DFS."""
@@ -348,3 +408,57 @@ class Project(BaseModel):
             if task.id == task_id:
                 return task
         return None
+
+
+class ResourceSpec(BaseModel):
+    """Individual resource/member specification."""
+
+    name: Optional[str] = None
+    id: Optional[str] = None
+    availability: float = Field(default=1.0, gt=0.0, le=1.0)
+    calendar: str = Field(default="default")
+    experience_level: int = Field(default=2)
+    productivity_level: float = Field(default=1.0)
+    sickness_prob: float = Field(default=0.0, ge=0.0, le=1.0)
+    planned_absence: List[date] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def normalize_name(self) -> "ResourceSpec":
+        """Use legacy id as fallback name."""
+        if self.name is None and self.id is not None:
+            self.name = self.id
+        return self
+
+    @field_validator("experience_level")
+    @classmethod
+    def validate_experience_level(cls, value: int) -> int:
+        """Validate experience level."""
+        if value not in {1, 2, 3}:
+            raise ValueError("experience_level must be one of: 1, 2, 3")
+        return value
+
+    @field_validator("productivity_level")
+    @classmethod
+    def validate_productivity_level(cls, value: float) -> float:
+        """Validate productivity level."""
+        if value < 0.1 or value > 2.0:
+            raise ValueError("productivity_level must be between 0.1 and 2.0")
+        return value
+
+
+class CalendarSpec(BaseModel):
+    """Working calendar specification."""
+
+    id: str = Field(default="default")
+    work_hours_per_day: float = Field(default=8.0, gt=0)
+    work_days: List[int] = Field(default_factory=lambda: [1, 2, 3, 4, 5])
+    holidays: List[date] = Field(default_factory=list)
+
+    @field_validator("work_days")
+    @classmethod
+    def validate_work_days(cls, value: List[int]) -> List[int]:
+        """Validate work day values (1=Mon ... 7=Sun)."""
+        for day in value:
+            if day < 1 or day > 7:
+                raise ValueError("work_days entries must be integers in range 1..7")
+        return value

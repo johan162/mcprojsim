@@ -70,8 +70,8 @@ At the highest level, a project file may contain the following sections:
 - `project` — required
 - `tasks` — required
 - `project_risks` — optional
-- `resources` — optional. **Note:** Does not impact the simulation at the moment.
-- `calendars` — optional, **Note:** Does not impact the simulation at the moment.
+- `resources` — optional. When present, constrained scheduling is activated.
+- `calendars` — optional. Used by constrained scheduling when resources reference calendars.
 
 The smallest valid project file therefore looks like this:
 
@@ -638,29 +638,42 @@ The top-level project model accepts a `resources` section.
 
 ### Current implementation shape
 
-At parse time, `resources` is typed as:
+At parse time, each `resources` entry is validated as a resource object with defaults.
 
-```text
-list[dict[str, Any]]
-```
+Supported fields:
 
-That means each resource entry must be a mapping-like object, but the current project model does not impose a stricter nested schema inside each entry.
+- `name` (optional string)
+- `experience_level` (optional integer: 1, 2, or 3; default: `2`)
+- `productivity_level` (optional float: 0.1 to 2.0; default: `1.0`)
+- `sickness_prob` (optional float: 0.0 to 1.0; default: `0.0`)
+- `planned_absence` (optional list of ISO dates)
+- `calendar` (optional string; default: `"default"`)
+- `availability` (optional float in (0, 1]; default: `1.0`)
+
+Backward-compatibility note:
+
+- Legacy field `id` is still accepted and used as fallback for `name`.
+- If `name` is omitted, the system auto-generates a unique name using `resource_nnn` (e.g., `resource_001`).
 
 ### Example shape accepted by the current model
 
 ```yaml
 resources:
-  - id: "backend_dev"
-    name: "Backend Developer"
-    availability: 1.0
-  - id: "qa_engineer"
-    name: "QA Engineer"
-    availability: 0.5
+  - name: "backend_dev"
+    experience_level: 3
+    productivity_level: 1.1
+    sickness_prob: 0.05
+    planned_absence:
+      - "2026-07-01"
+      - "2026-07-02"
+  - experience_level: 2
+    productivity_level: 0.9
+    sickness_prob: 0.08
 ```
 
 ### Important note
 
-The parser accepts this section, but the current source code does not define a strongly validated internal resource schema at the project-model level.
+The parser and project model validate this schema, including defaults and uniqueness of resolved resource names.
 
 ## The top-level `calendars` section
 
@@ -668,20 +681,22 @@ The top-level project model also accepts a `calendars` section.
 
 ### Current implementation shape
 
-At parse time, `calendars` is typed as:
+At parse time, each calendar entry is validated with this shape:
 
-```text
-list[dict[str, Any]]
-```
+- `id` (string; default: `"default"`)
+- `work_hours_per_day` (positive float; default: `8.0`)
+- `work_days` (list of integers in range `1..7`; default: `[1,2,3,4,5]`)
+- `holidays` (list of ISO dates)
 
-As with top-level `resources`, the current project model does not define a stricter nested schema for calendar entries.
+Calendar IDs must be unique.
 
 ### Example shape accepted by the current model
 
 ```yaml
 calendars:
   - id: "standard"
-    working_days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    work_hours_per_day: 8
+    work_days: [1, 2, 3, 4, 5]
     holidays:
       - "2026-12-25"
       - "2026-12-26"
@@ -689,7 +704,7 @@ calendars:
 
 ### Important note
 
-This section is accepted structurally by the project parser, but the current project model does not validate its internal keys beyond “list of objects”.
+This section is validated by the project model; unknown or invalid fields fail validation.
 
 ## Full YAML example
 

@@ -139,3 +139,20 @@ class TestSimulationResults:
 
         assert "critical_path_sequences" in data
         assert data["critical_path_sequences"][0]["path"] == ["task_001", "task_002"]
+
+    def test_to_dict_includes_constrained_diagnostics(self, sample_results):
+        """Test constrained scheduling metadata is included in dictionary export."""
+        sample_results.schedule_mode = "resource_constrained"
+        sample_results.resource_constraints_active = True
+        sample_results.resource_wait_time_hours = 2.0
+        sample_results.resource_utilization = 0.66
+        sample_results.calendar_delay_time_hours = 5.0
+
+        data = sample_results.to_dict()
+
+        assert data["schedule_mode"] == "resource_constrained"
+        assert data["resource_constraints_active"] is True
+        diagnostics = data["constrained_diagnostics"]
+        assert diagnostics["resource_wait_time_hours"] == pytest.approx(2.0)
+        assert diagnostics["resource_utilization"] == pytest.approx(0.66)
+        assert diagnostics["calendar_delay_time_hours"] == pytest.approx(5.0)
