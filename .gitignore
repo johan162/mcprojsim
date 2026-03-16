@@ -119,3 +119,6 @@ dmypy.json
 *.html
 *.json
 *.csv
+
+# Generated documentation
+*.pdf

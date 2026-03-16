@@ -125,6 +125,24 @@ PYPI_NAME := mcprojsim
 VERSION := $(shell grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
 CONTAINER_NAME := $(PROJECT)
 
+# User guide PDF output path
+USER_GUIDE_PDF := user_guide.pdf
+
+# Doc files for User Guide PDF generation
+USER_GUIDE_DOCS := \
+	docs/user_guide/getting_started.md \
+	docs/user_guide/introduction.md \
+	docs/user_guide/your_first_project.md  \
+	docs/user_guide/uncertainty_factors.md  \
+	docs/user_guide/task_estimation.md  \
+	docs/user_guide/risks.md  \
+	docs/user_guide/project_files.md  \
+	docs/user_guide/constrained.md  \
+	docs/user_guide/running_simulations.md  \
+	docs/user_guide/interpreting_results.md  \
+	docs/user_guide/mcp-server.md \
+	docs/examples.md
+
 # Minimum coverage percentage required
 COVERAGE := 80
 
@@ -171,7 +189,7 @@ $(TEST_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(FORMAT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running code formatter...$(NC)"
-	@poetry run black $(SRC_DIR) $(TEST_DIR) -q
+	@poetry run black --check $(SRC_DIR) $(TEST_DIR) -q
 	@touch $(FORMAT_STAMP)
 	@echo -e "$(GREEN)✓ Format target runs successfully$(NC)"
 
@@ -399,6 +417,15 @@ maintainer-clean: ## Perform a thorough cleanup including virtual environment, c
 # ============================================================================================
 docs: $(DOC_STAMP) ## Build the project documentation with MkDocs
 	@:
+
+pdf: $(USER_GUIDE_PDF) ## Build the user guide PDF
+	@:
+
+$(USER_GUIDE_PDF): $(DOC_FILES) ## Build the user guide PDF using Pandoc
+	@echo -e "$(DARKYELLOW)- Building user guide PDF with Pandoc...$(NC)"
+	@pandoc --pdf-engine=xelatex -V mainfont="Arial Unicode MS" -V monofont="DejaVu Sans Mono" \
+	-V geometry:top=2cm,left=2.5cm,right=1.8cm,bottom=1.5cm \
+	$(USER_GUIDE_DOCS) -o $(USER_GUIDE_PDF)
 
 docs-serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
