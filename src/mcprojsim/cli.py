@@ -904,6 +904,7 @@ def generate(
         if not project.start_date:
             issues.append("No start date specified")
         task_nums = {t.number for t in project.tasks}
+        resource_names = {r.name for r in project.resources}
         for task in project.tasks:
             has_estimate = (
                 task.t_shirt_size is not None
@@ -916,6 +917,12 @@ def generate(
                 if int(ref) not in task_nums:
                     issues.append(
                         f"Task {task.number} depends on Task {ref}, which does not exist"
+                    )
+            for res_name in task.resources:
+                if resource_names and res_name not in resource_names:
+                    issues.append(
+                        f"Task {task.number} references unknown resource"
+                        f" '{res_name}'"
                     )
         if issues:
             click.echo("Validation issues:")
