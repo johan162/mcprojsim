@@ -4,23 +4,7 @@ The goal is to implement all MVP requirements in `docs/mcprojsim_reqs.md` to be 
 
 ## Not implemented yet
 
-### 1. Resource-aware scheduling and calendar enforcement (FR-009)
-
-Current state:
-
-- `Task.resources` exists
-- top-level `Project.resources` and `Project.calendars` exist
-- the scheduler ignores all of them
-
-What is missing:
-
-- no prevention of resource over-allocation
-- no use of resource availability
-- no work-hours-per-day handling
-- no holiday or non-working-period handling
-- no resource-constrained scheduling / leveling
-
-### 2. Dedicated typed resource/calendar models from the architecture section
+### 1. Dedicated typed resource/calendar models from the architecture section
 
 The requirements architecture describes dedicated resource/calendar models, but the implementation currently stores top-level resources and calendars as raw dictionaries.
 
@@ -30,7 +14,7 @@ What is missing:
 - no typed `Resource` / `Calendar` models
 - no validation beyond raw dictionary acceptance
 
-### 3. Environment-based configuration selection (FR-012)
+### 2. Environment-based configuration selection (FR-012)
 
 Current state:
 
@@ -171,3 +155,20 @@ What is missing:
 - no explicit user-facing schema artifact
 - no normalized structured validation report
 - no line-number-aware validation output
+
+
+## Resource-aware scheduling and calendar enforcement (FR-009)
+
+Current state:
+
+- `Task.resources` exists
+- top-level `Project.resources` and `Project.calendars` exist
+- the scheduler ignores all of them
+
+What is missing:
+
+- no prevention of resource over-allocation
+- no use of resource availability
+- no work-hours-per-day handling
+- no holiday or non-working-period handling
+- no resource-constrained scheduling / leveling
