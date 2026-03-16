@@ -140,14 +140,14 @@ DOCKER_SRC_FILES := Dockerfile docker-compose.yml docker-entrypoint.sh
 STAMP_DIR := .makefile-stamps
 $(shell mkdir -p $(STAMP_DIR))
 
-CONTAINER_STAMP := $(STAMP_DIR)/.container-stamp
-DOC_STAMP := $(STAMP_DIR)/.docs-stamp
-FORMAT_STAMP := $(STAMP_DIR)/.format-stamp
-LINT_STAMP := $(STAMP_DIR)/.lint-stamp
-TYPECHECK_STAMP := $(STAMP_DIR)/.typecheck-stamp
-INSTALL_STAMP := $(STAMP_DIR)/.install-stamp
-TEST_STAMP := $(STAMP_DIR)/.test-stamp
-GHCR_LOGIN_STAMP := $(STAMP_DIR)/.ghcr-login-stamp
+CONTAINER_STAMP := $(STAMP_DIR)/container-stamp
+DOC_STAMP := $(STAMP_DIR)/docs-stamp
+FORMAT_STAMP := $(STAMP_DIR)/format-stamp
+LINT_STAMP := $(STAMP_DIR)/lint-stamp
+TYPECHECK_STAMP := $(STAMP_DIR)/typecheck-stamp
+INSTALL_STAMP := $(STAMP_DIR)/install-stamp
+TEST_STAMP := $(STAMP_DIR)/test-stamp
+GHCR_LOGIN_STAMP := $(STAMP_DIR)/ghcr-login-stamp
 
 # Build package files
 BUILD_DIR := dist
