@@ -127,9 +127,7 @@ class NLProjectParser:
     _TASK_HEADER_RE = re.compile(r"task\s*(\d+)\s*[:.=]?\s*(.*)", re.IGNORECASE)
 
     # -- Resource header -------------------------------------------------------
-    _RESOURCE_HEADER_RE = re.compile(
-        r"resource\s*(\d+)\s*[:.=]?\s*(.*)", re.IGNORECASE
-    )
+    _RESOURCE_HEADER_RE = re.compile(r"resource\s*(\d+)\s*[:.=]?\s*(.*)", re.IGNORECASE)
 
     # -- Calendar header -------------------------------------------------------
     _CALENDAR_HEADER_RE = re.compile(r"calendar\s*[:.=]?\s*(.+)", re.IGNORECASE)
@@ -148,9 +146,7 @@ class NLProjectParser:
     _TASK_REF_RE = re.compile(r"task\s*(\d+)", re.IGNORECASE)
 
     # -- Task constraint bullet patterns ---------------------------------------
-    _TASK_RESOURCES_RE = re.compile(
-        r"resources?\s*[:.=]?\s*(.+)", re.IGNORECASE
-    )
+    _TASK_RESOURCES_RE = re.compile(r"resources?\s*[:.=]?\s*(.+)", re.IGNORECASE)
     _TASK_MAX_RESOURCES_RE = re.compile(
         r"max\s*resources?\s*[:.=]?\s*(\d+)", re.IGNORECASE
     )
@@ -168,9 +164,7 @@ class NLProjectParser:
     _RES_AVAILABILITY_RE = re.compile(
         r"availability\s*[:.=]?\s*([\d.]+)", re.IGNORECASE
     )
-    _RES_CALENDAR_RE = re.compile(
-        r"calendar\s*[:.=]?\s*(\S+)", re.IGNORECASE
-    )
+    _RES_CALENDAR_RE = re.compile(r"calendar\s*[:.=]?\s*(\S+)", re.IGNORECASE)
     _RES_SICKNESS_RE = re.compile(
         r"sickness(?:\s*prob(?:ability)?)?\s*[:.=]?\s*([\d.]+)", re.IGNORECASE
     )
@@ -183,12 +177,8 @@ class NLProjectParser:
     _CAL_WORK_HOURS_RE = re.compile(
         r"work\s*hours?(?:\s*per\s*day)?\s*[:.=]?\s*([\d.]+)", re.IGNORECASE
     )
-    _CAL_WORK_DAYS_RE = re.compile(
-        r"work\s*days?\s*[:.=]?\s*([\d,\s]+)", re.IGNORECASE
-    )
-    _CAL_HOLIDAYS_RE = re.compile(
-        r"holidays?\s*[:.=]?\s*(.+)", re.IGNORECASE
-    )
+    _CAL_WORK_DAYS_RE = re.compile(r"work\s*days?\s*[:.=]?\s*([\d,\s]+)", re.IGNORECASE)
+    _CAL_HOLIDAYS_RE = re.compile(r"holidays?\s*[:.=]?\s*(.+)", re.IGNORECASE)
 
     # -- Public API ------------------------------------------------------------
 
@@ -397,9 +387,7 @@ class NLProjectParser:
             if task.max_resources != 1:
                 lines.append(f"    max_resources: {task.max_resources}")
             if task.min_experience_level != 1:
-                lines.append(
-                    f"    min_experience_level: {task.min_experience_level}"
-                )
+                lines.append(f"    min_experience_level: {task.min_experience_level}")
 
         # Resources section
         if project.resources:
@@ -411,12 +399,9 @@ class NLProjectParser:
                     lines.append(f'    calendar: "{resource.calendar}"')
                 if resource.availability != 1.0:
                     lines.append(
-                        f"    availability:"
-                        f" {self._fmt_num(resource.availability)}"
+                        f"    availability:" f" {self._fmt_num(resource.availability)}"
                     )
-                lines.append(
-                    f"    experience_level: {resource.experience_level}"
-                )
+                lines.append(f"    experience_level: {resource.experience_level}")
                 lines.append(
                     f"    productivity_level:"
                     f" {self._fmt_num(resource.productivity_level)}"
@@ -427,9 +412,7 @@ class NLProjectParser:
                         f" {self._fmt_num(resource.sickness_prob)}"
                     )
                 if resource.planned_absence:
-                    absence_str = ", ".join(
-                        f'"{d}"' for d in resource.planned_absence
-                    )
+                    absence_str = ", ".join(f'"{d}"' for d in resource.planned_absence)
                     lines.append(f"    planned_absence: [{absence_str}]")
 
         # Calendars section
@@ -445,9 +428,7 @@ class NLProjectParser:
                 days_str = ", ".join(str(d) for d in calendar.work_days)
                 lines.append(f"    work_days: [{days_str}]")
                 if calendar.holidays:
-                    holidays_str = ", ".join(
-                        f'"{h}"' for h in calendar.holidays
-                    )
+                    holidays_str = ", ".join(f'"{h}"' for h in calendar.holidays)
                     lines.append(f"    holidays: [{holidays_str}]")
 
         lines.append("")
@@ -575,9 +556,7 @@ class NLProjectParser:
             return True
         return False
 
-    def _try_parse_resource_bullet(
-        self, text: str, resource: ParsedResource
-    ) -> bool:
+    def _try_parse_resource_bullet(self, text: str, resource: ParsedResource) -> bool:
         m = self._RES_EXPERIENCE_RE.match(text)
         if m:
             resource.experience_level = int(m.group(1))
@@ -617,9 +596,7 @@ class NLProjectParser:
 
         return False
 
-    def _try_parse_calendar_bullet(
-        self, text: str, calendar: ParsedCalendar
-    ) -> bool:
+    def _try_parse_calendar_bullet(self, text: str, calendar: ParsedCalendar) -> bool:
         m = self._CAL_WORK_HOURS_RE.match(text)
         if m:
             calendar.work_hours_per_day = float(m.group(1))
@@ -628,9 +605,7 @@ class NLProjectParser:
         m = self._CAL_WORK_DAYS_RE.match(text)
         if m:
             days = [
-                int(d.strip())
-                for d in m.group(1).split(",")
-                if d.strip().isdigit()
+                int(d.strip()) for d in m.group(1).split(",") if d.strip().isdigit()
             ]
             if days:
                 calendar.work_days = days
