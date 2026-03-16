@@ -724,3 +724,7 @@ The resolved values are then converted to hours using the same conversion logic.
 | Story points | `story_points` | Triangular (via config lookup) | Agile teams using story point practices |
 
 All methods produce the same kind of output: a sampled duration for each iteration. The choice of method depends on what information the team is comfortable providing, not on any difference in simulation behavior.
+
+\newpage
+
+

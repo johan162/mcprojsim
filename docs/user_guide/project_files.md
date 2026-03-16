@@ -1430,3 +1430,5 @@ Although multiple forms are accepted, the clearest project files usually follow 
 - treat `resources` and `calendars` as advanced sections whose detailed internal schema may evolve.
 
 If you want to see the reference syntax used in practice, compare this chapter with `examples/sample_project.yaml`, `examples/tshirt_walkthrough_project.yaml`, `examples/story_points_walkthrough_project.yaml`, and `examples/project_with_custom_thresholds.yaml`.
+
+\newpage

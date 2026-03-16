@@ -713,3 +713,6 @@ The most useful thing you can do over time is *calibrate*: compare the simulatio
 | Staffing advisory | Recommended team size per experience profile | Team sizing, hiring decisions |
 | Thermometer | Visual probability-to-effort mapping | Stakeholder communication |
 | Delivery dates | Calendar dates at each percentile | Scheduling and milestone setting |
+
+\newpage
+

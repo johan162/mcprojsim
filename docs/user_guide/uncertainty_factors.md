@@ -209,3 +209,5 @@ Any values you specify in your configuration file are merged with the defaults. 
 - Uncertainty factors are **multiplicative**: they scale the sampled base duration before risks are evaluated.
 - Multiple uncertainty factors **compound**: their multipliers are multiplied together, which can produce significant combined effects.
 
+\newpage
+

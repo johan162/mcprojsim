@@ -625,3 +625,5 @@ The natural language parser is a pattern-based parser, not a full natural langua
 - **Project-level risks** are not extracted from the description. Add them manually.
 - The parser expects **numbered task headers** (`Task 1:`, `Task 2:`). Free-form task lists without numbers are not recognized.
 - **Circular dependencies** are not detected by the parser — they will be caught when you load the file with `mcprojsim validate`.
+
+\newpage
