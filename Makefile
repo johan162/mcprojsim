@@ -137,14 +137,17 @@ LOCK_FILE := poetry.lock
 DOCKER_SRC_FILES := Dockerfile docker-compose.yml docker-entrypoint.sh
 
 # Timestamp files
-CONTAINER_STAMP := .container-stamp
-DOC_STAMP := .docs-stamp
-FORMAT_STAMP := .format-stamp
-LINT_STAMP := .lint-stamp
-TYPECHECK_STAMP := .typecheck-stamp
-INSTALL_STAMP := .install-stamp
-TEST_STAMP := .test-stamp
-GHCR_LOGIN_STAMP := .ghcr-login-stamp
+STAMP_DIR := .makefile-stamps
+$(shell mkdir -p $(STAMP_DIR))
+
+CONTAINER_STAMP := $(STAMP_DIR)/.container-stamp
+DOC_STAMP := $(STAMP_DIR)/.docs-stamp
+FORMAT_STAMP := $(STAMP_DIR)/.format-stamp
+LINT_STAMP := $(STAMP_DIR)/.lint-stamp
+TYPECHECK_STAMP := $(STAMP_DIR)/.typecheck-stamp
+INSTALL_STAMP := $(STAMP_DIR)/.install-stamp
+TEST_STAMP := $(STAMP_DIR)/.test-stamp
+GHCR_LOGIN_STAMP := $(STAMP_DIR)/.ghcr-login-stamp
 
 # Build package files
 BUILD_DIR := dist
@@ -378,7 +381,7 @@ clean: ## Clean up build artifacts, caches, and timestamp files. Keep the .venv 
 	@rm -rf htmlcov
 	@rm -rf site dist
 	@rm -rf .mypy_cache
-	@rm -f $(FORMAT_STAMP) $(LINT_STAMP) $(TYPECHECK_STAMP) $(DOC_STAMP) $(TEST_STAMP) $(CONTAINER_STAMP) $(GHCR_LOGIN_STAMP)
+	@rm -f $(STAMP_DIR)
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.pyc" -delete
 	@echo -e "$(GREEN)✓ Clean completed$(NC)"

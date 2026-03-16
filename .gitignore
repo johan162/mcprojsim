@@ -99,6 +99,9 @@ dmypy.json
 # Makefile time-stamps
 *.stamp
 *-stamp
+.makefile-stamps
+.makefile-stamps/**
+
 
 # Certificate files
 *.pem
