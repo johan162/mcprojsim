@@ -1,18 +1,24 @@
-# Makefile for OneSelect Backend Application
+# Makefile for MCProjSim project
 # The structure for the Makefile is built on separating timestamp dependencies and command targets
 # Each command target may depend on one or more timestamp files that encapsulate the logic for when
 # to re-run certain tasks based on file changes.
 
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
-pre-commit clean maintainer-clean docs docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
+pre-commit clean maintainer-clean docs pdf docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all
 
 
 # Make behavior
 .DEFAULT_GOAL := help
+
+# Get full path to bash
 SHELL := $(shell which bash)
+
+# Delete target files on error to prevent stale timestamps
 .DELETE_ON_ERROR:
+
+# Use a single shell for each target to allow multi-line commands and better error handling
 .ONESHELL:
 
 # Colors for output
