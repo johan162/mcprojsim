@@ -79,6 +79,7 @@ endif
 # Check which container engine is running and set the appropriate tool
 PODMAN_RUNNING := $(shell podman info >/dev/null 2>&1 && echo "yes" || echo "no")
 DOCKER_RUNNING := $(shell docker info >/dev/null 2>&1 && echo "yes" || echo "no")
+NO_CONTAINER_ENGINE := $(shell if [ "$(PODMAN_RUNNING)" = "no" ] && [ "$(DOCKER_RUNNING)" = "no" ]; then echo "yes"; else echo "no"; fi)
 
 ifeq ($(PODMAN_RUNNING),yes)
     CONTAINER_CMD := ${PODMAN}
@@ -158,7 +159,7 @@ TEST_FILES := $(shell find $(TEST_DIR) -name 'test_*.py')
 DOC_FILES := mkdocs.yml $(shell find $(DOCS_DIR) -name '*.md' -o -name '*.yml' -o -name '*.yaml')
 MISC_FILES := pyproject.toml README.md mypy.ini .flake8
 LOCK_FILE := poetry.lock
-DOCKER_SRC_FILES := Dockerfile docker-compose.yml docker-entrypoint.sh
+DOCKER_SRC_FILES := Dockerfile docker-compose.yml
 
 # Timestamp files
 STAMP_DIR := .makefile-stamps
@@ -199,7 +200,7 @@ $(FORMAT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@touch $(FORMAT_STAMP)
 	@echo -e "$(GREEN)✓ Format target runs successfully$(NC)"
 
-$(CONTAINER_STAMP): $(SRC_FILES) $(TEST_FILES) $(DOCKER_SRC_FILES) $(MISC_FILES) $(INSTALL_STAMP)
+$(CONTAINER_STAMP): $(SRC_FILES) $(TEST_FILES) $(DOCKER_SRC_FILES) $(MISC_FILES) $(INSTALL_STAMP) | container-engine-check
 	@echo -e "$(DARKYELLOW)- Building container image...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) build
 	@$(CONTAINER_CMD) tag oneselect-backend:latest oneselect-backend:$(VERSION)
@@ -437,22 +438,28 @@ docs-serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
 	@poetry run mkdocs serve -a localhost:$(DOCS_PORT)
 
-docs-container-build: ## Build the containerized documentation image
+container-engine-check:
+	@if [ "$(NO_CONTAINER_ENGINE)" = "yes" ]; then \
+        echo -e "$(YELLOW)⚠️  Warning: No container engine detected. Skipping container operation. Please start Podman or Docker.$(NC)"; \
+        exit 1; \
+    fi
+
+docs-container-build: | container-engine-check ## Build the containerized documentation image
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) build
 
-docs-container-start: ## Start the containerized documentation server
+docs-container-start: | container-engine-check ## Start the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) start
 
-docs-container-stop: ## Stop the containerized documentation server
+docs-container-stop: | container-engine-check ## Stop the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) stop
 
-docs-container-restart: ## Restart the containerized documentation server
+docs-container-restart: | container-engine-check ## Restart the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) restart
 
-docs-container-status: ## Show status for the containerized documentation server
+docs-container-status: | container-engine-check ## Show status for the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) status
 
-docs-container-logs: ## Show logs for the containerized documentation server
+docs-container-logs: | container-engine-check ## Show logs for the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) logs --follow
 
 docs-deploy: ## Build and deploy documentation to GitHub Pages
@@ -470,47 +477,47 @@ docs-deploy: ## Build and deploy documentation to GitHub Pages
 # container-build: $(CONTAINER_STAMP) container-build-public ## Build the container image for the application and tag it with the current version
 # 	@:
 
-container-up: $(CONTAINER_STAMP) ## Start the container in detached mode
+container-up: $(CONTAINER_STAMP)  | container-engine-check ## Start the container in detached mode
 	@echo -e "$(DARKYELLOW)- Starting containers...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) up -d
 	@echo -e "$(GREEN)✓ Containers started$(NC)"
 
-container-down:  ## Stop and remove the running container
+container-down: | container-engine-check ## Stop and remove the running container
 	@echo -e "$(DARKYELLOW)- Stopping containers...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) down
 	@echo -e "$(GREEN)✓ Containers stopped$(NC)"
 
-container-logs: ## Follow the logs of the running container
+container-logs: | container-engine-check ## Follow the logs of the running container
 	@$(CONTAINER_COMPOSE_CMD) logs -f
 
-container-restart: $(CONTAINER_STAMP) ## Restart the running container
+container-restart: $(CONTAINER_STAMP) | container-engine-check ## Restart the running container
 	@echo -e "$(DARKYELLOW)- Restarting containers...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) restart
 	@echo -e "$(GREEN)✓ Containers restarted$(NC)"
 
-container-shell: $(CONTAINER_STAMP) ## Open an interactive shell inside the running container
+container-shell: $(CONTAINER_STAMP) | container-engine-check ## Open an interactive shell inside the running container
 	@$(CONTAINER_COMPOSE_CMD) exec $(SERVICE_NAME) /bin/shz
 
 container-clean: container-clean-container-volumes container-clean-images ## Clean up all containers and images
 
-container-clean-container-volumes: ## Remove all containers, volumes and prune the system
+container-clean-container-volumes: | container-engine-check ## Remove all containers, volumes and prune the system
 	@echo -e "$(DARKYELLOW)- Cleaning up containers and volumes...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) down -v
 	@$(CONTAINER_CMD) system prune -f
 	@echo -e "$(GREEN)✓ Containers and volumes removed$(NC)"
 
-container-clean-images: container-down ## Remove all oneselect container images
+container-clean-images: container-down | container-engine-check ## Remove all oneselect container images
 	@echo -e "$(DARKYELLOW)- Removing all oneselect images...$(NC)"
 	@$(CONTAINER_CMD) rmi -f $$($(CONTAINER_CMD) images --filter "reference=oneselect*" -q) 2>/dev/null || true
 	@rm -f $(CONTAINER_STAMP)
 	@echo -e "$(GREEN)✓ Images removed$(NC)"
 
-container-volume-info: ## Inspect the container volume used for persistent data storage
+container-volume-info: | container-engine-check ## Inspect the container volume used for persistent data storage
 	@echo -e "$(DARKYELLOW)- Listing container volumes...$(NC)"
 	@$(CONTAINER_CMD) volume ls
 	@$(CONTAINER_CMD) volume inspect $(PROJECT)_oneselect-data
 
-container-rebuild: ## Rebuild container from scratch with auto-detection
+container-rebuild: | container-engine-check ## Rebuild container from scratch with auto-detection
 	@echo -e "$(DARKYELLOW)- Rebuilding container from scratch...$(NC)"
 	@$(MAKE) container-down || true
 	@rm -f $(CONTAINER_STAMP)
@@ -518,16 +525,16 @@ container-rebuild: ## Rebuild container from scratch with auto-detection
 	@echo -e "$(GREEN)✓ Container rebuilt$(NC)"
 
 # Alias for backwards compatibility and convenience
-container-build: container-build-auto ## Build container (auto-detects proxy environment)
+container-build: container-build-auto  | container-engine-check ## Build container (auto-detects proxy environment)
 	@:
 
 # Auto-detect and build with appropriate configuration
-container-build-auto: ## Automatically detect proxy and build with appropriate configuration
+container-build-auto: | container-engine-check ## Automatically detect proxy and build with appropriate configuration
 	@echo -e "$(DARKYELLOW)- Auto-detecting build environment...$(NC)"
 	@$(MAKE) $(DEFAULT_CONTAINER_BUILD)
 
 # Build with proxy CA certificate (for internal/proxy environments)
-container-build-proxy: ## Build container image with proxy CA certificate for proxy environments
+container-build-proxy: | container-engine-check ## Build container image with proxy CA certificate for proxy environments
 	@echo -e "$(DARKYELLOW)- Building container image with proxy CA support...$(NC)"
 	@if [ ! -s $(PROXY_CA_FILE) ]; then \
 		echo -e "$(RED)✗ Error: $(PROXY_CA_FILE) not found$(NC)"; \
@@ -539,7 +546,7 @@ container-build-proxy: ## Build container image with proxy CA certificate for pr
 	@echo -e "$(GREEN)✓ Container image built with proxy CA support$(NC)"
 
 # Build public/standard version (no proxy CA)
-container-build-standard: ## Build container image without proxy CA (for public/standard deployments)
+container-build-standard: | container-engine-check ## Build container image without proxy CA (for public/standard deployments)
 	@echo -e "$(DARKYELLOW)- Building public container image (no proxy CA)...$(NC)"
 	@$(CONTAINER_CMD) build --build-arg USE_PROXY_CA=false -t $(CONTAINER_NAME):latest -t $(CONTAINER_NAME):$(VERSION) .
 	@touch $(CONTAINER_STAMP)
