@@ -122,3 +122,5 @@ dmypy.json
 
 # Generated documentation
 *.pdf
+.build/
+

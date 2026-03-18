@@ -4,7 +4,7 @@
 # to re-run certain tasks based on file changes.
 
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
-pre-commit clean maintainer-clean docs pdf docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
+pre-commit clean maintainer-clean docs pdf pdf-pandoc docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all
 
@@ -134,6 +134,13 @@ CONTAINER_NAME := $(PROJECT)
 
 # User guide PDF output path
 USER_GUIDE_PDF := user_guide.pdf
+USER_GUIDE_PANDOC_PDF := user_guide_pandoc.pdf
+USER_GUIDE_BUILD_DIR := .build/user-guide
+USER_GUIDE_TEMPLATE := docs/user_guide/report_template.tex
+USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
+USER_GUIDE_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body.tex
+USER_GUIDE_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report.tex
+USER_GUIDE_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report.pdf
 
 # Doc files for User Guide PDF generation
 USER_GUIDE_DOCS := \
@@ -316,7 +323,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build|docs|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
+	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-pandoc|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
@@ -405,6 +412,7 @@ clean: ## Clean up build artifacts, caches, and timestamp files. Keep the .venv 
 	@rm -rf .coverage coverage.xml
 	@rm -rf htmlcov
 	@rm -rf site dist
+	@rm -rf $(USER_GUIDE_BUILD_DIR)
 	@rm -rf .mypy_cache
 	@rm -rf $(STAMP_DIR)
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
@@ -428,11 +436,35 @@ docs: $(DOC_STAMP) ## Build the project documentation with MkDocs
 pdf: $(USER_GUIDE_PDF) ## Build the user guide PDF
 	@:
 
-$(USER_GUIDE_PDF): $(DOC_FILES) ## Build the user guide PDF using Pandoc
-	@echo -e "$(DARKYELLOW)- Building user guide PDF with Pandoc...$(NC)"
+$(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) ## Build user guide via custom LaTeX report template + pdflatex
+	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
+	@mkdir -p $(USER_GUIDE_BUILD_DIR)
+	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
+	@cat $(USER_GUIDE_DOCS) | LC_ALL=C tr -cd '\11\12\15\40-\176' > $(USER_GUIDE_CONCAT_MD)
+	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --ascii --syntax-highlighting=none $(USER_GUIDE_CONCAT_MD) -o $(USER_GUIDE_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(USER_GUIDE_BODY_TEX)
+	@rm -f $(USER_GUIDE_BODY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$(NC)"
+	@awk -v body="$(USER_GUIDE_BODY_TEX)" '\
+		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$(USER_GUIDE_TEMPLATE) > $(USER_GUIDE_TEX)
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with pdflatex (2 passes for references/TOC)...$(NC)"
+	@pdflatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@pdflatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
+	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
+
+pdf-pandoc: $(USER_GUIDE_PANDOC_PDF) ## Build fallback user guide PDF directly with Pandoc
+	@:
+
+$(USER_GUIDE_PANDOC_PDF): $(USER_GUIDE_DOCS)
+	@echo -e "$(DARKYELLOW)- Building fallback user guide PDF directly with Pandoc...$(NC)"
 	@pandoc --pdf-engine=xelatex -V mainfont="Arial Unicode MS" -V monofont="DejaVu Sans Mono" \
-	-V geometry:top=2cm,left=2.5cm,right=1.8cm,bottom=1.5cm \
-	$(USER_GUIDE_DOCS) -o $(USER_GUIDE_PDF)
+		-V geometry:top=2cm,left=2.5cm,right=1.8cm,bottom=1.5cm \
+		$(USER_GUIDE_DOCS) -o $(USER_GUIDE_PANDOC_PDF)
 
 docs-serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
