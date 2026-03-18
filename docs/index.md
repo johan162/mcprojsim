@@ -4,7 +4,7 @@
 
 MCProjSim runs thousands of Monte Carlo simulations on your project plan and turns uncertain task estimates into confidence-based delivery forecasts — so you can tell stakeholders *"we have a 90 % chance of finishing by March 2nd"* instead of *"it'll take about 10 weeks"*.
 
----
+
 
 ## Why MCProjSim?
 

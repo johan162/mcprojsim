@@ -4,7 +4,7 @@ This chapter explains how individual tasks are estimated in `mcprojsim` and how 
 
 The goal of this chapter is to explain all supported estimation methods, the probability distributions behind them, and how to specify each one in a project file.
 
----
+
 
 ## How estimation works in the simulation
 
@@ -20,7 +20,7 @@ The result is the task's effective duration for that iteration. Over thousands o
 
 This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in [Risks and Uncertainty Factors](risks.md).
 
----
+
 
 ## Estimation methods at a glance
 
@@ -34,7 +34,7 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 
 All three methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
 
----
+
 
 ## Explicit range estimates
 
@@ -90,7 +90,7 @@ estimate:
 
 Here, the best-case savings is 2 days (5 minus 3), but the worst-case overrun is 10 days (15 minus 5). This kind of asymmetry is realistic and the triangular distribution handles it naturally.
 
----
+
 
 ## Near-deterministic estimates
 
@@ -108,7 +108,7 @@ estimate:
 
 This effectively produces a duration of approximately 5 days in every iteration, with negligible variation. The sampled values will be very close to 5.0 but not exactly identical, which is usually close enough for practical purposes.
 
----
+
 
 ## Probability distributions
 
@@ -245,7 +245,7 @@ Here, the most likely duration is 10 days, but the long right tail means that in
 
 For most projects, the triangular distribution is the right choice. It is intuitive, bounded, and maps naturally to how teams think about estimates. The log-normal distribution is a specialized tool for tasks where the unbounded right tail better reflects reality.
 
----
+
 
 ## T-shirt size estimates
 
@@ -421,7 +421,7 @@ t_shirt_sizes:
 
 The unit setting applies to **all** T-shirt sizes in the configuration. You cannot mix units across individual sizes — the `t_shirt_size_unit` value governs the entire mapping. The project file never specifies a unit for T-shirt size estimates; the unit is always determined by this configuration setting.
 
----
+
 
 ## Story point estimates
 
@@ -566,7 +566,7 @@ As with T-shirt sizes, the unit setting applies to **all** story point mappings 
 
 > **Note:** The `t_shirt_size_unit` and `story_point_unit` settings are independent. It is perfectly valid to have T-shirt sizes in hours and story points in days (the defaults), or any other combination.
 
----
+
 
 ## Mixing estimation methods
 
@@ -609,7 +609,7 @@ All four estimation methods are combined in one project. Each task's estimate is
 
 The only restriction is that you cannot combine multiple estimation methods on the same task. Each task must use exactly one of: explicit range, T-shirt size, or story points.
 
----
+
 
 ## The `unit` field
 
@@ -692,7 +692,7 @@ When a T-shirt size or story point estimate is resolved during simulation, the n
 
 The resolved values are then converted to hours using the same conversion logic. This means a story point estimate of `5` with default configuration resolves to `min=3, most_likely=5, max=8` in days, which the simulator converts to `min=24, most_likely=40, max=64` in hours.
 
----
+
 
 ## Validation rules
 
@@ -712,7 +712,7 @@ The resolved values are then converted to hours using the same conversion logic.
 | `unit` must be `"hours"`, `"days"`, or `"weeks"` | Explicit estimates | Yes — free-form strings not accepted |
 | No `unit` on symbolic estimates | T-shirt / story point | Yes — unit comes from config |
 
----
+
 
 ## Summary
 

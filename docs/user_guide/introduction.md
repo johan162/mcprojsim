@@ -6,7 +6,7 @@ This chapter introduces the ideas behind probabilistic project estimation in a g
 
 The intended reader is generally knowledgeable about software projects and planning, but not necessarily familiar with Monte Carlo methods. For that reason, the discussion starts with familiar project problems and then moves step by step toward the simulation model used by the tool.
 
----
+
 
 ## A brief history of Monte Carlo methods
 
@@ -16,7 +16,7 @@ That insight — replacing analytical complexity with repeated random sampling �
 
 Since then, Monte Carlo simulation has found applications across nearly every quantitative field: nuclear physics, financial risk modeling, climate science, engineering reliability, drug development, and — closer to home — project estimation. The fundamental principle remains the same one that occurred to Ulam over a card game: when a problem is too complex to solve analytically, simulate it many times and study the results.
 
----
+
 
 ## Why software schedule estimates are difficult
 
@@ -30,7 +30,7 @@ A single-point estimate such as "this task will take five days" appears precise,
 
 In practice, a task may finish early if the work is straightforward, finish near the expected time if things go normally, or finish much later if complications arise. A single-point estimate does not distinguish between these cases, which makes it difficult to reason about overall project risk.
 
----
+
 
 ## How Monte Carlo compares to other estimation approaches
 
@@ -45,7 +45,7 @@ Monte Carlo simulation is not the only way to handle uncertainty in project sche
 
 The key advantage of Monte Carlo simulation is that it does not reduce uncertainty to a single number or a simple formula. Instead, it builds an entire distribution of possible outcomes. This makes it possible to answer questions like "what is the probability of finishing by a given date?" rather than only "what is the expected finish date?"
 
----
+
 
 ## From single numbers to structured uncertainty
 
@@ -61,7 +61,7 @@ These three values describe the shape of belief about the task. The minimum is n
 
 A range estimate contains more information than a single number. It tells us not only what outcome seems typical, but also how much variation surrounds it. That variation is essential at project level — even if every task has only moderate uncertainty, the combined uncertainty across many tasks can create a wide spread of overall completion dates.
 
----
+
 
 ## How Monte Carlo simulation uses these ranges
 
@@ -81,7 +81,7 @@ Consider a single task estimated at 3 / 5 / 10 days. Across several iterations, 
 
 No single run is "the truth". The value of the method comes from looking at the collection of results. In `mcprojsim`, the default is 10,000 iterations, which is usually enough to provide a stable picture for most planning tasks.
 
----
+
 
 ## From many runs to a probability distribution
 
@@ -101,7 +101,7 @@ This is the point at which simulation becomes valuable for management decisions.
 
 The important point is not that one percentile is always correct. The simulation allows stakeholders to choose a confidence level deliberately rather than inheriting one implicitly from an optimistic single-point estimate.
 
----
+
 
 ## Tasks, dependencies, and project structure
 
@@ -119,7 +119,7 @@ Project duration is not computed by adding all task durations together. Some tas
 
 This is why task scheduling is a central part of project simulation. The same set of task estimates can lead to different overall project durations depending on how the work is connected.
 
----
+
 
 ## The critical path
 
@@ -129,7 +129,7 @@ Not every task contributes equally to schedule risk. Some tasks are important bu
 
 A common mistake is to assume there is one fixed critical path. In deterministic planning this may be a useful simplification, but in a simulation context it is often wrong. Because task durations vary from run to run, the schedule-dominating path can also change. One of the strengths of Monte Carlo simulation is that it can show which tasks are *frequently* critical, not just which tasks are critical in one nominal plan. `mcprojsim` tracks this across all iterations and reports a criticality index for each task — the percentage of iterations in which that task appeared on the critical path.
 
----
+
 
 ## Two sources of schedule variation
 
@@ -169,7 +169,7 @@ Risks can be defined at two levels:
 
 Every risk combines two dimensions: how likely the event is, and how large the consequence is if it happens. A low-probability, high-impact event behaves very differently from a high-probability, low-impact event. Monte Carlo simulation captures both naturally without forcing them into a single oversimplified score.
 
----
+
 
 ## What the simulation computes, step by step
 
@@ -186,7 +186,7 @@ For each iteration, the simulation follows this sequence:
 
 This process is repeated for every iteration. The final output is not the result of one deterministic calculation, but the statistical summary of many plausible project histories.
 
----
+
 
 ## Understanding the results
 
@@ -214,7 +214,7 @@ Simulation results also help answer the question "how many people should work on
 
 Although Monte Carlo simulation relies on randomness, it can be made reproducible. By setting a random seed, users can repeat the same simulation and obtain the same results. This is useful for analysis, review, automation, and auditability — it allows teams to discuss the same output without worrying that the numbers changed simply because the simulation was run again.
 
----
+
 
 ## How the input files reflect the model
 
@@ -241,7 +241,7 @@ Before learning every schema detail, it helps to read a project file as a narrat
 
 T-shirt sizes and story points are mapped to numeric ranges in the configuration file, so they ultimately feed into the same simulation machinery as explicit estimates. They provide a natural bridge from familiar agile estimation practices into probabilistic simulation.
 
----
+
 
 ## When Monte Carlo estimation is most valuable
 
@@ -254,7 +254,7 @@ Monte Carlo methods are particularly helpful when projects have:
 
 The method is less valuable when the work is trivial, highly repetitive, or too poorly defined to estimate in any structured way. Like any planning method, it works best when the inputs are thoughtful and the model is used with judgment.
 
----
+
 
 ## What comes next in this guide
 

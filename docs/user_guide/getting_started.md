@@ -1,5 +1,14 @@
 # Getting Started
 
+This short, hands-on chapter shows you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with context.
+
+What you'll learn
+
+- Quick generation of a valid project file from a plain-text description.
+- Running a reproducible Monte Carlo simulation and exporting interactive reports.
+- Using sensitivity and critical-path outputs to find the tasks that drive schedule risk.
+
+
 ## Before you start
 
 You need:
@@ -15,7 +24,7 @@ python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 ```
 
----
+
 
 ## Install mcprojsim
 
@@ -46,7 +55,6 @@ mcprojsim --version
 mcprojsim --help
 ```
 
----
 
 ## Create your first project file
 
@@ -112,7 +120,7 @@ That is it — the generated `project.yaml` is ready for validation and simulati
 
     See the [Project Files](project_files.md) reference for all available fields.
 
----
+
 
 ## Validate the file
 
@@ -130,7 +138,9 @@ Expected result:
 
 If validation fails, read the reported field name and fix the YAML file before continuing.
 
----
+Tip: common validation issues are missing `id` fields on tasks, invalid date formats, or incorrect field names — see [Project Files](project_files.md) for the full field reference and examples.
+
+
 
 ## Run your first simulation
 
@@ -143,6 +153,8 @@ What this does:
 - Runs the default 10 000 Monte Carlo iterations
 - Uses `--seed 42` so the result is reproducible
 - Prints a summary to the terminal
+
+Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and use `--seed` for reproducible runs; see [Running Simulations](running_simulations.md) for full CLI options.
 
 You should see output like:
 
@@ -179,7 +191,7 @@ Most Frequent Critical Paths:
 No export formats specified. Use -f to export results to files.
 ```
 
----
+
 
 ## Export results
 
@@ -204,7 +216,9 @@ open "Website Refresh_results.html"     # macOS
 xdg-open "Website Refresh_results.html" # Linux
 ```
 
----
+Tip: export HTML first (`-f html`) to interactively inspect sensitivity, critical paths and charts — it is the easiest way to explore results visually.
+
+
 
 ## What the main results mean
 
@@ -216,7 +230,7 @@ xdg-open "Website Refresh_results.html" # Linux
 
 All durations are reported in **hours** (the canonical internal unit), with **working days** and **projected delivery dates** (weekends excluded) shown alongside.
 
----
+
 
 ## 7. Useful next commands
 
@@ -238,7 +252,6 @@ Suppress progress output (useful in CI/CD):
 mcprojsim simulate project.yaml --quiet
 ```
 
----
 
 ## Where to go next
 
@@ -248,5 +261,17 @@ mcprojsim simulate project.yaml --quiet
 - [Project Files](project_files.md) — complete project file reference
 - [Configuration](../configuration.md) — customize uncertainty factors and mappings
 - [Examples](../examples.md) — working example projects
+
+## Try these example projects
+
+- `examples/sample_project.yaml` — full sample with risks and resources
+- `examples/quickstart_project.yaml` — minimal quickstart example used in this chapter
+- `examples/resource_cap_small_task.yaml` — a small resource-constrained example to try constrained scheduling
+
+## Next steps (recommended learning path)
+
+- Beginner: follow this chapter and open the HTML report to inspect results.
+- Intermediate: read [Your First Project](your_first_project.md) and [Task Estimation](task_estimation.md) to improve input quality.
+- Advanced: explore [Configuration](../configuration.md), [Constrained Scheduling](constrained.md), and [MCP Server](mcp-server.md) for automation and integrations.
 
 \newpage

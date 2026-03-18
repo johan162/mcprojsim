@@ -150,7 +150,7 @@ tasks:
 
 Here, `requirements_maturity`, `team_distribution`, and `integration_complexity` all take their default values.
 
----
+
 
 # Configuring Uncertainty Factor Multipliers
 
@@ -198,7 +198,7 @@ uncertainty_factors:
 
 Any values you specify in your configuration file are merged with the defaults. You only need to include the factors or levels you want to override.
 
----
+
 
 ## Summary
 

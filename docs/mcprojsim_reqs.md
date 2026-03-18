@@ -1,13 +1,13 @@
 # Monte Carlo Software Development Estimation System
 ## Formal Specification v1.0
 
----
+
 
 ## 1. Executive Summary
 
 This document specifies a Monte Carlo simulation system for software development effort estimation. The system models uncertainties in task duration, applies risk impacts, handles task dependencies, and generates probabilistic project completion forecasts through iterative simulation.
 
----
+
 
 ## 2. System Overview
 
@@ -24,7 +24,7 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - Sensitivity analysis and critical path identification
 - Export results to multiple formats (JSON, CSV, HTML reports)
 
----
+
 
 ## 3. Detailed Requirements
 
@@ -418,7 +418,7 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - Log level SHALL be configurable
 - Logs SHALL include timestamps and context
 
----
+
 
 ## 4. Input File Format Specification
 
@@ -566,7 +566,7 @@ output:
   histogram_bins: 50
 ```
 
----
+
 
 ## 5. System Architecture
 
@@ -663,7 +663,7 @@ examples/
 #### StatisticalAnalyzer
 - Methods: calculate_statistics(), generate_histogram(), compute_percentiles()
 
----
+
 
 ## 6. Algorithms
 
@@ -735,7 +735,7 @@ For each iteration, identify the longest path through the task network. Track fr
 * Project-level risks are applied after schedule calculation, so they can make the project finish later without changing which tasks were counted as critical.
 * If multiple terminal tasks finish at the same project end time, the code traces all of them, so one iteration can contribute multiple branches rather than one single canonical path.
 
----
+
 
 ## 7. Technology Stack
 
@@ -761,7 +761,7 @@ For each iteration, identify the longest path through the task network. Track fr
 - **mkdocs-material**: 9.0+ (Material theme)
 - **mkdocstrings**: 0.22+ (API documentation from docstrings)
 
----
+
 
 ## 8. Usage Examples
 
@@ -816,7 +816,7 @@ for task_id, criticality in critical_tasks.items():
     print(f"{task_id}: {criticality*100:.1f}% critical")
 ```
 
----
+
 
 ## 9. Validation Rules
 
@@ -831,7 +831,7 @@ for task_id, criticality in critical_tasks.items():
 9. Uncertainty factor levels must match config definitions
 10. At least one task must be defined
 
----
+
 
 ## 10. Output Formats
 
@@ -850,7 +850,7 @@ Interactive report with:
 - Sensitivity analysis chart
 - Risk impact summary
 
----
+
 
 ## 11. Future Enhancements (Out of Scope for v1.0)
 
@@ -865,7 +865,7 @@ Interactive report with:
 9. Correlation between task durations (currently assumes independence)
 10. Weather/external factor modeling
 
----
+
 
 ## 12. References
 
@@ -875,7 +875,7 @@ Interactive report with:
 - NIST Guide for Risk Analysis
 - PMI PMBOK Guide (7th Edition)
 
----
+
 
 ## Document Control
 
@@ -883,6 +883,6 @@ Interactive report with:
 |---------|------|--------|---------|
 | 1.0 | 2025-10-23 | Initial | Initial specification |
 
----
+
 
 **End of Specification**

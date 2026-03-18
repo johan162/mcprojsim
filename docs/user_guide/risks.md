@@ -4,7 +4,7 @@ This chapter explains how `mcprojsim` models schedule variation due to **risks**
 
 **Risks** are discrete events that may or may not happen. A failed security audit, the departure of a key developer, or a sudden change in requirements are all risks. Each risk has a probability of occurring and an impact if it does.
 
----
+
 
 ## How Risks Affect the Simulation
 
@@ -24,7 +24,7 @@ For each iteration, the simulation processes each task as follows:
 
 This order matters. Uncertainty factors scale the base estimate before risks are evaluated. A percentage-based task risk therefore acts on the already-adjusted duration, not on the raw sampled value. Project-level risks are applied after scheduling, so they affect the final project completion time but do not change which tasks appear on the critical path for that iteration.
 
----
+
 
 ## Risk Definitions
 
@@ -90,7 +90,7 @@ The structured form with `type: "absolute"` behaves the same as the simple numer
 | `impact: { type: "absolute", value: 2, unit: "days" }` | Adds 2 days (converted to hours) if triggered |
 | `impact: { type: "percentage", value: 20 }` | Adds 20% of current duration if triggered |
 
----
+
 
 ## Task-Level Risks
 
@@ -159,7 +159,7 @@ In each iteration, the simulator:
 3. Evaluates the "Security audit findings" risk: with 30% probability, adds 5 days.
 4. Uses the resulting value as the task duration for scheduling.
 
----
+
 
 ## Project-Level Risks
 
@@ -204,7 +204,7 @@ In this example, if the first risk triggers in an iteration where the scheduled 
 
 Project-level risks are applied after the schedule is computed. This means they increase the final project duration but do not change which tasks are identified as being on the critical path for that iteration. The critical path is determined purely by task durations, uncertainty factors, task-level risks, and dependency structure.
 
----
+
 
 ## Combining Risks at Both Levels
 
@@ -307,7 +307,7 @@ tasks:
 
 In this project, each iteration might unfold differently. In one run the vendor documentation risk triggers on `pay_001`, adding 4 days. In another, the compliance review project risk fires, stretching the total duration by 15%. The Monte Carlo process captures all these possibilities and summarizes them statistically.
 
----
+
 
 ## Tasks Without Risks
 
@@ -326,7 +326,7 @@ tasks:
     risks: []
 ```
 
----
+
 
 ## Practical Tips for Defining Risks
 
@@ -337,7 +337,7 @@ tasks:
 - **Use absolute impact for fixed-cost events.** If a risk has a known cost regardless of the task size (e.g., a mandatory 3-day wait for an external review), absolute impact is appropriate.
 - **Keep risk lists manageable.** Most tasks should have zero to three risks. If a task has many risks, consider whether some of them are better captured as uncertainty factors or whether the task should be broken into smaller pieces.
 
----
+
 
 ## Examples
 
@@ -499,7 +499,7 @@ tasks:
 
 Compared to Example 1, this version will produce a wider and generally longer distribution of project durations. The uncertainty factors shift task durations systematically (for instance, the low team experience on `dash_003` multiplies that task's sampled duration by 1.30), and the risks introduce discrete jumps when they trigger. The two project-level risks add further spread to the overall distribution.
 
----
+
 
 ## Summary
 

@@ -2,7 +2,7 @@
 
 This chapter is a reference for the `mcprojsim` command-line interface. It covers all four commands: `generate`, `validate`, `simulate`, and `config show`.
 
----
+
 
 ## Command overview
 
@@ -15,7 +15,7 @@ This chapter is a reference for the `mcprojsim` command-line interface. It cover
 
 A typical workflow runs these commands in sequence: generate (or write by hand) → validate → simulate.
 
----
+
 
 ## `mcprojsim generate`
 
@@ -70,7 +70,7 @@ Task 2:
 - Size: XL
 ```
 
----
+
 
 ## `mcprojsim validate`
 
@@ -109,7 +109,7 @@ If the file has errors, the validator reports the issue and aborts:
 
 It is good practice to validate before every simulation, especially after editing a file or generating one with `mcprojsim generate`.
 
----
+
 
 ## `mcprojsim simulate`
 
@@ -263,7 +263,7 @@ When export formats are specified with `-f`, the following files are created:
 | `csv` | Tabular summary with statistics, percentiles, and critical paths |
 | `html` | Interactive report with thermometer chart and distribution histogram |
 
----
+
 
 ## `mcprojsim config show`
 

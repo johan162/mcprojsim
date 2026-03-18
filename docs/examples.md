@@ -24,7 +24,7 @@ This page provides practical examples of project definitions, progressing from s
 
 All outputs below were generated with `--minimal --seed 42` for reproducibility. Use `--seed` to get identical results on your machine.
 
----
+
 
 ## Basic Project with Explicit Estimates
 
@@ -102,7 +102,7 @@ Key observations: two sequential tasks, no parallelism (`Max Parallel Tasks: 1`)
 
 See `examples/quickstart_example.yaml` in the repository.
 
----
+
 
 ## T-Shirt Sizing
 
@@ -237,7 +237,7 @@ Note: T-shirt size and story point estimates must **not** include a `unit` field
 
 See `examples/tshirt_sizing_project.yaml` in the repository.
 
----
+
 
 ## Story Points
 
@@ -335,7 +335,7 @@ Key observations: small project with low uncertainty — the CV is only 0.15 and
 
 See `examples/story_points_walkthrough_project.yaml` in the repository.
 
----
+
 
 ## Complex Project with Risks
 
@@ -592,7 +592,7 @@ Key observations:
 
 See `examples/sample_project.yaml` in the repository.
 
----
+
 
 ## Log-Normal Distribution
 
@@ -612,7 +612,7 @@ tasks:
 
 The log-normal distribution produces a heavier right tail, making it suitable for research, exploration, or tasks with high uncertainty about upper bounds.
 
----
+
 
 ## Constrained Scheduling with `team_size`
 
@@ -733,7 +733,7 @@ Key observations:
 
 See `examples/team_size_demo_base.yaml` and `examples/team_size_demo_with_team_size.yaml` in the repository.
 
----
+
 
 ## Constrained Scheduling with Explicit Resources and Calendars
 
@@ -804,14 +804,14 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 621.45 hours (78 working days)
-Median (P50): 631.03 hours
-Std Dev: 88.85 hours
-Minimum: 389.83 hours
-Maximum: 1135.58 hours
-Coefficient of Variation: 0.1430
-Skewness: 0.7106
-Excess Kurtosis: 4.5765
+Mean: 614.28 hours (77 working days)
+Median (P50): 629.35 hours
+Std Dev: 88.73 hours
+Minimum: 388.64 hours
+Maximum: 871.92 hours
+Coefficient of Variation: 0.1444
+Skewness: 0.0954
+Excess Kurtosis: 0.1078
 
 Project Effort Statistical Summary:
 Mean: 174.56 person-hours (22 person-days)
@@ -824,10 +824,10 @@ Skewness: 0.2087
 Excess Kurtosis: -0.3433
 
 Calendar Time Confidence Intervals:
-  P50: 631.03 hours (79 working days)  (2026-07-21)
-  P80: 677.79 hours (85 working days)  (2026-07-29)
-  P90: 721.52 hours (91 working days)  (2026-08-06)
-  P95: 726.37 hours (91 working days)  (2026-08-06)
+  P50: 629.35 hours (79 working days)  (2026-07-21)
+  P80: 678.65 hours (85 working days)  (2026-07-29)
+  P90: 703.72 hours (88 working days)  (2026-08-03)
+  P95: 725.74 hours (91 working days)  (2026-08-06)
 ```
 
 Key observations:
@@ -842,7 +842,7 @@ Key observations:
 
 For a full constrained walkthrough with incremental complexity, see the [Constrained Scheduling Guide](user_guide/constrained.md).
 
----
+
 
 ## Natural Language Project Generation
 
@@ -984,14 +984,14 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 1279.37 hours (160 working days)
-Median (P50): 1279.19 hours
-Std Dev: 135.62 hours
-Minimum: 943.03 hours
-Maximum: 1661.90 hours
-Coefficient of Variation: 0.1060
-Skewness: 0.1732
-Excess Kurtosis: -0.0363
+Mean: 1276.42 hours (160 working days)
+Median (P50): 1278.17 hours
+Std Dev: 130.91 hours
+Minimum: 942.69 hours
+Maximum: 1661.48 hours
+Coefficient of Variation: 0.1026
+Skewness: 0.0075
+Excess Kurtosis: -0.0079
 
 Project Effort Statistical Summary:
 Mean: 417.14 person-hours (53 person-days)
@@ -1004,10 +1004,10 @@ Skewness: -0.0057
 Excess Kurtosis: -0.4161
 
 Calendar Time Confidence Intervals:
-  P50: 1279.19 hours (160 working days)  (2026-12-11)
-  P80: 1416.30 hours (178 working days)  (2027-01-06)
-  P90: 1464.17 hours (184 working days)  (2027-01-14)
-  P95: 1494.27 hours (187 working days)  (2027-01-19)
+  P50: 1278.17 hours (160 working days)  (2026-12-11)
+  P80: 1417.72 hours (178 working days)  (2027-01-06)
+  P90: 1442.15 hours (181 working days)  (2027-01-11)
+  P95: 1467.84 hours (184 working days)  (2027-01-14)
 ```
 
 The generated YAML includes full `resources:` and `calendars:` sections. Use `--validate-only` to check your description before generating:
@@ -1022,7 +1022,7 @@ mcprojsim generate examples/nl_constrained_example.txt --validate-only
 
 See `examples/nl_example.txt` and `examples/nl_constrained_example.txt` in the repository.
 
----
+
 
 ## Running Examples
 

@@ -20,7 +20,7 @@ This page provides practical examples of project definitions, progressing from s
 
 All outputs below were generated with `--minimal --seed 42` for reproducibility. Use `--seed` to get identical results on your machine.
 
----
+
 
 ## Basic Project with Explicit Estimates
 
@@ -34,7 +34,7 @@ Key observations: two sequential tasks, no parallelism (`Max Parallel Tasks: 1`)
 
 See `examples/quickstart_example.yaml` in the repository.
 
----
+
 
 ## T-Shirt Sizing
 
@@ -50,7 +50,7 @@ Note: T-shirt size and story point estimates must **not** include a `unit` field
 
 See `examples/tshirt_sizing_project.yaml` in the repository.
 
----
+
 
 ## Story Points
 
@@ -64,7 +64,7 @@ Key observations: small project with low uncertainty — the CV is only 0.15 and
 
 See `examples/story_points_walkthrough_project.yaml` in the repository.
 
----
+
 
 ## Complex Project with Risks
 
@@ -81,7 +81,7 @@ Key observations:
 
 See `examples/sample_project.yaml` in the repository.
 
----
+
 
 ## Log-Normal Distribution
 
@@ -101,7 +101,7 @@ tasks:
 
 The log-normal distribution produces a heavier right tail, making it suitable for research, exploration, or tasks with high uncertainty about upper bounds.
 
----
+
 
 ## Constrained Scheduling with `team_size`
 
@@ -123,7 +123,7 @@ Key observations:
 
 See `examples/team_size_demo_base.yaml` and `examples/team_size_demo_with_team_size.yaml` in the repository.
 
----
+
 
 ## Constrained Scheduling with Explicit Resources and Calendars
 
@@ -145,7 +145,7 @@ Key observations:
 
 For a full constrained walkthrough with incremental complexity, see the [Constrained Scheduling Guide](user_guide/constrained.md).
 
----
+
 
 ## Natural Language Project Generation
 
@@ -171,7 +171,7 @@ The generated YAML includes full `resources:` and `calendars:` sections. Use `--
 
 See `examples/nl_example.txt` and `examples/nl_constrained_example.txt` in the repository.
 
----
+
 
 ## Running Examples
 

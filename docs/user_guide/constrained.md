@@ -21,7 +21,7 @@ The CLI and exporters report this explicitly via:
 - `Schedule Mode` (`dependency_only` or `resource_constrained`),
 - constrained diagnostics (resource wait time, utilization, calendar delay contribution).
 
----
+
 
 ## How `team_size` affects scheduling
 
@@ -134,7 +134,7 @@ Median (P50): 529.86 hours
 - If explicit resources are fewer than `team_size`, generated defaults fill the gap.
 - If both are omitted (or `team_size: 0` with no resources), the run is dependency-only.
 
----
+
 
 ## Example 1: Baseline (dependency-only)
 
@@ -175,7 +175,7 @@ Calendar Time Confidence Intervals:
   P99: 170.61 hours (22 working days)  (2026-05-01)
 ```
 
----
+
 
 ## Resource fields introduced in this chapter
 
@@ -266,7 +266,7 @@ This avoids combinatorial explosion and keeps runtime predictable for large proj
 It is a heuristic, not globally optimal schedule optimization.
 
 
----
+
 
 ## Example 2: Add resources (single-pass automatic assignment)
 
@@ -368,7 +368,7 @@ Look for:
   - Effective Resource Utilization
   - Calendar Delay Contribution (hours)
 
----
+
 
 ## Example 3: Add working calendars
 
@@ -440,7 +440,7 @@ The table below compares calendar-time percentiles from the sample runs above (s
 
 This progression highlights how resource constraints and then calendar constraints increase elapsed calendar time, even when effort distributions are unchanged.
 
----
+
 
 ## Example 4: Add sickness and planned absence
 
@@ -466,7 +466,7 @@ resources:
 !!! note
     `sickness_prob` is currently configured in the **project file** (per resource), not in the global config file as it is based an individal assessment. If not specified it is the same as specifying sick probability as `0.0`
 
----
+
 
 ## Example 5: Add task-level resource constraints
 
@@ -504,7 +504,7 @@ tasks:
 
 This is the first point in the walkthrough where `max_resources` is actively overridden above the default (`1`) to allow multi-resource task execution.
 
----
+
 
 ## Example 6: Full constrained project (final build-up)
 
@@ -613,7 +613,7 @@ mcprojsim simulate constrained-full.yaml \
   -o results/constrained-full
 ```
 
----
+
 
 ## Single-pass vs double-pass assignment
 
@@ -633,7 +633,7 @@ Practical workaround today:
 2. Tighten task-level resource constraints (`resources`, `max_resources`, `min_experience_level`) for the highest-criticality tasks.
 3. Re-run and compare constrained diagnostics and completion percentiles.
 
----
+
 
 ## CLI options most relevant to constrained runs
 
@@ -650,7 +650,7 @@ Use these with `mcprojsim simulate`:
 | `-o` | Keep scenario outputs organized for side-by-side comparison |
 | `--target-date` | Evaluate on-time probability against a concrete deadline |
 
----
+
 
 ## Where to configure constrained behavior
 
@@ -687,7 +687,7 @@ staffing:
   effort_percentile: 80
 ```
 
----
+
 
 ## Related chapters
 

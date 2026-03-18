@@ -4,7 +4,7 @@ Writing a full YAML project file by hand is straightforward once you know the fo
 
 This chapter explains what the MCP server is, how to install and configure it, how the natural language parser works, and how to get the best results from it.
 
----
+
 
 ## What is the MCP server?
 
@@ -18,7 +18,7 @@ The **Model Context Protocol (MCP)** is an open standard that lets AI assistants
 
 When an MCP client connects to the server, the AI assistant can invoke these tools on your behalf. You describe a project in plain language, the assistant calls `generate_project_file` or `simulate_project`, and you get back a ready-to-use result.
 
----
+
 
 ## Prerequisites and installation
 
@@ -81,7 +81,7 @@ Every MCP client has its own configuration format. Below are examples for common
 !!! note
     If you installed `mcprojsim` inside a Poetry virtual environment, you may need to specify the full path to the entry point. You can find it with `poetry run which mcprojsim-mcp`.
 
----
+
 
 ## Workflow overview
 
@@ -137,7 +137,7 @@ You can also ask the assistant to validate first:
 
 The assistant will call `validate_project_description` and report any warnings (missing estimates, undefined dependencies) before you commit to generating the file.
 
----
+
 
 ## Natural language input format
 
@@ -185,7 +185,7 @@ The parser normalizes a variety of size labels to standard sizes:
 
 Size matching is case-insensitive: `size: medium`, `Size: MEDIUM`, and `Size Medium` all resolve to `M`.
 
----
+
 
 ## Examples
 
@@ -476,7 +476,7 @@ Task 3:
 
 `Extra Small` becomes `XS`, `Extra Large` becomes `XL`, and `Small` becomes `S` in the generated YAML.
 
----
+
 
 ## Using the parser from the command line
 
@@ -527,7 +527,7 @@ with open("my_project.yaml", "w") as f:
     f.write(yaml_output)
 ```
 
----
+
 
 ## Tips & tricks
 
