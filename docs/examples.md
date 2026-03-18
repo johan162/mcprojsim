@@ -1,14 +1,14 @@
 # Examples
 
 - [Examples](#examples)
-  - [1. Basic Project with Explicit Estimates](#1-basic-project-with-explicit-estimates)
-  - [2. T-Shirt Sizing](#2-t-shirt-sizing)
-  - [3. Story Points](#3-story-points)
-  - [4. Complex Project with Risks](#4-complex-project-with-risks)
-  - [5. Log-Normal Distribution](#5-log-normal-distribution)
-  - [6. Constrained Scheduling with `team_size`](#6-constrained-scheduling-with-team_size)
-  - [7. Constrained Scheduling with Explicit Resources and Calendars](#7-constrained-scheduling-with-explicit-resources-and-calendars)
-  - [8. Natural Language Project Generation](#8-natural-language-project-generation)
+  - [Basic Project with Explicit Estimates](#basic-project-with-explicit-estimates)
+  - [T-Shirt Sizing](#t-shirt-sizing)
+  - [Story Points](#story-points)
+  - [Complex Project with Risks](#complex-project-with-risks)
+  - [Log-Normal Distribution](#log-normal-distribution)
+  - [Constrained Scheduling with `team_size`](#constrained-scheduling-with-team_size)
+  - [Constrained Scheduling with Explicit Resources and Calendars](#constrained-scheduling-with-explicit-resources-and-calendars)
+  - [Natural Language Project Generation](#natural-language-project-generation)
     - [Basic text input (dependency-only)](#basic-text-input-dependency-only)
     - [Text input with resources and calendars (constrained)](#text-input-with-resources-and-calendars-constrained)
   - [Running Examples](#running-examples)
@@ -22,7 +22,7 @@ All outputs below were generated with `--minimal --seed 42` for reproducibility.
 
 ---
 
-## 1. Basic Project with Explicit Estimates
+## Basic Project with Explicit Estimates
 
 A simple project with two sequential tasks using three-point (min / most likely / max) estimates. This is the simplest useful project definition.
 
@@ -83,7 +83,7 @@ See `examples/quickstart_example.yaml` in the repository.
 
 ---
 
-## 2. T-Shirt Sizing
+## T-Shirt Sizing
 
 For quick estimation using relative sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`). T-shirt sizes map to default effort ranges that are configurable via the [configuration file](user_guide/task_estimation.md#t-shirt-size-estimates).
 
@@ -168,7 +168,7 @@ See `examples/tshirt_sizing_project.yaml` in the repository.
 
 ---
 
-## 3. Story Points
+## Story Points
 
 For agile-style relative estimation using calibrated story point mappings. Default mappings are configurable via the [configuration file](user_guide/task_estimation.md#story-point-estimates).
 
@@ -233,7 +233,7 @@ See `examples/story_points_walkthrough_project.yaml` in the repository.
 
 ---
 
-## 4. Complex Project with Risks
+## Complex Project with Risks
 
 A realistic project with 8 tasks, complex dependencies, uncertainty factors, and both task-level and project-level risks.
 
@@ -359,7 +359,7 @@ See `examples/sample_project.yaml` in the repository.
 
 ---
 
-## 5. Log-Normal Distribution
+## Log-Normal Distribution
 
 For tasks where extreme overruns are more probable than a triangular distribution predicts:
 
@@ -379,7 +379,7 @@ The log-normal distribution produces a heavier right tail, making it suitable fo
 
 ---
 
-## 6. Constrained Scheduling with `team_size`
+## Constrained Scheduling with `team_size`
 
 The simplest way to activate resource-constrained scheduling: add `team_size` to the project metadata. This auto-generates default resources.
 
@@ -450,7 +450,7 @@ See `examples/team_size_demo_base.yaml` and `examples/team_size_demo_with_team_s
 
 ---
 
-## 7. Constrained Scheduling with Explicit Resources and Calendars
+## Constrained Scheduling with Explicit Resources and Calendars
 
 For full control, define resources with individual skill levels, productivity, sickness probability, and planned absences. Attach resources to named calendars with custom work patterns.
 
@@ -545,7 +545,7 @@ For a full constrained walkthrough with incremental complexity, see the [Constra
 
 ---
 
-## 8. Natural Language Project Generation
+## Natural Language Project Generation
 
 The `generate` command converts plain-text project descriptions into valid YAML project files. This lets you sketch a project quickly and iterate.
 

@@ -17,7 +17,7 @@ python3 -m pipx ensurepath
 
 ---
 
-## 1. Install mcprojsim
+## Install mcprojsim
 
 ### With pipx (recommended)
 
@@ -48,7 +48,7 @@ mcprojsim --help
 
 ---
 
-## 2. Create your first project file
+## Create your first project file
 
 The quickest way is to describe your project in plain text and let `mcprojsim generate` produce the YAML for you.
 
@@ -114,7 +114,7 @@ That is it — the generated `project.yaml` is ready for validation and simulati
 
 ---
 
-## 3. Validate the file
+## Validate the file
 
 Before simulating, check the file for errors:
 
@@ -132,7 +132,7 @@ If validation fails, read the reported field name and fix the YAML file before c
 
 ---
 
-## 4. Run your first simulation
+## Run your first simulation
 
 ```bash
 mcprojsim simulate project.yaml --seed 42
@@ -181,7 +181,7 @@ No export formats specified. Use -f to export results to files.
 
 ---
 
-## 5. Export results
+## Export results
 
 To generate report files, add `-f` with the desired formats:
 
@@ -206,7 +206,7 @@ xdg-open "Website Refresh_results.html" # Linux
 
 ---
 
-## 6. What the main results mean
+## What the main results mean
 
 | Percentile | Meaning | Typical use |
 |------------|---------|-------------|
