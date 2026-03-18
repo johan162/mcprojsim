@@ -4,7 +4,7 @@
 # to re-run certain tasks based on file changes.
 
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
-pre-commit clean maintainer-clean docs pdf pdf-pandoc docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
+pre-commit clean maintainer-clean docs pdf pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all
 
@@ -156,6 +156,12 @@ USER_GUIDE_DOCS := \
 	docs/user_guide/interpreting_results.md  \
 	docs/user_guide/mcp-server.md \
 	docs/examples.md
+
+# Example generation
+EXAMPLES_TEMPLATE := docs/examples_template.md
+EXAMPLES_GENERATOR := scripts/gen-examples.sh
+EXAMPLES_OUTPUT := docs/examples.md
+EXAMPLE_FILES := $(wildcard examples/*.yaml) $(wildcard examples/*.txt)
 
 # Minimum coverage percentage required
 COVERAGE := 80
@@ -323,7 +329,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-pandoc|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
+	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-pandoc|gen-examples|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
@@ -433,6 +439,13 @@ maintainer-clean: ## Perform a thorough cleanup including virtual environment, c
 docs: $(DOC_STAMP) ## Build the project documentation with MkDocs
 	@:
 
+gen-examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
+	@:
+
+$(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) $(INSTALL_STAMP)
+	@echo -e "$(DARKYELLOW)- Generating examples documentation from template...$(NC)"
+	@bash $(EXAMPLES_GENERATOR)
+
 pdf: $(USER_GUIDE_PDF) ## Build the user guide PDF
 	@:
 
@@ -440,9 +453,9 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) ## Build user guide
 	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
 	@mkdir -p $(USER_GUIDE_BUILD_DIR)
 	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
-	@cat $(USER_GUIDE_DOCS) | LC_ALL=C tr -cd '\11\12\15\40-\176' > $(USER_GUIDE_CONCAT_MD)
+	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_CONCAT_MD)
 	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --ascii --syntax-highlighting=none $(USER_GUIDE_CONCAT_MD) -o $(USER_GUIDE_BODY_TEX)
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(USER_GUIDE_CONCAT_MD) -o $(USER_GUIDE_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(USER_GUIDE_BODY_TEX)
 	@rm -f $(USER_GUIDE_BODY_TEX).bak
 	@echo -e "$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$(NC)"
@@ -451,9 +464,9 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) ## Build user guide
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$(USER_GUIDE_TEMPLATE) > $(USER_GUIDE_TEX)
-	@echo -e "$(DARKYELLOW)  - Compiling PDF with pdflatex (2 passes for references/TOC)...$(NC)"
-	@pdflatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
-	@pdflatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
 	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
 	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
 

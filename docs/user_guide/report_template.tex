@@ -1,8 +1,9 @@
-\documentclass[11pt,a4paper]{report}
+\documentclass[10pt,a4paper]{report}
 
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{lmodern}
+\usepackage{fontspec}
+%% \setmainfont{DejaVu Serif}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
 \usepackage[a4paper,top=2cm,left=2.5cm,right=1.8cm,bottom=1.8cm]{geometry}
 \usepackage{graphicx}
 \usepackage{calc}
@@ -16,6 +17,35 @@
 \usepackage{xcolor}
 \usepackage{setspace}
 \usepackage{parskip}
+\usepackage{fancyvrb}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeborder}{HTML}{C0C0C0}
+\fvset{fontsize=\small}
+
+% Shaded background for verbatim: manual minipage with colorbox
+\newenvironment{shadedverbatim}{%
+  \VerbatimEnvironment
+  \begin{minipage}{\dimexpr\linewidth-4mm}%
+  \columncolor{codebg}%
+  \begin{Verbatim}%
+}{%
+  \end{Verbatim}%
+  \end{minipage}%
+}
+
+% Override verbatim to use a snugshade-style background via save-box approach
+\newsavebox{\verbbox}
+\renewenvironment{verbatim}{%
+  \VerbatimEnvironment
+  \begin{lrbox}{\verbbox}%
+  \begin{minipage}{\dimexpr\linewidth-8mm}%
+  \begin{Verbatim}%
+}{%
+  \end{Verbatim}%
+  \end{minipage}%
+  \end{lrbox}%
+  \noindent\colorbox{codebg}{\usebox{\verbbox}}%
+}
 
 \setstretch{1.08}
 \setlength{\parindent}{0pt}

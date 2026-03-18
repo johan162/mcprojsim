@@ -1,3 +1,7 @@
+<!-- AUTO-GENERATED FILE — DO NOT EDIT -->
+<!-- Source: docs/examples_template.md -->
+<!-- Regenerate with: make gen-examples -->
+
 # Examples
 
 - [Examples](#examples)
@@ -29,6 +33,7 @@ A simple project with two sequential tasks using three-point (min / most likely 
 ```yaml
 project:
   name: "Website Refresh"
+  description: "Small example project"
   start_date: "2026-04-01"
   confidence_levels: [50, 80, 90]
 
@@ -59,6 +64,8 @@ mcprojsim simulate examples/quickstart_example.yaml --minimal --seed 42
 ```
 
 ```text
+=== Simulation Results ===
+
 Project Overview:
 Project: Website Refresh
 Hours per Day: 8.0
@@ -69,7 +76,21 @@ Calendar Time Statistical Summary:
 Mean: 126.93 hours (16 working days)
 Median (P50): 125.74 hours
 Std Dev: 17.68 hours
+Minimum: 78.43 hours
+Maximum: 184.27 hours
 Coefficient of Variation: 0.1393
+Skewness: 0.2267
+Excess Kurtosis: -0.4206
+
+Project Effort Statistical Summary:
+Mean: 126.93 person-hours (16 person-days)
+Median (P50): 125.74 person-hours
+Std Dev: 17.68 person-hours
+Minimum: 78.43 person-hours
+Maximum: 184.27 person-hours
+Coefficient of Variation: 0.1393
+Skewness: 0.2267
+Excess Kurtosis: -0.4206
 
 Calendar Time Confidence Intervals:
   P50: 125.74 hours (16 working days)  (2026-04-23)
@@ -90,8 +111,11 @@ For quick estimation using relative sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`). T-
 ```yaml
 project:
   name: "Mobile App Development"
+  description: "Example project using T-shirt sizing for effort estimates"
   start_date: "2025-11-01"
   confidence_levels: [10, 50, 75, 80, 85, 90, 95, 99]
+  probability_red_threshold: 0.50
+  probability_green_threshold: 0.90
 
 tasks:
   - id: "design_ui"
@@ -108,12 +132,18 @@ tasks:
     estimate:
       t_shirt_size: "L"
     dependencies: []
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"
 
   - id: "api_development"
     name: "REST API Development"
     estimate:
       t_shirt_size: "XL"
     dependencies: ["setup_backend"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "high"
     risks:
       - id: "api_complexity"
         name: "API complexity higher than expected"
@@ -128,12 +158,33 @@ tasks:
     estimate:
       t_shirt_size: "XXL"
     dependencies: ["design_ui", "api_development"]
+    uncertainty_factors:
+      team_experience: "low"
+      technical_complexity: "high"
 
   - id: "integration_testing"
     name: "Integration Testing"
     estimate:
       t_shirt_size: "M"
     dependencies: ["mobile_app_dev"]
+    uncertainty_factors:
+      requirements_maturity: "high"
+
+  - id: "deployment"
+    name: "Deployment and Go-Live"
+    estimate:
+      t_shirt_size: "S"
+    dependencies: ["integration_testing"]
+    uncertainty_factors:
+      integration_complexity: "medium"
+
+project_risks:
+  - id: "team_change"
+    name: "Key team member leaves"
+    probability: 0.15
+    impact:
+      type: "percentage"
+      value: 20
 ```
 
 ```bash
@@ -141,6 +192,8 @@ mcprojsim simulate examples/tshirt_sizing_project.yaml --minimal --seed 42
 ```
 
 ```text
+=== Simulation Results ===
+
 Project Overview:
 Project: Mobile App Development
 Hours per Day: 8.0
@@ -151,12 +204,30 @@ Calendar Time Statistical Summary:
 Mean: 3491.26 hours (437 working days)
 Median (P50): 3422.83 hours
 Std Dev: 578.05 hours
+Minimum: 2189.84 hours
+Maximum: 6092.89 hours
 Coefficient of Variation: 0.1656
+Skewness: 0.5892
+Excess Kurtosis: 0.1221
+
+Project Effort Statistical Summary:
+Mean: 3476.64 person-hours (435 person-days)
+Median (P50): 3419.67 person-hours
+Std Dev: 508.01 person-hours
+Minimum: 2284.80 person-hours
+Maximum: 5287.37 person-hours
+Coefficient of Variation: 0.1461
+Skewness: 0.4073
+Excess Kurtosis: -0.4388
 
 Calendar Time Confidence Intervals:
   P10: 2791.21 hours (349 working days)  (2027-03-04)
   P50: 3422.83 hours (428 working days)  (2027-06-23)
+  P75: 3869.17 hours (484 working days)  (2027-09-09)
+  P80: 3981.40 hours (498 working days)  (2027-09-29)
+  P85: 4103.10 hours (513 working days)  (2027-10-20)
   P90: 4273.10 hours (535 working days)  (2027-11-19)
+  P95: 4516.80 hours (565 working days)  (2027-12-31)
   P99: 5055.58 hours (632 working days)  (2028-04-04)
 ```
 
@@ -175,6 +246,7 @@ For agile-style relative estimation using calibrated story point mappings. Defau
 ```yaml
 project:
   name: "Tiny Landing Page"
+  description: "Story Point sizing example"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
 
@@ -205,26 +277,58 @@ tasks:
 ```
 
 ```bash
-mcprojsim simulate examples/story_points_walkthrough_project.yaml --minimal --seed 42
+mcprojsim simulate examples/story_points_walkthrough_project.yaml --minimal --table --seed 42
 ```
 
 ```text
+=== Simulation Results ===
+
 Project Overview:
-Project: Tiny Landing Page
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+┌────────────────────┬───────────────────┐
+│ Field              │ Value             │
+├────────────────────┼───────────────────┤
+│ Project            │ Tiny Landing Page │
+│ Hours per Day      │ 8.0               │
+│ Max Parallel Tasks │ 1                 │
+│ Schedule Mode      │ dependency_only   │
+└────────────────────┴───────────────────┘
 
 Calendar Time Statistical Summary:
-Mean: 109.90 hours (14 working days)
-Median (P50): 109.21 hours
-Std Dev: 15.97 hours
-Coefficient of Variation: 0.1453
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 109.90 hours (14 working days) │
+│ Median (P50)             │ 109.21 hours                   │
+│ Std Dev                  │ 15.97 hours                    │
+│ Minimum                  │ 64.96 hours                    │
+│ Maximum                  │ 167.85 hours                   │
+│ Coefficient of Variation │ 0.1453                         │
+│ Skewness                 │ 0.1731                         │
+│ Excess Kurtosis          │ -0.2637                        │
+└──────────────────────────┴────────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 109.90 person-hours (14 person-days) │
+│ Median (P50)             │ 109.21 person-hours                  │
+│ Std Dev                  │ 15.97 person-hours                   │
+│ Minimum                  │ 64.96 person-hours                   │
+│ Maximum                  │ 167.85 person-hours                  │
+│ Coefficient of Variation │ 0.1453                               │
+│ Skewness                 │ 0.1731                               │
+│ Excess Kurtosis          │ -0.2637                              │
+└──────────────────────────┴──────────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
-  P50: 109.21 hours (14 working days)  (2026-03-19)
-  P80: 123.81 hours (16 working days)  (2026-03-23)
-  P90: 131.03 hours (17 working days)  (2026-03-24)
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │  109.21 │             14 │ 2026-03-19 │
+│ P80          │  123.81 │             16 │ 2026-03-23 │
+│ P90          │  131.03 │             17 │ 2026-03-24 │
+└──────────────┴─────────┴────────────────┴────────────┘
 ```
 
 Key observations: small project with low uncertainty — the CV is only 0.15 and P50 to P90 spans just 3 working days.
@@ -240,10 +344,12 @@ A realistic project with 8 tasks, complex dependencies, uncertainty factors, and
 ```yaml
 project:
   name: "Customer Portal Redesign"
+  description: "Next-generation customer portal with enhanced features"
   start_date: "2025-11-01"
   confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
-  probability_red_threshold: 0.50
-  probability_green_threshold: 0.90
+  # Probability thresholds for thermometer visualization
+  probability_red_threshold: 0.50    # Below 50% shown as red (high risk)
+  probability_green_threshold: 0.90  # Above 90% shown as green (low risk)
 
 project_risks:
   - id: "risk_001"
@@ -252,6 +358,8 @@ project_risks:
     impact:
       type: "percentage"
       value: 20
+    description: "Risk of losing senior developer mid-project"
+  
   - id: "risk_002"
     name: "Requirements change"
     probability: 0.30
@@ -263,6 +371,7 @@ project_risks:
 tasks:
   - id: "task_001"
     name: "Database schema design"
+    description: "Design normalized schema for customer data"
     estimate:
       min: 3
       most_likely: 5
@@ -273,6 +382,8 @@ tasks:
       team_experience: "high"
       requirements_maturity: "medium"
       technical_complexity: "low"
+      team_distribution: "colocated"
+      integration_complexity: "low"
     risks:
       - id: "task_risk_001"
         name: "Schema migration issues"
@@ -284,43 +395,150 @@ tasks:
 
   - id: "task_002"
     name: "API endpoint implementation"
-    estimate: { min: 5, most_likely: 8, max: 15, unit: "days" }
+    description: "Implement RESTful API endpoints"
+    estimate:
+      min: 5
+      most_likely: 8
+      max: 15
+      unit: "days"
     dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "high"
+      technical_complexity: "medium"
+      team_distribution: "colocated"
+      integration_complexity: "medium"
+    risks: []
 
   - id: "task_003"
     name: "Frontend React components"
-    estimate: { min: 7, most_likely: 10, max: 18, unit: "days" }
+    description: "Build reusable React components for UI"
+    estimate:
+      min: 7
+      most_likely: 10
+      max: 18
+      unit: "days"
     dependencies: []
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "medium"
+      technical_complexity: "medium"
+      team_distribution: "colocated"
+      integration_complexity: "low"
     risks:
       - id: "task_risk_002"
         name: "Browser compatibility issues"
         probability: 0.25
-        impact: { type: "absolute", value: 3, unit: "days" }
+        impact:
+          type: "absolute"
+          value: 3
+          unit: "days"
 
   - id: "task_004"
     name: "Authentication & Authorization"
-    estimate: { min: 4, most_likely: 6, max: 12, unit: "days" }
+    description: "Implement OAuth2 and role-based access control"
+    estimate:
+      min: 4
+      most_likely: 6
+      max: 12
+      unit: "days"
     dependencies: ["task_002"]
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "high"
+      technical_complexity: "high"
+      team_distribution: "colocated"
+      integration_complexity: "high"
+    risks:
+      - id: "task_risk_003"
+        name: "Security audit findings"
+        probability: 0.30
+        impact:
+          type: "absolute"
+          value: 5
+          unit: "days"
 
   - id: "task_005"
     name: "Integration testing"
-    estimate: { min: 3, most_likely: 5, max: 8, unit: "days" }
+    description: "End-to-end integration tests"
+    estimate:
+      min: 3
+      most_likely: 5
+      max: 8
+      unit: "days"
     dependencies: ["task_002", "task_003", "task_004"]
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "high"
+      technical_complexity: "medium"
+      team_distribution: "colocated"
+      integration_complexity: "high"
+    risks: []
 
   - id: "task_006"
     name: "Performance optimization"
-    estimate: { min: 2, most_likely: 4, max: 7, unit: "days" }
+    description: "Optimize API and frontend performance"
+    estimate:
+      min: 2
+      most_likely: 4
+      max: 7
+      unit: "days"
     dependencies: ["task_005"]
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "medium"
+      technical_complexity: "high"
+      team_distribution: "colocated"
+      integration_complexity: "medium"
+    risks:
+      - id: "task_risk_004"
+        name: "Performance targets not met"
+        probability: 0.35
+        impact:
+          type: "absolute"
+          value: 4
+          unit: "days"
 
   - id: "task_007"
     name: "Documentation"
-    estimate: { min: 2, most_likely: 3, max: 5, unit: "days" }
+    description: "API documentation and user guides"
+    estimate:
+      min: 2
+      most_likely: 3
+      max: 5
+      unit: "days"
     dependencies: ["task_002", "task_003"]
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "high"
+      technical_complexity: "low"
+      team_distribution: "colocated"
+      integration_complexity: "low"
+    risks: []
 
   - id: "task_008"
     name: "Deployment & DevOps"
-    estimate: { min: 3, most_likely: 5, max: 9, unit: "days" }
+    description: "Setup CI/CD pipeline and production deployment"
+    estimate:
+      min: 3
+      most_likely: 5
+      max: 9
+      unit: "days"
     dependencies: ["task_006"]
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "medium"
+      technical_complexity: "medium"
+      team_distribution: "distributed"
+      integration_complexity: "high"
+    risks:
+      - id: "task_risk_005"
+        name: "Infrastructure issues"
+        probability: 0.20
+        impact:
+          type: "absolute"
+          value: 3
+          unit: "days"
 ```
 
 ```bash
@@ -328,6 +546,8 @@ mcprojsim simulate examples/sample_project.yaml --minimal --seed 42
 ```
 
 ```text
+=== Simulation Results ===
+
 Project Overview:
 Project: Customer Portal Redesign
 Hours per Day: 8.0
@@ -338,13 +558,28 @@ Calendar Time Statistical Summary:
 Mean: 580.89 hours (73 working days)
 Median (P50): 574.73 hours
 Std Dev: 78.46 hours
+Minimum: 365.50 hours
+Maximum: 924.02 hours
 Coefficient of Variation: 0.1351
+Skewness: 0.4798
+Excess Kurtosis: 0.1518
+
+Project Effort Statistical Summary:
+Mean: 686.35 person-hours (86 person-days)
+Median (P50): 684.08 person-hours
+Std Dev: 61.54 person-hours
+Minimum: 487.94 person-hours
+Maximum: 902.14 person-hours
+Coefficient of Variation: 0.0897
+Skewness: 0.1210
+Excess Kurtosis: -0.1140
 
 Calendar Time Confidence Intervals:
   P25: 524.00 hours (66 working days)  (2026-02-02)
   P50: 574.73 hours (72 working days)  (2026-02-10)
   P75: 629.98 hours (79 working days)  (2026-02-19)
   P80: 645.37 hours (81 working days)  (2026-02-23)
+  P85: 663.34 hours (83 working days)  (2026-02-25)
   P90: 685.64 hours (86 working days)  (2026-03-02)
   P95: 722.71 hours (91 working days)  (2026-03-09)
   P99: 789.05 hours (99 working days)  (2026-03-19)
@@ -405,6 +640,8 @@ mcprojsim simulate examples/team_size_demo_with_team_size.yaml --minimal --seed 
 ```
 
 ```text
+=== Simulation Results ===
+
 Project Overview:
 Project: Team Size Demo
 Hours per Day: 8.0
@@ -415,12 +652,28 @@ Calendar Time Statistical Summary:
 Mean: 538.18 hours (68 working days)
 Median (P50): 530.38 hours
 Std Dev: 80.88 hours
+Minimum: 318.42 hours
+Maximum: 792.91 hours
 Coefficient of Variation: 0.1503
+Skewness: 0.1193
+Excess Kurtosis: -0.3749
+
+Project Effort Statistical Summary:
+Mean: 131.18 person-hours (17 person-days)
+Median (P50): 130.38 person-hours
+Std Dev: 18.95 person-hours
+Minimum: 78.42 person-hours
+Maximum: 184.91 person-hours
+Coefficient of Variation: 0.1445
+Skewness: 0.1120
+Excess Kurtosis: -0.5163
 
 Calendar Time Confidence Intervals:
   P25: 485.83 hours (61 working days)  (2026-06-25)
   P50: 530.38 hours (67 working days)  (2026-07-03)
+  P75: 624.63 hours (79 working days)  (2026-07-21)
   P80: 628.37 hours (79 working days)  (2026-07-21)
+  P85: 648.21 hours (82 working days)  (2026-07-24)
   P90: 652.96 hours (82 working days)  (2026-07-24)
   P95: 675.60 hours (85 working days)  (2026-07-29)
   P99: 700.95 hours (88 working days)  (2026-08-03)
@@ -433,11 +686,43 @@ mcprojsim simulate examples/team_size_demo_base.yaml --minimal --seed 42
 ```
 
 ```text
+=== Simulation Results ===
+
+Project Overview:
+Project: Team Size Demo
+Hours per Day: 8.0
+Max Parallel Tasks: 1
 Schedule Mode: dependency_only
 
+Calendar Time Statistical Summary:
+Mean: 131.18 hours (17 working days)
+Median (P50): 130.38 hours
+Std Dev: 18.95 hours
+Minimum: 78.42 hours
+Maximum: 184.91 hours
+Coefficient of Variation: 0.1445
+Skewness: 0.1120
+Excess Kurtosis: -0.5163
+
+Project Effort Statistical Summary:
+Mean: 131.18 person-hours (17 person-days)
+Median (P50): 130.38 person-hours
+Std Dev: 18.95 person-hours
+Minimum: 78.42 person-hours
+Maximum: 184.91 person-hours
+Coefficient of Variation: 0.1445
+Skewness: 0.1120
+Excess Kurtosis: -0.5163
+
 Calendar Time Confidence Intervals:
+  P25: 117.83 hours (15 working days)  (2026-04-22)
   P50: 130.38 hours (17 working days)  (2026-04-24)
+  P75: 144.63 hours (19 working days)  (2026-04-28)
+  P80: 148.37 hours (19 working days)  (2026-04-28)
+  P85: 152.21 hours (20 working days)  (2026-04-29)
   P90: 156.96 hours (20 working days)  (2026-04-29)
+  P95: 163.60 hours (21 working days)  (2026-04-30)
+  P99: 172.95 hours (22 working days)  (2026-05-01)
 ```
 
 Key observations:
@@ -457,6 +742,7 @@ For full control, define resources with individual skill levels, productivity, s
 ```yaml
 project:
   name: "Onboarding Portal"
+  description: "Constrained scheduling example with explicit resources and calendars"
   start_date: "2026-04-01"
   hours_per_day: 8
   confidence_levels: [50, 80, 90, 95]
@@ -505,10 +791,12 @@ calendars:
 ```
 
 ```bash
-mcprojsim simulate constrained_portal.yaml --minimal --seed 42 --iterations 200
+mcprojsim simulate examples/constrained_portal.yaml --minimal --seed 42 --iterations 200
 ```
 
 ```text
+=== Simulation Results ===
+
 Project Overview:
 Project: Onboarding Portal
 Hours per Day: 8.0
@@ -516,19 +804,30 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 614.18 hours (77 working days)
-Median (P50): 628.42 hours
-Std Dev: 96.21 hours
-Coefficient of Variation: 0.1567
+Mean: 621.45 hours (78 working days)
+Median (P50): 631.03 hours
+Std Dev: 88.85 hours
+Minimum: 389.83 hours
+Maximum: 1135.58 hours
+Coefficient of Variation: 0.1430
+Skewness: 0.7106
+Excess Kurtosis: 4.5765
 
 Project Effort Statistical Summary:
 Mean: 174.56 person-hours (22 person-days)
+Median (P50): 172.93 person-hours
+Std Dev: 22.36 person-hours
+Minimum: 124.60 person-hours
+Maximum: 228.99 person-hours
+Coefficient of Variation: 0.1281
+Skewness: 0.2087
+Excess Kurtosis: -0.3433
 
 Calendar Time Confidence Intervals:
-  P50: 628.42 hours (79 working days)  (2026-07-21)
-  P80: 678.38 hours (85 working days)  (2026-07-29)
-  P90: 722.36 hours (91 working days)  (2026-08-06)
-  P95: 794.07 hours (100 working days)  (2026-08-19)
+  P50: 631.03 hours (79 working days)  (2026-07-21)
+  P80: 677.79 hours (85 working days)  (2026-07-29)
+  P90: 721.52 hours (91 working days)  (2026-08-06)
+  P95: 726.37 hours (91 working days)  (2026-08-06)
 ```
 
 Key observations:
@@ -559,7 +858,7 @@ Task 1:
 - Size: M
 Task 2:
 - Refine requirements
-- Depends on Task 1
+- Depends on Task1
 - Size XL
 Task 3:
 - Design solution
@@ -568,16 +867,38 @@ Task 3:
 ```
 
 ```bash
-mcprojsim generate examples/nl_example.txt -o project.yaml
-mcprojsim simulate project.yaml --minimal --seed 42
+mcprojsim generate examples/nl_example.txt -o .build/gen-examples/nl_project.yaml
+mcprojsim simulate .build/gen-examples/nl_project.yaml --minimal --seed 42
 ```
 
 ```text
+=== Simulation Results ===
+
 Project Overview:
 Project: Rework Web Interface
 Hours per Day: 8.0
 Max Parallel Tasks: 1
 Schedule Mode: dependency_only
+
+Calendar Time Statistical Summary:
+Mean: 1670.31 hours (209 working days)
+Median (P50): 1654.52 hours
+Std Dev: 210.88 hours
+Minimum: 1169.56 hours
+Maximum: 2433.52 hours
+Coefficient of Variation: 0.1263
+Skewness: 0.3511
+Excess Kurtosis: -0.2986
+
+Project Effort Statistical Summary:
+Mean: 1670.31 person-hours (209 person-days)
+Median (P50): 1654.52 person-hours
+Std Dev: 210.88 person-hours
+Minimum: 1169.56 person-hours
+Maximum: 2433.52 person-hours
+Coefficient of Variation: 0.1263
+Skewness: 0.3511
+Excess Kurtosis: -0.2986
 
 Calendar Time Confidence Intervals:
   P50: 1654.52 hours (207 working days)  (2027-03-18)
@@ -649,11 +970,13 @@ Task 4: Verification and rollout
 ```
 
 ```bash
-mcprojsim generate examples/nl_constrained_example.txt -o project.yaml
-mcprojsim simulate project.yaml --minimal --seed 42 --iterations 200
+mcprojsim generate examples/nl_constrained_example.txt -o .build/gen-examples/nl_constrained_project.yaml
+mcprojsim simulate .build/gen-examples/nl_constrained_project.yaml --minimal --seed 42 --iterations 200
 ```
 
 ```text
+=== Simulation Results ===
+
 Project Overview:
 Project: Platform Migration
 Hours per Day: 8.0
@@ -661,16 +984,30 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 1276.23 hours (160 working days)
-Median (P50): 1276.72 hours
-Std Dev: 128.72 hours
-Coefficient of Variation: 0.1009
+Mean: 1279.37 hours (160 working days)
+Median (P50): 1279.19 hours
+Std Dev: 135.62 hours
+Minimum: 943.03 hours
+Maximum: 1661.90 hours
+Coefficient of Variation: 0.1060
+Skewness: 0.1732
+Excess Kurtosis: -0.0363
+
+Project Effort Statistical Summary:
+Mean: 417.14 person-hours (53 person-days)
+Median (P50): 418.58 person-hours
+Std Dev: 41.45 person-hours
+Minimum: 311.34 person-hours
+Maximum: 529.00 person-hours
+Coefficient of Variation: 0.0994
+Skewness: -0.0057
+Excess Kurtosis: -0.4161
 
 Calendar Time Confidence Intervals:
-  P50: 1276.72 hours (160 working days)  (2026-12-11)
-  P80: 1351.55 hours (169 working days)  (2026-12-24)
-  P90: 1442.32 hours (181 working days)  (2027-01-11)
-  P95: 1472.32 hours (185 working days)  (2027-01-15)
+  P50: 1279.19 hours (160 working days)  (2026-12-11)
+  P80: 1416.30 hours (178 working days)  (2027-01-06)
+  P90: 1464.17 hours (184 working days)  (2027-01-14)
+  P95: 1494.27 hours (187 working days)  (2027-01-19)
 ```
 
 The generated YAML includes full `resources:` and `calendars:` sections. Use `--validate-only` to check your description before generating:
