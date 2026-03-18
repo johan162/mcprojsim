@@ -133,7 +133,7 @@ VERSION := $(shell grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
 CONTAINER_NAME := $(PROJECT)
 
 # User guide PDF output path
-USER_GUIDE_PDF := user_guide.pdf
+USER_GUIDE_PDF := mcprojsim_user_guide-v$(VERSION).pdf
 USER_GUIDE_PANDOC_PDF := user_guide_pandoc.pdf
 USER_GUIDE_BUILD_DIR := .build/user-guide
 USER_GUIDE_TEMPLATE := docs/user_guide/report_template.tex
