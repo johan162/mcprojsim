@@ -133,6 +133,7 @@ class NLProjectParser:
     _CALENDAR_HEADER_RE = re.compile(r"calendar\s*[:.=]?\s*(.+)", re.IGNORECASE)
 
     # -- Task bullet patterns --------------------------------------------------
+    _NAME_RE = re.compile(r"name\s*[:.=]?\s*(.+)", re.IGNORECASE)
     _SIZE_RE = re.compile(r"size\s*[:.=]?\s*(.+)", re.IGNORECASE)
     _STORY_POINTS_RE = re.compile(
         r"(?:story\s*)?points?\s*[:.=]?\s*(\d+)", re.IGNORECASE
@@ -254,6 +255,8 @@ class NLProjectParser:
                 if not bullet_text:
                     continue
 
+                if self._try_parse_task_name(bullet_text, current_task):
+                    continue
                 if self._try_parse_task_max_resources(bullet_text, current_task):
                     continue
                 if self._try_parse_task_min_experience(bullet_text, current_task):
@@ -493,6 +496,15 @@ class NLProjectParser:
             normalized = _SIZE_ALIASES.get(full_upper) or _SIZE_ALIASES.get(first_upper)
             if normalized and normalized in _VALID_SIZES:
                 task.t_shirt_size = normalized
+                return True
+        return False
+
+    def _try_parse_task_name(self, text: str, task: ParsedTask) -> bool:
+        m = self._NAME_RE.match(text)
+        if m:
+            name = m.group(1).strip().rstrip(".,;:")
+            if name and not task.name:
+                task.name = name
                 return True
         return False
 

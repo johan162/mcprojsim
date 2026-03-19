@@ -97,6 +97,16 @@ class TestNLProjectParserTasks:
         text = "Task 1: Setup infrastructure\n- Size: L"
         assert self.parser.parse(text).tasks[0].name == "Setup infrastructure"
 
+    def test_task_name_from_bullet(self) -> None:
+        """Task name specified as a bullet point with 'name:' pattern."""
+        text = "Task 1:\n- name: Analyze Requirements\n- Size: L"
+        assert self.parser.parse(text).tasks[0].name == "Analyze Requirements"
+
+    def test_task_name_from_bullet_no_colon(self) -> None:
+        """Task name specified as a bullet point with 'name' (no colon)."""
+        text = "Task 1:\n- name Analyze Requirements\n- Size: L"
+        assert self.parser.parse(text).tasks[0].name == "Analyze Requirements"
+
     def test_default_task_name(self) -> None:
         text = "Task 1:\n- Size: M"
         assert self.parser.parse(text).tasks[0].name == "Task 1"
