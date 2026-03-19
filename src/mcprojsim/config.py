@@ -209,6 +209,7 @@ class EstimateRangeConfig(BaseModel):
     expected: float = Field(gt=0)
     high: float = Field(gt=0)
 
+
 class TShirtSizeConfig(EstimateRangeConfig):
     """T-shirt size estimate configuration."""
 

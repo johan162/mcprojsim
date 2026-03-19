@@ -132,6 +132,7 @@ class TaskEstimate(BaseModel):
                 )
         return self
 
+
 def convert_to_hours(value: float, unit: EffortUnit, hours_per_day: float) -> float:
     """Convert a value from the given unit to hours.
 
