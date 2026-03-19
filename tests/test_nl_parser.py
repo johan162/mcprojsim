@@ -218,6 +218,66 @@ class TestNLProjectParserTasks:
         assert project.tasks[0].t_shirt_size == "M"
 
 
+class TestNLProjectParserDates:
+    """Tests for date extraction and range expansion."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser(current_year=2026)
+
+    def test_calendar_holiday_iso_range_expands(self) -> None:
+        text = "Task 1:\n- Work\n- Size: S\nCalendar:\n- Holiday: 2026-03-19 to 2026-03-21"
+        project = self.parser.parse(text)
+
+        assert project.calendars[0].holidays == [
+            "2026-03-19",
+            "2026-03-20",
+            "2026-03-21",
+        ]
+
+    def test_calendar_holiday_compact_range_expands(self) -> None:
+        text = "Task 1:\n- Work\n- Size: S\nCalendar:\n- Holidays: 20260319 - 20260321"
+        project = self.parser.parse(text)
+
+        assert project.calendars[0].holidays == [
+            "2026-03-19",
+            "2026-03-20",
+            "2026-03-21",
+        ]
+
+    def test_calendar_holiday_day_month_range_uses_current_year(self) -> None:
+        text = "Task 1:\n- Work\n- Size: S\nCalendar:\n- Holiday: 19 Mar to 21 Mar"
+        project = self.parser.parse(text)
+
+        assert project.calendars[0].holidays == [
+            "2026-03-19",
+            "2026-03-20",
+            "2026-03-21",
+        ]
+
+    def test_resource_absence_range_expands(self) -> None:
+        text = (
+            "Task 1:\n- Work\n- Size: S\n"
+            "Resource 1: Alice\n- Absence: 2026-04-01 to 2026-04-03"
+        )
+        project = self.parser.parse(text)
+
+        assert project.resources[0].planned_absence == [
+            "2026-04-01",
+            "2026-04-02",
+            "2026-04-03",
+        ]
+
+    def test_extract_dates_keeps_single_dates_and_ranges(self) -> None:
+        assert self.parser._extract_dates(
+            "2026-03-19 to 2026-03-20, 20260322, 24 Mar"
+        ) == [
+            "2026-03-19",
+            "2026-03-20",
+            "2026-03-22",
+            "2026-03-24",
+        ]
+
+
 class TestNLProjectParserYAML:
     """Tests for YAML generation."""
 

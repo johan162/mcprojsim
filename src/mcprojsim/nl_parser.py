@@ -19,6 +19,7 @@ Supported input patterns:
 
 from __future__ import annotations
 
+from datetime import date, datetime, timedelta
 import re
 from dataclasses import dataclass, field
 
@@ -173,6 +174,13 @@ class NLProjectParser:
         r"(?:planned\s*)?absence\s*[:.=]?\s*(.+)", re.IGNORECASE
     )
     _ISO_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+    _DATE_TOKEN_RE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{8}|\d{1,2}\s+[A-Za-z]{3,9}")
+    _DATE_RANGE_RE = re.compile(
+        r"(?P<start>\d{4}-\d{2}-\d{2}|\d{8}|\d{1,2}\s+[A-Za-z]{3,9})"
+        r"\s*(?:to|[-–—])\s*"
+        r"(?P<end>\d{4}-\d{2}-\d{2}|\d{8}|\d{1,2}\s+[A-Za-z]{3,9})",
+        re.IGNORECASE,
+    )
 
     # -- Calendar bullet patterns ----------------------------------------------
     _CAL_WORK_HOURS_RE = re.compile(
@@ -182,6 +190,9 @@ class NLProjectParser:
     _CAL_HOLIDAYS_RE = re.compile(r"holidays?\s*[:.=]?\s*(.+)", re.IGNORECASE)
 
     # -- Public API ------------------------------------------------------------
+
+    def __init__(self, current_year: int | None = None) -> None:
+        self.current_year = current_year if current_year is not None else date.today().year
 
     def parse(self, text: str) -> ParsedProject:
         """Parse a natural language project description.
@@ -596,7 +607,7 @@ class NLProjectParser:
 
         m = self._RES_ABSENCE_RE.match(text)
         if m:
-            dates = self._ISO_DATE_RE.findall(m.group(1))
+            dates = self._extract_dates(m.group(1))
             if dates:
                 resource.planned_absence.extend(dates)
                 return True
@@ -625,12 +636,72 @@ class NLProjectParser:
 
         m = self._CAL_HOLIDAYS_RE.match(text)
         if m:
-            dates = self._ISO_DATE_RE.findall(m.group(1))
+            dates = self._extract_dates(m.group(1))
             if dates:
                 calendar.holidays.extend(dates)
             return True
 
         return False
+
+    def _extract_dates(self, text: str) -> list[str]:
+        """Extract single dates and expand date ranges into ISO dates."""
+        dates: list[str] = []
+        consumed = [False] * len(text)
+
+        for match in self._DATE_RANGE_RE.finditer(text):
+            start_date = self._parse_date_token(match.group("start"))
+            end_date = self._parse_date_token(match.group("end"))
+            if start_date is None or end_date is None:
+                continue
+
+            range_start, range_end = sorted((start_date, end_date))
+            for offset in range((range_end - range_start).days + 1):
+                self._append_unique_date(
+                    dates, (range_start + timedelta(days=offset)).isoformat()
+                )
+
+            for index in range(match.start(), match.end()):
+                consumed[index] = True
+
+        remaining_text = "".join(
+            char if not consumed[index] else " " for index, char in enumerate(text)
+        )
+
+        for match in self._DATE_TOKEN_RE.finditer(remaining_text):
+            parsed_date = self._parse_date_token(match.group(0))
+            if parsed_date is not None:
+                self._append_unique_date(dates, parsed_date.isoformat())
+
+        return dates
+
+    def _parse_date_token(self, token: str) -> date | None:
+        """Parse a supported natural-language date token."""
+        cleaned = " ".join(token.strip().split())
+        if not cleaned:
+            return None
+
+        for fmt in ("%Y-%m-%d", "%Y%m%d"):
+            try:
+                return datetime.strptime(cleaned, fmt).date()
+            except ValueError:
+                pass
+
+        normalized = cleaned.title()
+        for fmt in ("%d %b %Y", "%d %B %Y"):
+            try:
+                return datetime.strptime(
+                    f"{normalized} {self.current_year}", fmt
+                ).date()
+            except ValueError:
+                pass
+
+        return None
+
+    @staticmethod
+    def _append_unique_date(dates: list[str], value: str) -> None:
+        """Append a date string once while preserving order."""
+        if value not in dates:
+            dates.append(value)
 
     @staticmethod
     def _yaml_str(s: str) -> str:
