@@ -349,13 +349,6 @@ install: $(INSTALL_STAMP) ## Install project dependencies and setup virtual envi
 reinstall: clean-venv clean install ## Reinstall the project from scratch
 	@echo -e "$(GREEN)✓ Project reinstalled successfully$(NC)"
 
-# ============================================================================================
-# Run the API Development Server Locally
-# ============================================================================================
-run: | $(DB_FILE) ## Run the development server with auto-reload
-	@echo -e "$(BLUE)Starting development server on http://$(SERVER_HOST):$(SERVER_PORT)$(NC)"
-	@poetry run uvicorn app.main:app --reload --host $(SERVER_HOST) --port $(SERVER_PORT)
-
 # =============================================================================================
 # Testing Targets
 # The targets: test-short, test-param, and test-html will always be run on invocation.
@@ -368,13 +361,9 @@ test-short: $(INSTALL_STAMP) ## Run tests in parallel with minimal output, no co
 	@echo -e "$(DARKYELLOW)- Starting short test without coverage...$(NC)"	
 	@poetry run pytest -n auto -q --no-cov
 
-test-param: $(INSTALL_STAMP) ## Run parameterized integration tests, no coverage
-	@echo -e "$(DARKYELLOW)- Starting parameterized integration tests...$(NC)"
-	@poetry run pytest -n 0 --no-cov tests/test_integration_parametrized.py::TestParameterizedWorkflow -s
-
 test-html: $(INSTALL_STAMP) ## Run tests in parallel, HTML & XML coverage report
 	@echo -e "$(DARKYELLOW)- Starting parallel test coverage...$(NC)"
-	@poetry run pytest -q -n auto --cov=app --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
+	@poetry run pytest -q -n auto --cov=src/mcprojsime --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
 	@echo -e "$(GREEN)✓ Test coverage report generated in \"coverage.xml\" and \"htmlcov/index.html\"$(NC)"
 
 # ============================================================================================
