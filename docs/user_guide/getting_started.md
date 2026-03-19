@@ -1,5 +1,7 @@
 # Getting Started
 
+Welcome to the Monte Carlo Project Simulator User Guide.
+
 This short, hands-on chapter shows you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with context.
 
 What you'll learn

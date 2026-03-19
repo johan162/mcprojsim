@@ -1,7 +1,5 @@
 # Introduction to Monte Carlo Simulation
 
-Welcome to the Monte Carlo Project Simulator User Guide.
-
 This chapter introduces the ideas behind probabilistic project estimation in a gradual way. The goal is not to jump directly into commands or file syntax, but to build a clear mental model of what Monte Carlo simulation is, why it is useful for project planning, and how the main concepts appear in `mcprojsim`.
 
 The intended reader is generally knowledgeable about software projects and planning, but not necessarily familiar with Monte Carlo methods. For that reason, the discussion starts with familiar project problems and then moves step by step toward the simulation model used by the tool.
@@ -10,12 +8,13 @@ The intended reader is generally knowledgeable about software projects and plann
 
 ## A brief history of Monte Carlo methods
 
-The Monte Carlo method was born from a moment of restless curiosity. In 1946, the mathematician Stanislaw Ulam was recovering from illness and passing the time playing solitaire. He wondered what the probability of winning a particular Canfield layout might be. Rather than attempting a combinatorial proof, he realized it would be far simpler to play many hands and count the wins.
+The Monte Carlo method was born from a moment of restless curiosity. In 1946, the physicist Stanislaw Ulam was recovering from illness and passing the time playing solitaire. He wondered what the probability of winning a particular Canfield layout might be. Rather than attempting a combinatorial proof, he realized it would be far simpler to play many hands and count the wins.
 
-That insight — replacing analytical complexity with repeated random sampling — turned out to be profoundly useful. Ulam shared the idea with John von Neumann, and together they developed it into a computational technique for the nuclear weapons research at Los Alamos National Laboratory. The physicist Nicholas Metropolis suggested naming the method after the Monte Carlo Casino in Monaco, a nod to the role of chance at its core.
+That insight — replacing analytical complexity with repeated random sampling — turned out to be profoundly useful. Ulam shared the idea with John von Neumann, and together they developed it into a computational technique for the nuclear weapons research at Los Alamos National Laboratory. The physicist Nicholas Metropolis suggested naming the method after the Monte Carlo Casino in Monaco where Ulam's uncle would borrow money from relatives to gamble. The name was also a nod to the role of chance at its core.
 
-Since then, Monte Carlo simulation has found applications across nearly every quantitative field: nuclear physics, financial risk modeling, climate science, engineering reliability, drug development, and — closer to home — project estimation. The fundamental principle remains the same one that occurred to Ulam over a card game: when a problem is too complex to solve analytically, simulate it many times and study the results.
+Since then, Monte Carlo methods (and more specifically its advanced cousin Markov Chain Monte Carlo (MCMC) methods) have found applications across nearly every quantitative field: nuclear physics, financial risk modeling, climate science, engineering reliability, drug development, and — closer to home — project estimation. The fundamental principle remains the same one that occurred to Ulam over a card game: when a problem is too complex to solve analytically, simulate it many times and study the results.
 
+Project estimation is a natural fit for Monte Carlo methods because of the inherent uncertainty and complexity of software projects. By modeling tasks as probability distributions rather than fixed numbers, we can capture the range of possible outcomes and make more informed decisions about scheduling and risk management.
 
 
 ## Why software schedule estimates are difficult
@@ -168,6 +167,65 @@ Risks can be defined at two levels:
 - **Project-level risks** apply to the project as a whole. For example, there might be a 15% chance that a key developer leaves, delaying the entire project by 20%.
 
 Every risk combines two dimensions: how likely the event is, and how large the consequence is if it happens. A low-probability, high-impact event behaves very differently from a high-probability, low-impact event. Monte Carlo simulation captures both naturally without forcing them into a single oversimplified score.
+
+
+
+## Effort estimation versus calendar scheduling
+
+Everything discussed so far — task estimates, uncertainty factors, risks — describes how much *work* a task requires. This is the effort dimension, measured in hours of productive labor. But effort alone does not answer the question that stakeholders actually ask: "When will it be done?"
+
+The answer to that question lives in a different dimension: calendar time. Calendar time is the elapsed clock time from project start to project finish, and it depends on much more than effort. Two projects with identical total effort can finish weeks or even months apart depending on how many people are available, when they work, and what interruptions occur along the way.
+
+| Dimension | What it measures | Example |
+|-----------|-----------------|---------|
+| **Effort** | Total productive work required | 80 person-hours |
+| **Calendar time** | Elapsed wall-clock duration | 15 working days (3 calendar weeks) |
+
+The distinction matters because most planning conversations conflate the two. When someone estimates "this will take two weeks", they usually mean effort — but the listener hears a calendar commitment. A simulation that only models effort without considering how that effort maps onto real calendars will produce misleadingly optimistic dates.
+
+Converting effort into calendar time requires knowing the capacity available at each point in time. If two people work full-time on a task, 80 hours of effort can finish in 40 clock-hours — five working days. If one person works half-time, the same effort stretches to 20 working days. The conversion is not a simple division; it must account for varying capacity across time as people come and go, work different schedules, and encounter interruptions.
+
+
+
+## Constrained scheduling: from ideal plans to real-world schedules
+
+Dependency-only scheduling assumes that any task can start immediately once its predecessors are complete, as if an unlimited number of equally skilled people were always available. This is a useful simplification for understanding project structure, but it does not reflect reality. Real projects have a finite number of people, and those people have different skills, work different hours, take holidays, and occasionally get sick.
+
+Constrained scheduling bridges this gap. When the simulation knows about the actual team — who is available, when they work, and what skills they have — it can produce calendar dates that reflect genuine capacity rather than theoretical parallelism.
+
+### Resources and capacity
+
+In a constrained simulation, each team member is modeled as a resource with specific characteristics:
+
+| Characteristic | What it captures | Why it matters |
+|----------------|-----------------|----------------|
+| **Availability** | Fraction of the workday this person is available | A 50%-available resource takes twice as long in calendar time |
+| **Productivity** | Relative throughput compared to baseline | A senior developer may complete work faster than a junior one |
+| **Experience level** | Skill tier of the resource | Some tasks require a minimum experience level |
+
+These properties determine how quickly a resource converts effort into progress. The scheduler integrates effort over actual capacity windows — it does not simply divide effort by a fixed rate. When multiple resources work on the same task, their capacities combine, but practical limits prevent unrealistic compression (assigning eight people to an eight-hour task does not make it finish in one hour).
+
+Because resources are finite, tasks sometimes cannot start even when their dependencies are satisfied. A task may be ready to go, but all qualified resources are occupied elsewhere. This waiting time — invisible in dependency-only mode — is a real and often significant contributor to project duration.
+
+### Working calendars
+
+People do not work around the clock. A working calendar defines the rhythm of productive time: which days of the week are working days, how many hours per day, and which dates are holidays. Different resources can follow different calendars — a full-time developer on a Monday-to-Friday schedule, a part-time contractor working four shorter days.
+
+The effect on scheduling is direct. An eight-hour task that begins on Friday afternoon cannot finish until Monday. A task assigned to someone on a four-day week takes longer in calendar time than the same task assigned to someone working five days. Holidays create gaps where no progress occurs. All of these effects compound across the project, and they are especially visible in the tail of the schedule distribution — the dates at P90 and beyond that matter most for planning commitments.
+
+### Planned and unplanned absence
+
+Even on working days, people are not always available. Planned absences — vacations, conferences, training — are known in advance and can be specified per resource. The simulation treats these dates as non-working days for that individual, reducing their capacity to zero on those dates.
+
+Unplanned absence is inherently stochastic. People get sick, have family emergencies, or encounter other interruptions that cannot be predicted. `mcprojsim` models this by assigning each resource a daily sickness probability. On each simulated working day, the simulator rolls a random check for each resource. If sickness triggers, the resource is unavailable for a realistic duration drawn from a probability distribution. Because this happens independently in each simulation iteration, the aggregate effect of unplanned absence emerges naturally in the results — some iterations see little disruption, others see more, and the overall distribution captures the range.
+
+This stochastic modeling of absence is one of the reasons Monte Carlo simulation is particularly well suited to schedule planning. Deterministic methods either ignore absence entirely or account for it with a crude average discount. A simulation can model the actual variability: the possibility that two key people happen to be sick during the same critical week, or that the project runs smoothly with minimal disruption. Both scenarios contribute to the final probability distribution.
+
+### Why constrained scheduling changes the picture
+
+The combined effect of resource constraints, calendars, and absences is often substantial. A project that finishes in 130 hours under dependency-only scheduling might take 550 calendar-hours — over four times longer — when resource constraints and calendars are applied. The effort has not changed; the calendar reality has.
+
+This is not a failure of estimation. It is a more honest picture of when work actually completes. The gap between effort-based estimates and calendar-based schedules is where many real-world planning surprises originate. By modeling resources, calendars, and absences explicitly, the simulation surfaces these effects before the project starts rather than after commitments have been made.
 
 
 

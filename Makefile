@@ -446,10 +446,23 @@ $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) 
 	@echo -e "$(DARKYELLOW)- Generating examples documentation from template...$(NC)"
 	@bash $(EXAMPLES_GENERATOR)
 
-pdf: $(USER_GUIDE_PDF) ## Build the user guide PDF
+## Target that updates the version number in the LaTeX template for the user guide PDF generation
+update-version: ## Update the version number in the LaTeX template for the user guide PDF generation
+	@echo -e "$(DARKYELLOW)- Updating version number in LaTeX template...$(NC)"
+	@sed -i.bak -E 's/Monte Carlo Project Simulation, v[0-9.]+/Monte Carlo Project Simulation, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
+	@if grep -q "Monte Carlo Project Simulation, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
+		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template$(NC)"; \
+		exit 1; \
+	fi
+	@rm -f $(USER_GUIDE_TEMPLATE).bak
+	
+
+pdf: $(USER_GUIDE_PDF)  ## Build the user guide PDF
 	@:
 
-$(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) ## Build user guide via custom LaTeX report template + pdflatex
+$(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  ## Build user guide via custom LaTeX report template + pdflatex
 	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
 	@mkdir -p $(USER_GUIDE_BUILD_DIR)
 	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
