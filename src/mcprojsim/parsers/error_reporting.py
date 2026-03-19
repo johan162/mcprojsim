@@ -585,9 +585,9 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
     ):
         return {
             "distribution",
-            "min",
-            "most_likely",
-            "max",
+            "low",
+            "expected",
+            "high",
             "standard_deviation",
             "t_shirt_size",
             "story_points",

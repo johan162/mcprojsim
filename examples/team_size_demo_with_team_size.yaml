@@ -7,8 +7,8 @@ project:
 tasks:
   - id: "task_001"
     name: "Task 1"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
   - id: "task_002"
     name: "Task 2"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]

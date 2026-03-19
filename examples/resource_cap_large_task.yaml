@@ -6,7 +6,7 @@ project:
 tasks:
   - id: "task_001"
     name: "Large task with high requested parallelism"
-    estimate: { min: 160, most_likely: 200, max: 280 }
+    estimate: { low: 160, expected: 200, high: 280 }
     max_resources: 12
 
 resources:

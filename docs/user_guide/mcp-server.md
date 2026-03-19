@@ -345,36 +345,36 @@ tasks:
   - id: "task_001"
     name: "Schema analysis"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 5
+      low: 2
+      expected: 3
+      high: 5
       unit: "days"
     dependencies: []
 
   - id: "task_002"
     name: "Write migration scripts"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"
     dependencies: ["task_001"]
 
   - id: "task_003"
     name: "Data validation"
     estimate:
-      min: 8
-      most_likely: 16
-      max: 32
+      low: 8
+      expected: 16
+      high: 32
       unit: "hours"
     dependencies: ["task_002"]
 
   - id: "task_004"
     name: "Production cutover"
     estimate:
-      min: 1
-      most_likely: 2
-      max: 3
+      low: 1
+      expected: 2
+      high: 3
       unit: "days"
     dependencies: ["task_003"]
 ```
@@ -583,9 +583,9 @@ The generated YAML uses symbolic estimates (`t_shirt_size: "M"` or `story_points
 ```yaml
 t_shirt_sizes:
   M:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
 ```
 
 Then run the simulation with:

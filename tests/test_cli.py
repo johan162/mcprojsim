@@ -82,7 +82,7 @@ class TestCli:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                     }
@@ -168,7 +168,7 @@ class TestCli:
             )
             config_file.write_text(
                 yaml.safe_dump(
-                    {"t_shirt_sizes": {"M": {"min": 10, "most_likely": 20, "max": 30}}}
+                    {"t_shirt_sizes": {"M": {"low": 10, "expected": 20, "high": 30}}}
                 )
             )
 
@@ -191,7 +191,7 @@ class TestCli:
         assert captured["output_path"].endswith("result.html")
         assert captured["project"].project.name == "CLI Test"
         assert captured["html_config"] is captured["engine_config"]
-        assert captured["html_config"].get_t_shirt_size("M").most_likely == 20
+        assert captured["html_config"].get_t_shirt_size("M").expected == 20
         assert captured["critical_path_limit"] == 2
 
     def test_simulate_shows_critical_path_sequences(self, monkeypatch) -> None:
@@ -259,7 +259,7 @@ class TestCli:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                     }
@@ -325,7 +325,7 @@ class TestCli:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                     }
@@ -400,7 +400,7 @@ class TestCli:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                     }
@@ -427,16 +427,17 @@ tasks:
   - id: task_001
     name: Task
     estimate:
-      min: 1
+      low: 1
       mostlikely: 2
-      max: 3
+      high: 3
 """.strip())
 
             result = runner.invoke(cli, ["validate", str(project_file)])
 
         assert result.exit_code != 0
         assert "line 9" in result.output
-        assert "most_likely" in result.output
+        assert "mostlikely" in result.output
+        assert "Unknown field" in result.output
 
     def test_validate_fails_when_assigned_resource_is_underqualified(self) -> None:
         """validate should fail when task resource assignment violates min experience."""
@@ -455,7 +456,7 @@ tasks:
                             {
                                 "id": "task_001",
                                 "name": "Senior Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                                 "resources": ["junior_dev"],
                                 "min_experience_level": 3,
                             }
@@ -492,7 +493,7 @@ tasks:
                             {
                                 "id": "task_001",
                                 "name": "Senior Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                                 "resources": ["junior_dev"],
                                 "min_experience_level": 3,
                             }
@@ -530,7 +531,7 @@ tasks:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                         "resources": [
@@ -566,7 +567,7 @@ tasks:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                         "resources": [

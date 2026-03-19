@@ -4,7 +4,14 @@ from datetime import date
 from enum import Enum
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from mcprojsim.config import (
     DEFAULT_CONFIDENCE_LEVELS,
@@ -33,10 +40,24 @@ class ImpactType(str, Enum):
 class TaskEstimate(BaseModel):
     """Task effort estimate with distribution parameters."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     distribution: DistributionType = Field(default=DistributionType.TRIANGULAR)
-    min: Optional[float] = Field(default=None, ge=0)
-    most_likely: Optional[float] = Field(default=None, gt=0)
-    max: Optional[float] = Field(default=None, ge=0)
+    low: Optional[float] = Field(
+        default=None,
+        ge=0,
+        validation_alias=AliasChoices("low", "min"),
+    )
+    expected: Optional[float] = Field(
+        default=None,
+        gt=0,
+        validation_alias=AliasChoices("expected", "most_likely"),
+    )
+    high: Optional[float] = Field(
+        default=None,
+        ge=0,
+        validation_alias=AliasChoices("high", "max"),
+    )
     standard_deviation: Optional[float] = Field(default=None, gt=0)
     t_shirt_size: Optional[str] = Field(default=None)
     story_points: Optional[int] = Field(default=None, gt=0)
@@ -84,10 +105,10 @@ class TaskEstimate(BaseModel):
                 )
             return self
 
-        # For explicit estimates, most_likely is required
-        if self.most_likely is None:
+        # For explicit estimates, expected is required
+        if self.expected is None:
             raise ValueError(
-                "Either 't_shirt_size', 'story_points', or 'most_likely' must be specified"
+                "Either 't_shirt_size', 'story_points', or 'expected' must be specified"
             )
 
         # Default unit for explicit estimates is hours
@@ -95,22 +116,21 @@ class TaskEstimate(BaseModel):
             self.unit = EffortUnit.HOURS
 
         if self.distribution == DistributionType.TRIANGULAR:
-            if self.min is None or self.max is None:
+            if self.low is None or self.high is None:
                 raise ValueError(
-                    "Triangular distribution requires min, most_likely, and max"
+                    "Triangular distribution requires low, expected, and high"
                 )
-            if not (self.min <= self.most_likely <= self.max):
+            if not (self.low <= self.expected <= self.high):
                 raise ValueError(
-                    f"Must satisfy min <= most_likely <= max, "
-                    f"got {self.min} <= {self.most_likely} <= {self.max}"
+                    f"Must satisfy low <= expected <= high, "
+                    f"got {self.low} <= {self.expected} <= {self.high}"
                 )
         elif self.distribution == DistributionType.LOGNORMAL:
             if self.standard_deviation is None:
                 raise ValueError(
-                    "Lognormal distribution requires most_likely and standard_deviation"
+                    "Lognormal distribution requires expected and standard_deviation"
                 )
         return self
-
 
 def convert_to_hours(value: float, unit: EffortUnit, hours_per_day: float) -> float:
     """Convert a value from the given unit to hours.

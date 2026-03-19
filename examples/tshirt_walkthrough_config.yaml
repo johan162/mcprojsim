@@ -1,29 +1,29 @@
 t_shirt_size_unit: "hours"
 t_shirt_sizes:
   XS:
-    min: 0.5
-    most_likely: 1
-    max: 2
+    low: 0.5
+    expected: 1
+    high: 2
   S:
-    min: 1
-    most_likely: 2
-    max: 4
+    low: 1
+    expected: 2
+    high: 4
   M:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
   L:
-    min: 5
-    most_likely: 8
-    max: 13
+    low: 5
+    expected: 8
+    high: 13
   XL:
-    min: 8
-    most_likely: 13
-    max: 21
+    low: 8
+    expected: 13
+    high: 21
   XXL:
-    min: 13
-    most_likely: 21
-    max: 34
+    low: 13
+    expected: 21
+    high: 34
 
 uncertainty_factors:
   team_experience:

@@ -85,7 +85,7 @@ Generate the project file:
 mcprojsim generate description.txt -o project.yaml
 ```
 
-That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `min/most_likely/max` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
+That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
 
 ??? tip "Alternative: write the YAML by hand"
 
@@ -102,17 +102,17 @@ That is it — the generated `project.yaml` is ready for validation and simulati
       - id: "task_001"
         name: "Design updates"
         estimate:
-          min: 2
-          most_likely: 3
-          max: 5
+          low: 2
+          expected: 3
+          high: 5
           unit: "days"
 
       - id: "task_002"
         name: "Frontend changes"
         estimate:
-          min: 4
-          most_likely: 6
-          max: 10
+          low: 4
+          expected: 6
+          high: 10
           unit: "days"
         dependencies: ["task_001"]
         uncertainty_factors:

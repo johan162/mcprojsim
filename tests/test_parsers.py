@@ -20,9 +20,9 @@ def sample_project_dict():
                 "id": "task_001",
                 "name": "Task 1",
                 "estimate": {
-                    "min": 1,
-                    "most_likely": 2,
-                    "max": 5,
+                    "low": 1,
+                    "expected": 2,
+                    "high": 5,
                 },
             }
         ],
@@ -83,9 +83,9 @@ class TestYAMLParser:
                         "id": "task_001",
                         "name": "Task 1",
                         "estimate": {
-                            "min": 1,
-                            "most_likely": 2,
-                            "max": 5,
+                            "low": 1,
+                            "expected": 2,
+                            "high": 5,
                         },
                         "resources": ["alice"],
                     }
@@ -133,9 +133,9 @@ tasks:
     - id: task_001
         name: Example task
         estimate:
-            min: 1
+            low: 1
             mostlikely: 2
-            max: 3
+            high: 3
 """.strip())
 
             parser = YAMLParser()
@@ -144,7 +144,7 @@ tasks:
             assert not is_valid
             assert "line 9" in error
             assert "mostlikely" in error
-            assert "most_likely" in error
+            assert "expected" in error
 
         def test_parse_file_reports_dependency_suggestion(self, tmp_path):
             """Dependency validation should point to the dependency line with a suggestion."""
@@ -157,15 +157,15 @@ tasks:
     - id: task_001
         name: First task
         estimate:
-            min: 1
-            most_likely: 2
-            max: 3
+            low: 1
+            expected: 2
+            high: 3
     - id: task_002
         name: Second task
         estimate:
-            min: 1
-            most_likely: 2
-            max: 3
+            low: 1
+            expected: 2
+            high: 3
         dependencies:
             - task_001_typo
 """.strip())
@@ -211,9 +211,9 @@ id = "task_001"
 name = "Task"
 
 [tasks.estimate]
-min = 1
+low = 1
 mostlikely = 2
-max = 3
+high = 3
 """.strip())
 
         parser = TOMLParser()
@@ -222,7 +222,7 @@ max = 3
         assert not is_valid
         assert "line 11" in error
         assert "mostlikely" in error
-        assert "most_likely" in error
+        assert "Unknown field" in error
 
     def test_parse_file_reports_toml_syntax_line_numbers(self, tmp_path):
         """TOML syntax errors should include line and column information."""
@@ -236,9 +236,9 @@ start_date = "2025-01-01"
 id = "task_001"
 name = "Task"
 [tasks.estimate
-min = 1
-most_likely = 2
-max = 3
+low = 1
+expected = 2
+high = 3
 """.strip())
 
         parser = TOMLParser()

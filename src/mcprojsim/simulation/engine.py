@@ -437,8 +437,8 @@ class SimulationEngine:
         # Create new estimate with resolved values and config unit
         return TaskEstimate(
             distribution=estimate.distribution,
-            min=resolved_config.min,
-            most_likely=resolved_config.most_likely,
-            max=resolved_config.max,
+            low=resolved_config.low,
+            expected=resolved_config.expected,
+            high=resolved_config.high,
             unit=resolved_unit,
         )

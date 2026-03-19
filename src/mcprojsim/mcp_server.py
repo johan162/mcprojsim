@@ -138,7 +138,7 @@ def validate_project_description(description: str) -> str:
         has_estimate = (
             task.t_shirt_size is not None
             or task.story_points is not None
-            or task.min_estimate is not None
+            or task.low_estimate is not None
         )
         if not has_estimate:
             issues.append(

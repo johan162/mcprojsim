@@ -86,9 +86,9 @@ tasks:
   - id: "task_001"
     name: "First task"
     estimate:
-      min: 1
-      most_likely: 2
-      max: 3
+      low: 1
+      expected: 2
+      high: 3
 ```
 
 ### Top-level YAML skeleton
@@ -225,9 +225,9 @@ tasks:
   - id: "task_001"
     name: "Design database schema"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 8
+      low: 3
+      expected: 5
+      high: 8
 ```
 
 ### TOML task example
@@ -239,7 +239,7 @@ name = "Design database schema"
 
 [tasks.estimate]
 min = 3
-most_likely = 5
+expected = 5
 max = 8
 ```
 
@@ -266,7 +266,7 @@ This is the default and most common form.
 |---|---|---|---|
 | `distribution` | No | `"triangular"` or `"lognormal"` | `"triangular"` |
 | `min` | Yes for triangular | number ≥ 0 | `null` |
-| `most_likely` | Yes | number > 0 | `null` |
+| `expected` | Yes | number > 0 | `null` |
 | `max` | Yes for triangular | number ≥ 0 | `null` |
 | `unit` | No | `"hours"`, `"days"`, or `"weeks"` | `"hours"` |
 
@@ -274,19 +274,19 @@ This is the default and most common form.
 
 For a triangular estimate:
 
-- `most_likely` must be present,
+- `expected` must be present,
 - `min` must be present,
 - `max` must be present,
-- `min <= most_likely <= max`.
+- `low <= expected <= high`.
 - `unit` must be one of `"hours"`, `"days"`, or `"weeks"` if specified.
 
 #### YAML example
 
 ```yaml
 estimate:
-  min: 3
-  most_likely: 5
-  max: 10
+  low: 3
+  expected: 5
+  high: 10
   unit: "days"
 ```
 
@@ -295,7 +295,7 @@ estimate:
 ```toml
 [tasks.estimate]
 min = 3
-most_likely = 5
+expected = 5
 max = 10
 unit = "days"
 ```
@@ -309,7 +309,7 @@ The implementation also supports log-normal estimates.
 | Field | Required | Type | Notes |
 |---|---|---|---|
 | `distribution` | Yes | `"lognormal"` | Must be set explicitly |
-| `most_likely` | Yes | number > 0 | Required |
+| `expected` | Yes | number > 0 | Required |
 | `standard_deviation` | Yes | number > 0 | Required |
 | `unit` | No | `"hours"`, `"days"`, or `"weeks"` | `"hours"` |
 
@@ -318,7 +318,7 @@ The implementation also supports log-normal estimates.
 For a log-normal estimate:
 
 - `distribution` must be `lognormal`,
-- `most_likely` must be present,
+- `expected` must be present,
 - `standard_deviation` must be present.
 - `unit` must be one of `"hours"`, `"days"`, or `"weeks"` if specified.
 
@@ -329,7 +329,7 @@ For a log-normal estimate:
 ```yaml
 estimate:
   distribution: "lognormal"
-  most_likely: 8
+  expected: 8
   standard_deviation: 2
   unit: "days"
 ```
@@ -339,7 +339,7 @@ estimate:
 ```toml
 [tasks.estimate]
 distribution = "lognormal"
-most_likely = 8
+expected = 8
 standard_deviation = 2
 unit = "days"
 ```
@@ -360,9 +360,9 @@ This form lets the task refer to a symbolic size such as `XS`, `M`, or `XL`.
 When `t_shirt_size` is present:
 
 - the `TaskEstimate` validator accepts the estimate immediately,
-- explicit `min`, `most_likely`, `max`, and `standard_deviation` are not required,
+- explicit `min`, `expected`, `max`, and `standard_deviation` are not required,
 - **`unit` must not be specified** — the unit comes from the configuration file's `t_shirt_size_unit` setting (default: `"hours"`),
-- the simulation engine resolves the size to actual `min`, `most_likely`, and `max` values from the active configuration.
+- the simulation engine resolves the size to actual `min`, `expected`, and `max` values from the active configuration.
 
 If the chosen size does not exist in the active configuration, simulation raises an error.
 
@@ -389,9 +389,9 @@ In other words, this is technically accepted by the model:
 ```yaml
 estimate:
   t_shirt_size: "M"
-  min: 1
-  most_likely: 2
-  max: 3
+  low: 1
+  expected: 2
+  high: 3
 ```
 
 But it should be treated as ambiguous and avoided in real project files. If you use `t_shirt_size`, prefer to omit the explicit numeric range fields.
@@ -413,7 +413,7 @@ When `story_points` is present:
 
 - the value must currently be one of `1`, `2`, `3`, `5`, `8`, `13`, or `21`,
 - **`unit` must not be specified** — the unit comes from the configuration file's `story_point_unit` setting (default: `"days"`),
-- the simulation engine resolves the Story Point value to actual `min`, `most_likely`, and `max` values from the active configuration.
+- the simulation engine resolves the Story Point value to actual `min`, `expected`, and `max` values from the active configuration.
 
 If the chosen Story Point value does not exist in the active configuration, simulation raises an error.
 
@@ -442,19 +442,19 @@ Built-in defaults exist for both styles, and a custom configuration file may ove
 ```yaml
 t_shirt_sizes:
   M:
-    min: 4
-    most_likely: 6
-    max: 9
+    low: 4
+    expected: 6
+    high: 9
 
 story_points:
   5:
-    min: 4
-    most_likely: 6
-    max: 9
+    low: 4
+    expected: 6
+    high: 9
   8:
-    min: 6
-    most_likely: 9
-    max: 16
+    low: 6
+    expected: 9
+    high: 16
 ```
 
 If a custom configuration overrides only some T-shirt sizes or Story Point values, the remaining built-in defaults stay available.
@@ -493,16 +493,16 @@ tasks:
   - id: "task_001"
     name: "Backend design"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 6
+      low: 2
+      expected: 4
+      high: 6
 
   - id: "task_002"
     name: "API implementation"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 12
+      low: 5
+      expected: 8
+      high: 12
     dependencies: ["task_001"]
 ```
 
@@ -765,9 +765,9 @@ tasks:
     name: "Design"
     description: "Design the feature set"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 7
+      low: 2
+      expected: 4
+      high: 7
       unit: "days"
     dependencies: []
     uncertainty_factors:
@@ -784,7 +784,7 @@ tasks:
     name: "Implementation"
     estimate:
       distribution: "lognormal"
-      most_likely: 8
+      expected: 8
       standard_deviation: 2
       unit: "days"
     dependencies: ["task_001"]
@@ -848,7 +848,7 @@ resources = ["designer"]
 
 [tasks.estimate]
 min = 2
-most_likely = 4
+expected = 4
 max = 7
 unit = "days"
 
@@ -870,7 +870,7 @@ resources = ["backend_dev", "frontend_dev"]
 
 [tasks.estimate]
 distribution = "lognormal"
-most_likely = 8
+expected = 8
 standard_deviation = 2
 unit = "days"
 
@@ -979,25 +979,25 @@ uncertainty_factors:
 
 t_shirt_sizes:
   XS:
-    min: 0.5
-    most_likely: 1
-    max: 2
+    low: 0.5
+    expected: 1
+    high: 2
   M:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
 
 t_shirt_size_unit: "hours"
 
 story_points:
   1:
-    min: 0.5
-    most_likely: 1
-    max: 3
+    low: 0.5
+    expected: 1
+    high: 3
   5:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
 
 story_point_unit: "days"
 
@@ -1091,7 +1091,7 @@ This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric ef
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
 | `min` | Yes when that size is defined | float | — | `> 0` |
-| `most_likely` | Yes | float | — | `> 0` |
+| `expected` | Yes | float | — | `> 0` |
 | `max` | Yes | float | — | `> 0` |
 
 ### Built-in size keys
@@ -1105,7 +1105,7 @@ This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric ef
 
 ### Built-in defaults
 
-| Size | `min` | `most_likely` | `max` |
+| Size | `min` | `expected` | `max` |
 |---|---:|---:|---:|
 | `XS` | 0.5 | 1 | 2 |
 | `S` | 1 | 2 | 4 |
@@ -1119,9 +1119,9 @@ This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric ef
 ```yaml
 t_shirt_sizes:
   M:
-    min: 4
-    most_likely: 6
-    max: 9
+    low: 4
+    expected: 6
+    high: 9
 ```
 
 With this override, only `M` changes. The other built-in sizes remain available.
@@ -1157,7 +1157,7 @@ This section maps Story Point values to numeric effort ranges.
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
 | `min` | Yes when that point value is defined | float | — | `> 0` |
-| `most_likely` | Yes | float | — | `> 0` |
+| `expected` | Yes | float | — | `> 0` |
 | `max` | Yes | float | — | `> 0` |
 
 ### Built-in point values
@@ -1172,7 +1172,7 @@ This section maps Story Point values to numeric effort ranges.
 
 ### Built-in defaults
 
-| Points | `min` | `most_likely` | `max` |
+| Points | `min` | `expected` | `max` |
 |---|---:|---:|---:|
 | `1` | 0.5 | 1 | 3 |
 | `2` | 1 | 2 | 4 |
@@ -1187,9 +1187,9 @@ This section maps Story Point values to numeric effort ranges.
 ```yaml
 story_points:
   8:
-    min: 6
-    most_likely: 9
-    max: 16
+    low: 6
+    expected: 9
+    high: 16
 ```
 
 ## The `story_point_unit` field
@@ -1375,7 +1375,7 @@ The current configuration model validates these rules directly:
 
 - `t_shirt_size_unit` must be one of `hours`, `days`, or `weeks`,
 - `story_point_unit` must be one of `hours`, `days`, or `weeks`,
-- all configured estimate ranges require positive `min`, `most_likely`, and `max`,
+- all configured estimate ranges require positive `min`, `expected`, and `max`,
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
 - `output.histogram_bins` must be greater than 0,
@@ -1406,8 +1406,8 @@ The current implementation validates the following rules directly:
 - task dependencies must not be circular,
 - `start_date` must parse as an ISO date,
 - probability thresholds must be in range and ordered correctly,
-- triangular estimates must satisfy `min <= most_likely <= max`,
-- log-normal estimates must include `most_likely` and `standard_deviation`,
+- triangular estimates must satisfy `low <= expected <= high`,
+- log-normal estimates must include `expected` and `standard_deviation`,
 - risks must have probabilities in `0.0..1.0`,
 - structured risk impacts must use positive values.
 

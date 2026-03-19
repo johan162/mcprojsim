@@ -93,7 +93,7 @@ tasks:
     name: "Research new technology"
     estimate:
       distribution: "lognormal"
-      most_likely: 5
+      expected: 5
       standard_deviation: 2
       unit: "days"
     dependencies: []

@@ -46,21 +46,21 @@ DEFAULT_UNCERTAINTY_FACTORS = {
     "integration_complexity": {"low": 1.0, "medium": 1.15, "high": 1.35},
 }
 DEFAULT_T_SHIRT_SIZE_VALUES = {
-    "XS": {"min": 3, "most_likely": 5, "max": 15},
-    "S": {"min": 5, "most_likely": 16, "max": 40},
-    "M": {"min": 40, "most_likely": 60, "max": 120},
-    "L": {"min": 160, "most_likely": 240, "max": 500},
-    "XL": {"min": 320, "most_likely": 400, "max": 750},
-    "XXL": {"min": 400, "most_likely": 500, "max": 1200},
+    "XS": {"low": 3, "expected": 5, "high": 15},
+    "S": {"low": 5, "expected": 16, "high": 40},
+    "M": {"low": 40, "expected": 60, "high": 120},
+    "L": {"low": 160, "expected": 240, "high": 500},
+    "XL": {"low": 320, "expected": 400, "high": 750},
+    "XXL": {"low": 400, "expected": 500, "high": 1200},
 }
 DEFAULT_STORY_POINT_VALUES = {
-    1: {"min": 0.5, "most_likely": 1, "max": 3},
-    2: {"min": 1, "most_likely": 2, "max": 4},
-    3: {"min": 1.5, "most_likely": 3, "max": 5},
-    5: {"min": 3, "most_likely": 5, "max": 8},
-    8: {"min": 5, "most_likely": 8, "max": 15},
-    13: {"min": 8, "most_likely": 13, "max": 21},
-    21: {"min": 13, "most_likely": 21, "max": 34},
+    1: {"low": 0.5, "expected": 1, "high": 3},
+    2: {"low": 1, "expected": 2, "high": 4},
+    3: {"low": 1.5, "expected": 3, "high": 5},
+    5: {"low": 3, "expected": 5, "high": 8},
+    8: {"low": 5, "expected": 8, "high": 15},
+    13: {"low": 8, "expected": 13, "high": 21},
+    21: {"low": 13, "expected": 21, "high": 34},
 }
 
 
@@ -205,10 +205,9 @@ class StaffingConfig(BaseModel):
 class EstimateRangeConfig(BaseModel):
     """Range configuration for a symbolic estimate."""
 
-    min: float = Field(gt=0)
-    most_likely: float = Field(gt=0)
-    max: float = Field(gt=0)
-
+    low: float = Field(gt=0)
+    expected: float = Field(gt=0)
+    high: float = Field(gt=0)
 
 class TShirtSizeConfig(EstimateRangeConfig):
     """T-shirt size estimate configuration."""

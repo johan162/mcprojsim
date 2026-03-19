@@ -1019,8 +1019,8 @@ class HTMLExporter:
             size_config = effective_config.get_t_shirt_size(t_shirt)
             if size_config is not None:
                 return (
-                    f"{t_shirt} ({size_config.min}, "
-                    f"{size_config.most_likely}, {size_config.max})"
+                    f"{t_shirt} ({size_config.low}, "
+                    f"{size_config.expected}, {size_config.high})"
                 )
             return f"{t_shirt} (unknown)"
 
@@ -1031,23 +1031,23 @@ class HTMLExporter:
             points_config = effective_config.get_story_point(story_points)
             if points_config is not None:
                 return (
-                    f"SP {story_points} ({points_config.min}, "
-                    f"{points_config.most_likely}, {points_config.max})"
+                    f"SP {story_points} ({points_config.low}, "
+                    f"{points_config.expected}, {points_config.high})"
                 )
             return f"SP {story_points} (unknown)"
 
-        # Check if it's a triangular distribution (min, most_likely, max)
+        # Check if it's a triangular distribution (low, expected, high)
         elif (
-            hasattr(task.estimate, "min")
-            and hasattr(task.estimate, "most_likely")
-            and hasattr(task.estimate, "max")
+            hasattr(task.estimate, "low")
+            and hasattr(task.estimate, "expected")
+            and hasattr(task.estimate, "high")
         ):
             if (
-                task.estimate.min is not None
-                and task.estimate.most_likely is not None
-                and task.estimate.max is not None
+                task.estimate.low is not None
+                and task.estimate.expected is not None
+                and task.estimate.high is not None
             ):
-                return f"({task.estimate.min}, {task.estimate.most_likely}, {task.estimate.max})"
+                return f"({task.estimate.low}, {task.estimate.expected}, {task.estimate.high})"
 
         # Fallback to mean simulated effort
         if task_id in results.task_durations:

@@ -41,17 +41,17 @@ tasks:
   - id: "task_001"
     name: "Design updates"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 5
+      low: 2
+      expected: 3
+      high: 5
       unit: "days"
 
   - id: "task_002"
     name: "Frontend changes"
     estimate:
-      min: 4
-      most_likely: 6
-      max: 10
+      low: 4
+      expected: 6
+      high: 10
       unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
@@ -373,9 +373,9 @@ tasks:
     name: "Database schema design"
     description: "Design normalized schema for customer data"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"
     dependencies: []
     uncertainty_factors:
@@ -397,9 +397,9 @@ tasks:
     name: "API endpoint implementation"
     description: "Implement RESTful API endpoints"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
@@ -414,9 +414,9 @@ tasks:
     name: "Frontend React components"
     description: "Build reusable React components for UI"
     estimate:
-      min: 7
-      most_likely: 10
-      max: 18
+      low: 7
+      expected: 10
+      high: 18
       unit: "days"
     dependencies: []
     uncertainty_factors:
@@ -438,9 +438,9 @@ tasks:
     name: "Authentication & Authorization"
     description: "Implement OAuth2 and role-based access control"
     estimate:
-      min: 4
-      most_likely: 6
-      max: 12
+      low: 4
+      expected: 6
+      high: 12
       unit: "days"
     dependencies: ["task_002"]
     uncertainty_factors:
@@ -462,9 +462,9 @@ tasks:
     name: "Integration testing"
     description: "End-to-end integration tests"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 8
+      low: 3
+      expected: 5
+      high: 8
       unit: "days"
     dependencies: ["task_002", "task_003", "task_004"]
     uncertainty_factors:
@@ -479,9 +479,9 @@ tasks:
     name: "Performance optimization"
     description: "Optimize API and frontend performance"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 7
+      low: 2
+      expected: 4
+      high: 7
       unit: "days"
     dependencies: ["task_005"]
     uncertainty_factors:
@@ -503,9 +503,9 @@ tasks:
     name: "Documentation"
     description: "API documentation and user guides"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 5
+      low: 2
+      expected: 3
+      high: 5
       unit: "days"
     dependencies: ["task_002", "task_003"]
     uncertainty_factors:
@@ -520,9 +520,9 @@ tasks:
     name: "Deployment & DevOps"
     description: "Setup CI/CD pipeline and production deployment"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 9
+      low: 3
+      expected: 5
+      high: 9
       unit: "days"
     dependencies: ["task_006"]
     uncertainty_factors:
@@ -604,7 +604,7 @@ tasks:
     name: "Research new technology"
     estimate:
       distribution: "lognormal"
-      most_likely: 5
+      expected: 5
       standard_deviation: 2
       unit: "days"
     dependencies: []
@@ -628,10 +628,10 @@ project:
 tasks:
   - id: "task_001"
     name: "Task 1"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
   - id: "task_002"
     name: "Task 2"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
 ```
 
@@ -750,11 +750,11 @@ project:
 tasks:
   - id: "task_001"
     name: "Requirements"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
 
   - id: "task_002"
     name: "Implementation"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
     resources: ["alice", "bob"]
     max_resources: 2
@@ -762,7 +762,7 @@ tasks:
 
   - id: "task_003"
     name: "Testing"
-    estimate: { min: 16, most_likely: 24, max: 40 }
+    estimate: { low: 16, expected: 24, high: 40 }
     dependencies: ["task_002"]
 
 resources:

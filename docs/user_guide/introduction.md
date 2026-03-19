@@ -293,7 +293,7 @@ Before learning every schema detail, it helps to read a project file as a narrat
 
 | Estimate type | When to use it | Example |
 |---------------|---------------|---------|
-| **Explicit range** (min / most_likely / max) | When the team can provide numeric estimates | `min: 3, most_likely: 5, max: 10` |
+| **Explicit range** (low / expected / high) | When the team can provide numeric estimates | `low: 3, expected: 5, high: 10` |
 | **T-shirt size** (XS through XXL) | For early-stage or relative estimation | `t_shirt_size: "M"` |
 | **Story points** (1, 2, 3, 5, 8, 13, 21) | When the team uses story point estimation | `story_points: 5` |
 

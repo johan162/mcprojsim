@@ -45,9 +45,9 @@ tasks:
   - id: "task_001"
     name: "Create landing page"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 5
+      low: 2
+      expected: 3
+      high: 5
       unit: "days"
 ```
 
@@ -107,17 +107,17 @@ tasks:
   - id: "task_001"
     name: "Create landing page"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 5
+      low: 2
+      expected: 3
+      high: 5
       unit: "days"
 
   - id: "task_002"
     name: "Deploy site"
     estimate:
-      min: 1
-      most_likely: 2
-      max: 4
+      low: 1
+      expected: 2
+      high: 4
       unit: "days"
     dependencies: ["task_001"]
 ```
@@ -236,9 +236,9 @@ tasks:
   - id: "task_001"
     name: "Create landing page"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 5
+      low: 2
+      expected: 3
+      high: 5
       unit: "days"
     uncertainty_factors:
       team_experience: "high"
@@ -247,9 +247,9 @@ tasks:
   - id: "task_002"
     name: "Deploy site"
     estimate:
-      min: 1
-      most_likely: 2
-      max: 4
+      low: 1
+      expected: 2
+      high: 4
       unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
@@ -316,9 +316,9 @@ tasks:
   - id: "task_001"
     name: "Create landing page"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 5
+      low: 2
+      expected: 3
+      high: 5
       unit: "days"
     uncertainty_factors:
       team_experience: "high"
@@ -327,9 +327,9 @@ tasks:
   - id: "task_002"
     name: "Deploy site"
     estimate:
-      min: 1
-      most_likely: 2
-      max: 4
+      low: 1
+      expected: 2
+      high: 4
       unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
@@ -377,7 +377,7 @@ That is exactly what we expect when we add plausible delay events to the model. 
 
 ## An alternative style: T-shirt sized estimates
 
-So far, every task has used an explicit estimate range with `min`, `most_likely`, and `max`. That is often the best choice when the team is comfortable expressing estimates directly in days.
+So far, every task has used an explicit estimate range with `low`, `expected`, and `high`. That is often the best choice when the team is comfortable expressing estimates directly in days.
 
 However, some teams think more naturally in relative sizing. They can say that one task is `S`, another is `M`, and another is `XL`, even when they do not yet want to commit to detailed numeric ranges.
 
@@ -385,7 +385,7 @@ However, some teams think more naturally in relative sizing. They can say that o
 
 ### Step 5: use `t_shirt_size` instead of explicit ranges
 
-In the source code, a task estimate may specify `t_shirt_size` instead of `most_likely` and the related range values. Validation accepts that form, and the simulation engine later resolves the symbolic size to concrete `min`, `most_likely`, and `max` values from the active configuration.
+In the source code, a task estimate may specify `t_shirt_size` instead of `expected` and the related range values. Validation accepts that form, and the simulation engine later resolves the symbolic size to concrete `low`, `expected`, and `high` values from the active configuration.
 
 That means a T-shirt-sized task still becomes an ordinary probabilistic range during simulation. The symbolic label is just a more convenient way to express the estimate in the input file.
 
@@ -437,29 +437,29 @@ If you want to use a custom configuration file with T-shirt estimates, add a `t_
 ```yaml
 t_shirt_sizes:
   XS:
-    min: 0.5
-    most_likely: 1
-    max: 2
+    low: 0.5
+    expected: 1
+    high: 2
   S:
-    min: 1
-    most_likely: 2
-    max: 4
+    low: 1
+    expected: 2
+    high: 4
   M:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
   L:
-    min: 5
-    most_likely: 8
-    max: 13
+    low: 5
+    expected: 8
+    high: 13
   XL:
-    min: 8
-    most_likely: 13
-    max: 21
+    low: 8
+    expected: 13
+    high: 21
   XXL:
-    min: 13
-    most_likely: 21
-    max: 34
+    low: 13
+    expected: 21
+    high: 34
 ```
 
 These are the same default mappings provided by the application itself. If you run without a custom configuration file, those built-in sizes are available automatically.
@@ -506,7 +506,7 @@ T-shirt sizes are especially useful early in planning, when the team can compare
 
 Some teams prefer to estimate backlog items in Story Points rather than T-shirt sizes or explicit day ranges.
 
-`mcprojsim` supports that style as another symbolic estimate form. In the input file you provide a `story_points` value, and during simulation the active configuration resolves it to a numeric `(min, most_likely, max)` range in the configured unit (default: days).
+`mcprojsim` supports that style as another symbolic estimate form. In the input file you provide a `story_points` value, and during simulation the active configuration resolves it to a numeric `(low, expected, high)` range in the configured unit (default: days).
 
 **Important:** Story point estimates must not include a `unit` field in the project file. The unit is determined by the configuration file's `story_point_unit` setting (default: `"days"`).
 
@@ -552,25 +552,25 @@ If you want to customize Story Point mappings, add a `story_points` section to t
 ```yaml
 story_points:
   1:
-    min: 0.5
-    most_likely: 1
-    max: 3
+    low: 0.5
+    expected: 1
+    high: 3
   2:
-    min: 1
-    most_likely: 2
-    max: 4
+    low: 1
+    expected: 2
+    high: 4
   3:
-    min: 1.5
-    most_likely: 3
-    max: 5
+    low: 1.5
+    expected: 3
+    high: 5
   5:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
   8:
-    min: 5
-    most_likely: 8
-    max: 15
+    low: 5
+    expected: 8
+    high: 15
 ```
 
 These are built-in defaults. If you provide a custom configuration file, you may override only the Story Point values you want to recalibrate for your team; the remaining built-in defaults stay available.
@@ -622,7 +622,7 @@ The tiny examples in this chapter are teaching examples. The files in the `examp
 
 - `examples/sample_project.yaml` shows a more complete project with several tasks, dependencies, uncertainty factors, and risks.
 - `examples/sample_config.yaml` shows a fuller configuration with reusable uncertainty-factor mappings and output settings.
-- `examples/tshirt_sizing_project.yaml` shows an alternative style where tasks use T-shirt sizes instead of explicit `min`, `most_likely`, and `max` values.
+- `examples/tshirt_sizing_project.yaml` shows an alternative style where tasks use T-shirt sizes instead of explicit `low`, `expected`, and `high` values.
 - `examples/story_points_walkthrough_project.yaml` shows the same symbolic-estimate idea using Story Points and a configuration mapping.
 - `examples/project_with_custom_thresholds.yaml` shows how project-level reporting thresholds can be tuned for stricter or more conservative decision-making.
 

@@ -120,9 +120,9 @@ tasks:
   - id: "task_001"
     name: "Database schema design"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"
     uncertainty_factors:
       team_experience: "high"
@@ -139,9 +139,9 @@ tasks:
   - id: "task_010"
     name: "Prototype ML pipeline"
     estimate:
-      min: 8
-      most_likely: 14
-      max: 25
+      low: 8
+      expected: 14
+      high: 25
       unit: "days"
     uncertainty_factors:
       team_experience: "low"

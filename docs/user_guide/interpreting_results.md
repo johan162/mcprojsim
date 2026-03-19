@@ -657,7 +657,7 @@ The real power of these metrics comes from reading them together. Here is a deci
 
 If the spread between P50 and P90 is uncomfortably wide, consider:
 
-- **Splitting large tasks**: A single task with `min: 5, max: 40` contributes more variance than two tasks with `min: 3, max: 20` each, especially when they are on different dependency paths.
+- **Splitting large tasks**: A single task with `low: 5, high: 40` contributes more variance than two tasks with `low: 3, high: 20` each, especially when they are on different dependency paths.
 - **Tightening estimate ranges**: If subject-matter experts can narrow the gap between `min` and `max` after investigation, uncertainty drops directly.
 - **Mitigating high-impact risks**: Removing or reducing the probability of risks on critical tasks has the largest effect.
 - **Adding parallel paths**: Restructuring dependencies so that fewer tasks are in a single sequential chain reduces the chance of cascading delays.

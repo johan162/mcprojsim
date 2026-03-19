@@ -28,9 +28,9 @@ class TestDistributionSampler:
         sampler = DistributionSampler(np.random.RandomState(42))
         estimate = TaskEstimate(
             distribution=DistributionType.TRIANGULAR,
-            min=1.0,
-            most_likely=2.0,
-            max=5.0,
+            low=1.0,
+            expected=2.0,
+            high=5.0,
         )
 
         samples = [sampler.sample(estimate) for _ in range(100)]
@@ -43,7 +43,7 @@ class TestDistributionSampler:
         sampler = DistributionSampler(np.random.RandomState(42))
         estimate = TaskEstimate(
             distribution=DistributionType.LOGNORMAL,
-            most_likely=5.0,
+            expected=5.0,
             standard_deviation=1.0,
         )
 
@@ -52,7 +52,7 @@ class TestDistributionSampler:
 
     def test_sample_reproducibility(self):
         """Test that sampling is reproducible with same seed."""
-        estimate = TaskEstimate(min=1, most_likely=2, max=5)
+        estimate = TaskEstimate(low=1, expected=2, high=5)
 
         sampler1 = DistributionSampler(np.random.RandomState(42))
         samples1 = [sampler1.sample(estimate) for _ in range(10)]
@@ -69,7 +69,7 @@ class TestDistributionSampler:
         sampler = DistributionSampler(np.random.RandomState(42))
 
         # Create an estimate with an invalid distribution type
-        estimate = TaskEstimate(min=1, most_likely=2, max=5)
+        estimate = TaskEstimate(low=1, expected=2, high=5)
         estimate.distribution = "invalid_distribution"  # type: ignore
 
         with pytest.raises(ValueError, match="Unknown distribution type"):
@@ -129,13 +129,13 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                     dependencies=[],
                 ),
                 Task(
                     id="task_002",
                     name="Task 2",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                     dependencies=["task_001"],
                 ),
             ],
@@ -149,7 +149,7 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -197,12 +197,12 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                 ),
                 Task(
                     id="task_002",
                     name="Task 2",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                 ),
             ],
             resources=[
@@ -234,7 +234,7 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                     max_resources=2,
                     min_experience_level=2,
                 )
@@ -266,7 +266,7 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                     max_resources=8,
                 )
             ],
@@ -308,7 +308,7 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                     resources=["res_a"],
                 )
             ],
@@ -336,7 +336,7 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                     resources=["res_a"],
                 )
             ],
@@ -370,18 +370,18 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Start",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                 ),
                 Task(
                     id="task_002",
                     name="Branch A",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                     dependencies=["task_001"],
                 ),
                 Task(
                     id="task_003",
                     name="Branch B",
-                    estimate=TaskEstimate(min=1, most_likely=1, max=1),
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
                     dependencies=["task_001"],
                 ),
             ],
@@ -407,7 +407,7 @@ class TestTaskScheduler:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -437,13 +437,13 @@ class TestTaskScheduler:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         dependencies=["task_002"],
                     ),
                     Task(
                         id="task_002",
                         name="Task 2",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         dependencies=["task_001"],
                     ),
                 ],
@@ -462,7 +462,7 @@ class TestSimulationEngine:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -492,13 +492,13 @@ class TestSimulationEngine:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=8, most_likely=9, max=10),
+                    estimate=TaskEstimate(low=8, expected=9, high=10),
                     resources=["res_a"],
                 ),
                 Task(
                     id="task_002",
                     name="Task 2",
-                    estimate=TaskEstimate(min=8, most_likely=9, max=10),
+                    estimate=TaskEstimate(low=8, expected=9, high=10),
                     resources=["res_a"],
                 ),
             ],
@@ -552,18 +552,18 @@ class TestSimulationEngine:
                 Task(
                     id="task_001",
                     name="Start",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=3),
+                    estimate=TaskEstimate(low=1, expected=2, high=3),
                 ),
                 Task(
                     id="task_002",
                     name="Branch A",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=3),
+                    estimate=TaskEstimate(low=1, expected=2, high=3),
                     dependencies=["task_001"],
                 ),
                 Task(
                     id="task_003",
                     name="Branch B",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=3),
+                    estimate=TaskEstimate(low=1, expected=2, high=3),
                     dependencies=["task_001"],
                 ),
             ],
@@ -596,7 +596,7 @@ class TestSimulationEngine:
         task = Task(
             id="task_001",
             name="Task 1",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
         )
 
         # No uncertainty factors should not change duration
@@ -613,7 +613,7 @@ class TestSimulationEngine:
         task_with_factors = Task(
             id="task_002",
             name="Task 2",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
             uncertainty_factors=UncertaintyFactors(team_experience="low"),
         )
 
@@ -629,7 +629,7 @@ class TestSimulationEngine:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                     risks=[
                         Risk(
                             id="risk_001",

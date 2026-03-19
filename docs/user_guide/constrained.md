@@ -45,10 +45,10 @@ project:
 tasks:
   - id: "task_001"
     name: "Task 1"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
   - id: "task_002"
     name: "Task 2"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
 ```
 
@@ -64,10 +64,10 @@ project:
 tasks:
   - id: "task_001"
     name: "Task 1"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
   - id: "task_002"
     name: "Task 2"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
 ```
 
@@ -92,10 +92,10 @@ project:
 tasks:
   - id: "task_001"
     name: "Task 1"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
   - id: "task_002"
     name: "Task 2"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
 
 resources:
@@ -149,11 +149,11 @@ project:
 tasks:
   - id: "task_001"
     name: "Requirements"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
 
   - id: "task_002"
     name: "Implementation"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
 ```
 
@@ -281,11 +281,11 @@ project:
 tasks:
   - id: "task_001"
     name: "Requirements"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
 
   - id: "task_002"
     name: "Implementation"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
 
 resources:
@@ -347,12 +347,12 @@ If you want explicit control instead of automatic pooling, set `tasks[*].resourc
 tasks:
   - id: "task_001"
     name: "Requirements"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
     resources: ["alice"]
 
   - id: "task_002"
     name: "Implementation"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
     resources: ["alice", "bob"]
     max_resources: 2
@@ -383,10 +383,10 @@ project:
 tasks:
   - id: "task_001"
     name: "Requirements"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
   - id: "task_002"
     name: "Implementation"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
 
 resources:
@@ -480,7 +480,7 @@ Use task fields to control assignment behavior:
 tasks:
   - id: "task_003"
     name: "Data migration"
-    estimate: { min: 24, most_likely: 40, max: 64 }
+    estimate: { low: 24, expected: 40, high: 64 }
     dependencies: ["task_002"]
     resources: ["alice"]
     max_resources: 1
@@ -488,7 +488,7 @@ tasks:
 
   - id: "task_004"
     name: "System testing"
-    estimate: { min: 16, most_likely: 24, max: 40 }
+    estimate: { low: 16, expected: 24, high: 40 }
     dependencies: ["task_003"]
     resources: ["alice", "bob"]
     max_resources: 2
@@ -530,14 +530,14 @@ project_risks:
 tasks:
   - id: "task_001"
     name: "Architecture design"
-    estimate: { min: 16, most_likely: 24, max: 40 }
+    estimate: { low: 16, expected: 24, high: 40 }
     uncertainty_factors:
       team_experience: medium
       technical_complexity: medium
 
   - id: "task_002"
     name: "Core implementation"
-    estimate: { min: 80, most_likely: 120, max: 180 }
+    estimate: { low: 80, expected: 120, high: 180 }
     dependencies: ["task_001"]
     resources: ["alice", "bob", "carol"]
     max_resources: 2
@@ -551,7 +551,7 @@ tasks:
 
   - id: "task_003"
     name: "Migration"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_002"]
     resources: ["alice"]
     max_resources: 1
@@ -559,7 +559,7 @@ tasks:
 
   - id: "task_004"
     name: "Verification and rollout"
-    estimate: { min: 24, most_likely: 40, max: 64 }
+    estimate: { low: 24, expected: 40, high: 64 }
     dependencies: ["task_003"]
     resources: ["alice", "bob", "carol"]
     max_resources: 2

@@ -316,7 +316,7 @@ class TestHTMLExporter:
         )
 
         config = Config.model_validate(
-            {"t_shirt_sizes": {"M": {"min": 10, "most_likely": 20, "max": 30}}}
+            {"t_shirt_sizes": {"M": {"low": 10, "expected": 20, "high": 30}}}
         )
 
         output_file = tmp_path / "results.html"
@@ -388,7 +388,7 @@ class TestHTMLExporter:
         )
 
         config = Config.model_validate(
-            {"story_points": {5: {"min": 10, "most_likely": 20, "max": 30}}}
+            {"story_points": {5: {"low": 10, "expected": 20, "high": 30}}}
         )
 
         output_file = tmp_path / "story-points.html"

@@ -24,50 +24,50 @@ class TestTaskEstimate:
         """Test valid triangular distribution."""
         estimate = TaskEstimate(
             distribution=DistributionType.TRIANGULAR,
-            min=1.0,
-            most_likely=2.0,
-            max=5.0,
+            low=1.0,
+            expected=2.0,
+            high=5.0,
         )
-        assert estimate.min == 1.0
-        assert estimate.most_likely == 2.0
-        assert estimate.max == 5.0
+        assert estimate.low == 1.0
+        assert estimate.expected == 2.0
+        assert estimate.high == 5.0
 
     def test_triangular_distribution_invalid_range(self):
         """Test invalid triangular distribution range."""
-        with pytest.raises(ValueError, match="min <= most_likely <= max"):
+        with pytest.raises(ValueError, match="low <= expected <= high"):
             TaskEstimate(
                 distribution=DistributionType.TRIANGULAR,
-                min=5.0,
-                most_likely=2.0,
-                max=10.0,
+                low=5.0,
+                expected=2.0,
+                high=10.0,
             )
 
     def test_triangular_distribution_missing_params(self):
         """Test triangular distribution with missing parameters."""
-        with pytest.raises(ValueError, match="requires min, most_likely, and max"):
+        with pytest.raises(ValueError, match="requires low, expected, and high"):
             TaskEstimate(
                 distribution=DistributionType.TRIANGULAR,
-                most_likely=5.0,
+                expected=5.0,
             )
 
     def test_lognormal_distribution_valid(self):
         """Test valid lognormal distribution."""
         estimate = TaskEstimate(
             distribution=DistributionType.LOGNORMAL,
-            most_likely=5.0,
+            expected=5.0,
             standard_deviation=2.0,
         )
-        assert estimate.most_likely == 5.0
+        assert estimate.expected == 5.0
         assert estimate.standard_deviation == 2.0
 
     def test_lognormal_distribution_missing_params(self):
         """Test lognormal distribution with missing parameters."""
         with pytest.raises(
-            ValueError, match="requires most_likely and standard_deviation"
+            ValueError, match="requires expected and standard_deviation"
         ):
             TaskEstimate(
                 distribution=DistributionType.LOGNORMAL,
-                most_likely=5.0,
+                expected=5.0,
             )
 
     def test_tshirt_size_valid(self):
@@ -76,9 +76,9 @@ class TestTaskEstimate:
             t_shirt_size="M",
         )
         assert estimate.t_shirt_size == "M"
-        assert estimate.min is None
-        assert estimate.most_likely is None
-        assert estimate.max is None
+        assert estimate.low is None
+        assert estimate.expected is None
+        assert estimate.high is None
 
     def test_tshirt_size_with_unit_rejected(self):
         """Test T-shirt size rejects unit in project file."""
@@ -96,9 +96,9 @@ class TestTaskEstimate:
 
         assert estimate.story_points == 5
         assert estimate.unit is None
-        assert estimate.min is None
-        assert estimate.most_likely is None
-        assert estimate.max is None
+        assert estimate.low is None
+        assert estimate.expected is None
+        assert estimate.high is None
 
     def test_story_points_with_explicit_unit_rejected(self):
         """Test Story Points reject unit in project file."""
@@ -128,7 +128,7 @@ class TestTaskEstimate:
         """Test that either T-shirt size or explicit estimate is required."""
         with pytest.raises(
             ValueError,
-            match="Either 't_shirt_size', 'story_points', or 'most_likely' must be specified",
+            match="Either 't_shirt_size', 'story_points', or 'expected' must be specified",
         ):
             TaskEstimate()
 
@@ -185,7 +185,7 @@ class TestTask:
         task = Task(
             id="task_001",
             name="Test Task",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
         )
         assert task.id == "task_001"
         assert task.name == "Test Task"
@@ -196,7 +196,7 @@ class TestTask:
         task = Task(
             id="task_001",
             name="Test Task",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
             dependencies=["task_000"],
         )
         assert task.has_dependency("task_000")
@@ -207,7 +207,7 @@ class TestTask:
         task = Task(
             id="task_001",
             name="Test Task",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
             uncertainty_factors=UncertaintyFactors(
                 team_experience="high",
                 technical_complexity="low",
@@ -237,7 +237,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -256,7 +256,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -287,7 +287,7 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                     )
                 ],
                 resources=[
@@ -308,7 +308,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
             resources=[{"name": "alice", "experience_level": 3}],
@@ -339,7 +339,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
             resources=[{"name": "alice"}],
@@ -356,7 +356,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
             resources=[
@@ -384,7 +384,7 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                     )
                 ],
                 resources=[
@@ -405,7 +405,7 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         resources=["missing_resource"],
                     )
                 ],
@@ -424,7 +424,7 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Senior-only Task",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         resources=["junior_resource"],
                         min_experience_level=3,
                     )
@@ -442,7 +442,7 @@ class TestProject:
         task = Task(
             id="task_001",
             name="Task 1",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
         )
         assert task.max_resources == 1
         assert task.min_experience_level == 1
@@ -451,7 +451,7 @@ class TestProject:
             Task(
                 id="task_002",
                 name="Task 2",
-                estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                estimate=TaskEstimate(low=1, expected=2, high=5),
                 min_experience_level=4,
             )
 
@@ -467,12 +467,12 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                     ),
                     Task(
                         id="task_001",
                         name="Task 2",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                     ),
                 ],
             )
@@ -500,7 +500,7 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         dependencies=["task_999"],  # Doesn't exist
                     )
                 ],
@@ -518,13 +518,13 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         dependencies=["task_002"],
                     ),
                     Task(
                         id="task_002",
                         name="Task 2",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         dependencies=["task_001"],
                     ),
                 ],
@@ -541,7 +541,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -563,7 +563,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                     risks=[
                         Risk(
                             id="task_risk_001",
@@ -599,7 +599,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -620,7 +620,7 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                     )
                 ],
             )

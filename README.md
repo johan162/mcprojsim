@@ -80,9 +80,9 @@ tasks:
   - id: "task_001"
     name: "Database schema design"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"
     dependencies: []
     uncertainty_factors:

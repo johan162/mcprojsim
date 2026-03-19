@@ -825,14 +825,14 @@ def show_config(config_file: Optional[str]) -> None:
     for size, config in cfg.t_shirt_sizes.items():
         click.echo(f"  {size}:")
         click.echo(
-            f"    min: {config.min}, most_likely: {config.most_likely}, max: {config.max}"
+            f"    low: {config.low}, expected: {config.expected}, high: {config.high}"
         )
 
     click.echo(f"\nStory Points (unit: {cfg.story_point_unit.value}):")
     for points, sp_config in sorted(cfg.story_points.items()):
         click.echo(f"  {points}:")
         click.echo(
-            f"    min: {sp_config.min}, most_likely: {sp_config.most_likely}, max: {sp_config.max}"
+            f"    low: {sp_config.low}, expected: {sp_config.expected}, high: {sp_config.high}"
         )
 
     click.echo("\nSimulation:")
@@ -909,7 +909,7 @@ def generate(
             has_estimate = (
                 task.t_shirt_size is not None
                 or task.story_points is not None
-                or task.min_estimate is not None
+                or task.low_estimate is not None
             )
             if not has_estimate:
                 issues.append(f"Task {task.number} ('{task.name}') has no estimate")

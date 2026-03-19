@@ -36,9 +36,9 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL report specific validation errors with line numbers
 
 **FR-002: Triangular Distribution Sampling**
-- Each task estimate SHALL be defined with either a triangular distribution specified with (minimum, most_likely, maximum) values or a log-normal distribution specified with (most_likely, standard_deviation)
+- Each task estimate SHALL be defined with either a triangular distribution specified with (minimum, expected, maximum) values or a log-normal distribution specified with (expected, standard_deviation)
 - The system SHALL sample from triangular distributions using numpy.random.triangular or a log-normal distributions using numpy.random.lognormal
-- The system SHALL validate that min ≤ most_likely ≤ max for a triangular distribution
+- The system SHALL validate that low ≤ expected ≤ high for a triangular distribution
 
 **FR-003: Monte Carlo Simulation Execution**
 - The system SHALL perform N iterations (configurable, default 10,000)
@@ -464,9 +464,9 @@ tasks:
     name: "Database schema design"
     description: "Design normalized schema for customer data"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"  # "hours" (default), "days", or "weeks"; converted to hours internally
     
     dependencies: []  # No predecessors
@@ -491,9 +491,9 @@ tasks:
   - id: "task_002"
     name: "API endpoint implementation"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"  # Converted to hours using hours_per_day
     dependencies: ["task_001"]  # Depends on task_001
     uncertainty_factors:
@@ -646,7 +646,7 @@ examples/
 - Methods: validate(), get_task_by_id()
 
 #### Task
-- Properties: id, name, estimate (min, most_likely, max), dependencies, uncertainty_factors, risks, resources
+- Properties: id, name, estimate (min, expected, max), dependencies, uncertainty_factors, risks, resources
 - Methods: calculate_adjusted_estimate(), has_dependency()
 
 #### Risk
@@ -675,7 +675,7 @@ FOR iteration = 1 TO N:
     
     FOR each task:
         # Sample base duration
-        base = sample_triangular(task.min, task.most_likely, task.max)
+        base = sample_triangular(task.min, task.expected, task.max)
         
         # Apply uncertainty factors
         adjusted = base * product(uncertainty_multipliers)
@@ -823,7 +823,7 @@ for task_id, criticality in critical_tasks.items():
 1. All task IDs must be unique
 2. All dependency references must exist
 3. No circular dependencies
-4. Estimate: min ≤ most_likely ≤ max
+4. Estimate: low ≤ expected ≤ high
 5. Probabilities must be in range [0, 1]
 6. Impacts must be non-negative
 7. Start date must be valid ISO 8601 format

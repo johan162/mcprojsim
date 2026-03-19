@@ -16,17 +16,17 @@ uncertainty_factors:
 
 story_points:
   1:
-    min: 0.5
-    most_likely: 1
-    max: 2.5
+    low: 0.5
+    expected: 1
+    high: 2.5
   2:
-    min: 1
-    most_likely: 2
-    max: 3.5
+    low: 1
+    expected: 2
+    high: 3.5
   5:
-    min: 3.5
-    most_likely: 5.5
-    max: 9
+    low: 3.5
+    expected: 5.5
+    high: 9
 
 simulation:
   default_iterations: 10000

@@ -54,9 +54,9 @@ class ParsedTask:
     name: str = ""
     t_shirt_size: str | None = None
     story_points: int | None = None
-    min_estimate: float | None = None
-    most_likely_estimate: float | None = None
-    max_estimate: float | None = None
+    low_estimate: float | None = None
+    expected_estimate: float | None = None
+    high_estimate: float | None = None
     estimate_unit: str = "days"
     dependency_refs: list[str] = field(default_factory=list)
     description: str | None = None
@@ -192,7 +192,9 @@ class NLProjectParser:
     # -- Public API ------------------------------------------------------------
 
     def __init__(self, current_year: int | None = None) -> None:
-        self.current_year = current_year if current_year is not None else date.today().year
+        self.current_year = (
+            current_year if current_year is not None else date.today().year
+        )
 
     def parse(self, text: str) -> ParsedProject:
         """Parse a natural language project description.
@@ -370,16 +372,15 @@ class NLProjectParser:
             elif task.story_points is not None:
                 lines.append("    estimate:")
                 lines.append(f"      story_points: {task.story_points}")
-            elif task.min_estimate is not None:
+            elif task.low_estimate is not None:
                 lines.append("    estimate:")
-                lines.append(f"      min: {self._fmt_num(task.min_estimate)}")
-                if task.most_likely_estimate is not None:
+                lines.append(f"      low: {self._fmt_num(task.low_estimate)}")
+                if task.expected_estimate is not None:
                     lines.append(
-                        f"      most_likely:"
-                        f" {self._fmt_num(task.most_likely_estimate)}"
+                        f"      expected:" f" {self._fmt_num(task.expected_estimate)}"
                     )
-                if task.max_estimate is not None:
-                    lines.append(f"      max: {self._fmt_num(task.max_estimate)}")
+                if task.high_estimate is not None:
+                    lines.append(f"      high: {self._fmt_num(task.high_estimate)}")
                 lines.append(f'      unit: "{task.estimate_unit}"')
 
             # Dependencies
@@ -541,9 +542,9 @@ class NLProjectParser:
     def _try_parse_estimate(self, text: str, task: ParsedTask) -> bool:
         m = self._ESTIMATE_RE.match(text)
         if m:
-            task.min_estimate = float(m.group(1))
-            task.most_likely_estimate = float(m.group(2))
-            task.max_estimate = float(m.group(3))
+            task.low_estimate = float(m.group(1))
+            task.expected_estimate = float(m.group(2))
+            task.high_estimate = float(m.group(3))
             if m.group(4):
                 unit = m.group(4).lower()
                 if unit.startswith("hour") or unit == "h":

@@ -25,13 +25,13 @@ class TestEndToEnd:
                 {
                     "id": "task_001",
                     "name": "Design",
-                    "estimate": {"min": 2, "most_likely": 3, "max": 5},
+                    "estimate": {"low": 2, "expected": 3, "high": 5},
                     "dependencies": [],
                 },
                 {
                     "id": "task_002",
                     "name": "Implementation",
-                    "estimate": {"min": 5, "most_likely": 8, "max": 12},
+                    "estimate": {"low": 5, "expected": 8, "high": 12},
                     "dependencies": ["task_001"],
                     "uncertainty_factors": {
                         "team_experience": "medium",
@@ -41,7 +41,7 @@ class TestEndToEnd:
                 {
                     "id": "task_003",
                     "name": "Testing",
-                    "estimate": {"min": 2, "most_likely": 4, "max": 6},
+                    "estimate": {"low": 2, "expected": 4, "high": 6},
                     "dependencies": ["task_002"],
                     "risks": [
                         {
@@ -142,7 +142,7 @@ class TestEndToEnd:
                 {
                     "id": "task_001",
                     "name": "Task",
-                    "estimate": {"min": 10, "most_likely": 5, "max": 15},  # Invalid
+                    "estimate": {"low": 10, "expected": 5, "high": 15},  # Invalid
                 }
             ],
         }
@@ -168,7 +168,7 @@ class TestCLIIntegration:
                 {
                     "id": "task_001",
                     "name": "Task",
-                    "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
                 }
             ],
         }

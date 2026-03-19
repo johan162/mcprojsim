@@ -164,9 +164,9 @@ class TestNLProjectParserTasks:
     def test_explicit_estimate(self) -> None:
         text = "Task 1:\n- Development\n- Estimate: 3/5/10 days"
         task = self.parser.parse(text).tasks[0]
-        assert task.min_estimate == 3.0
-        assert task.most_likely_estimate == 5.0
-        assert task.max_estimate == 10.0
+        assert task.low_estimate == 3.0
+        assert task.expected_estimate == 5.0
+        assert task.high_estimate == 10.0
         assert task.estimate_unit == "days"
 
     def test_explicit_estimate_hours(self) -> None:
@@ -176,9 +176,9 @@ class TestNLProjectParserTasks:
     def test_explicit_estimate_dash_separator(self) -> None:
         text = "Task 1:\n- Work\n- Estimate: 2-4-8"
         task = self.parser.parse(text).tasks[0]
-        assert task.min_estimate == 2.0
-        assert task.most_likely_estimate == 4.0
-        assert task.max_estimate == 8.0
+        assert task.low_estimate == 2.0
+        assert task.expected_estimate == 4.0
+        assert task.high_estimate == 8.0
 
     def test_single_dependency(self) -> None:
         text = "Task 1:\n- A\n- Size: S\nTask 2:\n- B\n- Depends on Task 1\n- Size: M"
@@ -225,7 +225,9 @@ class TestNLProjectParserDates:
         self.parser = NLProjectParser(current_year=2026)
 
     def test_calendar_holiday_iso_range_expands(self) -> None:
-        text = "Task 1:\n- Work\n- Size: S\nCalendar:\n- Holiday: 2026-03-19 to 2026-03-21"
+        text = (
+            "Task 1:\n- Work\n- Size: S\nCalendar:\n- Holiday: 2026-03-19 to 2026-03-21"
+        )
         project = self.parser.parse(text)
 
         assert project.calendars[0].holidays == [
@@ -317,9 +319,9 @@ class TestNLProjectParserYAML:
         text = "Task 1:\n- Work\n- Estimate: 3/5/10 days"
         data = yaml.safe_load(self.parser.parse_and_generate(text))
         est = data["tasks"][0]["estimate"]
-        assert est["min"] == 3
-        assert est["most_likely"] == 5
-        assert est["max"] == 10
+        assert est["low"] == 3
+        assert est["expected"] == 5
+        assert est["high"] == 10
         assert est["unit"] == "days"
 
     def test_yaml_dependencies_mapped(self) -> None:

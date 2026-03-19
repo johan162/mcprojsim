@@ -18,12 +18,12 @@ _PROJECT_YAML = {
         {
             "id": "task_001",
             "name": "Alpha",
-            "estimate": {"min": 3, "most_likely": 5, "max": 8},
+            "estimate": {"low": 3, "expected": 5, "high": 8},
         },
         {
             "id": "task_002",
             "name": "Beta",
-            "estimate": {"min": 2, "most_likely": 4, "max": 6},
+            "estimate": {"low": 2, "expected": 4, "high": 6},
             "dependencies": ["task_001"],
         },
     ],

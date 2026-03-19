@@ -127,7 +127,7 @@ class TestSimulateProject:
         import yaml
 
         custom_cfg = yaml.safe_dump(
-            {"t_shirt_sizes": {"M": {"min": 10, "most_likely": 20, "max": 30}}}
+            {"t_shirt_sizes": {"M": {"low": 10, "expected": 20, "high": 30}}}
         )
         result = simulate_project(
             _SIMPLE_DESC, iterations=100, seed=42, config_yaml=custom_cfg

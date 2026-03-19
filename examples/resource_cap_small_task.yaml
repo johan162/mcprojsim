@@ -6,7 +6,7 @@ project:
 tasks:
   - id: "task_001"
     name: "Short, bounded task"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
     max_resources: 8
 
 resources:

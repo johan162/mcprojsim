@@ -8,11 +8,11 @@ project:
 tasks:
   - id: "task_001"
     name: "Requirements"
-    estimate: { min: 8, most_likely: 16, max: 24 }
+    estimate: { low: 8, expected: 16, high: 24 }
 
   - id: "task_002"
     name: "Implementation"
-    estimate: { min: 40, most_likely: 64, max: 96 }
+    estimate: { low: 40, expected: 64, high: 96 }
     dependencies: ["task_001"]
     resources: ["alice", "bob"]
     max_resources: 2
@@ -20,7 +20,7 @@ tasks:
 
   - id: "task_003"
     name: "Testing"
-    estimate: { min: 16, most_likely: 24, max: 40 }
+    estimate: { low: 16, expected: 24, high: 40 }
     dependencies: ["task_002"]
 
 resources:

@@ -91,12 +91,12 @@ This document provides a complete formal grammar specification for Monte Carlo P
 <estimate_spec> ::= <triangular_estimate> | <lognormal_estimate> | <tshirt_estimate> | <story_point_estimate>
 
 <triangular_estimate> ::= <min_value>
-                         <most_likely_value>
+                         <expected_value>
                          <max_value>
                          <unit>
 
 <lognormal_estimate> ::= "distribution:" "lognormal"
-                        <most_likely_value>
+                        <expected_value>
                         <standard_deviation>
                         <unit>
 
@@ -110,11 +110,11 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <story_point_value> ::= "1" | "2" | "3" | "5" | "8" | "13" | "21"
 
-<min_value> ::= "min:" <positive_number>
+<min_value> ::= "low:" <positive_number>
 
-<most_likely_value> ::= "most_likely:" <positive_number>
+<expected_value> ::= "expected:" <positive_number>
 
-<max_value> ::= "max:" <positive_number>
+<max_value> ::= "high:" <positive_number>
 
 <standard_deviation> ::= "standard_deviation:" <positive_number>
 
@@ -307,34 +307,34 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
 
 1. **Task IDs**: Must be unique across all tasks
 2. **Estimate Validity** (Triangular):
-   - `min` ≤ `most_likely` ≤ `max`
+   - `min` ≤ `expected` ≤ `max`
    - All values must be positive
 3. **Estimate Validity** (Log-Normal):
-   - `most_likely` > 0
+   - `expected` > 0
    - `standard_deviation` > 0
 4. **Estimate Validity** (T-Shirt Size):
    - Must be one of: `XS`, `S`, `M`, `L`, `XL`, `XXL`
    - Values are resolved from configuration file
    - `unit` must NOT be specified in the project file; unit comes from `t_shirt_size_unit` in config (default: `"hours"`)
    - Default values (in hours):
-     * `XS`: min=3, most_likely=5, max=15
-     * `S`: min=5, most_likely=16, max=40
-     * `M`: min=40, most_likely=60, max=120
-     * `L`: min=160, most_likely=240, max=500
-     * `XL`: min=320, most_likely=400, max=750
-     * `XXL`: min=400, most_likely=500, max=1200
+     * `XS`: min=3, expected=5, max=15
+     * `S`: min=5, expected=16, max=40
+     * `M`: min=40, expected=60, max=120
+     * `L`: min=160, expected=240, max=500
+     * `XL`: min=320, expected=400, max=750
+     * `XXL`: min=400, expected=500, max=1200
 5. **Estimate Validity** (Story Points):
    - Must be one of: `1`, `2`, `3`, `5`, `8`, `13`, `21`
    - `unit` must NOT be specified in the project file; unit comes from `story_point_unit` in config (default: `"days"`)
    - Values are resolved from configuration file to numeric ranges
    - Default values (in days):
-     * `1`: min=0.5, most_likely=1, max=3
-     * `2`: min=1, most_likely=2, max=4
-     * `3`: min=1.5, most_likely=3, max=5
-     * `5`: min=3, most_likely=5, max=8
-     * `8`: min=5, most_likely=8, max=15
-     * `13`: min=8, most_likely=13, max=21
-     * `21`: min=13, most_likely=21, max=34
+     * `1`: min=0.5, expected=1, max=3
+     * `2`: min=1, expected=2, max=4
+     * `3`: min=1.5, expected=3, max=5
+     * `5`: min=3, expected=5, max=8
+     * `8`: min=5, expected=8, max=15
+     * `13`: min=8, expected=13, max=21
+     * `21`: min=13, expected=21, max=34
 6. **Dependencies**:
    - Referenced task IDs must exist
    - No circular dependencies allowed
@@ -396,9 +396,9 @@ tasks:
   - id: "task_001"
     name: "Backend Development"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"
     dependencies: []
     uncertainty_factors:
@@ -414,7 +414,7 @@ tasks:
     name: "Integration"
     estimate:
       distribution: "lognormal"
-      most_likely: 3
+      expected: 3
       standard_deviation: 1.5
       unit: "days"
     dependencies: ["task_001"]
@@ -443,11 +443,11 @@ project_risks:
 ### Invalid Examples
 
 ```yaml
-# INVALID: min > most_likely
+# INVALID: min > expected
 estimate:
-  min: 10
-  most_likely: 5  # ERROR: must be >= min
-  max: 15
+  low: 10
+  expected: 5  # ERROR: must be >= min
+  high: 15
   unit: "days"
 
 # INVALID: circular dependency

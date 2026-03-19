@@ -37,18 +37,18 @@ def serial_project():
             Task(
                 id="A",
                 name="Task A",
-                estimate=TaskEstimate(min=2, most_likely=4, max=6),
+                estimate=TaskEstimate(low=2, expected=4, high=6),
             ),
             Task(
                 id="B",
                 name="Task B",
-                estimate=TaskEstimate(min=3, most_likely=5, max=8),
+                estimate=TaskEstimate(low=3, expected=5, high=8),
                 dependencies=["A"],
             ),
             Task(
                 id="C",
                 name="Task C",
-                estimate=TaskEstimate(min=1, most_likely=2, max=4),
+                estimate=TaskEstimate(low=1, expected=2, high=4),
                 dependencies=["B"],
             ),
         ],
@@ -67,24 +67,24 @@ def parallel_project():
             Task(
                 id="start",
                 name="Start",
-                estimate=TaskEstimate(min=1, most_likely=1, max=1.01),
+                estimate=TaskEstimate(low=1, expected=1, high=1.01),
             ),
             Task(
                 id="long",
                 name="Long Branch",
-                estimate=TaskEstimate(min=9.5, most_likely=10, max=10.5),
+                estimate=TaskEstimate(low=9.5, expected=10, high=10.5),
                 dependencies=["start"],
             ),
             Task(
                 id="short",
                 name="Short Branch",
-                estimate=TaskEstimate(min=1.5, most_likely=2, max=2.5),
+                estimate=TaskEstimate(low=1.5, expected=2, high=2.5),
                 dependencies=["start"],
             ),
             Task(
                 id="end",
                 name="End",
-                estimate=TaskEstimate(min=1, most_likely=1, max=1.01),
+                estimate=TaskEstimate(low=1, expected=1, high=1.01),
                 dependencies=["long", "short"],
             ),
         ],
@@ -100,12 +100,12 @@ def risky_project():
             Task(
                 id="safe",
                 name="Safe Task",
-                estimate=TaskEstimate(min=3, most_likely=4, max=5),
+                estimate=TaskEstimate(low=3, expected=4, high=5),
             ),
             Task(
                 id="risky",
                 name="Risky Task",
-                estimate=TaskEstimate(min=3, most_likely=4, max=5),
+                estimate=TaskEstimate(low=3, expected=4, high=5),
                 risks=[
                     Risk(
                         id="r1",
@@ -239,7 +239,7 @@ class TestScheduleSlack:
                 Task(
                     id="only",
                     name="Only",
-                    estimate=TaskEstimate(min=5, most_likely=5, max=5),
+                    estimate=TaskEstimate(low=5, expected=5, high=5),
                 )
             ],
         )
@@ -508,12 +508,12 @@ class TestIntegrationAllFeatures:
                 Task(
                     id="design",
                     name="Design",
-                    estimate=TaskEstimate(min=8, most_likely=16, max=32),
+                    estimate=TaskEstimate(low=8, expected=16, high=32),
                 ),
                 Task(
                     id="backend",
                     name="Backend",
-                    estimate=TaskEstimate(min=16, most_likely=40, max=80),
+                    estimate=TaskEstimate(low=16, expected=40, high=80),
                     dependencies=["design"],
                     risks=[
                         Risk(
@@ -527,13 +527,13 @@ class TestIntegrationAllFeatures:
                 Task(
                     id="frontend",
                     name="Frontend",
-                    estimate=TaskEstimate(min=16, most_likely=32, max=64),
+                    estimate=TaskEstimate(low=16, expected=32, high=64),
                     dependencies=["design"],
                 ),
                 Task(
                     id="testing",
                     name="Testing",
-                    estimate=TaskEstimate(min=8, most_likely=16, max=24),
+                    estimate=TaskEstimate(low=8, expected=16, high=24),
                     dependencies=["backend", "frontend"],
                 ),
             ],

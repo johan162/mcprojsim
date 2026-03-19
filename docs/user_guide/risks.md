@@ -134,9 +134,9 @@ tasks:
     name: "Authentication & Authorization"
     description: "Implement OAuth2 and role-based access control"
     estimate:
-      min: 4
-      most_likely: 6
-      max: 12
+      low: 4
+      expected: 6
+      high: 12
       unit: "days"
     dependencies: ["task_002"]
     uncertainty_factors:
@@ -242,9 +242,9 @@ tasks:
     name: "API client library"
     description: "Build client library for vendor payment API"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 14
+      low: 5
+      expected: 8
+      high: 14
       unit: "days"
     dependencies: []
     risks:
@@ -257,9 +257,9 @@ tasks:
     name: "Transaction processing engine"
     description: "Core payment transaction handling logic"
     estimate:
-      min: 8
-      most_likely: 12
-      max: 20
+      low: 8
+      expected: 12
+      high: 20
       unit: "days"
     dependencies: ["pay_001"]
     risks:
@@ -276,9 +276,9 @@ tasks:
     name: "Integration testing with sandbox"
     description: "End-to-end testing against vendor sandbox environment"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"
     dependencies: ["pay_002"]
     risks:
@@ -291,9 +291,9 @@ tasks:
     name: "Security hardening"
     description: "Encryption, tokenization, and audit logging"
     estimate:
-      min: 4
-      most_likely: 6
-      max: 10
+      low: 4
+      expected: 6
+      high: 10
       unit: "days"
     dependencies: ["pay_002"]
     risks:
@@ -318,9 +318,9 @@ tasks:
   - id: "task_007"
     name: "Documentation"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 5
+      low: 2
+      expected: 3
+      high: 5
       unit: "days"
     dependencies: ["task_002", "task_003"]
     risks: []
@@ -358,36 +358,36 @@ tasks:
   - id: "dash_001"
     name: "Data model design"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 7
+      low: 2
+      expected: 4
+      high: 7
       unit: "days"
     dependencies: []
 
   - id: "dash_002"
     name: "Backend API"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 14
+      low: 5
+      expected: 8
+      high: 14
       unit: "days"
     dependencies: ["dash_001"]
 
   - id: "dash_003"
     name: "Frontend charts"
     estimate:
-      min: 4
-      most_likely: 6
-      max: 11
+      low: 4
+      expected: 6
+      high: 11
       unit: "days"
     dependencies: ["dash_001"]
 
   - id: "dash_004"
     name: "Integration and deployment"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 6
+      low: 2
+      expected: 3
+      high: 6
       unit: "days"
     dependencies: ["dash_002", "dash_003"]
 ```
@@ -427,9 +427,9 @@ tasks:
   - id: "dash_001"
     name: "Data model design"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 7
+      low: 2
+      expected: 4
+      high: 7
       unit: "days"
     dependencies: []
     uncertainty_factors:
@@ -445,9 +445,9 @@ tasks:
   - id: "dash_002"
     name: "Backend API"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 14
+      low: 5
+      expected: 8
+      high: 14
       unit: "days"
     dependencies: ["dash_001"]
     uncertainty_factors:
@@ -464,9 +464,9 @@ tasks:
   - id: "dash_003"
     name: "Frontend charts"
     estimate:
-      min: 4
-      most_likely: 6
-      max: 11
+      low: 4
+      expected: 6
+      high: 11
       unit: "days"
     dependencies: ["dash_001"]
     uncertainty_factors:
@@ -481,9 +481,9 @@ tasks:
   - id: "dash_004"
     name: "Integration and deployment"
     estimate:
-      min: 2
-      most_likely: 3
-      max: 6
+      low: 2
+      expected: 3
+      high: 6
       unit: "days"
     dependencies: ["dash_002", "dash_003"]
     uncertainty_factors:

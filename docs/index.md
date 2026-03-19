@@ -57,9 +57,9 @@ tasks:
   - id: "task_001"
     name: "Backend API"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"
     uncertainty_factors:
       team_experience: "medium"
