@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://johan162.github.io/mcprojsim/user_guide/running_simulations/">
       
       
-        <link rel="prev" href="../project_files/">
+        <link rel="prev" href="../constrained/">
       
       
         <link rel="next" href="../interpreting_results/">
@@ -652,6 +652,34 @@
     
   
     Project Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../constrained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource and Calendar Constrained Scheduling
   
 
     
@@ -1465,7 +1493,6 @@
 
 <h1 id="running-simulations">Running simulations<a class="headerlink" href="#running-simulations" title="Permanent link">&para;</a></h1>
 <p>This chapter is a reference for the <code>mcprojsim</code> command-line interface. It covers all four commands: <code>generate</code>, <code>validate</code>, <code>simulate</code>, and <code>config show</code>.</p>
-<hr />
 <h2 id="command-overview">Command overview<a class="headerlink" href="#command-overview" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1494,7 +1521,6 @@
 </tbody>
 </table>
 <p>A typical workflow runs these commands in sequence: generate (or write by hand) → validate → simulate.</p>
-<hr />
 <h2 id="mcprojsim-generate"><code>mcprojsim generate</code><a class="headerlink" href="#mcprojsim-generate" title="Permanent link">&para;</a></h2>
 <p>Converts a plain-text project description into a syntactically correct YAML project file. The parser runs locally — no AI service or network access is required.</p>
 <h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h3>
@@ -1553,7 +1579,6 @@
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>- Depends on Task 1
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>- Size: XL
 </span></code></pre></div>
-<hr />
 <h2 id="mcprojsim-validate"><code>mcprojsim validate</code><a class="headerlink" href="#mcprojsim-validate" title="Permanent link">&para;</a></h2>
 <p>Checks a YAML or TOML project file for structural and semantic errors.</p>
 <h3 id="usage_1">Usage<a class="headerlink" href="#usage_1" title="Permanent link">&para;</a></h3>
@@ -1585,7 +1610,6 @@
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  Task &#39;task_003&#39; depends on &#39;task_999&#39;, which does not exist
 </span></code></pre></div>
 <p>It is good practice to validate before every simulation, especially after editing a file or generating one with <code>mcprojsim generate</code>.</p>
-<hr />
 <h2 id="mcprojsim-simulate"><code>mcprojsim simulate</code><a class="headerlink" href="#mcprojsim-simulate" title="Permanent link">&para;</a></h2>
 <p>Runs the Monte Carlo simulation on a validated project file.</p>
 <h3 id="usage_2">Usage<a class="headerlink" href="#usage_2" title="Permanent link">&para;</a></h3>
@@ -1647,6 +1671,11 @@
 <td>off</td>
 </tr>
 <tr>
+<td><code>-m</code>, <code>--minimal</code></td>
+<td>Show minimal console output: version, project overview, calendar/effort statistical summaries, and calendar confidence intervals only</td>
+<td>off</td>
+</tr>
+<tr>
 <td><code>--staffing</code></td>
 <td>Show full staffing analysis table with team-size recommendations per experience profile</td>
 <td>off</td>
@@ -1686,11 +1715,14 @@
 </span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="c1"># Table mode (ASCII tables for tabular sections)</span>
 </span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--table
 </span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>
-</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="c1"># Show staffing recommendations</span>
-</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="c1"># Minimal output mode (core summaries only)</span>
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--minimal
 </span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>
-</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="c1"># Staffing with table formatting</span>
-</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing<span class="w"> </span>--table
+</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="c1"># Show staffing recommendations</span>
+</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing
+</span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a>
+</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="c1"># Staffing with table formatting</span>
+</span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing<span class="w"> </span>--table
 </span></code></pre></div>
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>By default, the simulation prints a plain-text summary. With <code>--table</code> (<code>-t</code>), the confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are formatted as ASCII tables with column headers and box-drawing borders:</p>
@@ -1770,7 +1802,6 @@
 </tr>
 </tbody>
 </table>
-<hr />
 <h2 id="mcprojsim-config-show"><code>mcprojsim config show</code><a class="headerlink" href="#mcprojsim-config-show" title="Permanent link">&para;</a></h2>
 <p>Displays the active configuration (uncertainty factor multipliers, T-shirt size mappings, story point mappings, simulation defaults).</p>
 <h3 id="usage_3">Usage<a class="headerlink" href="#usage_3" title="Permanent link">&para;</a></h3>
@@ -1783,6 +1814,7 @@
 </span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Show a custom configuration merged with defaults</span>
 </span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span>--config-file<span class="w"> </span>my_config.yaml
 </span></code></pre></div>
+<p>\newpage</p>
 
 
 

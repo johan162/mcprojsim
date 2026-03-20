@@ -669,6 +669,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/constrained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource and Calendar Constrained Scheduling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/running_simulations/" class="md-nav__link">
         
   
@@ -1941,18 +1969,17 @@
 <h3 id="taskestimate"><code>TaskEstimate</code><a class="headerlink" href="#taskestimate" title="Permanent link">&para;</a></h3>
 <p>Supports four estimation styles:</p>
 <ul>
-<li>Triangular estimates via <code>min</code>, <code>most_likely</code>, and <code>max</code></li>
-<li>Log-normal estimates via <code>most_likely</code> and <code>standard_deviation</code></li>
+<li>Triangular estimates via <code>low</code>, <code>expected</code>, and <code>high</code></li>
+<li>Log-normal estimates via <code>low</code>, <code>expected</code>, and <code>high</code></li>
 <li>T-shirt-sized estimates via <code>t_shirt_size</code></li>
 <li>Story Point estimates via <code>story_points</code></li>
 </ul>
 <p>Key fields:</p>
 <ul>
 <li><code>distribution</code></li>
-<li><code>min</code></li>
-<li><code>most_likely</code></li>
-<li><code>max</code></li>
-<li><code>standard_deviation</code></li>
+<li><code>low</code></li>
+<li><code>expected</code></li>
+<li><code>high</code></li>
 <li><code>t_shirt_size</code></li>
 <li><code>story_points</code></li>
 <li><code>unit</code></li>
@@ -2128,7 +2155,7 @@
 <li><code>Task 1: Backend API</code> followed by bullet points</li>
 <li><code>Size: M</code> or <code>Size XL</code> (T-shirt sizes)</li>
 <li><code>Story points: 5</code></li>
-<li><code>Estimate: 3/5/10 days</code> (min/most_likely/max)</li>
+<li><code>Estimate: 3/5/10 days</code> (low/expected/high)</li>
 <li><code>Depends on Task 1, Task 3</code></li>
 </ul>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
@@ -2148,7 +2175,7 @@
 <h3 id="data-classes">Data classes<a class="headerlink" href="#data-classes" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>ParsedProject</code> — extracted project-level data (<code>name</code>, <code>start_date</code>, <code>hours_per_day</code>, <code>tasks</code>, <code>confidence_levels</code>)</li>
-<li><code>ParsedTask</code> — extracted task data (<code>name</code>, <code>t_shirt_size</code>, <code>story_points</code>, <code>min_estimate</code>/<code>most_likely_estimate</code>/<code>max_estimate</code>, <code>dependency_refs</code>)</li>
+<li><code>ParsedTask</code> — extracted task data (<code>name</code>, <code>t_shirt_size</code>, <code>story_points</code>, <code>min_estimate</code>/<code>expected_estimate</code>/<code>max_estimate</code>, <code>dependency_refs</code>)</li>
 </ul>
 
 

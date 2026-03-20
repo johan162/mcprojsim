@@ -672,6 +672,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../constrained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource and Calendar Constrained Scheduling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../running_simulations/" class="md-nav__link">
         
   
@@ -1742,7 +1770,6 @@
 <h1 id="mcp-server-natural-language-project-input">MCP Server &amp; Natural Language Project Input<a class="headerlink" href="#mcp-server-natural-language-project-input" title="Permanent link">&para;</a></h1>
 <p>Writing a full YAML project file by hand is straightforward once you know the format, but it takes time — especially when you are in an early planning session and just want to sketch out tasks quickly. The mcprojsim <strong>MCP server</strong> bridges that gap. It lets an AI assistant (such as Claude, GitHub Copilot, or any MCP-compatible client) convert a rough, natural-language project description into a syntactically correct project specification file that <code>mcprojsim</code> can simulate immediately.</p>
 <p>This chapter explains what the MCP server is, how to install and configure it, how the natural language parser works, and how to get the best results from it.</p>
-<hr />
 <h2 id="what-is-the-mcp-server">What is the MCP server?<a class="headerlink" href="#what-is-the-mcp-server" title="Permanent link">&para;</a></h2>
 <p>The <strong>Model Context Protocol (MCP)</strong> is an open standard that lets AI assistants call external tools in a structured way. The mcprojsim MCP server exposes three tools:</p>
 <table>
@@ -1768,7 +1795,6 @@
 </tbody>
 </table>
 <p>When an MCP client connects to the server, the AI assistant can invoke these tools on your behalf. You describe a project in plain language, the assistant calls <code>generate_project_file</code> or <code>simulate_project</code>, and you get back a ready-to-use result.</p>
-<hr />
 <h2 id="prerequisites-and-installation">Prerequisites and installation<a class="headerlink" href="#prerequisites-and-installation" title="Permanent link">&para;</a></h2>
 <p>The MCP server has one additional dependency beyond the core <code>mcprojsim</code> package: the <code>mcp</code> Python library. It is declared as an optional dependency group so it does not affect users who do not need the server.</p>
 <h3 id="step-1-install-mcprojsim-with-mcp-support">Step 1: Install mcprojsim with MCP support<a class="headerlink" href="#step-1-install-mcprojsim-with-mcp-support" title="Permanent link">&para;</a></h3>
@@ -1808,7 +1834,6 @@
 <p class="admonition-title">Note</p>
 <p>If you installed <code>mcprojsim</code> inside a Poetry virtual environment, you may need to specify the full path to the entry point. You can find it with <code>poetry run which mcprojsim-mcp</code>.</p>
 </div>
-<hr />
 <h2 id="workflow-overview">Workflow overview<a class="headerlink" href="#workflow-overview" title="Permanent link">&para;</a></h2>
 <p>There are two workflows depending on whether you want to review the YAML before simulating or go directly to results.</p>
 <h3 id="two-step-workflow-generate-then-simulate">Two-step workflow: generate then simulate<a class="headerlink" href="#two-step-workflow-generate-then-simulate" title="Permanent link">&para;</a></h3>
@@ -1886,7 +1911,6 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 <p>"Validate this project description before generating the file."</p>
 </blockquote>
 <p>The assistant will call <code>validate_project_description</code> and report any warnings (missing estimates, undefined dependencies) before you commit to generating the file.</p>
-<hr />
 <h2 id="natural-language-input-format">Natural language input format<a class="headerlink" href="#natural-language-input-format" title="Permanent link">&para;</a></h2>
 <p>The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes.</p>
 <h3 id="project-level-fields">Project-level fields<a class="headerlink" href="#project-level-fields" title="Permanent link">&para;</a></h3>
@@ -2008,7 +2032,6 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </tbody>
 </table>
 <p>Size matching is case-insensitive: <code>size: medium</code>, <code>Size: MEDIUM</code>, and <code>Size Medium</code> all resolve to <code>M</code>.</p>
-<hr />
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>The following examples show different levels of detail and formatting styles, all of which the parser handles correctly.</p>
 <h3 id="example-1-minimal-description-with-t-shirt-sizes">Example 1: Minimal description with T-shirt sizes<a class="headerlink" href="#example-1-minimal-description-with-t-shirt-sizes" title="Permanent link">&para;</a></h3>
@@ -2145,36 +2168,36 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_001&quot;</span>
 </span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Schema</span><span class="nv"> </span><span class="s">analysis&quot;</span>
 </span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">      </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">      </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
-</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">      </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 </span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>
 </span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_002&quot;</span>
 </span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Write</span><span class="nv"> </span><span class="s">migration</span><span class="nv"> </span><span class="s">scripts&quot;</span>
 </span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a><span class="w">      </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a><span class="w">      </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a><span class="w">      </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
 </span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_001&quot;</span><span class="p p-Indicator">]</span>
 </span><span id="__span-12-25"><a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a>
 </span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_003&quot;</span>
 </span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Data</span><span class="nv"> </span><span class="s">validation&quot;</span>
 </span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a><span class="w">      </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-</span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a><span class="w">      </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
-</span><span id="__span-12-31"><a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a><span class="w">      </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+</span><span id="__span-12-31"><a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
 </span><span id="__span-12-32"><a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;hours&quot;</span>
 </span><span id="__span-12-33"><a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_002&quot;</span><span class="p p-Indicator">]</span>
 </span><span id="__span-12-34"><a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a>
 </span><span id="__span-12-35"><a id="__codelineno-12-35" name="__codelineno-12-35" href="#__codelineno-12-35"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_004&quot;</span>
 </span><span id="__span-12-36"><a id="__codelineno-12-36" name="__codelineno-12-36" href="#__codelineno-12-36"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Production</span><span class="nv"> </span><span class="s">cutover&quot;</span>
 </span><span id="__span-12-37"><a id="__codelineno-12-37" name="__codelineno-12-37" href="#__codelineno-12-37"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-12-38"><a id="__codelineno-12-38" name="__codelineno-12-38" href="#__codelineno-12-38"></a><span class="w">      </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-</span><span id="__span-12-39"><a id="__codelineno-12-39" name="__codelineno-12-39" href="#__codelineno-12-39"></a><span class="w">      </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-</span><span id="__span-12-40"><a id="__codelineno-12-40" name="__codelineno-12-40" href="#__codelineno-12-40"></a><span class="w">      </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-12-38"><a id="__codelineno-12-38" name="__codelineno-12-38" href="#__codelineno-12-38"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-12-39"><a id="__codelineno-12-39" name="__codelineno-12-39" href="#__codelineno-12-39"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-12-40"><a id="__codelineno-12-40" name="__codelineno-12-40" href="#__codelineno-12-40"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
 </span><span id="__span-12-41"><a id="__codelineno-12-41" name="__codelineno-12-41" href="#__codelineno-12-41"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span><span id="__span-12-42"><a id="__codelineno-12-42" name="__codelineno-12-42" href="#__codelineno-12-42"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_003&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
@@ -2257,7 +2280,6 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>- Size: Small
 </span></code></pre></div>
 <p><code>Extra Small</code> becomes <code>XS</code>, <code>Extra Large</code> becomes <code>XL</code>, and <code>Small</code> becomes <code>S</code> in the generated YAML.</p>
-<hr />
 <h2 id="using-the-parser-from-the-command-line">Using the parser from the command line<a class="headerlink" href="#using-the-parser-from-the-command-line" title="Permanent link">&para;</a></h2>
 <p>You do not need an MCP client or an AI service to use the natural language parser. The <code>mcprojsim generate</code> command runs the same parser directly from the terminal:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>mcprojsim<span class="w"> </span>generate<span class="w"> </span>description.txt<span class="w"> </span>-o<span class="w"> </span>my_project.yaml
@@ -2298,7 +2320,6 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </span><span id="__span-18-31"><a id="__codelineno-18-31" name="__codelineno-18-31" href="#__codelineno-18-31"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_project.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 </span><span id="__span-18-32"><a id="__codelineno-18-32" name="__codelineno-18-32" href="#__codelineno-18-32"></a>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml_output</span><span class="p">)</span>
 </span></code></pre></div>
-<hr />
 <h2 id="tips-tricks">Tips &amp; tricks<a class="headerlink" href="#tips-tricks" title="Permanent link">&para;</a></h2>
 <h3 id="start-simple-then-enrich">Start simple, then enrich<a class="headerlink" href="#start-simple-then-enrich" title="Permanent link">&para;</a></h3>
 <p>The parser generates a minimal but valid project file. After generating the initial YAML, you can manually add:</p>
@@ -2339,9 +2360,9 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 <p>The generated YAML uses symbolic estimates (<code>t_shirt_size: "M"</code> or <code>story_points: 5</code>). These are resolved to numeric ranges at simulation time using a configuration file. If you want custom mappings, create a <code>config.yaml</code>:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nt">t_shirt_sizes</span><span class="p">:</span>
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">  </span><span class="nt">M</span><span class="p">:</span>
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">    </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">    </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
 </span></code></pre></div>
 <p>Then run the simulation with:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>my_project.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml
@@ -2371,6 +2392,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 <li>The parser expects <strong>numbered task headers</strong> (<code>Task 1:</code>, <code>Task 2:</code>). Free-form task lists without numbers are not recognized.</li>
 <li><strong>Circular dependencies</strong> are not detected by the parser — they will be caught when you load the file with <code>mcprojsim validate</code>.</li>
 </ul>
+<p>\newpage</p>
 
 
 

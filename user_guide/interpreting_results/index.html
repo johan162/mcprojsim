@@ -672,6 +672,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../constrained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource and Calendar Constrained Scheduling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../running_simulations/" class="md-nav__link">
         
   
@@ -2583,7 +2611,6 @@
 
 <h1 id="interpreting-results">Interpreting Results<a class="headerlink" href="#interpreting-results" title="Permanent link">&para;</a></h1>
 <p>After running a simulation, <code>mcprojsim</code> produces a set of statistics, percentiles, critical path data, and optionally an HTML report with a histogram and thermometer chart. This chapter explains what those outputs mean and how to use them for practical decision-making.</p>
-<hr />
 <h2 id="the-output-at-a-glance">The output at a glance<a class="headerlink" href="#the-output-at-a-glance" title="Permanent link">&para;</a></h2>
 <p>A typical CLI run (using <code>examples/sample_project.yaml</code>) produces output like this:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mcprojsim, version 0.3.0
@@ -2660,7 +2687,6 @@
 </span></code></pre></div>
 <p>Every number here comes from simulating your project thousands of times with different random samples. The results describe the <em>distribution</em> of outcomes, not a single prediction.</p>
 <p>The sections below explain each part of this output in detail.</p>
-<hr />
 <h2 id="understanding-percentiles">Understanding percentiles<a class="headerlink" href="#understanding-percentiles" title="Permanent link">&para;</a></h2>
 <p>Percentiles are the most actionable part of the output. Each percentile answers the question: <em>"How many hours (or days) would be enough to finish the project X% of the time?"</em></p>
 <table>
@@ -2708,7 +2734,6 @@
 <p>A useful rule of thumb: commit externally at the P85–P90 level, plan internally at P50, and track the gap between them. If the gap is large, your project has high uncertainty — which is itself valuable information.</p>
 <h3 id="working-days-and-delivery-dates">Working days and delivery dates<a class="headerlink" href="#working-days-and-delivery-dates" title="Permanent link">&para;</a></h3>
 <p>Each percentile also shows working days (hours ÷ hours_per_day, rounded up) and a projected delivery date that counts forward from <code>start_date</code>, skipping weekends. These are calculated from the hours figure — they are not separate estimates.</p>
-<hr />
 <h2 id="effort-confidence-intervals">Effort confidence intervals<a class="headerlink" href="#effort-confidence-intervals" title="Permanent link">&para;</a></h2>
 <p>The <strong>Effort Confidence Intervals</strong> section appears immediately after the calendar confidence intervals. While the calendar percentiles answer <em>"how long will this project take?"</em>, the effort percentiles answer <em>"how much total work will this project require?"</em></p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Effort Confidence Intervals:
@@ -2760,7 +2785,6 @@ $$</p>
 </tr>
 </tbody>
 </table>
-<hr />
 <h2 id="the-thermometer-chart">The thermometer chart<a class="headerlink" href="#the-thermometer-chart" title="Permanent link">&para;</a></h2>
 <p>The HTML report includes a thermometer — a vertical colour-coded bar showing effort at probability levels from 50% to 99%. It provides a quick visual: green zones are highly likely to succeed, orange zones are risky.</p>
 <ul>
@@ -2769,7 +2793,6 @@ $$</p>
 <li><strong>Green → dark green</strong> (90%–99%): high confidence. Suitable for external commitments.</li>
 </ul>
 <p>The colour thresholds are configurable via <code>probability_red_threshold</code> and <code>probability_green_threshold</code> in the project file.</p>
-<hr />
 <h2 id="mean-vs-median">Mean vs. median<a class="headerlink" href="#mean-vs-median" title="Permanent link">&para;</a></h2>
 <p>The <strong>mean</strong> (average) and <strong>median</strong> (P50) are often close, but they diverge when the distribution is skewed — which it almost always is in software projects, because tasks tend to overrun more than they finish early.</p>
 <ul>
@@ -2777,7 +2800,6 @@ $$</p>
 <li>A large gap between mean and median signals high asymmetry. It suggests a few bad-case scenarios are contributing disproportionately to the average.</li>
 </ul>
 <p>For planning, the <strong>median</strong> is generally more useful than the mean. The mean can be distorted by outliers, while the median always represents the 50th-percentile outcome.</p>
-<hr />
 <h2 id="standard-deviation-and-coefficient-of-variation">Standard deviation and coefficient of variation<a class="headerlink" href="#standard-deviation-and-coefficient-of-variation" title="Permanent link">&para;</a></h2>
 <p>The <strong>standard deviation</strong> measures the spread of outcomes in hours. By itself, the number is hard to interpret — 50 hours of spread means something different for a 100-hour project than for a 1000-hour one.</p>
 <p>The <strong>coefficient of variation</strong> (CV) normalises the spread so that you can compare uncertainty across projects of different sizes.</p>
@@ -2822,7 +2844,6 @@ $$</p>
 </ul>
 <h3 id="practical-use_1">Practical use<a class="headerlink" href="#practical-use_1" title="Permanent link">&para;</a></h3>
 <p>A high CV is not necessarily bad — it is <em>honest</em>. It tells you that the inputs contain wide estimate ranges, high-probability risks, or both. Narrowing the CV means improving the inputs: tightening estimates, reducing risk exposure, or breaking large tasks into better-understood pieces. Use the CV to compare uncertainty across different project proposals: a project with CV 0.40 carries much more schedule risk than one with CV 0.15, regardless of their absolute durations.</p>
-<hr />
 <h2 id="skewness">Skewness<a class="headerlink" href="#skewness" title="Permanent link">&para;</a></h2>
 <p>Skewness measures how asymmetric the distribution of project durations is. In software projects, distributions almost always skew right: there are more ways for things to go wrong than to go better than planned.</p>
 <h3 id="definition_1">Definition<a class="headerlink" href="#definition_1" title="Permanent link">&para;</a></h3>
@@ -2866,7 +2887,6 @@ $$</p>
 </ul>
 <h3 id="practical-use_2">Practical use<a class="headerlink" href="#practical-use_2" title="Permanent link">&para;</a></h3>
 <p>When skewness is positive, the mean overstates a "typical" outcome. Prefer the median for internal planning. The gap between mean and median quantifies how much the tail is pulling the average: a gap of 10+ hours suggests meaningful tail risk that should be communicated to stakeholders.</p>
-<hr />
 <h2 id="excess-kurtosis">Excess kurtosis<a class="headerlink" href="#excess-kurtosis" title="Permanent link">&para;</a></h2>
 <p>Excess kurtosis describes the "tailedness" of the distribution — whether extreme outcomes (very early or very late finishes) are more or less likely than a normal distribution would predict.</p>
 <h3 id="definition_2">Definition<a class="headerlink" href="#definition_2" title="Permanent link">&para;</a></h3>
@@ -2906,7 +2926,6 @@ $$</p>
 </ul>
 <h3 id="practical-use_3">Practical use<a class="headerlink" href="#practical-use_3" title="Permanent link">&para;</a></h3>
 <p>Excess kurtosis guides how much buffer to add between your planning target and your worst-case commitment. When kurtosis is high, the gap between P90 and P99 is larger than usual, so committing at P90 leaves more residual risk than it would for a normal-tailed distribution. Conversely, negative kurtosis means outcomes are bunched together and P90 commitments are safer than they might first appear.</p>
-<hr />
 <h2 id="sensitivity-analysis">Sensitivity analysis<a class="headerlink" href="#sensitivity-analysis" title="Permanent link">&para;</a></h2>
 <p>The sensitivity analysis section ranks tasks by how strongly their duration influences the total project duration. It answers the question: <em>"Which task's estimate uncertainty matters most to the overall schedule?"</em></p>
 <h3 id="definition_3">Definition<a class="headerlink" href="#definition_3" title="Permanent link">&para;</a></h3>
@@ -2952,7 +2971,6 @@ $$</p>
 </ul>
 <h3 id="practical-use_4">Practical use<a class="headerlink" href="#practical-use_4" title="Permanent link">&para;</a></h3>
 <p>Use sensitivity to prioritise where to invest in better estimates. Spending a day refining the estimate for a +0.45 task reduces overall schedule uncertainty far more than refining a +0.02 task. In the HTML report, the sensitivity analysis appears as a tornado chart for visual comparison.</p>
-<hr />
 <h2 id="schedule-slack">Schedule slack<a class="headerlink" href="#schedule-slack" title="Permanent link">&para;</a></h2>
 <p>Schedule slack (also called total float) shows how much each task can be delayed without delaying the overall project. It is calculated using a backward-pass Critical Path Method (CPM) and then averaged across all Monte Carlo iterations.</p>
 <h3 id="definition_4">Definition<a class="headerlink" href="#definition_4" title="Permanent link">&para;</a></h3>
@@ -2975,7 +2993,6 @@ $$</p>
 </ul>
 <h3 id="practical-use_5">Practical use<a class="headerlink" href="#practical-use_5" title="Permanent link">&para;</a></h3>
 <p>Slack tells you where you have scheduling flexibility. Tasks with large buffers are safe to deprioritise, start later, or assign to less experienced team members. Tasks with zero slack are where delays are most costly — prioritise them in resource allocation, assign your strongest people, and mitigate their risks first.</p>
-<hr />
 <h2 id="risk-impact-analysis">Risk impact analysis<a class="headerlink" href="#risk-impact-analysis" title="Permanent link">&para;</a></h2>
 <p>The risk impact analysis section shows how much each task's risks contribute to the schedule across all simulation iterations. This goes beyond listing risks in the project file — it shows what actually happened during the simulation.</p>
 <h3 id="reported-metrics">Reported metrics<a class="headerlink" href="#reported-metrics" title="Permanent link">&para;</a></h3>
@@ -3025,7 +3042,6 @@ $$</p>
 <li>If a task has <strong>high <code>mean_when_triggered</code> but low trigger rate</strong> → have a contingency plan ready, but don't rearrange the whole schedule for it.</li>
 <li>If a task has <strong>large slack</strong> → its risks are mostly absorbed by the buffer. Monitor, but don't prioritise.</li>
 </ol>
-<hr />
 <h2 id="critical-path-analysis">Critical path analysis<a class="headerlink" href="#critical-path-analysis" title="Permanent link">&para;</a></h2>
 <h3 id="what-is-the-critical-path">What is the critical path?<a class="headerlink" href="#what-is-the-critical-path" title="Permanent link">&para;</a></h3>
 <p>The critical path is the longest chain of dependent tasks that determines when the project finishes. If any task on the critical path takes longer, the whole project takes longer. Tasks <em>not</em> on the critical path have slack — they can overrun without affecting the delivery date, up to a point.</p>
@@ -3047,7 +3063,6 @@ $$</p>
 <li><strong>Criticality &lt; 0.3</strong>: Rarely critical. This task has significant slack in most scenarios.</li>
 </ul>
 <p>If multiple tasks share high criticality, the project has several competing bottleneck paths. That actually <em>reduces</em> schedule risk compared to a single dominant path, because no one task controls the outcome.</p>
-<hr />
 <h2 id="max-parallel-tasks">Max parallel tasks<a class="headerlink" href="#max-parallel-tasks" title="Permanent link">&para;</a></h2>
 <p>The <strong>Max parallel tasks</strong> line reports the highest number of tasks that were scheduled to run at the same time in any single simulation iteration. The scheduler places every task at the earliest moment its dependencies allow, so two tasks without a dependency relationship can overlap.</p>
 <h3 id="how-it-is-calculated">How it is calculated<a class="headerlink" href="#how-it-is-calculated" title="Permanent link">&para;</a></h3>
@@ -3083,7 +3098,6 @@ $$</p>
 <li>If <strong>max parallel tasks ≤ team size</strong>: the simulation's parallelism assumption is realistic.</li>
 <li>If <strong>max parallel tasks &gt; team size</strong>: the simulation is optimistic. Consider adding explicit dependencies to serialise tasks that share a resource, or mentally adjust the percentiles upward.</li>
 </ul>
-<hr />
 <h2 id="staffing-recommendations">Staffing recommendations<a class="headerlink" href="#staffing-recommendations" title="Permanent link">&para;</a></h2>
 <p>The staffing advisory appears at the bottom of every simulation run. It answers the question: <em>"Given this project's parallelism and effort, how many people should work on it?"</em></p>
 <h3 id="the-advisory-line">The advisory line<a class="headerlink" href="#the-advisory-line" title="Permanent link">&para;</a></h3>
@@ -3337,7 +3351,6 @@ $$</p>
 <li>The communication overhead is linear in team size. Real-world overhead grows faster (some models use $n(n-1)/2$ communication channels); the linear model is a conservative simplification.</li>
 <li>The simulation already assumes unlimited parallelism, so the staffing recommendation does not change the simulated durations — it is an advisory layer on top of the existing results.</li>
 </ul>
-<hr />
 <h2 id="combining-the-analyses">Combining the analyses<a class="headerlink" href="#combining-the-analyses" title="Permanent link">&para;</a></h2>
 <p>The real power of these metrics comes from reading them together. Here is a decision framework:</p>
 <table>
@@ -3370,17 +3383,15 @@ $$</p>
 </tr>
 </tbody>
 </table>
-<hr />
 <h2 id="reducing-volatility">Reducing volatility<a class="headerlink" href="#reducing-volatility" title="Permanent link">&para;</a></h2>
 <p>If the spread between P50 and P90 is uncomfortably wide, consider:</p>
 <ul>
-<li><strong>Splitting large tasks</strong>: A single task with <code>min: 5, max: 40</code> contributes more variance than two tasks with <code>min: 3, max: 20</code> each, especially when they are on different dependency paths.</li>
+<li><strong>Splitting large tasks</strong>: A single task with <code>low: 5, high: 40</code> contributes more variance than two tasks with <code>low: 3, high: 20</code> each, especially when they are on different dependency paths.</li>
 <li><strong>Tightening estimate ranges</strong>: If subject-matter experts can narrow the gap between <code>min</code> and <code>max</code> after investigation, uncertainty drops directly.</li>
 <li><strong>Mitigating high-impact risks</strong>: Removing or reducing the probability of risks on critical tasks has the largest effect.</li>
 <li><strong>Adding parallel paths</strong>: Restructuring dependencies so that fewer tasks are in a single sequential chain reduces the chance of cascading delays.</li>
 <li><strong>Addressing high-sensitivity tasks first</strong>: Use the sensitivity analysis to focus effort where it matters most.</li>
 </ul>
-<hr />
 <h2 id="limitations-of-the-simulation">Limitations of the simulation<a class="headerlink" href="#limitations-of-the-simulation" title="Permanent link">&para;</a></h2>
 <p>Monte Carlo simulation is a powerful tool, but it has boundaries. Understanding them prevents over-reliance on the numbers.</p>
 <h3 id="what-the-simulation-does-well">What the simulation does well<a class="headerlink" href="#what-the-simulation-does-well" title="Permanent link">&para;</a></h3>
@@ -3410,7 +3421,6 @@ $$</p>
 </ul>
 <h3 id="calibration-matters">Calibration matters<a class="headerlink" href="#calibration-matters" title="Permanent link">&para;</a></h3>
 <p>The most useful thing you can do over time is <em>calibrate</em>: compare the simulation's P50 and P90 with actual outcomes, and adjust your estimation habits accordingly. If your P90 is consistently exceeded, your <code>max</code> values are too low. If P50 is consistently beaten, your <code>min</code> values may be too conservative — or your uncertainty factors are inflating estimates.</p>
-<hr />
 <h2 id="quick-reference">Quick reference<a class="headerlink" href="#quick-reference" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -3498,6 +3508,7 @@ $$</p>
 </tr>
 </tbody>
 </table>
+<p>\newpage</p>
 
 
 

@@ -663,6 +663,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/constrained/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resource and Calendar Constrained Scheduling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/running_simulations/" class="md-nav__link">
         
   
@@ -987,6 +1015,39 @@
     <span class="md-ellipsis">
       
         3.1 Functional Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#311-resource-and-calendar-constrained-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1.1 Resource and Calendar-Constrained Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#312-implementation-plan-for-resource-and-calendar-constrained-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1.2 Implementation Plan for Resource and Calendar-Constrained Scheduling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#313-implementation-decisions-and-selections-current-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1.3 Implementation Decisions and Selections (Current Baseline)
       
     </span>
   </a>
@@ -1486,10 +1547,8 @@
 
 <h1 id="monte-carlo-software-development-estimation-system">Monte Carlo Software Development Estimation System<a class="headerlink" href="#monte-carlo-software-development-estimation-system" title="Permanent link">&para;</a></h1>
 <h2 id="formal-specification-v10">Formal Specification v1.0<a class="headerlink" href="#formal-specification-v10" title="Permanent link">&para;</a></h2>
-<hr />
 <h2 id="1-executive-summary">1. Executive Summary<a class="headerlink" href="#1-executive-summary" title="Permanent link">&para;</a></h2>
 <p>This document specifies a Monte Carlo simulation system for software development effort estimation. The system models uncertainties in task duration, applies risk impacts, handles task dependencies, and generates probabilistic project completion forecasts through iterative simulation.</p>
-<hr />
 <h2 id="2-system-overview">2. System Overview<a class="headerlink" href="#2-system-overview" title="Permanent link">&para;</a></h2>
 <h3 id="21-purpose">2.1 Purpose<a class="headerlink" href="#21-purpose" title="Permanent link">&para;</a></h3>
 <p>Provide probabilistic estimates for software project completion through Monte Carlo simulation, accounting for task uncertainty, risk events, complexity factors, and resource constraints.</p>
@@ -1504,17 +1563,16 @@
 <li>Sensitivity analysis and critical path identification</li>
 <li>Export results to multiple formats (JSON, CSV, HTML reports)</li>
 </ul>
-<hr />
 <h2 id="3-detailed-requirements">3. Detailed Requirements<a class="headerlink" href="#3-detailed-requirements" title="Permanent link">&para;</a></h2>
 <h3 id="31-functional-requirements">3.1 Functional Requirements<a class="headerlink" href="#31-functional-requirements" title="Permanent link">&para;</a></h3>
 <p><strong>FR-001: Input File Parsing</strong>
 - The system SHALL parse project definition files in YAML or TOML format
 - The system SHALL validate input files against a defined schema
 - The system SHALL report specific validation errors with line numbers</p>
-<p><strong>FR-002: Triangular Distribution Sampling</strong>
-- Each task estimate SHALL be defined with either a triangular distribution specified with (minimum, most_likely, maximum) values or a log-normal distribution specified with (most_likely, standard_deviation)
+<p><strong>FR-002: Distribution Sampling</strong>
+- Each task estimate SHALL be defined with either a triangular distribution specified with (minimum, expected, maximum) values or a shifted log-normal distribution specified with (minimum, expected, maximum) values and a configured interpretation of the maximum as a percentile
 - The system SHALL sample from triangular distributions using numpy.random.triangular or a log-normal distributions using numpy.random.lognormal
-- The system SHALL validate that min ≤ most_likely ≤ max for a triangular distribution</p>
+- The system SHALL validate that low ≤ expected ≤ high for a triangular distribution</p>
 <p><strong>FR-003: Monte Carlo Simulation Execution</strong>
 - The system SHALL perform N iterations (configurable, default 10,000)
 - Each iteration SHALL sample all task durations independently
@@ -1625,6 +1683,166 @@
 - The system SHALL display the full staffing analysis table when the <code>--staffing</code> CLI flag is specified
 - The system SHALL include staffing recommendations and table data in JSON and CSV exports
 - The system SHALL offer configuration to decide which effort percentile to base staffing suggestion on</p>
+<h3 id="311-resource-and-calendar-constrained-scheduling">3.1.1 Resource and Calendar-Constrained Scheduling<a class="headerlink" href="#311-resource-and-calendar-constrained-scheduling" title="Permanent link">&para;</a></h3>
+<p><strong>FR-026: Team Size and Member Model</strong>
+- The system SHALL allow project-level <code>team_size</code> as an integer &gt;= 0.
+- If <code>team_size &gt; 0</code>, validation SHALL ensure the effective resource pool size equals <code>team_size</code> by auto-generating default resources when needed.
+- If <code>team_size</code> is omitted or <code>0</code>, no team-size-driven resources SHALL be generated.
+- Team members SHALL be identifiable for assignment, availability, and sickness modeling.</p>
+<p><strong>FR-027: Productivity and Experience Attributes</strong>
+- Each team member SHALL have default productivity 1.0 (1 person-hour per clock hour).
+- Productivity SHALL be configurable per member in the range 0.1 to 2.0.
+- Each team member SHALL have experience level 1, 2, or 3 (Junior, Mid, Expert).
+- Invalid productivity/experience values SHALL fail validation.</p>
+<p><strong>FR-028: Working Calendar Defaults and Holidays</strong>
+- The default calendar SHALL include Monday–Friday as working days and exclude weekends.
+- Projects MAY define public holidays as non-working dates.
+- Holidays SHALL be applied to calendar-time simulation and delivery-date forecasting.</p>
+<p><strong>FR-029: Member Time-Off and Vacation</strong>
+- The system SHALL support member-specific non-working dates (vacation/days off).
+- Member time off SHALL override default working-day availability for those dates.
+- Overlapping holidays/weekends/time-off SHALL not double-penalize availability.</p>
+<p><strong>FR-030: Calendar-Aware Percentiles and Dates</strong>
+- Calendar-time percentiles SHALL account for all non-working periods (weekends, holidays, member days off).
+- Delivery-date forecasts SHALL be computed from constrained schedules, not dependency-only elapsed hours.</p>
+<p><strong>FR-031: Task Resource Constraints and Qualification</strong>
+- Tasks SHALL support max concurrent assignees per task; default is 1 when unspecified.
+- Tasks SHALL support minimum experience requirement; default is level 1 when unspecified.
+- All members SHALL be eligible for all tasks unless constrained by minimum experience.
+- The scheduler SHALL never assign more than task max resources concurrently.
+- The scheduler SHALL also apply a practical auto-cap per task based on effort granularity and coordination limits.</p>
+<p><strong>FR-032: Sickness Event Modeling</strong>
+- Each member SHALL have a daily sickness-start probability in [0.0, 1.0].
+- Sickness start SHALL be modeled as independent Bernoulli trials per working day.
+- Sickness duration SHALL follow a log-normal distribution configured in config, with default mode 2 working days.
+- During sickness periods, member availability SHALL be zero.</p>
+<p><strong>FR-033: Resource Assignment Strategy</strong>
+- The system SHALL use deterministic greedy assignment when resource contention exists.
+- The strategy SHALL be deterministic for a fixed seed and equal-priority ties.
+- Tie-breaking rules SHALL be defined (ready tasks in sorted order, eligible resources in sorted order).
+- The scheduler SHALL start ready tasks with currently available eligible resources and SHALL NOT delay start to wait for additional resources.</p>
+<p><strong>FR-034: Two-Pass Critical-Path-Aware Simulation Mode</strong>
+- A two-pass critical-path-aware assignment mode MAY be added in a future release.
+- The current baseline does not expose two-pass mode as a CLI or config toggle.</p>
+<p><strong>FR-035: Resource/Calendar Reporting and Export</strong>
+- The system SHALL report resource-constrained metrics: wait time due to resource contention, utilization, and calendar delay contribution.
+- JSON/CSV/HTML exports SHALL include these metrics when resource mode is active.
+- CLI output SHALL distinguish dependency-only vs resource-constrained schedule semantics.</p>
+<p><strong>FR-036: Backward Compatibility and Fallback Behavior</strong>
+- Existing project files without resource/calendar/team fields SHALL remain valid.
+- In absence of explicit resource settings, behavior SHALL default to prior-compatible assumptions (task max resources=1, experience min=1, default calendar).
+- If neither resources nor team-size-generated resources exist, scheduling SHALL run in dependency-only mode.
+- Migration guidance SHALL be documented for adopting explicit team/resource definitions.</p>
+<p><strong>FR-037: Resource and Calendar Schema Validation</strong>
+- Team size SHALL be validated as an integer &gt;= 0.
+- Team-member productivity SHALL be validated in the closed range [0.1, 2.0].
+- Team-member experience level SHALL be validated as one of {1, 2, 3}.
+- Task-level <code>max_resources</code> SHALL be validated as an integer &gt;= 1.
+- Task-level <code>min_experience_level</code> SHALL be validated as one of {1, 2, 3}.
+- Calendar identifiers, resource identifiers, and task identifiers SHALL be unique within their namespaces.
+- References from tasks to resources/calendars SHALL be validated; unknown references SHALL fail validation.
+- If explicit resources exceed <code>team_size</code> (when <code>team_size &gt; 0</code>), validation SHALL fail.
+- Holiday, vacation, and day-off dates SHALL be validated as ISO 8601 dates.
+- Invalid sickness parameters (probability outside [0,1], invalid distribution parameters, or invalid start-day metadata) SHALL fail validation.</p>
+<p><strong>FR-038: Scheduling Semantics Under Resource Constraints</strong>
+- Resource-constrained scheduling SHALL preserve dependency constraints as hard constraints.
+- A task SHALL start only when dependencies are met and required resources satisfying minimum experience are available.
+- Tasks SHALL be non-preemptive by default once started; optional preemption behavior MAY be added later behind configuration.
+- When multiple eligible tasks compete for the same resource pool, the assignment policy SHALL apply deterministic tie-breaking.
+- Reported calendar duration SHALL be the completion time of the resource-constrained schedule, not a dependency-only earliest-start schedule.</p>
+<p><strong>FR-039: Calendar Computation Rules</strong>
+- Weekends, configured public holidays, individual vacations/days off, and sickness periods SHALL all be treated as non-working time for affected members.
+- Resource availability SHALL be computed at working-calendar granularity (working day and working hours per day).
+- Conversion between effort and elapsed calendar time SHALL use project <code>hours_per_day</code> and the active calendar/resource constraints.
+- Delivery-date forecasting SHALL use the resource- and calendar-constrained timeline.</p>
+<p><strong>FR-040: Sickness Configuration and Defaults</strong>
+- The sickness model SHALL support per-member default probability and optional day-specific overrides.
+- When day-specific overrides are present, they SHALL take precedence over the default daily probability for matching dates.
+- The default sickness-duration distribution SHALL be log-normal with mode = 2 working days.
+- Configuration SHALL expose parameters needed to reproduce the duration distribution (at minimum mode and dispersion).</p>
+<p><strong>FR-041: Reporting and Export Contract for Resource-Constrained Runs</strong>
+- CLI, JSON, CSV, and HTML outputs SHALL explicitly indicate whether resource/calendar constraints were active.
+- Outputs SHALL include resource-related diagnostics at minimum: average queue/wait time due to resource contention, effective utilization, and delay attributable to non-working periods.
+- Critical-path reporting SHALL document whether reported criticality reflects dependency-only paths or resource-constrained critical chains.
+- Comparative fields MAY include dependency-only baseline versus constrained schedule deltas when available.</p>
+<p><strong>FR-042: Two-Pass Mode Configuration and Acceptance Criteria</strong>
+- Two-pass mode SHALL be configurable with default disabled.
+- Pass 1 SHALL compute baseline criticality indices under configured resource/calendar constraints.
+- Pass 2 SHALL prioritize assignments for tasks ranked by pass-1 criticality, then allocate remaining capacity to other ready tasks.
+- The system SHALL expose deterministic acceptance tests demonstrating that two-pass mode does not violate dependency or resource constraints.
+- The system SHALL report pass-1 versus pass-2 outcome deltas for traceability.</p>
+<p><strong>FR-043: Unique Resource Naming and Defaulting Rules</strong>
+- Reources SHALL be specified as a vector in the project specification
+- Each resource specified individually SHALL have a unique <code>name</code> within the project.
+- If <code>experience_level</code> is omitted for a resource, the system SHALL default it to level 2.
+- If <code>productivity_level</code> is omitted for a resource, the system SHALL default it to 1.0.
+- If a resource entry omits <code>name</code>, the system SHALL assign a generated name using the format <code>resource_nnn</code>.
+- Generated names SHALL use ordered, zero-padded three-digit suffixes (<code>resource_001</code>, <code>resource_002</code>, <code>resource_003</code>, ...).
+- Auto-generated names SHALL also be validated for uniqueness against explicitly provided names.</p>
+<p><strong>FR-044: Resource Specification Schema</strong>
+- Each resource object SHALL support the fields <code>name</code>, <code>experience_level</code>, <code>productivity_level</code>, and <code>sickness_prob</code>.
+- Each resource object SHALL support <code>planned_absence</code> as a list of dates.
+- <code>planned_absence</code> dates SHALL be interpreted as non-working days for that resource.
+- <code>planned_absence</code> entries SHALL be validated as ISO 8601 dates.
+- Resource fields omitted by the user SHALL use defaults defined by FR-043 and FR-040.</p>
+<h3 id="312-implementation-plan-for-resource-and-calendar-constrained-scheduling">3.1.2 Implementation Plan for Resource and Calendar-Constrained Scheduling<a class="headerlink" href="#312-implementation-plan-for-resource-and-calendar-constrained-scheduling" title="Permanent link">&para;</a></h3>
+<p><strong>Phase A: DONE! Data Model and Schema Foundation</strong>
+- Add/normalize schema for team size, team members, productivity, experience, calendars, holidays, vacations/days off, sickness configuration, and task resource limits.
+- Implement validation rules from FR-037 and FR-040 across parser and model layers.
+- Preserve backward compatibility defaults per FR-036.</p>
+<p><strong>Phase B: DONE! Updated project file specification</strong>
+- Add parsing of resource specification in the projects specification from FR-043, FR-044
+- The documentation SHALL be described in user guide <code>project_files.md</code>
+- The grammar SHALL be formalized in <code>docs/grammar.md</code> with EBNF grammar for the resource and calendar specification</p>
+<p><strong>Phase C: Resource/Calendar Scheduling Core</strong>
+- Extend scheduler to enforce resource availability and minimum experience constraints while respecting dependencies.
+- Apply non-working calendar windows and member unavailability (holiday/vacation/sickness) during scheduling.
+- Ensure deterministic tie-breaking and reproducibility with fixed random seeds.</p>
+<p><strong>Phase D: Sickness and Availability Simulation</strong>
+- Implement per-member sickness start process and log-normal duration sampling.
+- Integrate sickness episodes into member availability timelines used by the scheduler.
+- Add targeted unit tests for probability bounds, distribution parameters, and edge cases.</p>
+<p><strong>Phase E: Two-Pass Critical-Path Prioritization</strong>
+- Implement configurable two-pass mode (default off).
+- Pass 1 computes constrained criticality; Pass 2 applies critical-path-prioritized assignment.
+- Add regression and determinism tests for pass-delta behavior.</p>
+<p><strong>Phase F: Metrics, Exports, and UX</strong>
+- Add resource/calendar diagnostics required by FR-041 to CLI and all exporters.
+- Annotate reports with schedule mode (dependency-only vs constrained).
+- Keep existing fields stable unless explicitly versioned.</p>
+<p><strong>Phase G: Documentation and Rollout</strong>
+- Update user/project file docs with canonical schema and migration examples.
+- Update algorithm and limitations sections to remove dependency-only caveats once implementation is complete.
+- Add end-to-end fixtures and performance checks for constrained schedules.</p>
+<h3 id="313-implementation-decisions-and-selections-current-baseline">3.1.3 Implementation Decisions and Selections (Current Baseline)<a class="headerlink" href="#313-implementation-decisions-and-selections-current-baseline" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Resource-constrained scheduling is implemented as an explicit scheduler mode (<code>use_resource_constraints</code>) to preserve backward compatibility for existing dependency-only workflows.</li>
+<li>Two scheduling modes are supported:</li>
+<li>dependency-only (<code>dependency_only</code>) when no resources are available after validation,</li>
+<li>resource-constrained (<code>resource_constrained</code>) when resources are available.</li>
+<li>Task execution in resource-constrained mode is non-preemptive in the current baseline.</li>
+<li>Resource assignment is deterministic and stable (sorted task IDs and resource names) to preserve reproducibility with fixed random seeds.</li>
+<li>Missing resource names are auto-generated in ordered format <code>resource_001</code>, <code>resource_002</code>, ... and validated for uniqueness.</li>
+<li>Legacy top-level resource field <code>id</code> is accepted as a backward-compatible fallback for <code>name</code>.</li>
+<li>Task-level resource references are validated against resolved resource names; unknown references fail fast during project validation.</li>
+<li>Calendar validation is introduced at schema level (ID uniqueness, work-day range 1..7, ISO-8601 date parsing for holidays/absences), while full calendar-aware scheduling behavior is implemented incrementally in later phases.</li>
+<li>Engine scheduling enables resource-constrained mode when validated resources are present; this includes resources explicitly defined in the project file and resources auto-generated from <code>team_size &gt; 0</code>.</li>
+<li><code>team_size</code> semantics in baseline:</li>
+<li><code>team_size</code> omitted or <code>0</code>: keep explicit resources only,</li>
+<li>explicit resources &gt; <code>team_size</code> (when <code>team_size &gt; 0</code>): validation error,</li>
+<li>explicit resources &lt; <code>team_size</code>: auto-fill with default resources up to <code>team_size</code>.</li>
+<li>In constrained mode, elapsed task duration is integrated over calendar windows and time-varying capacity rather than computed as a simple static ratio.</li>
+<li>Sickness episodes are generated per resource per iteration using an independent daily start probability and a log-normal duration model (default mode 2 days, baseline sigma 0.5).</li>
+<li>Planned absences and sickness days are treated as non-working days for affected resources in constrained scheduling.</li>
+<li>Working-time boundaries are currently modeled from day start with <code>work_hours_per_day</code> length; explicit shift start times are deferred to a later phase.</li>
+<li>Practical assignment cap is applied in constrained mode:</li>
+<li><code>granularity_cap = max(1, floor(task_effort_hours / MIN_EFFORT_PER_ASSIGNEE_HOURS))</code>,</li>
+<li><code>coordination_cap = MAX_ASSIGNEES_PER_TASK</code>,</li>
+<li>effective per-task auto-cap <code>= min(granularity_cap, coordination_cap)</code>.</li>
+<li>Current baseline constants are <code>MIN_EFFORT_PER_ASSIGNEE_HOURS = 16.0</code> and <code>MAX_ASSIGNEES_PER_TASK = 3</code>.</li>
+<li>Current assignment is greedy start-now: when at least one eligible resource is available, the task starts; scheduler does not wait for additional resources.</li>
+<li>Two-pass criticality-prioritized assignment is not currently enabled in baseline CLI/config.</li>
+</ul>
 <h3 id="32-non-functional-requirements">3.2 Non-Functional Requirements<a class="headerlink" href="#32-non-functional-requirements" title="Permanent link">&para;</a></h3>
 <p><strong>NFR-001: Performance</strong>
 - The system SHALL complete 50,000 iterations for a 100-task project in under 90 seconds on AMD64 architecture with 16GB of memory
@@ -1669,7 +1887,6 @@
 - The system SHALL log warnings and errors
 - Log level SHALL be configurable
 - Logs SHALL include timestamps and context</p>
-<hr />
 <h2 id="4-input-file-format-specification">4. Input File Format Specification<a class="headerlink" href="#4-input-file-format-specification" title="Permanent link">&para;</a></h2>
 <h3 id="41-project-definition-file-yamltoml">4.1 Project Definition File (YAML/TOML)<a class="headerlink" href="#41-project-definition-file-yamltoml" title="Permanent link">&para;</a></h3>
 <p>The primary input is a project definition file containing:</p>
@@ -1706,9 +1923,9 @@
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Database</span><span class="nv"> </span><span class="s">schema</span><span class="nv"> </span><span class="s">design&quot;</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Design</span><span class="nv"> </span><span class="s">normalized</span><span class="nv"> </span><span class="s">schema</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">customer</span><span class="nv"> </span><span class="s">data&quot;</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">      </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span><span class="w">  </span><span class="c1"># &quot;hours&quot; (default), &quot;days&quot;, or &quot;weeks&quot;; converted to hours internally</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># No predecessors</span>
@@ -1721,27 +1938,29 @@
 </span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">      </span><span class="nt">integration_complexity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;low&quot;</span>
 </span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
 </span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">    </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;backend_dev_1&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;dba_1&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Optional</span>
-</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>
-</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="nt">risks</span><span class="p">:</span>
-</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_risk_001&quot;</span>
-</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Schema</span><span class="nv"> </span><span class="s">migration</span><span class="nv"> </span><span class="s">issues&quot;</span>
-</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">        </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.20</span>
-</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">        </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">  </span><span class="c1"># hours (plain numbers are always hours)</span>
-</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>
-</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_002&quot;</span>
-</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;API</span><span class="nv"> </span><span class="s">endpoint</span><span class="nv"> </span><span class="s">implementation&quot;</span>
-</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">      </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">      </span><span class="nt">most_likely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">      </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
-</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span><span class="w">  </span><span class="c1"># Converted to hours using hours_per_day</span>
-</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_001&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Depends on task_001</span>
-</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="w">    </span><span class="nt">uncertainty_factors</span><span class="p">:</span>
-</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="w">      </span><span class="nt">team_experience</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
-</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="w">      </span><span class="nt">requirements_maturity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
-</span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="w">      </span><span class="nt">technical_complexity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
-</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="w">    </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;backend_dev_1&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;backend_dev_2&quot;</span><span class="p p-Indicator">]</span>
-</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="w">    </span><span class="nt">risks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="nt">max_resources</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="nt">min_experience_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">    </span><span class="nt">risks</span><span class="p">:</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_risk_001&quot;</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Schema</span><span class="nv"> </span><span class="s">migration</span><span class="nv"> </span><span class="s">issues&quot;</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">        </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.20</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">        </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">  </span><span class="c1"># hours (plain numbers are always hours)</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_002&quot;</span>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;API</span><span class="nv"> </span><span class="s">endpoint</span><span class="nv"> </span><span class="s">implementation&quot;</span>
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span><span class="w">  </span><span class="c1"># Converted to hours using hours_per_day</span>
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_001&quot;</span><span class="p p-Indicator">]</span><span class="w">  </span><span class="c1"># Depends on task_001</span>
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="w">    </span><span class="nt">uncertainty_factors</span><span class="p">:</span>
+</span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="w">      </span><span class="nt">team_experience</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
+</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="w">      </span><span class="nt">requirements_maturity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
+</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="w">      </span><span class="nt">technical_complexity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
+</span><span id="__span-2-42"><a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a><span class="w">    </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;backend_dev_1&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;backend_dev_2&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-43"><a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="w">    </span><span class="nt">risks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span></code></pre></div>
 <h4 id="414-resource-definitions-optional">4.1.4 Resource Definitions (Optional)<a class="headerlink" href="#414-resource-definitions-optional" title="Permanent link">&para;</a></h4>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">resources</span><span class="p">:</span>
@@ -1799,7 +2018,6 @@
 </span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="w">  </span><span class="nt">include_histogram</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="w">  </span><span class="nt">histogram_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
 </span></code></pre></div>
-<hr />
 <h2 id="5-system-architecture">5. System Architecture<a class="headerlink" href="#5-system-architecture" title="Permanent link">&para;</a></h2>
 <h3 id="51-module-structure">5.1 Module Structure<a class="headerlink" href="#51-module-structure" title="Permanent link">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>monte_carlo_estimator/
@@ -1874,7 +2092,7 @@
 </ul>
 <h4 id="task">Task<a class="headerlink" href="#task" title="Permanent link">&para;</a></h4>
 <ul>
-<li>Properties: id, name, estimate (min, most_likely, max), dependencies, uncertainty_factors, risks, resources</li>
+<li>Properties: id, name, estimate (min, expected, max), dependencies, uncertainty_factors, risks, resources</li>
 <li>Methods: calculate_adjusted_estimate(), has_dependency()</li>
 </ul>
 <h4 id="risk">Risk<a class="headerlink" href="#risk" title="Permanent link">&para;</a></h4>
@@ -1895,7 +2113,6 @@
 <ul>
 <li>Methods: calculate_statistics(), generate_histogram(), compute_percentiles()</li>
 </ul>
-<hr />
 <h2 id="6-algorithms">6. Algorithms<a class="headerlink" href="#6-algorithms" title="Permanent link">&para;</a></h2>
 <h3 id="61-monte-carlo-simulation-loop">6.1 Monte Carlo Simulation Loop<a class="headerlink" href="#61-monte-carlo-simulation-loop" title="Permanent link">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>FOR iteration = 1 TO N:
@@ -1903,7 +2120,7 @@
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    FOR each task:
 </span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        # Sample base duration
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        base = sample_triangular(task.min, task.most_likely, task.max)
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        base = sample_triangular(task.min, task.expected, task.max)
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        # Apply uncertainty factors
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        adjusted = base * product(uncertainty_multipliers)
@@ -1934,21 +2151,18 @@
 <ul>
 <li>In engine.py, each iteration first samples every task duration from its estimate distribution.</li>
 <li>The engine then adjusts each sampled duration with uncertainty factors and task-level risks before scheduling.</li>
-<li>After that, scheduler.py computes an earliest-start schedule using only dependency constraints: </li>
-<li>tasks with no dependencies start at time 0,</li>
-<li>a task starts at the maximum end time of its predecessors,</li>
-<li>independent tasks therefore do run in parallel today.</li>
-<li>Project duration is then computed as the maximum end time in the schedule, not as the sum of all task durations. That directly contradicts the idea that the engine just adds all task efforts together.</li>
-<li>Only after the scheduled project duration is known does the engine apply project-level risks. This means project-wide risk penalties affect final duration, but they do not affect critical-path membership for that iteration.</li>
-<li>The scheduler then identifies the critical path for that iteration by:</li>
-<li>finding every task that ends exactly at project completion,</li>
-<li>recursively walking backward through predecessors whose end time exactly matches the successor’s start time,</li>
-<li>collecting all such tasks into a set.</li>
+<li>The scheduler mode is selected per iteration from validated project resources:</li>
+<li><code>dependency_only</code> when no resources exist,</li>
+<li><code>resource_constrained</code> when resources exist (explicitly defined or generated from <code>team_size &gt; 0</code>).</li>
+<li>In dependency-only mode, tasks start at earliest dependency-feasible times.</li>
+<li>In resource-constrained mode, start and end times also depend on eligibility (<code>resources</code>, <code>min_experience_level</code>), assignment caps (<code>max_resources</code> and practical auto-cap), calendars, planned absence, and sickness episodes.</li>
+<li>Project duration is computed as the maximum task end time in the resulting schedule, not as the sum of task durations.</li>
+<li>Only after scheduled duration is known does the engine apply project-level risks.</li>
 </ul>
 <h3 id="64-critical-path-identification">6.4 Critical Path Identification<a class="headerlink" href="#64-critical-path-identification" title="Permanent link">&para;</a></h3>
 <p>For each iteration, identify the longest path through the task network. Track frequency of each task appearing on critical path.</p>
 <ul>
-<li>This is a dependency-only critical path, not a resource-constrained critical chain.</li>
+<li>Critical-path tracing is currently based on dependency timing relationships in the realized schedule.</li>
 <li>A task is counted as critical in an iteration if it lies on at least one longest dependency path in that specific sampled schedule.</li>
 <li>Across all iterations, the engine increments a counter per task in the results field critical_path_frequency in simulation.py.</li>
 <li>The method get_critical_path then converts those counts into a criticality index by dividing by the number of iterations.</li>
@@ -1956,14 +2170,12 @@
 </ul>
 <h3 id="65-limitations">6.5 Limitations<a class="headerlink" href="#65-limitations" title="Permanent link">&para;</a></h3>
 <ul>
-<li>No resource constraints are used in scheduling today. The scheduler ignores task resources, project resources, and calendars.</li>
-<li>That means the current critical path is purely precedence-based.</li>
-<li>Top-level resources and calendars are parsed into the project model, but they are <strong>NOT</strong> used in scheduling (yet)</li>
-<li>Task-level resources are also present in the model, but not consumed by the scheduler.</li>
+<li>Two-pass criticality-prioritized assignment mode is not currently enabled as a user-facing toggle.</li>
+<li>Assignment strategy is deterministic greedy rather than globally optimal schedule optimization.</li>
+<li>Critical-path reporting reflects dependency relationships and should not be interpreted as a full resource-critical-chain optimizer.</li>
 <li>Project-level risks are applied after schedule calculation, so they can make the project finish later without changing which tasks were counted as critical.</li>
 <li>If multiple terminal tasks finish at the same project end time, the code traces all of them, so one iteration can contribute multiple branches rather than one single canonical path.</li>
 </ul>
-<hr />
 <h2 id="7-technology-stack">7. Technology Stack<a class="headerlink" href="#7-technology-stack" title="Permanent link">&para;</a></h2>
 <h3 id="71-core-dependencies">7.1 Core Dependencies<a class="headerlink" href="#71-core-dependencies" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1990,7 +2202,6 @@
 <li><strong>mkdocs-material</strong>: 9.0+ (Material theme)</li>
 <li><strong>mkdocstrings</strong>: 0.22+ (API documentation from docstrings)</li>
 </ul>
-<hr />
 <h2 id="8-usage-examples">8. Usage Examples<a class="headerlink" href="#8-usage-examples" title="Permanent link">&para;</a></h2>
 <h3 id="81-command-line-interface">8.1 Command-Line Interface<a class="headerlink" href="#81-command-line-interface" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Run simulation with default settings</span>
@@ -2037,13 +2248,12 @@
 </span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="k">for</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">criticality</span> <span class="ow">in</span> <span class="n">critical_tasks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 </span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">criticality</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">% critical&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<hr />
 <h2 id="9-validation-rules">9. Validation Rules<a class="headerlink" href="#9-validation-rules" title="Permanent link">&para;</a></h2>
 <ol>
 <li>All task IDs must be unique</li>
 <li>All dependency references must exist</li>
 <li>No circular dependencies</li>
-<li>Estimate: min ≤ most_likely ≤ max</li>
+<li>Estimate: low ≤ expected ≤ high</li>
 <li>Probabilities must be in range [0, 1]</li>
 <li>Impacts must be non-negative</li>
 <li>Start date must be valid ISO 8601 format</li>
@@ -2051,7 +2261,6 @@
 <li>Uncertainty factor levels must match config definitions</li>
 <li>At least one task must be defined</li>
 </ol>
-<hr />
 <h2 id="10-output-formats">10. Output Formats<a class="headerlink" href="#10-output-formats" title="Permanent link">&para;</a></h2>
 <h3 id="101-json-output">10.1 JSON Output<a class="headerlink" href="#101-json-output" title="Permanent link">&para;</a></h3>
 <p>Complete simulation results with all statistics, histogram data, and metadata.</p>
@@ -2065,7 +2274,6 @@
 - Critical path analysis
 - Sensitivity analysis chart
 - Risk impact summary</p>
-<hr />
 <h2 id="11-future-enhancements-out-of-scope-for-v10">11. Future Enhancements (Out of Scope for v1.0)<a class="headerlink" href="#11-future-enhancements-out-of-scope-for-v10" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Support for PERT distribution as alternative to triangular</li>
@@ -2079,7 +2287,6 @@
 <li>Correlation between task durations (currently assumes independence)</li>
 <li>Weather/external factor modeling</li>
 </ol>
-<hr />
 <h2 id="12-references">12. References<a class="headerlink" href="#12-references" title="Permanent link">&para;</a></h2>
 <ul>
 <li><em>Software Estimation: Demystifying the Black Art</em> by Steve McConnell</li>
@@ -2088,7 +2295,6 @@
 <li>NIST Guide for Risk Analysis</li>
 <li>PMI PMBOK Guide (7th Edition)</li>
 </ul>
-<hr />
 <h2 id="document-control">Document Control<a class="headerlink" href="#document-control" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2108,7 +2314,6 @@
 </tr>
 </tbody>
 </table>
-<hr />
 <p><strong>End of Specification</strong></p>
 
 
