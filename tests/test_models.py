@@ -44,7 +44,9 @@ class TestTaskEstimate:
 
     def test_triangular_distribution_missing_params(self):
         """Test triangular distribution with missing parameters."""
-        with pytest.raises(ValueError, match="requires low, expected, and high"):
+        with pytest.raises(
+            ValueError, match="Explicit estimates require low, expected, and high"
+        ):
             TaskEstimate(
                 distribution=DistributionType.TRIANGULAR,
                 expected=5.0,
@@ -54,20 +56,32 @@ class TestTaskEstimate:
         """Test valid lognormal distribution."""
         estimate = TaskEstimate(
             distribution=DistributionType.LOGNORMAL,
+            low=2.0,
             expected=5.0,
-            standard_deviation=2.0,
+            high=16.0,
         )
+        assert estimate.low == 2.0
         assert estimate.expected == 5.0
-        assert estimate.standard_deviation == 2.0
+        assert estimate.high == 16.0
 
     def test_lognormal_distribution_missing_params(self):
         """Test lognormal distribution with missing parameters."""
         with pytest.raises(
-            ValueError, match="requires expected and standard_deviation"
+            ValueError, match="Explicit estimates require low, expected, and high"
         ):
             TaskEstimate(
                 distribution=DistributionType.LOGNORMAL,
                 expected=5.0,
+            )
+
+    def test_lognormal_distribution_requires_strict_range(self):
+        """Shifted lognormal fitting needs a strictly increasing range."""
+        with pytest.raises(ValueError, match="requires low < expected < high"):
+            TaskEstimate(
+                distribution=DistributionType.LOGNORMAL,
+                low=5.0,
+                expected=5.0,
+                high=10.0,
             )
 
     def test_tshirt_size_valid(self):
@@ -243,6 +257,27 @@ class TestProject:
         )
         assert project.project.name == "Test Project"
         assert len(project.tasks) == 1
+
+    def test_project_level_lognormal_default_validates_task_ranges(self):
+        """Project-level default distribution should validate explicit task ranges."""
+        with pytest.raises(
+            ValueError,
+            match="Task task_001: Lognormal distribution requires low < expected < high",
+        ):
+            Project(
+                project=ProjectMetadata(
+                    name="Test Project",
+                    start_date=date(2025, 1, 1),
+                    distribution=DistributionType.LOGNORMAL,
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(low=1, expected=1, high=5),
+                    )
+                ],
+            )
 
     def test_project_team_size_metadata(self):
         """Test project metadata accepts team size."""

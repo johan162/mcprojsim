@@ -3,6 +3,7 @@
 from copy import deepcopy
 from enum import Enum
 from pathlib import Path
+from statistics import NormalDist
 from typing import Any, Dict, Optional
 
 import yaml
@@ -31,6 +32,8 @@ DEFAULT_CRITICAL_PATH_REPORT_LIMIT = 2
 DEFAULT_CONFIDENCE_LEVELS = [25, 50, 75, 80, 85, 90, 95, 99]
 DEFAULT_PROBABILITY_RED_THRESHOLD = 0.50
 DEFAULT_PROBABILITY_GREEN_THRESHOLD = 0.90
+DEFAULT_LOGNORMAL_HIGH_PERCENTILE = 95
+ALLOWED_LOGNORMAL_HIGH_PERCENTILES = [70, 75, 80, 85, 90, 95, 99]
 DEFAULT_UNCERTAINTY_FACTOR_LEVELS = {
     "team_experience": "medium",
     "requirements_maturity": "medium",
@@ -82,6 +85,9 @@ def _build_default_config_data() -> dict[str, Any]:
             "default_iterations": DEFAULT_SIMULATION_ITERATIONS,
             "random_seed": None,
             "max_stored_critical_paths": DEFAULT_MAX_STORED_CRITICAL_PATHS,
+        },
+        "lognormal": {
+            "high_percentile": DEFAULT_LOGNORMAL_HIGH_PERCENTILE,
         },
         "output": {
             "formats": list(DEFAULT_OUTPUT_FORMATS),
@@ -141,6 +147,22 @@ class SimulationConfig(BaseModel):
         default=DEFAULT_MAX_STORED_CRITICAL_PATHS,
         gt=0,
     )
+
+
+class LogNormalConfig(BaseModel):
+    """Shifted log-normal interpretation settings."""
+
+    high_percentile: int = Field(default=DEFAULT_LOGNORMAL_HIGH_PERCENTILE)
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.high_percentile not in ALLOWED_LOGNORMAL_HIGH_PERCENTILES:
+            allowed = ", ".join(
+                str(value) for value in ALLOWED_LOGNORMAL_HIGH_PERCENTILES
+            )
+            raise ValueError(
+                "lognormal.high_percentile must be one of: "
+                f"{allowed}; got {self.high_percentile}"
+            )
 
 
 class OutputConfig(BaseModel):
@@ -227,6 +249,7 @@ class Config(BaseModel):
     story_points: Dict[int, StoryPointConfig] = Field(default_factory=dict)
     story_point_unit: EffortUnit = Field(default=EffortUnit.DAYS)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
+    lognormal: LogNormalConfig = Field(default_factory=LogNormalConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     staffing: StaffingConfig = Field(default_factory=StaffingConfig)
 
@@ -292,3 +315,7 @@ class Config(BaseModel):
             StoryPointConfig object or None if not found
         """
         return self.story_points.get(points)
+
+    def get_lognormal_high_z_value(self) -> float:
+        """Return the z-score for the configured shifted-lognormal high percentile."""
+        return NormalDist().inv_cdf(self.lognormal.high_percentile / 100.0)

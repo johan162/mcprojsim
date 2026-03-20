@@ -164,23 +164,55 @@ estimate:
 
 ### Log-normal distribution
 
-The log-normal distribution is an alternative that produces a right-skewed, unbounded distribution. It is useful for tasks where the upside risk (overrun) is potentially much larger than the downside opportunity (early finish).
+The log-normal distribution is an alternative that produces a right-skewed,
+unbounded distribution. It is useful for tasks where the upside risk (overrun)
+is potentially much larger than the downside opportunity (early finish).
+
+`mcprojsim` implements this as a **shifted log-normal** so end users can keep
+working with the same `low`, `expected`, and `high` fields they already use for
+triangular estimates.
 
 **Properties:**
 
 | Property | Description |
 |----------|-------------|
 | Shape | Right-skewed, long tail toward high values |
-| Parameters | `expected` (mode), `standard_deviation` (sigma) |
-| Support | All positive values — no upper bound |
-| Skewness | Always right-skewed; heavier tail with larger sigma |
+| Parameters | `low`, `expected`, `high`, plus configured percentile for `high` |
+| Support | All values greater than `low` |
+| Skewness | Always right-skewed; heavier tail with larger fitted sigma |
 | Implementation | `numpy.random.lognormal` |
 
-The `expected` value is used as the distribution's mode. Internally, the simulator converts it to the log-normal `mu` parameter using the relationship:
+Internally the simulator defines a shifted variable:
 
-$$\mu = \ln(\text{most\_likely}) + \sigma^2$$
+$$Y = X - \text{low}$$
 
-where $\sigma$ is the `standard_deviation` value you provide.
+where $X$ is the actual duration and $Y$ follows a standard log-normal
+distribution.
+
+The inputs are interpreted as:
+
+- `low`: hard minimum / shift
+- `expected`: mode of $X$
+- `high`: configured percentile of $X$ (P95 by default)
+
+This gives:
+
+$$e^{\mu - \sigma^2} = \text{expected} - \text{low}$$
+
+and
+
+$$e^{\mu + z_p\sigma} = \text{high} - \text{low}$$
+
+where $z_p$ is the z-score for the configured percentile. For the default P95,
+$z_p \approx 1.645$.
+
+Subtracting the two equations yields:
+
+$$\sigma^2 + z_p\sigma = \ln(\text{high} - \text{low}) - \ln(\text{expected} - \text{low})$$
+
+The simulator solves that quadratic for the positive $\sigma$, then computes:
+
+$$\mu = \ln(\text{expected} - \text{low}) + \sigma^2$$
 
 **When to use it:**
 
@@ -200,21 +232,15 @@ where $\sigma$ is the `standard_deviation` value you provide.
 ```yaml
 estimate:
   distribution: "lognormal"
+  low: 2
   expected: 5
-  standard_deviation: 0.5
+  high: 14
   unit: "days"
 ```
 
-The `standard_deviation` parameter controls the spread. A smaller value (e.g., 0.3) produces a relatively tight distribution clustered around the mode. A larger value (e.g., 1.0 or above) produces a wide distribution with a long right tail.
-
-**Effect of standard deviation on spread:**
-
-| `standard_deviation` | Behavior |
-|---------------------|----------|
-| 0.3                 | Tight — most samples close to `expected` |
-| 0.5                 | Moderate spread |
-| 0.8                 | Wide — noticeable right tail |
-| 1.0                 | Very wide — occasional extreme outliers |
+Here, 2 days is the minimum, 5 days is the most likely outcome, and 14 days is
+interpreted as the configured high percentile (P95 by default). Wider gaps
+between `expected` and `high` produce a heavier right tail.
 
 **Example: a research task with high uncertainty**
 
@@ -224,8 +250,9 @@ tasks:
     name: "Prototype ML model"
     estimate:
       distribution: "lognormal"
+      low: 4
       expected: 10
-      standard_deviation: 0.8
+      high: 30
       unit: "days"
     dependencies: []
 ```
@@ -237,7 +264,7 @@ Here, the most likely duration is 10 days, but the long right tail means that in
 | Aspect | Triangular | Log-normal |
 |--------|-----------|------------|
 | Bounded | Yes — samples always within [min, max] | No — no upper bound |
-| Parameters | `low`, `expected`, `high` | `expected`, `standard_deviation` |
+| Parameters | `low`, `expected`, `high` | `low`, `expected`, `high` + configured high percentile |
 | Skewness | Depends on parameter placement | Always right-skewed |
 | Intuition | Easy to explain to non-technical stakeholders | Requires more statistical background |
 | Extreme values | Impossible beyond stated bounds | Possible — long tail |
@@ -578,8 +605,9 @@ tasks:
     name: "Technology research"
     estimate:
       distribution: "lognormal"
+      low: 3
       expected: 8
-      standard_deviation: 0.6
+      high: 20
       unit: "days"
     dependencies: []
 
@@ -704,8 +732,8 @@ The resolved values are then converted to hours using the same conversion logic.
 | `low` < `high` | Triangular distribution | Yes — NumPy requires strict inequality |
 | `expected` > 0 | All explicit estimates | Yes — zero or negative not allowed |
 | `low` ≥ 0 | Triangular distribution | Yes — negative values not allowed |
-| `standard_deviation` > 0 | Log-normal distribution | Yes — must be positive |
-| `expected` and `standard_deviation` both provided | Log-normal distribution | Yes — both required |
+| `low` < `expected` < `high` | Log-normal distribution | Yes — shifted fit requires a strict range |
+| `low`, `expected`, `high` all provided | Log-normal distribution | Yes — all three required |
 | `low`, `expected`, `high` all provided | Triangular distribution | Yes — all three required |
 | Only one symbolic type | T-shirt / story point | Yes — cannot use both on one task |
 | Story point value in allowed set | Story points | Yes — must be 1, 2, 3, 5, 8, 13, or 21 |
@@ -719,12 +747,11 @@ The resolved values are then converted to hours using the same conversion logic.
 | Estimation method | Required fields | Distribution | Good for |
 |-------------------|----------------|--------------|----------|
 | Explicit range (triangular) | `low`, `expected`, `high` | Triangular (bounded) | Well-understood tasks with clear bounds |
-| Explicit range (log-normal) | `expected`, `standard_deviation`, `distribution: "lognormal"` | Log-normal (unbounded) | Exploratory tasks with open-ended risk |
-| T-shirt size | `t_shirt_size` | Triangular (via config lookup) | Relative estimation, early planning |
-| Story points | `story_points` | Triangular (via config lookup) | Agile teams using story point practices |
+| Explicit range (log-normal) | `low`, `expected`, `high`, `distribution: "lognormal"` | Shifted log-normal | Exploratory tasks with open-ended risk |
+| T-shirt size | `t_shirt_size` | Inherits project/task distribution after config lookup | Relative estimation, early planning |
+| Story points | `story_points` | Inherits project/task distribution after config lookup | Agile teams using story point practices |
 
 All methods produce the same kind of output: a sampled duration for each iteration. The choice of method depends on what information the team is comfortable providing, not on any difference in simulation behavior.
 
 \newpage
-
 

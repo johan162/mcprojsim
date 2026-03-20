@@ -93,13 +93,16 @@ tasks:
     name: "Research new technology"
     estimate:
       distribution: "lognormal"
+      low: 2
       expected: 5
-      standard_deviation: 2
+      high: 14
       unit: "days"
     dependencies: []
 ```
 
-The log-normal distribution produces a heavier right tail, making it suitable for research, exploration, or tasks with high uncertainty about upper bounds.
+The shifted log-normal distribution produces a heavier right tail, making it
+suitable for research, exploration, or tasks with high uncertainty about upper
+bounds.
 
 
 

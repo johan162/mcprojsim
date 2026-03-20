@@ -604,8 +604,9 @@ tasks:
     name: "Research new technology"
     estimate:
       distribution: "lognormal"
+      low: 2
       expected: 5
-      standard_deviation: 2
+      high: 14
       unit: "days"
     dependencies: []
 ```

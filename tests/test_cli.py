@@ -9,6 +9,7 @@ from click.testing import CliRunner
 from mcprojsim import __version__
 from mcprojsim.cli import cli
 from mcprojsim.config import DEFAULT_SIMULATION_ITERATIONS
+from mcprojsim.simulation.distributions import fit_shifted_lognormal
 
 
 class TestCli:
@@ -337,6 +338,59 @@ class TestCli:
         assert result.exit_code == 0
         assert "Simulation time: 12.34 seconds" in result.output
         assert "Peak simulation memory: 64.00 MiB" in result.output
+
+    def test_config_show_displays_shifted_lognormal_parameters(self) -> None:
+        """The config show command should include derived log-normal parameters."""
+        runner = CliRunner()
+
+        result = runner.invoke(cli, ["config", "show"])
+
+        assert result.exit_code == 0
+        default_z = 1.6448536269514722
+        tshirt_mu, tshirt_sigma = fit_shifted_lognormal(40, 60, 120, default_z)
+        story_mu, story_sigma = fit_shifted_lognormal(3, 5, 8, default_z)
+        assert (
+            "    lognormal params: "
+            f"mu: {tshirt_mu:.4f}, sigma: {tshirt_sigma:.4f}, "
+            f"z-score: {default_z:.4f}"
+        ) in result.output
+        assert (
+            "    lognormal params: "
+            f"mu: {story_mu:.4f}, sigma: {story_sigma:.4f}, "
+            f"z-score: {default_z:.4f}"
+        ) in result.output
+
+    def test_config_show_uses_custom_lognormal_percentile(self, tmp_path) -> None:
+        """Custom config percentiles should change displayed z-scores and fit."""
+        runner = CliRunner()
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "lognormal": {"high_percentile": 90},
+                    "t_shirt_sizes": {"M": {"low": 4, "expected": 6, "high": 10}},
+                    "story_points": {5: {"low": 2, "expected": 3, "high": 7}},
+                }
+            )
+        )
+
+        result = runner.invoke(cli, ["config", "show", "-c", str(config_file)])
+
+        assert result.exit_code == 0
+        custom_z = 1.2815515655446008
+        tshirt_mu, tshirt_sigma = fit_shifted_lognormal(4, 6, 10, custom_z)
+        story_mu, story_sigma = fit_shifted_lognormal(2, 3, 7, custom_z)
+        assert "High percentile for 'high' value: P90" in result.output
+        assert (
+            "    lognormal params: "
+            f"mu: {tshirt_mu:.4f}, sigma: {tshirt_sigma:.4f}, "
+            f"z-score: {custom_z:.4f}"
+        ) in result.output
+        assert (
+            "    lognormal params: "
+            f"mu: {story_mu:.4f}, sigma: {story_sigma:.4f}, "
+            f"z-score: {custom_z:.4f}"
+        ) in result.output
 
     def test_simulate_double_quiet_suppresses_all_normal_output(
         self, monkeypatch

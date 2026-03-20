@@ -96,8 +96,9 @@ This document provides a complete formal grammar specification for Monte Carlo P
                          <unit>
 
 <lognormal_estimate> ::= "distribution:" "lognormal"
+                        <min_value>
                         <expected_value>
-                        <standard_deviation>
+                        <max_value>
                         <unit>
 
 <tshirt_estimate> ::= "t_shirt_size:" <tshirt_size>
@@ -115,8 +116,6 @@ This document provides a complete formal grammar specification for Monte Carlo P
 <expected_value> ::= "expected:" <positive_number>
 
 <max_value> ::= "high:" <positive_number>
-
-<standard_deviation> ::= "standard_deviation:" <positive_number>
 
 <unit> ::= "unit:" <time_unit>
 
@@ -310,8 +309,7 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
    - `min` ≤ `expected` ≤ `max`
    - All values must be positive
 3. **Estimate Validity** (Log-Normal):
-   - `expected` > 0
-   - `standard_deviation` > 0
+   - `low` < `expected` < `high`
 4. **Estimate Validity** (T-Shirt Size):
    - Must be one of: `XS`, `S`, `M`, `L`, `XL`, `XXL`
    - Values are resolved from configuration file
@@ -414,8 +412,9 @@ tasks:
     name: "Integration"
     estimate:
       distribution: "lognormal"
+      low: 1
       expected: 3
-      standard_deviation: 1.5
+      high: 8
       unit: "days"
     dependencies: ["task_001"]
 

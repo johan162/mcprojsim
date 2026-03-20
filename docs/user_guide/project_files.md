@@ -156,6 +156,7 @@ The `project` section is required. It contains project-level metadata and report
 | `currency` | No | string | `"USD"` | Stored as metadata |
 | `confidence_levels` | No | list of integers | `[25, 50, 75, 80, 85, 90, 95, 99]` | Controls reported percentiles |
 | `hours_per_day` | No | float | `8.0` | Hours in a working day; used for day/week conversion |
+| `distribution` | No | `"triangular"` or `"lognormal"` | `"triangular"` | Default estimate distribution for tasks that do not specify one |
 | `team_size` | No | integer | `null` | If > `0`, target total resources after validation (may auto-create defaults) |
 | `probability_red_threshold` | No | float | `0.50` | Must be between `0.0` and `1.0` |
 | `probability_green_threshold` | No | float | `0.90` | Must be between `0.0` and `1.0` |
@@ -167,6 +168,7 @@ The implementation currently enforces these rules for `project`:
 - `start_date` must be a valid ISO-format date string or a date object,
 - `probability_red_threshold` must be less than `probability_green_threshold`,
 - both thresholds must be in the range `0.0` to `1.0`,
+- `distribution`, if provided, must be either `triangular` or `lognormal`,
 - if provided, `team_size` must be `>= 0`,
 - if `team_size > 0` and explicit `resources` are fewer, default resources are added up to `team_size`,
 - if explicit `resources` exceed `team_size`, validation fails.
@@ -179,6 +181,7 @@ project:
   description: "Next-generation customer portal with enhanced features"
   start_date: "2025-11-01"
   currency: "USD"
+  distribution: "triangular"
   confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
   probability_red_threshold: 0.50
   probability_green_threshold: 0.90
@@ -192,6 +195,7 @@ name = "Customer Portal Redesign"
 description = "Next-generation customer portal with enhanced features"
 start_date = "2025-11-01"
 currency = "USD"
+distribution = "triangular"
 confidence_levels = [25, 50, 75, 80, 85, 90, 95, 99]
 probability_red_threshold = 0.50
 probability_green_threshold = 0.90
@@ -302,15 +306,22 @@ unit = "days"
 
 ### 2. Log-normal estimate
 
-The implementation also supports log-normal estimates.
+The implementation also supports **shifted** log-normal estimates. In this mode
+you still provide `low`, `expected`, and `high`, but they are interpreted
+differently:
+
+- `low` is the hard shift / minimum,
+- `expected` is the mode,
+- `high` is interpreted as the configured percentile (P95 by default; see `lognormal.high_percentile` in the configuration file).
 
 #### Supported fields
 
 | Field | Required | Type | Notes |
 |---|---|---|---|
 | `distribution` | Yes | `"lognormal"` | Must be set explicitly |
+| `low` | Yes | number ≥ 0 | Required |
 | `expected` | Yes | number > 0 | Required |
-| `standard_deviation` | Yes | number > 0 | Required |
+| `high` | Yes | number ≥ 0 | Required |
 | `unit` | No | `"hours"`, `"days"`, or `"weeks"` | `"hours"` |
 
 #### Validation rules
@@ -318,19 +329,20 @@ The implementation also supports log-normal estimates.
 For a log-normal estimate:
 
 - `distribution` must be `lognormal`,
+- `low` must be present,
 - `expected` must be present,
-- `standard_deviation` must be present.
+- `high` must be present,
+- `low < expected < high`,
 - `unit` must be one of `"hours"`, `"days"`, or `"weeks"` if specified.
-
-`min` and `max` are not required in this mode.
 
 #### YAML example
 
 ```yaml
 estimate:
   distribution: "lognormal"
+  low: 3
   expected: 8
-  standard_deviation: 2
+  high: 20
   unit: "days"
 ```
 
@@ -339,8 +351,9 @@ estimate:
 ```toml
 [tasks.estimate]
 distribution = "lognormal"
+low = 3
 expected = 8
-standard_deviation = 2
+high = 20
 unit = "days"
 ```
 
@@ -360,9 +373,10 @@ This form lets the task refer to a symbolic size such as `XS`, `M`, or `XL`.
 When `t_shirt_size` is present:
 
 - the `TaskEstimate` validator accepts the estimate immediately,
-- explicit `min`, `expected`, `max`, and `standard_deviation` are not required,
+- explicit `min`, `expected`, and `max` are not required,
 - **`unit` must not be specified** — the unit comes from the configuration file's `t_shirt_size_unit` setting (default: `"hours"`),
-- the simulation engine resolves the size to actual `min`, `expected`, and `max` values from the active configuration.
+- the simulation engine resolves the size to actual `min`, `expected`, and `max` values from the active configuration,
+- if `distribution` is omitted, the task inherits the project-level default distribution.
 
 If the chosen size does not exist in the active configuration, simulation raises an error.
 
@@ -784,8 +798,9 @@ tasks:
     name: "Implementation"
     estimate:
       distribution: "lognormal"
+      low: 3
       expected: 8
-      standard_deviation: 2
+      high: 20
       unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
@@ -870,8 +885,9 @@ resources = ["backend_dev", "frontend_dev"]
 
 [tasks.estimate]
 distribution = "lognormal"
+low = 3
 expected = 8
-standard_deviation = 2
+high = 20
 unit = "days"
 
 [tasks.uncertainty_factors]
@@ -1407,7 +1423,7 @@ The current implementation validates the following rules directly:
 - `start_date` must parse as an ISO date,
 - probability thresholds must be in range and ordered correctly,
 - triangular estimates must satisfy `low <= expected <= high`,
-- log-normal estimates must include `expected` and `standard_deviation`,
+- log-normal estimates must include `low`, `expected`, and `high`, and must satisfy `low < expected < high`,
 - risks must have probabilities in `0.0..1.0`,
 - structured risk impacts must use positive values.
 

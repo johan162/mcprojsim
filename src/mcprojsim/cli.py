@@ -14,6 +14,7 @@ from mcprojsim.models.project import Project
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.parsers import TOMLParser, YAMLParser
 from mcprojsim.simulation import SimulationEngine
+from mcprojsim.simulation.distributions import fit_shifted_lognormal
 from mcprojsim.utils import Validator, setup_logging
 
 
@@ -67,6 +68,24 @@ def _run_simulation_with_metrics(
         peak_memory_bytes = max(0, rss_after - rss_before)
 
     return results, elapsed_seconds, peak_memory_bytes
+
+
+def _format_shifted_lognormal_parameters(
+    label: str,
+    low: float,
+    expected: float,
+    high: float,
+    z_score: float,
+) -> str:
+    """Format shifted-lognormal parameters derived from a configured range."""
+    try:
+        mu, sigma = fit_shifted_lognormal(low, expected, high, z_score)
+    except ValueError as exc:
+        raise click.ClickException(
+            f"Cannot derive log-normal parameters for {label}: {exc}"
+        ) from exc
+
+    return f"mu: {mu:.4f}, sigma: {sigma:.4f}, z-score: {z_score:.4f}"
 
 
 @click.group()
@@ -821,11 +840,23 @@ def show_config(config_file: Optional[str]) -> None:
         for level, value in levels.items():
             click.echo(f"    {level}: {value}")
 
+    lognormal_z_score = cfg.get_lognormal_high_z_value()
+
     click.echo(f"\nT-Shirt Sizes (unit: {cfg.t_shirt_size_unit.value}):")
     for size, config in cfg.t_shirt_sizes.items():
         click.echo(f"  {size}:")
         click.echo(
             f"    low: {config.low}, expected: {config.expected}, high: {config.high}"
+        )
+        click.echo(
+            "    lognormal params: "
+            + _format_shifted_lognormal_parameters(
+                f"T-shirt size {size}",
+                config.low,
+                config.expected,
+                config.high,
+                lognormal_z_score,
+            )
         )
 
     click.echo(f"\nStory Points (unit: {cfg.story_point_unit.value}):")
@@ -834,12 +865,26 @@ def show_config(config_file: Optional[str]) -> None:
         click.echo(
             f"    low: {sp_config.low}, expected: {sp_config.expected}, high: {sp_config.high}"
         )
+        click.echo(
+            "    lognormal params: "
+            + _format_shifted_lognormal_parameters(
+                f"story point {points}",
+                sp_config.low,
+                sp_config.expected,
+                sp_config.high,
+                lognormal_z_score,
+            )
+        )
 
     click.echo("\nSimulation:")
     click.echo(f"  Default iterations: {cfg.simulation.default_iterations}")
     click.echo(f"  Random seed: {cfg.simulation.random_seed}")
     click.echo(
         "  Max stored critical paths: " f"{cfg.simulation.max_stored_critical_paths}"
+    )
+    click.echo("\nLognormal:")
+    click.echo(
+        "  High percentile for 'high' value: " f"P{cfg.lognormal.high_percentile}"
     )
 
     click.echo("\nOutput:")

@@ -53,6 +53,7 @@ The current configuration schema supports these top-level keys:
 - `story_points`
 - `story_point_unit`
 - `simulation`
+- `lognormal`
 - `output`
 - `staffing`
 
@@ -116,6 +117,9 @@ simulation:
   default_iterations: 10000
   random_seed: 42
   max_stored_critical_paths: 20
+
+lognormal:
+  high_percentile: 95
 
 output:
   formats: ["json", "csv", "html"]
@@ -231,6 +235,35 @@ t_shirt_sizes:
     expected: 6
     high: 9
 ```
+
+## Shifted log-normal configuration
+
+When an estimate uses `distribution: "lognormal"`, `mcprojsim` fits a **shifted**
+log-normal from the already familiar `low`, `expected`, and `high` fields:
+
+- `low` is treated as the hard shift/minimum,
+- `expected` is treated as the mode,
+- `high` is treated as a chosen percentile of the distribution.
+
+That percentile is configured here:
+
+```yaml
+lognormal:
+  high_percentile: 95
+```
+
+Allowed values are:
+
+- `70`
+- `75`
+- `80`
+- `85`
+- `90`
+- `95`
+- `99`
+
+The default is `95`, meaning the `high` value is interpreted as the P95 point of
+the shifted log-normal distribution.
 
 ### `t_shirt_size_unit`
 

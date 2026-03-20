@@ -540,6 +540,7 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "confidence_levels",
             "probability_red_threshold",
             "probability_green_threshold",
+            "distribution",
             "team_size",
         }
 
@@ -588,7 +589,6 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "low",
             "expected",
             "high",
-            "standard_deviation",
             "t_shirt_size",
             "story_points",
             "unit",

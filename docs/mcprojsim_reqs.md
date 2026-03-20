@@ -35,8 +35,8 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL validate input files against a defined schema
 - The system SHALL report specific validation errors with line numbers
 
-**FR-002: Triangular Distribution Sampling**
-- Each task estimate SHALL be defined with either a triangular distribution specified with (minimum, expected, maximum) values or a log-normal distribution specified with (expected, standard_deviation)
+**FR-002: Distribution Sampling**
+- Each task estimate SHALL be defined with either a triangular distribution specified with (minimum, expected, maximum) values or a shifted log-normal distribution specified with (minimum, expected, maximum) values and a configured interpretation of the maximum as a percentile
 - The system SHALL sample from triangular distributions using numpy.random.triangular or a log-normal distributions using numpy.random.lognormal
 - The system SHALL validate that low ≤ expected ≤ high for a triangular distribution
 

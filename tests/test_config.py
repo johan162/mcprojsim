@@ -22,6 +22,7 @@ class TestConfig:
         assert "requirements_maturity" in config.uncertainty_factors
         assert "technical_complexity" in config.uncertainty_factors
         assert config.simulation.default_iterations == 10000
+        assert config.lognormal.high_percentile == 95
 
     def test_default_confidence_levels_include_p25_and_p99(self):
         """Test the shared default confidence levels include P25 and P99."""
@@ -107,6 +108,22 @@ class TestConfig:
         """Test loading from non-existent file."""
         with pytest.raises(FileNotFoundError):
             Config.load_from_file("nonexistent.yaml")
+
+    def test_load_from_file_overrides_lognormal_percentile(self, tmp_path):
+        """Test loading config supports a custom shifted-lognormal percentile."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("lognormal:\n  high_percentile: 90\n")
+
+        config = Config.load_from_file(config_file)
+        assert config.lognormal.high_percentile == 90
+
+    def test_invalid_lognormal_percentile_rejected(self, tmp_path):
+        """Only the documented percentile choices should be accepted."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("lognormal:\n  high_percentile: 92\n")
+
+        with pytest.raises(ValueError, match="must be one of"):
+            Config.load_from_file(config_file)
 
 
 class TestSimulationConfig:

@@ -4,7 +4,10 @@ import pytest
 import numpy as np
 from datetime import date
 
-from mcprojsim.simulation.distributions import DistributionSampler
+from mcprojsim.simulation.distributions import (
+    DistributionSampler,
+    fit_shifted_lognormal,
+)
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
 from mcprojsim.simulation.scheduler import TaskScheduler
 from mcprojsim.simulation.engine import SimulationEngine
@@ -43,12 +46,27 @@ class TestDistributionSampler:
         sampler = DistributionSampler(np.random.RandomState(42))
         estimate = TaskEstimate(
             distribution=DistributionType.LOGNORMAL,
+            low=2.0,
             expected=5.0,
-            standard_deviation=1.0,
+            high=16.0,
         )
 
         samples = [sampler.sample(estimate) for _ in range(100)]
-        assert all(s > 0 for s in samples)
+        assert all(s > 2.0 for s in samples)
+
+    def test_fit_shifted_lognormal_matches_mode_and_percentile(self):
+        """The fitted shifted-lognormal should honor mode and chosen percentile."""
+        low = 2.0
+        expected = 5.0
+        high = 16.0
+        z95 = 1.6448536269514722
+
+        mu, sigma = fit_shifted_lognormal(low, expected, high, z95)
+        shifted_mode = np.exp(mu - sigma**2)
+        shifted_p95 = np.exp(mu + z95 * sigma)
+
+        assert shifted_mode == pytest.approx(expected - low)
+        assert shifted_p95 == pytest.approx(high - low)
 
     def test_sample_reproducibility(self):
         """Test that sampling is reproducible with same seed."""
@@ -255,6 +273,66 @@ class TestTaskScheduler:
 
         assert constrained["task_001"]["start"] == 0.0
         assert constrained["task_001"]["end"] == effort_hours / 2
+
+
+class TestSimulationEngineDistributionResolution:
+    """Tests for project/task distribution default resolution."""
+
+    def test_project_default_lognormal_applies_to_explicit_estimates(self):
+        project = Project(
+            project=ProjectMetadata(
+                name="Default Lognormal",
+                start_date=date(2025, 1, 1),
+                distribution=DistributionType.LOGNORMAL,
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=2, expected=5, high=16),
+                )
+            ],
+        )
+
+        engine = SimulationEngine(
+            iterations=20, random_seed=42, config=Config.get_default()
+        )
+        results = engine.run(project)
+
+        assert np.all(results.task_durations["task_001"] > 2.0)
+
+    def test_task_distribution_overrides_project_default(self):
+        project = Project(
+            project=ProjectMetadata(
+                name="Override Default",
+                start_date=date(2025, 1, 1),
+                distribution=DistributionType.LOGNORMAL,
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(
+                        distribution=DistributionType.TRIANGULAR,
+                        low=2,
+                        expected=5,
+                        high=16,
+                    ),
+                )
+            ],
+        )
+
+        engine = SimulationEngine(
+            iterations=50, random_seed=42, config=Config.get_default()
+        )
+        resolved = engine._resolve_estimate(
+            project.tasks[0], project.project.distribution
+        )
+
+        assert resolved.distribution == DistributionType.TRIANGULAR
+        assert resolved.low == 2.0
+        assert resolved.expected == 5.0
+        assert resolved.high == 16.0
 
     def test_schedule_tasks_practical_cap_limits_over_assignment(self):
         """Auto-cap should prevent assigning too many resources to small tasks."""

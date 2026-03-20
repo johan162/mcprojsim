@@ -13,6 +13,7 @@ from mcprojsim.config import (
     EstimateRangeConfig,
 )
 from mcprojsim.models.project import (
+    DistributionType,
     Project,
     Task,
     TaskEstimate,
@@ -53,7 +54,9 @@ class SimulationEngine:
         self.random_state = np.random.RandomState(random_seed)
 
         # Initialize components
-        self.sampler = DistributionSampler(self.random_state)
+        self.sampler = DistributionSampler(
+            self.random_state, self.config.get_lognormal_high_z_value()
+        )
         self.risk_evaluator = RiskEvaluator(self.random_state)
 
     def run(self, project: Project) -> SimulationResults:
@@ -287,7 +290,7 @@ class SimulationEngine:
         # Sample and adjust task durations
         for task in project.tasks:
             # Resolve T-shirt size / story points to actual estimate if needed
-            estimate = self._resolve_estimate(task.estimate)
+            estimate = self._resolve_estimate(task, project.project.distribution)
 
             # Sample base duration (in the estimate's native unit)
             base_duration = self.sampler.sample(estimate)
@@ -396,20 +399,25 @@ class SimulationEngine:
 
         return base_duration * multiplier
 
-    def _resolve_estimate(self, estimate: TaskEstimate) -> TaskEstimate:
+    def _resolve_estimate(
+        self, task: Task, project_distribution: DistributionType
+    ) -> TaskEstimate:
         """Resolve symbolic estimates to actual estimate values.
 
         For T-shirt sizes and story points, the numeric ranges and unit
         come from the configuration.
 
         Args:
-            estimate: TaskEstimate object
+            task: Task whose estimate should be resolved
+            project_distribution: Project-level default distribution
 
         Returns:
             TaskEstimate with resolved values
         """
         from mcprojsim.models.project import TaskEstimate
 
+        estimate = task.estimate
+        effective_distribution = estimate.distribution or project_distribution
         resolved_config: EstimateRangeConfig | None = None
         resolved_unit: EffortUnit | None = None
 
@@ -432,11 +440,17 @@ class SimulationEngine:
             resolved_unit = self.config.story_point_unit
 
         else:
-            return estimate
+            return TaskEstimate(
+                distribution=effective_distribution,
+                low=estimate.low,
+                expected=estimate.expected,
+                high=estimate.high,
+                unit=estimate.unit,
+            )
 
         # Create new estimate with resolved values and config unit
         return TaskEstimate(
-            distribution=estimate.distribution,
+            distribution=effective_distribution,
             low=resolved_config.low,
             expected=resolved_config.expected,
             high=resolved_config.high,

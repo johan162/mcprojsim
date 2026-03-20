@@ -185,7 +185,7 @@ Key method:
 Supports four estimation styles:
 
 - Triangular estimates via `low`, `expected`, and `high`
-- Log-normal estimates via `expected` and `standard_deviation`
+- Log-normal estimates via `low`, `expected`, and `high`
 - T-shirt-sized estimates via `t_shirt_size`
 - Story Point estimates via `story_points`
 
@@ -195,7 +195,6 @@ Key fields:
 - `low`
 - `expected`
 - `high`
-- `standard_deviation`
 - `t_shirt_size`
 - `story_points`
 - `unit`

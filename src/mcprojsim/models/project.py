@@ -40,9 +40,9 @@ class ImpactType(str, Enum):
 class TaskEstimate(BaseModel):
     """Task effort estimate with distribution parameters."""
 
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
 
-    distribution: DistributionType = Field(default=DistributionType.TRIANGULAR)
+    distribution: DistributionType | None = Field(default=None)
     low: Optional[float] = Field(
         default=None,
         ge=0,
@@ -58,7 +58,6 @@ class TaskEstimate(BaseModel):
         ge=0,
         validation_alias=AliasChoices("high", "max"),
     )
-    standard_deviation: Optional[float] = Field(default=None, gt=0)
     t_shirt_size: Optional[str] = Field(default=None)
     story_points: Optional[int] = Field(default=None, gt=0)
     unit: Optional[EffortUnit] = Field(default=None)
@@ -115,21 +114,33 @@ class TaskEstimate(BaseModel):
         if self.unit is None:
             self.unit = EffortUnit.HOURS
 
-        if self.distribution == DistributionType.TRIANGULAR:
-            if self.low is None or self.high is None:
-                raise ValueError(
-                    "Triangular distribution requires low, expected, and high"
-                )
-            if not (self.low <= self.expected <= self.high):
-                raise ValueError(
-                    f"Must satisfy low <= expected <= high, "
-                    f"got {self.low} <= {self.expected} <= {self.high}"
-                )
-        elif self.distribution == DistributionType.LOGNORMAL:
-            if self.standard_deviation is None:
-                raise ValueError(
-                    "Lognormal distribution requires expected and standard_deviation"
-                )
+        if self.low is None or self.high is None:
+            raise ValueError("Explicit estimates require low, expected, and high")
+        if not (self.low <= self.expected <= self.high):
+            raise ValueError(
+                f"Must satisfy low <= expected <= high, "
+                f"got {self.low} <= {self.expected} <= {self.high}"
+            )
+        if self.distribution == DistributionType.LOGNORMAL and not (
+            self.low < self.expected < self.high
+        ):
+            raise ValueError("Lognormal distribution requires low < expected < high")
+        return self
+
+    def validate_effective_distribution(
+        self, distribution: DistributionType
+    ) -> "TaskEstimate":
+        """Validate range semantics for the effective distribution in use."""
+        if self.t_shirt_size is not None or self.story_points is not None:
+            return self
+        if (
+            distribution == DistributionType.LOGNORMAL
+            and self.low is not None
+            and self.expected is not None
+            and self.high is not None
+            and not (self.low < self.expected < self.high)
+        ):
+            raise ValueError("Lognormal distribution requires low < expected < high")
         return self
 
 
@@ -287,6 +298,12 @@ class ProjectMetadata(BaseModel):
         le=1.0,
         description="Probability threshold above which is shown as green (default 90%)",
     )
+    distribution: DistributionType = Field(
+        default=DistributionType.TRIANGULAR,
+        description=(
+            "Default task estimate distribution when a task does not specify one"
+        ),
+    )
     team_size: Optional[int] = Field(default=None, ge=0)
 
     @field_validator("start_date", mode="before")
@@ -344,6 +361,9 @@ class Project(BaseModel):
 
         # Check for circular dependencies
         self._check_circular_dependencies()
+
+        # Validate effective task distributions after project defaults are known
+        self._validate_effective_task_distributions()
 
         # Validate and normalize resources
         self._normalize_and_validate_resources()
@@ -462,6 +482,17 @@ class Project(BaseModel):
                     raise ValueError(
                         f"Circular dependency detected involving task {task.id}"
                     )
+
+    def _validate_effective_task_distributions(self) -> None:
+        """Validate explicit task ranges against the effective distribution."""
+        for task in self.tasks:
+            effective_distribution = (
+                task.estimate.distribution or self.project.distribution
+            )
+            try:
+                task.estimate.validate_effective_distribution(effective_distribution)
+            except ValueError as error:
+                raise ValueError(f"Task {task.id}: {error}") from error
 
     def get_task_by_id(self, task_id: str) -> Optional[Task]:
         """Get task by ID."""
