@@ -272,6 +272,18 @@ Here, the most likely duration is 10 days, but the long right tail means that in
 
 For most projects, the triangular distribution is the right choice. It is intuitive, bounded, and maps naturally to how teams think about estimates. The log-normal distribution is a specialized tool for tasks where the unbounded right tail better reflects reality.
 
+### Why is log-normal a good model for software (or project) estimation?
+
+Individual task durations are often observed to follow a log-normal distribution in empirical studies of projects and software projects in particular. 
+This can be explained by noticing that task durations are influenced by many small, multiplicative factors — such as the complexity of the work, the efficiency of the team, the quality of requirements, and unforeseen issues that arise during execution. When you have a process that is influenced by many independent multiplicative factors, the resulting distribution of outcomes tends to be log-normal. This can be easily seen by observing that if an estimate can be written as 
+
+$$X = X_0 \times F_1 \times F_2 \times ... \times F_n$$
+
+where $X_0$ is the base estimate and $F_i$ are the multiplicative factors, then taking the logarithm gives:
+
+$$\ln(X) = \ln(X_0) + \ln(F_1) + \ln(F_2) + ... + \ln(F_n)$$
+
+If we assume the $\ln(F_i)$ are independent and identically distributed, then by the Central Limit Theorem, $\ln(X)$ will tend to be normally distributed, which means that $X$ is log-normally distributed.
 
 
 ## T-shirt size estimates
