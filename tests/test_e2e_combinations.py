@@ -38,6 +38,10 @@ from mcprojsim.models.project import (
     convert_to_hours,
 )
 from mcprojsim.parsers.yaml_parser import YAMLParser
+from mcprojsim.simulation.distributions import (
+    LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER,
+    fit_shifted_lognormal,
+)
 from mcprojsim.simulation.engine import SimulationEngine
 from mcprojsim.simulation.scheduler import TaskScheduler
 
@@ -128,16 +132,20 @@ def _make_estimate(spec: dict[str, Any], rng: random.Random) -> dict[str, Any]:
         low = round(rng.uniform(0.5, 5.0), 1)
         mid = round(low + rng.uniform(0.5, 5.0), 1)
         high = round(mid + rng.uniform(0.5, 10.0), 1)
-        est: dict[str, Any] = {"min": low, "most_likely": mid, "max": high}
+        est: dict[str, Any] = {"low": low, "expected": mid, "high": high}
         if spec.get("unit") is not None:
             est["unit"] = spec["unit"]
         return est
 
     if etype == "lognormal":
+        low = round(rng.uniform(0.5, 5.0), 1)
+        expected = round(low + rng.uniform(0.5, 5.0), 1)
+        high = round(expected + rng.uniform(0.5, 10.0), 1)
         est = {
             "distribution": "lognormal",
-            "most_likely": round(rng.uniform(1.0, 20.0), 1),
-            "standard_deviation": round(rng.uniform(0.2, 0.8), 2),
+            "low": low,
+            "expected": expected,
+            "high": high,
         }
         if spec.get("unit") is not None:
             est["unit"] = spec["unit"]
@@ -427,15 +435,11 @@ def _unit_combos_for(etype: str) -> list[dict[str, Any]]:
 # Deterministic bounds computation
 # ---------------------------------------------------------------------------
 
-# For lognormal: no hard upper bound.  We use exp(mu + K*sigma) as a
-# statistical ceiling.  With K=6, P(X > ceiling) ≈ 1e-9 per sample —
-# negligibly small even over 10 000 iterations.
-_LOGNORMAL_K = 6
-
 
 def _resolve_estimate_range(
     task: Task,
     config: Config,
+    project_distribution: DistributionType,
     hours_per_day: float,
 ) -> tuple[float, float]:
     """Return (min_hours, max_hours) for a task after resolution + conversion.
@@ -445,44 +449,76 @@ def _resolve_estimate_range(
     and the upper bound is a conservative statistical ceiling.
     """
     est = task.estimate
+    effective_distribution = est.distribution or project_distribution
 
     # Resolve symbolic estimates
     if est.t_shirt_size is not None:
         rc = config.get_t_shirt_size(est.t_shirt_size)
         assert rc is not None
         unit = config.t_shirt_size_unit
+        if effective_distribution == DistributionType.TRIANGULAR:
+            return (
+                convert_to_hours(rc.low, unit, hours_per_day),
+                convert_to_hours(rc.high, unit, hours_per_day),
+            )
+        mu, sigma = fit_shifted_lognormal(
+            rc.low,
+            rc.expected,
+            rc.high,
+            config.get_lognormal_high_z_value(),
+        )
         return (
-            convert_to_hours(rc.min, unit, hours_per_day),
-            convert_to_hours(rc.max, unit, hours_per_day),
+            convert_to_hours(rc.low, unit, hours_per_day),
+            convert_to_hours(
+                rc.low + math.exp(mu + LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER * sigma),
+                unit,
+                hours_per_day,
+            ),
         )
 
     if est.story_points is not None:
         sp = config.get_story_point(est.story_points)
         assert sp is not None
         unit = config.story_point_unit
+        if effective_distribution == DistributionType.TRIANGULAR:
+            return (
+                convert_to_hours(sp.low, unit, hours_per_day),
+                convert_to_hours(sp.high, unit, hours_per_day),
+            )
+        mu, sigma = fit_shifted_lognormal(
+            sp.low,
+            sp.expected,
+            sp.high,
+            config.get_lognormal_high_z_value(),
+        )
         return (
-            convert_to_hours(sp.min, unit, hours_per_day),
-            convert_to_hours(sp.max, unit, hours_per_day),
+            convert_to_hours(sp.low, unit, hours_per_day),
+            convert_to_hours(
+                sp.low + math.exp(mu + LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER * sigma),
+                unit,
+                hours_per_day,
+            ),
         )
 
     # Explicit estimate
     unit = est.unit or EffortUnit.HOURS
 
-    if est.distribution == DistributionType.TRIANGULAR:
-        assert est.min is not None and est.max is not None
+    if effective_distribution == DistributionType.TRIANGULAR:
+        assert est.low is not None and est.high is not None
         return (
-            convert_to_hours(est.min, unit, hours_per_day),
-            convert_to_hours(est.max, unit, hours_per_day),
+            convert_to_hours(est.low, unit, hours_per_day),
+            convert_to_hours(est.high, unit, hours_per_day),
         )
 
-    # Lognormal: mode = most_likely, sigma = standard_deviation
-    # mu = ln(mode) + sigma^2   (same formula as DistributionSampler)
-    assert est.most_likely is not None and est.standard_deviation is not None
-    sigma = est.standard_deviation
-    mu = math.log(est.most_likely) + sigma**2
-    # Practical lower bound: exp(mu - K*sigma) — vanishingly unlikely below
-    lo = math.exp(mu - _LOGNORMAL_K * sigma)
-    hi = math.exp(mu + _LOGNORMAL_K * sigma)
+    assert est.low is not None and est.expected is not None and est.high is not None
+    mu, sigma = fit_shifted_lognormal(
+        est.low,
+        est.expected,
+        est.high,
+        config.get_lognormal_high_z_value(),
+    )
+    lo = est.low
+    hi = est.low + math.exp(mu + LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER * sigma)
     return (
         convert_to_hours(lo, unit, hours_per_day),
         convert_to_hours(hi, unit, hours_per_day),
@@ -538,7 +574,12 @@ def compute_project_bounds(
     task_max_hours: dict[str, float] = {}
 
     for task in project.tasks:
-        lo, hi = _resolve_estimate_range(task, config, hours_per_day)
+        lo, hi = _resolve_estimate_range(
+            task,
+            config,
+            project.project.distribution,
+            hours_per_day,
+        )
         uf = _uncertainty_multiplier(task, config)
 
         task_lo = lo * uf
@@ -728,9 +769,9 @@ class TestUnitConversionConsistency:
                         "id": "t1",
                         "name": "Task",
                         "estimate": {
-                            "min": 1,
-                            "most_likely": 2,
-                            "max": 3,
+                            "low": 1,
+                            "expected": 2,
+                            "high": 3,
                             "unit": "hours",
                         },
                         "dependencies": [],
@@ -750,9 +791,9 @@ class TestUnitConversionConsistency:
                         "id": "t1",
                         "name": "Task",
                         "estimate": {
-                            "min": 1,
-                            "most_likely": 2,
-                            "max": 3,
+                            "low": 1,
+                            "expected": 2,
+                            "high": 3,
                             "unit": "days",
                         },
                         "dependencies": [],
@@ -790,9 +831,9 @@ class TestUnitConversionConsistency:
                         "id": "t1",
                         "name": "Task",
                         "estimate": {
-                            "min": 5,
-                            "most_likely": 10,
-                            "max": 15,
+                            "low": 5,
+                            "expected": 10,
+                            "high": 15,
                             "unit": "days",
                         },
                         "dependencies": [],
@@ -812,9 +853,9 @@ class TestUnitConversionConsistency:
                         "id": "t1",
                         "name": "Task",
                         "estimate": {
-                            "min": 1,
-                            "most_likely": 2,
-                            "max": 3,
+                            "low": 1,
+                            "expected": 2,
+                            "high": 3,
                             "unit": "weeks",
                         },
                         "dependencies": [],
@@ -934,9 +975,9 @@ class TestMixedEstimationProjects:
                         "id": "t1",
                         "name": "Triangular task",
                         "estimate": {
-                            "min": 4,
-                            "most_likely": 8,
-                            "max": 16,
+                            "low": 4,
+                            "expected": 8,
+                            "high": 16,
                             "unit": "hours",
                         },
                         "dependencies": [],
@@ -946,8 +987,9 @@ class TestMixedEstimationProjects:
                         "name": "Lognormal task",
                         "estimate": {
                             "distribution": "lognormal",
-                            "most_likely": 3,
-                            "standard_deviation": 0.4,
+                            "low": 1,
+                            "expected": 3,
+                            "high": 8,
                             "unit": "days",
                         },
                         "dependencies": ["t1"],
@@ -996,9 +1038,9 @@ class TestMixedEstimationProjects:
                         "id": "t1",
                         "name": "Weeks task",
                         "estimate": {
-                            "min": 1,
-                            "most_likely": 2,
-                            "max": 3,
+                            "low": 1,
+                            "expected": 2,
+                            "high": 3,
                             "unit": "weeks",
                         },
                         "dependencies": [],
@@ -1018,7 +1060,7 @@ class TestMixedEstimationProjects:
                     {
                         "id": "t4",
                         "name": "Hours task",
-                        "estimate": {"min": 10, "most_likely": 20, "max": 40},
+                        "estimate": {"low": 10, "expected": 20, "high": 40},
                         "dependencies": ["t2", "t3"],
                     },
                 ],

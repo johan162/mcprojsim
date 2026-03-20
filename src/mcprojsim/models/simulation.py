@@ -52,6 +52,13 @@ class SimulationResults(BaseModel):
     # Peak parallelism observed across all iterations
     max_parallel_tasks: int = 0
 
+    # Scheduling mode metadata and constrained diagnostics
+    schedule_mode: str = "dependency_only"
+    resource_constraints_active: bool = False
+    resource_wait_time_hours: float = 0.0
+    resource_utilization: float = 0.0
+    calendar_delay_time_hours: float = 0.0
+
     # Risk impact tracking
     risk_impacts: Dict[str, np.ndarray] = Field(default_factory=dict)
     project_risk_impacts: np.ndarray = Field(default_factory=lambda: np.array([]))
@@ -250,6 +257,13 @@ class SimulationResults(BaseModel):
                 for record in self.critical_path_sequences
             ],
             "max_parallel_tasks": self.max_parallel_tasks,
+            "schedule_mode": self.schedule_mode,
+            "resource_constraints_active": self.resource_constraints_active,
+            "constrained_diagnostics": {
+                "resource_wait_time_hours": self.resource_wait_time_hours,
+                "resource_utilization": self.resource_utilization,
+                "calendar_delay_time_hours": self.calendar_delay_time_hours,
+            },
         }
 
     def hours_to_working_days(self, hours: float) -> int:

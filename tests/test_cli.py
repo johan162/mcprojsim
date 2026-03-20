@@ -9,6 +9,7 @@ from click.testing import CliRunner
 from mcprojsim import __version__
 from mcprojsim.cli import cli
 from mcprojsim.config import DEFAULT_SIMULATION_ITERATIONS
+from mcprojsim.simulation.distributions import fit_shifted_lognormal
 
 
 class TestCli:
@@ -82,7 +83,7 @@ class TestCli:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                     }
@@ -168,7 +169,7 @@ class TestCli:
             )
             config_file.write_text(
                 yaml.safe_dump(
-                    {"t_shirt_sizes": {"M": {"min": 10, "most_likely": 20, "max": 30}}}
+                    {"t_shirt_sizes": {"M": {"low": 10, "expected": 20, "high": 30}}}
                 )
             )
 
@@ -191,7 +192,7 @@ class TestCli:
         assert captured["output_path"].endswith("result.html")
         assert captured["project"].project.name == "CLI Test"
         assert captured["html_config"] is captured["engine_config"]
-        assert captured["html_config"].get_t_shirt_size("M").most_likely == 20
+        assert captured["html_config"].get_t_shirt_size("M").expected == 20
         assert captured["critical_path_limit"] == 2
 
     def test_simulate_shows_critical_path_sequences(self, monkeypatch) -> None:
@@ -259,7 +260,7 @@ class TestCli:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                     }
@@ -325,7 +326,7 @@ class TestCli:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                     }
@@ -337,6 +338,59 @@ class TestCli:
         assert result.exit_code == 0
         assert "Simulation time: 12.34 seconds" in result.output
         assert "Peak simulation memory: 64.00 MiB" in result.output
+
+    def test_config_show_displays_shifted_lognormal_parameters(self) -> None:
+        """The config show command should include derived log-normal parameters."""
+        runner = CliRunner()
+
+        result = runner.invoke(cli, ["config", "show"])
+
+        assert result.exit_code == 0
+        default_z = 1.6448536269514722
+        tshirt_mu, tshirt_sigma = fit_shifted_lognormal(40, 60, 120, default_z)
+        story_mu, story_sigma = fit_shifted_lognormal(3, 5, 8, default_z)
+        assert (
+            "    lognormal params: "
+            f"mu: {tshirt_mu:.4f}, sigma: {tshirt_sigma:.4f}, "
+            f"z-score: {default_z:.4f}"
+        ) in result.output
+        assert (
+            "    lognormal params: "
+            f"mu: {story_mu:.4f}, sigma: {story_sigma:.4f}, "
+            f"z-score: {default_z:.4f}"
+        ) in result.output
+
+    def test_config_show_uses_custom_lognormal_percentile(self, tmp_path) -> None:
+        """Custom config percentiles should change displayed z-scores and fit."""
+        runner = CliRunner()
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "lognormal": {"high_percentile": 90},
+                    "t_shirt_sizes": {"M": {"low": 4, "expected": 6, "high": 10}},
+                    "story_points": {5: {"low": 2, "expected": 3, "high": 7}},
+                }
+            )
+        )
+
+        result = runner.invoke(cli, ["config", "show", "-c", str(config_file)])
+
+        assert result.exit_code == 0
+        custom_z = 1.2815515655446008
+        tshirt_mu, tshirt_sigma = fit_shifted_lognormal(4, 6, 10, custom_z)
+        story_mu, story_sigma = fit_shifted_lognormal(2, 3, 7, custom_z)
+        assert "High percentile for 'high' value: P90" in result.output
+        assert (
+            "    lognormal params: "
+            f"mu: {tshirt_mu:.4f}, sigma: {tshirt_sigma:.4f}, "
+            f"z-score: {custom_z:.4f}"
+        ) in result.output
+        assert (
+            "    lognormal params: "
+            f"mu: {story_mu:.4f}, sigma: {story_sigma:.4f}, "
+            f"z-score: {custom_z:.4f}"
+        ) in result.output
 
     def test_simulate_double_quiet_suppresses_all_normal_output(
         self, monkeypatch
@@ -400,7 +454,7 @@ class TestCli:
                             {
                                 "id": "task_001",
                                 "name": "Task",
-                                "estimate": {"min": 1, "most_likely": 2, "max": 3},
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
                             }
                         ],
                     }
@@ -427,13 +481,160 @@ tasks:
   - id: task_001
     name: Task
     estimate:
-      min: 1
+      low: 1
       mostlikely: 2
-      max: 3
+      high: 3
 """.strip())
 
             result = runner.invoke(cli, ["validate", str(project_file)])
 
         assert result.exit_code != 0
         assert "line 9" in result.output
-        assert "most_likely" in result.output
+        assert "mostlikely" in result.output
+        assert "Unknown field" in result.output
+
+    def test_validate_fails_when_assigned_resource_is_underqualified(self) -> None:
+        """validate should fail when task resource assignment violates min experience."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Experience Test",
+                            "start_date": "2025-01-01",
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Senior Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "resources": ["junior_dev"],
+                                "min_experience_level": 3,
+                            }
+                        ],
+                        "resources": [
+                            {
+                                "name": "junior_dev",
+                                "experience_level": 1,
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["validate", str(project_file)])
+
+        assert result.exit_code != 0
+        assert "requires min_experience_level" in result.output
+
+    def test_simulate_fails_when_assigned_resource_is_underqualified(self) -> None:
+        """simulate should fail when task resource assignment violates min experience."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Experience Test",
+                            "start_date": "2025-01-01",
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Senior Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "resources": ["junior_dev"],
+                                "min_experience_level": 3,
+                            }
+                        ],
+                        "resources": [
+                            {
+                                "name": "junior_dev",
+                                "experience_level": 1,
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file)])
+
+        assert result.exit_code != 0
+        assert "requires min_experience_level" in result.output
+
+    def test_validate_fails_when_resources_exceed_team_size(self) -> None:
+        """validate should fail when explicit resources exceed team_size."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Team Size Test",
+                            "start_date": "2025-01-01",
+                            "team_size": 1,
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                            }
+                        ],
+                        "resources": [
+                            {"name": "alice"},
+                            {"name": "bob"},
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["validate", str(project_file)])
+
+        assert result.exit_code != 0
+        assert (
+            "team_size is smaller than explicitly specified resources" in result.output
+        )
+
+    def test_simulate_fails_when_resources_exceed_team_size(self) -> None:
+        """simulate should fail when explicit resources exceed team_size."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Team Size Test",
+                            "start_date": "2025-01-01",
+                            "team_size": 1,
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                            }
+                        ],
+                        "resources": [
+                            {"name": "alice"},
+                            {"name": "bob"},
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file)])
+
+        assert result.exit_code != 0
+        assert (
+            "team_size is smaller than explicitly specified resources" in result.output
+        )

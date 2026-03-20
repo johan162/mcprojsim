@@ -1,0 +1,55 @@
+Project name: Platform Migration
+Start date: 2026-05-01
+Hours per day: 8
+
+Resource 1: Alice
+- Experience: 3
+- Productivity: 1.1
+- Sickness: 0.02
+- Absence: 2026-05-15
+
+Resource 2: Bob
+- Experience: 2
+- Productivity: 1.0
+- Availability: 0.8
+- Sickness: 0.03
+
+Resource 3: Carol
+- Experience: 2
+- Calendar: part_time
+- Availability: 0.75
+- Productivity: 0.9
+- Sickness: 0.04
+- Absence: 2026-06-01, 2026-06-02
+
+Calendar: default
+- Work hours: 8
+- Work days: 1, 2, 3, 4, 5
+- Holidays: 2026-05-25
+
+Calendar: part_time
+- Work hours: 6
+- Work days: 1, 2, 3, 4
+
+Task 1: Architecture design
+- Estimate: 16/24/40 hours
+- Min experience: 2
+
+Task 2: Core implementation
+- Estimate: 80/120/180 hours
+- Depends on Task 1
+- Resources: Alice, Bob, Carol
+- Max resources: 2
+- Min experience: 2
+
+Task 3: Data migration
+- Estimate: 40/64/96 hours
+- Depends on Task 2
+- Resources: Alice
+- Min experience: 3
+
+Task 4: Verification and rollout
+- Estimate: 24/40/64 hours
+- Depends on Task 3
+- Resources: Alice, Bob, Carol
+- Max resources: 2

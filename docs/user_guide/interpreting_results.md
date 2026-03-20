@@ -2,7 +2,7 @@
 
 After running a simulation, `mcprojsim` produces a set of statistics, percentiles, critical path data, and optionally an HTML report with a histogram and thermometer chart. This chapter explains what those outputs mean and how to use them for practical decision-making.
 
----
+
 
 ## The output at a glance
 
@@ -86,7 +86,7 @@ Every number here comes from simulating your project thousands of times with dif
 
 The sections below explain each part of this output in detail.
 
----
+
 
 ## Understanding percentiles
 
@@ -116,7 +116,7 @@ A useful rule of thumb: commit externally at the P85–P90 level, plan internall
 
 Each percentile also shows working days (hours ÷ hours_per_day, rounded up) and a projected delivery date that counts forward from `start_date`, skipping weekends. These are calculated from the hours figure — they are not separate estimates.
 
----
+
 
 ## Effort confidence intervals
 
@@ -163,7 +163,7 @@ A ratio of 1.0 means all tasks are serial (effort = elapsed time). A ratio above
 | **Staffing decisions** | Effort percentiles tell you how many person-hours to fund; the staffing table maps that to team sizes |
 | **Comparing estimates to actuals** | Track both: actual elapsed time against calendar P50, and actual time-sheet hours against effort P50 |
 
----
+
 
 ## The thermometer chart
 
@@ -175,7 +175,7 @@ The HTML report includes a thermometer — a vertical colour-coded bar showing e
 
 The colour thresholds are configurable via `probability_red_threshold` and `probability_green_threshold` in the project file.
 
----
+
 
 ## Mean vs. median
 
@@ -186,7 +186,7 @@ The **mean** (average) and **median** (P50) are often close, but they diverge wh
 
 For planning, the **median** is generally more useful than the mean. The mean can be distorted by outliers, while the median always represents the 50th-percentile outcome.
 
----
+
 
 ## Standard deviation and coefficient of variation
 
@@ -223,7 +223,7 @@ In the sample output, `CV = 0.1353` indicates low uncertainty: the spread of out
 
 A high CV is not necessarily bad — it is *honest*. It tells you that the inputs contain wide estimate ranges, high-probability risks, or both. Narrowing the CV means improving the inputs: tightening estimates, reducing risk exposure, or breaking large tasks into better-understood pieces. Use the CV to compare uncertainty across different project proposals: a project with CV 0.40 carries much more schedule risk than one with CV 0.15, regardless of their absolute durations.
 
----
+
 
 ## Skewness
 
@@ -258,7 +258,7 @@ In the sample output, `Skewness = 0.4865` indicates moderate right skew: some it
 
 When skewness is positive, the mean overstates a "typical" outcome. Prefer the median for internal planning. The gap between mean and median quantifies how much the tail is pulling the average: a gap of 10+ hours suggests meaningful tail risk that should be communicated to stakeholders.
 
----
+
 
 ## Excess kurtosis
 
@@ -292,7 +292,7 @@ In the sample output, `Excess Kurtosis = 0.2469` is slightly positive, meaning t
 
 Excess kurtosis guides how much buffer to add between your planning target and your worst-case commitment. When kurtosis is high, the gap between P90 and P99 is larger than usual, so committing at P90 leaves more residual risk than it would for a normal-tailed distribution. Conversely, negative kurtosis means outcomes are bunched together and P90 commitments are safer than they might first appear.
 
----
+
 
 ## Sensitivity analysis
 
@@ -331,7 +331,7 @@ In the sample output, `task_004: +0.4322` is the strongest driver, meaning its d
 
 Use sensitivity to prioritise where to invest in better estimates. Spending a day refining the estimate for a +0.45 task reduces overall schedule uncertainty far more than refining a +0.02 task. In the HTML report, the sensitivity analysis appears as a tornado chart for visual comparison.
 
----
+
 
 ## Schedule slack
 
@@ -364,7 +364,7 @@ In the sample output, `task_003` has 165.16 hours of slack and `task_007` has 35
 
 Slack tells you where you have scheduling flexibility. Tasks with large buffers are safe to deprioritise, start later, or assign to less experienced team members. Tasks with zero slack are where delays are most costly — prioritise them in resource allocation, assign your strongest people, and mitigate their risks first.
 
----
+
 
 ## Risk impact analysis
 
@@ -409,7 +409,7 @@ Combine risk impact analysis with sensitivity and slack to decide where to act:
 2. If a task has **high `mean_when_triggered` but low trigger rate** → have a contingency plan ready, but don't rearrange the whole schedule for it.
 3. If a task has **large slack** → its risks are mostly absorbed by the buffer. Monitor, but don't prioritise.
 
----
+
 
 ## Critical path analysis
 
@@ -435,7 +435,7 @@ In a deterministic schedule there is one critical path. In a Monte Carlo simulat
 
 If multiple tasks share high criticality, the project has several competing bottleneck paths. That actually *reduces* schedule risk compared to a single dominant path, because no one task controls the outcome.
 
----
+
 
 ## Max parallel tasks
 
@@ -464,7 +464,7 @@ Use this number as a sanity check:
 - If **max parallel tasks ≤ team size**: the simulation's parallelism assumption is realistic.
 - If **max parallel tasks > team size**: the simulation is optimistic. Consider adding explicit dependencies to serialise tasks that share a resource, or mentally adjust the percentiles upward.
 
----
+
 
 ## Staffing recommendations
 
@@ -637,7 +637,7 @@ A typical profile shows a "U-shaped" efficiency curve (when viewed from left to 
 - The communication overhead is linear in team size. Real-world overhead grows faster (some models use $n(n-1)/2$ communication channels); the linear model is a conservative simplification.
 - The simulation already assumes unlimited parallelism, so the staffing recommendation does not change the simulated durations — it is an advisory layer on top of the existing results.
 
----
+
 
 ## Combining the analyses
 
@@ -651,19 +651,19 @@ The real power of these metrics comes from reading them together. Here is a deci
 | Low sensitivity + zero slack | The task is on the critical path but doesn't contribute much variance. It is a stable bottleneck — duration is predictable but the path still runs through it. |
 | Low sensitivity + large slack | **Low priority.** This task has both predictable duration and scheduling flexibility. |
 
----
+
 
 ## Reducing volatility
 
 If the spread between P50 and P90 is uncomfortably wide, consider:
 
-- **Splitting large tasks**: A single task with `min: 5, max: 40` contributes more variance than two tasks with `min: 3, max: 20` each, especially when they are on different dependency paths.
+- **Splitting large tasks**: A single task with `low: 5, high: 40` contributes more variance than two tasks with `low: 3, high: 20` each, especially when they are on different dependency paths.
 - **Tightening estimate ranges**: If subject-matter experts can narrow the gap between `min` and `max` after investigation, uncertainty drops directly.
 - **Mitigating high-impact risks**: Removing or reducing the probability of risks on critical tasks has the largest effect.
 - **Adding parallel paths**: Restructuring dependencies so that fewer tasks are in a single sequential chain reduces the chance of cascading delays.
 - **Addressing high-sensitivity tasks first**: Use the sensitivity analysis to focus effort where it matters most.
 
----
+
 
 ## Limitations of the simulation
 
@@ -692,7 +692,7 @@ Monte Carlo simulation is a powerful tool, but it has boundaries. Understanding 
 
 The most useful thing you can do over time is *calibrate*: compare the simulation's P50 and P90 with actual outcomes, and adjust your estimation habits accordingly. If your P90 is consistently exceeded, your `max` values are too low. If P50 is consistently beaten, your `min` values may be too conservative — or your uncertainty factors are inflating estimates.
 
----
+
 
 ## Quick reference
 
@@ -713,3 +713,6 @@ The most useful thing you can do over time is *calibrate*: compare the simulatio
 | Staffing advisory | Recommended team size per experience profile | Team sizing, hiring decisions |
 | Thermometer | Visual probability-to-effort mapping | Stakeholder communication |
 | Delivery dates | Calendar dates at each percentile | Scheduling and milestone setting |
+
+\newpage
+

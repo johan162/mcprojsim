@@ -1,5 +1,16 @@
 # Getting Started
 
+Welcome to the Monte Carlo Project Simulator User Guide.
+
+This short, hands-on chapter shows you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with context.
+
+What you'll learn
+
+- Quick generation of a valid project file from a plain-text description.
+- Running a reproducible Monte Carlo simulation and exporting interactive reports.
+- Using sensitivity and critical-path outputs to find the tasks that drive schedule risk.
+
+
 ## Before you start
 
 You need:
@@ -15,9 +26,9 @@ python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 ```
 
----
 
-## 1. Install mcprojsim
+
+## Install mcprojsim
 
 ### With pipx (recommended)
 
@@ -46,9 +57,8 @@ mcprojsim --version
 mcprojsim --help
 ```
 
----
 
-## 2. Create your first project file
+## Create your first project file
 
 The quickest way is to describe your project in plain text and let `mcprojsim generate` produce the YAML for you.
 
@@ -75,7 +85,7 @@ Generate the project file:
 mcprojsim generate description.txt -o project.yaml
 ```
 
-That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `min/most_likely/max` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
+That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
 
 ??? tip "Alternative: write the YAML by hand"
 
@@ -92,17 +102,17 @@ That is it — the generated `project.yaml` is ready for validation and simulati
       - id: "task_001"
         name: "Design updates"
         estimate:
-          min: 2
-          most_likely: 3
-          max: 5
+          low: 2
+          expected: 3
+          high: 5
           unit: "days"
 
       - id: "task_002"
         name: "Frontend changes"
         estimate:
-          min: 4
-          most_likely: 6
-          max: 10
+          low: 4
+          expected: 6
+          high: 10
           unit: "days"
         dependencies: ["task_001"]
         uncertainty_factors:
@@ -112,9 +122,9 @@ That is it — the generated `project.yaml` is ready for validation and simulati
 
     See the [Project Files](project_files.md) reference for all available fields.
 
----
 
-## 3. Validate the file
+
+## Validate the file
 
 Before simulating, check the file for errors:
 
@@ -130,9 +140,11 @@ Expected result:
 
 If validation fails, read the reported field name and fix the YAML file before continuing.
 
----
+Tip: common validation issues are missing `id` fields on tasks, invalid date formats, or incorrect field names — see [Project Files](project_files.md) for the full field reference and examples.
 
-## 4. Run your first simulation
+
+
+## Run your first simulation
 
 ```bash
 mcprojsim simulate project.yaml --seed 42
@@ -143,6 +155,8 @@ What this does:
 - Runs the default 10 000 Monte Carlo iterations
 - Uses `--seed 42` so the result is reproducible
 - Prints a summary to the terminal
+
+Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and use `--seed` for reproducible runs; see [Running Simulations](running_simulations.md) for full CLI options.
 
 You should see output like:
 
@@ -179,9 +193,9 @@ Most Frequent Critical Paths:
 No export formats specified. Use -f to export results to files.
 ```
 
----
 
-## 5. Export results
+
+## Export results
 
 To generate report files, add `-f` with the desired formats:
 
@@ -204,9 +218,11 @@ open "Website Refresh_results.html"     # macOS
 xdg-open "Website Refresh_results.html" # Linux
 ```
 
----
+Tip: export HTML first (`-f html`) to interactively inspect sensitivity, critical paths and charts — it is the easiest way to explore results visually.
 
-## 6. What the main results mean
+
+
+## What the main results mean
 
 | Percentile | Meaning | Typical use |
 |------------|---------|-------------|
@@ -216,7 +232,7 @@ xdg-open "Website Refresh_results.html" # Linux
 
 All durations are reported in **hours** (the canonical internal unit), with **working days** and **projected delivery dates** (weekends excluded) shown alongside.
 
----
+
 
 ## 7. Useful next commands
 
@@ -238,7 +254,6 @@ Suppress progress output (useful in CI/CD):
 mcprojsim simulate project.yaml --quiet
 ```
 
----
 
 ## Where to go next
 
@@ -248,3 +263,17 @@ mcprojsim simulate project.yaml --quiet
 - [Project Files](project_files.md) — complete project file reference
 - [Configuration](../configuration.md) — customize uncertainty factors and mappings
 - [Examples](../examples.md) — working example projects
+
+## Try these example projects
+
+- `examples/sample_project.yaml` — full sample with risks and resources
+- `examples/quickstart_project.yaml` — minimal quickstart example used in this chapter
+- `examples/resource_cap_small_task.yaml` — a small resource-constrained example to try constrained scheduling
+
+## Next steps (recommended learning path)
+
+- Beginner: follow this chapter and open the HTML report to inspect results.
+- Intermediate: read [Your First Project](your_first_project.md) and [Task Estimation](task_estimation.md) to improve input quality.
+- Advanced: explore [Configuration](../configuration.md), [Constrained Scheduling](constrained.md), and [MCP Server](mcp-server.md) for automation and integrations.
+
+\newpage

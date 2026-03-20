@@ -1,13 +1,13 @@
 # Monte Carlo Software Development Estimation System
 ## Formal Specification v1.0
 
----
+
 
 ## 1. Executive Summary
 
 This document specifies a Monte Carlo simulation system for software development effort estimation. The system models uncertainties in task duration, applies risk impacts, handles task dependencies, and generates probabilistic project completion forecasts through iterative simulation.
 
----
+
 
 ## 2. System Overview
 
@@ -24,7 +24,7 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - Sensitivity analysis and critical path identification
 - Export results to multiple formats (JSON, CSV, HTML reports)
 
----
+
 
 ## 3. Detailed Requirements
 
@@ -35,10 +35,10 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL validate input files against a defined schema
 - The system SHALL report specific validation errors with line numbers
 
-**FR-002: Triangular Distribution Sampling**
-- Each task estimate SHALL be defined with either a triangular distribution specified with (minimum, most_likely, maximum) values or a log-normal distribution specified with (most_likely, standard_deviation)
+**FR-002: Distribution Sampling**
+- Each task estimate SHALL be defined with either a triangular distribution specified with (minimum, expected, maximum) values or a shifted log-normal distribution specified with (minimum, expected, maximum) values and a configured interpretation of the maximum as a percentile
 - The system SHALL sample from triangular distributions using numpy.random.triangular or a log-normal distributions using numpy.random.lognormal
-- The system SHALL validate that min ≤ most_likely ≤ max for a triangular distribution
+- The system SHALL validate that low ≤ expected ≤ high for a triangular distribution
 
 **FR-003: Monte Carlo Simulation Execution**
 - The system SHALL perform N iterations (configurable, default 10,000)
@@ -172,6 +172,195 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - The system SHALL display the full staffing analysis table when the `--staffing` CLI flag is specified
 - The system SHALL include staffing recommendations and table data in JSON and CSV exports
 - The system SHALL offer configuration to decide which effort percentile to base staffing suggestion on
+
+### 3.1.1 Resource and Calendar-Constrained Scheduling
+
+**FR-026: Team Size and Member Model**
+- The system SHALL allow project-level `team_size` as an integer >= 0.
+- If `team_size > 0`, validation SHALL ensure the effective resource pool size equals `team_size` by auto-generating default resources when needed.
+- If `team_size` is omitted or `0`, no team-size-driven resources SHALL be generated.
+- Team members SHALL be identifiable for assignment, availability, and sickness modeling.
+
+**FR-027: Productivity and Experience Attributes**
+- Each team member SHALL have default productivity 1.0 (1 person-hour per clock hour).
+- Productivity SHALL be configurable per member in the range 0.1 to 2.0.
+- Each team member SHALL have experience level 1, 2, or 3 (Junior, Mid, Expert).
+- Invalid productivity/experience values SHALL fail validation.
+
+**FR-028: Working Calendar Defaults and Holidays**
+- The default calendar SHALL include Monday–Friday as working days and exclude weekends.
+- Projects MAY define public holidays as non-working dates.
+- Holidays SHALL be applied to calendar-time simulation and delivery-date forecasting.
+
+**FR-029: Member Time-Off and Vacation**
+- The system SHALL support member-specific non-working dates (vacation/days off).
+- Member time off SHALL override default working-day availability for those dates.
+- Overlapping holidays/weekends/time-off SHALL not double-penalize availability.
+
+**FR-030: Calendar-Aware Percentiles and Dates**
+- Calendar-time percentiles SHALL account for all non-working periods (weekends, holidays, member days off).
+- Delivery-date forecasts SHALL be computed from constrained schedules, not dependency-only elapsed hours.
+
+**FR-031: Task Resource Constraints and Qualification**
+- Tasks SHALL support max concurrent assignees per task; default is 1 when unspecified.
+- Tasks SHALL support minimum experience requirement; default is level 1 when unspecified.
+- All members SHALL be eligible for all tasks unless constrained by minimum experience.
+- The scheduler SHALL never assign more than task max resources concurrently.
+- The scheduler SHALL also apply a practical auto-cap per task based on effort granularity and coordination limits.
+
+**FR-032: Sickness Event Modeling**
+- Each member SHALL have a daily sickness-start probability in [0.0, 1.0].
+- Sickness start SHALL be modeled as independent Bernoulli trials per working day.
+- Sickness duration SHALL follow a log-normal distribution configured in config, with default mode 2 working days.
+- During sickness periods, member availability SHALL be zero.
+
+**FR-033: Resource Assignment Strategy**
+- The system SHALL use deterministic greedy assignment when resource contention exists.
+- The strategy SHALL be deterministic for a fixed seed and equal-priority ties.
+- Tie-breaking rules SHALL be defined (ready tasks in sorted order, eligible resources in sorted order).
+- The scheduler SHALL start ready tasks with currently available eligible resources and SHALL NOT delay start to wait for additional resources.
+
+**FR-034: Two-Pass Critical-Path-Aware Simulation Mode**
+- A two-pass critical-path-aware assignment mode MAY be added in a future release.
+- The current baseline does not expose two-pass mode as a CLI or config toggle.
+
+**FR-035: Resource/Calendar Reporting and Export**
+- The system SHALL report resource-constrained metrics: wait time due to resource contention, utilization, and calendar delay contribution.
+- JSON/CSV/HTML exports SHALL include these metrics when resource mode is active.
+- CLI output SHALL distinguish dependency-only vs resource-constrained schedule semantics.
+
+**FR-036: Backward Compatibility and Fallback Behavior**
+- Existing project files without resource/calendar/team fields SHALL remain valid.
+- In absence of explicit resource settings, behavior SHALL default to prior-compatible assumptions (task max resources=1, experience min=1, default calendar).
+- If neither resources nor team-size-generated resources exist, scheduling SHALL run in dependency-only mode.
+- Migration guidance SHALL be documented for adopting explicit team/resource definitions.
+
+**FR-037: Resource and Calendar Schema Validation**
+- Team size SHALL be validated as an integer >= 0.
+- Team-member productivity SHALL be validated in the closed range [0.1, 2.0].
+- Team-member experience level SHALL be validated as one of {1, 2, 3}.
+- Task-level `max_resources` SHALL be validated as an integer >= 1.
+- Task-level `min_experience_level` SHALL be validated as one of {1, 2, 3}.
+- Calendar identifiers, resource identifiers, and task identifiers SHALL be unique within their namespaces.
+- References from tasks to resources/calendars SHALL be validated; unknown references SHALL fail validation.
+- If explicit resources exceed `team_size` (when `team_size > 0`), validation SHALL fail.
+- Holiday, vacation, and day-off dates SHALL be validated as ISO 8601 dates.
+- Invalid sickness parameters (probability outside [0,1], invalid distribution parameters, or invalid start-day metadata) SHALL fail validation.
+
+**FR-038: Scheduling Semantics Under Resource Constraints**
+- Resource-constrained scheduling SHALL preserve dependency constraints as hard constraints.
+- A task SHALL start only when dependencies are met and required resources satisfying minimum experience are available.
+- Tasks SHALL be non-preemptive by default once started; optional preemption behavior MAY be added later behind configuration.
+- When multiple eligible tasks compete for the same resource pool, the assignment policy SHALL apply deterministic tie-breaking.
+- Reported calendar duration SHALL be the completion time of the resource-constrained schedule, not a dependency-only earliest-start schedule.
+
+**FR-039: Calendar Computation Rules**
+- Weekends, configured public holidays, individual vacations/days off, and sickness periods SHALL all be treated as non-working time for affected members.
+- Resource availability SHALL be computed at working-calendar granularity (working day and working hours per day).
+- Conversion between effort and elapsed calendar time SHALL use project `hours_per_day` and the active calendar/resource constraints.
+- Delivery-date forecasting SHALL use the resource- and calendar-constrained timeline.
+
+**FR-040: Sickness Configuration and Defaults**
+- The sickness model SHALL support per-member default probability and optional day-specific overrides.
+- When day-specific overrides are present, they SHALL take precedence over the default daily probability for matching dates.
+- The default sickness-duration distribution SHALL be log-normal with mode = 2 working days.
+- Configuration SHALL expose parameters needed to reproduce the duration distribution (at minimum mode and dispersion).
+
+**FR-041: Reporting and Export Contract for Resource-Constrained Runs**
+- CLI, JSON, CSV, and HTML outputs SHALL explicitly indicate whether resource/calendar constraints were active.
+- Outputs SHALL include resource-related diagnostics at minimum: average queue/wait time due to resource contention, effective utilization, and delay attributable to non-working periods.
+- Critical-path reporting SHALL document whether reported criticality reflects dependency-only paths or resource-constrained critical chains.
+- Comparative fields MAY include dependency-only baseline versus constrained schedule deltas when available.
+
+**FR-042: Two-Pass Mode Configuration and Acceptance Criteria**
+- Two-pass mode SHALL be configurable with default disabled.
+- Pass 1 SHALL compute baseline criticality indices under configured resource/calendar constraints.
+- Pass 2 SHALL prioritize assignments for tasks ranked by pass-1 criticality, then allocate remaining capacity to other ready tasks.
+- The system SHALL expose deterministic acceptance tests demonstrating that two-pass mode does not violate dependency or resource constraints.
+- The system SHALL report pass-1 versus pass-2 outcome deltas for traceability.
+
+**FR-043: Unique Resource Naming and Defaulting Rules**
+- Reources SHALL be specified as a vector in the project specification
+- Each resource specified individually SHALL have a unique `name` within the project.
+- If `experience_level` is omitted for a resource, the system SHALL default it to level 2.
+- If `productivity_level` is omitted for a resource, the system SHALL default it to 1.0.
+- If a resource entry omits `name`, the system SHALL assign a generated name using the format `resource_nnn`.
+- Generated names SHALL use ordered, zero-padded three-digit suffixes (`resource_001`, `resource_002`, `resource_003`, ...).
+- Auto-generated names SHALL also be validated for uniqueness against explicitly provided names.
+
+**FR-044: Resource Specification Schema**
+- Each resource object SHALL support the fields `name`, `experience_level`, `productivity_level`, and `sickness_prob`.
+- Each resource object SHALL support `planned_absence` as a list of dates.
+- `planned_absence` dates SHALL be interpreted as non-working days for that resource.
+- `planned_absence` entries SHALL be validated as ISO 8601 dates.
+- Resource fields omitted by the user SHALL use defaults defined by FR-043 and FR-040.
+
+### 3.1.2 Implementation Plan for Resource and Calendar-Constrained Scheduling
+
+**Phase A: DONE! Data Model and Schema Foundation**
+- Add/normalize schema for team size, team members, productivity, experience, calendars, holidays, vacations/days off, sickness configuration, and task resource limits.
+- Implement validation rules from FR-037 and FR-040 across parser and model layers.
+- Preserve backward compatibility defaults per FR-036.
+
+**Phase B: DONE! Updated project file specification**
+- Add parsing of resource specification in the projects specification from FR-043, FR-044
+- The documentation SHALL be described in user guide `project_files.md`
+- The grammar SHALL be formalized in `docs/grammar.md` with EBNF grammar for the resource and calendar specification
+
+**Phase C: Resource/Calendar Scheduling Core**
+- Extend scheduler to enforce resource availability and minimum experience constraints while respecting dependencies.
+- Apply non-working calendar windows and member unavailability (holiday/vacation/sickness) during scheduling.
+- Ensure deterministic tie-breaking and reproducibility with fixed random seeds.
+
+**Phase D: Sickness and Availability Simulation**
+- Implement per-member sickness start process and log-normal duration sampling.
+- Integrate sickness episodes into member availability timelines used by the scheduler.
+- Add targeted unit tests for probability bounds, distribution parameters, and edge cases.
+
+**Phase E: Two-Pass Critical-Path Prioritization**
+- Implement configurable two-pass mode (default off).
+- Pass 1 computes constrained criticality; Pass 2 applies critical-path-prioritized assignment.
+- Add regression and determinism tests for pass-delta behavior.
+
+**Phase F: Metrics, Exports, and UX**
+- Add resource/calendar diagnostics required by FR-041 to CLI and all exporters.
+- Annotate reports with schedule mode (dependency-only vs constrained).
+- Keep existing fields stable unless explicitly versioned.
+
+**Phase G: Documentation and Rollout**
+- Update user/project file docs with canonical schema and migration examples.
+- Update algorithm and limitations sections to remove dependency-only caveats once implementation is complete.
+- Add end-to-end fixtures and performance checks for constrained schedules.
+
+### 3.1.3 Implementation Decisions and Selections (Current Baseline)
+
+- Resource-constrained scheduling is implemented as an explicit scheduler mode (`use_resource_constraints`) to preserve backward compatibility for existing dependency-only workflows.
+- Two scheduling modes are supported:
+  - dependency-only (`dependency_only`) when no resources are available after validation,
+  - resource-constrained (`resource_constrained`) when resources are available.
+- Task execution in resource-constrained mode is non-preemptive in the current baseline.
+- Resource assignment is deterministic and stable (sorted task IDs and resource names) to preserve reproducibility with fixed random seeds.
+- Missing resource names are auto-generated in ordered format `resource_001`, `resource_002`, ... and validated for uniqueness.
+- Legacy top-level resource field `id` is accepted as a backward-compatible fallback for `name`.
+- Task-level resource references are validated against resolved resource names; unknown references fail fast during project validation.
+- Calendar validation is introduced at schema level (ID uniqueness, work-day range 1..7, ISO-8601 date parsing for holidays/absences), while full calendar-aware scheduling behavior is implemented incrementally in later phases.
+- Engine scheduling enables resource-constrained mode when validated resources are present; this includes resources explicitly defined in the project file and resources auto-generated from `team_size > 0`.
+- `team_size` semantics in baseline:
+  - `team_size` omitted or `0`: keep explicit resources only,
+  - explicit resources > `team_size` (when `team_size > 0`): validation error,
+  - explicit resources < `team_size`: auto-fill with default resources up to `team_size`.
+- In constrained mode, elapsed task duration is integrated over calendar windows and time-varying capacity rather than computed as a simple static ratio.
+- Sickness episodes are generated per resource per iteration using an independent daily start probability and a log-normal duration model (default mode 2 days, baseline sigma 0.5).
+- Planned absences and sickness days are treated as non-working days for affected resources in constrained scheduling.
+- Working-time boundaries are currently modeled from day start with `work_hours_per_day` length; explicit shift start times are deferred to a later phase.
+- Practical assignment cap is applied in constrained mode:
+  - `granularity_cap = max(1, floor(task_effort_hours / MIN_EFFORT_PER_ASSIGNEE_HOURS))`,
+  - `coordination_cap = MAX_ASSIGNEES_PER_TASK`,
+  - effective per-task auto-cap `= min(granularity_cap, coordination_cap)`.
+- Current baseline constants are `MIN_EFFORT_PER_ASSIGNEE_HOURS = 16.0` and `MAX_ASSIGNEES_PER_TASK = 3`.
+- Current assignment is greedy start-now: when at least one eligible resource is available, the task starts; scheduler does not wait for additional resources.
+- Two-pass criticality-prioritized assignment is not currently enabled in baseline CLI/config.
+
  
 
 ### 3.2 Non-Functional Requirements
@@ -229,7 +418,7 @@ Provide probabilistic estimates for software project completion through Monte Ca
 - Log level SHALL be configurable
 - Logs SHALL include timestamps and context
 
----
+
 
 ## 4. Input File Format Specification
 
@@ -275,9 +464,9 @@ tasks:
     name: "Database schema design"
     description: "Design normalized schema for customer data"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"  # "hours" (default), "days", or "weeks"; converted to hours internally
     
     dependencies: []  # No predecessors
@@ -290,6 +479,8 @@ tasks:
       integration_complexity: "low"
     
     resources: ["backend_dev_1", "dba_1"]  # Optional
+    max_resources: 2
+    min_experience_level: 1
     
     risks:
       - id: "task_risk_001"
@@ -300,9 +491,9 @@ tasks:
   - id: "task_002"
     name: "API endpoint implementation"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"  # Converted to hours using hours_per_day
     dependencies: ["task_001"]  # Depends on task_001
     uncertainty_factors:
@@ -375,7 +566,7 @@ output:
   histogram_bins: 50
 ```
 
----
+
 
 ## 5. System Architecture
 
@@ -455,7 +646,7 @@ examples/
 - Methods: validate(), get_task_by_id()
 
 #### Task
-- Properties: id, name, estimate (min, most_likely, max), dependencies, uncertainty_factors, risks, resources
+- Properties: id, name, estimate (min, expected, max), dependencies, uncertainty_factors, risks, resources
 - Methods: calculate_adjusted_estimate(), has_dependency()
 
 #### Risk
@@ -472,7 +663,7 @@ examples/
 #### StatisticalAnalyzer
 - Methods: calculate_statistics(), generate_histogram(), compute_percentiles()
 
----
+
 
 ## 6. Algorithms
 
@@ -484,7 +675,7 @@ FOR iteration = 1 TO N:
     
     FOR each task:
         # Sample base duration
-        base = sample_triangular(task.min, task.most_likely, task.max)
+        base = sample_triangular(task.min, task.expected, task.max)
         
         # Apply uncertainty factors
         adjusted = base * product(uncertainty_multipliers)
@@ -518,22 +709,19 @@ Uses Kahn's algorithm for topological sorting to determine task execution order 
 
 * In engine.py, each iteration first samples every task duration from its estimate distribution.
 * The engine then adjusts each sampled duration with uncertainty factors and task-level risks before scheduling.
-* After that, scheduler.py computes an earliest-start schedule using only dependency constraints: 
-  * tasks with no dependencies start at time 0,
-  * a task starts at the maximum end time of its predecessors,
-  * independent tasks therefore do run in parallel today.
-* Project duration is then computed as the maximum end time in the schedule, not as the sum of all task durations. That directly contradicts the idea that the engine just adds all task efforts together.
-* Only after the scheduled project duration is known does the engine apply project-level risks. This means project-wide risk penalties affect final duration, but they do not affect critical-path membership for that iteration.
-* The scheduler then identifies the critical path for that iteration by:
-  * finding every task that ends exactly at project completion,
-  * recursively walking backward through predecessors whose end time exactly matches the successor’s start time,
-  * collecting all such tasks into a set.
+* The scheduler mode is selected per iteration from validated project resources:
+  * `dependency_only` when no resources exist,
+  * `resource_constrained` when resources exist (explicitly defined or generated from `team_size > 0`).
+* In dependency-only mode, tasks start at earliest dependency-feasible times.
+* In resource-constrained mode, start and end times also depend on eligibility (`resources`, `min_experience_level`), assignment caps (`max_resources` and practical auto-cap), calendars, planned absence, and sickness episodes.
+* Project duration is computed as the maximum task end time in the resulting schedule, not as the sum of task durations.
+* Only after scheduled duration is known does the engine apply project-level risks.
 
 ### 6.4 Critical Path Identification
 
 For each iteration, identify the longest path through the task network. Track frequency of each task appearing on critical path.
 
-* This is a dependency-only critical path, not a resource-constrained critical chain.
+* Critical-path tracing is currently based on dependency timing relationships in the realized schedule.
 * A task is counted as critical in an iteration if it lies on at least one longest dependency path in that specific sampled schedule.
 * Across all iterations, the engine increments a counter per task in the results field critical_path_frequency in simulation.py.
 * The method get_critical_path then converts those counts into a criticality index by dividing by the number of iterations.
@@ -541,14 +729,13 @@ For each iteration, identify the longest path through the task network. Track fr
 
 ### 6.5 Limitations
 
-* No resource constraints are used in scheduling today. The scheduler ignores task resources, project resources, and calendars.
-* That means the current critical path is purely precedence-based.
-* Top-level resources and calendars are parsed into the project model, but they are **NOT** used in scheduling (yet)
-* Task-level resources are also present in the model, but not consumed by the scheduler.
+* Two-pass criticality-prioritized assignment mode is not currently enabled as a user-facing toggle.
+* Assignment strategy is deterministic greedy rather than globally optimal schedule optimization.
+* Critical-path reporting reflects dependency relationships and should not be interpreted as a full resource-critical-chain optimizer.
 * Project-level risks are applied after schedule calculation, so they can make the project finish later without changing which tasks were counted as critical.
 * If multiple terminal tasks finish at the same project end time, the code traces all of them, so one iteration can contribute multiple branches rather than one single canonical path.
 
----
+
 
 ## 7. Technology Stack
 
@@ -574,7 +761,7 @@ For each iteration, identify the longest path through the task network. Track fr
 - **mkdocs-material**: 9.0+ (Material theme)
 - **mkdocstrings**: 0.22+ (API documentation from docstrings)
 
----
+
 
 ## 8. Usage Examples
 
@@ -629,14 +816,14 @@ for task_id, criticality in critical_tasks.items():
     print(f"{task_id}: {criticality*100:.1f}% critical")
 ```
 
----
+
 
 ## 9. Validation Rules
 
 1. All task IDs must be unique
 2. All dependency references must exist
 3. No circular dependencies
-4. Estimate: min ≤ most_likely ≤ max
+4. Estimate: low ≤ expected ≤ high
 5. Probabilities must be in range [0, 1]
 6. Impacts must be non-negative
 7. Start date must be valid ISO 8601 format
@@ -644,7 +831,7 @@ for task_id, criticality in critical_tasks.items():
 9. Uncertainty factor levels must match config definitions
 10. At least one task must be defined
 
----
+
 
 ## 10. Output Formats
 
@@ -663,7 +850,7 @@ Interactive report with:
 - Sensitivity analysis chart
 - Risk impact summary
 
----
+
 
 ## 11. Future Enhancements (Out of Scope for v1.0)
 
@@ -678,7 +865,7 @@ Interactive report with:
 9. Correlation between task durations (currently assumes independence)
 10. Weather/external factor modeling
 
----
+
 
 ## 12. References
 
@@ -688,7 +875,7 @@ Interactive report with:
 - NIST Guide for Risk Analysis
 - PMI PMBOK Guide (7th Edition)
 
----
+
 
 ## Document Control
 
@@ -696,6 +883,6 @@ Interactive report with:
 |---------|------|--------|---------|
 | 1.0 | 2025-10-23 | Initial | Initial specification |
 
----
+
 
 **End of Specification**

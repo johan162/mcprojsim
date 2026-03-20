@@ -382,7 +382,7 @@ class TestRecommendExactValues:
 
     def test_exact_values_default_profiles(self) -> None:
         """Hand-computed expectations for effort=180, CP=100, max_parallel=3."""
-        results = _make_results()  # effort=180, CP=100, max=3
+        results = _make_results()  # effort=180, CP=100, high=3
         config = Config.get_default()
         recs = StaffingAnalyzer.recommend_team_size(results, config)
         by_prof = {r.profile: r for r in recs}
@@ -791,12 +791,12 @@ def _write_project() -> str:
                     {
                         "id": "task_001",
                         "name": "Alpha",
-                        "estimate": {"min": 3, "most_likely": 5, "max": 8},
+                        "estimate": {"low": 3, "expected": 5, "high": 8},
                     },
                     {
                         "id": "task_002",
                         "name": "Beta",
-                        "estimate": {"min": 2, "most_likely": 4, "max": 6},
+                        "estimate": {"low": 2, "expected": 4, "high": 6},
                         "dependencies": ["task_001"],
                     },
                 ],

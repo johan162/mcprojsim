@@ -18,12 +18,12 @@ _PROJECT_YAML = {
         {
             "id": "task_001",
             "name": "Alpha",
-            "estimate": {"min": 3, "most_likely": 5, "max": 8},
+            "estimate": {"low": 3, "expected": 5, "high": 8},
         },
         {
             "id": "task_002",
             "name": "Beta",
-            "estimate": {"min": 2, "most_likely": 4, "max": 6},
+            "estimate": {"low": 2, "expected": 4, "high": 6},
             "dependencies": ["task_001"],
         },
     ],
@@ -47,6 +47,11 @@ class _FakeResults:
     percentiles = {50: 38.0, 80: 44.0, 90: 48.0}
     effort_percentiles: dict[int, float] = {}
     max_parallel_tasks = 2
+    schedule_mode = "resource_constrained"
+    resource_constraints_active = True
+    resource_wait_time_hours = 1.5
+    resource_utilization = 0.7
+    calendar_delay_time_hours = 4.0
 
     def total_effort_hours(self):
         return 60.0
@@ -166,6 +171,16 @@ class TestSimulatePlainOutput:
         assert "Risk Impact Analysis" in result.output
         assert "triggers=25.0%" in result.output
 
+    def test_plain_constrained_diagnostics(self, monkeypatch):
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            pf = _write_project(None)
+            result = runner.invoke(cli, ["simulate", pf])
+        assert "Schedule Mode: resource_constrained" in result.output
+        assert "Constrained Schedule Diagnostics" in result.output
+        assert "Average Resource Wait" in result.output
+
 
 class TestSimulateTableOutput:
     """Table-formatted output (--table)."""
@@ -177,7 +192,10 @@ class TestSimulateTableOutput:
             pf = _write_project(None)
             result = runner.invoke(cli, ["simulate", pf, "--table"])
         assert result.exit_code == 0
-        assert "Parameter" in result.output
+        assert "Project Overview" in result.output
+        assert "Calendar Time Statistical Summary" in result.output
+        assert "Project Effort Statistical Summary" in result.output
+        assert "Field" in result.output
         assert "Value" in result.output
         assert "CLI Output Test" in result.output
 
@@ -216,6 +234,17 @@ class TestSimulateTableOutput:
             result = runner.invoke(cli, ["simulate", pf, "--table"])
         assert "Trigger Rate" in result.output
         assert "25.0%" in result.output
+
+    def test_table_constrained_diagnostics(self, monkeypatch):
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            pf = _write_project(None)
+            result = runner.invoke(cli, ["simulate", pf, "--table"])
+        assert "Schedule Mode" in result.output
+        assert "resource_constrained" in result.output
+        assert "Constrained Schedule Diagnostics" in result.output
+        assert "Effective Resource Utilization" in result.output
 
 
 class TestSimulateTargetDate:
@@ -258,6 +287,56 @@ class TestSimulateTargetDate:
             pf = _write_project(None)
             result = runner.invoke(cli, ["simulate", pf, "--target-date", "not-a-date"])
         assert "Invalid target date format" in result.output
+
+
+class TestSimulateMinimalOutput:
+    """Minimal output mode (--minimal, -m)."""
+
+    def test_minimal_plain_shows_only_core_sections(self, monkeypatch):
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            pf = _write_project(None)
+            result = runner.invoke(cli, ["simulate", pf, "--minimal"])
+
+        assert result.exit_code == 0
+        assert "mcprojsim, version" in result.output
+        assert "Project Overview" in result.output
+        assert "Calendar Time Statistical Summary" in result.output
+        assert "Project Effort Statistical Summary" in result.output
+        assert "Calendar Time Confidence Intervals" in result.output
+
+        assert "Simulation time:" not in result.output
+        assert "Peak simulation memory:" not in result.output
+        assert "Effort Confidence Intervals" not in result.output
+        assert "Sensitivity Analysis" not in result.output
+        assert "Schedule Slack" not in result.output
+        assert "Risk Impact Analysis" not in result.output
+        assert "Constrained Schedule Diagnostics" not in result.output
+        assert "Most Frequent Critical Paths" not in result.output
+        assert "Staffing (based on" not in result.output
+        assert "No export formats specified" not in result.output
+
+    def test_minimal_table_shows_only_core_sections(self, monkeypatch):
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
+        runner = CliRunner()
+        with runner.isolated_filesystem():
+            pf = _write_project(None)
+            result = runner.invoke(cli, ["simulate", pf, "--minimal", "--table"])
+
+        assert result.exit_code == 0
+        assert "Project Overview" in result.output
+        assert "Calendar Time Statistical Summary" in result.output
+        assert "Project Effort Statistical Summary" in result.output
+        assert "Calendar Time Confidence Intervals" in result.output
+        assert "Percentile" in result.output
+        assert "Working Days" in result.output
+
+        assert "Effort Confidence Intervals" not in result.output
+        assert "Correlation" not in result.output
+        assert "Slack (hours)" not in result.output
+        assert "Trigger Rate" not in result.output
+        assert "Constrained Schedule Diagnostics" not in result.output
 
 
 class TestSimulateExports:

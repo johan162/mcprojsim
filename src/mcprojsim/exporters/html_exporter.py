@@ -190,6 +190,7 @@ HTML_TEMPLATE = """
             <tr><td class="metric">Iterations</td><td class="value">{{ iterations }}</td></tr>
             <tr><td class="metric">Random Seed</td><td class="value">{{ random_seed }}</td></tr>
             <tr><td class="metric">Hours per Day</td><td class="value">{{ hours_per_day }}</td></tr>
+            <tr><td class="metric">Schedule Mode</td><td class="value">{{ schedule_mode }}</td></tr>
         </table>
     </div>
 
@@ -444,6 +445,31 @@ HTML_TEMPLATE = """
     </div>
     {% endif %}
 
+    {% if resource_constraints_active %}
+    <div class="section">
+        <h3>Constrained Schedule Diagnostics</h3>
+        <table>
+            <thead>
+                <tr><th>Metric</th><th class="header-center">Value</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Average Resource Wait (hours)</td>
+                    <td class="value-center">{{ "%.2f"|format(resource_wait_time_hours) }}</td>
+                </tr>
+                <tr>
+                    <td>Effective Resource Utilization</td>
+                    <td class="value-center">{{ "%.1f"|format(resource_utilization * 100) }}%</td>
+                </tr>
+                <tr>
+                    <td>Calendar Delay Contribution (hours)</td>
+                    <td class="value-center">{{ "%.2f"|format(calendar_delay_time_hours) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
     <div class="section">
         <h3>Critical Path Analysis</h3>
         <table>
@@ -667,6 +693,11 @@ class HTMLExporter:
             iterations=results.iterations,
             random_seed=results.random_seed or "None",
             hours_per_day=results.hours_per_day,
+            schedule_mode=results.schedule_mode,
+            resource_constraints_active=results.resource_constraints_active,
+            resource_wait_time_hours=results.resource_wait_time_hours,
+            resource_utilization=results.resource_utilization,
+            calendar_delay_time_hours=results.calendar_delay_time_hours,
             mean=results.mean,
             mean_working_days=math.ceil(results.mean / results.hours_per_day),
             median=results.median,
@@ -988,8 +1019,8 @@ class HTMLExporter:
             size_config = effective_config.get_t_shirt_size(t_shirt)
             if size_config is not None:
                 return (
-                    f"{t_shirt} ({size_config.min}, "
-                    f"{size_config.most_likely}, {size_config.max})"
+                    f"{t_shirt} ({size_config.low}, "
+                    f"{size_config.expected}, {size_config.high})"
                 )
             return f"{t_shirt} (unknown)"
 
@@ -1000,23 +1031,23 @@ class HTMLExporter:
             points_config = effective_config.get_story_point(story_points)
             if points_config is not None:
                 return (
-                    f"SP {story_points} ({points_config.min}, "
-                    f"{points_config.most_likely}, {points_config.max})"
+                    f"SP {story_points} ({points_config.low}, "
+                    f"{points_config.expected}, {points_config.high})"
                 )
             return f"SP {story_points} (unknown)"
 
-        # Check if it's a triangular distribution (min, most_likely, max)
+        # Check if it's a triangular distribution (low, expected, high)
         elif (
-            hasattr(task.estimate, "min")
-            and hasattr(task.estimate, "most_likely")
-            and hasattr(task.estimate, "max")
+            hasattr(task.estimate, "low")
+            and hasattr(task.estimate, "expected")
+            and hasattr(task.estimate, "high")
         ):
             if (
-                task.estimate.min is not None
-                and task.estimate.most_likely is not None
-                and task.estimate.max is not None
+                task.estimate.low is not None
+                and task.estimate.expected is not None
+                and task.estimate.high is not None
             ):
-                return f"({task.estimate.min}, {task.estimate.most_likely}, {task.estimate.max})"
+                return f"({task.estimate.low}, {task.estimate.expected}, {task.estimate.high})"
 
         # Fallback to mean simulated effort
         if task_id in results.task_durations:

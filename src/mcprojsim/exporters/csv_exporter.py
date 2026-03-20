@@ -48,6 +48,7 @@ class CSVExporter:
             writer.writerow(["Iterations", results.iterations])
             writer.writerow(["Random Seed", results.random_seed])
             writer.writerow(["Hours per Day", results.hours_per_day])
+            writer.writerow(["Schedule Mode", results.schedule_mode])
             writer.writerow([])
 
             # Write statistics
@@ -183,6 +184,28 @@ class CSVExporter:
                                 f"{stats['mean_when_triggered']:.2f}",
                             ]
                         )
+
+            if results.resource_constraints_active:
+                writer.writerow([])
+                writer.writerow(["Constrained Schedule Diagnostics", ""])
+                writer.writerow(
+                    [
+                        "Average Resource Wait (hours)",
+                        f"{results.resource_wait_time_hours:.2f}",
+                    ]
+                )
+                writer.writerow(
+                    [
+                        "Effective Resource Utilization",
+                        f"{results.resource_utilization:.4f}",
+                    ]
+                )
+                writer.writerow(
+                    [
+                        "Calendar Delay Contribution (hours)",
+                        f"{results.calendar_delay_time_hours:.2f}",
+                    ]
+                )
 
             # Write staffing analysis
             writer.writerow([])

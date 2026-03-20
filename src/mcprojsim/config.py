@@ -3,6 +3,7 @@
 from copy import deepcopy
 from enum import Enum
 from pathlib import Path
+from statistics import NormalDist
 from typing import Any, Dict, Optional
 
 import yaml
@@ -31,6 +32,8 @@ DEFAULT_CRITICAL_PATH_REPORT_LIMIT = 2
 DEFAULT_CONFIDENCE_LEVELS = [25, 50, 75, 80, 85, 90, 95, 99]
 DEFAULT_PROBABILITY_RED_THRESHOLD = 0.50
 DEFAULT_PROBABILITY_GREEN_THRESHOLD = 0.90
+DEFAULT_LOGNORMAL_HIGH_PERCENTILE = 95
+ALLOWED_LOGNORMAL_HIGH_PERCENTILES = [70, 75, 80, 85, 90, 95, 99]
 DEFAULT_UNCERTAINTY_FACTOR_LEVELS = {
     "team_experience": "medium",
     "requirements_maturity": "medium",
@@ -46,21 +49,21 @@ DEFAULT_UNCERTAINTY_FACTORS = {
     "integration_complexity": {"low": 1.0, "medium": 1.15, "high": 1.35},
 }
 DEFAULT_T_SHIRT_SIZE_VALUES = {
-    "XS": {"min": 3, "most_likely": 5, "max": 15},
-    "S": {"min": 5, "most_likely": 16, "max": 40},
-    "M": {"min": 40, "most_likely": 60, "max": 120},
-    "L": {"min": 160, "most_likely": 240, "max": 500},
-    "XL": {"min": 320, "most_likely": 400, "max": 750},
-    "XXL": {"min": 400, "most_likely": 500, "max": 1200},
+    "XS": {"low": 3, "expected": 5, "high": 15},
+    "S": {"low": 5, "expected": 16, "high": 40},
+    "M": {"low": 40, "expected": 60, "high": 120},
+    "L": {"low": 160, "expected": 240, "high": 500},
+    "XL": {"low": 320, "expected": 400, "high": 750},
+    "XXL": {"low": 400, "expected": 500, "high": 1200},
 }
 DEFAULT_STORY_POINT_VALUES = {
-    1: {"min": 0.5, "most_likely": 1, "max": 3},
-    2: {"min": 1, "most_likely": 2, "max": 4},
-    3: {"min": 1.5, "most_likely": 3, "max": 5},
-    5: {"min": 3, "most_likely": 5, "max": 8},
-    8: {"min": 5, "most_likely": 8, "max": 15},
-    13: {"min": 8, "most_likely": 13, "max": 21},
-    21: {"min": 13, "most_likely": 21, "max": 34},
+    1: {"low": 0.5, "expected": 1, "high": 3},
+    2: {"low": 1, "expected": 2, "high": 4},
+    3: {"low": 1.5, "expected": 3, "high": 5},
+    5: {"low": 3, "expected": 5, "high": 8},
+    8: {"low": 5, "expected": 8, "high": 15},
+    13: {"low": 8, "expected": 13, "high": 21},
+    21: {"low": 13, "expected": 21, "high": 34},
 }
 
 
@@ -82,6 +85,9 @@ def _build_default_config_data() -> dict[str, Any]:
             "default_iterations": DEFAULT_SIMULATION_ITERATIONS,
             "random_seed": None,
             "max_stored_critical_paths": DEFAULT_MAX_STORED_CRITICAL_PATHS,
+        },
+        "lognormal": {
+            "high_percentile": DEFAULT_LOGNORMAL_HIGH_PERCENTILE,
         },
         "output": {
             "formats": list(DEFAULT_OUTPUT_FORMATS),
@@ -141,6 +147,22 @@ class SimulationConfig(BaseModel):
         default=DEFAULT_MAX_STORED_CRITICAL_PATHS,
         gt=0,
     )
+
+
+class LogNormalConfig(BaseModel):
+    """Shifted log-normal interpretation settings."""
+
+    high_percentile: int = Field(default=DEFAULT_LOGNORMAL_HIGH_PERCENTILE)
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.high_percentile not in ALLOWED_LOGNORMAL_HIGH_PERCENTILES:
+            allowed = ", ".join(
+                str(value) for value in ALLOWED_LOGNORMAL_HIGH_PERCENTILES
+            )
+            raise ValueError(
+                "lognormal.high_percentile must be one of: "
+                f"{allowed}; got {self.high_percentile}"
+            )
 
 
 class OutputConfig(BaseModel):
@@ -205,9 +227,9 @@ class StaffingConfig(BaseModel):
 class EstimateRangeConfig(BaseModel):
     """Range configuration for a symbolic estimate."""
 
-    min: float = Field(gt=0)
-    most_likely: float = Field(gt=0)
-    max: float = Field(gt=0)
+    low: float = Field(gt=0)
+    expected: float = Field(gt=0)
+    high: float = Field(gt=0)
 
 
 class TShirtSizeConfig(EstimateRangeConfig):
@@ -227,6 +249,7 @@ class Config(BaseModel):
     story_points: Dict[int, StoryPointConfig] = Field(default_factory=dict)
     story_point_unit: EffortUnit = Field(default=EffortUnit.DAYS)
     simulation: SimulationConfig = Field(default_factory=SimulationConfig)
+    lognormal: LogNormalConfig = Field(default_factory=LogNormalConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     staffing: StaffingConfig = Field(default_factory=StaffingConfig)
 
@@ -292,3 +315,7 @@ class Config(BaseModel):
             StoryPointConfig object or None if not found
         """
         return self.story_points.get(points)
+
+    def get_lognormal_high_z_value(self) -> float:
+        """Return the z-score for the configured shifted-lognormal high percentile."""
+        return NormalDist().inv_cdf(self.lognormal.high_percentile / 100.0)

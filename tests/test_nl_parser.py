@@ -97,6 +97,16 @@ class TestNLProjectParserTasks:
         text = "Task 1: Setup infrastructure\n- Size: L"
         assert self.parser.parse(text).tasks[0].name == "Setup infrastructure"
 
+    def test_task_name_from_bullet(self) -> None:
+        """Task name specified as a bullet point with 'name:' pattern."""
+        text = "Task 1:\n- name: Analyze Requirements\n- Size: L"
+        assert self.parser.parse(text).tasks[0].name == "Analyze Requirements"
+
+    def test_task_name_from_bullet_no_colon(self) -> None:
+        """Task name specified as a bullet point with 'name' (no colon)."""
+        text = "Task 1:\n- name Analyze Requirements\n- Size: L"
+        assert self.parser.parse(text).tasks[0].name == "Analyze Requirements"
+
     def test_default_task_name(self) -> None:
         text = "Task 1:\n- Size: M"
         assert self.parser.parse(text).tasks[0].name == "Task 1"
@@ -154,9 +164,9 @@ class TestNLProjectParserTasks:
     def test_explicit_estimate(self) -> None:
         text = "Task 1:\n- Development\n- Estimate: 3/5/10 days"
         task = self.parser.parse(text).tasks[0]
-        assert task.min_estimate == 3.0
-        assert task.most_likely_estimate == 5.0
-        assert task.max_estimate == 10.0
+        assert task.low_estimate == 3.0
+        assert task.expected_estimate == 5.0
+        assert task.high_estimate == 10.0
         assert task.estimate_unit == "days"
 
     def test_explicit_estimate_hours(self) -> None:
@@ -166,9 +176,9 @@ class TestNLProjectParserTasks:
     def test_explicit_estimate_dash_separator(self) -> None:
         text = "Task 1:\n- Work\n- Estimate: 2-4-8"
         task = self.parser.parse(text).tasks[0]
-        assert task.min_estimate == 2.0
-        assert task.most_likely_estimate == 4.0
-        assert task.max_estimate == 8.0
+        assert task.low_estimate == 2.0
+        assert task.expected_estimate == 4.0
+        assert task.high_estimate == 8.0
 
     def test_single_dependency(self) -> None:
         text = "Task 1:\n- A\n- Size: S\nTask 2:\n- B\n- Depends on Task 1\n- Size: M"
@@ -206,6 +216,68 @@ class TestNLProjectParserTasks:
         project = self.parser.parse(text)
         assert len(project.tasks) == 1
         assert project.tasks[0].t_shirt_size == "M"
+
+
+class TestNLProjectParserDates:
+    """Tests for date extraction and range expansion."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser(current_year=2026)
+
+    def test_calendar_holiday_iso_range_expands(self) -> None:
+        text = (
+            "Task 1:\n- Work\n- Size: S\nCalendar:\n- Holiday: 2026-03-19 to 2026-03-21"
+        )
+        project = self.parser.parse(text)
+
+        assert project.calendars[0].holidays == [
+            "2026-03-19",
+            "2026-03-20",
+            "2026-03-21",
+        ]
+
+    def test_calendar_holiday_compact_range_expands(self) -> None:
+        text = "Task 1:\n- Work\n- Size: S\nCalendar:\n- Holidays: 20260319 - 20260321"
+        project = self.parser.parse(text)
+
+        assert project.calendars[0].holidays == [
+            "2026-03-19",
+            "2026-03-20",
+            "2026-03-21",
+        ]
+
+    def test_calendar_holiday_day_month_range_uses_current_year(self) -> None:
+        text = "Task 1:\n- Work\n- Size: S\nCalendar:\n- Holiday: 19 Mar to 21 Mar"
+        project = self.parser.parse(text)
+
+        assert project.calendars[0].holidays == [
+            "2026-03-19",
+            "2026-03-20",
+            "2026-03-21",
+        ]
+
+    def test_resource_absence_range_expands(self) -> None:
+        text = (
+            "Task 1:\n- Work\n- Size: S\n"
+            "Resource 1: Alice\n- Absence: 2026-04-01 to 2026-04-03"
+        )
+        project = self.parser.parse(text)
+
+        assert project.resources[0].planned_absence == [
+            "2026-04-01",
+            "2026-04-02",
+            "2026-04-03",
+        ]
+
+    def test_extract_dates_keeps_single_dates_and_ranges(self) -> None:
+        assert self.parser._extract_dates(
+            "2026-03-19 to 2026-03-20, 20260322, 24 Mar"
+        ) == [
+            "2026-03-19",
+            "2026-03-20",
+            "2026-03-22",
+            "2026-03-24",
+        ]
 
 
 class TestNLProjectParserYAML:
@@ -247,9 +319,9 @@ class TestNLProjectParserYAML:
         text = "Task 1:\n- Work\n- Estimate: 3/5/10 days"
         data = yaml.safe_load(self.parser.parse_and_generate(text))
         est = data["tasks"][0]["estimate"]
-        assert est["min"] == 3
-        assert est["most_likely"] == 5
-        assert est["max"] == 10
+        assert est["low"] == 3
+        assert est["expected"] == 5
+        assert est["high"] == 10
         assert est["unit"] == "days"
 
     def test_yaml_dependencies_mapped(self) -> None:

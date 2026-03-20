@@ -184,18 +184,17 @@ Key method:
 
 Supports four estimation styles:
 
-- Triangular estimates via `min`, `most_likely`, and `max`
-- Log-normal estimates via `most_likely` and `standard_deviation`
+- Triangular estimates via `low`, `expected`, and `high`
+- Log-normal estimates via `low`, `expected`, and `high`
 - T-shirt-sized estimates via `t_shirt_size`
 - Story Point estimates via `story_points`
 
 Key fields:
 
 - `distribution`
-- `min`
-- `most_likely`
-- `max`
-- `standard_deviation`
+- `low`
+- `expected`
+- `high`
 - `t_shirt_size`
 - `story_points`
 - `unit`
@@ -421,7 +420,7 @@ Supported input patterns:
 - `Task 1: Backend API` followed by bullet points
 - `Size: M` or `Size XL` (T-shirt sizes)
 - `Story points: 5`
-- `Estimate: 3/5/10 days` (min/most_likely/max)
+- `Estimate: 3/5/10 days` (low/expected/high)
 - `Depends on Task 1, Task 3`
 
 ```python
@@ -443,4 +442,4 @@ yaml_output = parser.parse_and_generate(description)
 ### Data classes
 
 - `ParsedProject` — extracted project-level data (`name`, `start_date`, `hours_per_day`, `tasks`, `confidence_levels`)
-- `ParsedTask` — extracted task data (`name`, `t_shirt_size`, `story_points`, `min_estimate`/`most_likely_estimate`/`max_estimate`, `dependency_refs`)
+- `ParsedTask` — extracted task data (`name`, `t_shirt_size`, `story_points`, `min_estimate`/`expected_estimate`/`max_estimate`, `dependency_refs`)

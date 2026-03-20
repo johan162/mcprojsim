@@ -22,6 +22,7 @@ class TestConfig:
         assert "requirements_maturity" in config.uncertainty_factors
         assert "technical_complexity" in config.uncertainty_factors
         assert config.simulation.default_iterations == 10000
+        assert config.lognormal.high_percentile == 95
 
     def test_default_confidence_levels_include_p25_and_p99(self):
         """Test the shared default confidence levels include P25 and P99."""
@@ -82,8 +83,8 @@ class TestConfig:
     def test_load_from_file_merges_symbolic_defaults(self, tmp_path):
         """Test loading config preserves built-in symbolic defaults not overridden."""
         config_data = {
-            "story_points": {5: {"min": 4, "most_likely": 6, "max": 9}},
-            "t_shirt_sizes": {"M": {"min": 4, "most_likely": 6, "max": 9}},
+            "story_points": {5: {"low": 4, "expected": 6, "high": 9}},
+            "t_shirt_sizes": {"M": {"low": 4, "expected": 6, "high": 9}},
         }
 
         config_file = tmp_path / "config.yaml"
@@ -95,18 +96,34 @@ class TestConfig:
         assert config.get_story_point(5) is not None
         sp5 = config.get_story_point(5)
         assert sp5 is not None
-        assert sp5.most_likely == 6
+        assert sp5.expected == 6
         assert config.get_story_point(8) is not None
         assert config.get_t_shirt_size("M") is not None
         ts_m = config.get_t_shirt_size("M")
         assert ts_m is not None
-        assert ts_m.most_likely == 6
+        assert ts_m.expected == 6
         assert config.get_t_shirt_size("XL") is not None
 
     def test_load_from_nonexistent_file(self):
         """Test loading from non-existent file."""
         with pytest.raises(FileNotFoundError):
             Config.load_from_file("nonexistent.yaml")
+
+    def test_load_from_file_overrides_lognormal_percentile(self, tmp_path):
+        """Test loading config supports a custom shifted-lognormal percentile."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("lognormal:\n  high_percentile: 90\n")
+
+        config = Config.load_from_file(config_file)
+        assert config.lognormal.high_percentile == 90
+
+    def test_invalid_lognormal_percentile_rejected(self, tmp_path):
+        """Only the documented percentile choices should be accepted."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("lognormal:\n  high_percentile: 92\n")
+
+        with pytest.raises(ValueError, match="must be one of"):
+            Config.load_from_file(config_file)
 
 
 class TestSimulationConfig:
@@ -141,21 +158,21 @@ class TestTShirtSizes:
         # Test a few sizes
         xs = config.get_t_shirt_size("XS")
         assert xs is not None
-        assert xs.min == 3
-        assert xs.most_likely == 5
-        assert xs.max == 15
+        assert xs.low == 3
+        assert xs.expected == 5
+        assert xs.high == 15
 
         m = config.get_t_shirt_size("M")
         assert m is not None
-        assert m.min == 40
-        assert m.most_likely == 60
-        assert m.max == 120
+        assert m.low == 40
+        assert m.expected == 60
+        assert m.high == 120
 
         xxl = config.get_t_shirt_size("XXL")
         assert xxl is not None
-        assert xxl.min == 400
-        assert xxl.most_likely == 500
-        assert xxl.max == 1200
+        assert xxl.low == 400
+        assert xxl.expected == 500
+        assert xxl.high == 1200
 
     def test_get_unknown_tshirt_size(self):
         """Test getting unknown T-shirt size returns None."""
@@ -181,21 +198,21 @@ class TestStoryPoints:
 
         sp1 = config.get_story_point(1)
         assert sp1 is not None
-        assert sp1.min == 0.5
-        assert sp1.most_likely == 1
-        assert sp1.max == 3
+        assert sp1.low == 0.5
+        assert sp1.expected == 1
+        assert sp1.high == 3
 
         sp8 = config.get_story_point(8)
         assert sp8 is not None
-        assert sp8.min == 5
-        assert sp8.most_likely == 8
-        assert sp8.max == 15
+        assert sp8.low == 5
+        assert sp8.expected == 8
+        assert sp8.high == 15
 
         sp21 = config.get_story_point(21)
         assert sp21 is not None
-        assert sp21.min == 13
-        assert sp21.most_likely == 21
-        assert sp21.max == 34
+        assert sp21.low == 13
+        assert sp21.expected == 21
+        assert sp21.high == 34
 
     def test_get_unknown_story_point(self):
         """Test getting unknown Story Point value returns None."""

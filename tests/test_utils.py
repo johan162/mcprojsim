@@ -19,7 +19,7 @@ class TestValidator:
                 {
                     "id": "task_001",
                     "name": "Task 1",
-                    "estimate": {"min": 1, "most_likely": 2, "max": 5},
+                    "estimate": {"low": 1, "expected": 2, "high": 5},
                 }
             ],
         }
@@ -74,7 +74,7 @@ class TestValidator:
                 {
                     "id": "task_001",
                     "name": "Task 1",
-                    "estimate": {"min": 1, "most_likely": 2, "max": 5},
+                    "estimate": {"low": 1, "expected": 2, "high": 5},
                 }
             ],
         }

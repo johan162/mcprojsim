@@ -53,6 +53,7 @@ The current configuration schema supports these top-level keys:
 - `story_points`
 - `story_point_unit`
 - `simulation`
+- `lognormal`
 - `output`
 - `staffing`
 
@@ -86,29 +87,29 @@ uncertainty_factors:
 
 t_shirt_sizes:
   XS:
-    min: 0.5
-    most_likely: 1
-    max: 2
+    low: 0.5
+    expected: 1
+    high: 2
   M:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
 
 t_shirt_size_unit: "hours"
 
 story_points:
   1:
-    min: 0.5
-    most_likely: 1
-    max: 3
+    low: 0.5
+    expected: 1
+    high: 3
   5:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
   8:
-    min: 5
-    most_likely: 8
-    max: 15
+    low: 5
+    expected: 8
+    high: 15
 
 story_point_unit: "days"
 
@@ -116,6 +117,9 @@ simulation:
   default_iterations: 10000
   random_seed: 42
   max_stored_critical_paths: 20
+
+lognormal:
+  high_percentile: 95
 
 output:
   formats: ["json", "csv", "html"]
@@ -200,7 +204,7 @@ If you override only part of either mapping table, the remaining built-in defaul
 
 ### T-shirt sizes
 
-Tasks may use `t_shirt_size` instead of explicit `min` / `most_likely` / `max` values.
+Tasks may use `t_shirt_size` instead of explicit `min` / `expected` / `max` values.
 
 Built-in size keys:
 
@@ -213,7 +217,7 @@ Built-in size keys:
 
 Built-in defaults:
 
-| Size | `min` | `most_likely` | `max` |
+| Size | `min` | `expected` | `max` |
 |---|---:|---:|---:|
 | `XS` | 0.5 | 1 | 2 |
 | `S` | 1 | 2 | 4 |
@@ -227,10 +231,39 @@ Example override:
 ```yaml
 t_shirt_sizes:
   M:
-    min: 4
-    most_likely: 6
-    max: 9
+    low: 4
+    expected: 6
+    high: 9
 ```
+
+## Shifted log-normal configuration
+
+When an estimate uses `distribution: "lognormal"`, `mcprojsim` fits a **shifted**
+log-normal from the already familiar `low`, `expected`, and `high` fields:
+
+- `low` is treated as the hard shift/minimum,
+- `expected` is treated as the mode,
+- `high` is treated as a chosen percentile of the distribution.
+
+That percentile is configured here:
+
+```yaml
+lognormal:
+  high_percentile: 95
+```
+
+Allowed values are:
+
+- `70`
+- `75`
+- `80`
+- `85`
+- `90`
+- `95`
+- `99`
+
+The default is `95`, meaning the `high` value is interpreted as the P95 point of
+the shifted log-normal distribution.
 
 ### `t_shirt_size_unit`
 
@@ -266,7 +299,7 @@ Built-in point values:
 
 Built-in defaults:
 
-| Points | `min` | `most_likely` | `max` |
+| Points | `min` | `expected` | `max` |
 |---|---:|---:|---:|
 | `1` | 0.5 | 1 | 3 |
 | `2` | 1 | 2 | 4 |
@@ -281,13 +314,13 @@ Example override:
 ```yaml
 story_points:
   5:
-    min: 4
-    most_likely: 6
-    max: 9
+    low: 4
+    expected: 6
+    high: 9
   8:
-    min: 6
-    most_likely: 9
-    max: 16
+    low: 6
+    expected: 9
+    high: 16
 ```
 
 ### `story_point_unit`
@@ -477,7 +510,7 @@ The configuration model validates these constraints directly:
 
 - `t_shirt_size_unit` must be one of `hours`, `days`, or `weeks`,
 - `story_point_unit` must be one of `hours`, `days`, or `weeks`,
-- all configured estimate ranges require positive `min`, `most_likely`, and `max`,
+- all configured estimate ranges require positive `min`, `expected`, and `max`,
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
 - `output.histogram_bins` must be greater than 0,

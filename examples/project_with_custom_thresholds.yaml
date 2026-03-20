@@ -15,9 +15,9 @@ tasks:
     name: "Security architecture design"
     description: "Design secure architecture"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"
     uncertainty_factors:
       team_experience: "medium"
@@ -28,9 +28,9 @@ tasks:
     name: "Implementation"
     description: "Implement core features"
     estimate:
-      min: 10
-      most_likely: 20
-      max: 35
+      low: 10
+      expected: 20
+      high: 35
       unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
@@ -41,9 +41,9 @@ tasks:
     name: "Security testing"
     description: "Comprehensive security audit"
     estimate:
-      min: 5
-      most_likely: 10
-      max: 20
+      low: 5
+      expected: 10
+      high: 20
       unit: "days"
     dependencies: ["task_002"]
     uncertainty_factors:

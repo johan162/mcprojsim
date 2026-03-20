@@ -120,9 +120,9 @@ tasks:
   - id: "task_001"
     name: "Database schema design"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"
     uncertainty_factors:
       team_experience: "high"
@@ -139,9 +139,9 @@ tasks:
   - id: "task_010"
     name: "Prototype ML pipeline"
     estimate:
-      min: 8
-      most_likely: 14
-      max: 25
+      low: 8
+      expected: 14
+      high: 25
       unit: "days"
     uncertainty_factors:
       team_experience: "low"
@@ -150,7 +150,7 @@ tasks:
 
 Here, `requirements_maturity`, `team_distribution`, and `integration_complexity` all take their default values.
 
----
+
 
 # Configuring Uncertainty Factor Multipliers
 
@@ -198,7 +198,7 @@ uncertainty_factors:
 
 Any values you specify in your configuration file are merged with the defaults. You only need to include the factors or levels you want to override.
 
----
+
 
 ## Summary
 
@@ -208,4 +208,6 @@ Any values you specify in your configuration file are merged with the defaults. 
 
 - Uncertainty factors are **multiplicative**: they scale the sampled base duration before risks are evaluated.
 - Multiple uncertainty factors **compound**: their multipliers are multiplied together, which can produce significant combined effects.
+
+\newpage
 
