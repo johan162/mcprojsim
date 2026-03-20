@@ -652,34 +652,34 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 538.18 hours (68 working days)
-Median (P50): 530.38 hours
-Std Dev: 80.88 hours
-Minimum: 318.42 hours
-Maximum: 792.91 hours
-Coefficient of Variation: 0.1503
-Skewness: 0.1193
-Excess Kurtosis: -0.3749
+Mean: 538.33 hours (68 working days)
+Median (P50): 530.25 hours
+Std Dev: 80.28 hours
+Minimum: 337.16 hours
+Maximum: 793.05 hours
+Coefficient of Variation: 0.1491
+Skewness: 0.1334
+Excess Kurtosis: -0.3907
 
 Project Effort Statistical Summary:
-Mean: 131.18 person-hours (17 person-days)
-Median (P50): 130.38 person-hours
-Std Dev: 18.95 person-hours
-Minimum: 78.42 person-hours
-Maximum: 184.91 person-hours
-Coefficient of Variation: 0.1445
-Skewness: 0.1120
-Excess Kurtosis: -0.5163
+Mean: 131.12 person-hours (17 person-days)
+Median (P50): 130.25 person-hours
+Std Dev: 18.79 person-hours
+Minimum: 81.16 person-hours
+Maximum: 185.05 person-hours
+Coefficient of Variation: 0.1433
+Skewness: 0.1250
+Excess Kurtosis: -0.5403
 
 Calendar Time Confidence Intervals:
-  P25: 485.83 hours (61 working days)  (2026-06-25)
-  P50: 530.38 hours (67 working days)  (2026-07-03)
-  P75: 624.63 hours (79 working days)  (2026-07-21)
-  P80: 628.37 hours (79 working days)  (2026-07-21)
-  P85: 648.21 hours (82 working days)  (2026-07-24)
-  P90: 652.96 hours (82 working days)  (2026-07-24)
-  P95: 675.60 hours (85 working days)  (2026-07-29)
-  P99: 700.95 hours (88 working days)  (2026-08-03)
+  P25: 485.56 hours (61 working days)  (2026-06-25)
+  P50: 530.25 hours (67 working days)  (2026-07-03)
+  P75: 624.72 hours (79 working days)  (2026-07-21)
+  P80: 627.91 hours (79 working days)  (2026-07-21)
+  P85: 648.18 hours (82 working days)  (2026-07-24)
+  P90: 652.93 hours (82 working days)  (2026-07-24)
+  P95: 675.08 hours (85 working days)  (2026-07-29)
+  P99: 701.04 hours (88 working days)  (2026-08-03)
 ```
 
 Compare with the same project **without** `team_size` (dependency-only mode):
@@ -807,30 +807,30 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 619.12 hours (78 working days)
-Median (P50): 630.64 hours
-Std Dev: 84.78 hours
-Minimum: 388.64 hours
-Maximum: 871.99 hours
-Coefficient of Variation: 0.1369
-Skewness: 0.0677
-Excess Kurtosis: 0.0160
+Mean: 622.35 hours (78 working days)
+Median (P50): 630.16 hours
+Std Dev: 82.72 hours
+Minimum: 387.98 hours
+Maximum: 890.12 hours
+Coefficient of Variation: 0.1329
+Skewness: 0.0753
+Excess Kurtosis: 0.4830
 
 Project Effort Statistical Summary:
-Mean: 174.56 person-hours (22 person-days)
-Median (P50): 172.93 person-hours
-Std Dev: 22.36 person-hours
-Minimum: 124.60 person-hours
-Maximum: 228.99 person-hours
-Coefficient of Variation: 0.1281
-Skewness: 0.2087
-Excess Kurtosis: -0.3433
+Mean: 174.90 person-hours (22 person-days)
+Median (P50): 175.84 person-hours
+Std Dev: 20.43 person-hours
+Minimum: 120.72 person-hours
+Maximum: 225.55 person-hours
+Coefficient of Variation: 0.1168
+Skewness: 0.0826
+Excess Kurtosis: -0.2307
 
 Calendar Time Confidence Intervals:
-  P50: 630.64 hours (79 working days)  (2026-07-21)
-  P80: 677.53 hours (85 working days)  (2026-07-29)
-  P90: 721.06 hours (91 working days)  (2026-08-06)
-  P95: 724.90 hours (91 working days)  (2026-08-06)
+  P50: 630.16 hours (79 working days)  (2026-07-21)
+  P80: 676.83 hours (85 working days)  (2026-07-29)
+  P90: 703.75 hours (88 working days)  (2026-08-03)
+  P95: 726.73 hours (91 working days)  (2026-08-06)
 ```
 
 Key observations:
@@ -987,30 +987,30 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 1277.93 hours (160 working days)
-Median (P50): 1297.13 hours
-Std Dev: 132.99 hours
-Minimum: 939.66 hours
-Maximum: 1684.69 hours
-Coefficient of Variation: 0.1041
-Skewness: 0.1667
-Excess Kurtosis: -0.1595
+Mean: 1256.09 hours (158 working days)
+Median (P50): 1264.41 hours
+Std Dev: 132.44 hours
+Minimum: 962.44 hours
+Maximum: 1657.45 hours
+Coefficient of Variation: 0.1054
+Skewness: 0.2059
+Excess Kurtosis: -0.1495
 
 Project Effort Statistical Summary:
-Mean: 417.14 person-hours (53 person-days)
-Median (P50): 418.58 person-hours
-Std Dev: 41.45 person-hours
-Minimum: 311.34 person-hours
-Maximum: 529.00 person-hours
-Coefficient of Variation: 0.0994
-Skewness: -0.0057
-Excess Kurtosis: -0.4161
+Mean: 411.37 person-hours (52 person-days)
+Median (P50): 410.01 person-hours
+Std Dev: 40.80 person-hours
+Minimum: 321.07 person-hours
+Maximum: 509.50 person-hours
+Coefficient of Variation: 0.0992
+Skewness: 0.0893
+Excess Kurtosis: -0.6046
 
 Calendar Time Confidence Intervals:
-  P50: 1297.13 hours (163 working days)  (2026-12-16)
-  P80: 1364.80 hours (171 working days)  (2026-12-28)
-  P90: 1464.19 hours (184 working days)  (2027-01-14)
-  P95: 1495.58 hours (187 working days)  (2027-01-19)
+  P50: 1264.41 hours (159 working days)  (2026-12-10)
+  P80: 1348.09 hours (169 working days)  (2026-12-24)
+  P90: 1440.65 hours (181 working days)  (2027-01-11)
+  P95: 1466.63 hours (184 working days)  (2027-01-14)
 ```
 
 The generated YAML includes full `resources:` and `calendars:` sections. Use `--validate-only` to check your description before generating:

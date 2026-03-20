@@ -241,7 +241,7 @@ A positive value means the distribution has a longer right tail (late finishes a
 
 | Skewness | Meaning |
 |----------|--------|
-| ≈ 0 | Roughly symmetric — early and late outcomes are about equally spread around the median |
+| ~ 0 | Roughly symmetric — early and late outcomes are about equally spread around the median |
 | 0.1–0.5 | Mild right skew — a slight tendency toward late outcomes, which is typical |
 | 0.5–1.0 | Moderate right skew — the mean is noticeably higher than the median; a few bad scenarios are pulling the average up |
 | > 1.0 | Strong right skew — significant tail risk; worst-case outcomes are much worse than typical outcomes |
@@ -276,7 +276,7 @@ The $-3$ subtracts the kurtosis of a normal distribution, so that a normal distr
 
 | Excess kurtosis | Meaning |
 |-----------------|--------|
-| ≈ 0 | Tail behaviour similar to a normal distribution |
+| ~ 0 | Tail behaviour similar to a normal distribution |
 | > 0 (leptokurtic) | Heavier tails — extreme outcomes are more frequent than normal. Surprises (both good and bad) happen more often |
 | < 0 (platykurtic) | Lighter tails — outcomes are more concentrated around the mean. Fewer surprises |
 
@@ -461,7 +461,7 @@ The simulation does **not** model resource constraints — it assumes unlimited 
 
 Use this number as a sanity check:
 
-- If **max parallel tasks ≤ team size**: the simulation's parallelism assumption is realistic.
+- If **max parallel tasks <= team size**: the simulation's parallelism assumption is realistic.
 - If **max parallel tasks > team size**: the simulation is optimistic. Consider adding explicit dependencies to serialise tasks that share a resource, or mentally adjust the percentiles upward.
 
 

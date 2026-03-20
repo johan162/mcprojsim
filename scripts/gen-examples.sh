@@ -9,14 +9,17 @@
 #
 #   {{run:command}}   → Emits a ```bash block showing the user-facing
 #                      command (with "poetry run" and internal paths
-#                      stripped), then executes the command and inserts
-#                      the captured output in a ```text block.
+#                      stripped), then inserts captured output from
+#                      PASS 1 in a ```text block.
 #
-# Multiple {{run:...}} placeholders can reference the same input file
-# with different CLI flags to showcase different options.
+# The script uses two passes:
+#   PASS 1: Scan template for {{run:...}} commands, run each unique command
+#           in parallel, and cache outputs under .build/gen-examples/runs.
+#   PASS 2: Render final markdown by expanding {{file:...}} and {{run:...}}
+#           placeholders using cached PASS 1 outputs.
 #
 # Usage:
-#   scripts/gen-examples.sh [template] [output]
+#   scripts/gen-examples.sh [--jobs N] [template] [output]
 #   make gen-examples
 # ---------------------------------------------------------------------------
 set -euo pipefail
@@ -25,8 +28,48 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
 
-TEMPLATE="${1:-docs/examples_template.md}"
-OUTPUT="${2:-docs/examples.md}"
+JOBS=0
+
+usage() {
+    cat >&2 <<'EOF'
+Usage: scripts/gen-examples.sh [--jobs N] [template] [output]
+
+Options:
+  --jobs N   Max number of parallel PASS 1 run commands.
+             N <= 0 means no limit (run all at once; default).
+EOF
+}
+
+args=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --jobs)
+            if [[ $# -lt 2 ]]; then
+                echo "ERROR: --jobs requires a numeric value" >&2
+                usage
+                exit 2
+            fi
+            if [[ ! "$2" =~ ^-?[0-9]+$ ]]; then
+                echo "ERROR: --jobs must be an integer, got '$2'" >&2
+                usage
+                exit 2
+            fi
+            JOBS="$2"
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            args+=("$1")
+            shift
+            ;;
+    esac
+done
+
+TEMPLATE="${args[0]:-docs/examples_template.md}"
+OUTPUT="${args[1]:-docs/examples.md}"
 WORK_DIR=".build/gen-examples"
 
 mkdir -p "$WORK_DIR"
@@ -34,6 +77,7 @@ mkdir -p "$WORK_DIR"
 file_count=0
 run_count=0
 errors=0
+run_failures=0
 
 # Detect code-fence language from file extension
 fence_lang() {
@@ -70,7 +114,102 @@ display_cmd() {
     printf '%s' "${result%$'\n'}"
 }
 
+# Return index of command in run_cmds array, if present.
+find_run_cmd_index() {
+    local needle="$1"
+    local i
+    for i in "${!run_cmds[@]}"; do
+        if [[ "${run_cmds[$i]}" == "$needle" ]]; then
+            printf '%s' "$i"
+            return 0
+        fi
+    done
+    return 1
+}
+
+wait_for_free_slot() {
+    local limit="$1"
+    if (( limit <= 0 )); then
+        return 0
+    fi
+    while (( ${#pids[@]} >= limit )); do
+        local pid done_index=-1 idx
+        for idx in "${!pids[@]}"; do
+            pid="${pids[$idx]}"
+            if ! kill -0 "$pid" 2>/dev/null; then
+                wait "$pid" || true
+                done_index="$idx"
+                break
+            fi
+        done
+        if (( done_index >= 0 )); then
+            unset 'pids[done_index]'
+            pids=("${pids[@]}")
+        else
+            sleep 0.05
+        fi
+    done
+}
+
 echo "Generating $OUTPUT from $TEMPLATE ..." >&2
+
+RUN_DIR="$WORK_DIR/runs"
+mkdir -p "$RUN_DIR"
+rm -f "$RUN_DIR"/*.out "$RUN_DIR"/*.status "$RUN_DIR"/*.cmd
+
+# PASS 1: collect all unique run commands from template
+run_cmds=()
+while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ ^[[:space:]]*\{\{run:(.+)\}\}[[:space:]]*$ ]]; then
+        cmd="${BASH_REMATCH[1]}"
+        if ! find_run_cmd_index "$cmd" >/dev/null; then
+            run_cmds+=("$cmd")
+        fi
+    fi
+done < "$TEMPLATE"
+
+if (( JOBS > 0 )); then
+    echo "PASS 1: executing ${#run_cmds[@]} unique run command(s) in parallel (jobs=$JOBS) ..." >&2
+else
+    echo "PASS 1: executing ${#run_cmds[@]} unique run command(s) in parallel ..." >&2
+fi
+
+# Execute all unique run commands in parallel and cache outputs under .build
+pids=()
+for i in "${!run_cmds[@]}"; do
+    wait_for_free_slot "$JOBS"
+    cmd="${run_cmds[$i]}"
+    printf '%s\n' "$cmd" > "$RUN_DIR/$i.cmd"
+    (
+        if output=$(eval "$cmd" 2>/dev/null); then
+            cleaned=$(printf '%s\n' "$output" \
+                | grep -v '^mcprojsim, version ' \
+                | grep -v '^Progress: ' \
+                | sed '/./,$!d')
+            printf '%s\n' "$cleaned" > "$RUN_DIR/$i.out"
+            printf '0\n' > "$RUN_DIR/$i.status"
+        else
+            printf '%s\n' "${output:-}" > "$RUN_DIR/$i.out"
+            printf '1\n' > "$RUN_DIR/$i.status"
+        fi
+    ) &
+    pids+=("$!")
+done
+
+for pid in "${pids[@]}"; do
+    wait "$pid"
+done
+
+for i in "${!run_cmds[@]}"; do
+    if [[ -f "$RUN_DIR/$i.status" ]] && [[ "$(cat "$RUN_DIR/$i.status")" != "0" ]]; then
+        echo "  ⚠  non-zero exit: ${run_cmds[$i]}" >&2
+        run_failures=$((run_failures + 1))
+    else
+        echo "  ✓ run:  ${run_cmds[$i]:0:72}…" >&2
+    fi
+done
+
+echo "PASS 2: rendering $OUTPUT ..." >&2
 
 {
     # Auto-generated header
@@ -84,9 +223,9 @@ echo "Generating $OUTPUT from $TEMPLATE ..." >&2
         # ── {{file:relative/path}} ──────────────────────────────────────
         if [[ "$line" =~ ^[[:space:]]*\{\{file:([^}]+)\}\}[[:space:]]*$ ]]; then
             fpath="${BASH_REMATCH[1]}"
-            lang=$(fence_lang "$fpath")
+            file_lang=$(fence_lang "$fpath")
             if [[ -f "$fpath" ]]; then
-                echo '```'"$lang"
+                echo '```'"$file_lang"
                 cat "$fpath"
                 echo '```'
                 file_count=$((file_count + 1))
@@ -106,22 +245,21 @@ echo "Generating $OUTPUT from $TEMPLATE ..." >&2
             echo ""
             echo '```'
             echo ""
-            # Execute and emit output
+            # Insert cached PASS 1 output
             echo '```text'
-            if output=$(eval "$cmd" 2>/dev/null); then
-                # Strip version banner, progress lines, and leading blank lines
-                cleaned=$(printf '%s\n' "$output" \
-                    | grep -v '^mcprojsim, version ' \
-                    | grep -v '^Progress: ' \
-                    | sed '/./,$!d')
-                printf '%s\n' "$cleaned"
+            if cmd_idx=$(find_run_cmd_index "$cmd"); then
+                if [[ -f "$RUN_DIR/$cmd_idx.out" ]]; then
+                    cat "$RUN_DIR/$cmd_idx.out"
+                else
+                    echo "<!-- ERROR: missing cached output for run command -->"
+                    errors=$((errors + 1))
+                fi
             else
-                printf '%s\n' "$output"
-                echo "  ⚠  non-zero exit: $cmd" >&2
+                echo "<!-- ERROR: run command not found in pass 1 cache -->"
+                errors=$((errors + 1))
             fi
             echo '```'
             run_count=$((run_count + 1))
-            echo "  ✓ run:  ${cmd:0:72}…" >&2
 
         # ── Plain line (pass-through) ───────────────────────────────────
         else
@@ -132,7 +270,7 @@ echo "Generating $OUTPUT from $TEMPLATE ..." >&2
 } > "$OUTPUT"
 
 echo "" >&2
-echo "✓ Generated $OUTPUT  (files: $file_count, runs: $run_count, errors: $errors)" >&2
+echo "✓ Generated $OUTPUT  (files: $file_count, runs: $run_count, errors: $errors, run_failures: $run_failures)" >&2
 if (( errors > 0 )); then
     echo "⚠  There were $errors error(s) — review the output for <!-- ERROR --> comments." >&2
     exit 1

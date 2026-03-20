@@ -135,12 +135,12 @@ CONTAINER_NAME := $(PROJECT)
 # User guide PDF output path
 USER_GUIDE_PDF := mcprojsim_user_guide-v$(VERSION).pdf
 USER_GUIDE_PANDOC_PDF := user_guide_pandoc.pdf
-USER_GUIDE_BUILD_DIR := .build/user-guide
+USER_GUIDE_DIST_DIR := .build/user-guide
 USER_GUIDE_TEMPLATE := docs/user_guide/report_template.tex
-USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
-USER_GUIDE_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body.tex
-USER_GUIDE_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report.tex
-USER_GUIDE_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report.pdf
+USER_GUIDE_CONCAT_MD := $(USER_GUIDE_DIST_DIR)/user_guide_concat.md
+USER_GUIDE_BODY_TEX := $(USER_GUIDE_DIST_DIR)/user_guide_body.tex
+USER_GUIDE_TEX := $(USER_GUIDE_DIST_DIR)/user_guide_report.tex
+USER_GUIDE_PDF_BUILT := $(USER_GUIDE_DIST_DIR)/user_guide_report.pdf
 
 # Doc files for User Guide PDF generation
 USER_GUIDE_DOCS := \
@@ -188,11 +188,15 @@ TEST_STAMP := $(STAMP_DIR)/test-stamp
 GHCR_LOGIN_STAMP := $(STAMP_DIR)/ghcr-login-stamp
 
 # Build package files
-BUILD_DIR := dist
+DIST_DIR := dist
+
+# Generic builddir for interim build artifacts (e.g. for PDF generation)
+BUILD_DIR := .build
+
 # Remove any hypen in PyPi specifi version number for wheel filename compliance
 PYPI_VERSION := $(shell echo $(VERSION) | tr -d '-')
-BUILD_WHEEL := $(BUILD_DIR)/$(PYPI_NAME)-$(PYPI_VERSION)-py3-none-any.whl
-BUILD_SDIST := $(BUILD_DIR)/$(PYPI_NAME)-$(PYPI_VERSION).tar.gz
+BUILD_WHEEL := $(DIST_DIR)/$(PYPI_NAME)-$(PYPI_VERSION)-py3-none-any.whl
+BUILD_SDIST := $(DIST_DIR)/$(PYPI_NAME)-$(PYPI_VERSION).tar.gz
 
 # ================================================================================================
 # Timestamp dependencies
@@ -396,6 +400,13 @@ build: $(INSTALL_STAMP) check test docs $(BUILD_WHEEL) $(BUILD_SDIST) ## Build t
 # ============================================================================================
 # Cleanup Targets
 # ============================================================================================
+really-clean: ## Perform a deep clean including virtual environment, containers, database files, and all build artifacts
+	@echo -e "$(DARKYELLOW)- Performing really deep clean...$(NC)"
+	@$(MAKE) clean-venv
+	-@$(MAKE) container-clean 2>/dev/null || true
+	-@$(MAKE) clean 2>/dev/null || true
+	@echo -e "$(GREEN)✓ Deep clean completed$(NC)"
+
 clean-venv: ## Remove the virtual environment
 	@echo -e "$(DARKYELLOW)- Removing virtual environment...$(NC)"
 	@rm -rf .venv ${INSTALL_STAMP}
@@ -404,10 +415,12 @@ clean-venv: ## Remove the virtual environment
 clean: ## Clean up build artifacts, caches, and timestamp files. Keep the .venv intact.
 	@echo -e "$(DARKYELLOW)- Cleaning build artifacts and caches...$(NC)"
 	@rm -rf .pytest_cache
+	@rm -rf $(DIST_DIR)
+	@rm -rf $(BUILD_DIR)
 	@rm -rf .coverage coverage.xml
 	@rm -rf htmlcov
-	@rm -rf site dist
-	@rm -rf $(USER_GUIDE_BUILD_DIR)
+	@rm -rf site
+	@rm -rf $(USER_GUIDE_DIST_DIR)
 	@rm -rf .mypy_cache
 	@rm -rf $(STAMP_DIR)
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
@@ -453,7 +466,7 @@ pdf: $(USER_GUIDE_PDF)  ## Build the user guide PDF
 
 $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  ## Build user guide via custom LaTeX report template + pdflatex
 	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
-	@mkdir -p $(USER_GUIDE_BUILD_DIR)
+	@mkdir -p $(USER_GUIDE_DIST_DIR)
 	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
 	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_CONCAT_MD)
 	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
@@ -467,8 +480,8 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  #
 		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$(USER_GUIDE_TEMPLATE) > $(USER_GUIDE_TEX)
 	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_DIST_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_DIST_DIR) $(USER_GUIDE_TEX) >/dev/null
 	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
 	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
 

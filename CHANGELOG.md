@@ -1,3 +1,17 @@
+## [v0.6.1] - 2026-03-21
+
+Release Type: patch
+
+### 📋 Summary
+- Make sure runs with the same `--seed` flag are identical
+
+### 🐛 Bug Fixes
+- Closes (#1). The specified `--seed` was not used in all `rand()` setup. Specifically it was not used when simulating sickness.
+
+### 🛠 Internal
+- Speedup when generating `examples.md` by running all included project files in parallel to generate the output.
+
+
 ## [v0.6.0] - 2026-03-21
 
 Release Type: minor
