@@ -3,9 +3,6 @@ __pycache__
 *.py[cod]
 *$py.class
 
-# C extensions
-*.so
-
 # Distribution / packaging
 .Python
 build/
@@ -52,16 +49,8 @@ coverage.xml
 cover/
 
 # Translations
-*.mo
-*.pot
-
-
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducible builds.
-#   However, if you need to support multiple versions of python, you will need to do this
-#   in pyproject.toml and not include poetry.lock
-#poetry.lock
+**/*.mo
+**/*.pot
 
 # Environments
 .env
@@ -88,13 +77,12 @@ dmypy.json
 *.code-workspace
 
 # macOS
-.DS_Store
+**/.DS_Store
 
 # SQLite
-*.sqlite
-*.sqlite3
-*.db
-
+**/*.sqlite
+**/*.sqlite3
+**/*.db
 
 # Makefile time-stamps
 *.stamp
@@ -102,25 +90,27 @@ dmypy.json
 .makefile-stamps
 .makefile-stamps/**
 
-
 # Certificate files
 *.pem
 
-# Generated files in examples
-/examples/*.csv
-/examples/*.html
-/examples/*.json
-
 # Backup files
 *~
-*.bak
+**/*.bak
 
 # Generated reports
-*.html
-*.json
-*.csv
+**/*.html
+**/*.json
+**/*.csv
 
 # Generated documentation
-*.pdf
 .build/
+**/*.pdf
+**/*.aux
+**/*.bbl
+**/*.blg
+**/*.log
+**/*.out
+**/*.toc
+**/*.fdb_latexmk
+**/*.fls
 
