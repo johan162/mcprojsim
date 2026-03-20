@@ -70,8 +70,10 @@ At the highest level, a project file may contain the following sections:
 - `project` — required
 - `tasks` — required
 - `project_risks` — optional
-- `resources` — optional. **Note:** Does not impact the simulation at the moment.
-- `calendars` — optional, **Note:** Does not impact the simulation at the moment.
+- `resources` — optional. When present, constrained scheduling is activated.
+- `calendars` — optional. Used by constrained scheduling when resources reference calendars.
+
+If `project.team_size` is greater than zero, default resources are generated up to that size (after validating explicit resources), which also makes scheduling resource-constrained.
 
 The smallest valid project file therefore looks like this:
 
@@ -84,9 +86,9 @@ tasks:
   - id: "task_001"
     name: "First task"
     estimate:
-      min: 1
-      most_likely: 2
-      max: 3
+      low: 1
+      expected: 2
+      high: 3
 ```
 
 ### Top-level YAML skeleton
@@ -154,6 +156,8 @@ The `project` section is required. It contains project-level metadata and report
 | `currency` | No | string | `"USD"` | Stored as metadata |
 | `confidence_levels` | No | list of integers | `[25, 50, 75, 80, 85, 90, 95, 99]` | Controls reported percentiles |
 | `hours_per_day` | No | float | `8.0` | Hours in a working day; used for day/week conversion |
+| `distribution` | No | `"triangular"` or `"lognormal"` | `"triangular"` | Default estimate distribution for tasks that do not specify one |
+| `team_size` | No | integer | `null` | If > `0`, target total resources after validation (may auto-create defaults) |
 | `probability_red_threshold` | No | float | `0.50` | Must be between `0.0` and `1.0` |
 | `probability_green_threshold` | No | float | `0.90` | Must be between `0.0` and `1.0` |
 
@@ -163,7 +167,11 @@ The implementation currently enforces these rules for `project`:
 
 - `start_date` must be a valid ISO-format date string or a date object,
 - `probability_red_threshold` must be less than `probability_green_threshold`,
-- both thresholds must be in the range `0.0` to `1.0`.
+- both thresholds must be in the range `0.0` to `1.0`,
+- `distribution`, if provided, must be either `triangular` or `lognormal`,
+- if provided, `team_size` must be `>= 0`,
+- if `team_size > 0` and explicit `resources` are fewer, default resources are added up to `team_size`,
+- if explicit `resources` exceed `team_size`, validation fails.
 
 ### YAML example
 
@@ -173,6 +181,7 @@ project:
   description: "Next-generation customer portal with enhanced features"
   start_date: "2025-11-01"
   currency: "USD"
+  distribution: "triangular"
   confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
   probability_red_threshold: 0.50
   probability_green_threshold: 0.90
@@ -186,6 +195,7 @@ name = "Customer Portal Redesign"
 description = "Next-generation customer portal with enhanced features"
 start_date = "2025-11-01"
 currency = "USD"
+distribution = "triangular"
 confidence_levels = [25, 50, 75, 80, 85, 90, 95, 99]
 probability_red_threshold = 0.50
 probability_green_threshold = 0.90
@@ -208,6 +218,8 @@ Each task is validated as a `Task` object with the following fields.
 | `dependencies` | No | list of strings | `[]` | Each entry must match another task `id` |
 | `uncertainty_factors` | No | object | defaults applied | Recognized factor fields described below |
 | `resources` | No | list of strings | `[]` | Task-level resource names |
+| `max_resources` | No | integer | `1` | Max number of resources that may be assigned concurrently |
+| `min_experience_level` | No | integer | `1` | Minimum resource experience allowed (`1`, `2`, `3`) |
 | `risks` | No | list of risk objects | `[]` | Task-level probabilistic risks |
 
 ### Minimal task example
@@ -217,9 +229,9 @@ tasks:
   - id: "task_001"
     name: "Design database schema"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 8
+      low: 3
+      expected: 5
+      high: 8
 ```
 
 ### TOML task example
@@ -231,7 +243,7 @@ name = "Design database schema"
 
 [tasks.estimate]
 min = 3
-most_likely = 5
+expected = 5
 max = 8
 ```
 
@@ -258,7 +270,7 @@ This is the default and most common form.
 |---|---|---|---|
 | `distribution` | No | `"triangular"` or `"lognormal"` | `"triangular"` |
 | `min` | Yes for triangular | number ≥ 0 | `null` |
-| `most_likely` | Yes | number > 0 | `null` |
+| `expected` | Yes | number > 0 | `null` |
 | `max` | Yes for triangular | number ≥ 0 | `null` |
 | `unit` | No | `"hours"`, `"days"`, or `"weeks"` | `"hours"` |
 
@@ -266,19 +278,19 @@ This is the default and most common form.
 
 For a triangular estimate:
 
-- `most_likely` must be present,
+- `expected` must be present,
 - `min` must be present,
 - `max` must be present,
-- `min <= most_likely <= max`.
+- `low <= expected <= high`.
 - `unit` must be one of `"hours"`, `"days"`, or `"weeks"` if specified.
 
 #### YAML example
 
 ```yaml
 estimate:
-  min: 3
-  most_likely: 5
-  max: 10
+  low: 3
+  expected: 5
+  high: 10
   unit: "days"
 ```
 
@@ -287,22 +299,29 @@ estimate:
 ```toml
 [tasks.estimate]
 min = 3
-most_likely = 5
+expected = 5
 max = 10
 unit = "days"
 ```
 
 ### 2. Log-normal estimate
 
-The implementation also supports log-normal estimates.
+The implementation also supports **shifted** log-normal estimates. In this mode
+you still provide `low`, `expected`, and `high`, but they are interpreted
+differently:
+
+- `low` is the hard shift / minimum,
+- `expected` is the mode,
+- `high` is interpreted as the configured percentile (P95 by default; see `lognormal.high_percentile` in the configuration file).
 
 #### Supported fields
 
 | Field | Required | Type | Notes |
 |---|---|---|---|
 | `distribution` | Yes | `"lognormal"` | Must be set explicitly |
-| `most_likely` | Yes | number > 0 | Required |
-| `standard_deviation` | Yes | number > 0 | Required |
+| `low` | Yes | number ≥ 0 | Required |
+| `expected` | Yes | number > 0 | Required |
+| `high` | Yes | number ≥ 0 | Required |
 | `unit` | No | `"hours"`, `"days"`, or `"weeks"` | `"hours"` |
 
 #### Validation rules
@@ -310,19 +329,20 @@ The implementation also supports log-normal estimates.
 For a log-normal estimate:
 
 - `distribution` must be `lognormal`,
-- `most_likely` must be present,
-- `standard_deviation` must be present.
+- `low` must be present,
+- `expected` must be present,
+- `high` must be present,
+- `low < expected < high`,
 - `unit` must be one of `"hours"`, `"days"`, or `"weeks"` if specified.
-
-`min` and `max` are not required in this mode.
 
 #### YAML example
 
 ```yaml
 estimate:
   distribution: "lognormal"
-  most_likely: 8
-  standard_deviation: 2
+  low: 3
+  expected: 8
+  high: 20
   unit: "days"
 ```
 
@@ -331,8 +351,9 @@ estimate:
 ```toml
 [tasks.estimate]
 distribution = "lognormal"
-most_likely = 8
-standard_deviation = 2
+low = 3
+expected = 8
+high = 20
 unit = "days"
 ```
 
@@ -352,9 +373,10 @@ This form lets the task refer to a symbolic size such as `XS`, `M`, or `XL`.
 When `t_shirt_size` is present:
 
 - the `TaskEstimate` validator accepts the estimate immediately,
-- explicit `min`, `most_likely`, `max`, and `standard_deviation` are not required,
+- explicit `min`, `expected`, and `max` are not required,
 - **`unit` must not be specified** — the unit comes from the configuration file's `t_shirt_size_unit` setting (default: `"hours"`),
-- the simulation engine resolves the size to actual `min`, `most_likely`, and `max` values from the active configuration.
+- the simulation engine resolves the size to actual `min`, `expected`, and `max` values from the active configuration,
+- if `distribution` is omitted, the task inherits the project-level default distribution.
 
 If the chosen size does not exist in the active configuration, simulation raises an error.
 
@@ -381,9 +403,9 @@ In other words, this is technically accepted by the model:
 ```yaml
 estimate:
   t_shirt_size: "M"
-  min: 1
-  most_likely: 2
-  max: 3
+  low: 1
+  expected: 2
+  high: 3
 ```
 
 But it should be treated as ambiguous and avoided in real project files. If you use `t_shirt_size`, prefer to omit the explicit numeric range fields.
@@ -405,7 +427,7 @@ When `story_points` is present:
 
 - the value must currently be one of `1`, `2`, `3`, `5`, `8`, `13`, or `21`,
 - **`unit` must not be specified** — the unit comes from the configuration file's `story_point_unit` setting (default: `"days"`),
-- the simulation engine resolves the Story Point value to actual `min`, `most_likely`, and `max` values from the active configuration.
+- the simulation engine resolves the Story Point value to actual `min`, `expected`, and `max` values from the active configuration.
 
 If the chosen Story Point value does not exist in the active configuration, simulation raises an error.
 
@@ -434,19 +456,19 @@ Built-in defaults exist for both styles, and a custom configuration file may ove
 ```yaml
 t_shirt_sizes:
   M:
-    min: 4
-    most_likely: 6
-    max: 9
+    low: 4
+    expected: 6
+    high: 9
 
 story_points:
   5:
-    min: 4
-    most_likely: 6
-    max: 9
+    low: 4
+    expected: 6
+    high: 9
   8:
-    min: 6
-    most_likely: 9
-    max: 16
+    low: 6
+    expected: 9
+    high: 16
 ```
 
 If a custom configuration overrides only some T-shirt sizes or Story Point values, the remaining built-in defaults stay available.
@@ -485,16 +507,16 @@ tasks:
   - id: "task_001"
     name: "Backend design"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 6
+      low: 2
+      expected: 4
+      high: 6
 
   - id: "task_002"
     name: "API implementation"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 12
+      low: 5
+      expected: 8
+      high: 12
     dependencies: ["task_001"]
 ```
 
@@ -549,6 +571,29 @@ resources: ["backend_dev", "database_admin"]
 ```
 
 Task-level `resources` is typed as a list of strings in the current model.
+
+### Resource assignment rule with `max_resources`
+
+When `resources` lists multiple names, the scheduler may still assign fewer resources:
+
+- assignment at task start is capped by `max_resources` (default `1`),
+- scheduler applies an automatic practical cap:
+  - `granularity_cap = max(1, floor(task_effort_hours / 4.0))`
+  - `coordination_cap = 6`
+  - `practical_cap = min(granularity_cap, coordination_cap)`
+- effective start-time assignment is:
+  - `min(max_resources, practical_cap, eligible_available_resources_now)`.
+
+This avoids unrealistic over-assignment on short tasks while still permitting
+parallelization on larger tasks.
+
+Important behavior for schema users:
+
+- assignment happens at task start only,
+- assigned resources remain fixed for the task execution,
+- no mid-task reassignment/swapping is performed.
+
+Also, if you explicitly list resource names and set `min_experience_level`, each named resource must meet that minimum or validation fails.
 
 ## The `risks` field inside a task
 
@@ -638,29 +683,42 @@ The top-level project model accepts a `resources` section.
 
 ### Current implementation shape
 
-At parse time, `resources` is typed as:
+At parse time, each `resources` entry is validated as a resource object with defaults.
 
-```text
-list[dict[str, Any]]
-```
+Supported fields:
 
-That means each resource entry must be a mapping-like object, but the current project model does not impose a stricter nested schema inside each entry.
+- `name` (optional string)
+- `experience_level` (optional integer: 1, 2, or 3; default: `2`)
+- `productivity_level` (optional float: 0.1 to 2.0; default: `1.0`)
+- `sickness_prob` (optional float: 0.0 to 1.0; default: `0.0`)
+- `planned_absence` (optional list of ISO dates)
+- `calendar` (optional string; default: `"default"`)
+- `availability` (optional float in (0, 1]; default: `1.0`)
+
+Backward-compatibility note:
+
+- Legacy field `id` is still accepted and used as fallback for `name`.
+- If `name` is omitted, the system auto-generates a unique name using `resource_nnn` (e.g., `resource_001`).
 
 ### Example shape accepted by the current model
 
 ```yaml
 resources:
-  - id: "backend_dev"
-    name: "Backend Developer"
-    availability: 1.0
-  - id: "qa_engineer"
-    name: "QA Engineer"
-    availability: 0.5
+  - name: "backend_dev"
+    experience_level: 3
+    productivity_level: 1.1
+    sickness_prob: 0.05
+    planned_absence:
+      - "2026-07-01"
+      - "2026-07-02"
+  - experience_level: 2
+    productivity_level: 0.9
+    sickness_prob: 0.08
 ```
 
 ### Important note
 
-The parser accepts this section, but the current source code does not define a strongly validated internal resource schema at the project-model level.
+The parser and project model validate this schema, including defaults and uniqueness of resolved resource names.
 
 ## The top-level `calendars` section
 
@@ -668,20 +726,22 @@ The top-level project model also accepts a `calendars` section.
 
 ### Current implementation shape
 
-At parse time, `calendars` is typed as:
+At parse time, each calendar entry is validated with this shape:
 
-```text
-list[dict[str, Any]]
-```
+- `id` (string; default: `"default"`)
+- `work_hours_per_day` (positive float; default: `8.0`)
+- `work_days` (list of integers in range `1..7`; default: `[1,2,3,4,5]`)
+- `holidays` (list of ISO dates)
 
-As with top-level `resources`, the current project model does not define a stricter nested schema for calendar entries.
+Calendar IDs must be unique.
 
 ### Example shape accepted by the current model
 
 ```yaml
 calendars:
   - id: "standard"
-    working_days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    work_hours_per_day: 8
+    work_days: [1, 2, 3, 4, 5]
     holidays:
       - "2026-12-25"
       - "2026-12-26"
@@ -689,7 +749,7 @@ calendars:
 
 ### Important note
 
-This section is accepted structurally by the project parser, but the current project model does not validate its internal keys beyond “list of objects”.
+This section is validated by the project model; unknown or invalid fields fail validation.
 
 ## Full YAML example
 
@@ -719,9 +779,9 @@ tasks:
     name: "Design"
     description: "Design the feature set"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 7
+      low: 2
+      expected: 4
+      high: 7
       unit: "days"
     dependencies: []
     uncertainty_factors:
@@ -738,8 +798,9 @@ tasks:
     name: "Implementation"
     estimate:
       distribution: "lognormal"
-      most_likely: 8
-      standard_deviation: 2
+      low: 3
+      expected: 8
+      high: 20
       unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:
@@ -802,7 +863,7 @@ resources = ["designer"]
 
 [tasks.estimate]
 min = 2
-most_likely = 4
+expected = 4
 max = 7
 unit = "days"
 
@@ -824,8 +885,9 @@ resources = ["backend_dev", "frontend_dev"]
 
 [tasks.estimate]
 distribution = "lognormal"
-most_likely = 8
-standard_deviation = 2
+low = 3
+expected = 8
+high = 20
 unit = "days"
 
 [tasks.uncertainty_factors]
@@ -933,25 +995,25 @@ uncertainty_factors:
 
 t_shirt_sizes:
   XS:
-    min: 0.5
-    most_likely: 1
-    max: 2
+    low: 0.5
+    expected: 1
+    high: 2
   M:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
 
 t_shirt_size_unit: "hours"
 
 story_points:
   1:
-    min: 0.5
-    most_likely: 1
-    max: 3
+    low: 0.5
+    expected: 1
+    high: 3
   5:
-    min: 3
-    most_likely: 5
-    max: 8
+    low: 3
+    expected: 5
+    high: 8
 
 story_point_unit: "days"
 
@@ -1045,7 +1107,7 @@ This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric ef
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
 | `min` | Yes when that size is defined | float | — | `> 0` |
-| `most_likely` | Yes | float | — | `> 0` |
+| `expected` | Yes | float | — | `> 0` |
 | `max` | Yes | float | — | `> 0` |
 
 ### Built-in size keys
@@ -1059,7 +1121,7 @@ This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric ef
 
 ### Built-in defaults
 
-| Size | `min` | `most_likely` | `max` |
+| Size | `min` | `expected` | `max` |
 |---|---:|---:|---:|
 | `XS` | 0.5 | 1 | 2 |
 | `S` | 1 | 2 | 4 |
@@ -1073,9 +1135,9 @@ This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric ef
 ```yaml
 t_shirt_sizes:
   M:
-    min: 4
-    most_likely: 6
-    max: 9
+    low: 4
+    expected: 6
+    high: 9
 ```
 
 With this override, only `M` changes. The other built-in sizes remain available.
@@ -1111,7 +1173,7 @@ This section maps Story Point values to numeric effort ranges.
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
 | `min` | Yes when that point value is defined | float | — | `> 0` |
-| `most_likely` | Yes | float | — | `> 0` |
+| `expected` | Yes | float | — | `> 0` |
 | `max` | Yes | float | — | `> 0` |
 
 ### Built-in point values
@@ -1126,7 +1188,7 @@ This section maps Story Point values to numeric effort ranges.
 
 ### Built-in defaults
 
-| Points | `min` | `most_likely` | `max` |
+| Points | `min` | `expected` | `max` |
 |---|---:|---:|---:|
 | `1` | 0.5 | 1 | 3 |
 | `2` | 1 | 2 | 4 |
@@ -1141,9 +1203,9 @@ This section maps Story Point values to numeric effort ranges.
 ```yaml
 story_points:
   8:
-    min: 6
-    most_likely: 9
-    max: 16
+    low: 6
+    expected: 9
+    high: 16
 ```
 
 ## The `story_point_unit` field
@@ -1329,7 +1391,7 @@ The current configuration model validates these rules directly:
 
 - `t_shirt_size_unit` must be one of `hours`, `days`, or `weeks`,
 - `story_point_unit` must be one of `hours`, `days`, or `weeks`,
-- all configured estimate ranges require positive `min`, `most_likely`, and `max`,
+- all configured estimate ranges require positive `min`, `expected`, and `max`,
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
 - `output.histogram_bins` must be greater than 0,
@@ -1360,8 +1422,8 @@ The current implementation validates the following rules directly:
 - task dependencies must not be circular,
 - `start_date` must parse as an ISO date,
 - probability thresholds must be in range and ordered correctly,
-- triangular estimates must satisfy `min <= most_likely <= max`,
-- log-normal estimates must include `most_likely` and `standard_deviation`,
+- triangular estimates must satisfy `low <= expected <= high`,
+- log-normal estimates must include `low`, `expected`, and `high`, and must satisfy `low < expected < high`,
 - risks must have probabilities in `0.0..1.0`,
 - structured risk impacts must use positive values.
 
@@ -1384,3 +1446,5 @@ Although multiple forms are accepted, the clearest project files usually follow 
 - treat `resources` and `calendars` as advanced sections whose detailed internal schema may evolve.
 
 If you want to see the reference syntax used in practice, compare this chapter with `examples/sample_project.yaml`, `examples/tshirt_walkthrough_project.yaml`, `examples/story_points_walkthrough_project.yaml`, and `examples/project_with_custom_thresholds.yaml`.
+
+\newpage

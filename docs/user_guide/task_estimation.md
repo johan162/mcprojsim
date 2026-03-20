@@ -4,7 +4,7 @@ This chapter explains how individual tasks are estimated in `mcprojsim` and how 
 
 The goal of this chapter is to explain all supported estimation methods, the probability distributions behind them, and how to specify each one in a project file.
 
----
+
 
 ## How estimation works in the simulation
 
@@ -20,7 +20,7 @@ The result is the task's effective duration for that iteration. Over thousands o
 
 This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in [Risks and Uncertainty Factors](risks.md).
 
----
+
 
 ## Estimation methods at a glance
 
@@ -28,13 +28,13 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 
 | Method | Input | Resolved to | Best for |
 |--------|-------|-------------|----------|
-| **Explicit range** | `min`, `most_likely`, `max` | Used directly | Teams comfortable giving numeric day estimates |
-| **T-shirt size** | `t_shirt_size` (e.g., `"M"`) | Looked up in config → `min`, `most_likely`, `max` | Early-stage or relative estimation |
-| **Story points** | `story_points` (e.g., `5`) | Looked up in config → `min`, `most_likely`, `max` | Teams using story point estimation practices |
+| **Explicit range** | `low`, `expected`, `high` | Used directly | Teams comfortable giving numeric day estimates |
+| **T-shirt size** | `t_shirt_size` (e.g., `"M"`) | Looked up in config → `low`, `expected`, `high` | Early-stage or relative estimation |
+| **Story points** | `story_points` (e.g., `5`) | Looked up in config → `low`, `expected`, `high` | Teams using story point estimation practices |
 
 All three methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
 
----
+
 
 ## Explicit range estimates
 
@@ -42,12 +42,12 @@ The most direct way to estimate a task is to provide three values that describe 
 
 | Parameter     | Meaning                                          | Required |
 |---------------|--------------------------------------------------|----------|
-| `min`         | The shortest plausible duration (optimistic)      | Yes      |
-| `most_likely` | The expected duration under normal conditions     | Yes      |
-| `max`         | The longest plausible duration (pessimistic)       | Yes      |
+| `low`         | The shortest plausible duration (optimistic)      | Yes      |
+| `expected` | The expected duration under normal conditions     | Yes      |
+| `high`         | The longest plausible duration (pessimistic)       | Yes      |
 | `unit`        | The time unit: `"hours"`, `"days"`, or `"weeks"` (default: `"hours"`) | No       |
 
-The three values must satisfy: `min` ≤ `most_likely` ≤ `max`.
+The three values must satisfy: `low` ≤ `expected` ≤ `high`.
 
 ### Basic example
 
@@ -56,9 +56,9 @@ tasks:
   - id: "task_001"
     name: "Database schema design"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"
 ```
 
@@ -68,47 +68,47 @@ This tells the simulator: in the best case, the task takes about 3 days; most li
 
 The three values are not arbitrary guesses. They carry specific meaning:
 
-- **`min`** is not the theoretical fastest time if everything goes perfectly. It is the shortest duration that is still realistic given the scope of work. Ask: "If things go smoothly, how fast could this realistically be done?"
+- **`low`** is not the theoretical fastest time if everything goes perfectly. It is the shortest duration that is still realistic given the scope of work. Ask: "If things go smoothly, how fast could this realistically be done?"
 
-- **`most_likely`** is the duration you would expect under normal conditions. It represents the mode — the single most probable outcome. Ask: "If I had to pick one number for this task, what would it be?"
+- **`expected`** is the duration you would expect under normal conditions. It represents the mode — the single most probable outcome. Ask: "If I had to pick one number for this task, what would it be?"
 
-- **`max`** is not a catastrophic worst case. It is the longest duration that is credibly possible if several things go wrong, but without extraordinary events like losing the entire team. Ask: "If this task hits significant headwinds, how long could it take?"
+- **`high`** is not a catastrophic worst case. It is the longest duration that is credibly possible if several things go wrong, but without extraordinary events like losing the entire team. Ask: "If this task hits significant headwinds, how long could it take?"
 
-The spread between `min` and `max` reflects how uncertain you are. A narrow range (e.g., 4 / 5 / 6) means high confidence. A wide range (e.g., 3 / 5 / 15) means substantial uncertainty, and the simulation results will reflect that.
+The spread between `low` and `high` reflects how uncertain you are. A narrow range (e.g., 4 / 5 / 6) means high confidence. A wide range (e.g., 3 / 5 / 15) means substantial uncertainty, and the simulation results will reflect that.
 
 ### Asymmetric ranges
 
-In practice, most software tasks have more upside risk than downside opportunity. It is common for the distance between `most_likely` and `max` to be larger than the distance between `min` and `most_likely`. This naturally produces a right-skewed distribution — reflecting the reality that tasks are more likely to run over than to finish early by the same margin.
+In practice, most software tasks have more upside risk than downside opportunity. It is common for the distance between `expected` and `high` to be larger than the distance between `low` and `expected`. This naturally produces a right-skewed distribution — reflecting the reality that tasks are more likely to run over than to finish early by the same margin.
 
 ```yaml
 estimate:
-  min: 3
-  most_likely: 5
-  max: 15
+  low: 3
+  expected: 5
+  high: 15
   unit: "days"
 ```
 
 Here, the best-case savings is 2 days (5 minus 3), but the worst-case overrun is 10 days (15 minus 5). This kind of asymmetry is realistic and the triangular distribution handles it naturally.
 
----
+
 
 ## Near-deterministic estimates
 
-Sometimes a task has very little uncertainty — for example, a well-understood routine task with a known duration. You might be tempted to set `min`, `most_likely`, and `max` to the same value.
+Sometimes a task has very little uncertainty — for example, a well-understood routine task with a known duration. You might be tempted to set `low`, `expected`, and `high` to the same value.
 
-However, the triangular distribution requires `min` < `max`. Setting all three values equal will produce a validation error at sampling time. To model a near-deterministic task, use a very narrow range:
+However, the triangular distribution requires `low` < `high`. Setting all three values equal will produce a validation error at sampling time. To model a near-deterministic task, use a very narrow range:
 
 ```yaml
 estimate:
-  min: 4.9
-  most_likely: 5
-  max: 5.1
+  low: 4.9
+  expected: 5
+  high: 5.1
   unit: "days"
 ```
 
 This effectively produces a duration of approximately 5 days in every iteration, with negligible variation. The sampled values will be very close to 5.0 but not exactly identical, which is usually close enough for practical purposes.
 
----
+
 
 ## Probability distributions
 
@@ -116,16 +116,16 @@ The estimate range defines the inputs. The probability distribution defines how 
 
 ### Triangular distribution (default)
 
-The triangular distribution is the default and most commonly used distribution in project estimation. It is defined by three parameters — minimum, mode, and maximum — which correspond directly to the `min`, `most_likely`, and `max` fields in the estimate.
+The triangular distribution is the default and most commonly used distribution in project estimation. It is defined by three parameters — minimum, mode, and maximum — which correspond directly to the `low`, `expected`, and `high` fields in the estimate.
 
 **Properties:**
 
 | Property | Description |
 |----------|-------------|
 | Shape | Triangle-shaped probability density |
-| Parameters | `min`, `most_likely` (mode), `max` |
-| Support | Values between `min` and `max` only |
-| Skewness | Determined by position of `most_likely` within the range |
+| Parameters | `low`, `expected` (mode), `high` |
+| Support | Values between `low` and `high` only |
+| Skewness | Determined by position of `expected` within the range |
 | Implementation | `numpy.random.triangular` |
 
 **When to use it:**
@@ -137,9 +137,9 @@ The triangular distribution is the default and most commonly used distribution i
 
 **Characteristics:**
 
-The triangular distribution concentrates probability around the `most_likely` value and tapers linearly toward the extremes. It guarantees that no sample will be less than `min` or greater than `max`, which can be reassuring when the team has confidence in the boundaries.
+The triangular distribution concentrates probability around the `expected` value and tapers linearly toward the extremes. It guarantees that no sample will be less than `low` or greater than `high`, which can be reassuring when the team has confidence in the boundaries.
 
-If `most_likely` is centered between `min` and `max`, the distribution is symmetric. If `most_likely` is closer to `min` (common in software estimation), the distribution is right-skewed — producing a longer tail toward the high end.
+If `expected` is centered between `low` and `high`, the distribution is symmetric. If `expected` is closer to `low` (common in software estimation), the distribution is right-skewed — producing a longer tail toward the high end.
 
 **Specification:**
 
@@ -148,39 +148,71 @@ The triangular distribution is the default, so you do not need to specify it exp
 ```yaml
 # Implicit (triangular is the default)
 estimate:
-  min: 3
-  most_likely: 5
-  max: 10
+  low: 3
+  expected: 5
+  high: 10
   unit: "days"
 
 # Explicit
 estimate:
   distribution: "triangular"
-  min: 3
-  most_likely: 5
-  max: 10
+  low: 3
+  expected: 5
+  high: 10
   unit: "days"
 ```
 
 ### Log-normal distribution
 
-The log-normal distribution is an alternative that produces a right-skewed, unbounded distribution. It is useful for tasks where the upside risk (overrun) is potentially much larger than the downside opportunity (early finish).
+The log-normal distribution is an alternative that produces a right-skewed,
+unbounded distribution. It is useful for tasks where the upside risk (overrun)
+is potentially much larger than the downside opportunity (early finish).
+
+`mcprojsim` implements this as a **shifted log-normal** so end users can keep
+working with the same `low`, `expected`, and `high` fields they already use for
+triangular estimates.
 
 **Properties:**
 
 | Property | Description |
 |----------|-------------|
 | Shape | Right-skewed, long tail toward high values |
-| Parameters | `most_likely` (mode), `standard_deviation` (sigma) |
-| Support | All positive values — no upper bound |
-| Skewness | Always right-skewed; heavier tail with larger sigma |
+| Parameters | `low`, `expected`, `high`, plus configured percentile for `high` |
+| Support | All values greater than `low` |
+| Skewness | Always right-skewed; heavier tail with larger fitted sigma |
 | Implementation | `numpy.random.lognormal` |
 
-The `most_likely` value is used as the distribution's mode. Internally, the simulator converts it to the log-normal `mu` parameter using the relationship:
+Internally the simulator defines a shifted variable:
 
-$$\mu = \ln(\text{most\_likely}) + \sigma^2$$
+$$Y = X - \text{low}$$
 
-where $\sigma$ is the `standard_deviation` value you provide.
+where $X$ is the actual duration and $Y$ follows a standard log-normal
+distribution.
+
+The inputs are interpreted as:
+
+- `low`: hard minimum / shift
+- `expected`: mode of $X$
+- `high`: configured percentile of $X$ (P95 by default)
+
+This gives:
+
+$$e^{\mu - \sigma^2} = \text{expected} - \text{low}$$
+
+and
+
+$$e^{\mu + z_p\sigma} = \text{high} - \text{low}$$
+
+where $z_p$ is the z-score for the configured percentile. For the default P95,
+$z_p \approx 1.645$.
+
+Subtracting the two equations yields:
+
+$$\sigma^2 + z_p\sigma = \ln(\text{high} - \text{low}) - \ln(\text{expected} - \text{low})$$
+
+The simulator solves that quadratic for the positive $\sigma$, then computes:
+
+$$\mu = \ln(\text{expected} - \text{low}) + \sigma^2$$
 
 **When to use it:**
 
@@ -200,21 +232,15 @@ where $\sigma$ is the `standard_deviation` value you provide.
 ```yaml
 estimate:
   distribution: "lognormal"
-  most_likely: 5
-  standard_deviation: 0.5
+  low: 2
+  expected: 5
+  high: 14
   unit: "days"
 ```
 
-The `standard_deviation` parameter controls the spread. A smaller value (e.g., 0.3) produces a relatively tight distribution clustered around the mode. A larger value (e.g., 1.0 or above) produces a wide distribution with a long right tail.
-
-**Effect of standard deviation on spread:**
-
-| `standard_deviation` | Behavior |
-|---------------------|----------|
-| 0.3                 | Tight — most samples close to `most_likely` |
-| 0.5                 | Moderate spread |
-| 0.8                 | Wide — noticeable right tail |
-| 1.0                 | Very wide — occasional extreme outliers |
+Here, 2 days is the minimum, 5 days is the most likely outcome, and 14 days is
+interpreted as the configured high percentile (P95 by default). Wider gaps
+between `expected` and `high` produce a heavier right tail.
 
 **Example: a research task with high uncertainty**
 
@@ -224,8 +250,9 @@ tasks:
     name: "Prototype ML model"
     estimate:
       distribution: "lognormal"
-      most_likely: 10
-      standard_deviation: 0.8
+      low: 4
+      expected: 10
+      high: 30
       unit: "days"
     dependencies: []
 ```
@@ -237,7 +264,7 @@ Here, the most likely duration is 10 days, but the long right tail means that in
 | Aspect | Triangular | Log-normal |
 |--------|-----------|------------|
 | Bounded | Yes — samples always within [min, max] | No — no upper bound |
-| Parameters | `min`, `most_likely`, `max` | `most_likely`, `standard_deviation` |
+| Parameters | `low`, `expected`, `high` | `low`, `expected`, `high` + configured high percentile |
 | Skewness | Depends on parameter placement | Always right-skewed |
 | Intuition | Easy to explain to non-technical stakeholders | Requires more statistical background |
 | Extreme values | Impossible beyond stated bounds | Possible — long tail |
@@ -245,19 +272,31 @@ Here, the most likely duration is 10 days, but the long right tail means that in
 
 For most projects, the triangular distribution is the right choice. It is intuitive, bounded, and maps naturally to how teams think about estimates. The log-normal distribution is a specialized tool for tasks where the unbounded right tail better reflects reality.
 
----
+### Why is log-normal a good model for software (or project) estimation?
+
+Individual task durations are often observed to follow a log-normal distribution in empirical studies of projects and software projects in particular. 
+This can be explained by noticing that task durations are influenced by many small, multiplicative factors — such as the complexity of the work, the efficiency of the team, the quality of requirements, and unforeseen issues that arise during execution. When you have a process that is influenced by many independent multiplicative factors, the resulting distribution of outcomes tends to be log-normal. This can be easily seen by observing that if an estimate can be written as 
+
+$$X = X_0 \times F_1 \times F_2 \times ... \times F_n$$
+
+where $X_0$ is the base estimate and $F_i$ are the multiplicative factors, then taking the logarithm gives:
+
+$$\ln(X) = \ln(X_0) + \ln(F_1) + \ln(F_2) + ... + \ln(F_n)$$
+
+If we assume the $\ln(F_i)$ are independent and identically distributed, then by the Central Limit Theorem, $\ln(X)$ will tend to be normally distributed, which means that $X$ is log-normally distributed.
+
 
 ## T-shirt size estimates
 
 T-shirt sizing is a relative estimation technique where tasks are classified into categories such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`. This is useful when teams are more comfortable with relative comparisons ("this is a medium-sized task") than with specific day estimates.
 
-In `mcprojsim`, each T-shirt size is mapped to a numeric range (`min`, `most_likely`, `max`) in the configuration file. During simulation, the size label is resolved to its numeric range, and then the triangular distribution is used for sampling — exactly as if the numeric values had been specified directly.
+In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) in the configuration file. During simulation, the size label is resolved to its numeric range, and then the triangular distribution is used for sampling — exactly as if the numeric values had been specified directly.
 
 ### Default T-shirt size mappings
 
 The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_unit` in the configuration file).
 
-| Size | min (hours) | most_likely (hours) | max (hours) |
+| Size | min (hours) | expected (hours) | max (hours) |
 |------|-------------|--------------------|-----------|
 | `XS` | 0.5         | 1                  | 2          |
 | `S`  | 1           | 2                  | 4          |
@@ -285,9 +324,9 @@ This is equivalent to writing:
 
 ```yaml
 estimate:
-  min: 3
-  most_likely: 5
-  max: 8
+  low: 3
+  expected: 5
+  high: 8
   unit: "hours"
 ```
 
@@ -348,29 +387,29 @@ The default mappings can be overridden in the configuration file. This allows or
 # config.yaml
 t_shirt_sizes:
   XS:
-    min: 0.25
-    most_likely: 0.5
-    max: 1
+    low: 0.25
+    expected: 0.5
+    high: 1
   S:
-    min: 0.5
-    most_likely: 1
-    max: 2
+    low: 0.5
+    expected: 1
+    high: 2
   M:
-    min: 1
-    most_likely: 2
-    max: 4
+    low: 1
+    expected: 2
+    high: 4
   L:
-    min: 2
-    most_likely: 4
-    max: 7
+    low: 2
+    expected: 4
+    high: 7
   XL:
-    min: 4
-    most_likely: 7
-    max: 12
+    low: 4
+    expected: 7
+    high: 12
   XXL:
-    min: 7
-    most_likely: 12
-    max: 20
+    low: 7
+    expected: 12
+    high: 20
 ```
 
 Any sizes you define in the configuration file replace the defaults entirely for that size. You can also define only the sizes your team uses — for instance, if you only use `S`, `M`, and `L`, you only need to define those three.
@@ -385,17 +424,17 @@ t_shirt_size_unit: "hours"
 
 t_shirt_sizes:
   S:
-    min: 1
-    most_likely: 2
-    max: 4       # 1–4 hours
+    low: 1
+    expected: 2
+    high: 4       # 1–4 hours
   M:
-    min: 3
-    most_likely: 5
-    max: 8       # 3–8 hours
+    low: 3
+    expected: 5
+    high: 8       # 3–8 hours
   L:
-    min: 5
-    most_likely: 8
-    max: 13      # 5–13 hours
+    low: 5
+    expected: 8
+    high: 13      # 5–13 hours
 ```
 
 If your team thinks about T-shirt sizes in terms of working days rather than hours, set `t_shirt_size_unit` to `"days"`. The simulator will then convert the ranges to hours using `hours_per_day`:
@@ -406,22 +445,22 @@ t_shirt_size_unit: "days"
 
 t_shirt_sizes:
   S:
-    min: 0.5
-    most_likely: 1
-    max: 2       # 0.5–2 days → 4–16 hours (at 8 hours/day)
+    low: 0.5
+    expected: 1
+    high: 2       # 0.5–2 days → 4–16 hours (at 8 hours/day)
   M:
-    min: 1
-    most_likely: 2
-    max: 4       # 1–4 days → 8–32 hours
+    low: 1
+    expected: 2
+    high: 4       # 1–4 days → 8–32 hours
   L:
-    min: 2
-    most_likely: 4
-    max: 7       # 2–7 days → 16–56 hours
+    low: 2
+    expected: 4
+    high: 7       # 2–7 days → 16–56 hours
 ```
 
 The unit setting applies to **all** T-shirt sizes in the configuration. You cannot mix units across individual sizes — the `t_shirt_size_unit` value governs the entire mapping. The project file never specifies a unit for T-shirt size estimates; the unit is always determined by this configuration setting.
 
----
+
 
 ## Story point estimates
 
@@ -431,7 +470,7 @@ Story points are a common estimation unit in agile teams. In `mcprojsim`, story 
 
 The default unit for story points is **days** (configurable via `story_point_unit` in the configuration file).
 
-| Story points | min (days) | most_likely (days) | max (days) |
+| Story points | min (days) | expected (days) | max (days) |
 |--------------|------------|-------------------|------------|
 | 1            | 0.5        | 1                  | 3          |
 | 2            | 1          | 2                  | 4          |
@@ -511,17 +550,17 @@ Different teams have different velocity patterns. The configuration file lets yo
 # config.yaml
 story_points:
   1:
-    min: 0.5
-    most_likely: 1
-    max: 2.5
+    low: 0.5
+    expected: 1
+    high: 2.5
   2:
-    min: 1
-    most_likely: 2
-    max: 3.5
+    low: 1
+    expected: 2
+    high: 3.5
   5:
-    min: 3.5
-    most_likely: 5.5
-    max: 9
+    low: 3.5
+    expected: 5.5
+    high: 9
 ```
 
 You only need to include the story point values you want to override. Any values not specified in your configuration will use the built-in defaults. Note that you can only use values from the allowed set (1, 2, 3, 5, 8, 13, 21) — the allowed values are defined in the code, not in configuration.
@@ -536,13 +575,13 @@ story_point_unit: "days"
 
 story_points:
   1:
-    min: 0.5
-    most_likely: 1
-    max: 3       # 0.5–3 days → 4–24 hours (at 8 hours/day)
+    low: 0.5
+    expected: 1
+    high: 3       # 0.5–3 days → 4–24 hours (at 8 hours/day)
   5:
-    min: 3
-    most_likely: 5
-    max: 8       # 3–8 days → 24–64 hours
+    low: 3
+    expected: 5
+    high: 8       # 3–8 days → 24–64 hours
 ```
 
 If your team calibrates story points directly in hours, set `story_point_unit` to `"hours"`:
@@ -553,20 +592,20 @@ story_point_unit: "hours"
 
 story_points:
   1:
-    min: 1
-    most_likely: 3
-    max: 6       # 1–6 hours
+    low: 1
+    expected: 3
+    high: 6       # 1–6 hours
   5:
-    min: 8
-    most_likely: 16
-    max: 32      # 8–32 hours
+    low: 8
+    expected: 16
+    high: 32      # 8–32 hours
 ```
 
 As with T-shirt sizes, the unit setting applies to **all** story point mappings in the configuration. The project file never specifies a unit for story point estimates — the unit is always determined by `story_point_unit`.
 
 > **Note:** The `t_shirt_size_unit` and `story_point_unit` settings are independent. It is perfectly valid to have T-shirt sizes in hours and story points in days (the defaults), or any other combination.
 
----
+
 
 ## Mixing estimation methods
 
@@ -578,8 +617,9 @@ tasks:
     name: "Technology research"
     estimate:
       distribution: "lognormal"
-      most_likely: 8
-      standard_deviation: 0.6
+      low: 3
+      expected: 8
+      high: 20
       unit: "days"
     dependencies: []
 
@@ -592,9 +632,9 @@ tasks:
   - id: "implementation"
     name: "Core implementation"
     estimate:
-      min: 10
-      most_likely: 15
-      max: 25
+      low: 10
+      expected: 15
+      high: 25
       unit: "days"
     dependencies: ["design"]
 
@@ -609,7 +649,7 @@ All four estimation methods are combined in one project. Each task's estimate is
 
 The only restriction is that you cannot combine multiple estimation methods on the same task. Each task must use exactly one of: explicit range, T-shirt size, or story points.
 
----
+
 
 ## The `unit` field
 
@@ -664,16 +704,16 @@ The simulator automatically converts all estimate values to hours before simulat
 tasks:
   - id: "quick_fix"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 8
+      low: 2
+      expected: 4
+      high: 8
       unit: "hours"    # Small task estimated in hours
 
   - id: "major_feature"
     estimate:
-      min: 2
-      most_likely: 4
-      max: 8
+      low: 2
+      expected: 4
+      high: 8
       unit: "days"     # Large task estimated in days
 ```
 
@@ -690,9 +730,9 @@ When a T-shirt size or story point estimate is resolved during simulation, the n
 - `t_shirt_size_unit`: defaults to `"hours"`
 - `story_point_unit`: defaults to `"days"`
 
-The resolved values are then converted to hours using the same conversion logic. This means a story point estimate of `5` with default configuration resolves to `min=3, most_likely=5, max=8` in days, which the simulator converts to `min=24, most_likely=40, max=64` in hours.
+The resolved values are then converted to hours using the same conversion logic. This means a story point estimate of `5` with default configuration resolves to `min=3, expected=5, max=8` in days, which the simulator converts to `min=24, expected=40, max=64` in hours.
 
----
+
 
 ## Validation rules
 
@@ -700,27 +740,30 @@ The resolved values are then converted to hours using the same conversion logic.
 
 | Rule | Applies to | Error if violated |
 |------|-----------|-------------------|
-| `min` ≤ `most_likely` ≤ `max` | Triangular distribution | Yes — values must be in order |
-| `min` < `max` | Triangular distribution | Yes — NumPy requires strict inequality |
-| `most_likely` > 0 | All explicit estimates | Yes — zero or negative not allowed |
-| `min` ≥ 0 | Triangular distribution | Yes — negative values not allowed |
-| `standard_deviation` > 0 | Log-normal distribution | Yes — must be positive |
-| `most_likely` and `standard_deviation` both provided | Log-normal distribution | Yes — both required |
-| `min`, `most_likely`, `max` all provided | Triangular distribution | Yes — all three required |
+| `low` ≤ `expected` ≤ `high` | Triangular distribution | Yes — values must be in order |
+| `low` < `high` | Triangular distribution | Yes — NumPy requires strict inequality |
+| `expected` > 0 | All explicit estimates | Yes — zero or negative not allowed |
+| `low` ≥ 0 | Triangular distribution | Yes — negative values not allowed |
+| `low` < `expected` < `high` | Log-normal distribution | Yes — shifted fit requires a strict range |
+| `low`, `expected`, `high` all provided | Log-normal distribution | Yes — all three required |
+| `low`, `expected`, `high` all provided | Triangular distribution | Yes — all three required |
 | Only one symbolic type | T-shirt / story point | Yes — cannot use both on one task |
 | Story point value in allowed set | Story points | Yes — must be 1, 2, 3, 5, 8, 13, or 21 |
 | `unit` must be `"hours"`, `"days"`, or `"weeks"` | Explicit estimates | Yes — free-form strings not accepted |
 | No `unit` on symbolic estimates | T-shirt / story point | Yes — unit comes from config |
 
----
+
 
 ## Summary
 
 | Estimation method | Required fields | Distribution | Good for |
 |-------------------|----------------|--------------|----------|
-| Explicit range (triangular) | `min`, `most_likely`, `max` | Triangular (bounded) | Well-understood tasks with clear bounds |
-| Explicit range (log-normal) | `most_likely`, `standard_deviation`, `distribution: "lognormal"` | Log-normal (unbounded) | Exploratory tasks with open-ended risk |
-| T-shirt size | `t_shirt_size` | Triangular (via config lookup) | Relative estimation, early planning |
-| Story points | `story_points` | Triangular (via config lookup) | Agile teams using story point practices |
+| Explicit range (triangular) | `low`, `expected`, `high` | Triangular (bounded) | Well-understood tasks with clear bounds |
+| Explicit range (log-normal) | `low`, `expected`, `high`, `distribution: "lognormal"` | Shifted log-normal | Exploratory tasks with open-ended risk |
+| T-shirt size | `t_shirt_size` | Inherits project/task distribution after config lookup | Relative estimation, early planning |
+| Story points | `story_points` | Inherits project/task distribution after config lookup | Agile teams using story point practices |
 
 All methods produce the same kind of output: a sampled duration for each iteration. The choice of method depends on what information the team is comfortable providing, not on any difference in simulation behavior.
+
+\newpage
+

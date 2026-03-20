@@ -308,7 +308,7 @@ print_step_colored ""
 # 2.1: Static analysis and code quality
 echo "  ✓ Checking code formatting..."
 run_command "poetry run black --check --diff src/ tests/" "Checking code formatting"
-run_command "poetry run flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
+run_command "poetry run flake8 src/${PROGRAMNAME} tests/" "Running flake8 static analysis"
 run_command "poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy static analysis"
 
 

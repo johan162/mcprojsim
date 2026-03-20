@@ -2,9 +2,16 @@
 
 from datetime import date
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from mcprojsim.config import (
     DEFAULT_CONFIDENCE_LEVELS,
@@ -33,11 +40,24 @@ class ImpactType(str, Enum):
 class TaskEstimate(BaseModel):
     """Task effort estimate with distribution parameters."""
 
-    distribution: DistributionType = Field(default=DistributionType.TRIANGULAR)
-    min: Optional[float] = Field(default=None, ge=0)
-    most_likely: Optional[float] = Field(default=None, gt=0)
-    max: Optional[float] = Field(default=None, ge=0)
-    standard_deviation: Optional[float] = Field(default=None, gt=0)
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    distribution: DistributionType | None = Field(default=None)
+    low: Optional[float] = Field(
+        default=None,
+        ge=0,
+        validation_alias=AliasChoices("low", "min"),
+    )
+    expected: Optional[float] = Field(
+        default=None,
+        gt=0,
+        validation_alias=AliasChoices("expected", "most_likely"),
+    )
+    high: Optional[float] = Field(
+        default=None,
+        ge=0,
+        validation_alias=AliasChoices("high", "max"),
+    )
     t_shirt_size: Optional[str] = Field(default=None)
     story_points: Optional[int] = Field(default=None, gt=0)
     unit: Optional[EffortUnit] = Field(default=None)
@@ -84,31 +104,43 @@ class TaskEstimate(BaseModel):
                 )
             return self
 
-        # For explicit estimates, most_likely is required
-        if self.most_likely is None:
+        # For explicit estimates, expected is required
+        if self.expected is None:
             raise ValueError(
-                "Either 't_shirt_size', 'story_points', or 'most_likely' must be specified"
+                "Either 't_shirt_size', 'story_points', or 'expected' must be specified"
             )
 
         # Default unit for explicit estimates is hours
         if self.unit is None:
             self.unit = EffortUnit.HOURS
 
-        if self.distribution == DistributionType.TRIANGULAR:
-            if self.min is None or self.max is None:
-                raise ValueError(
-                    "Triangular distribution requires min, most_likely, and max"
-                )
-            if not (self.min <= self.most_likely <= self.max):
-                raise ValueError(
-                    f"Must satisfy min <= most_likely <= max, "
-                    f"got {self.min} <= {self.most_likely} <= {self.max}"
-                )
-        elif self.distribution == DistributionType.LOGNORMAL:
-            if self.standard_deviation is None:
-                raise ValueError(
-                    "Lognormal distribution requires most_likely and standard_deviation"
-                )
+        if self.low is None or self.high is None:
+            raise ValueError("Explicit estimates require low, expected, and high")
+        if not (self.low <= self.expected <= self.high):
+            raise ValueError(
+                f"Must satisfy low <= expected <= high, "
+                f"got {self.low} <= {self.expected} <= {self.high}"
+            )
+        if self.distribution == DistributionType.LOGNORMAL and not (
+            self.low < self.expected < self.high
+        ):
+            raise ValueError("Lognormal distribution requires low < expected < high")
+        return self
+
+    def validate_effective_distribution(
+        self, distribution: DistributionType
+    ) -> "TaskEstimate":
+        """Validate range semantics for the effective distribution in use."""
+        if self.t_shirt_size is not None or self.story_points is not None:
+            return self
+        if (
+            distribution == DistributionType.LOGNORMAL
+            and self.low is not None
+            and self.expected is not None
+            and self.high is not None
+            and not (self.low < self.expected < self.high)
+        ):
+            raise ValueError("Lognormal distribution requires low < expected < high")
         return self
 
 
@@ -222,7 +254,17 @@ class Task(BaseModel):
         default_factory=UncertaintyFactors
     )
     resources: List[str] = Field(default_factory=list)
+    max_resources: int = Field(default=1, ge=1)
+    min_experience_level: int = Field(default=1)
     risks: List[Risk] = Field(default_factory=list)
+
+    @field_validator("min_experience_level")
+    @classmethod
+    def validate_min_experience_level(cls, value: int) -> int:
+        """Validate minimum experience level."""
+        if value not in {1, 2, 3}:
+            raise ValueError("min_experience_level must be one of: 1, 2, 3")
+        return value
 
     def has_dependency(self, task_id: str) -> bool:
         """Check if this task depends on another task."""
@@ -256,6 +298,13 @@ class ProjectMetadata(BaseModel):
         le=1.0,
         description="Probability threshold above which is shown as green (default 90%)",
     )
+    distribution: DistributionType = Field(
+        default=DistributionType.TRIANGULAR,
+        description=(
+            "Default task estimate distribution when a task does not specify one"
+        ),
+    )
+    team_size: Optional[int] = Field(default=None, ge=0)
 
     @field_validator("start_date", mode="before")
     @classmethod
@@ -287,8 +336,8 @@ class Project(BaseModel):
     project: ProjectMetadata
     tasks: List[Task]
     project_risks: List[Risk] = Field(default_factory=list)
-    resources: List[Dict[str, Any]] = Field(default_factory=list)
-    calendars: List[Dict[str, Any]] = Field(default_factory=list)
+    resources: List["ResourceSpec"] = Field(default_factory=list)
+    calendars: List["CalendarSpec"] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_project(self) -> "Project":
@@ -313,7 +362,99 @@ class Project(BaseModel):
         # Check for circular dependencies
         self._check_circular_dependencies()
 
+        # Validate effective task distributions after project defaults are known
+        self._validate_effective_task_distributions()
+
+        # Validate and normalize resources
+        self._normalize_and_validate_resources()
+        self._validate_calendars()
+        self._validate_resource_references()
+
         return self
+
+    def _normalize_and_validate_resources(self) -> None:
+        """Normalize resource names and validate uniqueness/defaults."""
+        self._apply_team_size_resource_rules()
+
+        used_names: set[str] = set()
+        next_index = 1
+
+        for resource in self.resources:
+            if not resource.name:
+                while True:
+                    candidate = f"resource_{next_index:03d}"
+                    next_index += 1
+                    if candidate not in used_names:
+                        resource.name = candidate
+                        break
+
+            if resource.name in used_names:
+                raise ValueError(f"Resource names must be unique: {resource.name}")
+            used_names.add(resource.name)
+
+    def _apply_team_size_resource_rules(self) -> None:
+        """Apply validation and defaults for team_size vs explicit resources.
+
+        Rules:
+        - team_size is None or 0: keep explicitly specified resources only.
+        - team_size > 0 and explicit resources > team_size: validation error.
+        - team_size > 0 and explicit resources < team_size: append default
+          resources so total count equals team_size.
+        """
+        team_size = self.project.team_size
+        if team_size is None or team_size == 0:
+            return
+
+        explicit_count = len(self.resources)
+        if explicit_count > team_size:
+            raise ValueError(
+                "team_size is smaller than explicitly specified resources: "
+                f"team_size={team_size}, resources={explicit_count}"
+            )
+
+        missing = team_size - explicit_count
+        if missing <= 0:
+            return
+
+        self.resources.extend(ResourceSpec() for _ in range(missing))
+
+    def _validate_calendars(self) -> None:
+        """Validate calendar identifier uniqueness."""
+        calendar_ids = [calendar.id for calendar in self.calendars]
+        if len(calendar_ids) != len(set(calendar_ids)):
+            raise ValueError("Calendar IDs must be unique")
+
+    def _validate_resource_references(self) -> None:
+        """Validate task and resource references to resources/calendars."""
+        resource_names = {resource.name for resource in self.resources if resource.name}
+        resource_by_name = {
+            resource.name: resource for resource in self.resources if resource.name
+        }
+        available_calendar_ids = {calendar.id for calendar in self.calendars} or {
+            "default"
+        }
+
+        for task in self.tasks:
+            for resource_name in task.resources:
+                if resource_name not in resource_names:
+                    raise ValueError(
+                        f"Task {task.id} references unknown resource {resource_name}"
+                    )
+
+                resource = resource_by_name[resource_name]
+                if resource.experience_level < task.min_experience_level:
+                    raise ValueError(
+                        f"Task {task.id} requires min_experience_level "
+                        f"{task.min_experience_level}, but assigned resource "
+                        f"{resource_name} has experience_level "
+                        f"{resource.experience_level}"
+                    )
+
+        for resource in self.resources:
+            if resource.calendar not in available_calendar_ids:
+                raise ValueError(
+                    f"Resource {resource.name} references unknown calendar {resource.calendar}"
+                )
 
     def _check_circular_dependencies(self) -> None:
         """Check for circular dependencies using DFS."""
@@ -342,9 +483,74 @@ class Project(BaseModel):
                         f"Circular dependency detected involving task {task.id}"
                     )
 
+    def _validate_effective_task_distributions(self) -> None:
+        """Validate explicit task ranges against the effective distribution."""
+        for task in self.tasks:
+            effective_distribution = (
+                task.estimate.distribution or self.project.distribution
+            )
+            try:
+                task.estimate.validate_effective_distribution(effective_distribution)
+            except ValueError as error:
+                raise ValueError(f"Task {task.id}: {error}") from error
+
     def get_task_by_id(self, task_id: str) -> Optional[Task]:
         """Get task by ID."""
         for task in self.tasks:
             if task.id == task_id:
                 return task
         return None
+
+
+class ResourceSpec(BaseModel):
+    """Individual resource/member specification."""
+
+    name: Optional[str] = None
+    id: Optional[str] = None
+    availability: float = Field(default=1.0, gt=0.0, le=1.0)
+    calendar: str = Field(default="default")
+    experience_level: int = Field(default=2)
+    productivity_level: float = Field(default=1.0)
+    sickness_prob: float = Field(default=0.0, ge=0.0, le=1.0)
+    planned_absence: List[date] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def normalize_name(self) -> "ResourceSpec":
+        """Use legacy id as fallback name."""
+        if self.name is None and self.id is not None:
+            self.name = self.id
+        return self
+
+    @field_validator("experience_level")
+    @classmethod
+    def validate_experience_level(cls, value: int) -> int:
+        """Validate experience level."""
+        if value not in {1, 2, 3}:
+            raise ValueError("experience_level must be one of: 1, 2, 3")
+        return value
+
+    @field_validator("productivity_level")
+    @classmethod
+    def validate_productivity_level(cls, value: float) -> float:
+        """Validate productivity level."""
+        if value < 0.1 or value > 2.0:
+            raise ValueError("productivity_level must be between 0.1 and 2.0")
+        return value
+
+
+class CalendarSpec(BaseModel):
+    """Working calendar specification."""
+
+    id: str = Field(default="default")
+    work_hours_per_day: float = Field(default=8.0, gt=0)
+    work_days: List[int] = Field(default_factory=lambda: [1, 2, 3, 4, 5])
+    holidays: List[date] = Field(default_factory=list)
+
+    @field_validator("work_days")
+    @classmethod
+    def validate_work_days(cls, value: List[int]) -> List[int]:
+        """Validate work day values (1=Mon ... 7=Sun)."""
+        for day in value:
+            if day < 1 or day > 7:
+                raise ValueError("work_days entries must be integers in range 1..7")
+        return value

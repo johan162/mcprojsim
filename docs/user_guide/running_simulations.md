@@ -2,7 +2,7 @@
 
 This chapter is a reference for the `mcprojsim` command-line interface. It covers all four commands: `generate`, `validate`, `simulate`, and `config show`.
 
----
+
 
 ## Command overview
 
@@ -15,7 +15,7 @@ This chapter is a reference for the `mcprojsim` command-line interface. It cover
 
 A typical workflow runs these commands in sequence: generate (or write by hand) → validate → simulate.
 
----
+
 
 ## `mcprojsim generate`
 
@@ -70,7 +70,7 @@ Task 2:
 - Size: XL
 ```
 
----
+
 
 ## `mcprojsim validate`
 
@@ -109,7 +109,7 @@ If the file has errors, the validator reports the issue and aborts:
 
 It is good practice to validate before every simulation, especially after editing a file or generating one with `mcprojsim generate`.
 
----
+
 
 ## `mcprojsim simulate`
 
@@ -134,6 +134,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
 | `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
+| `-m`, `--minimal` | Show minimal console output: version, project overview, calendar/effort statistical summaries, and calendar confidence intervals only | off |
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
 
@@ -166,6 +167,9 @@ mcprojsim simulate project.yaml --verbose
 
 # Table mode (ASCII tables for tabular sections)
 mcprojsim simulate project.yaml --table
+
+# Minimal output mode (core summaries only)
+mcprojsim simulate project.yaml --minimal
 
 # Show staffing recommendations
 mcprojsim simulate project.yaml --staffing
@@ -259,7 +263,7 @@ When export formats are specified with `-f`, the following files are created:
 | `csv` | Tabular summary with statistics, percentiles, and critical paths |
 | `html` | Interactive report with thermometer chart and distribution histogram |
 
----
+
 
 ## `mcprojsim config show`
 
@@ -280,3 +284,7 @@ mcprojsim config show
 # Show a custom configuration merged with defaults
 mcprojsim config show --config-file my_config.yaml
 ```
+
+
+\newpage
+

@@ -46,6 +46,11 @@ def sample_results():
     results.percentile(50)
     results.percentile(90)
     results.percentile(99)
+    results.schedule_mode = "resource_constrained"
+    results.resource_constraints_active = True
+    results.resource_wait_time_hours = 1.25
+    results.resource_utilization = 0.72
+    results.calendar_delay_time_hours = 3.5
     return results
 
 
@@ -70,6 +75,21 @@ class TestJSONExporter:
         assert "99" in data["calendar_time_confidence_intervals"]
         assert "critical_path" in data
         assert "critical_path_sequences" in data
+        assert data["schedule"]["mode"] == "resource_constrained"
+        assert data["schedule"]["resource_constraints_active"] is True
+
+    def test_json_contains_constrained_diagnostics(self, sample_results, tmp_path):
+        """Test that JSON includes constrained schedule diagnostics."""
+        output_file = tmp_path / "results.json"
+        JSONExporter.export(sample_results, output_file)
+
+        with open(output_file, "r") as f:
+            data = json.load(f)
+
+        diagnostics = data["constrained_diagnostics"]
+        assert diagnostics["resource_wait_time_hours"] == pytest.approx(1.25)
+        assert diagnostics["resource_utilization"] == pytest.approx(0.72)
+        assert diagnostics["calendar_delay_time_hours"] == pytest.approx(3.5)
 
     def test_json_contains_statistics(self, sample_results, tmp_path):
         """Test that JSON contains statistics."""
@@ -191,6 +211,21 @@ class TestCSVExporter:
         # Should have at least some histogram bins
         assert histogram_data_rows > 0
 
+    def test_csv_contains_constrained_diagnostics(self, sample_results, tmp_path):
+        """Test that CSV includes constrained schedule diagnostics section."""
+        output_file = tmp_path / "results.csv"
+        CSVExporter.export(sample_results, output_file)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Schedule Mode" in content
+        assert "resource_constrained" in content
+        assert "Constrained Schedule Diagnostics" in content
+        assert "Average Resource Wait (hours)" in content
+        assert "Effective Resource Utilization" in content
+        assert "Calendar Delay Contribution (hours)" in content
+
 
 class TestHTMLExporter:
     """Tests for HTML exporter."""
@@ -281,7 +316,7 @@ class TestHTMLExporter:
         )
 
         config = Config.model_validate(
-            {"t_shirt_sizes": {"M": {"min": 10, "most_likely": 20, "max": 30}}}
+            {"t_shirt_sizes": {"M": {"low": 10, "expected": 20, "high": 30}}}
         )
 
         output_file = tmp_path / "results.html"
@@ -353,7 +388,7 @@ class TestHTMLExporter:
         )
 
         config = Config.model_validate(
-            {"story_points": {5: {"min": 10, "most_likely": 20, "max": 30}}}
+            {"story_points": {5: {"low": 10, "expected": 20, "high": 30}}}
         )
 
         output_file = tmp_path / "story-points.html"
@@ -408,6 +443,20 @@ class TestHTMLExporter:
             content = f.read()
 
         assert "Max Parallel Tasks" in content
+        assert "Schedule Mode" in content
+
+    def test_html_contains_constrained_diagnostics(self, sample_results, tmp_path):
+        """Test that HTML contains constrained schedule diagnostics section."""
+        output_file = tmp_path / "results.html"
+        HTMLExporter.export(sample_results, output_file)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Constrained Schedule Diagnostics" in content
+        assert "Average Resource Wait (hours)" in content
+        assert "Effective Resource Utilization" in content
+        assert "Calendar Delay Contribution (hours)" in content
 
     def test_html_contains_staffing_section(self, sample_results, tmp_path):
         """Test that HTML contains staffing recommendations and table."""

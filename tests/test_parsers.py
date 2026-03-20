@@ -20,9 +20,9 @@ def sample_project_dict():
                 "id": "task_001",
                 "name": "Task 1",
                 "estimate": {
-                    "min": 1,
-                    "most_likely": 2,
-                    "max": 5,
+                    "low": 1,
+                    "expected": 2,
+                    "high": 5,
                 },
             }
         ],
@@ -68,6 +68,40 @@ class TestYAMLParser:
         with pytest.raises(ValueError, match="Invalid project data"):
             parser.parse_dict({"invalid": "data"})
 
+    def test_parse_resources_with_defaults(self):
+        """Test parsing resource schema with defaults and generated names."""
+        parser = YAMLParser()
+        project = parser.parse_dict(
+            {
+                "project": {
+                    "name": "Res Parser Project",
+                    "start_date": "2025-01-01",
+                    "team_size": 3,
+                },
+                "tasks": [
+                    {
+                        "id": "task_001",
+                        "name": "Task 1",
+                        "estimate": {
+                            "low": 1,
+                            "expected": 2,
+                            "high": 5,
+                        },
+                        "resources": ["alice"],
+                    }
+                ],
+                "resources": [
+                    {"name": "alice", "experience_level": 3},
+                    {"experience_level": 1},
+                ],
+            }
+        )
+
+        assert project.project.team_size == 3
+        assert project.resources[0].name == "alice"
+        assert project.resources[1].name == "resource_001"
+        assert project.resources[1].productivity_level == 1.0
+
     def test_validate_file_valid(self, sample_yaml_file):
         """Test validating valid file."""
         parser = YAMLParser()
@@ -99,9 +133,9 @@ tasks:
     - id: task_001
         name: Example task
         estimate:
-            min: 1
+            low: 1
             mostlikely: 2
-            max: 3
+            high: 3
 """.strip())
 
             parser = YAMLParser()
@@ -110,7 +144,7 @@ tasks:
             assert not is_valid
             assert "line 9" in error
             assert "mostlikely" in error
-            assert "most_likely" in error
+            assert "expected" in error
 
         def test_parse_file_reports_dependency_suggestion(self, tmp_path):
             """Dependency validation should point to the dependency line with a suggestion."""
@@ -123,15 +157,15 @@ tasks:
     - id: task_001
         name: First task
         estimate:
-            min: 1
-            most_likely: 2
-            max: 3
+            low: 1
+            expected: 2
+            high: 3
     - id: task_002
         name: Second task
         estimate:
-            min: 1
-            most_likely: 2
-            max: 3
+            low: 1
+            expected: 2
+            high: 3
         dependencies:
             - task_001_typo
 """.strip())
@@ -177,9 +211,9 @@ id = "task_001"
 name = "Task"
 
 [tasks.estimate]
-min = 1
+low = 1
 mostlikely = 2
-max = 3
+high = 3
 """.strip())
 
         parser = TOMLParser()
@@ -188,7 +222,7 @@ max = 3
         assert not is_valid
         assert "line 11" in error
         assert "mostlikely" in error
-        assert "most_likely" in error
+        assert "Unknown field" in error
 
     def test_parse_file_reports_toml_syntax_line_numbers(self, tmp_path):
         """TOML syntax errors should include line and column information."""
@@ -202,9 +236,9 @@ start_date = "2025-01-01"
 id = "task_001"
 name = "Task"
 [tasks.estimate
-min = 1
-most_likely = 2
-max = 3
+low = 1
+expected = 2
+high = 3
 """.strip())
 
         parser = TOMLParser()

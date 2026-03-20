@@ -11,10 +11,15 @@ Supported input patterns:
     - Story points: "Story points: 5"
     - Explicit estimates: "Estimate: 3/5/10 days"
     - Dependencies: "Depends on Task 1", "Depends on Task 1, Task 2"
+    - Resources: "Resource N: Name" followed by bullet points
+    - Calendars: "Calendar: id" followed by bullet points
+    - Task constraints: "Resources: Alice, Bob", "Max resources: 2",
+      "Min experience: 3"
 """
 
 from __future__ import annotations
 
+from datetime import date, datetime, timedelta
 import re
 from dataclasses import dataclass, field
 
@@ -49,12 +54,39 @@ class ParsedTask:
     name: str = ""
     t_shirt_size: str | None = None
     story_points: int | None = None
-    min_estimate: float | None = None
-    most_likely_estimate: float | None = None
-    max_estimate: float | None = None
+    low_estimate: float | None = None
+    expected_estimate: float | None = None
+    high_estimate: float | None = None
     estimate_unit: str = "days"
     dependency_refs: list[str] = field(default_factory=list)
     description: str | None = None
+    resources: list[str] = field(default_factory=list)
+    max_resources: int = 1
+    min_experience_level: int = 1
+
+
+@dataclass
+class ParsedResource:
+    """A resource/team member extracted from a natural language description."""
+
+    number: int
+    name: str = ""
+    availability: float = 1.0
+    experience_level: int = 2
+    productivity_level: float = 1.0
+    calendar: str = "default"
+    sickness_prob: float = 0.0
+    planned_absence: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ParsedCalendar:
+    """A working calendar extracted from a natural language description."""
+
+    id: str = "default"
+    work_hours_per_day: float = 8.0
+    work_days: list[int] = field(default_factory=lambda: [1, 2, 3, 4, 5])
+    holidays: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -67,6 +99,8 @@ class ParsedProject:
     hours_per_day: float = 8.0
     tasks: list[ParsedTask] = field(default_factory=list)
     confidence_levels: list[int] = field(default_factory=lambda: [50, 80, 90, 95])
+    resources: list[ParsedResource] = field(default_factory=list)
+    calendars: list[ParsedCalendar] = field(default_factory=list)
 
 
 class NLProjectParser:
@@ -93,7 +127,14 @@ class NLProjectParser:
     # -- Task header -----------------------------------------------------------
     _TASK_HEADER_RE = re.compile(r"task\s*(\d+)\s*[:.=]?\s*(.*)", re.IGNORECASE)
 
+    # -- Resource header -------------------------------------------------------
+    _RESOURCE_HEADER_RE = re.compile(r"resource\s*(\d+)\s*[:.=]?\s*(.*)", re.IGNORECASE)
+
+    # -- Calendar header -------------------------------------------------------
+    _CALENDAR_HEADER_RE = re.compile(r"calendar\s*[:.=]?\s*(.+)", re.IGNORECASE)
+
     # -- Task bullet patterns --------------------------------------------------
+    _NAME_RE = re.compile(r"name\s*[:.=]?\s*(.+)", re.IGNORECASE)
     _SIZE_RE = re.compile(r"size\s*[:.=]?\s*(.+)", re.IGNORECASE)
     _STORY_POINTS_RE = re.compile(
         r"(?:story\s*)?points?\s*[:.=]?\s*(\d+)", re.IGNORECASE
@@ -106,7 +147,54 @@ class NLProjectParser:
     )
     _TASK_REF_RE = re.compile(r"task\s*(\d+)", re.IGNORECASE)
 
+    # -- Task constraint bullet patterns ---------------------------------------
+    _TASK_RESOURCES_RE = re.compile(r"resources?\s*[:.=]?\s*(.+)", re.IGNORECASE)
+    _TASK_MAX_RESOURCES_RE = re.compile(
+        r"max\s*resources?\s*[:.=]?\s*(\d+)", re.IGNORECASE
+    )
+    _TASK_MIN_EXPERIENCE_RE = re.compile(
+        r"min(?:imum)?\s*experience(?:\s*level)?\s*[:.=]?\s*([123])", re.IGNORECASE
+    )
+
+    # -- Resource bullet patterns ----------------------------------------------
+    _RES_EXPERIENCE_RE = re.compile(
+        r"experience(?:\s*level)?\s*[:.=]?\s*([123])", re.IGNORECASE
+    )
+    _RES_PRODUCTIVITY_RE = re.compile(
+        r"productivity(?:\s*level)?\s*[:.=]?\s*([\d.]+)", re.IGNORECASE
+    )
+    _RES_AVAILABILITY_RE = re.compile(
+        r"availability\s*[:.=]?\s*([\d.]+)", re.IGNORECASE
+    )
+    _RES_CALENDAR_RE = re.compile(r"calendar\s*[:.=]?\s*(\S+)", re.IGNORECASE)
+    _RES_SICKNESS_RE = re.compile(
+        r"sickness(?:\s*prob(?:ability)?)?\s*[:.=]?\s*([\d.]+)", re.IGNORECASE
+    )
+    _RES_ABSENCE_RE = re.compile(
+        r"(?:planned\s*)?absence\s*[:.=]?\s*(.+)", re.IGNORECASE
+    )
+    _ISO_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+    _DATE_TOKEN_RE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{8}|\d{1,2}\s+[A-Za-z]{3,9}")
+    _DATE_RANGE_RE = re.compile(
+        r"(?P<start>\d{4}-\d{2}-\d{2}|\d{8}|\d{1,2}\s+[A-Za-z]{3,9})"
+        r"\s*(?:to|[-–—])\s*"
+        r"(?P<end>\d{4}-\d{2}-\d{2}|\d{8}|\d{1,2}\s+[A-Za-z]{3,9})",
+        re.IGNORECASE,
+    )
+
+    # -- Calendar bullet patterns ----------------------------------------------
+    _CAL_WORK_HOURS_RE = re.compile(
+        r"work\s*hours?(?:\s*per\s*day)?\s*[:.=]?\s*([\d.]+)", re.IGNORECASE
+    )
+    _CAL_WORK_DAYS_RE = re.compile(r"work\s*days?\s*[:.=]?\s*([\d,\s]+)", re.IGNORECASE)
+    _CAL_HOLIDAYS_RE = re.compile(r"holidays?\s*[:.=]?\s*(.+)", re.IGNORECASE)
+
     # -- Public API ------------------------------------------------------------
+
+    def __init__(self, current_year: int | None = None) -> None:
+        self.current_year = (
+            current_year if current_year is not None else date.today().year
+        )
 
     def parse(self, text: str) -> ParsedProject:
         """Parse a natural language project description.
@@ -123,6 +211,20 @@ class NLProjectParser:
         project = ParsedProject()
         lines = text.strip().splitlines()
         current_task: ParsedTask | None = None
+        current_resource: ParsedResource | None = None
+        current_calendar: ParsedCalendar | None = None
+
+        def _flush_section() -> None:
+            nonlocal current_task, current_resource, current_calendar
+            if current_task is not None:
+                project.tasks.append(current_task)
+                current_task = None
+            if current_resource is not None:
+                project.resources.append(current_resource)
+                current_resource = None
+            if current_calendar is not None:
+                project.calendars.append(current_calendar)
+                current_calendar = None
 
         for raw_line in lines:
             line = raw_line.strip()
@@ -132,13 +234,32 @@ class NLProjectParser:
             # Check for task header
             task_match = self._TASK_HEADER_RE.match(line)
             if task_match:
-                if current_task is not None:
-                    project.tasks.append(current_task)
+                _flush_section()
                 task_num = int(task_match.group(1))
                 inline_name = task_match.group(2).strip().rstrip(":.")
                 current_task = ParsedTask(number=task_num)
                 if inline_name:
                     current_task.name = inline_name
+                continue
+
+            # Check for resource header
+            resource_match = self._RESOURCE_HEADER_RE.match(line)
+            if resource_match:
+                _flush_section()
+                res_num = int(resource_match.group(1))
+                inline_name = resource_match.group(2).strip().rstrip(":.")
+                current_resource = ParsedResource(number=res_num)
+                if inline_name:
+                    current_resource.name = inline_name
+                continue
+
+            # Check for calendar header (raw line without bullet prefix
+            # won't match inside a section where lines start with - or *)
+            calendar_match = self._CALENDAR_HEADER_RE.match(line)
+            if calendar_match:
+                _flush_section()
+                cal_id = calendar_match.group(1).strip().rstrip(":.")
+                current_calendar = ParsedCalendar(id=cal_id)
                 continue
 
             # Inside a task: process bullet points
@@ -147,6 +268,14 @@ class NLProjectParser:
                 if not bullet_text:
                     continue
 
+                if self._try_parse_task_name(bullet_text, current_task):
+                    continue
+                if self._try_parse_task_max_resources(bullet_text, current_task):
+                    continue
+                if self._try_parse_task_min_experience(bullet_text, current_task):
+                    continue
+                if self._try_parse_task_resources(bullet_text, current_task):
+                    continue
                 if self._try_parse_size(bullet_text, current_task):
                     continue
                 if self._try_parse_story_points(bullet_text, current_task):
@@ -163,12 +292,27 @@ class NLProjectParser:
                     current_task.description = bullet_text
                 continue
 
+            # Inside a resource: process bullet points
+            if current_resource is not None:
+                bullet_text = re.sub(r"^[-*•]\s*", "", line).strip()
+                if not bullet_text:
+                    continue
+                self._try_parse_resource_bullet(bullet_text, current_resource)
+                continue
+
+            # Inside a calendar: process bullet points
+            if current_calendar is not None:
+                bullet_text = re.sub(r"^[-*•]\s*", "", line).strip()
+                if not bullet_text:
+                    continue
+                self._try_parse_calendar_bullet(bullet_text, current_calendar)
+                continue
+
             # Project-level metadata
             self._try_parse_project_metadata(line, project)
 
-        # Append the last task
-        if current_task is not None:
-            project.tasks.append(current_task)
+        # Flush the last open section
+        _flush_section()
 
         if not project.tasks:
             raise ValueError("No tasks found in the project description.")
@@ -177,6 +321,11 @@ class NLProjectParser:
         for task in project.tasks:
             if not task.name:
                 task.name = f"Task {task.number}"
+
+        # Default resource names for resources without an explicit name
+        for resource in project.resources:
+            if not resource.name:
+                resource.name = f"resource_{resource.number:03d}"
 
         return project
 
@@ -223,16 +372,15 @@ class NLProjectParser:
             elif task.story_points is not None:
                 lines.append("    estimate:")
                 lines.append(f"      story_points: {task.story_points}")
-            elif task.min_estimate is not None:
+            elif task.low_estimate is not None:
                 lines.append("    estimate:")
-                lines.append(f"      min: {self._fmt_num(task.min_estimate)}")
-                if task.most_likely_estimate is not None:
+                lines.append(f"      low: {self._fmt_num(task.low_estimate)}")
+                if task.expected_estimate is not None:
                     lines.append(
-                        f"      most_likely:"
-                        f" {self._fmt_num(task.most_likely_estimate)}"
+                        f"      expected:" f" {self._fmt_num(task.expected_estimate)}"
                     )
-                if task.max_estimate is not None:
-                    lines.append(f"      max: {self._fmt_num(task.max_estimate)}")
+                if task.high_estimate is not None:
+                    lines.append(f"      high: {self._fmt_num(task.high_estimate)}")
                 lines.append(f'      unit: "{task.estimate_unit}"')
 
             # Dependencies
@@ -246,6 +394,57 @@ class NLProjectParser:
                 lines.append(f"    dependencies: [{dep_str}]")
             else:
                 lines.append("    dependencies: []")
+
+            # Resource constraints (only emit non-defaults)
+            if task.resources:
+                res_str = ", ".join(f'"{r}"' for r in task.resources)
+                lines.append(f"    resources: [{res_str}]")
+            if task.max_resources != 1:
+                lines.append(f"    max_resources: {task.max_resources}")
+            if task.min_experience_level != 1:
+                lines.append(f"    min_experience_level: {task.min_experience_level}")
+
+        # Resources section
+        if project.resources:
+            lines.append("")
+            lines.append("resources:")
+            for resource in project.resources:
+                lines.append(f'  - name: "{resource.name}"')
+                if resource.calendar != "default":
+                    lines.append(f'    calendar: "{resource.calendar}"')
+                if resource.availability != 1.0:
+                    lines.append(
+                        f"    availability:" f" {self._fmt_num(resource.availability)}"
+                    )
+                lines.append(f"    experience_level: {resource.experience_level}")
+                lines.append(
+                    f"    productivity_level:"
+                    f" {self._fmt_num(resource.productivity_level)}"
+                )
+                if resource.sickness_prob > 0.0:
+                    lines.append(
+                        f"    sickness_prob:"
+                        f" {self._fmt_num(resource.sickness_prob)}"
+                    )
+                if resource.planned_absence:
+                    absence_str = ", ".join(f'"{d}"' for d in resource.planned_absence)
+                    lines.append(f"    planned_absence: [{absence_str}]")
+
+        # Calendars section
+        if project.calendars:
+            lines.append("")
+            lines.append("calendars:")
+            for calendar in project.calendars:
+                lines.append(f'  - id: "{calendar.id}"')
+                lines.append(
+                    f"    work_hours_per_day:"
+                    f" {self._fmt_num(calendar.work_hours_per_day)}"
+                )
+                days_str = ", ".join(str(d) for d in calendar.work_days)
+                lines.append(f"    work_days: [{days_str}]")
+                if calendar.holidays:
+                    holidays_str = ", ".join(f'"{h}"' for h in calendar.holidays)
+                    lines.append(f"    holidays: [{holidays_str}]")
 
         lines.append("")
         return "\n".join(lines)
@@ -312,6 +511,15 @@ class NLProjectParser:
                 return True
         return False
 
+    def _try_parse_task_name(self, text: str, task: ParsedTask) -> bool:
+        m = self._NAME_RE.match(text)
+        if m:
+            name = m.group(1).strip().rstrip(".,;:")
+            if name and not task.name:
+                task.name = name
+                return True
+        return False
+
     def _try_parse_story_points(self, text: str, task: ParsedTask) -> bool:
         m = self._STORY_POINTS_RE.match(text)
         if m:
@@ -334,9 +542,9 @@ class NLProjectParser:
     def _try_parse_estimate(self, text: str, task: ParsedTask) -> bool:
         m = self._ESTIMATE_RE.match(text)
         if m:
-            task.min_estimate = float(m.group(1))
-            task.most_likely_estimate = float(m.group(2))
-            task.max_estimate = float(m.group(3))
+            task.low_estimate = float(m.group(1))
+            task.expected_estimate = float(m.group(2))
+            task.high_estimate = float(m.group(3))
             if m.group(4):
                 unit = m.group(4).lower()
                 if unit.startswith("hour") or unit == "h":
@@ -347,6 +555,154 @@ class NLProjectParser:
                     task.estimate_unit = "weeks"
             return True
         return False
+
+    def _try_parse_task_resources(self, text: str, task: ParsedTask) -> bool:
+        m = self._TASK_RESOURCES_RE.match(text)
+        if m:
+            raw = m.group(1).strip()
+            names = [n.strip() for n in raw.split(",") if n.strip()]
+            if names:
+                task.resources = names
+                return True
+        return False
+
+    def _try_parse_task_max_resources(self, text: str, task: ParsedTask) -> bool:
+        m = self._TASK_MAX_RESOURCES_RE.match(text)
+        if m:
+            task.max_resources = int(m.group(1))
+            return True
+        return False
+
+    def _try_parse_task_min_experience(self, text: str, task: ParsedTask) -> bool:
+        m = self._TASK_MIN_EXPERIENCE_RE.match(text)
+        if m:
+            task.min_experience_level = int(m.group(1))
+            return True
+        return False
+
+    def _try_parse_resource_bullet(self, text: str, resource: ParsedResource) -> bool:
+        m = self._RES_EXPERIENCE_RE.match(text)
+        if m:
+            resource.experience_level = int(m.group(1))
+            return True
+
+        m = self._RES_PRODUCTIVITY_RE.match(text)
+        if m:
+            resource.productivity_level = float(m.group(1))
+            return True
+
+        m = self._RES_AVAILABILITY_RE.match(text)
+        if m:
+            resource.availability = float(m.group(1))
+            return True
+
+        m = self._RES_CALENDAR_RE.match(text)
+        if m:
+            resource.calendar = m.group(1).strip()
+            return True
+
+        m = self._RES_SICKNESS_RE.match(text)
+        if m:
+            resource.sickness_prob = float(m.group(1))
+            return True
+
+        m = self._RES_ABSENCE_RE.match(text)
+        if m:
+            dates = self._extract_dates(m.group(1))
+            if dates:
+                resource.planned_absence.extend(dates)
+                return True
+
+        # Unmatched bullet could be the resource name
+        if not resource.name:
+            resource.name = text
+            return True
+
+        return False
+
+    def _try_parse_calendar_bullet(self, text: str, calendar: ParsedCalendar) -> bool:
+        m = self._CAL_WORK_HOURS_RE.match(text)
+        if m:
+            calendar.work_hours_per_day = float(m.group(1))
+            return True
+
+        m = self._CAL_WORK_DAYS_RE.match(text)
+        if m:
+            days = [
+                int(d.strip()) for d in m.group(1).split(",") if d.strip().isdigit()
+            ]
+            if days:
+                calendar.work_days = days
+            return True
+
+        m = self._CAL_HOLIDAYS_RE.match(text)
+        if m:
+            dates = self._extract_dates(m.group(1))
+            if dates:
+                calendar.holidays.extend(dates)
+            return True
+
+        return False
+
+    def _extract_dates(self, text: str) -> list[str]:
+        """Extract single dates and expand date ranges into ISO dates."""
+        dates: list[str] = []
+        consumed = [False] * len(text)
+
+        for match in self._DATE_RANGE_RE.finditer(text):
+            start_date = self._parse_date_token(match.group("start"))
+            end_date = self._parse_date_token(match.group("end"))
+            if start_date is None or end_date is None:
+                continue
+
+            range_start, range_end = sorted((start_date, end_date))
+            for offset in range((range_end - range_start).days + 1):
+                self._append_unique_date(
+                    dates, (range_start + timedelta(days=offset)).isoformat()
+                )
+
+            for index in range(match.start(), match.end()):
+                consumed[index] = True
+
+        remaining_text = "".join(
+            char if not consumed[index] else " " for index, char in enumerate(text)
+        )
+
+        for match in self._DATE_TOKEN_RE.finditer(remaining_text):
+            parsed_date = self._parse_date_token(match.group(0))
+            if parsed_date is not None:
+                self._append_unique_date(dates, parsed_date.isoformat())
+
+        return dates
+
+    def _parse_date_token(self, token: str) -> date | None:
+        """Parse a supported natural-language date token."""
+        cleaned = " ".join(token.strip().split())
+        if not cleaned:
+            return None
+
+        for fmt in ("%Y-%m-%d", "%Y%m%d"):
+            try:
+                return datetime.strptime(cleaned, fmt).date()
+            except ValueError:
+                pass
+
+        normalized = cleaned.title()
+        for fmt in ("%d %b %Y", "%d %B %Y"):
+            try:
+                return datetime.strptime(
+                    f"{normalized} {self.current_year}", fmt
+                ).date()
+            except ValueError:
+                pass
+
+        return None
+
+    @staticmethod
+    def _append_unique_date(dates: list[str], value: str) -> None:
+        """Append a date string once while preserving order."""
+        if value not in dates:
+            dates.append(value)
 
     @staticmethod
     def _yaml_str(s: str) -> str:

@@ -30,6 +30,8 @@ It is intended for teams that want answers such as:
 - **Selection of units** - Unit-aware estimation: supports hours, days, and weeks with automatic conversion to a canonical hours-based internal representation
 - **Work hours per day** - Configurable `hours_per_day` per project, with working-day and delivery-date reporting
 - **Dependency scheduling** - Task dependencies and schedule-aware project duration calculation
+- **Constrained scheduling** - Resource- and calendar-aware scheduling mode with automatic activation when resources are present (explicit or team-size generated)
+- **Resource handling** - Task/resource constraints (`resources`, `max_resources`, `min_experience_level`), availability, productivity, experience levels, and calendar/absence/sickness effects
 - **Risk modelling** - Task-level and project-level risk modeling
 - **Uncertainty factors** - Configurable uncertainty factors such as team experience and requirements maturity
 - **T-Shirt and Story Point** - T-shirt size and story point symbolic estimates with configurable unit defaults
@@ -78,9 +80,9 @@ tasks:
   - id: "task_001"
     name: "Database schema design"
     estimate:
-      min: 3
-      most_likely: 5
-      max: 10
+      low: 3
+      expected: 5
+      high: 10
       unit: "days"
     dependencies: []
     uncertainty_factors:
@@ -116,6 +118,7 @@ Use the local document that matches your goal:
 - [docs/user_guide/introduction.md](docs/user_guide/introduction.md) — concepts behind Monte Carlo estimation
 - [docs/user_guide/your_first_project.md](docs/user_guide/your_first_project.md) — build a project file step by step
 - [docs/user_guide/project_files.md](docs/user_guide/project_files.md) — project file reference
+- [docs/user_guide/constrained.md](docs/user_guide/constrained.md) — resource/calendar-constrained scheduling, assignment behavior, and diagnostics
 - [docs/configuration.md](docs/configuration.md) — uncertainty factors and runtime configuration
 - [docs/examples.md](docs/examples.md) — example projects and usage patterns
 - [docs/api_reference.md](docs/api_reference.md) — Python API usage
@@ -136,6 +139,9 @@ mcprojsim simulate examples/sample_project.yaml
 
 # Use a custom configuration
 mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml
+
+# Run resource/calendar-constrained scheduling example
+mcprojsim simulate examples/resource_cap_small_task.yaml --seed 42 --table
 
 # Reproduce a run exactly
 mcprojsim simulate examples/sample_project.yaml --seed 42
@@ -225,7 +231,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.5.0}
+  version = {0.6.0}
 }
 ```
 

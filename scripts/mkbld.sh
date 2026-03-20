@@ -264,7 +264,7 @@ print_step_colored ""
 run_command "poetry run black --check --diff src/ tests/" "Checking code formatting with black"
 
 # Step 2.2: Static analysis with flake8
-run_command "poetry run flake8 src/${PROGRAMNAME} tests/ --max-line-length=120 --extend-ignore=E203,W503,E501,E402" "Running flake8 static analysis"
+run_command "poetry run flake8 src/${PROGRAMNAME} tests/" "Running flake8 static analysis"
 
 # Step 2.3: Type checking with mypy
 run_command "poetry run mypy src/ tests/ --strict --ignore-missing-imports" "Running mypy type checking"

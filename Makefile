@@ -1,18 +1,24 @@
-# Makefile for OneSelect Backend Application
+# Makefile for MCProjSim project
 # The structure for the Makefile is built on separating timestamp dependencies and command targets
 # Each command target may depend on one or more timestamp files that encapsulate the logic for when
 # to re-run certain tasks based on file changes.
 
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
-pre-commit clean maintainer-clean docs docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
+pre-commit clean maintainer-clean docs pdf pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all
 
 
 # Make behavior
 .DEFAULT_GOAL := help
+
+# Get full path to bash
 SHELL := $(shell which bash)
+
+# Delete target files on error to prevent stale timestamps
 .DELETE_ON_ERROR:
+
+# Use a single shell for each target to allow multi-line commands and better error handling
 .ONESHELL:
 
 # Colors for output
@@ -73,6 +79,7 @@ endif
 # Check which container engine is running and set the appropriate tool
 PODMAN_RUNNING := $(shell podman info >/dev/null 2>&1 && echo "yes" || echo "no")
 DOCKER_RUNNING := $(shell docker info >/dev/null 2>&1 && echo "yes" || echo "no")
+NO_CONTAINER_ENGINE := $(shell if [ "$(PODMAN_RUNNING)" = "no" ] && [ "$(DOCKER_RUNNING)" = "no" ]; then echo "yes"; else echo "no"; fi)
 
 ifeq ($(PODMAN_RUNNING),yes)
     CONTAINER_CMD := ${PODMAN}
@@ -125,6 +132,37 @@ PYPI_NAME := mcprojsim
 VERSION := $(shell grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
 CONTAINER_NAME := $(PROJECT)
 
+# User guide PDF output path
+USER_GUIDE_PDF := mcprojsim_user_guide-v$(VERSION).pdf
+USER_GUIDE_PANDOC_PDF := user_guide_pandoc.pdf
+USER_GUIDE_BUILD_DIR := .build/user-guide
+USER_GUIDE_TEMPLATE := docs/user_guide/report_template.tex
+USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
+USER_GUIDE_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body.tex
+USER_GUIDE_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report.tex
+USER_GUIDE_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report.pdf
+
+# Doc files for User Guide PDF generation
+USER_GUIDE_DOCS := \
+	docs/user_guide/getting_started.md \
+	docs/user_guide/introduction.md \
+	docs/user_guide/your_first_project.md  \
+	docs/user_guide/uncertainty_factors.md  \
+	docs/user_guide/task_estimation.md  \
+	docs/user_guide/risks.md  \
+	docs/user_guide/project_files.md  \
+	docs/user_guide/constrained.md  \
+	docs/user_guide/running_simulations.md  \
+	docs/user_guide/interpreting_results.md  \
+	docs/user_guide/mcp-server.md \
+	docs/examples.md
+
+# Example generation
+EXAMPLES_TEMPLATE := docs/examples_template.md
+EXAMPLES_GENERATOR := scripts/gen-examples.sh
+EXAMPLES_OUTPUT := docs/examples.md
+EXAMPLE_FILES := $(wildcard examples/*.yaml) $(wildcard examples/*.txt)
+
 # Minimum coverage percentage required
 COVERAGE := 80
 
@@ -134,17 +172,20 @@ TEST_FILES := $(shell find $(TEST_DIR) -name 'test_*.py')
 DOC_FILES := mkdocs.yml $(shell find $(DOCS_DIR) -name '*.md' -o -name '*.yml' -o -name '*.yaml')
 MISC_FILES := pyproject.toml README.md mypy.ini .flake8
 LOCK_FILE := poetry.lock
-DOCKER_SRC_FILES := Dockerfile docker-compose.yml docker-entrypoint.sh
+DOCKER_SRC_FILES := Dockerfile docker-compose.yml
 
 # Timestamp files
-CONTAINER_STAMP := .container-stamp
-DOC_STAMP := .docs-stamp
-FORMAT_STAMP := .format-stamp
-LINT_STAMP := .lint-stamp
-TYPECHECK_STAMP := .typecheck-stamp
-INSTALL_STAMP := .install-stamp
-TEST_STAMP := .test-stamp
-GHCR_LOGIN_STAMP := .ghcr-login-stamp
+STAMP_DIR := .makefile-stamps
+$(shell mkdir -p $(STAMP_DIR))
+
+CONTAINER_STAMP := $(STAMP_DIR)/container-stamp
+DOC_STAMP := $(STAMP_DIR)/docs-stamp
+FORMAT_STAMP := $(STAMP_DIR)/format-stamp
+LINT_STAMP := $(STAMP_DIR)/lint-stamp
+TYPECHECK_STAMP := $(STAMP_DIR)/typecheck-stamp
+INSTALL_STAMP := $(STAMP_DIR)/install-stamp
+TEST_STAMP := $(STAMP_DIR)/test-stamp
+GHCR_LOGIN_STAMP := $(STAMP_DIR)/ghcr-login-stamp
 
 # Build package files
 BUILD_DIR := dist
@@ -168,11 +209,11 @@ $(TEST_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(FORMAT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running code formatter...$(NC)"
-	@poetry run black $(SRC_DIR) $(TEST_DIR) -q
+	@poetry run black --check $(SRC_DIR) $(TEST_DIR) -q
 	@touch $(FORMAT_STAMP)
 	@echo -e "$(GREEN)✓ Format target runs successfully$(NC)"
 
-$(CONTAINER_STAMP): $(SRC_FILES) $(TEST_FILES) $(DOCKER_SRC_FILES) $(MISC_FILES) $(INSTALL_STAMP)
+$(CONTAINER_STAMP): $(SRC_FILES) $(TEST_FILES) $(DOCKER_SRC_FILES) $(MISC_FILES) $(INSTALL_STAMP) | container-engine-check
 	@echo -e "$(DARKYELLOW)- Building container image...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) build
 	@$(CONTAINER_CMD) tag oneselect-backend:latest oneselect-backend:$(VERSION)
@@ -288,7 +329,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build|docs|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
+	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-pandoc|gen-examples|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
@@ -308,13 +349,6 @@ install: $(INSTALL_STAMP) ## Install project dependencies and setup virtual envi
 reinstall: clean-venv clean install ## Reinstall the project from scratch
 	@echo -e "$(GREEN)✓ Project reinstalled successfully$(NC)"
 
-# ============================================================================================
-# Run the API Development Server Locally
-# ============================================================================================
-run: | $(DB_FILE) ## Run the development server with auto-reload
-	@echo -e "$(BLUE)Starting development server on http://$(SERVER_HOST):$(SERVER_PORT)$(NC)"
-	@poetry run uvicorn app.main:app --reload --host $(SERVER_HOST) --port $(SERVER_PORT)
-
 # =============================================================================================
 # Testing Targets
 # The targets: test-short, test-param, and test-html will always be run on invocation.
@@ -327,13 +361,9 @@ test-short: $(INSTALL_STAMP) ## Run tests in parallel with minimal output, no co
 	@echo -e "$(DARKYELLOW)- Starting short test without coverage...$(NC)"	
 	@poetry run pytest -n auto -q --no-cov
 
-test-param: $(INSTALL_STAMP) ## Run parameterized integration tests, no coverage
-	@echo -e "$(DARKYELLOW)- Starting parameterized integration tests...$(NC)"
-	@poetry run pytest -n 0 --no-cov tests/test_integration_parametrized.py::TestParameterizedWorkflow -s
-
 test-html: $(INSTALL_STAMP) ## Run tests in parallel, HTML & XML coverage report
 	@echo -e "$(DARKYELLOW)- Starting parallel test coverage...$(NC)"
-	@poetry run pytest -q -n auto --cov=app --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
+	@poetry run pytest -q -n auto --cov=src/mcprojsime --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
 	@echo -e "$(GREEN)✓ Test coverage report generated in \"coverage.xml\" and \"htmlcov/index.html\"$(NC)"
 
 # ============================================================================================
@@ -377,8 +407,9 @@ clean: ## Clean up build artifacts, caches, and timestamp files. Keep the .venv 
 	@rm -rf .coverage coverage.xml
 	@rm -rf htmlcov
 	@rm -rf site dist
+	@rm -rf $(USER_GUIDE_BUILD_DIR)
 	@rm -rf .mypy_cache
-	@rm -f $(FORMAT_STAMP) $(LINT_STAMP) $(TYPECHECK_STAMP) $(DOC_STAMP) $(TEST_STAMP) $(CONTAINER_STAMP) $(GHCR_LOGIN_STAMP)
+	@rm -rf $(STAMP_DIR)
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.pyc" -delete
 	@echo -e "$(GREEN)✓ Clean completed$(NC)"
@@ -397,26 +428,85 @@ maintainer-clean: ## Perform a thorough cleanup including virtual environment, c
 docs: $(DOC_STAMP) ## Build the project documentation with MkDocs
 	@:
 
+gen-examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
+	@:
+
+$(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) $(INSTALL_STAMP)
+	@echo -e "$(DARKYELLOW)- Generating examples documentation from template...$(NC)"
+	@bash $(EXAMPLES_GENERATOR)
+
+## Target that updates the version number in the LaTeX template for the user guide PDF generation
+update-version: ## Update the version number in the LaTeX template for the user guide PDF generation
+	@echo -e "$(DARKYELLOW)- Updating version number in LaTeX template...$(NC)"
+	@sed -i.bak -E 's/Monte Carlo Project Simulation, v[0-9.]+/Monte Carlo Project Simulation, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
+	@if grep -q "Monte Carlo Project Simulation, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
+		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template$(NC)"; \
+		exit 1; \
+	fi
+	@rm -f $(USER_GUIDE_TEMPLATE).bak
+	
+
+pdf: $(USER_GUIDE_PDF)  ## Build the user guide PDF
+	@:
+
+$(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  ## Build user guide via custom LaTeX report template + pdflatex
+	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
+	@mkdir -p $(USER_GUIDE_BUILD_DIR)
+	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
+	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_CONCAT_MD)
+	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(USER_GUIDE_CONCAT_MD) -o $(USER_GUIDE_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(USER_GUIDE_BODY_TEX)
+	@rm -f $(USER_GUIDE_BODY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$(NC)"
+	@awk -v body="$(USER_GUIDE_BODY_TEX)" '\
+		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$(USER_GUIDE_TEMPLATE) > $(USER_GUIDE_TEX)
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
+	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
+
+pdf-pandoc: $(USER_GUIDE_PANDOC_PDF) ## Build fallback user guide PDF directly with Pandoc
+	@:
+
+$(USER_GUIDE_PANDOC_PDF): $(USER_GUIDE_DOCS)
+	@echo -e "$(DARKYELLOW)- Building fallback user guide PDF directly with Pandoc...$(NC)"
+	@pandoc --pdf-engine=xelatex -V mainfont="Arial Unicode MS" -V monofont="DejaVu Sans Mono" \
+		-V geometry:top=2cm,left=2.5cm,right=1.8cm,bottom=1.5cm \
+		$(USER_GUIDE_DOCS) -o $(USER_GUIDE_PANDOC_PDF)
+
 docs-serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
 	@poetry run mkdocs serve -a localhost:$(DOCS_PORT)
 
-docs-container-build: ## Build the containerized documentation image
+container-engine-check:
+	@if [ "$(NO_CONTAINER_ENGINE)" = "yes" ]; then \
+        echo -e "$(YELLOW)⚠️  Warning: No container engine detected. Skipping container operation. Please start Podman or Docker.$(NC)"; \
+        exit 1; \
+    fi
+
+docs-container-build: | container-engine-check ## Build the containerized documentation image
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) build
 
-docs-container-start: ## Start the containerized documentation server
+docs-container-start: | container-engine-check ## Start the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) start
 
-docs-container-stop: ## Stop the containerized documentation server
+docs-container-stop: | container-engine-check ## Stop the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) stop
 
-docs-container-restart: ## Restart the containerized documentation server
+docs-container-restart: | container-engine-check ## Restart the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) restart
 
-docs-container-status: ## Show status for the containerized documentation server
+docs-container-status: | container-engine-check ## Show status for the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) status
 
-docs-container-logs: ## Show logs for the containerized documentation server
+docs-container-logs: | container-engine-check ## Show logs for the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) logs --follow
 
 docs-deploy: ## Build and deploy documentation to GitHub Pages
@@ -434,47 +524,47 @@ docs-deploy: ## Build and deploy documentation to GitHub Pages
 # container-build: $(CONTAINER_STAMP) container-build-public ## Build the container image for the application and tag it with the current version
 # 	@:
 
-container-up: $(CONTAINER_STAMP) ## Start the container in detached mode
+container-up: $(CONTAINER_STAMP)  | container-engine-check ## Start the container in detached mode
 	@echo -e "$(DARKYELLOW)- Starting containers...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) up -d
 	@echo -e "$(GREEN)✓ Containers started$(NC)"
 
-container-down:  ## Stop and remove the running container
+container-down: | container-engine-check ## Stop and remove the running container
 	@echo -e "$(DARKYELLOW)- Stopping containers...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) down
 	@echo -e "$(GREEN)✓ Containers stopped$(NC)"
 
-container-logs: ## Follow the logs of the running container
+container-logs: | container-engine-check ## Follow the logs of the running container
 	@$(CONTAINER_COMPOSE_CMD) logs -f
 
-container-restart: $(CONTAINER_STAMP) ## Restart the running container
+container-restart: $(CONTAINER_STAMP) | container-engine-check ## Restart the running container
 	@echo -e "$(DARKYELLOW)- Restarting containers...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) restart
 	@echo -e "$(GREEN)✓ Containers restarted$(NC)"
 
-container-shell: $(CONTAINER_STAMP) ## Open an interactive shell inside the running container
+container-shell: $(CONTAINER_STAMP) | container-engine-check ## Open an interactive shell inside the running container
 	@$(CONTAINER_COMPOSE_CMD) exec $(SERVICE_NAME) /bin/shz
 
 container-clean: container-clean-container-volumes container-clean-images ## Clean up all containers and images
 
-container-clean-container-volumes: ## Remove all containers, volumes and prune the system
+container-clean-container-volumes: | container-engine-check ## Remove all containers, volumes and prune the system
 	@echo -e "$(DARKYELLOW)- Cleaning up containers and volumes...$(NC)"
 	@$(CONTAINER_COMPOSE_CMD) down -v
 	@$(CONTAINER_CMD) system prune -f
 	@echo -e "$(GREEN)✓ Containers and volumes removed$(NC)"
 
-container-clean-images: container-down ## Remove all oneselect container images
+container-clean-images: container-down | container-engine-check ## Remove all oneselect container images
 	@echo -e "$(DARKYELLOW)- Removing all oneselect images...$(NC)"
 	@$(CONTAINER_CMD) rmi -f $$($(CONTAINER_CMD) images --filter "reference=oneselect*" -q) 2>/dev/null || true
 	@rm -f $(CONTAINER_STAMP)
 	@echo -e "$(GREEN)✓ Images removed$(NC)"
 
-container-volume-info: ## Inspect the container volume used for persistent data storage
+container-volume-info: | container-engine-check ## Inspect the container volume used for persistent data storage
 	@echo -e "$(DARKYELLOW)- Listing container volumes...$(NC)"
 	@$(CONTAINER_CMD) volume ls
 	@$(CONTAINER_CMD) volume inspect $(PROJECT)_oneselect-data
 
-container-rebuild: ## Rebuild container from scratch with auto-detection
+container-rebuild: | container-engine-check ## Rebuild container from scratch with auto-detection
 	@echo -e "$(DARKYELLOW)- Rebuilding container from scratch...$(NC)"
 	@$(MAKE) container-down || true
 	@rm -f $(CONTAINER_STAMP)
@@ -482,16 +572,16 @@ container-rebuild: ## Rebuild container from scratch with auto-detection
 	@echo -e "$(GREEN)✓ Container rebuilt$(NC)"
 
 # Alias for backwards compatibility and convenience
-container-build: container-build-auto ## Build container (auto-detects proxy environment)
+container-build: container-build-auto  | container-engine-check ## Build container (auto-detects proxy environment)
 	@:
 
 # Auto-detect and build with appropriate configuration
-container-build-auto: ## Automatically detect proxy and build with appropriate configuration
+container-build-auto: | container-engine-check ## Automatically detect proxy and build with appropriate configuration
 	@echo -e "$(DARKYELLOW)- Auto-detecting build environment...$(NC)"
 	@$(MAKE) $(DEFAULT_CONTAINER_BUILD)
 
 # Build with proxy CA certificate (for internal/proxy environments)
-container-build-proxy: ## Build container image with proxy CA certificate for proxy environments
+container-build-proxy: | container-engine-check ## Build container image with proxy CA certificate for proxy environments
 	@echo -e "$(DARKYELLOW)- Building container image with proxy CA support...$(NC)"
 	@if [ ! -s $(PROXY_CA_FILE) ]; then \
 		echo -e "$(RED)✗ Error: $(PROXY_CA_FILE) not found$(NC)"; \
@@ -503,7 +593,7 @@ container-build-proxy: ## Build container image with proxy CA certificate for pr
 	@echo -e "$(GREEN)✓ Container image built with proxy CA support$(NC)"
 
 # Build public/standard version (no proxy CA)
-container-build-standard: ## Build container image without proxy CA (for public/standard deployments)
+container-build-standard: | container-engine-check ## Build container image without proxy CA (for public/standard deployments)
 	@echo -e "$(DARKYELLOW)- Building public container image (no proxy CA)...$(NC)"
 	@$(CONTAINER_CMD) build --build-arg USE_PROXY_CA=false -t $(CONTAINER_NAME):latest -t $(CONTAINER_NAME):$(VERSION) .
 	@touch $(CONTAINER_STAMP)

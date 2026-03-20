@@ -24,50 +24,64 @@ class TestTaskEstimate:
         """Test valid triangular distribution."""
         estimate = TaskEstimate(
             distribution=DistributionType.TRIANGULAR,
-            min=1.0,
-            most_likely=2.0,
-            max=5.0,
+            low=1.0,
+            expected=2.0,
+            high=5.0,
         )
-        assert estimate.min == 1.0
-        assert estimate.most_likely == 2.0
-        assert estimate.max == 5.0
+        assert estimate.low == 1.0
+        assert estimate.expected == 2.0
+        assert estimate.high == 5.0
 
     def test_triangular_distribution_invalid_range(self):
         """Test invalid triangular distribution range."""
-        with pytest.raises(ValueError, match="min <= most_likely <= max"):
+        with pytest.raises(ValueError, match="low <= expected <= high"):
             TaskEstimate(
                 distribution=DistributionType.TRIANGULAR,
-                min=5.0,
-                most_likely=2.0,
-                max=10.0,
+                low=5.0,
+                expected=2.0,
+                high=10.0,
             )
 
     def test_triangular_distribution_missing_params(self):
         """Test triangular distribution with missing parameters."""
-        with pytest.raises(ValueError, match="requires min, most_likely, and max"):
+        with pytest.raises(
+            ValueError, match="Explicit estimates require low, expected, and high"
+        ):
             TaskEstimate(
                 distribution=DistributionType.TRIANGULAR,
-                most_likely=5.0,
+                expected=5.0,
             )
 
     def test_lognormal_distribution_valid(self):
         """Test valid lognormal distribution."""
         estimate = TaskEstimate(
             distribution=DistributionType.LOGNORMAL,
-            most_likely=5.0,
-            standard_deviation=2.0,
+            low=2.0,
+            expected=5.0,
+            high=16.0,
         )
-        assert estimate.most_likely == 5.0
-        assert estimate.standard_deviation == 2.0
+        assert estimate.low == 2.0
+        assert estimate.expected == 5.0
+        assert estimate.high == 16.0
 
     def test_lognormal_distribution_missing_params(self):
         """Test lognormal distribution with missing parameters."""
         with pytest.raises(
-            ValueError, match="requires most_likely and standard_deviation"
+            ValueError, match="Explicit estimates require low, expected, and high"
         ):
             TaskEstimate(
                 distribution=DistributionType.LOGNORMAL,
-                most_likely=5.0,
+                expected=5.0,
+            )
+
+    def test_lognormal_distribution_requires_strict_range(self):
+        """Shifted lognormal fitting needs a strictly increasing range."""
+        with pytest.raises(ValueError, match="requires low < expected < high"):
+            TaskEstimate(
+                distribution=DistributionType.LOGNORMAL,
+                low=5.0,
+                expected=5.0,
+                high=10.0,
             )
 
     def test_tshirt_size_valid(self):
@@ -76,9 +90,9 @@ class TestTaskEstimate:
             t_shirt_size="M",
         )
         assert estimate.t_shirt_size == "M"
-        assert estimate.min is None
-        assert estimate.most_likely is None
-        assert estimate.max is None
+        assert estimate.low is None
+        assert estimate.expected is None
+        assert estimate.high is None
 
     def test_tshirt_size_with_unit_rejected(self):
         """Test T-shirt size rejects unit in project file."""
@@ -96,9 +110,9 @@ class TestTaskEstimate:
 
         assert estimate.story_points == 5
         assert estimate.unit is None
-        assert estimate.min is None
-        assert estimate.most_likely is None
-        assert estimate.max is None
+        assert estimate.low is None
+        assert estimate.expected is None
+        assert estimate.high is None
 
     def test_story_points_with_explicit_unit_rejected(self):
         """Test Story Points reject unit in project file."""
@@ -128,7 +142,7 @@ class TestTaskEstimate:
         """Test that either T-shirt size or explicit estimate is required."""
         with pytest.raises(
             ValueError,
-            match="Either 't_shirt_size', 'story_points', or 'most_likely' must be specified",
+            match="Either 't_shirt_size', 'story_points', or 'expected' must be specified",
         ):
             TaskEstimate()
 
@@ -185,7 +199,7 @@ class TestTask:
         task = Task(
             id="task_001",
             name="Test Task",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
         )
         assert task.id == "task_001"
         assert task.name == "Test Task"
@@ -196,7 +210,7 @@ class TestTask:
         task = Task(
             id="task_001",
             name="Test Task",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
             dependencies=["task_000"],
         )
         assert task.has_dependency("task_000")
@@ -207,7 +221,7 @@ class TestTask:
         task = Task(
             id="task_001",
             name="Test Task",
-            estimate=TaskEstimate(min=1, most_likely=2, max=5),
+            estimate=TaskEstimate(low=1, expected=2, high=5),
             uncertainty_factors=UncertaintyFactors(
                 team_experience="high",
                 technical_complexity="low",
@@ -237,12 +251,244 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
         assert project.project.name == "Test Project"
         assert len(project.tasks) == 1
+
+    def test_project_level_lognormal_default_validates_task_ranges(self):
+        """Project-level default distribution should validate explicit task ranges."""
+        with pytest.raises(
+            ValueError,
+            match="Task task_001: Lognormal distribution requires low < expected < high",
+        ):
+            Project(
+                project=ProjectMetadata(
+                    name="Test Project",
+                    start_date=date(2025, 1, 1),
+                    distribution=DistributionType.LOGNORMAL,
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(low=1, expected=1, high=5),
+                    )
+                ],
+            )
+
+    def test_project_team_size_metadata(self):
+        """Test project metadata accepts team size."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Team Project",
+                start_date=date(2025, 1, 1),
+                team_size=5,
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                )
+            ],
+        )
+        assert project.project.team_size == 5
+
+    def test_team_size_zero_is_valid(self):
+        """team_size may be explicitly set to zero."""
+        metadata = ProjectMetadata(
+            name="Zero Team",
+            start_date=date(2025, 1, 1),
+            team_size=0,
+        )
+        assert metadata.team_size == 0
+
+    def test_team_size_smaller_than_explicit_resources_is_invalid(self):
+        """Validation should fail when explicit resources exceed team_size."""
+        with pytest.raises(
+            ValueError,
+            match="team_size is smaller than explicitly specified resources",
+        ):
+            Project(
+                project=ProjectMetadata(
+                    name="Too Many Resources",
+                    start_date=date(2025, 1, 1),
+                    team_size=1,
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
+                    )
+                ],
+                resources=[
+                    {"name": "alice"},
+                    {"name": "bob"},
+                ],
+            )
+
+    def test_team_size_larger_than_explicit_resources_auto_fills_defaults(self):
+        """Missing resources should be auto-created up to team_size."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Auto Fill Team",
+                start_date=date(2025, 1, 1),
+                team_size=3,
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                )
+            ],
+            resources=[{"name": "alice", "experience_level": 3}],
+        )
+
+        assert len(project.resources) == 3
+        assert {r.name for r in project.resources} == {
+            "alice",
+            "resource_001",
+            "resource_002",
+        }
+
+        generated = [r for r in project.resources if r.name != "alice"]
+        for resource in generated:
+            assert resource.experience_level == 2
+            assert resource.productivity_level == 1.0
+            assert resource.sickness_prob == 0.0
+
+    def test_team_size_zero_does_not_expand_explicit_resources(self):
+        """team_size=0 should keep explicit resources unchanged."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Zero Team Explicit",
+                start_date=date(2025, 1, 1),
+                team_size=0,
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                )
+            ],
+            resources=[{"name": "alice"}],
+        )
+
+        assert len(project.resources) == 1
+        assert project.resources[0].name == "alice"
+
+    def test_resource_defaults_and_generated_name(self):
+        """Test resource defaults and auto-generated names."""
+        project = Project(
+            project=ProjectMetadata(name="Res Project", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                )
+            ],
+            resources=[
+                {"experience_level": 2},
+                {"name": "alice", "experience_level": 3},
+                {"id": "legacy_id"},
+            ],
+        )
+
+        assert project.resources[0].name == "resource_001"
+        assert project.resources[0].productivity_level == 1.0
+        assert project.resources[0].experience_level == 2
+        assert project.resources[1].name == "alice"
+        assert project.resources[2].name == "legacy_id"
+
+    def test_resource_unique_name_validation(self):
+        """Test duplicate resource names are rejected."""
+        with pytest.raises(ValueError, match="Resource names must be unique"):
+            Project(
+                project=ProjectMetadata(
+                    name="Dup Res Project",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
+                    )
+                ],
+                resources=[
+                    {"name": "sam"},
+                    {"name": "sam"},
+                ],
+            )
+
+    def test_task_resource_reference_validation(self):
+        """Test unknown task resource references are rejected."""
+        with pytest.raises(ValueError, match="references unknown resource"):
+            Project(
+                project=ProjectMetadata(
+                    name="Bad Ref Project",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
+                        resources=["missing_resource"],
+                    )
+                ],
+                resources=[{"name": "existing_resource"}],
+            )
+
+    def test_task_assigned_resource_must_meet_min_experience_level(self):
+        """Explicitly assigned resources must satisfy task min_experience_level."""
+        with pytest.raises(ValueError, match="requires min_experience_level"):
+            Project(
+                project=ProjectMetadata(
+                    name="Bad Experience Match",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Senior-only Task",
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
+                        resources=["junior_resource"],
+                        min_experience_level=3,
+                    )
+                ],
+                resources=[
+                    {
+                        "name": "junior_resource",
+                        "experience_level": 1,
+                    }
+                ],
+            )
+
+    def test_task_resource_constraints_defaults_and_validation(self):
+        """Test task-level resource constraints defaults and validation."""
+        task = Task(
+            id="task_001",
+            name="Task 1",
+            estimate=TaskEstimate(low=1, expected=2, high=5),
+        )
+        assert task.max_resources == 1
+        assert task.min_experience_level == 1
+
+        with pytest.raises(ValueError, match="min_experience_level"):
+            Task(
+                id="task_002",
+                name="Task 2",
+                estimate=TaskEstimate(low=1, expected=2, high=5),
+                min_experience_level=4,
+            )
 
     def test_project_duplicate_task_ids(self):
         """Test project with duplicate task IDs."""
@@ -256,12 +502,12 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                     ),
                     Task(
                         id="task_001",
                         name="Task 2",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                     ),
                 ],
             )
@@ -289,7 +535,7 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         dependencies=["task_999"],  # Doesn't exist
                     )
                 ],
@@ -307,13 +553,13 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         dependencies=["task_002"],
                     ),
                     Task(
                         id="task_002",
                         name="Task 2",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                         dependencies=["task_001"],
                     ),
                 ],
@@ -330,7 +576,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -352,7 +598,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                     risks=[
                         Risk(
                             id="task_risk_001",
@@ -388,7 +634,7 @@ class TestProject:
                 Task(
                     id="task_001",
                     name="Task 1",
-                    estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
                 )
             ],
         )
@@ -409,7 +655,7 @@ class TestProject:
                     Task(
                         id="task_001",
                         name="Task 1",
-                        estimate=TaskEstimate(min=1, most_likely=2, max=5),
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
                     )
                 ],
             )

@@ -1,3 +1,43 @@
+## [v0.6.0] - 2026-03-21
+
+Release Type: minor
+
+### 📋 Summary
+This release focuses on better planning realism and stronger authoring workflows. It adds constrained-scheduling support through natural-language and MCP flows, improves the user guide PDF pipeline, refines distribution modeling, and fixes natural-language parsing edge cases that affected generated project YAML files.
+
+### ⚠️ Breaking Changes
+- Log-normal duration modeling has been changed to a shifted log-normal approach derived from low/expected/high inputs, which can change simulation outcomes compared to previous versions.
+- The `standard_deviation` field has been removed from task specifications in favor of the new shifted log-normal modeling approach, which may require updates to existing project files.
+- Estimation ranges are now specified with `low`/`expected`/`high` fields instead of previous `min`/`most_likely`/`max` to better align with natural language inputs and the new distribution modeling approach. It is an an error to use the old field names in project files, and they must be updated to the new format.
+
+### ✨ Additions
+- Added resource constrained scheduling support in simulation. This included both MCP simulation flows and natural-language project generation.
+- Added template-driven, live-generated examples for documentation via generator scripts and Makefile integration.
+- Added a dedicated PDF build target workflow improvements for documentation builds.
+
+### 🚀 Improvements
+- Improved User Guide PDF generation using an explicit LaTeX template pipeline.
+- Improved documentation structure and readability by removing manual section numbering.
+- Added automatic version display on the User Guide front page.
+- Refreshed project examples to align with updated simulation behavior.
+- General Makefile cleanup and workflow polish for developer ergonomics.
+
+### 🐛 Bug Fixes
+- Fixed natural-language parser bug where task bullet lines using name: were incorrectly captured as literal task names.
+- Fixed calendar parsing to correctly interpret date ranges for holidays in natural-language input.
+
+### 📚 Documentation
+- Expanded and modernized documentation build flow for high-quality PDF output (based on LaTeX templates) and added a Makefile target for easy generation.
+- Updated documentation to cover new features and changes in simulation behavior.
+- Added/updated example-generation sections to keep documentation examples consistent with code behavior.
+- Updated wording and front-page content in the User Guide.
+
+### 🛠 Internal
+- Added baseline Copilot instruction scaffolding for repository workflows.
+- Regenerated examples after distribution-model changes to keep fixtures aligned with current behavior.
+- Minor maintenance and cleanup across build scripts and project housekeeping.
+
+
 ## [v0.5.0] - 2026-03-15
 
 Release Type: minor

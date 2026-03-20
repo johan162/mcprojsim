@@ -17,7 +17,11 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 ```ebnf
 # Top-Level Structure
-<project_file> ::= <project_section> <tasks_section> [<project_risks_section>]
+<project_file> ::= <project_section>
+                   <tasks_section>
+                   [<project_risks_section>]
+                   [<resources_section>]
+                   [<calendars_section>]
 
 # Project Section
 <project_section> ::= "project:" 
@@ -26,6 +30,7 @@ This document provides a complete formal grammar specification for Monte Carlo P
 <project_metadata> ::= <project_name>
                        <start_date>
                        [<hours_per_day>]
+                       [<team_size>]
                        [<confidence_levels>]
                        [<probability_thresholds>]
 
@@ -38,6 +43,8 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <hours_per_day> ::= "hours_per_day:" <positive_number>
                   # Default: 8.0. Controls conversion between days/weeks and hours.
+
+<team_size> ::= "team_size:" <non_negative_integer>
 
 <confidence_levels> ::= "confidence_levels:" "[" <percentile_list> "]"
 
@@ -67,6 +74,9 @@ This document provides a complete formal grammar specification for Monte Carlo P
                       <estimate>
                       <dependencies>
                       [<uncertainty_factors>]
+                      [<task_resources>]
+                      [<task_max_resources>]
+                      [<task_min_experience_level>]
                       [<task_risks>]
 
 <task_id> ::= "id:" <identifier>
@@ -81,13 +91,14 @@ This document provides a complete formal grammar specification for Monte Carlo P
 <estimate_spec> ::= <triangular_estimate> | <lognormal_estimate> | <tshirt_estimate> | <story_point_estimate>
 
 <triangular_estimate> ::= <min_value>
-                         <most_likely_value>
+                         <expected_value>
                          <max_value>
                          <unit>
 
 <lognormal_estimate> ::= "distribution:" "lognormal"
-                        <most_likely_value>
-                        <standard_deviation>
+                        <min_value>
+                        <expected_value>
+                        <max_value>
                         <unit>
 
 <tshirt_estimate> ::= "t_shirt_size:" <tshirt_size>
@@ -100,13 +111,11 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <story_point_value> ::= "1" | "2" | "3" | "5" | "8" | "13" | "21"
 
-<min_value> ::= "min:" <positive_number>
+<min_value> ::= "low:" <positive_number>
 
-<most_likely_value> ::= "most_likely:" <positive_number>
+<expected_value> ::= "expected:" <positive_number>
 
-<max_value> ::= "max:" <positive_number>
-
-<standard_deviation> ::= "standard_deviation:" <positive_number>
+<max_value> ::= "high:" <positive_number>
 
 <unit> ::= "unit:" <time_unit>
 
@@ -141,6 +150,20 @@ This document provides a complete formal grammar specification for Monte Carlo P
 # Task Risks
 <task_risks> ::= "risks:" <risk_list>
 
+# Task Resource Constraints
+<task_resources> ::= "resources:" <identifier_list_bracketed>
+           # Optional explicit resource-name allowlist for the task
+
+<identifier_list_bracketed> ::= "[]" | "[" <identifier_list> "]"
+
+<task_max_resources> ::= "max_resources:" <positive_integer>
+             # Default: 1
+
+<task_min_experience_level> ::= "min_experience_level:" <experience_level>
+                # Default: 1
+
+<experience_level> ::= "1" | "2" | "3"
+
 <risk_list> ::= { <risk> }
 
 # Project Risks Section
@@ -153,6 +176,68 @@ This document provides a complete formal grammar specification for Monte Carlo P
                      <risk_name>
                      <risk_probability>
                      <risk_impact>
+
+# Resources Section
+<resources_section> ::= "resources:" <resource_list>
+
+<resource_list> ::= { <resource> }
+
+<resource> ::= "-" <resource_properties>
+
+<resource_properties> ::= [<resource_name>]
+                         [<legacy_resource_id>]
+                         [<resource_availability>]
+                         [<resource_calendar>]
+                         [<resource_experience_level>]
+                         [<resource_productivity_level>]
+                         [<resource_sickness_prob>]
+                         [<resource_planned_absence>]
+
+<resource_name> ::= "name:" <identifier>
+
+<legacy_resource_id> ::= "id:" <identifier>
+
+<resource_availability> ::= "availability:" <probability>
+
+<resource_calendar> ::= "calendar:" <identifier>
+
+<resource_experience_level> ::= "experience_level:" <experience_level>
+
+<resource_productivity_level> ::= "productivity_level:" <positive_number>
+
+<resource_sickness_prob> ::= "sickness_prob:" <probability>
+
+<resource_planned_absence> ::= "planned_absence:" <date_list>
+
+<date_list> ::= "[]" | "[" <date_string_list> "]"
+
+<date_string_list> ::= <date_string> { "," <date_string> }
+
+# Calendars Section
+<calendars_section> ::= "calendars:" <calendar_list>
+
+<calendar_list> ::= { <calendar> }
+
+<calendar> ::= "-" <calendar_properties>
+
+<calendar_properties> ::= [<calendar_id>]
+                         [<calendar_work_hours_per_day>]
+                         [<calendar_work_days>]
+                         [<calendar_holidays>]
+
+<calendar_id> ::= "id:" <identifier>
+
+<calendar_work_hours_per_day> ::= "work_hours_per_day:" <positive_number>
+
+<calendar_work_days> ::= "work_days:" <weekday_int_list>
+
+<weekday_int_list> ::= "[]" | "[" <weekday_int_values> "]"
+
+<weekday_int_values> ::= <weekday_int> { "," <weekday_int> }
+
+<weekday_int> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7"
+
+<calendar_holidays> ::= "holidays:" <date_list>
 
 <risk_id> ::= "id:" <identifier>
 
@@ -175,6 +260,10 @@ This document provides a complete formal grammar specification for Monte Carlo P
 <string> ::= '"' { <character> } '"'
 
 <positive_number> ::= <integer> | <float>
+
+<positive_integer> ::= <integer>
+
+<non_negative_integer> ::= <integer>
 
 <integer> ::= <digit> { <digit> }
 
@@ -207,44 +296,77 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
 5. **Default Thresholds**: 
    - `probability_red_threshold`: 0.50 (50%)
    - `probability_green_threshold`: 0.90 (90%)
+6. **Team Size**:
+  - If provided, `team_size` must be an integer >= 0
+  - If `team_size` is omitted or `0`, only explicitly listed resources are used
+  - If `team_size` > number of explicitly listed resources, default resources are generated up to `team_size`
+  - If `team_size` < number of explicitly listed resources, validation fails
 
 ### Task-Level Constraints
 
 1. **Task IDs**: Must be unique across all tasks
 2. **Estimate Validity** (Triangular):
-   - `min` ≤ `most_likely` ≤ `max`
+   - `min` ≤ `expected` ≤ `max`
    - All values must be positive
 3. **Estimate Validity** (Log-Normal):
-   - `most_likely` > 0
-   - `standard_deviation` > 0
+   - `low` < `expected` < `high`
 4. **Estimate Validity** (T-Shirt Size):
    - Must be one of: `XS`, `S`, `M`, `L`, `XL`, `XXL`
    - Values are resolved from configuration file
    - `unit` must NOT be specified in the project file; unit comes from `t_shirt_size_unit` in config (default: `"hours"`)
    - Default values (in hours):
-     * `XS`: min=0.5, most_likely=1, max=2
-     * `S`: min=1, most_likely=2, max=4
-     * `M`: min=3, most_likely=5, max=8
-     * `L`: min=5, most_likely=8, max=13
-     * `XL`: min=8, most_likely=13, max=21
-     * `XXL`: min=13, most_likely=21, max=34
-  5. **Estimate Validity** (Story Points):
-    - Must be one of: `1`, `2`, `3`, `5`, `8`, `13`, `21`
-    - `unit` must NOT be specified in the project file; unit comes from `story_point_unit` in config (default: `"days"`)
-    - Values are resolved from configuration file to numeric ranges
-    - Default values (in days):
-      * `1`: min=0.5, most_likely=1, max=3
-      * `2`: min=1, most_likely=2, max=4
-      * `3`: min=1.5, most_likely=3, max=5
-      * `5`: min=3, most_likely=5, max=8
-      * `8`: min=5, most_likely=8, max=15
-      * `13`: min=8, most_likely=13, max=21
-      * `21`: min=13, most_likely=21, max=34
-  6. **Dependencies**: 
+     * `XS`: min=3, expected=5, max=15
+     * `S`: min=5, expected=16, max=40
+     * `M`: min=40, expected=60, max=120
+     * `L`: min=160, expected=240, max=500
+     * `XL`: min=320, expected=400, max=750
+     * `XXL`: min=400, expected=500, max=1200
+5. **Estimate Validity** (Story Points):
+   - Must be one of: `1`, `2`, `3`, `5`, `8`, `13`, `21`
+   - `unit` must NOT be specified in the project file; unit comes from `story_point_unit` in config (default: `"days"`)
+   - Values are resolved from configuration file to numeric ranges
+   - Default values (in days):
+     * `1`: min=0.5, expected=1, max=3
+     * `2`: min=1, expected=2, max=4
+     * `3`: min=1.5, expected=3, max=5
+     * `5`: min=3, expected=5, max=8
+     * `8`: min=5, expected=8, max=15
+     * `13`: min=8, expected=13, max=21
+     * `21`: min=13, expected=21, max=34
+6. **Dependencies**:
    - Referenced task IDs must exist
    - No circular dependencies allowed
    - Dependencies must form a Directed Acyclic Graph (DAG)
-  7. **Uncertainty Factors**: Custom factor names allowed beyond predefined set
+7. **Uncertainty Factors**: Custom factor names allowed beyond predefined set
+8. **Task Resource Constraints**:
+   - `max_resources` must be an integer >= 1 (default: 1)
+   - `min_experience_level` must be one of `1`, `2`, `3` (default: 1)
+   - If task `resources` is omitted, the task may draw from all project resources
+   - If task `resources` lists names, they must reference existing resources
+   - If task `resources` lists names and `min_experience_level` is set, each named resource must satisfy that minimum or validation fails
+  - Scheduler applies a practical auto-cap: `min(max_resources, floor(task_effort_hours/4), 6, eligible_available_resources)` with a minimum of 1 assignee
+   - Start-time assignment count is capped by `max_resources`
+
+### Resource and Calendar Constraints
+
+1. **Resource Name Uniqueness**:
+   - Resolved resource names must be unique within a project
+   - If `name` is omitted, a generated name (`resource_001`, `resource_002`, ...) is assigned
+2. **Resource Defaults**:
+   - `experience_level` default: 2
+   - `productivity_level` default: 1.0
+   - `sickness_prob` default: 0.0
+3. **Resource Bounds**:
+   - `experience_level` must be one of `1`, `2`, `3`
+   - `productivity_level` must be in range [0.1, 2.0]
+   - `sickness_prob` must be in range [0.0, 1.0]
+4. **Calendar Constraints**:
+   - Calendar IDs must be unique
+   - `work_days` entries must be integers in range `1..7`
+   - Holiday and planned-absence dates must be valid ISO-8601 dates
+5. **Reference Integrity**:
+   - Task-level `resources` entries must reference existing resource names
+   - Resource `calendar` must reference an existing calendar ID, or `default` if no explicit calendars are defined
 
 ### Risk Constraints
 
@@ -272,9 +394,9 @@ tasks:
   - id: "task_001"
     name: "Backend Development"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"
     dependencies: []
     uncertainty_factors:
@@ -290,8 +412,9 @@ tasks:
     name: "Integration"
     estimate:
       distribution: "lognormal"
-      most_likely: 3
-      standard_deviation: 1.5
+      low: 1
+      expected: 3
+      high: 8
       unit: "days"
     dependencies: ["task_001"]
 
@@ -319,11 +442,11 @@ project_risks:
 ### Invalid Examples
 
 ```yaml
-# INVALID: min > most_likely
+# INVALID: min > expected
 estimate:
-  min: 10
-  most_likely: 5  # ERROR: must be >= min
-  max: 15
+  low: 10
+  expected: 5  # ERROR: must be >= min
+  high: 15
   unit: "days"
 
 # INVALID: circular dependency

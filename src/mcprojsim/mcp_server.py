@@ -62,21 +62,40 @@ def generate_project_file(description: str) -> str:
     - Story points: "Story points: 5"
     - Explicit ranges: "Estimate: 3/5/10 days"
 
+    For constrained scheduling, you can also define:
+    - Resources: "Resource N: Name" with bullets for Experience, Productivity,
+      Availability, Calendar, Sickness, and Absence
+    - Calendars: "Calendar: id" with bullets for Work hours, Work days,
+      and Holidays
+    - Task constraints: "Resources: Alice, Bob", "Max resources: 2",
+      "Min experience: 3"
+
     Example input:
 
         Project name: My Project
         Start date: 2026-01-15
+
+        Resource 1: Alice
+        - Experience: 3
+        - Productivity: 1.1
+
+        Resource 2: Bob
+        - Experience: 2
+
         Task 1:
         - Design phase
         - Size: M
+        - Resources: Alice
         Task 2:
         - Implementation
         - Depends on Task 1
         - Size: XL
+        - Resources: Alice, Bob
+        - Max resources: 2
 
     Args:
         description: Semi-structured text describing the project, its tasks,
-                    sizing estimates, and dependencies.
+                    sizing estimates, resources, and dependencies.
 
     Returns:
         Syntactically correct YAML project file content ready for mcprojsim.
@@ -114,11 +133,12 @@ def validate_project_description(description: str) -> str:
         issues.append("WARNING: No start date specified.")
 
     task_nums = {t.number for t in project.tasks}
+    resource_names = {r.name for r in project.resources}
     for task in project.tasks:
         has_estimate = (
             task.t_shirt_size is not None
             or task.story_points is not None
-            or task.min_estimate is not None
+            or task.low_estimate is not None
         )
         if not has_estimate:
             issues.append(
@@ -130,6 +150,13 @@ def validate_project_description(description: str) -> str:
                 issues.append(
                     f"ERROR: Task {task.number} depends on "
                     f"Task {ref}, which does not exist."
+                )
+
+        for res_name in task.resources:
+            if resource_names and res_name not in resource_names:
+                issues.append(
+                    f"ERROR: Task {task.number} references unknown "
+                    f"resource '{res_name}'."
                 )
 
     if issues:

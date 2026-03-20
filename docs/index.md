@@ -4,7 +4,7 @@
 
 MCProjSim runs thousands of Monte Carlo simulations on your project plan and turns uncertain task estimates into confidence-based delivery forecasts — so you can tell stakeholders *"we have a 90 % chance of finishing by March 2nd"* instead of *"it'll take about 10 weeks"*.
 
----
+
 
 ## Why MCProjSim?
 
@@ -57,9 +57,9 @@ tasks:
   - id: "task_001"
     name: "Backend API"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
       unit: "days"
     uncertainty_factors:
       team_experience: "medium"
