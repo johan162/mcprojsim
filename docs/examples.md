@@ -807,14 +807,14 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 619.12 hours (78 working days)
-Median (P50): 630.64 hours
-Std Dev: 84.78 hours
+Mean: 612.72 hours (77 working days)
+Median (P50): 630.39 hours
+Std Dev: 87.03 hours
 Minimum: 388.64 hours
-Maximum: 871.99 hours
-Coefficient of Variation: 0.1369
-Skewness: 0.0677
-Excess Kurtosis: 0.0160
+Maximum: 840.89 hours
+Coefficient of Variation: 0.1420
+Skewness: -0.0096
+Excess Kurtosis: -0.3116
 
 Project Effort Statistical Summary:
 Mean: 174.56 person-hours (22 person-days)
@@ -827,10 +827,10 @@ Skewness: 0.2087
 Excess Kurtosis: -0.3433
 
 Calendar Time Confidence Intervals:
-  P50: 630.64 hours (79 working days)  (2026-07-21)
-  P80: 677.53 hours (85 working days)  (2026-07-29)
-  P90: 721.06 hours (91 working days)  (2026-08-06)
-  P95: 724.90 hours (91 working days)  (2026-08-06)
+  P50: 630.39 hours (79 working days)  (2026-07-21)
+  P80: 676.51 hours (85 working days)  (2026-07-29)
+  P90: 699.81 hours (88 working days)  (2026-08-03)
+  P95: 725.91 hours (91 working days)  (2026-08-06)
 ```
 
 Key observations:
@@ -987,14 +987,14 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 1277.93 hours (160 working days)
-Median (P50): 1297.13 hours
-Std Dev: 132.99 hours
-Minimum: 939.66 hours
-Maximum: 1684.69 hours
-Coefficient of Variation: 0.1041
-Skewness: 0.1667
-Excess Kurtosis: -0.1595
+Mean: 1267.73 hours (159 working days)
+Median (P50): 1276.69 hours
+Std Dev: 128.79 hours
+Minimum: 961.56 hours
+Maximum: 1662.32 hours
+Coefficient of Variation: 0.1016
+Skewness: 0.3475
+Excess Kurtosis: 0.1785
 
 Project Effort Statistical Summary:
 Mean: 417.14 person-hours (53 person-days)
@@ -1007,10 +1007,10 @@ Skewness: -0.0057
 Excess Kurtosis: -0.4161
 
 Calendar Time Confidence Intervals:
-  P50: 1297.13 hours (163 working days)  (2026-12-16)
-  P80: 1364.80 hours (171 working days)  (2026-12-28)
-  P90: 1464.19 hours (184 working days)  (2027-01-14)
-  P95: 1495.58 hours (187 working days)  (2027-01-19)
+  P50: 1276.69 hours (160 working days)  (2026-12-11)
+  P80: 1348.30 hours (169 working days)  (2026-12-24)
+  P90: 1445.87 hours (181 working days)  (2027-01-11)
+  P95: 1471.73 hours (184 working days)  (2027-01-14)
 ```
 
 The generated YAML includes full `resources:` and `calendars:` sections. Use `--validate-only` to check your description before generating:
