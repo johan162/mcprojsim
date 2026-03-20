@@ -2861,7 +2861,7 @@ $$</p>
 </thead>
 <tbody>
 <tr>
-<td>≈ 0</td>
+<td>~ 0</td>
 <td>Roughly symmetric — early and late outcomes are about equally spread around the median</td>
 </tr>
 <tr>
@@ -2904,7 +2904,7 @@ $$</p>
 </thead>
 <tbody>
 <tr>
-<td>≈ 0</td>
+<td>~ 0</td>
 <td>Tail behaviour similar to a normal distribution</td>
 </tr>
 <tr>
@@ -3095,7 +3095,7 @@ $$</p>
 <p>The simulation does <strong>not</strong> model resource constraints — it assumes unlimited capacity. If the reported peak parallelism exceeds your actual team size, the real schedule will be longer than the simulation predicts because some parallel tasks will have to wait for a free resource.</p>
 <p>Use this number as a sanity check:</p>
 <ul>
-<li>If <strong>max parallel tasks ≤ team size</strong>: the simulation's parallelism assumption is realistic.</li>
+<li>If <strong>max parallel tasks &lt;= team size</strong>: the simulation's parallelism assumption is realistic.</li>
 <li>If <strong>max parallel tasks &gt; team size</strong>: the simulation is optimistic. Consider adding explicit dependencies to serialise tasks that share a resource, or mentally adjust the percentiles upward.</li>
 </ul>
 <h2 id="staffing-recommendations">Staffing recommendations<a class="headerlink" href="#staffing-recommendations" title="Permanent link">&para;</a></h2>
