@@ -611,7 +611,9 @@ tasks:
     dependencies: []
 ```
 
-The log-normal distribution produces a heavier right tail, making it suitable for research, exploration, or tasks with high uncertainty about upper bounds.
+The shifted log-normal distribution produces a heavier right tail, making it
+suitable for research, exploration, or tasks with high uncertainty about upper
+bounds.
 
 
 
@@ -805,14 +807,14 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 620.85 hours (78 working days)
-Median (P50): 631.48 hours
-Std Dev: 88.44 hours
+Mean: 619.12 hours (78 working days)
+Median (P50): 630.64 hours
+Std Dev: 84.78 hours
 Minimum: 388.64 hours
-Maximum: 986.90 hours
-Coefficient of Variation: 0.1425
-Skewness: 0.3038
-Excess Kurtosis: 0.7873
+Maximum: 871.99 hours
+Coefficient of Variation: 0.1369
+Skewness: 0.0677
+Excess Kurtosis: 0.0160
 
 Project Effort Statistical Summary:
 Mean: 174.56 person-hours (22 person-days)
@@ -825,10 +827,10 @@ Skewness: 0.2087
 Excess Kurtosis: -0.3433
 
 Calendar Time Confidence Intervals:
-  P50: 631.48 hours (79 working days)  (2026-07-21)
-  P80: 678.08 hours (85 working days)  (2026-07-29)
-  P90: 721.50 hours (91 working days)  (2026-08-06)
-  P95: 726.84 hours (91 working days)  (2026-08-06)
+  P50: 630.64 hours (79 working days)  (2026-07-21)
+  P80: 677.53 hours (85 working days)  (2026-07-29)
+  P90: 721.06 hours (91 working days)  (2026-08-06)
+  P95: 724.90 hours (91 working days)  (2026-08-06)
 ```
 
 Key observations:
@@ -985,14 +987,14 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 1276.29 hours (160 working days)
-Median (P50): 1278.48 hours
-Std Dev: 136.76 hours
-Minimum: 936.30 hours
-Maximum: 1633.22 hours
-Coefficient of Variation: 0.1072
-Skewness: 0.0729
-Excess Kurtosis: -0.1226
+Mean: 1277.93 hours (160 working days)
+Median (P50): 1297.13 hours
+Std Dev: 132.99 hours
+Minimum: 939.66 hours
+Maximum: 1684.69 hours
+Coefficient of Variation: 0.1041
+Skewness: 0.1667
+Excess Kurtosis: -0.1595
 
 Project Effort Statistical Summary:
 Mean: 417.14 person-hours (53 person-days)
@@ -1005,10 +1007,10 @@ Skewness: -0.0057
 Excess Kurtosis: -0.4161
 
 Calendar Time Confidence Intervals:
-  P50: 1278.48 hours (160 working days)  (2026-12-11)
-  P80: 1416.32 hours (178 working days)  (2027-01-06)
-  P90: 1448.19 hours (182 working days)  (2027-01-12)
-  P95: 1512.23 hours (190 working days)  (2027-01-22)
+  P50: 1297.13 hours (163 working days)  (2026-12-16)
+  P80: 1364.80 hours (171 working days)  (2026-12-28)
+  P90: 1464.19 hours (184 working days)  (2027-01-14)
+  P95: 1495.58 hours (187 working days)  (2027-01-19)
 ```
 
 The generated YAML includes full `resources:` and `calendars:` sections. Use `--validate-only` to check your description before generating:
