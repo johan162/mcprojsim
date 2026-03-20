@@ -33,14 +33,20 @@ class TaskScheduler:
     MIN_EFFORT_PER_ASSIGNEE_HOURS = 16.0
     MAX_ASSIGNEES_PER_TASK = 3
 
-    def __init__(self, project: Project):
+    def __init__(
+        self,
+        project: Project,
+        random_state: np.random.RandomState | None = None,
+    ):
         """Initialize scheduler with project.
 
         Args:
             project: Project with tasks and dependencies
+            random_state: NumPy random state for reproducibility
         """
         self.project = project
         self.task_map = {task.id: task for task in project.tasks}
+        self.random_state = random_state or np.random.RandomState()
 
     @overload
     def schedule_tasks(
@@ -398,9 +404,9 @@ class TaskScheduler:
                     default_calendar,
                     preplanned_absence_only=True,
                 ):
-                    if np.random.random() < resource.sickness_prob:
+                    if self.random_state.random() < resource.sickness_prob:
                         sickness_len = max(
-                            1, int(round(np.random.lognormal(mu, sigma)))
+                            1, int(round(self.random_state.lognormal(mu, sigma)))
                         )
                         for offset in range(sickness_len):
                             sickness_by_resource[resource_name].add(

@@ -622,6 +622,43 @@ class TestSimulationEngine:
 
         assert np.allclose(results1.durations, results2.durations)
 
+    def test_simulation_reproducibility_with_constrained_sickness(self):
+        """Constrained scheduling should also be reproducible with the same seed."""
+        project = Project(
+            project=ProjectMetadata(name="Seeded Constrained", start_date=date(2025, 1, 6)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=8, expected=10, high=12),
+                    resources=["res_a"],
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(low=8, expected=10, high=12),
+                    resources=["res_a"],
+                    dependencies=["task_001"],
+                ),
+            ],
+            resources=[
+                {
+                    "name": "res_a",
+                    "experience_level": 2,
+                    "productivity_level": 1.0,
+                    "sickness_prob": 0.2,
+                }
+            ],
+        )
+
+        engine1 = SimulationEngine(iterations=25, random_seed=42, show_progress=False)
+        results1 = engine1.run(project)
+
+        engine2 = SimulationEngine(iterations=25, random_seed=42, show_progress=False)
+        results2 = engine2.run(project)
+
+        assert np.allclose(results1.durations, results2.durations)
+
     def test_run_simulation_stores_full_critical_paths(self, monkeypatch):
         """Test that simulation stores aggregated critical path sequences."""
         project = Project(
