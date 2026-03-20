@@ -625,7 +625,9 @@ class TestSimulationEngine:
     def test_simulation_reproducibility_with_constrained_sickness(self):
         """Constrained scheduling should also be reproducible with the same seed."""
         project = Project(
-            project=ProjectMetadata(name="Seeded Constrained", start_date=date(2025, 1, 6)),
+            project=ProjectMetadata(
+                name="Seeded Constrained", start_date=date(2025, 1, 6)
+            ),
             tasks=[
                 Task(
                     id="task_001",
