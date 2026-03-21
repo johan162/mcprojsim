@@ -1259,6 +1259,132 @@ These methods are intentionally aligned with the current repository architecture
 - they keep sprint planning as a parallel forecast surface rather than trying to reinterpret the current duration arrays.
 
 
+# Natural Language Input and MCP Integration
+
+The sprint-planning extension should also be expressible through the repository's existing semi-structured natural-language path, because that is already how the MCP server generates project files from text through `src/mcprojsim/nl_parser.py`. The design should therefore define a simplified natural-language surface for sprint planning that maps directly onto the same canonical `sprint_planning` schema used by YAML and TOML input.
+
+This should remain **semi-structured natural language**, not unconstrained free prose. The current parser works best when users provide short labeled lines, headers, and bullets. Sprint-planning support should follow that same contract so MCP users can describe planning settings and history in a way that still parses deterministically.
+
+## Suggested Natural-Language Shape
+
+The cleanest extension is to allow an optional sprint-planning section and repeated historical sprint sections inside the natural-language project description.
+
+Suggested shape:
+
+```text
+Project name: Payments Platform Refresh
+Start date: 2026-04-06
+
+Sprint planning:
+- Enabled: yes
+- Sprint length: 2 weeks
+- Capacity mode: story points
+- Planning confidence: 80%
+- Removed work treatment: churn only
+
+Sprint history SPR-2026-01:
+- Completed: 21 story points
+- Spillover: 5 story points
+- Added: 3 story points
+- Removed: 1 story point
+- Holiday factor: 1.0
+
+Sprint history SPR-2026-02:
+- Completed: 18 story points
+- Spillover: 7 story points
+- Added: 6 story points
+- Removed: 2 story points
+- Holiday factor: 0.9
+```
+
+The natural-language parser should normalize that form into the canonical YAML structure:
+
+- `Sprint planning:` starts a planning block;
+- `Sprint history <id>:` starts one historical sprint row;
+- the parsed output should still be emitted as the same `sprint_planning` YAML block described elsewhere in this proposal.
+
+## Accepted Human Variants
+
+Because the purpose of this input mode is to reduce friction for MCP and text-first users, the parser should accept common human alternatives for the same underlying fields, then normalize them to canonical values.
+
+Recommended alias handling:
+
+- sprint length: `Sprint length: 2 weeks`, `2 week sprints`, `Sprint cadence = 2 weeks`
+- capacity mode: `story points`, `points`, `tasks`, `items`
+- planning confidence: `Planning confidence: 80%`, `Plan at 80 percent confidence`, `Confidence level = 0.80`
+- removed-work treatment: `churn only`, `count removed work as churn only`, `reduce backlog`, `descoped work reduces backlog`
+- completed work: `completed`, `finished`, `done`, `delivered`
+- spillover work: `spillover`, `carryover`, `rolled over`
+- added work: `added`, `scope added`, `unplanned work added`, `mid-sprint additions`
+- removed work: `removed`, `descoped`, `taken out`, `scope removed`
+
+To keep the grammar deterministic, the parser should not try to infer sprint-planning semantics from arbitrary paragraphs. The accepted synonyms should still appear in short labeled lines or bullets.
+
+## Natural-Language Example
+
+The following example shows the intended user-facing input style, including several common human variations of the same concepts:
+
+```text
+Project name: Payments Platform Refresh
+Start date: 2026-04-06
+Description: Refresh the payments platform and move service integrations in stages.
+
+Sprint planning:
+- Turn sprint planning on
+- We work in 2-week sprints
+- Plan using points
+- Plan at 80 percent confidence
+- Removed work counts as churn only
+
+Sprint history SPR-2026-01:
+- Done: 21 points
+- Carryover: 5 points
+- Added mid-sprint: 3 points
+- Descoped: 1 point
+- Holiday factor: 1.0
+- Notes: Normal sprint
+
+Sprint history SPR-2026-02:
+- Finished: 18 story points
+- Rolled over: 7 story points
+- Scope added: 6 story points
+- Taken out: 2 story points
+- Capacity was 90 percent because of holidays
+
+Sprint history SPR-2026-03:
+- Delivered: 24 points
+- Spillover: 2 points
+- Unplanned work added: 1 point
+- Removed: 0 points
+
+Task 1: Discovery and architecture
+- Story points: 5
+
+Task 2: Schema updates
+- Story points: 8
+- Depends on Task 1
+
+Task 3: API implementation
+- Story points: 8
+- Depends on Task 2
+```
+
+That example deliberately mixes `done`, `finished`, and `delivered`, as well as `carryover`, `rolled over`, and `spillover`. The parser should normalize all of them to the canonical historical fields. Likewise, phrases such as `Capacity was 90 percent because of holidays` should normalize to `holiday_factor: 0.9` when the intent is clear and the numeric value is explicit.
+
+## Scope of the Natural-Language Form
+
+The simplified natural-language form only needs to cover the sprint-planning fields that are realistic for text-first authoring and MCP interaction:
+
+- `enabled`
+- `sprint_length_weeks`
+- `capacity_mode`
+- `planning_confidence_level`
+- `removed_work_treatment`
+- inline historical sprint rows with `sprint_id`, completed work, spillover, added work, removed work, `holiday_factor`, and optional notes
+
+Future sprint overrides, volatility overlays, and other advanced structures can remain YAML/TOML-first in the MVP and be added to the natural-language form later if there is real usage pressure.
+
+
 # Formal Requirements
 
 The requirements below are grouped by configuration, simulation behavior, outputs, validation, and implementation structure. They define the full target-state specification for sprint planning. The roadmap above defines implementation sequencing and MVP boundaries; it does not weaken any requirement outside the scope of the current increment. `SHALL` denotes mandatory behavior for whatever increment claims that requirement in scope. `MAY` denotes explicitly permitted optional behavior.
@@ -1285,6 +1411,8 @@ The requirements below are grouped by configuration, simulation behavior, output
 
 ### FR-SP-004: Historical Sprint Outcome Input
 - The system SHALL accept a list of historical sprint outcome observations provided by the user in the project definition file.
+- The system SHALL also support a simplified semi-structured natural-language representation of sprint-planning input for use by `src/mcprojsim/nl_parser.py` and the MCP server tools that already depend on that parser.
+- The natural-language representation SHALL normalize accepted aliases and phrasing variants into the canonical `sprint_planning` schema before YAML generation, validation, or simulation.
 - After the MVP increment, the system SHALL also support an alternative history input mode in which `sprint_planning.history` references an external JSON or CSV file instead of embedding inline history rows.
 - The system SHALL allow exactly one history source mechanism per sprint-planning configuration: either inline rows or an external history file reference.
 - When an external history file is used, the path SHALL be resolved relative to the project file unless an absolute path is provided.
@@ -1823,3 +1951,109 @@ Exit criteria:
 
 - the MVP sprint-planning path is covered at schema, engine, CLI, exporter, and integration levels;
 - existing non-sprint tests remain green.
+
+# Natural-Language Parser Extension Plan
+
+The MCP server already routes natural-language project descriptions through `src/mcprojsim/nl_parser.py`, so sprint-planning natural-language support should be implemented by extending that parser rather than by adding a parallel MCP-only parser. The goal is to parse a semi-structured human description, normalize it into canonical sprint-planning data, and then emit the same YAML structure defined elsewhere in this proposal.
+
+## Main parser functions to change
+
+Primary file:
+
+- `src/mcprojsim/nl_parser.py`
+
+### 1. Extend the parsed data model
+
+Add sprint-planning dataclasses and attach them to `ParsedProject`.
+
+Recommended additions:
+
+- `ParsedSprintPlanning`
+- `ParsedSprintHistoryEntry`
+- `ParsedProject.sprint_planning: ParsedSprintPlanning | None`
+
+The parser should keep using lightweight dataclasses in this layer. It should not duplicate the full Pydantic validation model here.
+
+### 2. Extend `parse()` with sprint-planning sections
+
+`NLProjectParser.parse()` currently tracks task, resource, and calendar sections. It should also track:
+
+- whether the parser is inside a `Sprint planning:` section;
+- whether the parser is inside a `Sprint history <id>:` section;
+- the current in-progress historical sprint row.
+
+Recommended behavior:
+
+1. Detect a sprint-planning section header before task parsing.
+2. Detect repeated sprint-history headers and flush the previous history row when a new one starts.
+3. Parse sprint-planning bullets and history bullets using dedicated helper functions rather than overloading task parsing logic.
+4. Flush any open sprint-history row before switching into tasks, resources, or calendars.
+
+### 3. Add sprint-planning metadata helpers
+
+Add focused helpers similar to the existing `_try_parse_project_metadata()` pattern.
+
+Recommended new helpers:
+
+- `_try_parse_sprint_planning_bullet()`
+- `_try_parse_sprint_history_bullet()`
+- `_try_parse_sprint_length()`
+- `_try_parse_capacity_mode()`
+- `_try_parse_planning_confidence()`
+- `_try_parse_removed_work_treatment()`
+- `_try_parse_holiday_factor()`
+- `_try_parse_completed_units()`
+- `_try_parse_spillover_units()`
+- `_try_parse_added_units()`
+- `_try_parse_removed_units()`
+
+These helpers should normalize accepted synonyms into canonical internal fields. For example, `done`, `finished`, and `delivered` should map to the completed-work field, while `carryover`, `rolled over`, and `spillover` should all map to the spillover field.
+
+### 4. Add normalization helpers for units and aliases
+
+The parser will need a small normalization layer so common human expressions map to deterministic YAML.
+
+Recommended helper responsibilities:
+
+- normalize `story points`, `points`, and `pts` to the `story_points` capacity family;
+- normalize `tasks` and `items` to the `tasks` capacity family;
+- normalize `%` and decimal confidence formats so `80%` and `0.80` both become `0.80`;
+- normalize natural-language `holiday_factor` expressions such as `90 percent capacity` into `0.9`;
+- normalize removed-work semantics such as `churn only` and `reduce backlog`.
+
+This logic should stay conservative. If the wording is ambiguous, the parser should leave the field unset and let validation fail later with a clear error rather than silently guessing.
+
+### 5. Extend `to_yaml()` to emit `sprint_planning`
+
+`NLProjectParser.to_yaml()` should emit a canonical `sprint_planning` block when parsed sprint-planning data is present.
+
+At minimum it should output:
+
+- `enabled`
+- `sprint_length_weeks`
+- `capacity_mode`
+- `planning_confidence_level`
+- `removed_work_treatment`
+- inline `history` rows with canonical field names
+
+This keeps the MCP server contract unchanged: it still returns a normal YAML project file, but that YAML can now include sprint planning.
+
+### 6. Keep `parse_and_generate()` unchanged in shape
+
+`parse_and_generate()` should remain a thin wrapper over `parse()` and `to_yaml()`. No new MCP-specific branching should be added there. The value comes from extending the parser's canonical understanding of the project description, not from special-casing one caller.
+
+## Suggested implementation order inside `nl_parser.py`
+
+1. Add new dataclasses for sprint planning and history rows.
+2. Add regex patterns and alias tables for sprint-planning headers and bullet parsing.
+3. Extend `parse()` to recognize sprint-planning and sprint-history sections.
+4. Add focused parsing helpers for the new sprint-planning fields.
+5. Extend `to_yaml()` to emit the parsed `sprint_planning` block.
+6. Add parser tests covering accepted aliases, mixed phrasing, and fallback failures.
+
+## Verification targets for the natural-language path
+
+- A semi-structured MCP description with sprint-planning input generates canonical YAML containing `sprint_planning`.
+- Mixed human phrasing such as `done`, `finished`, `carryover`, `rolled over`, and `scope added` normalizes to the canonical history fields.
+- Ambiguous free-form text is not silently misparsed as sprint-planning configuration.
+- Existing natural-language task, resource, and calendar parsing continues to work unchanged when no sprint-planning section is present.
