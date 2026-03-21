@@ -137,7 +137,39 @@ Each historical sprint row should also declare its delivery unit family by speci
 
 More generally, every historical sprint field other than `sprint_id` should be omittable and should fall back to a neutral, non-impacting default. This makes it possible to use partially observed historical data without forcing teams to backfill every sprint attribute before they can benefit from the model.
 
+An additional post-MVP input mode should also be supported for teams whose sprint history is generated automatically from another system. In practice, that history is more likely to be exported from Jira, Azure DevOps, or an internal reporting script as CSV or JSON than manually copied into the main YAML or TOML project file. The design should therefore allow `sprint_planning.history` to be provided either inline as it is shown above or as a reference to an external history file in a supported machine-generated format.
+
+The cleanest schema for that alternative is to allow `history` to accept exactly one of these two shapes:
+
+- an inline list of history rows;
+- an external source descriptor containing a file `path` and explicit `format` of `json` or `csv`.
+
+This keeps the primary project file readable while letting teams refresh sprint history automatically from an external tool without rewriting the full YAML or TOML project definition.
+
 Future calendar adjustments should also be explicitly configurable rather than only described conceptually. The cleanest approach is to allow a `future_sprint_overrides` list in `SprintPlanningSpec`, where each override targets a known future sprint and applies a `holiday_factor` or equivalent capacity multiplier for that specific sprint. This closes the gap between historical interpretation and forward prediction.
+
+### Alternative external history source
+
+For teams that generate history automatically, `sprint_planning.history` should also allow an external source descriptor instead of inline rows.
+
+Suggested YAML shape:
+
+```yaml
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: "story_points"
+  history:
+    format: "csv"   # or "json"
+    path: "data/sprint_history.csv"
+```
+
+Design rules:
+
+- exactly one history source mechanism should be allowed: either inline rows or an external file reference;
+- the external file path should be resolved relative to the project file unless given as an absolute path;
+- the external file should be loaded before default filling, normalization, and validation;
+- once loaded, external rows should be treated identically to inline rows.
 
 ### Example complete project file
 
@@ -253,6 +285,91 @@ Reading the example:
 - `volatility_overlay` is an optional sprint-level disruption model layered on top of historical resampling.
 - `spillover` configures the optional execution-spillover model used when a pulled task overruns within a sprint.
 
+### Example project file using external history
+
+The following example shows the same idea using an external CSV file instead of inline history rows:
+
+```yaml
+project:
+  name: "Payments Platform Refresh"
+  start_date: "2026-04-06"
+
+simulation:
+  iterations: 10000
+  random_seed: 42
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: "story_points"
+  planning_confidence_level: 0.80
+  removed_work_treatment: "churn_only"
+  uncertainty_mode: "empirical"
+  history:
+    format: "csv"
+    path: "data/sprint_history.csv"
+
+tasks:
+  - id: "discovery"
+    name: "Discovery and architecture"
+    planning_story_points: 5
+```
+
+The same project could instead reference a JSON file:
+
+```yaml
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: "story_points"
+  history:
+    format: "json"
+    path: "data/sprint_history.json"
+```
+
+### External history file formats
+
+For JSON, the simplest format is an array of objects using the same field names as the inline history rows:
+
+```json
+[
+  {
+    "sprint_id": "SPR-2026-01",
+    "sprint_length_weeks": 2,
+    "completed_story_points": 21,
+    "spillover_story_points": 5,
+    "added_story_points": 3,
+    "removed_story_points": 1,
+    "holiday_factor": 1.0,
+    "end_date": "2026-01-16",
+    "team_size": 5,
+    "notes": "Normal sprint"
+  },
+  {
+    "sprint_id": "SPR-2026-02",
+    "sprint_length_weeks": 2,
+    "completed_story_points": 18,
+    "spillover_story_points": 7,
+    "added_story_points": 6,
+    "removed_story_points": 2,
+    "holiday_factor": 0.9,
+    "end_date": "2026-01-30",
+    "team_size": 5,
+    "notes": "Production incident interrupted planned work"
+  }
+]
+```
+
+For CSV, the simplest format is a header row using the canonical field names from the inline schema:
+
+```csv
+sprint_id,sprint_length_weeks,completed_story_points,spillover_story_points,added_story_points,removed_story_points,holiday_factor,end_date,team_size,notes
+SPR-2026-01,2,21,5,3,1,1.0,2026-01-16,5,Normal sprint
+SPR-2026-02,2,18,7,6,2,0.9,2026-01-30,5,Production incident interrupted planned work
+```
+
+In both cases, omitted optional fields should still be allowed and should be normalized in the same way as inline rows after parsing.
+
 ### Historical sprint data fields
 
 The following table summarizes the fields that can be used inside each `sprint_planning.history` entry:
@@ -273,6 +390,8 @@ The following table summarizes the fields that can be used inside each `sprint_p
 | `end_date` | No | Optional metadata recording when the sprint ended. Useful for reporting, chronology hints, and later analysis, but not for identifying the row. |
 | `team_size` | No | Optional metadata recording the team size for that sprint. Preserved for diagnostics and future analysis. |
 | `notes` | No | Optional free-text metadata for contextual notes about the sprint. |
+
+When external history files are used instead of inline rows, JSON object keys and CSV column headers should use these same canonical field names.
 
 Field omission note:
 
@@ -715,6 +834,7 @@ Suggested fields:
 |---|---|
 | `SprintPlanningSpec` | `enabled`, `sprint_length_weeks`, `capacity_mode`, `history`, `uncertainty_mode`, `volatility_overlay`, `spillover`, `planning_confidence_level`, `removed_work_treatment`, `future_sprint_overrides` |
 | `SprintHistoryEntry` | `sprint_id`, `end_date?`, `sprint_length_weeks`, `completed_tasks?`, `completed_story_points?`, `spillover_tasks?`, `spillover_story_points?`, `added_tasks?`, `added_story_points?`, `removed_tasks?`, `removed_story_points?`, `team_size?`, `holiday_factor?`, `notes?` |
+| `SprintHistorySourceSpec` | `format` (`json` or `csv`), `path` |
 | `FutureSprintOverrideSpec` | `sprint_number?`, `start_date?`, `holiday_factor?`, `capacity_multiplier?`, `notes?` |
 | `SprintVolatilitySpec` | `enabled`, `disruption_probability`, `disruption_multiplier_low`, `disruption_multiplier_expected`, `disruption_multiplier_high` |
 | `SprintSpilloverSpec` | `enabled`, `model` (`table` or `logistic`), `size_reference_points`, `size_brackets`, `consumed_fraction_alpha`, `consumed_fraction_beta` |
@@ -731,6 +851,7 @@ The new optional historical fields should be interpreted as follows:
 - `end_date`: optional metadata for reporting, chronology hints, and potential later segmentation; not required for the MVP forecast math and not the primary key for the row.
 - `team_size`: optional metadata for diagnostics and future analysis; not used as a direct scaling input in the MVP forecast.
 - `future_sprint_overrides`: optional forward-looking calendar/capacity adjustments for specific known future sprints.
+- `history` may be either an inline list of `SprintHistoryEntry` rows or a `SprintHistorySourceSpec` pointing to an external JSON or CSV history file.
 
 All historical sprint-row fields other than `sprint_id` should be optional per history row. Neutral defaults should be applied as follows:
 
@@ -772,6 +893,7 @@ Optional additions:
 
 | Component | Responsibility | Suggested module |
 |---|---|---|
+| `SprintHistoryFileParser` | Load external JSON and CSV sprint-history files and normalize them into canonical history rows before validation/defaulting | `parsers/sprint_history_parser.py` |
 | `SprintCapacitySampler` | Jointly sample per-sprint completed, spillover, added-work, and removed-work outcomes from history and volatility config | `planning/sprint_capacity.py` |
 | `SprintPlanner` | Build ready queue, pull tasks into sprint buckets, inject unplanned additions, remove de-scoped work, and advance dependencies | `planning/sprint_planner.py` |
 | `SprintSimulationEngine` | Run N iterations, update backlog with added and optionally removed work, and produce sprint-count arrays | `planning/sprint_engine.py` |
@@ -814,6 +936,7 @@ This proposal is intended to be decision-ready for the MVP scope. The later phas
 3. Add calendar-adjusted future sprint capacity.
 4. Add burn-up percentile charts by sprint.
 5. Add warnings for heterogeneous task sizes in task-throughput mode.
+6. Add support for loading sprint history from external JSON and CSV files referenced from the main project file.
 
 The phased roadmap above defines delivery sequencing only. The formal requirements below describe the full target-state feature set; Phase 2 and Phase 3 items therefore remain part of the overall specification, but they are not required for the first MVP increment unless explicitly marked into scope for that increment.
 
@@ -830,6 +953,7 @@ To make the proposal implementable without further design gaps, the following de
 1. **Schema and validation behavior**
 
 - `SprintHistoryEntry` should accept sparse historical rows where churn fields are absent.
+- `SprintPlanningSpec.history` should accept either inline rows or an external history source descriptor, but not both at the same time.
 - `SprintHistoryEntry` should require a non-empty `sprint_id` for every historical row and treat that field as the row's primary identifier.
 - `SprintHistoryEntry` should require exactly one of `completed_story_points` or `completed_tasks` in every historical row.
 - Validation should normalize every omitted history-row field to its neutral default before downstream statistical processing.
@@ -837,6 +961,9 @@ To make the proposal implementable without further design gaps, the following de
 - Validation should reject history rows that mix task-based and story-point-based fields in the same row.
 - Validation should reject histories that do not contain at least two usable observations with positive delivery signal after defaulting and normalization.
 - Validation should reject mixed unit families within the same history series.
+- External JSON history files should contain an array of objects using the canonical history-row field names.
+- External CSV history files should contain a header row using the canonical history-row field names as column names.
+- External history files should be parsed into the same internal row representation as inline history before downstream validation and normalization.
 - Validation should reject non-positive `holiday_factor` values in historical rows and in future sprint overrides.
 - Validation should reject task-level spillover configurations that lack a resolvable planning story-point size for every task eligible for spillover evaluation.
 
@@ -1158,11 +1285,17 @@ The requirements below are grouped by configuration, simulation behavior, output
 
 ### FR-SP-004: Historical Sprint Outcome Input
 - The system SHALL accept a list of historical sprint outcome observations provided by the user in the project definition file.
+- After the MVP increment, the system SHALL also support an alternative history input mode in which `sprint_planning.history` references an external JSON or CSV file instead of embedding inline history rows.
+- The system SHALL allow exactly one history source mechanism per sprint-planning configuration: either inline rows or an external history file reference.
+- When an external history file is used, the path SHALL be resolved relative to the project file unless an absolute path is provided.
+- External history rows SHALL be parsed into the same canonical row structure and SHALL then follow the same validation, defaulting, normalization, and statistical processing rules as inline rows.
 - Every historical sprint outcome entry SHALL include a `sprint_id` field that serves as the primary key for that historical sprint record.
 - Every historical sprint outcome entry SHALL include exactly one of `completed_story_points` or `completed_tasks`.
 - Any historical sprint outcome entry field other than `sprint_id` and the required completed-unit field MAY be omitted.
 - In `story_points` mode, a history entry MAY provide `completed_story_points`, `spillover_story_points`, `added_story_points`, and `removed_story_points`.
 - In `tasks` mode, a history entry MAY provide `completed_tasks`, `spillover_tasks`, `added_tasks`, and `removed_tasks`.
+- In external JSON history files, each row SHALL use the same canonical field names as the inline history schema.
+- In external CSV history files, the header row SHALL use the same canonical field names as the inline history schema.
 - When `completed_story_points` is used in a history entry, any spillover, added, and removed values for that entry SHALL use the corresponding `*_story_points` fields.
 - When `completed_tasks` is used in a history entry, any spillover, added, and removed values for that entry SHALL use the corresponding `*_tasks` fields.
 - The system SHALL treat `end_date` as optional metadata and SHALL NOT require it in order to identify or store a historical sprint row.
@@ -1299,11 +1432,14 @@ The requirements below are grouped by configuration, simulation behavior, output
 - The system SHALL validate that `capacity_mode` is one of the supported enumerated values.
 - The system SHALL validate that every historical sprint outcome entry includes a non-empty `sprint_id`.
 - The system SHALL validate that `sprint_id` values are unique within the provided historical sprint series.
+- The system SHALL validate that `sprint_planning.history` is specified as either inline rows or an external history source descriptor, but not both.
+- The system SHALL validate that external history sources declare a supported format of `json` or `csv` and a non-empty path.
 - The system SHALL validate that every historical sprint outcome entry includes exactly one of `completed_story_points` or `completed_tasks`.
 - The system SHALL validate that all historical `completed_*`, `spillover_*`, `added_*`, and `removed_*` values are non-negative.
 - The system SHALL validate that every historical `holiday_factor`, when provided, is strictly positive.
 - The system SHALL validate that every historical row can be normalized by applying neutral defaults to omitted fields before downstream statistical processing.
 - The system SHALL validate that the history contains at least two usable observations with positive delivery signal after defaulting and normalization.
+- The system SHALL validate that external JSON history files contain an array of row objects and that external CSV history files contain a header row with canonical field names.
 - The system SHALL validate that each history entry uses the unit family implied by `capacity_mode` and does not mix task counts with story-point values for the same simulation.
 - The system SHALL validate that `planning_confidence_level`, when provided, is in the open interval `(0, 1)`.
 - The system SHALL validate that `removed_work_treatment`, when provided, is one of `churn_only` or `reduce_backlog`.
@@ -1322,6 +1458,7 @@ The requirements below are grouped by configuration, simulation behavior, output
 - Sprint planning logic SHALL be implemented in a dedicated `planning/` module to preserve separation of concerns and avoid modifying the existing simulation engine.
 - The module SHALL contain at minimum: a `SprintCapacitySampler` for resampling historical sprint outcome vectors, a `SprintPlanner` for managing the ready queue and sprint pulling, a `SprintSimulationEngine` for running N iterations, and a `SprintPlanningResults` model for holding output arrays and statistics.
 - The sprint simulation engine SHALL reuse the existing project's random seed mechanism to ensure reproducible results when a seed is configured.
+- After the MVP increment, the parsing layer SHALL include a dedicated history-file parser component for external JSON and CSV sprint-history sources so those files are normalized into `SprintHistoryEntry` rows before statistical processing.
 
 # Implementation Work Breakdown
 
@@ -1344,6 +1481,10 @@ Steps:
 4. Keep duration-estimation fields and sprint-planning fields separate. The existing `TaskEstimate.story_points` currently maps symbolic estimates to time via config, so sprint planning should not overload that field with backlog-planning semantics.
 5. Add project-level defaults that belong in configuration, such as the documented planning confidence default, to `src/mcprojsim/config.py` rather than hardcoding them in multiple runtime components.
 
+Post-MVP extension:
+
+6. Extend `SprintPlanningSpec.history` so it can also hold a `SprintHistorySourceSpec` with `format` and `path` for external CSV or JSON history files.
+
 Verification:
 
 - `Project(**data)` still loads a file with no `sprint_planning` section unchanged.
@@ -1365,6 +1506,10 @@ Steps:
 2. Add checks for duplicate `sprint_id` values, mixed unit families inside history rows, invalid override locators, and malformed spillover bracket definitions.
 3. Keep deeper semantic validation in the Pydantic models, but use the raw validator for issues where a source-aware message is materially better.
 4. Preserve backward compatibility for existing project files and parser behavior.
+
+Post-MVP extension:
+
+5. Add a dedicated parser for external sprint-history files, for example `src/mcprojsim/parsers/sprint_history_parser.py`, that supports both JSON arrays of row objects and CSV files with canonical column names.
 
 Verification:
 
@@ -1499,6 +1644,7 @@ The shortest safe delivery sequence on the current code base is:
 6. CLI integration
 7. exporters
 8. burn-up and advanced reporting
+9. external history file import for CSV and JSON
 
 That order works because each layer depends on the previous one and because it keeps the existing duration simulation path stable until sprint planning is already functionally complete.
 
@@ -1520,6 +1666,7 @@ The following items are explicitly **out of MVP scope** and should not block the
 - task-level execution spillover and carryover modeling
 - burn-up percentile charts
 - heterogeneous-task warnings in task mode beyond basic documentation and validation guidance
+- external CSV and JSON history-file import
 
 ## MVP Step 1. Schema and Validation
 
