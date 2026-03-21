@@ -933,7 +933,7 @@ Most importantly, it answers the actual user problem:
 
 This section consolidates the statistical model used throughout the proposal so the formal requirements can be read as implementation constraints rather than as the first place where the method is introduced. The guiding design choice is that sprint planning should remain an **empirical Monte Carlo forecast**. The model should preserve observed variation and observed coupling between delivery, spillover, and scope churn, rather than compressing history into a single average velocity.
 
-## 1. Canonical Historical Observation
+## Canonical Historical Observation
 
 After schema validation and default filling, each historical sprint row should be transformed into a canonical observation:
 
@@ -952,7 +952,7 @@ where:
 
 The unit family is either story points or tasks, determined by the row's completed-unit field and the active `capacity_mode`. All missing churn fields are first normalized to `0`, and missing `holiday_factor` is normalized to `1.0`.
 
-## 2. Delivery-Side Normalization
+## Delivery-Side Normalization
 
 The model treats `holiday_factor` as a delivery-capacity normalizer rather than as a churn signal. Historical sprints affected by reduced working availability should therefore be mapped back to a nominal full-capacity basis before they are compared or resampled.
 
@@ -967,7 +967,7 @@ r̂_i = r_i
 
 Only delivery-side quantities are holiday-normalized. Added work and removed work remain raw churn signals because they represent planning change rather than available working time.
 
-## 3. Weekly Normalization for Variable Sprint Lengths
+## Weekly Normalization for Variable Sprint Lengths
 
 Historical rows may use different sprint lengths. To support scenario analysis over any configured whole-week sprint length, each normalized historical observation should be converted to weekly rates:
 
@@ -980,7 +980,7 @@ w^r_i = r̂_i / L_i
 
 For a simulated sprint length of `L` weeks, the model should then build a simulated sprint outcome by summing `L` sampled weekly observations. This preserves the whole-week interpretation while avoiding the mistake of reusing a two-week historical outcome unchanged for a three-week forecast.
 
-## 4. Joint Empirical Bootstrap
+##  Joint Empirical Bootstrap
 
 The default stochastic engine should use **joint bootstrap resampling**. In practical terms, that means drawing historical outcome vectors with replacement from the normalized historical data, not sampling each component independently.
 
@@ -1004,7 +1004,7 @@ and use:
 
 This is the core statistical choice in the proposal. It preserves the observed dependence structure between good sprints, churn-heavy sprints, and low-delivery sprints. If high added scope historically coincides with high spillover and lower completion, the forecast should preserve that relationship instead of averaging it away.
 
-## 5. Derived Historical Ratios
+##  Derived Historical Ratios
 
 The model should compute three derived ratios from the same historical rows for diagnostics and planned-load guidance:
 
@@ -1022,7 +1022,7 @@ These ratios summarize different aspects of instability:
 
 The proposal uses these ratios in two places: for reporting historical planning stability, and for computing conservative planned-load guidance.
 
-## 6. Planned-Load Guidance Heuristic
+## Planned-Load Guidance Heuristic
 
 The proposal deliberately separates the **forecasting engine** from the **commitment heuristic**.
 
@@ -1042,7 +1042,7 @@ recommended_planned_commitment(q)
 
 This formula is intentionally conservative. It starts from typical delivered capacity, discounts it by high-percentile spillover and removal behavior, and reserves room for likely urgent additions. It is a planning aid, not the main forecast generator.
 
-## 7. Backlog-State Recursion
+## Backlog-State Recursion
 
 Completion-date forecasting should be based on explicit backlog evolution rather than on dividing remaining work by a point estimate. The per-sprint backlog recursion is:
 
@@ -1064,7 +1064,7 @@ The `removed_work_treatment` flag determines `R_t^{effective}`:
 
 This recursion is the main mechanism that turns historical churn into a date forecast.
 
-## 8. Volatility Overlay
+## Volatility Overlay
 
 The optional volatility overlay should be modeled as a multiplicative factor on deliverable capacity, not as a rewrite of the historical churn series:
 
@@ -1086,7 +1086,7 @@ C_t^{final} = C_t^{effective} * O_t
 
 where `O_t` defaults to `1.0` and is derived from `future_sprint_overrides` when present.
 
-## 9. Task-Level Execution Spillover
+## Task-Level Execution Spillover
 
 Task-level execution spillover is a second stochastic layer that applies after sprint capacity is sampled and tasks are pulled into the sprint. It is intentionally distinct from historical sprint-row spillover.
 
@@ -1113,7 +1113,7 @@ E[F] = alpha / (alpha + beta) = 3.25 / 5.0 = 0.65
 
 This means most of the task effort is usually consumed before the task spills over, but the task still contributes zero delivered throughput in that sprint.
 
-## 10. Output Statistics
+## Output Statistics
 
 The forecast should report two families of statistics:
 
@@ -1122,7 +1122,7 @@ The forecast should report two families of statistics:
 
 The primary summary outputs are empirical percentiles such as P50, P80, and P90. The proposal also uses standard descriptive statistics such as mean, median, standard deviation, and coefficient of variation. Where the proposal refers to “correlation statistics,” the intended default is the Pearson correlation coefficient computed over the historical completed, spillover, added, and removed series, with Spearman rank correlation permitted as an additional optional diagnostic.
 
-## 11. Why These Methods Fit `mcprojsim`
+## Why These Methods Fit `mcprojsim`
 
 These methods are intentionally aligned with the current repository architecture:
 
@@ -1327,7 +1327,7 @@ The requirements below are grouped by configuration, simulation behavior, output
 
 The current code base already has clean boundaries for configuration, raw-file validation, Pydantic schema validation, Monte Carlo execution, results modeling, CLI presentation, and exporters. Sprint planning should be implemented as a parallel path through those same boundaries rather than by overloading the existing duration engine.
 
-## 1. Extend the Project Schema First
+## Extend the Project Schema First
 
 Start in the schema layer because all downstream work depends on stable validated models.
 
@@ -1349,7 +1349,7 @@ Verification:
 - `Project(**data)` still loads a file with no `sprint_planning` section unchanged.
 - `Project(**data)` also loads a fully specified sprint-planning block with all optional sections present.
 
-## 2. Add Raw Validation and Source-Aware Error Reporting
+## Add Raw Validation and Source-Aware Error Reporting
 
 The repository already performs useful path-aware validation before Pydantic model construction. Sprint planning should plug into that same layer so YAML and TOML errors retain line context.
 
@@ -1371,7 +1371,7 @@ Verification:
 - YAML and TOML files with bad sprint-planning data produce line-aware validation messages.
 - Existing non-sprint project files validate exactly as before.
 
-## 3. Implement the New Planning Engine as a Parallel Subsystem
+## Implement the New Planning Engine as a Parallel Subsystem
 
 Do not fold sprint logic into `SimulationEngine.run()`. The current duration engine in `src/mcprojsim/simulation/engine.py` should remain stable.
 
@@ -1396,7 +1396,7 @@ Verification:
 - the new engine runs independently of the existing duration engine;
 - disabling sprint planning leaves the current simulation path untouched.
 
-## 4. Add a Dedicated Sprint Results Model
+## Add a Dedicated Sprint Results Model
 
 The current `SimulationResults` model in `src/mcprojsim/models/simulation.py` is duration-centric. Sprint planning should produce a separate results surface instead of mutating that class into a mixed abstraction.
 
@@ -1416,7 +1416,7 @@ Verification:
 - sprint-specific statistics can be computed without depending on `SimulationResults.durations`.
 - results serialization stays straightforward for JSON, CSV, and HTML exporters.
 
-## 5. Integrate the CLI Without Breaking the Current Command Model
+## Integrate the CLI Without Breaking the Current Command Model
 
 The existing entry point is the `simulate` command in `src/mcprojsim/cli.py`. Sprint planning should be added there as an extra output path, not as a new requirement for all simulations.
 
@@ -1437,7 +1437,7 @@ Verification:
 - existing CLI workflows still work for projects without sprint planning;
 - sprint-enabled projects produce both legacy simulation output and sprint-planning output in a clearly separated form.
 
-## 6. Extend Exporters with a Parallel Sprint-Planning Section
+## Extend Exporters with a Parallel Sprint-Planning Section
 
 The exporter layer is already cleanly separated by format. Sprint planning should be added as a new section in each exporter rather than mixed into existing duration statistics.
 
@@ -1459,7 +1459,7 @@ Verification:
 - exporters still work for pure duration simulations;
 - sprint-enabled exports contain the new sections and remain parseable.
 
-## 7. Add Tests in the Same Layers the Repository Already Uses
+##  Add Tests in the Same Layers the Repository Already Uses
 
 The repository already has a well-distributed test layout. Sprint planning should follow that pattern instead of creating only end-to-end tests.
 
@@ -1487,7 +1487,7 @@ Verification:
 - invalid files fail with precise messages;
 - current non-sprint tests remain green.
 
-## 8. Recommended Implementation Order
+##  Recommended Implementation Order
 
 The shortest safe delivery sequence on the current code base is:
 
