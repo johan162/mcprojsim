@@ -516,6 +516,7 @@ $(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(SPRINT_PLANNING_TEMPLATE) $(SPRI
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
 	@cp $(SPRINT_PLANNING_PDF_BUILT) $(SPRINT_PLANNING_PDF)
+	@rm -f $(SPRINT_PLANNING_DIST_DIR)/*.aux $(SPRINT_PLANNING_DIST_DIR)/*.log $(SPRINT_PLANNING_DIST_DIR)/*.fls $(SPRINT_PLANNING_DIST_DIR)/*.fdb_latexmk 2>/dev/null || true
 	@echo -e "$(GREEN)✓ Sprint-based planning PDF built: $(SPRINT_PLANNING_PDF)$(NC)"
 
 pdf-pandoc: $(USER_GUIDE_PANDOC_PDF) ## Build fallback user guide PDF directly with Pandoc
