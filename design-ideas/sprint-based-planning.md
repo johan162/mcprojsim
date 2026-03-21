@@ -2,29 +2,29 @@
 
 ## Executive Summary
 
-`mcprojsim` already produces two important distributions per simulation run: elapsed project duration and total effort. It does that by sampling task uncertainty, applying multiplicative uncertainty factors and additive risks, then scheduling the resulting task durations through dependency-only or resource-constrained scheduling.[^1][^2][^3] A sprint-planning mode should therefore be added **alongside** the current engine, not as a replacement for it.[^1][^3]
+`mcprojsim` already produces two important distributions per simulation run: elapsed project duration and total effort. It does that by sampling task uncertainty, applying multiplicative uncertainty factors and additive risks, then scheduling the resulting task durations through dependency-only or resource-constrained scheduling. A sprint-planning mode should therefore be added **alongside** the current engine, not as a replacement for it.
 
-The most suitable approach is an **empirical Monte Carlo sprint forecast** driven by historical team sprint outcomes, with two capacity modes: **story points per sprint** and **tasks/items per sprint**.[^4][^5][^6] Story-point mode is appropriate when the team already plans and measures in points; task-throughput mode is appropriate only when work items are right-sized and reasonably homogeneous, which is exactly the condition emphasized in throughput-driven sprint planning guidance.[^5][^7]
+The most suitable approach is an **empirical Monte Carlo sprint forecast** driven by historical team sprint outcomes, with two capacity modes: **story points per sprint** and **tasks/items per sprint**.[^4][^5][^6] Story-point mode is appropriate when the team already plans and measures in points; task-throughput mode is appropriate only when work items are right-sized and reasonably homogeneous, which is exactly the condition emphasized in throughput-driven sprint planning guidance.[^5]
 
-The best way is to make a **dependency-aware sprint simulator** that repeatedly samples sprint capacity from historical data, but with each historical sprint treated as a joint outcome containing **completed work, spill-over work, mid-sprint added work, and mid-sprint removed work**. The simulator should pull a subset of ready tasks into each sprint, model scope added during the sprint, model work explicitly removed from the sprint after planning, carry unfinished work out of the sprint, and stop when all project tasks are complete.[^1][^8] The output should be a distribution of **sprints-to-done** (P50/P80/P90), plus date projections, burn-up style percentile bands, commitment guidance for how much planned work to load into future sprints, and volatility diagnostics such as standard deviation and coefficient of variation, reusing statistical conventions the project already uses for duration reporting.[^2][^3]
+The best way is to make a **dependency-aware sprint simulator** that repeatedly samples sprint capacity from historical data, but with each historical sprint treated as a joint outcome containing **completed work, spill-over work, mid-sprint added work, and mid-sprint removed work**. The simulator should pull a subset of ready tasks into each sprint, model scope added during the sprint, model work explicitly removed from the sprint after planning, carry unfinished work out of the sprint, and stop when all project tasks are complete. The output should be a distribution of **sprints-to-done** (P50/P80/P90), plus date projections, burn-up style percentile bands, commitment guidance for how much planned work to load into future sprints, and volatility diagnostics such as standard deviation and coefficient of variation, reusing the same style of summary statistics already used elsewhere in the product.
 
-The strongest design choice is to make the sprint-capacity model **empirical first** (bootstrap/resampling historical sprint outcomes) rather than parametric first (fit a Normal/Lognormal model to velocity). Scrum and agile forecasting guidance consistently emphasizes using observed variation instead of collapsing data to a single average, and the current codebase is already organized around Monte Carlo sampling of uncertain work.[^4][^6][^9]
+The strongest design choice is to make the sprint-capacity model **empirical first** (bootstrap/resampling historical sprint outcomes) rather than parametric first (fit a Normal/Lognormal model to velocity). Scrum and agile forecasting guidance consistently emphasizes using observed variation instead of collapsing data to a single average, and the current product direction already aligns well with Monte Carlo-style sampling of uncertain work.[^4][^6]
 
 ## Query Type
 
-This is a **technical deep-dive / architecture proposal**: it asks how to add a new sprint-based forecasting mode to an existing Monte Carlo project simulation system, how to ground it in agile delivery practice, and how to represent uncertainty and volatility in a statistically sound way.[^1][^4]
+This is a **technical deep-dive / architecture proposal**: it asks how to add a new sprint-based forecasting mode to an existing Monte Carlo project simulation system, how to ground it in agile delivery practice, and how to represent uncertainty and volatility in a statistically sound way.[^4]
 
 ## Current `mcprojsim` Architecture and Why It Matters
 
-The current simulation engine runs many iterations and, in each one, resolves symbolic estimates, samples a task duration distribution, applies multiplicative uncertainty factors, applies risk impacts, and then schedules the resulting task durations to produce project duration statistics.[^1][^8] This means the system is already designed around **repeated stochastic simulation**, so sprint planning should plug into the same style of computation rather than introducing a deterministic planning subsystem.[^1][^8]
+The current simulation engine runs many iterations and, in each one, resolves symbolic estimates, samples a task duration distribution, applies multiplicative uncertainty factors, applies risk impacts, and then schedules the resulting task durations to produce project duration statistics. This means the system is already designed around **repeated stochastic simulation**, so sprint planning should plug into the same style of computation rather than introducing a deterministic planning subsystem.
 
-The engine also stores a per-iteration **effort distribution** by summing all task durations, separately from elapsed duration.[^1] That is important because sprint planning is conceptually closer to **capacity vs. backlog consumption** than to critical-path elapsed time; the repository already distinguishes those two ideas.[^1][^3]
+The engine also stores a per-iteration **effort distribution** by summing all task durations, separately from elapsed duration. That is important because sprint planning is conceptually closer to **capacity vs. backlog consumption** than to critical-path elapsed time; the product already distinguishes those two ideas.
 
-`SimulationResults` already exposes mean, median, standard deviation, skewness, kurtosis, percentile lookup, and dictionary/export support for simulated outputs.[^2] That suggests the cleanest extension is to add a parallel result surface for sprint forecasts, rather than trying to coerce sprint metrics into the existing `durations` array.[^2]
+`SimulationResults` already exposes mean, median, standard deviation, skewness, kurtosis, percentile lookup, and dictionary/export support for simulated outputs. That suggests the cleanest extension is to add a parallel result surface for sprint forecasts, rather than trying to coerce sprint metrics into the existing `durations` array.
 
-The staffing analyzer further reinforces that today’s model is fundamentally **effort + capacity => calendar time**, with team-size effects and communication overhead applied after simulation.[^3] Sprint planning is a different abstraction: it assumes a fixed sprint cadence and an empirically observed team delivery capacity per sprint, then asks how many sprint buckets are required to finish a backlog.[^3][^4]
+The staffing analyzer further reinforces that today’s model is fundamentally **effort + capacity => calendar time**, with team-size effects and communication overhead applied after simulation. Sprint planning is a different abstraction: it assumes a fixed sprint cadence and an empirically observed team delivery capacity per sprint, then asks how many sprint buckets are required to finish a backlog.[^4]
 
-Finally, the scheduler and constrained-scheduling documentation show that the current program already models dependencies, resource availability, holidays, planned absences, sickness, and practical caps on parallelism.[^10][^11] A sprint-planning mode should respect task dependencies and can optionally adjust sampled sprint capacity for known future calendar effects.[^10][^11]
+Finally, the current program already models dependencies, resource availability, holidays, planned absences, sickness, and practical caps on parallelism. A sprint-planning mode should respect task dependencies and can optionally adjust sampled sprint capacity for known future calendar effects.
 
 ## Architecture Overview
 
@@ -53,7 +53,7 @@ The Scrum Guide defines Sprints as fixed-length events of one month or less, and
 
 Atlassian’s velocity guidance describes sprint velocity as the amount of work a Scrum team completes in a sprint, usually in story points, and it explicitly says velocity should be based on **fully completed stories**, averaged across multiple sprints, while also noting that team size, experience, story complexity, and holidays affect it and that velocity is team-specific.[^13] That validates story-point-based sprint capacity as one supported mode, but it also highlights a key limitation: a simple average is not enough when capacity varies materially from sprint to sprint, when items spill out of the sprint, or when urgent work is added after sprint start.[^13]
 
-Scrum.org’s Monte Carlo forecasting article makes the crucial statistical point: using a single average burn rate discards variation, while Monte Carlo forecasting keeps the observed spread and yields a **range** of likely outcomes rather than a falsely precise point forecast.[^4] That is directly aligned with `mcprojsim`’s current Monte Carlo philosophy and is the best argument against implementing sprint planning as “remaining backlog / average velocity”.[^1][^4]
+Scrum.org’s Monte Carlo forecasting article makes the crucial statistical point: using a single average burn rate discards variation, while Monte Carlo forecasting keeps the observed spread and yields a **range** of likely outcomes rather than a falsely precise point forecast.[^4] That is directly aligned with `mcprojsim`’s Monte Carlo philosophy and is the best argument against implementing sprint planning as “remaining backlog / average velocity”.[^4]
 
 Scrum.org’s throughput-driven sprint planning article argues for using **throughput** (completed items per unit time) rather than story points when teams manage similarly sized work items, and it ties that to a Service Level Expectation (SLE) that helps determine whether items are “right-sized” for the workflow.[^5] This is the best support for a second capacity mode based on **tasks/items per sprint**, but it also implies a design constraint: item-throughput forecasting only works well when tasks are small enough and similarly sized enough to behave like comparable work items.[^5]
 
@@ -64,16 +64,16 @@ The LeadingEDJE agile forecasting write-up reinforces the same pattern: flow met
 | Approach | How it works | Strengths | Weaknesses | Verdict |
 |---|---|---|---|---|
 | Average velocity / average throughput | Divide remaining backlog by mean points-per-sprint or tasks-per-sprint | Very simple, easy to explain | Throws away variation; produces brittle point forecasts; weak under volatility[^4][^13] | Do **not** use as primary forecast |
-| Parametric capacity distribution | Fit a Normal/Lognormal/Gamma/Negative-Binomial model to capacity, then sample | Compact, smooth, supports extrapolation | Risk of fitting the wrong shape; fragile with small sample sizes; harder to explain to users[^4] | Optional advanced mode |
-| Empirical Monte Carlo resampling | Sample future sprint outcomes from observed historical sprint outcomes | Preserves real observed variation and churn coupling; easy to explain; aligned with current engine[^1][^4][^6] | Needs enough history; can inherit historical regime bias | **Recommended default** |
+| Parametric capacity distribution | Fit a Normal/ Lognormal /Gamma/ Negative-Binomial model to capacity, then sample | Compact, smooth, supports extrapolation | Risk of fitting the wrong shape; fragile with small sample sizes; harder to explain to users[^4] | Optional advanced mode |
+| Empirical Monte Carlo resampling | Sample future sprint outcomes from observed historical sprint outcomes | Preserves real observed variation and churn coupling; easy to explain; aligned with the product’s Monte Carlo direction[^4][^6] | Needs enough history; can inherit historical regime bias | **Recommended default** |
 | Throughput + SLE flow forecasting | Forecast completed items using throughput and right-sized items | Works well for item flow; no story points required[^5][^6] | Only valid if items are small and comparable; weaker for uneven task sizes | Recommended for task-count mode |
-| Dependency-aware sprint simulation | Resample capacity, but also only pull dependency-ready tasks into each sprint | Matches project-task structure; yields subset-of-tasks-per-sprint plan[^8][^10] | More implementation work; needs priority policy | **Recommended core simulator** |
+| Dependency-aware sprint simulation | Resample capacity, but also only pull dependency-ready tasks into each sprint | Matches project-task structure; yields subset-of-tasks-per-sprint plan | More implementation work; needs priority policy | **Recommended core simulator** |
 
 ## Recommended Product Design
 
 ### 1. Add sprint planning as a distinct planning mode
 
-Add a new top-level project section such as `sprint_planning`, rather than overloading the current `project` or `simulation` sections. The existing engine is duration-based and the new feature is capacity/burn-up based, so the separation should be explicit in the schema and outputs.[^1][^2][^3]
+Add a new top-level project section such as `sprint_planning`, rather than overloading the current `project` or `simulation` sections. The existing engine is duration-based and the new feature is capacity/burn-up based, so the separation should be explicit in the schema and outputs.
 
 Suggested shape:
 
@@ -333,18 +333,18 @@ Those are not the same phenomenon and should not be merged statistically.
 
 **Task mode** should use observed historical **completed tasks/items**, **spill-over tasks/items**, **added tasks/items**, and **removed tasks/items** per sprint, and should consume backlog in units of task-count.[^5] This is appropriate only when the project tasks represent right-sized backlog items rather than large epics; otherwise the forecast will be misleading because one “task” may be far larger than another.[^5]
 
-The repository’s current estimate model already supports explicit ranges, T-shirt sizes, and story points, and symbolic estimates are resolved before sampling.[^7][^8] But that does **not** mean hours-based task estimates can safely be converted into story points, because story points are a relative team-specific measure rather than a time unit.[^13] Therefore:
+The current estimate model already supports multiple sizing styles, but that does **not** mean hours-based task estimates can safely be converted into story points, because story points are a relative team-specific measure rather than a time unit.[^13] Therefore:
 
 - if `capacity_mode == "story_points"`, require each planned item to expose planning points explicitly, or require a separate `planning_story_points` field if the task’s duration estimate is not already story-point based;
 - if `capacity_mode == "tasks"`, count each eligible task as one item, but warn when item sizes are obviously heterogeneous.
 
 ### 3. Use a dependency-aware sprint pull simulator
 
-The model is based on working on a subset of tasks from the project in each sprint. The right way to express that in this repository is to build a **SprintPlanner** that mirrors what `TaskScheduler` does for hour-level execution: it should maintain a ready queue of dependency-satisfied tasks and select from that queue sprint by sprint.[^8][^10]
+The model is based on working on a subset of tasks from the project in each sprint. The right way to express that in this design is to build a **SprintPlanner** that mirrors the product’s existing scheduling approach at a sprint level: it should maintain a ready queue of dependency-satisfied tasks and select from that queue sprint by sprint.
 
 Recommended per-iteration algorithm:
 
-1. Build the initial ready queue from tasks whose dependencies are already satisfied.[^10]
+1. Build the initial ready queue from tasks whose dependencies are already satisfied.
 2. Sample the sprint outcome profile for Sprint `n`, including completed-capacity, added-work, removed-work, and churn behavior.
 3. Pull ready tasks in priority order until the usable sprint capacity would be exceeded.
 4. Inject sampled added work and remove sampled de-scoped work according to the configured interpretation.
@@ -457,7 +457,7 @@ Historical resampling already captures ordinary variation, but the user also ask
 - **uncertainty** = the spread already visible in historical sprint outcomes;
 - **volatility** = exogenous future shocks that may reduce capacity beyond the normal observed range.
 
-The current engine already uses multiplicative uncertainty factors on task duration.[^8] A sprint mode can use the same design pattern, but it should apply it specifically to the **deliverable-capacity component** of the sampled sprint outcome rather than to every historical variable indiscriminately:
+The current engine already uses multiplicative uncertainty factors on task duration. A sprint mode can use the same design pattern, but it should apply it specifically to the **deliverable-capacity component** of the sampled sprint outcome rather than to every historical variable indiscriminately:
 
 ```text
 effective_deliverable_capacity = sampled_completed_capacity * sampled_volatility_multiplier
@@ -550,7 +550,7 @@ sprint_planning:
 ```
 ## Measuring Uncertainty and Volatility
 
-The project already reports standard deviation and coefficient of variation (CV) for simulated duration outputs.[^2][^9] The sprint feature should report analogous metrics for historical and simulated sprint capacity, spill-over, and scope churn:
+The project already reports standard deviation and coefficient of variation (CV) for simulated duration outputs. The sprint feature should report analogous metrics for historical and simulated sprint capacity, spill-over, and scope churn:
 
 - mean capacity,
 - median capacity,
@@ -592,7 +592,7 @@ Sprints are fixed-length events in Scrum, but the chosen fixed length can differ
 
 If enough history exists for multiple sprint lengths, a more advanced option is to segment history by sprint length and prefer same-length history before falling back to normalized weekly pooling. That would preserve cadence-specific effects while still supporting scenario analysis.
 
-For delivery-date projection, map sprint counts to dates using sprint boundaries rather than working-day accumulation. However, known calendar effects can still be folded in by scaling future sprint capacity by the ratio of available workdays in that sprint versus nominal workdays, leveraging the same calendar concepts already present in constrained scheduling.[^10][^11]
+For delivery-date projection, map sprint counts to dates using sprint boundaries rather than working-day accumulation. However, known calendar effects can still be folded in by scaling future sprint capacity by the ratio of available workdays in that sprint versus nominal workdays.
 
 ## How to Treat Partial Work and Carry-Over
 
@@ -617,7 +617,7 @@ The two mechanisms combine naturally in the per-iteration algorithm:
 3. If capacity would be exhausted before starting the full task, defer it without charging capacity.
 4. At sprint end, compute delivered throughput from fully completed tasks only.
 
-Diagnostics should record, per iteration, both the number of deferred tasks and the total remaining effort from spill-over events, so the aggregate carry-over distribution can be distinguished from capacity-driven deferral in reports.[^10][^13]
+Diagnostics should record, per iteration, both the number of deferred tasks and the total remaining effort from spill-over events, so the aggregate carry-over distribution can be distinguished from capacity-driven deferral in reports.[^13]
 
 Historical spill-over, scope-addition, and scope-removal data should also shape how much work is intentionally loaded into the sprint in the first place. A planner that ignores these measures will systematically overcommit whenever the team has a history of churn or incomplete landings. The output should therefore include both:
 
@@ -682,7 +682,7 @@ An implementation-oriented schema defaulting rule should be stated explicitly:
 
 ### Task-level additions
 
-If story-point sprint mode needs to coexist with time-based duration estimates, add a separate optional field such as `planning_story_points` on `Task`. That avoids conflating delivery forecasting units with time-estimation units.[^7][^13]
+If story-point sprint mode needs to coexist with time-based duration estimates, add a separate optional field such as `planning_story_points` on `Task`. That avoids conflating delivery forecasting units with time-estimation units.[^13]
 
 Optional additions:
 
@@ -693,28 +693,28 @@ Optional additions:
 
 ## Recommended Internal Component Design
 
-| Component | Responsibility | Likely location |
+| Component | Responsibility | Suggested module |
 |---|---|---|
-| `SprintCapacitySampler` | Jointly sample per-sprint completed, spill-over, added-work, and removed-work outcomes from history and volatility config | `/Users/joaper/Devel/mcprojsim/src/mcprojsim/planning/sprint_capacity.py` |
-| `SprintPlanner` | Build ready queue, pull tasks into sprint buckets, inject unplanned additions, remove de-scoped work, and advance dependencies | `/Users/joaper/Devel/mcprojsim/src/mcprojsim/planning/sprint_planner.py` |
-| `SprintSimulationEngine` | Run N iterations, update backlog with added and optionally removed work, and produce sprint-count arrays | `/Users/joaper/Devel/mcprojsim/src/mcprojsim/planning/sprint_engine.py` |
-| `SprintPlanningResults` | Percentiles, dates, capacity stats, churn metrics, and planned-load guidance | `/Users/joaper/Devel/mcprojsim/src/mcprojsim/models/sprint_simulation.py` |
+| `SprintCapacitySampler` | Jointly sample per-sprint completed, spill-over, added-work, and removed-work outcomes from history and volatility config | `planning/sprint_capacity.py` |
+| `SprintPlanner` | Build ready queue, pull tasks into sprint buckets, inject unplanned additions, remove de-scoped work, and advance dependencies | `planning/sprint_planner.py` |
+| `SprintSimulationEngine` | Run N iterations, update backlog with added and optionally removed work, and produce sprint-count arrays | `planning/sprint_engine.py` |
+| `SprintPlanningResults` | Percentiles, dates, capacity stats, churn metrics, and planned-load guidance | `models/sprint_simulation.py` |
 
-This keeps sprint planning modular and avoids destabilizing the current duration-based simulation engine.[^1][^2]
+This keeps sprint planning modular and avoids destabilizing the current duration-based simulation engine.
 
 ## Integration with Existing `mcprojsim` Concepts
 
 ### Reuse what already fits
 
-- Reuse the repository’s Monte Carlo iteration pattern.[^1]
-- Reuse the statistics/percentile reporting style.[^2][^9]
-- Reuse the project dependency graph and task order.[^8][^10]
-- Reuse calendar metadata to adjust future sprint capacity when desired.[^10][^11]
+- Reuse the existing Monte Carlo iteration pattern.
+- Reuse the existing statistics and percentile reporting style.
+- Reuse the existing project dependency graph and task order.
+- Reuse calendar metadata to adjust future sprint capacity when desired.
 
 ### Do **not** force-fit what does not
 
 - Do not convert hours directly into story points.[^13]
-- Do not reuse critical-path elapsed duration as sprint count; sprint planning is a backlog-capacity forecast, not a path-length forecast.[^3]
+- Do not reuse critical-path elapsed duration as sprint count; sprint planning is a backlog-capacity forecast, not a path-length forecast.
 - Do not assume task-count throughput is valid unless items are right-sized.[^5]
 
 ## MVP vs. Follow-On Roadmap
@@ -791,7 +791,7 @@ These implementation notes do not change the design; they close the remaining sp
 
 ## Why This Is the Best-Fit Approach for `mcprojsim`
 
-This design fits the repository because it preserves the current Monte Carlo style, keeps the existing duration/effort outputs intact, and adds a parallel forecast for sprint cadence rather than trying to reinterpret the current duration arrays.[^1][^2][^3] It is also well grounded in agile practice: Sprints are fixed cadence, velocity/throughput should be based on completed work, and forecasts should reflect observed variation rather than a single mean.[^4][^5][^12][^13]
+This design fits the repository because it preserves the current Monte Carlo style, keeps the existing duration/effort outputs intact, and adds a parallel forecast for sprint cadence rather than trying to reinterpret the current duration arrays. It is also well grounded in agile practice: Sprints are fixed cadence, velocity/throughput should be based on completed work, and forecasts should reflect observed variation rather than a single mean.[^4][^5][^12][^13]
 
 Most importantly, it answers the actual user problem:
 
@@ -807,14 +807,14 @@ Most importantly, it answers the actual user problem:
 
 **High confidence**
 
-- `mcprojsim` is already structurally compatible with a sprint Monte Carlo extension because it already samples work stochastically, stores per-iteration outputs, and reports percentile/statistical summaries.[^1][^2]
-- An empirical Monte Carlo sprint-capacity model is better founded than an average-velocity model, based on both agile forecasting references and the architecture of the codebase.[^4][^6]
-- A dependency-aware sprint pull planner is the right way to model “subset of tasks per sprint” in this repository.[^8][^10]
+- `mcprojsim` is already structurally compatible with a sprint Monte Carlo extension because it already samples work stochastically, stores per-iteration outputs, and reports percentile/statistical summaries.
+- An empirical Monte Carlo sprint-capacity model is better founded than an average-velocity model, based on agile forecasting references.[^4][^6]
+- A dependency-aware sprint pull planner is the right way to model “subset of tasks per sprint” in this design.
 
 **Medium confidence**
 
 - Weekly normalization is the best way to support adjustable sprint lengths, but it may underrepresent ceremony/batching effects if a team has only ever worked in one sprint cadence.
-- Task-count throughput mode is valuable, but only if tasks are roughly right-sized; some projects in `mcprojsim` may currently define tasks at too coarse a granularity for that to be reliable.[^5][^7]
+- Task-count throughput mode is valuable, but only if tasks are roughly right-sized; some projects in `mcprojsim` may currently define tasks at too coarse a granularity for that to be reliable.[^5]
 - Historical added-work data tells us that scope churn exists, but if the project does not distinguish whether added work was also finished inside the same sprint, commitment guidance will remain conservative rather than exact.
 - Historical removed-work data is useful, but its forecast meaning depends on whether removal means genuine descoping or only replanning; the default should therefore remain conservative.
 
@@ -826,17 +826,9 @@ Most importantly, it answers the actual user problem:
 
 ## Footnotes
 
-[^1]: `/Users/joaper/Devel/mcprojsim/src/mcprojsim/simulation/engine.py:28-238` (commit `039b8a48f9730334626dce917d4d068fd85fcc50`)
-[^2]: `/Users/joaper/Devel/mcprojsim/src/mcprojsim/models/simulation.py:29-128` and `/Users/joaper/Devel/mcprojsim/src/mcprojsim/models/simulation.py:229-267` (commit `039b8a48f9730334626dce917d4d068fd85fcc50`)
-[^3]: `/Users/joaper/Devel/mcprojsim/src/mcprojsim/analysis/staffing.py:1-22` and `/Users/joaper/Devel/mcprojsim/src/mcprojsim/analysis/staffing.py:189-245` (commit `039b8a48f9730334626dce917d4d068fd85fcc50`)
 [^4]: `https://www.scrum.org/resources/blog/monte-carlo-forecasting-scrum` (Scrum.org, “Monte Carlo forecasting in Scrum”)
 [^5]: `https://www.scrum.org/resources/blog/throughput-driven-sprint-planning` (Scrum.org, “Throughput-Driven Sprint Planning”)
 [^6]: `https://blog.leadingedje.com/post/agileforecasting/caseforit.html` (LeadingEDJE, “Agile Forecasting: Monte Carlo Simulations and Flow Metrics”)
-[^7]: `/Users/joaper/Devel/mcprojsim/docs/user_guide/task_estimation.md:9-35` and `/Users/joaper/Devel/mcprojsim/src/mcprojsim/models/project.py:40-145` (commit `039b8a48f9730334626dce917d4d068fd85fcc50`)
-[^8]: `/Users/joaper/Devel/mcprojsim/src/mcprojsim/simulation/engine.py:260-458` (commit `039b8a48f9730334626dce917d4d068fd85fcc50`)
-[^9]: `/Users/joaper/Devel/mcprojsim/src/mcprojsim/analysis/statistics.py:8-67` and `/Users/joaper/Devel/mcprojsim/src/mcprojsim/models/simulation.py:236-247` (commit `039b8a48f9730334626dce917d4d068fd85fcc50`)
-[^10]: `/Users/joaper/Devel/mcprojsim/src/mcprojsim/simulation/scheduler.py:12-31` and `/Users/joaper/Devel/mcprojsim/src/mcprojsim/simulation/scheduler.py:141-257` (commit `039b8a48f9730334626dce917d4d068fd85fcc50`)
-[^11]: `/Users/joaper/Devel/mcprojsim/docs/user_guide/constrained.md:3-23` and `/Users/joaper/Devel/mcprojsim/docs/user_guide/constrained.md:26-35` (commit `039b8a48f9730334626dce917d4d068fd85fcc50`)
 [^12]: `https://scrumguides.org/scrum-guide.html` (The Scrum Guide, section “The Sprint”)
 [^13]: `https://www.atlassian.com/agile/project-management/velocity-scrum` (Atlassian, “Velocity in Scrum”)
 ---
