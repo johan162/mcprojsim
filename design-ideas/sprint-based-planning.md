@@ -1,4 +1,4 @@
-# Sprint-Based Planning for `mcprojsim`: Research and Design Proposal
+# Sprint-Based Planning: Design Proposal
 
 ## Executive Summary
 

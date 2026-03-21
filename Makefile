@@ -199,6 +199,7 @@ SPRINT_PLANNING_MD := $(DESIGN_IDEAS_DIR)/sprint-based-planning.md
 SPRINT_PLANNING_PDF := $(DESIGN_IDEAS_DIR)/sprint-based-planning.pdf
 SPRINT_PLANNING_DIST_DIR := $(BUILD_DIR)/design-ideas/sprint-based-planning
 SPRINT_PLANNING_TEMPLATE := $(DESIGN_IDEAS_DIR)/report_template.tex
+SPRINT_PLANNING_PANDOC_FILTER := scripts/pandoc_sprint_planning_table_widths.lua
 SPRINT_PLANNING_BODY_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_body.tex
 SPRINT_PLANNING_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.tex
 SPRINT_PLANNING_PDF_BUILT := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.pdf
@@ -498,11 +499,11 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  #
 pdf-sprint-planning: $(SPRINT_PLANNING_PDF) ## Build the sprint-based planning design PDF
 	@:
 
-$(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(SPRINT_PLANNING_TEMPLATE)
+$(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(SPRINT_PLANNING_TEMPLATE) $(SPRINT_PLANNING_PANDOC_FILTER)
 	@echo -e "$(DARKYELLOW)- Building sprint-based planning PDF via LaTeX report pipeline...$(NC)"
 	@mkdir -p $(SPRINT_PLANNING_DIST_DIR)
 	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(SPRINT_PLANNING_MD) -o $(SPRINT_PLANNING_BODY_TEX)
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER) $(SPRINT_PLANNING_MD) -o $(SPRINT_PLANNING_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(SPRINT_PLANNING_BODY_TEX)
 	@rm -f $(SPRINT_PLANNING_BODY_TEX).bak
 	@echo -e "$(DARKYELLOW)  - Injecting body into design-ideas LaTeX template...$(NC)"
