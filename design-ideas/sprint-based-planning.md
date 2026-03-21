@@ -547,7 +547,9 @@ For example:
 - in story-point mode, resample from historical quadruples of completed story points, spillover story points, added story points, and removed story points per sprint;
 - in task mode, resample from historical quadruples of completed tasks, spillover tasks, added tasks, and removed tasks per sprint.
 
-If the user changes `sprint_length_weeks`, normalize history to **weekly outcome rates** first, then resample at the weekly level and aggregate to the configured sprint length. This keeps “whole weeks” meaningful and makes 1-week, 2-week, and 3-week sprint scenarios comparable.
+If the user changes `sprint_length_weeks`, the model should still treat the **sprint as the primary statistical entity**. A sprint has internal structure such as planning cadence, batching, review deadlines, and end-of-sprint completion effects, so breaking it into synthetic independent weeks is not fully representative. The preferred approach is therefore to resample whole sprint observations whenever same-length historical cadence is available.
+
+For mixed historical cadences or requested sprint lengths that do not appear in the history at all, the MVP can still fall back to **weekly outcome-rate normalization** as a compatibility mechanism. That fallback is useful, but it should be described explicitly as an approximation rather than as the ideal long-term method.
 
 Recommended normalization:
 
@@ -562,7 +564,7 @@ simulated_sprint_outcome(L weeks) = sum(sampled weekly_completed_1..L,
                                         sampled weekly_removed_1..L)
 ```
 
-This is statistically cleaner than pretending that historical 2-week sprint capacity can be reused unchanged for a future 3-week sprint.
+This fallback is better than pretending that historical 2-week sprint capacity can be reused unchanged for a future 3-week sprint, but it should not be mistaken for a fully faithful representation of sprint behavior.
 
 ### Treat spillover, scope-addition, and scope-removal as first-class historical signals
 
@@ -775,10 +777,12 @@ Good user-facing diagnostics would include:
 Sprints are fixed-length events in Scrum, but the chosen fixed length can differ between teams or scenarios. The safest implementation is:
 
 1. allow a configured `sprint_length_weeks` as a whole number;
-2. normalize historical sprint outcomes to weekly rates;
-3. aggregate sampled weekly rates back into sprint capacity for the chosen sprint length.
+2. prefer resampling whole historical sprint observations at the same cadence as the configured sprint length;
+3. if the requested cadence is not available in history, allow an MVP fallback that normalizes historical sprint outcomes to weekly rates and re-aggregates them to the chosen sprint length, with an explicit warning that this is an approximation.
 
-If enough history exists for multiple sprint lengths, a more advanced option is to segment history by sprint length and prefer same-length history before falling back to normalized weekly pooling. That would preserve cadence-specific effects while still supporting scenario analysis.
+If enough history exists for multiple sprint lengths, the better approach is to segment history by sprint length and prefer same-length history before falling back to weekly normalization. That preserves cadence-specific effects while still supporting scenario analysis.
+
+The preferred advanced extension after the MVP is to use **block bootstrap over whole sprint observations** rather than synthetic week-by-week recombination. That keeps the sprint intact as the forecasting entity and better preserves internal sprint structure.
 
 If the requested sprint length does not appear in the historical data at all, the system should still allow forecasting by falling back to weekly normalization and re-aggregation, but it should warn that the chosen cadence is being extrapolated from different historical sprint lengths.
 
@@ -977,10 +981,11 @@ To make the proposal implementable without further design gaps, the following de
 (completed_units, spillover_units, added_units, removed_units)
 ```
 
-- The sampler should apply per-row default filling before weekly normalization.
+- The sampler should apply per-row default filling before any resampling or fallback normalization.
 - The sampler should only holiday-normalize delivery-side quantities (`completed`, and optionally `spillover` if that interpretation is retained), while leaving `added` and `removed` as raw churn signals.
 - The sampler should expose both the sampled delivered-capacity component and the sampled churn components so downstream planning logic does not have to reverse-engineer them from a single scalar.
 - The sampler should also apply any matching `future_sprint_overrides` when simulating known future sprints.
+- The sampler should treat whole historical sprint rows as the primary resampling entity whenever same-length cadence data exists, and only use week-level normalization as an explicit fallback for mixed-cadence extrapolation.
 
 3. **Planner and engine behavior**
 
@@ -1027,7 +1032,8 @@ Most importantly, it answers the actual user problem:
 
 **Medium confidence**
 
-- Weekly normalization is the best way to support adjustable sprint lengths, but it may underrepresent ceremony/batching effects if a team has only ever worked in one sprint cadence.
+- Weekly normalization is a workable MVP fallback for adjustable sprint lengths, but it can underrepresent ceremony, batching, and end-of-sprint effects because a sprint is not well represented as a bag of independent weeks.
+- Treating the sprint as the primary entity and using block bootstrap over whole sprint observations is the preferred advanced extension when the product moves beyond the MVP baseline.
 - Task-count throughput mode is valuable, but only if tasks are roughly right-sized; some projects in `mcprojsim` may currently define tasks at too coarse a granularity for that to be reliable.
 - Historical added-work data tells us that scope churn exists, but if the project does not distinguish whether added work was also finished inside the same sprint, commitment guidance will remain conservative rather than exact.
 - Historical removed-work data is useful, but its forecast meaning depends on whether removal means genuine descoping or only replanning; the default should therefore remain conservative.
@@ -1094,9 +1100,13 @@ r̂_i = r_i
 
 Only delivery-side quantities are holiday-normalized. Added work and removed work remain raw churn signals because they represent planning change rather than available working time.
 
-## Weekly Normalization for Variable Sprint Lengths
+## Sprint-Entity Resampling and Mixed Sprint Lengths
 
-Historical rows may use different sprint lengths. To support scenario analysis over any configured whole-week sprint length, each normalized historical observation should be converted to weekly rates:
+Historical rows may use different sprint lengths. The preferred statistical stance is that the **sprint remains the primary observation unit**. A sprint has inherent internal structure, so it is not generally a good idea to break it up into independent synthetic weeks and assume the result is still representative.
+
+When the configured sprint length matches a historical cadence that already exists in the data, the model should therefore resample **whole normalized sprint rows** as complete entities.
+
+For mixed historical cadences, or when the configured sprint length does not appear in the available data, the MVP may still fall back to a weekly normalization approximation:
 
 ```text
 w^c_i = ĉ_i / L_i
@@ -1105,7 +1115,14 @@ w^a_i = â_i / L_i
 w^r_i = r̂_i / L_i
 ```
 
-For a simulated sprint length of `L` weeks, the model should then build a simulated sprint outcome by summing `L` sampled weekly observations. This preserves the whole-week interpretation while avoiding the mistake of reusing a two-week historical outcome unchanged for a three-week forecast.
+For a simulated sprint length of `L` weeks, that fallback builds a simulated sprint outcome by summing `L` sampled weekly observations. This is acceptable as an MVP baseline for cross-cadence extrapolation, but it should be documented as an approximation rather than as the preferred long-term model.
+
+The preferred advanced extension is **block bootstrap over whole sprint observations**. In the simplest form, that means:
+
+- resample whole sprint rows at the configured cadence whenever possible;
+- when history spans multiple cadences or adjacent operational regimes, resample cadence-specific blocks of whole sprint rows rather than synthetic week fragments.
+
+That approach better preserves ceremony effects, batching, within-sprint coupling, and end-of-sprint completion behavior.
 
 ##  Joint Empirical Bootstrap
 
@@ -1117,7 +1134,15 @@ If the normalized historical dataset has `n` usable rows, define:
 Y_i = (w^c_i, w^s_i, w^a_i, w^r_i)
 ```
 
-For each simulated future week `t`, draw an index:
+for the MVP fallback path, or equivalently:
+
+```text
+Z_i = (ĉ_i, ŝ_i, â_i, r̂_i, L_i)
+```
+
+for the preferred sprint-entity resampling path.
+
+For the MVP weekly fallback, for each simulated future week `t`, draw an index:
 
 ```text
 J_t ~ Uniform({1, 2, ..., n})
@@ -1129,7 +1154,9 @@ and use:
 (W^c_t, W^s_t, W^a_t, W^r_t) = Y_{J_t}
 ```
 
-This is the core statistical choice in the proposal. It preserves the observed dependence structure between good sprints, churn-heavy sprints, and low-delivery sprints. If high added scope historically coincides with high spillover and lower completion, the forecast should preserve that relationship instead of averaging it away.
+For the preferred sprint-entity path, draw a historical sprint row or block of rows that already matches the configured cadence and use that as the sampled future sprint outcome.
+
+This is the core statistical choice in the proposal. It preserves the observed dependence structure between good sprints, churn-heavy sprints, and low-delivery sprints. If high added scope historically coincides with high spillover and lower completion, the forecast should preserve that relationship instead of averaging it away. The main refinement is that, when possible, the preserved dependence structure should be attached to whole sprint entities rather than reconstructed from synthetic week fragments.
 
 ##  Derived Historical Ratios
 
@@ -1442,7 +1469,9 @@ The requirements below are grouped by configuration, simulation behavior, output
 - The system SHALL resample completed units, spillover units, added units, and removed units as a joint historical vector so that observed correlations between delivery, spillover, and scope churn are preserved.
 - The system SHALL support historical rows where any fields are absent by first normalizing all omitted fields to their neutral defaults before statistical processing.
 - The system SHALL distinguish delivery-capacity signals from churn signals when normalizing historical data, so that holiday/calendar adjustments do not directly rescale raw added-work or removed-work observations.
-- The system SHALL normalize history observations to per-week outcome rates and aggregate sampled weekly rates to match the configured sprint length, so that historical sprints of differing lengths can be used together.
+- The system SHALL treat the historical sprint as the primary resampling entity whenever the configured cadence is represented in the available history.
+- For mixed historical sprint lengths or requested cadences not represented in history, the MVP MAY fall back to per-week outcome-rate normalization and re-aggregation as an approximation.
+- The system MAY support a more advanced block-bootstrap extension over whole sprint observations or cadence-specific blocks as the preferred alternative to synthetic week-by-week recombination.
 - The system SHALL NOT default to using only the historical mean velocity as the sprint capacity; point-estimate forecasting SHALL NOT be the primary output.
 
 ### FR-SP-007: Historical Spillover Modeling
@@ -1658,7 +1687,7 @@ Primary files:
 
 Steps:
 
-1. Implement `SprintCapacitySampler` to normalize sparse historical rows, holiday-normalize delivery-side quantities, convert history to weekly rates, perform joint bootstrap resampling, and apply volatility overlay plus future sprint overrides.
+1. Implement `SprintCapacitySampler` to normalize sparse historical rows, holiday-normalize delivery-side quantities, resample whole sprint observations as the default entity when cadence matches are available, use weekly normalization only as a mixed-cadence fallback, perform joint bootstrap resampling, and apply volatility overlay plus future sprint overrides.
 2. Implement `SprintPlanner` to build the dependency-ready queue from existing task dependencies, apply deterministic pull order using priority then task ID, defer tasks that do not fit, account for execution spillover when enabled, and record explicit backlog adjustments for aggregate added/removed work.
 3. Implement `SprintSimulationEngine` to run iterations with the same random-seed semantics already used by `SimulationEngine` in `src/mcprojsim/simulation/engine.py`.
 4. Reuse ideas from `TaskScheduler` in `src/mcprojsim/simulation/scheduler.py` for deterministic dependency handling, but do not try to reuse the elapsed-time scheduler directly because the sprint planner is a different abstraction.
@@ -1749,7 +1778,7 @@ Primary files to extend:
 Steps:
 
 1. Add schema-validation tests for sparse history rows, duplicate `sprint_id`, mixed unit families, and invalid spillover configuration.
-2. Add sampler tests for holiday normalization, weekly normalization, and joint resampling behavior.
+2. Add sampler tests for holiday normalization, whole-sprint entity resampling, weekly-normalization fallback behavior, and joint resampling behavior.
 3. Add planner tests for deterministic pull order, deferral, execution spillover, and backlog-adjustment ledger behavior.
 4. Add results and export tests for sprint-count percentiles, planned-load guidance, and carryover diagnostics.
 5. Add CLI integration tests showing that sprint planning is optional and non-breaking.
@@ -1838,18 +1867,20 @@ Work:
 
 1. Implement sparse-row default filling.
 2. Implement holiday normalization for delivery-side quantities only.
-3. Implement weekly normalization for mixed sprint lengths.
-4. Implement joint bootstrap sampling of completed, spillover, added, and removed history.
-5. Implement historical diagnostics required by MVP:
+3. Treat same-cadence historical sprint rows as the primary sampling entity.
+4. Implement weekly normalization for mixed sprint lengths as the MVP fallback path, with a clear warning that it is an approximation.
+5. Implement joint bootstrap sampling of completed, spillover, added, and removed history.
+6. Implement historical diagnostics required by MVP:
   - descriptive statistics for each historical series
   - spillover, addition, and removal ratios
   - Pearson correlation coefficients across the historical series
-6. Exclude volatility overlay and future sprint overrides from this MVP sampler.
+7. Exclude volatility overlay and future sprint overrides from this MVP sampler.
 
 Exit criteria:
 
 - the sampler produces deterministic outputs for a fixed seed;
-- weekly normalization works for mixed sprint lengths;
+- whole-sprint entity sampling works when same-cadence history exists;
+- weekly normalization fallback works for mixed sprint lengths;
 - the joint sample preserves row-level coupling by construction.
 
 ## MVP Step 3. Dependency-Aware Sprint Planner
