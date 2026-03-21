@@ -4,15 +4,15 @@
 
 `mcprojsim` already produces two important distributions per simulation run: elapsed project duration and total effort. It does that by sampling task uncertainty, applying multiplicative uncertainty factors and additive risks, then scheduling the resulting task durations through dependency-only or resource-constrained scheduling. A sprint-planning mode should therefore be added **alongside** the current engine, not as a replacement for it.
 
-The most suitable approach is an **empirical Monte Carlo sprint forecast** driven by historical team sprint outcomes, with two capacity modes: **story points per sprint** and **tasks/items per sprint**.[^4][^5][^6] Story-point mode is appropriate when the team already plans and measures in points; task-throughput mode is appropriate only when work items are right-sized and reasonably homogeneous, which is exactly the condition emphasized in throughput-driven sprint planning guidance.[^5]
+The most suitable approach is an **empirical Monte Carlo sprint forecast** driven by historical team sprint outcomes, with two capacity modes: **story points per sprint** and **tasks/items per sprint**. Story-point mode is appropriate when the team already plans and measures in points; task-throughput mode is appropriate only when work items are right-sized and reasonably homogeneous, which is exactly the condition emphasized in throughput-driven sprint planning guidance.
 
 The best way is to make a **dependency-aware sprint simulator** that repeatedly samples sprint capacity from historical data, but with each historical sprint treated as a joint outcome containing **completed work, spill-over work, mid-sprint added work, and mid-sprint removed work**. The simulator should pull a subset of ready tasks into each sprint, model scope added during the sprint, model work explicitly removed from the sprint after planning, carry unfinished work out of the sprint, and stop when all project tasks are complete. The output should be a distribution of **sprints-to-done** (P50/P80/P90), plus date projections, burn-up style percentile bands, commitment guidance for how much planned work to load into future sprints, and volatility diagnostics such as standard deviation and coefficient of variation, reusing the same style of summary statistics already used elsewhere in the product.
 
-The strongest design choice is to make the sprint-capacity model **empirical first** (bootstrap/resampling historical sprint outcomes) rather than parametric first (fit a Normal/Lognormal model to velocity). Scrum and agile forecasting guidance consistently emphasizes using observed variation instead of collapsing data to a single average, and the current product direction already aligns well with Monte Carlo-style sampling of uncertain work.[^4][^6]
+The strongest design choice is to make the sprint-capacity model **empirical first** (bootstrap/resampling historical sprint outcomes) rather than parametric first (fit a Normal/Lognormal model to velocity). Scrum and agile forecasting guidance consistently emphasizes using observed variation instead of collapsing data to a single average, and the current product direction already aligns well with Monte Carlo-style sampling of uncertain work.
 
 ## Query Type
 
-This is a **technical deep-dive / architecture proposal**: it asks how to add a new sprint-based forecasting mode to an existing Monte Carlo project simulation system, how to ground it in agile delivery practice, and how to represent uncertainty and volatility in a statistically sound way.[^4]
+This is a **technical deep-dive / architecture proposal**: it asks how to add a new sprint-based forecasting mode to an existing Monte Carlo project simulation system, how to ground it in agile delivery practice, and how to represent uncertainty and volatility in a statistically sound way.
 
 ## Current `mcprojsim` Architecture and Why It Matters
 
@@ -22,7 +22,7 @@ The engine also stores a per-iteration **effort distribution** by summing all ta
 
 `SimulationResults` already exposes mean, median, standard deviation, skewness, kurtosis, percentile lookup, and dictionary/export support for simulated outputs. That suggests the cleanest extension is to add a parallel result surface for sprint forecasts, rather than trying to coerce sprint metrics into the existing `durations` array.
 
-The staffing analyzer further reinforces that today’s model is fundamentally **effort + capacity => calendar time**, with team-size effects and communication overhead applied after simulation. Sprint planning is a different abstraction: it assumes a fixed sprint cadence and an empirically observed team delivery capacity per sprint, then asks how many sprint buckets are required to finish a backlog.[^4]
+The staffing analyzer further reinforces that today’s model is fundamentally **effort + capacity => calendar time**, with team-size effects and communication overhead applied after simulation. Sprint planning is a different abstraction: it assumes a fixed sprint cadence and an empirically observed team delivery capacity per sprint, then asks how many sprint buckets are required to finish a backlog.
 
 Finally, the current program already models dependencies, resource availability, holidays, planned absences, sickness, and practical caps on parallelism. A sprint-planning mode should respect task dependencies and can optionally adjust sampled sprint capacity for known future calendar effects.
 
@@ -49,24 +49,24 @@ Project tasks + sprint config + historical sprint outcomes
 
 ## External Research: What Agile Practice Suggests
 
-The Scrum Guide defines Sprints as fixed-length events of one month or less, and the entire framework is explicitly empirical: teams inspect outcomes and adapt based on what actually happened.[^12] That supports a sprint-planning feature whose primary inputs are **historical sprint outcomes** and a **fixed sprint length**.
+The Scrum Guide defines Sprints as fixed-length events of one month or less, and the entire framework is explicitly empirical: teams inspect outcomes and adapt based on what actually happened.[^4] That supports a sprint-planning feature whose primary inputs are **historical sprint outcomes** and a **fixed sprint length**.
 
-Atlassian’s velocity guidance describes sprint velocity as the amount of work a Scrum team completes in a sprint, usually in story points, and it explicitly says velocity should be based on **fully completed stories**, averaged across multiple sprints, while also noting that team size, experience, story complexity, and holidays affect it and that velocity is team-specific.[^13] That validates story-point-based sprint capacity as one supported mode, but it also highlights a key limitation: a simple average is not enough when capacity varies materially from sprint to sprint, when items spill out of the sprint, or when urgent work is added after sprint start.[^13]
+Atlassian’s velocity guidance describes sprint velocity as the amount of work a Scrum team completes in a sprint, usually in story points, and it explicitly says velocity should be based on **fully completed stories**, averaged across multiple sprints, while also noting that team size, experience, story complexity, and holidays affect it and that velocity is team-specific.[^5] That validates story-point-based sprint capacity as one supported mode, but it also highlights a key limitation: a simple average is not enough when capacity varies materially from sprint to sprint, when items spill out of the sprint, or when urgent work is added after sprint start.
 
-Scrum.org’s Monte Carlo forecasting article makes the crucial statistical point: using a single average burn rate discards variation, while Monte Carlo forecasting keeps the observed spread and yields a **range** of likely outcomes rather than a falsely precise point forecast.[^4] That is directly aligned with `mcprojsim`’s Monte Carlo philosophy and is the best argument against implementing sprint planning as “remaining backlog / average velocity”.[^4]
+Scrum.org’s Monte Carlo forecasting article makes the crucial statistical point: using a single average burn rate discards variation, while Monte Carlo forecasting keeps the observed spread and yields a **range** of likely outcomes rather than a falsely precise point forecast.[^1] That is directly aligned with `mcprojsim`’s Monte Carlo philosophy and is the best argument against implementing sprint planning as “remaining backlog / average velocity”.
 
-Scrum.org’s throughput-driven sprint planning article argues for using **throughput** (completed items per unit time) rather than story points when teams manage similarly sized work items, and it ties that to a Service Level Expectation (SLE) that helps determine whether items are “right-sized” for the workflow.[^5] This is the best support for a second capacity mode based on **tasks/items per sprint**, but it also implies a design constraint: item-throughput forecasting only works well when tasks are small enough and similarly sized enough to behave like comparable work items.[^5]
+Scrum.org’s throughput-driven sprint planning article argues for using **throughput** (completed items per unit time) rather than story points when teams manage similarly sized work items, and it ties that to a Service Level Expectation (SLE) that helps determine whether items are “right-sized” for the workflow.[^2] This is the best support for a second capacity mode based on **tasks/items per sprint**, but it also implies a design constraint: item-throughput forecasting only works well when tasks are small enough and similarly sized enough to behave like comparable work items.
 
-The LeadingEDJE agile forecasting write-up reinforces the same pattern: flow metrics and Monte Carlo simulation should be used to answer either “how many items by date?” or “when will this amount of work finish?”, using historical throughput or cycle-time data instead of deterministic plans.[^6] That maps almost exactly to the user request for “distribution of how many sprints it takes to complete the total effort to certain percentile.”[^6]
+The LeadingEDJE agile forecasting write-up reinforces the same pattern: flow metrics and Monte Carlo simulation should be used to answer either “how many items by date?” or “when will this amount of work finish?”, using historical throughput or cycle-time data instead of deterministic plans.[^3] That maps almost exactly to the user request for “distribution of how many sprints it takes to complete the total effort to certain percentile.”
 
 ## Compared Approaches
 
 | Approach | How it works | Strengths | Weaknesses | Verdict |
 |---|---|---|---|---|
-| Average velocity / average throughput | Divide remaining backlog by mean points-per-sprint or tasks-per-sprint | Very simple, easy to explain | Throws away variation; produces brittle point forecasts; weak under volatility[^4][^13] | Do **not** use as primary forecast |
-| Parametric capacity distribution | Fit a Normal/ Lognormal /Gamma/ Negative-Binomial model to capacity, then sample | Compact, smooth, supports extrapolation | Risk of fitting the wrong shape; fragile with small sample sizes; harder to explain to users[^4] | Optional advanced mode |
-| Empirical Monte Carlo resampling | Sample future sprint outcomes from observed historical sprint outcomes | Preserves real observed variation and churn coupling; easy to explain; aligned with the product’s Monte Carlo direction[^4][^6] | Needs enough history; can inherit historical regime bias | **Recommended default** |
-| Throughput + SLE flow forecasting | Forecast completed items using throughput and right-sized items | Works well for item flow; no story points required[^5][^6] | Only valid if items are small and comparable; weaker for uneven task sizes | Recommended for task-count mode |
+| Average velocity / average throughput | Divide remaining backlog by mean points-per-sprint or tasks-per-sprint | Very simple, easy to explain | Throws away variation; produces brittle point forecasts; weak under volatility | Do **not** use as primary forecast |
+| Parametric capacity distribution | Fit a Normal/ Lognormal /Gamma/ Negative-Binomial model to capacity, then sample | Compact, smooth, supports extrapolation | Risk of fitting the wrong shape; fragile with small sample sizes; harder to explain to users | Optional advanced mode |
+| Empirical Monte Carlo resampling | Sample future sprint outcomes from observed historical sprint outcomes | Preserves real observed variation and churn coupling; easy to explain; aligned with the product’s Monte Carlo direction | Needs enough history; can inherit historical regime bias | **Recommended default** |
+| Throughput + SLE flow forecasting | Forecast completed items using throughput and right-sized items | Works well for item flow; no story points required | Only valid if items are small and comparable; weaker for uneven task sizes | Recommended for task-count mode |
 | Dependency-aware sprint simulation | Resample capacity, but also only pull dependency-ready tasks into each sprint | Matches project-task structure; yields subset-of-tasks-per-sprint plan | More implementation work; needs priority policy | **Recommended core simulator** |
 
 ## Recommended Product Design
@@ -92,17 +92,20 @@ sprint_planning:
       holiday_factor: 0.8
       notes: "Public holiday sprint"
   history:
-    - sprint_length_weeks: 2
+    - sprint_id: "SPR-001"
+      sprint_length_weeks: 2
       completed_story_points: 23
       spillover_story_points: 5
       added_story_points: 3
       removed_story_points: 2
-    - sprint_length_weeks: 2
+    - sprint_id: "SPR-002"
+      sprint_length_weeks: 2
       completed_story_points: 19
       spillover_story_points: 8
       added_story_points: 6
       removed_story_points: 1
-    - sprint_length_weeks: 2
+    - sprint_id: "SPR-003"
+      sprint_length_weeks: 2
       completed_story_points: 26
       spillover_story_points: 2
       added_story_points: 1
@@ -116,11 +119,15 @@ sprint_planning:
     disruption_multiplier_high: 1.0
 ```
 
-The system should support sprint length adjustable in whole weeks and capacity configurable either as tasks-per-sprint or story-points-per-sprint, so those need to be first-class config choices.[^12][^13]
+The system should support sprint length adjustable in whole weeks and capacity configurable either as tasks-per-sprint or story-points-per-sprint, so those need to be first-class config choices.
 
 The extended historical fields for sprint churn should be optional in the input schema so teams can start with only completed work and then progressively add richer data. When omitted, `spillover_*`, `added_*`, and `removed_*` should default to `0` for that history row. This preserves backward compatibility for partially observed historical data while still rewarding teams that capture more detailed sprint outcomes.
 
-More generally, every field in a historical sprint row should be omittable and should fall back to a neutral, non-impacting default. This makes it possible to use partially observed historical data without forcing teams to backfill every sprint attribute before they can benefit from the model.
+Each historical sprint row should be identified by a mandatory `sprint_id` field. `sprint_id` is the stable key for storing, validating, and reporting a specific historical sprint record. By contrast, `end_date` should become optional metadata that can be used for reporting, chronology hints, or later segmentation, but it should no longer be the primary identifier for the row.
+
+Each historical sprint row should also declare its delivery unit family by specifying exactly one of `completed_story_points` or `completed_tasks`. That completed field anchors the interpretation of the rest of the row. If the row uses `completed_story_points`, then any spill-over, added, and removed values for that row should be expressed using the corresponding `*_story_points` fields. If the row uses `completed_tasks`, then the rest of the row should use the corresponding `*_tasks` fields. Mixed-unit rows should not be allowed, because they make the historical outcome vector ambiguous.
+
+More generally, every historical sprint field other than `sprint_id` should be omittable and should fall back to a neutral, non-impacting default. This makes it possible to use partially observed historical data without forcing teams to backfill every sprint attribute before they can benefit from the model.
 
 Future calendar adjustments should also be explicitly configurable rather than only described conceptually. The cleanest approach is to allow a `future_sprint_overrides` list in `SprintPlanningSpec`, where each override targets a known future sprint and applies a `holiday_factor` or equivalent capacity multiplier for that specific sprint. This closes the gap between historical interpretation and forward prediction.
 
@@ -149,7 +156,8 @@ sprint_planning:
       holiday_factor: 0.8
       notes: "Spring public holiday"
   history:
-    - end_date: "2026-01-16"
+    - sprint_id: "SPR-2026-01"
+      end_date: "2026-01-16"
       sprint_length_weeks: 2
       completed_story_points: 21
       spillover_story_points: 5
@@ -158,7 +166,8 @@ sprint_planning:
       team_size: 5
       holiday_factor: 1.0
       notes: "Normal sprint"
-    - end_date: "2026-01-30"
+    - sprint_id: "SPR-2026-02"
+      end_date: "2026-01-30"
       sprint_length_weeks: 2
       completed_story_points: 18
       spillover_story_points: 7
@@ -167,7 +176,8 @@ sprint_planning:
       team_size: 5
       holiday_factor: 0.9
       notes: "Production incident interrupted planned work"
-    - end_date: "2026-02-13"
+    - sprint_id: "SPR-2026-03"
+      end_date: "2026-02-13"
       sprint_length_weeks: 2
       completed_story_points: 24
       spillover_story_points: 2
@@ -226,9 +236,33 @@ tasks:
     dependencies: ["ui"]
 ```
 
+### Historical sprint data fields
+
+The following table summarizes the fields that can be used inside each `sprint_planning.history` entry:
+
+| Name of field | Mandatory | Description |
+|---|---|---|
+| `sprint_id` | Yes | Stable identifier for the historical sprint row. This is the primary key used to store, validate, and report the record. |
+| `sprint_length_weeks` | No | Sprint length for that historical observation. If omitted, it inherits from `sprint_planning.sprint_length_weeks`. |
+| `completed_story_points` | Conditionally mandatory | Story points fully completed within the sprint. Exactly one of `completed_story_points` or `completed_tasks` must be present in each history row. If this field is used, the row's spill-over, added, and removed values must use the `*_story_points` fields. |
+| `completed_tasks` | Conditionally mandatory | Tasks or items fully completed within the sprint. Exactly one of `completed_story_points` or `completed_tasks` must be present in each history row. If this field is used, the row's spill-over, added, and removed values must use the `*_tasks` fields. |
+| `spillover_story_points` | No | Story points that were started or planned but not finished by sprint end. Use this only when the row is anchored by `completed_story_points`. |
+| `spillover_tasks` | No | Tasks or items that spilled out of the sprint unfinished. Use this only when the row is anchored by `completed_tasks`. |
+| `added_story_points` | No | Story points added after sprint start because of scope churn or urgent demand. Use this only when the row is anchored by `completed_story_points`. |
+| `added_tasks` | No | Tasks or items added after sprint start because of scope churn or urgent demand. Use this only when the row is anchored by `completed_tasks`. |
+| `removed_story_points` | No | Story points explicitly removed from the sprint after sprint start. Use this only when the row is anchored by `completed_story_points`. |
+| `removed_tasks` | No | Tasks or items explicitly removed from the sprint after sprint start. Use this only when the row is anchored by `completed_tasks`. |
+| `holiday_factor` | No | Optional capacity-scaling metadata describing how much effective working time was available in that sprint relative to a normal sprint. |
+| `end_date` | No | Optional metadata recording when the sprint ended. Useful for reporting, chronology hints, and later analysis, but not for identifying the row. |
+| `team_size` | No | Optional metadata recording the team size for that sprint. Preserved for diagnostics and future analysis. |
+| `notes` | No | Optional free-text metadata for contextual notes about the sprint. |
+
 Field omission note:
 
-- Any historical sprint field may be omitted.
+- `sprint_id` is mandatory for every historical sprint row and has no default.
+- Exactly one of `completed_story_points` or `completed_tasks` must be present in every historical sprint row.
+- Once one completed-unit field is chosen for a row, any `spillover_*`, `added_*`, and `removed_*` values in that row must use the same unit family.
+- Any other historical sprint field may be omitted.
 - If `sprint_length_weeks` is omitted in a history row, it should default to the parent `sprint_planning.sprint_length_weeks`.
 - If `completed_*`, `spillover_*`, `added_*`, or `removed_*` is not present in a history row, it should be treated as `0` for that row.
 - If `removed_work_treatment` is omitted, it should default to `churn_only`.
@@ -241,14 +275,16 @@ Example sparse historical row with omitted fields:
 
 ```yaml
 history:
-  - completed_story_points: 20
+  - sprint_id: "SPR-2026-01"
+    completed_story_points: 20
 ```
 
 This sparse row should be interpreted as if it had been written as:
 
 ```yaml
 history:
-  - sprint_length_weeks: 2          # inherited from sprint_planning.sprint_length_weeks
+  - sprint_id: "SPR-2026-01"
+    sprint_length_weeks: 2          # inherited from sprint_planning.sprint_length_weeks
     completed_story_points: 20
     spillover_story_points: 0
     added_story_points: 0
@@ -329,11 +365,11 @@ Those are not the same phenomenon and should not be merged statistically.
 
 ### 2. Support two planning units, but keep them separate
 
-**Story-point mode** should use observed historical **completed story points**, **spill-over story points**, **added story points**, and **removed story points** per sprint, and should consume backlog in story points.[^13] This is appropriate when the team already estimates backlog items in story points.
+**Story-point mode** should use observed historical **completed story points**, **spill-over story points**, **added story points**, and **removed story points** per sprint, and should consume backlog in story points. This is appropriate when the team already estimates backlog items in story points.
 
-**Task mode** should use observed historical **completed tasks/items**, **spill-over tasks/items**, **added tasks/items**, and **removed tasks/items** per sprint, and should consume backlog in units of task-count.[^5] This is appropriate only when the project tasks represent right-sized backlog items rather than large epics; otherwise the forecast will be misleading because one “task” may be far larger than another.[^5]
+**Task mode** should use observed historical **completed tasks/items**, **spill-over tasks/items**, **added tasks/items**, and **removed tasks/items** per sprint, and should consume backlog in units of task-count. This is appropriate only when the project tasks represent right-sized backlog items rather than large epics; otherwise the forecast will be misleading because one “task” may be far larger than another.
 
-The current estimate model already supports multiple sizing styles, but that does **not** mean hours-based task estimates can safely be converted into story points, because story points are a relative team-specific measure rather than a time unit.[^13] Therefore:
+The current estimate model already supports multiple sizing styles, but that does **not** mean hours-based task estimates can safely be converted into story points, because story points are a relative team-specific measure rather than a time unit. Therefore:
 
 - if `capacity_mode == "story_points"`, require each planned item to expose planning points explicitly, or require a separate `planning_story_points` field if the task’s duration estimate is not already story-point based;
 - if `capacity_mode == "tasks"`, count each eligible task as one item, but warn when item sizes are obviously heterogeneous.
@@ -353,18 +389,18 @@ Recommended per-iteration algorithm:
 7. Repeat until all tasks are done.
 8. Record the number of sprints and the sprint-end date.
 
-This produces a true distribution of **sprints-to-done**, rather than merely dividing a scalar backlog by scalar capacity.[^4][^6]
+This produces a true distribution of **sprints-to-done**, rather than merely dividing a scalar backlog by scalar capacity.
 
 ### 4. Make empirical resampling the default uncertainty model
 
-The default sprint-capacity generator should be **empirical bootstrap/resampling** from observed historical sprint outcomes, because that preserves actual volatility and avoids assuming a distribution shape the team may not have.[^4][^6]
+The default sprint-capacity generator should be **empirical bootstrap/resampling** from observed historical sprint outcomes, because that preserves actual volatility and avoids assuming a distribution shape the team may not have.
 
 For example:
 
 - in story-point mode, resample from historical quadruples of completed story points, spill-over story points, added story points, and removed story points per sprint;
 - in task mode, resample from historical quadruples of completed tasks, spill-over tasks, added tasks, and removed tasks per sprint.
 
-If the user changes `sprint_length_weeks`, normalize history to **weekly outcome rates** first, then resample at the weekly level and aggregate to the configured sprint length. This keeps “whole weeks” meaningful and makes 1-week, 2-week, and 3-week sprint scenarios comparable.[^12]
+If the user changes `sprint_length_weeks`, normalize history to **weekly outcome rates** first, then resample at the weekly level and aggregate to the configured sprint length. This keeps “whole weeks” meaningful and makes 1-week, 2-week, and 3-week sprint scenarios comparable.
 
 Recommended normalization:
 
@@ -584,7 +620,7 @@ Good user-facing diagnostics would include:
 
 ## How to Handle Adjustable Sprint Lengths
 
-Sprints are fixed-length events in Scrum, but the chosen fixed length can differ between teams or scenarios.[^12] The safest implementation is:
+Sprints are fixed-length events in Scrum, but the chosen fixed length can differ between teams or scenarios. The safest implementation is:
 
 1. allow a configured `sprint_length_weeks` as a whole number;
 2. normalize historical sprint outcomes to weekly rates;
@@ -602,7 +638,7 @@ There are two distinct ways a task can fail to land in a sprint; they require di
 
 **Type 2: Execution-driven spill-over.** The task was pulled into the sprint, effort was expended against it, but the work was not completed by sprint end. This is a separate phenomenon: capacity is partially or fully consumed, yet no throughput credit is awarded. The task carries its remaining effort into the next sprint as a reduced-size item.
 
-Atlassian's velocity guidance says only **fully completed** stories count toward sprint velocity.[^13] Both types of carry-over are consistent with that rule: deferred tasks contribute zero to velocity with zero capacity cost; spilled tasks contribute zero to velocity but do carry a capacity cost.
+Atlassian's velocity guidance says only **fully completed** stories count toward sprint velocity. Both types of carry-over are consistent with that rule: deferred tasks contribute zero to velocity with zero capacity cost; spilled tasks contribute zero to velocity but do carry a capacity cost.
 
 The default for this feature should be **non-preemptive whole-item pull with execution-driven spill-over modeled separately** (see section 7):
 
@@ -617,7 +653,7 @@ The two mechanisms combine naturally in the per-iteration algorithm:
 3. If capacity would be exhausted before starting the full task, defer it without charging capacity.
 4. At sprint end, compute delivered throughput from fully completed tasks only.
 
-Diagnostics should record, per iteration, both the number of deferred tasks and the total remaining effort from spill-over events, so the aggregate carry-over distribution can be distinguished from capacity-driven deferral in reports.[^13]
+Diagnostics should record, per iteration, both the number of deferred tasks and the total remaining effort from spill-over events, so the aggregate carry-over distribution can be distinguished from capacity-driven deferral in reports.
 
 Historical spill-over, scope-addition, and scope-removal data should also shape how much work is intentionally loaded into the sprint in the first place. A planner that ignores these measures will systematically overcommit whenever the team has a history of churn or incomplete landings. The output should therefore include both:
 
@@ -643,7 +679,7 @@ Suggested fields:
 | Model | Fields |
 |---|---|
 | `SprintPlanningSpec` | `enabled`, `sprint_length_weeks`, `capacity_mode`, `history`, `uncertainty_mode`, `volatility_overlay`, `spillover_config`, `priority_mode`, `service_level_expectation_days`, `planning_confidence_level`, `removed_work_treatment`, `future_sprint_overrides` |
-| `SprintHistoryEntry` | `end_date?`, `sprint_length_weeks`, `completed_tasks?`, `completed_story_points?`, `spillover_tasks?`, `spillover_story_points?`, `added_tasks?`, `added_story_points?`, `removed_tasks?`, `removed_story_points?`, `team_size?`, `holiday_factor?`, `notes?` |
+| `SprintHistoryEntry` | `sprint_id`, `end_date?`, `sprint_length_weeks`, `completed_tasks?`, `completed_story_points?`, `spillover_tasks?`, `spillover_story_points?`, `added_tasks?`, `added_story_points?`, `removed_tasks?`, `removed_story_points?`, `team_size?`, `holiday_factor?`, `notes?` |
 | `FutureSprintOverrideSpec` | `sprint_number?`, `start_date?`, `holiday_factor?`, `capacity_multiplier?`, `notes?` |
 | `SprintVolatilitySpec` | `enabled`, `disruption_probability`, `multiplier_distribution` |
 | `SprintSpilloverSpec` | `enabled`, `model` (`table` or `logistic`), `size_reference_points`, `size_brackets`, `consumed_fraction_alpha`, `consumed_fraction_beta` |
@@ -652,15 +688,18 @@ Suggested fields:
 
 The new optional historical fields should be interpreted as follows:
 
+- `sprint_id`: mandatory stable identifier for the historical sprint row; used as the primary key for storage, validation, and reporting.
+- `completed_story_points` / `completed_tasks`: exactly one of these two fields must be present in each historical row, and that choice determines the unit family for the rest of the row.
 - `removed_story_points` / `removed_tasks`: work explicitly taken out of the sprint after sprint start;
 - `removed_work_treatment`: whether removed work only informs churn/commitment guidance or also reduces the remaining forecast backlog.
 - `holiday_factor`: the fraction of normal working availability in that sprint, used to distinguish reduced calendar availability from true planning or delivery instability.
-- `end_date`: optional metadata for chronological ordering, reporting, and potential later segmentation; not required for the MVP forecast math.
+- `end_date`: optional metadata for reporting, chronology hints, and potential later segmentation; not required for the MVP forecast math and not the primary key for the row.
 - `team_size`: optional metadata for diagnostics and future analysis; not used as a direct scaling input in the MVP forecast.
 - `future_sprint_overrides`: optional forward-looking calendar/capacity adjustments for specific known future sprints.
 
-All historical sprint-row fields should be optional per history row. Neutral defaults should be applied as follows:
+All historical sprint-row fields other than `sprint_id` should be optional per history row. Neutral defaults should be applied as follows:
 
+- `sprint_id` -> required, no default
 - `sprint_length_weeks` -> inherit from `SprintPlanningSpec.sprint_length_weeks`
 - `completed_*` -> `0`
 - `spillover_*` -> `0`
@@ -673,6 +712,9 @@ All historical sprint-row fields should be optional per history row. Neutral def
 
 An implementation-oriented schema defaulting rule should be stated explicitly:
 
+- every history row must include a non-empty `sprint_id`, and `sprint_id` values should be unique within the provided history list;
+- every history row must include exactly one of `completed_story_points` or `completed_tasks`;
+- once a row selects a completed-unit field, all `spillover_*`, `added_*`, and `removed_*` values in that row must use the same unit family;
 - every omitted history-row field should be normalized to its neutral default before statistical processing;
 - `sprint_length_weeks` inherits from the parent sprint-planning spec when omitted in a history row;
 - `completed_*`, `spillover_*`, `added_*`, and `removed_*` default to `0` per history row;
@@ -682,7 +724,7 @@ An implementation-oriented schema defaulting rule should be stated explicitly:
 
 ### Task-level additions
 
-If story-point sprint mode needs to coexist with time-based duration estimates, add a separate optional field such as `planning_story_points` on `Task`. That avoids conflating delivery forecasting units with time-estimation units.[^13]
+If story-point sprint mode needs to coexist with time-based duration estimates, add a separate optional field such as `planning_story_points` on `Task`. That avoids conflating delivery forecasting units with time-estimation units.
 
 Optional additions:
 
@@ -713,9 +755,9 @@ This keeps sprint planning modular and avoids destabilizing the current duration
 
 ### Do **not** force-fit what does not
 
-- Do not convert hours directly into story points.[^13]
+- Do not convert hours directly into story points.
 - Do not reuse critical-path elapsed duration as sprint count; sprint planning is a backlog-capacity forecast, not a path-length forecast.
-- Do not assume task-count throughput is valid unless items are right-sized.[^5]
+- Do not assume task-count throughput is valid unless items are right-sized.
 
 ## MVP vs. Follow-On Roadmap
 
@@ -749,15 +791,17 @@ To make the proposal implementable without further design gaps, the following de
 1. **Schema and validation behavior**
 
 - `SprintHistoryEntry` should accept sparse historical rows where churn fields are absent.
+- `SprintHistoryEntry` should require a non-empty `sprint_id` for every historical row and treat that field as the row's primary identifier.
+- `SprintHistoryEntry` should require exactly one of `completed_story_points` or `completed_tasks` in every historical row.
 - Validation should normalize every omitted history-row field to its neutral default before downstream statistical processing.
+- Validation should reject duplicate `sprint_id` values within the same history series.
+- Validation should reject history rows that mix task-based and story-point-based fields in the same row.
 - Validation should reject histories that do not contain at least two usable observations with positive delivery signal after defaulting and normalization.
 - Validation should reject mixed unit families within the same history series.
 
-`end_date` and `team_size` should be treated as metadata-only fields in the MVP. They may be stored and reported, but they should not silently alter capacity calculations unless a later design explicitly introduces that behavior.
+`end_date` and `team_size` should be treated as metadata-only fields in the MVP. They may be stored and reported, but they should not silently alter capacity calculations unless a later design explicitly introduces that behavior. `end_date` should no longer act as the primary identifier for a historical sprint row.
 
 2. **Sampler behavior**
-
-- `SprintCapacitySampler` should normalize historical rows into a canonical internal tuple:
 
 - `SprintCapacitySampler` should normalize historical rows into a canonical internal tuple:
 
@@ -791,7 +835,7 @@ These implementation notes do not change the design; they close the remaining sp
 
 ## Why This Is the Best-Fit Approach for `mcprojsim`
 
-This design fits the repository because it preserves the current Monte Carlo style, keeps the existing duration/effort outputs intact, and adds a parallel forecast for sprint cadence rather than trying to reinterpret the current duration arrays. It is also well grounded in agile practice: Sprints are fixed cadence, velocity/throughput should be based on completed work, and forecasts should reflect observed variation rather than a single mean.[^4][^5][^12][^13]
+This design fits the repository because it preserves the current Monte Carlo style, keeps the existing duration/effort outputs intact, and adds a parallel forecast for sprint cadence rather than trying to reinterpret the current duration arrays. It is also well grounded in agile practice: Sprints are fixed cadence, velocity/throughput should be based on completed work, and forecasts should reflect observed variation rather than a single mean.
 
 Most importantly, it answers the actual user problem:
 
@@ -801,20 +845,20 @@ Most importantly, it answers the actual user problem:
 - historical learning from work removed from the sprint after planning,
 - a statistically grounded recommendation for how much planned work should be loaded into future sprints,
 - explicit uncertainty and volatility handling,
-- and a percentile distribution for how many sprints it takes to finish the project.[^4][^5][^6]
+- and a percentile distribution for how many sprints it takes to finish the project.
 
 ## Confidence Assessment
 
 **High confidence**
 
 - `mcprojsim` is already structurally compatible with a sprint Monte Carlo extension because it already samples work stochastically, stores per-iteration outputs, and reports percentile/statistical summaries.
-- An empirical Monte Carlo sprint-capacity model is better founded than an average-velocity model, based on agile forecasting references.[^4][^6]
+- An empirical Monte Carlo sprint-capacity model is better founded than an average-velocity model, based on agile forecasting references.
 - A dependency-aware sprint pull planner is the right way to model “subset of tasks per sprint” in this design.
 
 **Medium confidence**
 
 - Weekly normalization is the best way to support adjustable sprint lengths, but it may underrepresent ceremony/batching effects if a team has only ever worked in one sprint cadence.
-- Task-count throughput mode is valuable, but only if tasks are roughly right-sized; some projects in `mcprojsim` may currently define tasks at too coarse a granularity for that to be reliable.[^5]
+- Task-count throughput mode is valuable, but only if tasks are roughly right-sized; some projects in `mcprojsim` may currently define tasks at too coarse a granularity for that to be reliable.
 - Historical added-work data tells us that scope churn exists, but if the project does not distinguish whether added work was also finished inside the same sprint, commitment guidance will remain conservative rather than exact.
 - Historical removed-work data is useful, but its forecast meaning depends on whether removal means genuine descoping or only replanning; the default should therefore remain conservative.
 
@@ -826,11 +870,11 @@ Most importantly, it answers the actual user problem:
 
 ## Footnotes
 
-[^4]: `https://www.scrum.org/resources/blog/monte-carlo-forecasting-scrum` (Scrum.org, “Monte Carlo forecasting in Scrum”)
-[^5]: `https://www.scrum.org/resources/blog/throughput-driven-sprint-planning` (Scrum.org, “Throughput-Driven Sprint Planning”)
-[^6]: `https://blog.leadingedje.com/post/agileforecasting/caseforit.html` (LeadingEDJE, “Agile Forecasting: Monte Carlo Simulations and Flow Metrics”)
-[^12]: `https://scrumguides.org/scrum-guide.html` (The Scrum Guide, section “The Sprint”)
-[^13]: `https://www.atlassian.com/agile/project-management/velocity-scrum` (Atlassian, “Velocity in Scrum”)
+[^1]: `https://www.scrum.org/resources/blog/monte-carlo-forecasting-scrum` (Scrum.org, “Monte Carlo forecasting in Scrum”)
+[^2]: `https://www.scrum.org/resources/blog/throughput-driven-sprint-planning` (Scrum.org, “Throughput-Driven Sprint Planning”)
+[^3]: `https://blog.leadingedje.com/post/agileforecasting/caseforit.html` (LeadingEDJE, “Agile Forecasting: Monte Carlo Simulations and Flow Metrics”)
+[^4]: `https://scrumguides.org/scrum-guide.html` (The Scrum Guide, section “The Sprint”)
+[^5]: `https://www.atlassian.com/agile/project-management/velocity-scrum` (Atlassian, “Velocity in Scrum”)
 ---
 
 ## Formal Requirements
@@ -854,13 +898,18 @@ Most importantly, it answers the actual user problem:
 
 ### FR-SP-004: Historical Sprint Outcome Input
 - The system SHALL accept a list of historical sprint outcome observations provided by the user in the project definition file.
-- Any field in a historical sprint outcome entry MAY be omitted.
+- Every historical sprint outcome entry SHALL include a `sprint_id` field that serves as the primary key for that historical sprint record.
+- Every historical sprint outcome entry SHALL include exactly one of `completed_story_points` or `completed_tasks`.
+- Any historical sprint outcome entry field other than `sprint_id` MAY be omitted.
 - In `story_points` mode, a history entry MAY provide `completed_story_points`, `spillover_story_points`, `added_story_points`, and `removed_story_points`.
 - In `tasks` mode, a history entry MAY provide `completed_tasks`, `spillover_tasks`, `added_tasks`, and `removed_tasks`.
+- When `completed_story_points` is used in a history entry, any spill-over, added, and removed values for that entry SHALL use the corresponding `*_story_points` fields.
+- When `completed_tasks` is used in a history entry, any spill-over, added, and removed values for that entry SHALL use the corresponding `*_tasks` fields.
 - When `sprint_length_weeks` is omitted from a history entry, the system SHALL default it to the parent `sprint_planning.sprint_length_weeks`.
 - When `completed_*`, `spillover_*`, `added_*`, or `removed_*` fields are omitted, the system SHALL treat the missing value as `0` for that sprint.
 - When `holiday_factor` is omitted, the system SHALL treat it as `1.0` for that sprint.
 - When `end_date`, `team_size`, or `notes` are omitted, the system SHALL treat them as null/ignored metadata values.
+- The system SHALL treat `end_date` as optional metadata and SHALL NOT require it in order to identify or store a historical sprint row.
 - The system SHALL require at least two historical observations before running a sprint simulation.
 - The system SHALL require at least two usable historical observations with positive delivery signal after defaulting and normalization before running a sprint simulation.
 
@@ -890,6 +939,7 @@ Most importantly, it answers the actual user problem:
 
 ### FR-SP-005D: Historical Metadata Treatment
 - The system SHALL treat `end_date`, `team_size`, and `notes` as metadata-only fields in the MVP sprint forecast unless a later feature explicitly enables them as model inputs.
+- The system SHALL treat `sprint_id` as the mandatory key for storing and referring to each historical sprint row, not as optional metadata.
 - Metadata-only fields MAY be preserved for reporting, ordering, filtering, or future analysis, but SHALL NOT silently change sprint-capacity calculations in the MVP design.
 
 ### FR-SP-006: Dependency-Aware Sprint Pull Simulation
@@ -952,6 +1002,9 @@ Most importantly, it answers the actual user problem:
 - The system SHALL validate that `sprint_length_weeks` is a positive integer.
 - The system SHALL validate that `capacity_mode` is one of the supported enumerated values.
 - The system SHALL validate that at least two historical sprint outcome entries are provided before accepting the sprint planning configuration.
+- The system SHALL validate that every historical sprint outcome entry includes a non-empty `sprint_id`.
+- The system SHALL validate that `sprint_id` values are unique within the provided historical sprint series.
+- The system SHALL validate that every historical sprint outcome entry includes exactly one of `completed_story_points` or `completed_tasks`.
 - The system SHALL validate that all historical `completed_*`, `spillover_*`, `added_*`, and `removed_*` values are non-negative.
 - The system SHALL validate that every historical row can be normalized by applying neutral defaults to omitted fields before downstream statistical processing.
 - The system SHALL validate that the history contains at least two usable observations with positive delivery signal after defaulting and normalization.
