@@ -462,8 +462,8 @@ $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) 
 ## Target that updates the version number in the LaTeX template for the user guide PDF generation
 update-version: ## Update the version number in the LaTeX template for the user guide PDF generation
 	@echo -e "$(DARKYELLOW)- Updating version number in LaTeX template...$(NC)"
-	@sed -i.bak -E 's/Monte Carlo Project Simulation, v[0-9.]+/Monte Carlo Project Simulation, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
-	@if grep -q "Monte Carlo Project Simulation, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
+	@sed -i.bak -E 's/\\texttt{mcprojsim}, v[0-9.]+/\\texttt{mcprojsim}, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
+	@if grep -q "\\\texttt{mcprojsim}, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
 		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template$(NC)"; \
