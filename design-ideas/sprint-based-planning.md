@@ -2345,28 +2345,4 @@ In a Bayesian framework, we would specify prior distributions for our parameters
 
 **Example code:**
 
-```python
-import pymc3 as pm
-import numpy as np
-# Assume we have historical data for T sprints
-T = 10
-N = np.array([5, 5, 5, 5, 5, 5, 5, 5, 5, 5])  # Team size
-C = np.array([20, 22, 18, 25, 24, 19, 21, 23, 20, 22])  # Completed stories
-with pm.Model() as model:
-    # Priors
-    lambda_0 = pm.Gamma('lambda_0', alpha=2, beta=2/20)  # Prior for initial velocity
-    sigma_lambda = pm.HalfNormal('sigma_lambda', 0.5)  # Volatility of velocity changes
-    
-    # Random walk for log-velocity
-    log_lambda = pm.GaussianRandomWalk('log_lambda', sigma=sigma_lambda, 
-        init_dist=pm.Normal.dist(0, 1), shape=T)
-    lambda_ = pm.Deterministic('lambda', pm.math.exp(log_lambda))
-    
-    # Likelihood
-    C_obs = pm.Poisson('C_obs', mu=lambda_ * N, observed=C)
-    
-    # Sample from the posterior
-    trace = pm.sample(2000, tune=1000, target_accept=0.9)
-```
-
 
