@@ -2346,6 +2346,5 @@ In a Bayesian framework, we would specify prior distributions for our parameters
 
 **Example code:**
 
-See: `design-ideas/bayssian_example_pred.py` for a full implementation of this approach.
-
+See: `design-ideas/baysian_example_pred.py` for a full implementation of this approach.
 
