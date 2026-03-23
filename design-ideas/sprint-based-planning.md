@@ -715,8 +715,8 @@ Both parameters belong to the Beta distribution used to sample `fraction_consume
 
 | Parameter | What it controls | Valid range | Default | Effect when increased (holding the other fixed) |
 |---|---|---|---|---|
-| `consumed_fraction _alpha` | Pulls the sampled consumed fraction toward `1.0` (more work finished before spillover) | `> 0` | `3.25` | Increases expected consumed fraction and generally reduces remainder size |
-| `consumed_fraction _beta` | Pulls the sampled consumed fraction toward `0.0` (less work finished before spillover) | `> 0` | `1.75` | Decreases expected consumed fraction and generally increases remainder size |
+| `consumed_fraction_alpha` | Pulls the sampled consumed fraction toward `1.0` (more work finished before spillover) | `> 0` | `3.25` | Increases expected consumed fraction and generally reduces remainder size |
+| `consumed_fraction_beta` | Pulls the sampled consumed fraction toward `0.0` (less work finished before spillover) | `> 0` | `1.75` | Decreases expected consumed fraction and generally increases remainder size |
 
 Useful identities for interpretation:
 
@@ -756,41 +756,41 @@ sprint_planning:
     consumed_fraction_beta: 1.75
 ```
 
-### Project-file parameter clarifications
+  ### Project-file parameter clarifications
 
-The following parameters appear in the project-file examples and are required to be interpreted consistently by implementations.
+  The following parameters appear in the project-file examples and are required to be interpreted consistently by implementations.
 
-| Parameter | Location | Meaning | Allowed values / constraints | Default when omitted |
-|---|---|---|---|---|
-| `uncertainty_ mode` | `sprint_planning` | Selects how sprint outcomes are sampled from history. | `"empirical"` for MVP (bootstrap/resampling of observed sprint outcomes). | `"empirical"` |
-| `planning _confidence _level` | `sprint _planning` | Confidence level used for planned-load guidance (not the core completion simulation iteration count). | Real number in `(0, 1)`, typically `0.50` to `0.95`. | `0.80` |
-| `removed_work _treatment` | `sprint _planning` | Controls whether removed scope only informs churn diagnostics, or also reduces remaining backlog in the forecast recursion. | `"churn_only"` or `"reduce_backlog"`. | `"churn_only"` |
-| `future_sprint _overrides` | `sprint_planning` | Optional list of known future sprint adjustments applied during forward simulation. | List of override objects. | No overrides |
-| `future_sprint _overrides[]. sprint_number` | override row | Target future sprint index (1-based) for the override. | Positive integer. Mutually exclusive with `start_date`. | `null` |
-| `future_sprint _overrides[]. start_date` | override row | Date-based target for an override when sprint number is not used. | ISO date string (`YYYY-MM-DD`). Mutually exclusive with `sprint_number`. | `null` |
-| `future_sprint _overrides[]. holiday_factor` | override row | Calendar-availability multiplier for that future sprint. | Real number `> 0`; typically `<= 1.0` for reduced availability. | `1.0` |
-| `future_sprint _overrides[]. capacity_multiplier` | override row | Explicit capacity multiplier for that future sprint, applied to sampled nominal sprint capacity. | Real number `> 0`. If both this and `holiday_factor` are present, multiply them. | `1.0` |
-| `volatility _overlay. enabled` | `sprint _planning. volatility_overlay` | Enables stochastic sprint-level disruption on top of empirical sampling. | Boolean. | `false` |
-| `volatility _overlay. disruption _probability` | `sprint _planning. volatility_overlay` | Probability that a sprint receives a disruption multiplier draw. | Real number in `[0, 1]`. | `0.0` |
-| `volatility _overlay. disruption _multiplier _low` | `sprint _planning. volatility_overlay` | Lower bound for disruption multiplier sampling. | Real number `> 0`; with MVP disruption semantics: `low <= expected <= high <= 1.0`. | `1.0` |
-| `volatility _overlay. disruption _multiplier _expected` | `sprint _planning. volatility_overlay` | Most likely disruption multiplier value (mode). | Real number `> 0`; ordered between `low` and `high`. | `1.0` |
-| `volatility _overlay. disruption _multiplier _high` | `sprint _planning. volatility_overlay` | Upper bound for disruption multiplier sampling. | Real number `> 0`; with MVP disruption semantics typically `<= 1.0`. | `1.0` |
-| `spillover.enabled` | `sprint _planning. spillover` | Enables task-level execution spillover modeling. | Boolean. | `false` |
-| `spillover.model` | `sprint _planning. spillover` | Spillover-probability function family. | `"table"` or `"logistic"`. | `"table"` |
-| `spillover.size_ reference_points` | `sprint _planning. spillover` | Reference size used by logistic model (`ref_size` in the formula). | Real number `> 0`. | `5` |
-| `spillover. size_brackets` | `sprint _planning. spillover` | Ordered piecewise probability definition used by table model. | Ascending `max_points` thresholds; final catch-all may use `null`. Each `probability` in `[0,1]`. | Built-in default brackets (2, 5, 8, null) with probabilities (0.05, 0.12, 0.25, 0.40) |
-| `spillover. size_brackets[]. max_points` | bracket row | Upper size bound included in the bracket. | Positive number or `null` for unbounded final bracket. | n/a |
-| `spillover. size_brackets[]. probability` | bracket row | Spillover probability for tasks in that bracket. | Real number in `[0, 1]`. | n/a |
-| `spillover. consumed _fraction _alpha` | `sprint _planning. spillover` | Beta-shape parameter pulling consumed fraction toward `1.0`. | Real number `> 0`. | `3.25` |
-| `spillover. consumed _fraction _beta` | `sprint _planning. spillover` | Beta-shape parameter pulling consumed fraction toward `0.0`. | Real number `> 0`. | `1.75` |
+  | Parameter | Location | Meaning | Allowed values / constraints | Default when omitted |
+  |---|---|---|---|---|
+  | `uncertainty_mode` | `sprint_planning` | Selects how sprint outcomes are sampled from history. | `"empirical"` for MVP (bootstrap/resampling of observed sprint outcomes). | `"empirical"` |
+  | `planning_confidence_level` | `sprint_planning` | Confidence level used for planned-load guidance (not the core completion simulation iteration count). | Real number in `(0, 1)`, typically `0.50` to `0.95`. | `0.80` |
+  | `removed_work_treatment` | `sprint_planning` | Controls whether removed scope only informs churn diagnostics, or also reduces remaining backlog in the forecast recursion. | `"churn_only"` or `"reduce_backlog"`. | `"churn_only"` |
+  | `future_sprint_overrides` | `sprint_planning` | Optional list of known future sprint adjustments applied during forward simulation. | List of override objects. | No overrides |
+  | `future_sprint_overrides[].sprint_number` | override row | Target future sprint index (1-based) for the override. | Positive integer. Mutually exclusive with `start_date`. | `null` |
+  | `future_sprint_overrides[].start_date` | override row | Date-based target for an override when sprint number is not used. | ISO date string (`YYYY-MM-DD`). Mutually exclusive with `sprint_number`. | `null` |
+  | `future_sprint_overrides[].holiday_factor` | override row | Calendar-availability multiplier for that future sprint. | Real number `> 0`; typically `<= 1.0` for reduced availability. | `1.0` |
+  | `future_sprint_overrides[].capacity_multiplier` | override row | Explicit capacity multiplier for that future sprint, applied to sampled nominal sprint capacity. | Real number `> 0`. If both this and `holiday_factor` are present, multiply them. | `1.0` |
+  | `volatility_overlay.enabled` | `sprint_planning.volatility_overlay` | Enables stochastic sprint-level disruption on top of empirical sampling. | Boolean. | `false` |
+  | `volatility_overlay.disruption_probability` | `sprint_planning.volatility_overlay` | Probability that a sprint receives a disruption multiplier draw. | Real number in `[0, 1]`. | `0.0` |
+  | `volatility_overlay.disruption_multiplier_low` | `sprint_planning.volatility_overlay` | Lower bound for disruption multiplier sampling. | Real number `> 0`; with MVP disruption semantics: `low <= expected <= high <= 1.0`. | `1.0` |
+  | `volatility_overlay.disruption_multiplier_expected` | `sprint_planning.volatility_overlay` | Most likely disruption multiplier value (mode). | Real number `> 0`; ordered between `low` and `high`. | `1.0` |
+  | `volatility_overlay.disruption_multiplier_high` | `sprint_planning.volatility_overlay` | Upper bound for disruption multiplier sampling. | Real number `> 0`; with MVP disruption semantics typically `<= 1.0`. | `1.0` |
+  | `spillover.enabled` | `sprint_planning.spillover` | Enables task-level execution spillover modeling. | Boolean. | `false` |
+  | `spillover.model` | `sprint_planning.spillover` | Spillover-probability function family. | `"table"` or `"logistic"`. | `"table"` |
+  | `spillover.size_reference_points` | `sprint_planning.spillover` | Reference size used by logistic model (`ref_size` in the formula). | Real number `> 0`. | `5` |
+  | `spillover.size_brackets` | `sprint_planning.spillover` | Ordered piecewise probability definition used by table model. | Ascending `max_points` thresholds; final catch-all may use `null`. Each `probability` in `[0,1]`. | Built-in default brackets (2, 5, 8, null) with probabilities (0.05, 0.12, 0.25, 0.40) |
+  | `spillover.size_brackets[].max_points` | bracket row | Upper size bound included in the bracket. | Positive number or `null` for unbounded final bracket. | n/a |
+  | `spillover.size_brackets[].probability` | bracket row | Spillover probability for tasks in that bracket. | Real number in `[0, 1]`. | n/a |
+  | `spillover.consumed_fraction_alpha` | `sprint_planning.spillover` | Beta-shape parameter pulling consumed fraction toward `1.0`. | Real number `> 0`. | `3.25` |
+  | `spillover.consumed_fraction_beta` | `sprint_planning.spillover` | Beta-shape parameter pulling consumed fraction toward `0.0`. | Real number `> 0`. | `1.75` |
 
-**Interpretation notes:**
+  Interpretation notes:
 
-- `planning_confidence _level` affects commitment guidance (how much to plan into a future sprint), while completion-date forecasting still comes from full Monte Carlo recursion.
-- `removed_work _treatment = "churn_only"` keeps removed work out of backlog shrinkage; `"reduce_backlog"` treats removed work as real backlog reduction in the forecast recursion.
-- For `future_sprint _overrides`, exactly one targeting key should be provided per row: `sprint_number` or `start_date`.
-- When `volatility_overlay. enabled = false`, the effective disruption multiplier is `1.0`.
-- In `spillover.model = "table"`, `size_reference _points` is ignored; in `spillover.model = "logistic"`, `size_brackets` is ignored.
+  - `planning_confidence_level` affects commitment guidance (how much to plan into a future sprint), while completion-date forecasting still comes from full Monte Carlo recursion.
+  - `removed_work_treatment = "churn_only"` keeps removed work out of backlog shrinkage; `"reduce_backlog"` treats removed work as real backlog reduction in the forecast recursion.
+  - For `future_sprint_overrides`, exactly one targeting key should be provided per row: `sprint_number` or `start_date`.
+  - When `volatility_overlay.enabled = false`, the effective disruption multiplier is `1.0`.
+  - In `spillover.model = "table"`, `size_reference_points` is ignored; in `spillover.model = "logistic"`, `size_brackets` is ignored.
 
 ## Measuring Uncertainty and Volatility
 
@@ -2322,9 +2322,10 @@ We can set up the likelihood function based on our model and then use optimizati
 import numpy as np
 from scipy.optimize import minimize
 # Assume we have historical data for T sprints
-T = 10
-N = np.array([5, 5, 5, 5, 5, 5, 5, 5, 5, 5])  # Team size
-C = np.array([20, 22, 18, 25, 24, 19, 21, 23, 20, 22])  # Completed stories
+T = 24
+N = np.array([5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5])  # Team size
+M = np.array([105,68,84,93,102,90,63,67,80,39,66,48,74,87,67,92,87,53,97,94,146,104,111,129])  # Commited story points
+C = np.array([85,63,73,81,92,46,65,31,82,49,86,25,71,71,86,96,55,44,90,46,91,67,46,111])  # Completed story points
 def negative_log_likelihood(params):
     lambda_0, sigma_lambda = params
     # Here we would compute the likelihood of the observed data given the parameters
@@ -2341,8 +2342,32 @@ estimated_lambda_0, estimated_sigma_lambda = result.x
 
 ### Using Bayesian inference to estimate the parameters
 
-In a Bayesian framework, we would specify prior distributions for our parameters based on domain knowledge or previous data. We would then use the observed historical sprint data to update these priors and obtain posterior distributions for the parameters. This can be done using MCMC sampling methods, which allow us to draw samples from the posterior distribution even when it is complex and does not have a closed-form solution. For example, we could use the `PyMC3` library in Python to set up our model and perform MCMC sampling to estimate the posterior distributions of our parameters. This approach provides a more complete understanding of the uncertainty in our parameter estimates and allows us to make probabilistic predictions about future sprints.
+In a Bayesian framework, we would specify prior distributions for our parameters based on domain knowledge or previous data. We would then use the observed historical sprint data to update these priors and obtain posterior distributions for the parameters. A full MCMC implementation is still reasonable for the richer state-space model above, but the example below is intentionally lighter weight: it uses a conjugate Gamma-Poisson model over a rolling historical window so it can run as-is with only NumPy. The result is still a probabilistic forecast for the next five sprints, including predictive intervals rather than only point estimates.
 
 **Example code:**
+
+```python
+import pymc3 as pm
+import numpy as np
+# Assume we have historical data for T sprints
+T = 10
+N = np.array([5, 5, 5, 5, 5, 5, 5, 5, 5, 5])  # Team size
+C = np.array([20, 22, 18, 25, 24, 19, 21, 23, 20, 22])  # Completed stories
+with pm.Model() as model:
+    # Priors
+    lambda_0 = pm.Gamma('lambda_0', alpha=2, beta=2/20)  # Prior for initial velocity
+    sigma_lambda = pm.HalfNormal('sigma_lambda', 0.5)  # Volatility of velocity changes
+    
+    # Random walk for log-velocity
+    log_lambda = pm.GaussianRandomWalk('log_lambda', sigma=sigma_lambda, 
+        init_dist=pm.Normal.dist(0, 1), shape=T)
+    lambda_ = pm.Deterministic('lambda', pm.math.exp(log_lambda))
+    
+    # Likelihood
+    C_obs = pm.Poisson('C_obs', mu=lambda_ * N, observed=C)
+    
+    # Sample from the posterior
+    trace = pm.sample(2000, tune=1000, target_accept=0.9)
+```
 
 
