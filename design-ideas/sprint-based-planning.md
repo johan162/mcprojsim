@@ -2088,3 +2088,160 @@ This keeps the MCP server contract unchanged: it still returns a normal YAML pro
 - Mixed human phrasing such as `done`, `finished`, `carryover`, `rolled over`, and `scope added` normalizes to the canonical history fields.
 - Ambiguous free-form text is not silently misparsed as sprint-planning configuration.
 - Existing natural-language task, resource, and calendar parsing continues to work unchanged when no sprint-planning section is present.
+
+\newpage
+
+# Some considerations for using an MCMC model
+
+
+## The Generative Model
+
+**Core Insight**
+
+The sprint data has temporal dependencies and unobserved team capacity that varies sprint-to-sprint. A hierarchical Bayesian model with MCMC is perfect here.
+
+**Data Structure**
+
+For each sprint $t = 1, \dots, T$, we observe:
+
+- $N_t$: Team size (known)
+- $C_t$: Stories completed
+- $S_t$: Story points completed 
+- $O_t$: Stories spilled over
+- $A_t$: Stories added mid-sprint
+
+Latent Variables (What We're Inferring)
+
+- $\lambda_t$: True team velocity (stories/sprint capacity) — varies over time
+- $\phi_t$: Story complexity (average points per story)
+- $\rho_t$: Scope creep rate (tendency to add work)
+- $\sigma_t$: Spillover tendency (execution risk)
+
+
+## The Statistical Model
+
+**Level 1:** Sprint-Level Likelihoods
+
+Completed Stories:
+
+$$C_t \sim \text{Poisson}(\lambda_t \cdot N_t \cdot \eta_t)$$
+
+Where $\eta_t$ is sprint efficiency (could be fixed or modeled). The Poisson captures count uncertainty.
+Story Points (conditional on stories):
+
+$$S_t \mid C_t \sim \text{Gamma}\left(\alpha = C_t \cdot \phi_t, \beta = 1\right)$$
+
+Or equivalently: points per story $\sim \text{Exponential}(1/\phi_t)$
+Spilled Stories:
+
+$$O_t \sim \text{Binomial}(C_t + O_t, \pi_t)$$
+
+Where $\pi_t = \text{logit}^{-1}(\rho_t)$ is spillover probability. The "denominator" is committed work = completed + spilled.
+Added Stories:
+
+$$A_t \sim \text{Poisson}(\gamma_t \cdot C_t)$$
+
+Where $\gamma_t$ is the scope creep ratio relative to planned work.
+
+**Level 2:** Temporal Dynamics (The Markov Structure)
+
+This is where MCMC shines. Team capability evolves:
+
+$$\lambda_t = \lambda_{t-1} \cdot \epsilon_t^{\delta}, \quad \epsilon_t \sim \text{LogNormal}(0, \sigma_\lambda)$$
+
+Or in log-space (easier for sampling):
+
+$$\log \lambda_t \sim \text{Normal}(\log \lambda_{t-1}, \sigma_\lambda)$$
+
+Same structure for $\phi_t$, $\rho_t$, $\gamma_t$ — these form a multivariate random walk or vector autoregression to model correlations between capability metrics.
+
+**Level 3:** Hyperpriors
+
+- $\lambda_0 \sim \text{Gamma}(2, 2/\bar{\lambda}_{\text{empirical}})$
+- $\sigma_\lambda \sim \text{HalfNormal}(0.5)$
+- $\phi_0 \sim \text{Gamma}(3, 3/\bar{\phi}_{\text{empirical}})$
+- $\rho_0 \sim \text{Normal}(0, 1)$  (logit scale)
+- $\gamma_0 \sim \text{HalfNormal}(0.3)$
+
+
+## MCMC Implementation Strategy
+
+Why This Fits MCMC
+
+1. Non-conjugate priors: The logit link for spillover and the random walk structure make Gibbs sampling hard
+2. Correlated posteriors: $\lambda_t$ and $\lambda_{t+1}$ are strongly coupled — Hamiltonian Monte Carlo (HMC) handles this beautifully
+3. Latent variable inference: We never observe "true velocity," only noisy completions
+
+Sampling Approach
+
+Use PyMC or Stan:
+
+```python
+# Pseudo-code structure
+with pm.Model() as sprint_model:
+    # Hyperpriors
+    sigma_lambda = pm.HalfNormal('sigma_lambda', 0.5)
+   
+    # Random walk for log-velocity
+    log_lambda = pm.GaussianRandomWalk(
+        'log_lambda',
+        sigma=sigma_lambda,
+        init_dist=pm.Normal.dist(0, 1),
+        shape=n_sprints
+    )
+    lambda_ = pm.Deterministic('lambda', pm.math.exp(log_lambda))
+   
+    # Similar for phi, rho, gamma...
+   
+    # Likelihoods
+    pm.Poisson('completed', mu=lambda_ * team_size * efficiency, observed=completed)
+   
+    # Spillover: need to model committed = completed + spilled
+    committed = completed + spilled
+    pm.Binomial('spilled', n=committed, p=pm.math.invlogit(rho), observed=spilled)
+   
+    # Posterior predictive for future sprints...
+   
+    trace = pm.sample(2000, tune=1000, target_accept=0.9)
+```
+
+
+## Prediction: Rolling Forward
+
+To predict sprint T+1:
+
+1. Sample $\lambda_{T+1} \sim \text{LogNormal}(\log \lambda_T, \sigma_\lambda)$ from posterior
+2. Generate $C_{T+1} \sim \text{Poisson}(\lambda_{T+1} \cdot N_{T+1})$
+3. Generate $O_{T+1}$, $A_{T+1}$, $S_{T+1}$ from their respective distributions
+
+This gives full predictive distributions, not just point estimates — crucial for sprint planning (e.g., "80% credible interval for completion is 12-18 stories").
+
+
+## Model Extensions
+
+### Extension Implementation
+
+Team changes Add $N_t$ as multiplier, or model onboarding lag
+Sprint length variation Include duration $D_t$ as offset: $\lambda_t \cdot D_t$
+Epic/story type Hierarchical model: $\lambda_t^{(type)}$ with shared hyperpriors
+Seasonality Add Fourier terms or sprint-of-quarter indicators
+Overdispersion Replace Poisson with Negative Binomial
+
+
+### Validation Strategy
+
+1. Posterior predictive checks: Simulate historical sprints, compare to actual
+2. Leave-future-out validation: Train on sprints $1 \dots T-k$, predict $T-k+1 \dots T$, compare to actual
+3. Calibration: Are 80% credible intervals actually containing 80% of outcomes?
+
+
+## Key Advantage of This Approach
+
+Traditional velocity forecasting uses rolling averages — this throws away uncertainty and temporal structure. The MCMC model:
+
+- Propagates uncertainty through the entire prediction
+- Adapts to trend changes (improving/declining team)
+- Quantifies risk (spillover probability, scope creep)
+- Incorporates structural knowledge (team size effects, story point distributions)
+
+
