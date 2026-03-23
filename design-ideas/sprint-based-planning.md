@@ -1690,9 +1690,6 @@ Steps:
 3. Add task-level fields needed by the design, most likely `planning_story_points`, `priority`, and `spillover_probability_override`, on the existing `Task` model.
 4. Keep duration-estimation fields and sprint-planning fields separate. The existing `TaskEstimate.story_points` currently maps symbolic estimates to time via config, so sprint planning should not overload that field with backlog-planning semantics.
 5. Add project-level defaults that belong in configuration, such as the documented planning confidence default, to `src/mcprojsim/config.py` rather than hardcoding them in multiple runtime components.
-
-Post-MVP extension:
-
 6. Extend `SprintPlanningSpec.history` so it can also hold a `SprintHistorySourceSpec` with `format` and `path` for external CSV or JSON history files.
 
 Verification:
