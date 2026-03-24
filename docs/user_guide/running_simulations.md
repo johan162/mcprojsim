@@ -137,6 +137,9 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-m`, `--minimal` | Show minimal console output: version, project overview, calendar/effort statistical summaries, and calendar confidence intervals only | off |
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
+| `--distribution MODEL` | Override the default task duration distribution (`triangular` or `lognormal`). Takes precedence over the project-level `distribution` setting but **not** over a `distribution` set on an individual task. | project file setting |
+| `--velocity-model MODEL` | Override the sprint planning velocity model (`empirical` or `neg_binomial`). Applies only when sprint planning is enabled in the project file. | project file setting |
+| `--no-sickness` | Disable sickness modelling regardless of the project file setting. Applies only when sprint planning is enabled. | off |
 
 ### Examples
 
@@ -176,6 +179,15 @@ mcprojsim simulate project.yaml --staffing
 
 # Staffing with table formatting
 mcprojsim simulate project.yaml --staffing --table
+
+# Override default distribution to lognormal (tasks with an explicit distribution are unaffected)
+mcprojsim simulate project.yaml --distribution lognormal
+
+# Sprint planning: switch velocity model to negative binomial
+mcprojsim simulate sprint_project.yaml --velocity-model neg_binomial
+
+# Sprint planning: disable sickness modelling
+mcprojsim simulate sprint_project.yaml --no-sickness
 ```
 
 ### Output

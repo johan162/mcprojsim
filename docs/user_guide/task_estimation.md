@@ -162,6 +162,50 @@ estimate:
   unit: "days"
 ```
 
+### Distribution precedence
+
+The distribution used for a task is resolved in this order, from highest to lowest priority:
+
+1. **Per-task `distribution` field** — set directly on a task's `estimate` block. Always takes precedence.
+2. **`--distribution` CLI flag** — overrides the project-level default for any task that does not set its own distribution. Tasks with an explicit `distribution` are unaffected.
+3. **Project-level `distribution` field** — set under `project:` in the project file. Acts as the default for all tasks in that project.
+4. **Built-in default** — `triangular` when nothing else is specified.
+
+This means you can set `distribution: lognormal` once at the project level and get log-normal sampling for every task without touching each individual task, while still overriding specific tasks back to `triangular` (or another distribution) where needed.
+
+**Example — project-wide lognormal with one triangular override:**
+
+```yaml
+project:
+  name: "Research Project"
+  start_date: "2026-04-01"
+  distribution: "lognormal"          # all tasks default to lognormal
+
+tasks:
+  - id: "task_001"
+    name: "Write specification"
+    estimate:                         # inherits lognormal from project
+      low: 1
+      expected: 3
+      high: 8
+      unit: "days"
+
+  - id: "task_002"
+    name: "Set up CI pipeline"
+    estimate:
+      distribution: "triangular"     # overrides project default for this task only
+      low: 0.5
+      expected: 1
+      high: 2
+      unit: "days"
+```
+
+You can also apply the override from the command line without editing the file:
+
+```bash
+mcprojsim simulate research_project.yaml --distribution lognormal
+```
+
 ### Log-normal distribution
 
 The log-normal distribution is an alternative that produces a right-skewed,
