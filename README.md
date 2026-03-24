@@ -44,6 +44,7 @@ It is intended for teams that want answers such as:
 - **Probability-of-date** — calculate the likelihood of finishing by a given target date (`--target-date`)
 - **Staffing analysis** — Brooks's Law–aware team-size recommendations for multiple experience profiles (`--staffing`)
 - **ASCII table output** — optional `--table` flag formats CLI results as bordered tables for easier reading
+- **Sprint planning** — Monte Carlo sprint forecasting with empirical or Negative Binomial velocity models, sickness modelling, item spillover, and historical metrics import (CSV or JSON)
 - Reproducible runs with explicit random seeds
 
 ## Recommended installation
@@ -119,6 +120,7 @@ Use the local document that matches your goal:
 - [docs/user_guide/your_first_project.md](docs/user_guide/your_first_project.md) — build a project file step by step
 - [docs/user_guide/project_files.md](docs/user_guide/project_files.md) — project file reference
 - [docs/user_guide/constrained.md](docs/user_guide/constrained.md) — resource/calendar-constrained scheduling, assignment behavior, and diagnostics
+- [docs/user_guide/sprint_planning.md](docs/user_guide/sprint_planning.md) — sprint planning, velocity models, sickness, and historical metric import
 - [docs/configuration.md](docs/configuration.md) — uncertainty factors and runtime configuration
 - [docs/examples.md](docs/examples.md) — example projects and usage patterns
 - [docs/api_reference.md](docs/api_reference.md) — Python API usage
@@ -154,6 +156,9 @@ mcprojsim simulate examples/sample_project.yaml --target-date 2026-06-01
 
 # Combine options
 mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml --table --verbose --seed 42
+
+# Sprint planning with negative binomial velocity model and sickness modelling
+mcprojsim simulate examples/sprint_nb_sickness_large.yaml --seed 42 --velocity-model neg_binomial
 ```
 
 ## MCP server integration
