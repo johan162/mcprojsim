@@ -1,0 +1,60 @@
+project:
+  name: "Sprint Planning Tasks Mode"
+  start_date: "2026-05-04"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Bug fix A"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_002"
+    name: "Bug fix B"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_003"
+    name: "Bug fix C"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_004"
+    name: "Bug fix D"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_005"
+    name: "Bug fix E"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_006"
+    name: "Bug fix F"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 1
+  capacity_mode: tasks
+  planning_confidence_level: 0.8
+  history:
+    - sprint_id: "SPR-001"
+      completed_tasks: 4
+      spillover_tasks: 1
+    - sprint_id: "SPR-002"
+      completed_tasks: 5
+      spillover_tasks: 0
+      added_tasks: 1
+    - sprint_id: "SPR-003"
+      completed_tasks: 4
+      spillover_tasks: 1
+      removed_tasks: 1

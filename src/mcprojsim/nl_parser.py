@@ -90,6 +90,34 @@ class ParsedCalendar:
 
 
 @dataclass
+class ParsedSprintHistoryEntry:
+    """A historical sprint outcome extracted from natural language."""
+
+    sprint_id: str
+    completed_story_points: float | None = None
+    completed_tasks: int | None = None
+    spillover_story_points: float | None = None
+    spillover_tasks: int | None = None
+    added_story_points: float | None = None
+    added_tasks: int | None = None
+    removed_story_points: float | None = None
+    removed_tasks: int | None = None
+    holiday_factor: float | None = None
+
+
+@dataclass
+class ParsedSprintPlanning:
+    """Sprint planning configuration extracted from natural language."""
+
+    enabled: bool = True
+    sprint_length_weeks: int = 2
+    capacity_mode: str = "story_points"
+    planning_confidence_level: float | None = None
+    removed_work_treatment: str | None = None
+    history: list[ParsedSprintHistoryEntry] = field(default_factory=list)
+
+
+@dataclass
 class ParsedProject:
     """A project extracted from a natural language description."""
 
@@ -101,6 +129,7 @@ class ParsedProject:
     confidence_levels: list[int] = field(default_factory=lambda: [50, 80, 90, 95])
     resources: list[ParsedResource] = field(default_factory=list)
     calendars: list[ParsedCalendar] = field(default_factory=list)
+    sprint_planning: ParsedSprintPlanning | None = None
 
 
 class NLProjectParser:
@@ -132,6 +161,14 @@ class NLProjectParser:
 
     # -- Calendar header -------------------------------------------------------
     _CALENDAR_HEADER_RE = re.compile(r"calendar\s*[:.=]?\s*(.+)", re.IGNORECASE)
+    _SPRINT_PLANNING_HEADER_RE = re.compile(
+        r"sprint\s*planning\s*[:.=]?\s*(.*)",
+        re.IGNORECASE,
+    )
+    _SPRINT_HISTORY_HEADER_RE = re.compile(
+        r"sprint\s*history(?:\s+([^:]+))?\s*[:.=]?\s*(.*)",
+        re.IGNORECASE,
+    )
 
     # -- Task bullet patterns --------------------------------------------------
     _NAME_RE = re.compile(r"name\s*[:.=]?\s*(.+)", re.IGNORECASE)
@@ -188,6 +225,42 @@ class NLProjectParser:
     )
     _CAL_WORK_DAYS_RE = re.compile(r"work\s*days?\s*[:.=]?\s*([\d,\s]+)", re.IGNORECASE)
     _CAL_HOLIDAYS_RE = re.compile(r"holidays?\s*[:.=]?\s*(.+)", re.IGNORECASE)
+    _SPRINT_LENGTH_RE = re.compile(
+        r"sprint\s*length\s*(?:weeks?)?\s*[:.=]?\s*(\d+)",
+        re.IGNORECASE,
+    )
+    _CAPACITY_MODE_RE = re.compile(
+        r"capacity\s*mode\s*[:.=]?\s*(story\s*points?|tasks?)",
+        re.IGNORECASE,
+    )
+    _PLANNING_CONFIDENCE_RE = re.compile(
+        r"planning\s*confidence\s*(?:level)?\s*[:.=]?\s*([\d.]+%?)",
+        re.IGNORECASE,
+    )
+    _REMOVED_WORK_RE = re.compile(
+        r"removed\s*work\s*treatment\s*[:.=]?\s*(churn_only|reduce_backlog)",
+        re.IGNORECASE,
+    )
+    _HISTORY_COMPLETED_RE = re.compile(
+        r"(?:completed|done|finished|delivered)\s*[:.=]?\s*([\d.]+)(?:\s+(points?|story\s*points?|tasks?))?",
+        re.IGNORECASE,
+    )
+    _HISTORY_SPILLOVER_RE = re.compile(
+        r"(?:spillover|carryover|rolled\s*over)\s*[:.=]?\s*([\d.]+)(?:\s+(points?|story\s*points?|tasks?))?",
+        re.IGNORECASE,
+    )
+    _HISTORY_ADDED_RE = re.compile(
+        r"(?:added|scope\s*added)\s*[:.=]?\s*([\d.]+)(?:\s+(points?|story\s*points?|tasks?))?",
+        re.IGNORECASE,
+    )
+    _HISTORY_REMOVED_RE = re.compile(
+        r"(?:removed|scope\s*removed)\s*[:.=]?\s*([\d.]+)(?:\s+(points?|story\s*points?|tasks?))?",
+        re.IGNORECASE,
+    )
+    _HOLIDAY_FACTOR_RE = re.compile(
+        r"(?:holiday\s*factor|capacity\s*(?:was\s*)?)\s*[:.=]?\s*([\d.]+%?)",
+        re.IGNORECASE,
+    )
 
     # -- Public API ------------------------------------------------------------
 
@@ -213,9 +286,11 @@ class NLProjectParser:
         current_task: ParsedTask | None = None
         current_resource: ParsedResource | None = None
         current_calendar: ParsedCalendar | None = None
+        current_sprint_history: ParsedSprintHistoryEntry | None = None
+        in_sprint_planning = False
 
         def _flush_section() -> None:
-            nonlocal current_task, current_resource, current_calendar
+            nonlocal current_task, current_resource, current_calendar, current_sprint_history
             if current_task is not None:
                 project.tasks.append(current_task)
                 current_task = None
@@ -225,6 +300,11 @@ class NLProjectParser:
             if current_calendar is not None:
                 project.calendars.append(current_calendar)
                 current_calendar = None
+            if current_sprint_history is not None:
+                if project.sprint_planning is None:
+                    project.sprint_planning = ParsedSprintPlanning()
+                project.sprint_planning.history.append(current_sprint_history)
+                current_sprint_history = None
 
         for raw_line in lines:
             line = raw_line.strip()
@@ -245,6 +325,7 @@ class NLProjectParser:
             # Check for resource header
             resource_match = self._RESOURCE_HEADER_RE.match(line)
             if resource_match:
+                in_sprint_planning = False
                 _flush_section()
                 res_num = int(resource_match.group(1))
                 inline_name = resource_match.group(2).strip().rstrip(":.")
@@ -257,9 +338,34 @@ class NLProjectParser:
             # won't match inside a section where lines start with - or *)
             calendar_match = self._CALENDAR_HEADER_RE.match(line)
             if calendar_match:
+                in_sprint_planning = False
                 _flush_section()
                 cal_id = calendar_match.group(1).strip().rstrip(":.")
                 current_calendar = ParsedCalendar(id=cal_id)
+                continue
+
+            sprint_planning_match = self._SPRINT_PLANNING_HEADER_RE.match(line)
+            if sprint_planning_match:
+                _flush_section()
+                if project.sprint_planning is None:
+                    project.sprint_planning = ParsedSprintPlanning()
+                in_sprint_planning = True
+                continue
+
+            sprint_history_match = self._SPRINT_HISTORY_HEADER_RE.match(line)
+            if sprint_history_match:
+                _flush_section()
+                if project.sprint_planning is None:
+                    project.sprint_planning = ParsedSprintPlanning()
+                in_sprint_planning = False
+                sprint_id = (
+                    sprint_history_match.group(1)
+                    or sprint_history_match.group(2)
+                    or f"SPR-{len(project.sprint_planning.history) + 1:03d}"
+                )
+                current_sprint_history = ParsedSprintHistoryEntry(
+                    sprint_id=sprint_id.strip().rstrip(":."),
+                )
                 continue
 
             # Inside a task: process bullet points
@@ -306,6 +412,26 @@ class NLProjectParser:
                 if not bullet_text:
                     continue
                 self._try_parse_calendar_bullet(bullet_text, current_calendar)
+                continue
+
+            if current_sprint_history is not None:
+                bullet_text = re.sub(r"^[-*•]\s*", "", line).strip()
+                if not bullet_text:
+                    continue
+                self._try_parse_sprint_history_bullet(
+                    bullet_text,
+                    current_sprint_history,
+                    project.sprint_planning,
+                )
+                continue
+
+            if in_sprint_planning and project.sprint_planning is not None:
+                bullet_text = re.sub(r"^[-*•]\s*", "", line).strip()
+                if not bullet_text:
+                    continue
+                self._try_parse_sprint_planning_bullet(
+                    bullet_text, project.sprint_planning
+                )
                 continue
 
             # Project-level metadata
@@ -445,6 +571,60 @@ class NLProjectParser:
                 if calendar.holidays:
                     holidays_str = ", ".join(f'"{h}"' for h in calendar.holidays)
                     lines.append(f"    holidays: [{holidays_str}]")
+
+        if project.sprint_planning is not None and project.sprint_planning.history:
+            lines.append("")
+            lines.append("sprint_planning:")
+            lines.append("  enabled: true")
+            lines.append(
+                f"  sprint_length_weeks: {project.sprint_planning.sprint_length_weeks}"
+            )
+            lines.append(f'  capacity_mode: "{project.sprint_planning.capacity_mode}"')
+            if project.sprint_planning.planning_confidence_level is not None:
+                lines.append(
+                    "  planning_confidence_level: "
+                    f"{self._fmt_num(project.sprint_planning.planning_confidence_level)}"
+                )
+            if project.sprint_planning.removed_work_treatment is not None:
+                lines.append(
+                    "  removed_work_treatment: "
+                    f'"{project.sprint_planning.removed_work_treatment}"'
+                )
+            lines.append("  history:")
+            for entry in project.sprint_planning.history:
+                lines.append(f'    - sprint_id: "{entry.sprint_id}"')
+                if entry.completed_story_points is not None:
+                    lines.append(
+                        "      completed_story_points: "
+                        f"{self._fmt_num(entry.completed_story_points)}"
+                    )
+                if entry.completed_tasks is not None:
+                    lines.append(f"      completed_tasks: {entry.completed_tasks}")
+                if entry.spillover_story_points is not None:
+                    lines.append(
+                        "      spillover_story_points: "
+                        f"{self._fmt_num(entry.spillover_story_points)}"
+                    )
+                if entry.spillover_tasks is not None:
+                    lines.append(f"      spillover_tasks: {entry.spillover_tasks}")
+                if entry.added_story_points is not None:
+                    lines.append(
+                        "      added_story_points: "
+                        f"{self._fmt_num(entry.added_story_points)}"
+                    )
+                if entry.added_tasks is not None:
+                    lines.append(f"      added_tasks: {entry.added_tasks}")
+                if entry.removed_story_points is not None:
+                    lines.append(
+                        "      removed_story_points: "
+                        f"{self._fmt_num(entry.removed_story_points)}"
+                    )
+                if entry.removed_tasks is not None:
+                    lines.append(f"      removed_tasks: {entry.removed_tasks}")
+                if entry.holiday_factor is not None:
+                    lines.append(
+                        f"      holiday_factor: {self._fmt_num(entry.holiday_factor)}"
+                    )
 
         lines.append("")
         return "\n".join(lines)
@@ -643,6 +823,137 @@ class NLProjectParser:
             return True
 
         return False
+
+    def _try_parse_sprint_planning_bullet(
+        self,
+        text: str,
+        sprint_planning: ParsedSprintPlanning,
+    ) -> bool:
+        """Parse one sprint-planning configuration bullet."""
+        m = self._SPRINT_LENGTH_RE.match(text)
+        if m:
+            sprint_planning.sprint_length_weeks = int(m.group(1))
+            return True
+
+        m = self._CAPACITY_MODE_RE.match(text)
+        if m:
+            normalized = m.group(1).lower().replace(" ", "_")
+            sprint_planning.capacity_mode = (
+                "story_points" if normalized.startswith("story") else "tasks"
+            )
+            return True
+
+        m = self._PLANNING_CONFIDENCE_RE.match(text)
+        if m:
+            sprint_planning.planning_confidence_level = self._parse_probability_token(
+                m.group(1)
+            )
+            return True
+
+        m = self._REMOVED_WORK_RE.match(text)
+        if m:
+            sprint_planning.removed_work_treatment = m.group(1).strip()
+            return True
+
+        return False
+
+    def _try_parse_sprint_history_bullet(
+        self,
+        text: str,
+        entry: ParsedSprintHistoryEntry,
+        sprint_planning: ParsedSprintPlanning | None,
+    ) -> bool:
+        """Parse one sprint-history bullet using canonical or synonym labels."""
+        m = self._HISTORY_COMPLETED_RE.match(text)
+        if m:
+            self._assign_history_value(
+                entry,
+                field_prefix="completed",
+                value=float(m.group(1)),
+                unit_token=m.group(2),
+                sprint_planning=sprint_planning,
+            )
+            return True
+
+        m = self._HISTORY_SPILLOVER_RE.match(text)
+        if m:
+            self._assign_history_value(
+                entry,
+                field_prefix="spillover",
+                value=float(m.group(1)),
+                unit_token=m.group(2),
+                sprint_planning=sprint_planning,
+            )
+            return True
+
+        m = self._HISTORY_ADDED_RE.match(text)
+        if m:
+            self._assign_history_value(
+                entry,
+                field_prefix="added",
+                value=float(m.group(1)),
+                unit_token=m.group(2),
+                sprint_planning=sprint_planning,
+            )
+            return True
+
+        m = self._HISTORY_REMOVED_RE.match(text)
+        if m:
+            self._assign_history_value(
+                entry,
+                field_prefix="removed",
+                value=float(m.group(1)),
+                unit_token=m.group(2),
+                sprint_planning=sprint_planning,
+            )
+            return True
+
+        m = self._HOLIDAY_FACTOR_RE.match(text)
+        if m:
+            entry.holiday_factor = self._parse_probability_token(m.group(1))
+            return True
+
+        return False
+
+    def _assign_history_value(
+        self,
+        entry: ParsedSprintHistoryEntry,
+        field_prefix: str,
+        value: float,
+        unit_token: str | None,
+        sprint_planning: ParsedSprintPlanning | None,
+    ) -> None:
+        """Assign a history field using explicit or inferred units."""
+        inferred_mode = (
+            sprint_planning.capacity_mode
+            if sprint_planning is not None
+            else "story_points"
+        )
+        token = (unit_token or "").lower().replace(" ", "")
+        uses_tasks = token.startswith("task") or inferred_mode == "tasks"
+
+        if field_prefix == "completed":
+            if uses_tasks:
+                entry.completed_tasks = int(value)
+            else:
+                entry.completed_story_points = value
+            return
+
+        if uses_tasks:
+            setattr(entry, f"{field_prefix}_tasks", int(value))
+        else:
+            setattr(entry, f"{field_prefix}_story_points", value)
+
+    @staticmethod
+    def _parse_probability_token(token: str) -> float:
+        """Parse decimal or percent tokens into 0..1 multipliers."""
+        cleaned = token.strip()
+        if cleaned.endswith("%"):
+            return float(cleaned[:-1]) / 100.0
+        value = float(cleaned)
+        if value > 1.0:
+            return value / 100.0
+        return value
 
     def _extract_dates(self, text: str) -> list[str]:
         """Extract single dates and expand date ranges into ISO dates."""

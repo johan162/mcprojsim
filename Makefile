@@ -151,6 +151,7 @@ USER_GUIDE_DOCS := \
 	docs/user_guide/task_estimation.md  \
 	docs/user_guide/risks.md  \
 	docs/user_guide/project_files.md  \
+	docs/user_guide/sprint_planning.md  \
 	docs/user_guide/constrained.md  \
 	docs/user_guide/running_simulations.md  \
 	docs/user_guide/interpreting_results.md  \
@@ -249,7 +250,7 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running linter...$(NC)"
 	@poetry run flake8 $(SRC_DIR) $(TEST_DIR)
 # Run pyright as an additional linting step if available
-	@if command -v pyright >/dev/null 2>&1; then \
+	@if poetry run pyright --version >/dev/null 2>&1; then \
 		echo -e "$(DARKYELLOW)- Running pyright for additional linting...$(NC)"; \
 		if poetry run pyright $(SRC_DIR) $(TEST_DIR); then \
 			echo -e "$(GREEN)✓ Pyright linting passed$(NC)"; \
@@ -258,7 +259,7 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 			exit 1; \
 		fi \
 	else \
-		echo -e "$(YELLOW)⚠️  Warning: pyright not found, skipping pyright linting. Install with 'npm install -g pyright' for enhanced linting.$(NC)"; \
+		echo -e "$(YELLOW)⚠️  Warning: pyright not found, skipping pyright linting. Install with 'poetry install --with dev' for enhanced linting.$(NC)"; \
 	fi
 	@touch $(LINT_STAMP)
 	@echo -e "$(GREEN)✓ Lint run successfully$(NC)"

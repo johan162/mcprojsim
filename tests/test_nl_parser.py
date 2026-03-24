@@ -402,3 +402,52 @@ Task 3:
         assert t3["name"] == "Design solution"
         assert t3["estimate"]["t_shirt_size"] == "XL"
         assert t3["dependencies"] == ["task_002"]
+
+    def test_parse_sprint_planning_and_history(self) -> None:
+        text = (
+            "Project: Sprint NL\n"
+            "Start date: 2026-01-01\n"
+            "Task 1:\n- Story\n- Story points: 5\n"
+            "Sprint planning:\n"
+            "- Sprint length: 2\n"
+            "- Capacity mode: story points\n"
+            "- Planning confidence level: 80%\n"
+            "Sprint history SPR-001:\n"
+            "- Done: 20 points\n"
+            "- Carryover: 3 points\n"
+            "- Scope added: 2 points\n"
+            "- Scope removed: 1 points\n"
+            "- Holiday factor: 90%\n"
+            "Sprint history SPR-002:\n"
+            "- Delivered: 18 points\n"
+            "- Rolled over: 2 points"
+        )
+
+        project = self.parser.parse(text)
+
+        assert project.sprint_planning is not None
+        assert project.sprint_planning.capacity_mode == "story_points"
+        assert project.sprint_planning.planning_confidence_level == pytest.approx(0.8)
+        assert len(project.sprint_planning.history) == 2
+        assert project.sprint_planning.history[
+            0
+        ].completed_story_points == pytest.approx(20.0)
+        assert project.sprint_planning.history[
+            0
+        ].spillover_story_points == pytest.approx(3.0)
+        assert project.sprint_planning.history[0].holiday_factor == pytest.approx(0.9)
+
+    def test_yaml_includes_sprint_planning_section(self) -> None:
+        text = (
+            "Project: Sprint YAML\n"
+            "Task 1:\n- Story\n- Story points: 3\n"
+            "Sprint planning:\n- Sprint length: 2\n- Capacity mode: story points\n"
+            "Sprint history S1:\n- Done: 10 points\n- Carryover: 1 points"
+        )
+
+        data = yaml.safe_load(self.parser.parse_and_generate(text))
+
+        assert data["sprint_planning"]["enabled"] is True
+        assert data["sprint_planning"]["capacity_mode"] == "story_points"
+        assert data["sprint_planning"]["history"][0]["sprint_id"] == "S1"
+        assert data["sprint_planning"]["history"][0]["spillover_story_points"] == 1

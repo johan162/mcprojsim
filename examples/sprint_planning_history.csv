@@ -1,0 +1,3 @@
+sprintUniqueID,committed_StoryPoints,completed_StoryPoints,addedIntraSprint_StoryPoints,removedInSprint_StoryPoints,spilledOver_StoryPoints,startDate,endDate
+2026:Q2 Sprint 1,32,28,4,2,2,2026-05-04T09:00:00.000+02:00,2026-05-11T09:00:00.000+02:00
+2026:Q2 Sprint 2,30,29,3,1,1,2026-05-11T09:00:00.000+02:00,2026-05-18T09:00:00.000+02:00

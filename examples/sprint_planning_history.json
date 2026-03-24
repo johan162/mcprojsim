@@ -1,0 +1,39 @@
+{
+  "metricDefinitions": {
+    "committed_StoryPoints": "Sum of story points for issues present at sprint start; issues added during the sprint are excluded.",
+    "completed_StoryPoints": "Sum of story points for issues completed during the sprint.",
+    "addedIntraSprint_StoryPoints": "Sum of story points for issues added during the sprint.",
+    "removedInSprint_StoryPoints": "Sum of story points removed from the sprint during execution.",
+    "spilledOver_StoryPoints": "Sum of story points not completed at sprint close."
+  },
+  "sprints": [
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 1",
+      "startDate": "2026-01-06T09:00:00.000+01:00",
+      "endDate": "2026-01-20",
+      "metrics": {
+        "committed_StoryPoints": 95.0,
+        "completed_StoryPoints": 78.0,
+        "addedIntraSprint_StoryPoints": 12.0,
+        "removedInSprint_StoryPoints": 6.0,
+        "spilledOver_StoryPoints": 11.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 2",
+      "endDate": "2026-02-03",
+      "metrics": {
+        "committed_StoryPoints": 88.0,
+        "completed_StoryPoints": 82.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 3",
+      "metrics": {
+        "committed_StoryPoints": 91.0,
+        "completed_StoryPoints": 85.0,
+        "spilledOver_StoryPoints": 4.0
+      }
+    }
+  ]
+}

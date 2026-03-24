@@ -11,6 +11,7 @@ import numpy as np
 from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
 from mcprojsim.models.simulation import SimulationResults
+from mcprojsim.models.sprint_simulation import SprintPlanningResults
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -35,6 +36,7 @@ class JSONExporter:
         output_path: Path | str,
         config: Config | None = None,
         critical_path_limit: int | None = None,
+        sprint_results: SprintPlanningResults | None = None,
     ) -> None:
         """Export results to JSON file.
 
@@ -47,7 +49,12 @@ class JSONExporter:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        data = JSONExporter._prepare_data(results, config, critical_path_limit)
+        data = JSONExporter._prepare_data(
+            results,
+            config,
+            critical_path_limit,
+            sprint_results,
+        )
 
         with open(output_path, "w") as f:
             json.dump(data, f, indent=2, cls=NumpyEncoder)
@@ -57,6 +64,7 @@ class JSONExporter:
         results: SimulationResults,
         config: Config | None = None,
         critical_path_limit: int | None = None,
+        sprint_results: SprintPlanningResults | None = None,
     ) -> Dict[str, Any]:
         """Prepare data for JSON export.
 
@@ -77,7 +85,7 @@ class JSONExporter:
         # Get current date and time for simulation timestamp
         simulation_date = datetime.now().isoformat()
 
-        return {
+        data = {
             "project": {"name": results.project_name},
             "simulation": {
                 "date": simulation_date,
@@ -156,6 +164,36 @@ class JSONExporter:
             },
             "staffing": JSONExporter._prepare_staffing_data(results, effective_config),
         }
+
+        if sprint_results is not None:
+            data["sprint_planning"] = JSONExporter._prepare_sprint_data(sprint_results)
+
+        return data
+
+    @staticmethod
+    def _prepare_sprint_data(
+        sprint_results: SprintPlanningResults,
+    ) -> Dict[str, Any]:
+        """Prepare sprint-planning data for JSON export."""
+        sprint_data = sprint_results.to_dict()
+        diagnostics = sprint_results.historical_diagnostics
+        sprint_data["sprint_count_confidence_intervals"] = {
+            str(percentile): {
+                "sprints": value,
+                "delivery_date": (
+                    delivery_date.isoformat() if delivery_date is not None else None
+                ),
+            }
+            for percentile, value in sorted(sprint_results.percentiles.items())
+            for delivery_date in [sprint_results.date_percentiles.get(percentile)]
+        }
+        sprint_data["historical_series_statistics"] = diagnostics.get(
+            "series_statistics",
+            {},
+        )
+        sprint_data["ratio_summaries"] = diagnostics.get("ratios", {})
+        sprint_data["historical_correlations"] = diagnostics.get("correlations", {})
+        return sprint_data
 
     @staticmethod
     def _prepare_staffing_data(

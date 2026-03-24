@@ -13,6 +13,7 @@ from mcprojsim.parsers.error_reporting import (
     load_yaml_with_locations,
     validate_project_payload,
 )
+from mcprojsim.parsers.sprint_history_parser import load_external_sprint_history
 
 
 class YAMLParser:
@@ -66,6 +67,7 @@ class YAMLParser:
         """
         file_path = Path(file_path) if file_path is not None else Path("<memory>.yaml")
         path_lines = path_lines or {(): 1}
+        data = load_external_sprint_history(data, file_path=file_path)
 
         issues = validate_project_payload(data)
         if issues:

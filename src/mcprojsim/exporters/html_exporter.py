@@ -15,6 +15,7 @@ from mcprojsim.config import Config
 from mcprojsim.config import DEFAULT_CONFIDENCE_LEVELS
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.models.project import Project
+from mcprojsim.models.sprint_simulation import SprintPlanningResults
 
 if TYPE_CHECKING:
     import matplotlib.pyplot as plt
@@ -579,6 +580,120 @@ HTML_TEMPLATE = """
     </div>
     {% endif %}
 
+    {% if sprint_summary %}
+    <div class="section">
+        <h3>Sprint Planning Summary</h3>
+        <table>
+            <tbody>
+                <tr><td class="metric">Sprint Length</td><td class="value">{{ sprint_summary.sprint_length_weeks }} weeks</td></tr>
+                <tr><td class="metric">Planning Confidence Level</td><td class="value">{{ sprint_summary.planning_confidence_percent }}%</td></tr>
+                <tr><td class="metric">Removed Work Treatment</td><td class="value">{{ sprint_summary.removed_work_treatment }}</td></tr>
+                <tr><td class="metric">Planned Commitment Guidance</td><td class="value">{{ sprint_summary.planned_commitment_guidance }}</td></tr>
+                <tr><td class="metric">Historical Sampling Mode</td><td class="value">{{ sprint_summary.sampling_mode }}</td></tr>
+                <tr><td class="metric">Historical Observations</td><td class="value">{{ sprint_summary.observation_count }}</td></tr>
+                <tr><td class="metric">Carryover Mean</td><td class="value">{{ sprint_summary.carryover_mean }}</td></tr>
+                <tr><td class="metric">Aggregate Spillover Rate</td><td class="value">{{ sprint_summary.aggregate_spillover_rate }}</td></tr>
+                <tr><td class="metric">Observed Disruption Frequency</td><td class="value">{{ sprint_summary.observed_disruption_frequency }}</td></tr>
+            </tbody>
+        </table>
+
+        <h4>Sprint Count Confidence Intervals</h4>
+        <table>
+            <thead>
+                <tr><th>Percentile</th><th class="header-center">Sprints</th><th class="header-center">Projected Delivery Date</th></tr>
+            </thead>
+            <tbody>
+                {% for percentile, sprint_count, delivery_date in sprint_summary.percentiles %}
+                <tr>
+                    <td>P{{ percentile }}</td>
+                    <td class="value-center">{{ sprint_count }}</td>
+                    <td class="value-center">{{ delivery_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if sprint_summary.series_statistics %}
+        <h4>Historical Series Statistics</h4>
+        <table>
+            <thead>
+                <tr><th>Series</th><th class="header-center">Mean</th><th class="header-center">Median</th><th class="header-center">Std Dev</th><th class="header-center">Min</th><th class="header-center">Max</th></tr>
+            </thead>
+            <tbody>
+                {% for series_name, mean, median, std_dev, min_val, max_val in sprint_summary.series_statistics %}
+                <tr>
+                    <td>{{ series_name }}</td>
+                    <td class="value-center">{{ mean }}</td>
+                    <td class="value-center">{{ median }}</td>
+                    <td class="value-center">{{ std_dev }}</td>
+                    <td class="value-center">{{ min_val }}</td>
+                    <td class="value-center">{{ max_val }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if sprint_summary.ratio_summaries %}
+        <h4>Historical Ratio Summaries</h4>
+        <table>
+            <thead>
+                <tr><th>Ratio</th><th class="header-center">Mean</th><th class="header-center">Median</th><th class="header-center">Std Dev</th><th class="header-center">P50</th><th class="header-center">P80</th><th class="header-center">P90</th></tr>
+            </thead>
+            <tbody>
+                {% for ratio_name, mean, median, std_dev, p50, p80, p90 in sprint_summary.ratio_summaries %}
+                <tr>
+                    <td>{{ ratio_name }}</td>
+                    <td class="value-center">{{ mean }}</td>
+                    <td class="value-center">{{ median }}</td>
+                    <td class="value-center">{{ std_dev }}</td>
+                    <td class="value-center">{{ p50 }}</td>
+                    <td class="value-center">{{ p80 }}</td>
+                    <td class="value-center">{{ p90 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if sprint_summary.correlations %}
+        <h4>Historical Correlations</h4>
+        <table>
+            <thead>
+                <tr><th>Series Pair</th><th class="header-center">Pearson Correlation</th></tr>
+            </thead>
+            <tbody>
+                {% for pair_name, value in sprint_summary.correlations %}
+                <tr>
+                    <td>{{ pair_name }}</td>
+                    <td class="value-center">{{ value }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if sprint_summary.burnup_percentiles %}
+        <h4>Burn-up Percentiles</h4>
+        <table>
+            <thead>
+                <tr><th>Sprint</th><th class="header-center">P50</th><th class="header-center">P80</th><th class="header-center">P90</th></tr>
+            </thead>
+            <tbody>
+                {% for sprint_number, p50, p80, p90 in sprint_summary.burnup_percentiles %}
+                <tr>
+                    <td>{{ sprint_number }}</td>
+                    <td class="value-center">{{ p50 }}</td>
+                    <td class="value-center">{{ p80 }}</td>
+                    <td class="value-center">{{ p90 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="section">
         <p><em>Report generated by Monte Carlo Project Simulator (mcprojsim)</em></p>
     </div>
@@ -597,6 +712,7 @@ class HTMLExporter:
         project: Project | None = None,
         config: Config | None = None,
         critical_path_limit: int | None = None,
+        sprint_results: SprintPlanningResults | None = None,
     ) -> None:
         """Export results to HTML file.
 
@@ -731,6 +847,7 @@ class HTMLExporter:
             risk_impact_data=risk_impact_data,
             max_parallel_tasks=results.max_parallel_tasks,
             effort_stats=HTMLExporter._compute_effort_stats(results),
+            sprint_summary=HTMLExporter._prepare_sprint_context(sprint_results),
             **HTMLExporter._prepare_staffing_context(results, effective_config),
         )
 
@@ -765,6 +882,91 @@ class HTMLExporter:
             "skewness": float(scipy_stats.skew(effort)) if std_dev > 0 else 0.0,
             "kurtosis": float(scipy_stats.kurtosis(effort)) if std_dev > 0 else 0.0,
             "mean_working_days": math.ceil(mean / results.hours_per_day),
+        }
+
+    @staticmethod
+    def _prepare_sprint_context(
+        sprint_results: SprintPlanningResults | None,
+    ) -> dict[str, Any] | None:
+        """Prepare sprint-planning context for HTML rendering."""
+        if sprint_results is None:
+            return None
+
+        series_statistics = sprint_results.historical_diagnostics.get(
+            "series_statistics",
+            {},
+        )
+        ratio_summaries = sprint_results.historical_diagnostics.get("ratios", {})
+        correlations = sprint_results.historical_diagnostics.get("correlations", {})
+        return {
+            "sprint_length_weeks": sprint_results.sprint_length_weeks,
+            "planning_confidence_percent": int(
+                round(sprint_results.planning_confidence_level * 100)
+            ),
+            "removed_work_treatment": sprint_results.removed_work_treatment,
+            "planned_commitment_guidance": f"{sprint_results.planned_commitment_guidance:.2f}",
+            "sampling_mode": sprint_results.historical_diagnostics.get(
+                "sampling_mode",
+                "",
+            ),
+            "observation_count": sprint_results.historical_diagnostics.get(
+                "observation_count",
+                0,
+            ),
+            "carryover_mean": (
+                f"{sprint_results.carryover_statistics.get('mean', 0.0):.2f}"
+            ),
+            "aggregate_spillover_rate": (
+                f"{sprint_results.spillover_statistics.get('aggregate_spillover_rate', {}).get('mean', 0.0):.4f}"
+            ),
+            "observed_disruption_frequency": (
+                f"{sprint_results.disruption_statistics.get('observed_frequency', 0.0):.4f}"
+            ),
+            "percentiles": [
+                (
+                    percentile,
+                    f"{value:.2f}",
+                    delivery_date.isoformat() if delivery_date is not None else "",
+                )
+                for percentile, value in sorted(sprint_results.percentiles.items())
+                for delivery_date in [sprint_results.date_percentiles.get(percentile)]
+            ],
+            "series_statistics": [
+                (
+                    series_name,
+                    f"{stats['mean']:.2f}",
+                    f"{stats['median']:.2f}",
+                    f"{stats['std_dev']:.2f}",
+                    f"{stats['min']:.2f}",
+                    f"{stats['max']:.2f}",
+                )
+                for series_name, stats in sorted(series_statistics.items())
+            ],
+            "ratio_summaries": [
+                (
+                    ratio_name,
+                    f"{stats['mean']:.4f}",
+                    f"{stats['median']:.4f}",
+                    f"{stats['std_dev']:.4f}",
+                    f"{stats.get('percentiles', {}).get(50, 0.0):.4f}",
+                    f"{stats.get('percentiles', {}).get(80, 0.0):.4f}",
+                    f"{stats.get('percentiles', {}).get(90, 0.0):.4f}",
+                )
+                for ratio_name, stats in sorted(ratio_summaries.items())
+            ],
+            "correlations": [
+                (pair_name, f"{value:.4f}")
+                for pair_name, value in sorted(correlations.items())
+            ],
+            "burnup_percentiles": [
+                (
+                    int(point["sprint_number"]),
+                    f"{point['p50']:.2f}",
+                    f"{point['p80']:.2f}",
+                    f"{point['p90']:.2f}",
+                )
+                for point in sprint_results.burnup_percentiles
+            ],
         }
 
     @staticmethod

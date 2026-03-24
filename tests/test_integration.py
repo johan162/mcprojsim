@@ -7,6 +7,7 @@ from mcprojsim import SimulationEngine
 from mcprojsim.parsers import YAMLParser
 from mcprojsim.exporters import JSONExporter, CSVExporter, HTMLExporter
 from mcprojsim.config import Config
+from mcprojsim.planning.sprint_engine import SprintSimulationEngine
 
 
 class TestEndToEnd:
@@ -64,6 +65,79 @@ class TestEndToEnd:
         }
 
         file_path = tmp_path / "project.yaml"
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
+        return file_path
+
+    @pytest.fixture
+    def sprint_project_file(self, tmp_path):
+        """Create a sprint-planning test project file."""
+        data = {
+            "project": {
+                "name": "Sprint Integration Test Project",
+                "start_date": "2025-01-06",
+                "confidence_levels": [50, 80, 90],
+            },
+            "tasks": [
+                {
+                    "id": "task_001",
+                    "name": "Design",
+                    "estimate": {"low": 2, "expected": 3, "high": 5},
+                    "planning_story_points": 3,
+                    "priority": 1,
+                },
+                {
+                    "id": "task_002",
+                    "name": "Implementation",
+                    "estimate": {"low": 5, "expected": 8, "high": 12},
+                    "dependencies": ["task_001"],
+                    "planning_story_points": 5,
+                    "priority": 2,
+                },
+                {
+                    "id": "task_003",
+                    "name": "Testing",
+                    "estimate": {"low": 2, "expected": 4, "high": 6},
+                    "dependencies": ["task_002"],
+                    "planning_story_points": 2,
+                    "priority": 3,
+                },
+            ],
+            "sprint_planning": {
+                "enabled": True,
+                "sprint_length_weeks": 2,
+                "capacity_mode": "story_points",
+                "planning_confidence_level": 0.8,
+                "history": [
+                    {
+                        "sprint_id": "S1",
+                        "completed_story_points": 6,
+                        "spillover_story_points": 1,
+                        "added_story_points": 0,
+                        "removed_story_points": 0,
+                        "holiday_factor": 1.0,
+                    },
+                    {
+                        "sprint_id": "S2",
+                        "completed_story_points": 5,
+                        "spillover_story_points": 0,
+                        "added_story_points": 1,
+                        "removed_story_points": 0,
+                        "holiday_factor": 1.0,
+                    },
+                    {
+                        "sprint_id": "S3",
+                        "completed_story_points": 7,
+                        "spillover_story_points": 1,
+                        "added_story_points": 0,
+                        "removed_story_points": 1,
+                        "holiday_factor": 1.0,
+                    },
+                ],
+            },
+        }
+
+        file_path = tmp_path / "sprint_project.yaml"
         with open(file_path, "w") as f:
             yaml.dump(data, f)
         return file_path
@@ -154,6 +228,46 @@ class TestEndToEnd:
         parser = YAMLParser()
         with pytest.raises(ValueError):
             parser.parse_file(file_path)
+
+    def test_sprint_planning_workflow(self, sprint_project_file, tmp_path):
+        """Test sprint-planning workflow from file to sprint results and exports."""
+        parser = YAMLParser()
+        project = parser.parse_file(sprint_project_file)
+
+        sprint_engine = SprintSimulationEngine(iterations=50, random_seed=42)
+        sprint_results = sprint_engine.run(project)
+
+        assert sprint_results.project_name == "Sprint Integration Test Project"
+        assert sprint_results.iterations == 50
+        assert len(sprint_results.sprint_counts) == 50
+        assert sprint_results.mean > 0
+        assert sprint_results.percentiles[80] > 0
+        assert sprint_results.date_percentiles[80] is not None
+        assert sprint_results.historical_diagnostics["observation_count"] == 3
+
+        duration_engine = SimulationEngine(
+            iterations=50,
+            random_seed=42,
+            config=Config.get_default(),
+            show_progress=False,
+        )
+        duration_results = duration_engine.run(project)
+
+        json_file = tmp_path / "sprint_results.json"
+        csv_file = tmp_path / "sprint_results.csv"
+        html_file = tmp_path / "sprint_results.html"
+
+        JSONExporter.export(duration_results, json_file, sprint_results=sprint_results)
+        CSVExporter.export(duration_results, csv_file, sprint_results=sprint_results)
+        HTMLExporter.export(duration_results, html_file, sprint_results=sprint_results)
+
+        assert json_file.exists()
+        assert csv_file.exists()
+        assert html_file.exists()
+
+        assert '"sprint_planning"' in json_file.read_text()
+        assert "Sprint Planning" in csv_file.read_text()
+        assert "Sprint Planning Summary" in html_file.read_text()
 
 
 class TestCLIIntegration:

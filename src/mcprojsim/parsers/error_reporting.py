@@ -73,6 +73,10 @@ def validate_project_payload(data: Any) -> list[ValidationIssue]:
     _collect_duplicate_task_id_issues(data, issues)
     _collect_missing_dependency_issues(data, issues)
     _collect_circular_dependency_issues(data, issues)
+    _collect_duplicate_sprint_id_issues(data, issues)
+    _collect_sprint_history_unit_issues(data, issues)
+    _collect_future_override_issues(data, issues)
+    _collect_spillover_bracket_issues(data, issues)
 
     return issues
 
@@ -526,9 +530,343 @@ def _dependency_position(task: Any, dependency: str) -> int | None:
     return None
 
 
+def _collect_duplicate_sprint_id_issues(
+    data: Any,
+    issues: list[ValidationIssue],
+) -> None:
+    sprint_planning = data.get("sprint_planning") if isinstance(data, dict) else None
+    if not isinstance(sprint_planning, dict):
+        return
+
+    history = sprint_planning.get("history")
+    if not isinstance(history, list):
+        return
+
+    seen: dict[str, int] = {}
+    for index, entry in enumerate(history):
+        if not isinstance(entry, dict):
+            continue
+
+        sprint_id = entry.get("sprint_id")
+        if not isinstance(sprint_id, str):
+            continue
+
+        if sprint_id in seen:
+            first_index = seen[sprint_id]
+            issues.append(
+                ValidationIssue(
+                    path=("sprint_planning", "history", index, "sprint_id"),
+                    message=f"Duplicate sprint_id '{sprint_id}'.",
+                    suggestion=(
+                        "Rename this sprint or reuse the first definition from "
+                        f"sprint_planning.history[{first_index + 1}]"
+                    ),
+                )
+            )
+        else:
+            seen[sprint_id] = index
+
+
+def _collect_sprint_history_unit_issues(
+    data: Any,
+    issues: list[ValidationIssue],
+) -> None:
+    sprint_planning = data.get("sprint_planning") if isinstance(data, dict) else None
+    if not isinstance(sprint_planning, dict):
+        return
+
+    capacity_mode = sprint_planning.get("capacity_mode")
+    history = sprint_planning.get("history")
+    if not isinstance(history, list):
+        return
+
+    for index, entry in enumerate(history):
+        if not isinstance(entry, dict):
+            continue
+
+        has_story_points = "completed_story_points" in entry
+        has_tasks = "completed_tasks" in entry
+
+        if has_story_points and has_tasks:
+            issues.append(
+                ValidationIssue(
+                    path=("sprint_planning", "history", index),
+                    message=(
+                        "Sprint history entries must include exactly one of "
+                        "'completed_story_points' or 'completed_tasks'"
+                    ),
+                )
+            )
+            continue
+
+        if not has_story_points and not has_tasks:
+            issues.append(
+                ValidationIssue(
+                    path=("sprint_planning", "history", index),
+                    message=(
+                        "Sprint history entries must include either "
+                        "'completed_story_points' or 'completed_tasks'"
+                    ),
+                )
+            )
+            continue
+
+        if has_story_points and _entry_uses_task_fields(entry):
+            issues.append(
+                ValidationIssue(
+                    path=("sprint_planning", "history", index),
+                    message=(
+                        "Sprint history entries using 'completed_story_points' must "
+                        "not include task-based spillover, added, or removed fields"
+                    ),
+                )
+            )
+
+        if has_tasks and _entry_uses_story_point_fields(entry):
+            issues.append(
+                ValidationIssue(
+                    path=("sprint_planning", "history", index),
+                    message=(
+                        "Sprint history entries using 'completed_tasks' must not "
+                        "include story-point-based spillover, added, or removed fields"
+                    ),
+                )
+            )
+
+        if capacity_mode == "story_points" and has_tasks:
+            issues.append(
+                ValidationIssue(
+                    path=("sprint_planning", "history", index, "completed_tasks"),
+                    message=(
+                        "Sprint history entries must use story-point completed fields "
+                        "when capacity_mode is 'story_points'"
+                    ),
+                )
+            )
+
+        if capacity_mode == "tasks" and has_story_points:
+            issues.append(
+                ValidationIssue(
+                    path=(
+                        "sprint_planning",
+                        "history",
+                        index,
+                        "completed_story_points",
+                    ),
+                    message=(
+                        "Sprint history entries must use task-count completed fields "
+                        "when capacity_mode is 'tasks'"
+                    ),
+                )
+            )
+
+
+def _collect_future_override_issues(
+    data: Any,
+    issues: list[ValidationIssue],
+) -> None:
+    sprint_planning = data.get("sprint_planning") if isinstance(data, dict) else None
+    if not isinstance(sprint_planning, dict):
+        return
+
+    overrides = sprint_planning.get("future_sprint_overrides")
+    if not isinstance(overrides, list):
+        return
+
+    sprint_length_weeks = sprint_planning.get("sprint_length_weeks")
+    project = data.get("project") if isinstance(data, dict) else None
+    project_start_date = (
+        project.get("start_date") if isinstance(project, dict) else None
+    )
+    project_start = _parse_iso_date(project_start_date)
+    sprint_days = (
+        sprint_length_weeks * 7 if isinstance(sprint_length_weeks, int) else None
+    )
+
+    seen_targets: dict[int, int] = {}
+    for index, override in enumerate(overrides):
+        if not isinstance(override, dict):
+            continue
+
+        sprint_number = override.get("sprint_number")
+        start_date_raw = override.get("start_date")
+        start_date = _parse_iso_date(start_date_raw)
+        if sprint_number is None and start_date is None:
+            issues.append(
+                ValidationIssue(
+                    path=("sprint_planning", "future_sprint_overrides", index),
+                    message=(
+                        "Future sprint overrides must define at least one locator: "
+                        "'sprint_number' or 'start_date'"
+                    ),
+                )
+            )
+            continue
+
+        resolved_sprint_number = (
+            sprint_number if isinstance(sprint_number, int) else None
+        )
+        if (
+            start_date is not None
+            and project_start is not None
+            and sprint_days is not None
+            and sprint_days > 0
+        ):
+            delta_days = (start_date - project_start).days
+            if delta_days < 0 or delta_days % sprint_days != 0:
+                issues.append(
+                    ValidationIssue(
+                        path=(
+                            "sprint_planning",
+                            "future_sprint_overrides",
+                            index,
+                            "start_date",
+                        ),
+                        message=(
+                            "Future sprint override start_date must align to a simulated "
+                            "sprint boundary"
+                        ),
+                    )
+                )
+                continue
+
+            derived_sprint_number = (delta_days // sprint_days) + 1
+            if (
+                resolved_sprint_number is not None
+                and resolved_sprint_number != derived_sprint_number
+            ):
+                issues.append(
+                    ValidationIssue(
+                        path=(
+                            "sprint_planning",
+                            "future_sprint_overrides",
+                            index,
+                            "start_date",
+                        ),
+                        message=(
+                            "Future sprint override sprint_number and start_date must "
+                            "resolve to the same sprint"
+                        ),
+                    )
+                )
+                continue
+            resolved_sprint_number = derived_sprint_number
+
+        if resolved_sprint_number is not None:
+            previous_index = seen_targets.get(resolved_sprint_number)
+            if previous_index is not None:
+                issues.append(
+                    ValidationIssue(
+                        path=("sprint_planning", "future_sprint_overrides", index),
+                        message=(
+                            "Future sprint overrides must target unique simulated sprints"
+                        ),
+                        suggestion=(
+                            "Merge this override with sprint_planning.future_sprint_overrides["
+                            f"{previous_index + 1}] or target a different sprint"
+                        ),
+                    )
+                )
+            else:
+                seen_targets[resolved_sprint_number] = index
+
+
+def _collect_spillover_bracket_issues(
+    data: Any,
+    issues: list[ValidationIssue],
+) -> None:
+    sprint_planning = data.get("sprint_planning") if isinstance(data, dict) else None
+    if not isinstance(sprint_planning, dict):
+        return
+
+    spillover = sprint_planning.get("spillover")
+    if not isinstance(spillover, dict):
+        return
+
+    size_brackets = spillover.get("size_brackets")
+    if not isinstance(size_brackets, list):
+        return
+
+    previous_max = 0.0
+    saw_unbounded = False
+    for index, bracket in enumerate(size_brackets):
+        if not isinstance(bracket, dict):
+            continue
+
+        max_points = bracket.get("max_points")
+        bracket_path = ("sprint_planning", "spillover", "size_brackets", index)
+
+        if saw_unbounded:
+            issues.append(
+                ValidationIssue(
+                    path=bracket_path,
+                    message=(
+                        "Spillover size_brackets must place the unbounded bracket last"
+                    ),
+                )
+            )
+            continue
+
+        if max_points is None:
+            saw_unbounded = True
+            continue
+
+        if isinstance(max_points, (int, float)) and float(max_points) <= previous_max:
+            issues.append(
+                ValidationIssue(
+                    path=bracket_path + ("max_points",),
+                    message=(
+                        "Spillover size_brackets max_points values must be strictly "
+                        "ascending"
+                    ),
+                )
+            )
+            continue
+
+        if isinstance(max_points, (int, float)):
+            previous_max = float(max_points)
+
+
+def _entry_uses_task_fields(entry: Mapping[str, Any]) -> bool:
+    return any(
+        field in entry for field in ("spillover_tasks", "added_tasks", "removed_tasks")
+    )
+
+
+def _entry_uses_story_point_fields(entry: Mapping[str, Any]) -> bool:
+    return any(
+        field in entry
+        for field in (
+            "spillover_story_points",
+            "added_story_points",
+            "removed_story_points",
+        )
+    )
+
+
+def _parse_iso_date(value: Any) -> Any:
+    from datetime import date
+
+    if isinstance(value, date):
+        return value
+    if not isinstance(value, str):
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
 def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
     if not path:
-        return {"project", "tasks", "project_risks", "resources", "calendars"}
+        return {
+            "project",
+            "tasks",
+            "project_risks",
+            "resources",
+            "calendars",
+            "sprint_planning",
+        }
 
     if path == ("project",):
         return {
@@ -555,7 +893,101 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "resources",
             "max_resources",
             "min_experience_level",
+            "planning_story_points",
+            "priority",
+            "spillover_probability_override",
             "risks",
+        }
+
+    if path == ("sprint_planning",):
+        return {
+            "enabled",
+            "sprint_length_weeks",
+            "capacity_mode",
+            "history",
+            "planning_confidence_level",
+            "removed_work_treatment",
+            "future_sprint_overrides",
+            "volatility_overlay",
+            "spillover",
+            "velocity_model",
+            "sickness",
+        }
+
+    if (
+        len(path) == 3
+        and path[0] == "sprint_planning"
+        and path[1] == "future_sprint_overrides"
+        and isinstance(path[2], int)
+    ):
+        return {
+            "sprint_number",
+            "start_date",
+            "holiday_factor",
+            "capacity_multiplier",
+            "notes",
+        }
+
+    if path == ("sprint_planning", "volatility_overlay"):
+        return {
+            "enabled",
+            "disruption_probability",
+            "disruption_multiplier_low",
+            "disruption_multiplier_expected",
+            "disruption_multiplier_high",
+        }
+
+    if path == ("sprint_planning", "spillover"):
+        return {
+            "enabled",
+            "model",
+            "size_reference_points",
+            "size_brackets",
+            "consumed_fraction_alpha",
+            "consumed_fraction_beta",
+            "logistic_slope",
+            "logistic_intercept",
+        }
+
+    if path == ("sprint_planning", "sickness"):
+        return {
+            "enabled",
+            "team_size",
+            "probability_per_person_per_week",
+            "duration_log_mu",
+            "duration_log_sigma",
+        }
+
+    if (
+        len(path) == 4
+        and path[0] == "sprint_planning"
+        and path[1] == "spillover"
+        and path[2] == "size_brackets"
+        and isinstance(path[3], int)
+    ):
+        return {"max_points", "probability"}
+
+    if (
+        len(path) == 3
+        and path[0] == "sprint_planning"
+        and path[1] == "history"
+        and isinstance(path[2], int)
+    ):
+        return {
+            "sprint_id",
+            "sprint_length_weeks",
+            "completed_story_points",
+            "completed_tasks",
+            "spillover_story_points",
+            "spillover_tasks",
+            "added_story_points",
+            "added_tasks",
+            "removed_story_points",
+            "removed_tasks",
+            "holiday_factor",
+            "end_date",
+            "team_size",
+            "notes",
         }
 
     if len(path) == 2 and path[0] == "resources" and isinstance(path[1], int):
