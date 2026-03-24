@@ -1,3 +1,39 @@
+## [v0.7.0] - 2026-03-24
+
+Release Type: minor
+
+### 📋 Summary
+This release adds sprint planning as a first-class forecasting mode on top of the existing Monte Carlo duration simulation. It introduces sprint-history driven forecasting, velocity-model choices, sickness and spillover modelling, new examples and user-guide coverage, and supporting release/build tooling for MCP distribution and documentation generation.
+
+### ✨ Additions
+- Added sprint-planning simulation with dedicated sprint results, sprint burn-up outputs, and support for empirical and Negative Binomial velocity models.
+- Added external sprint history loading from CSV and JSON files, including example project files and reference data sets.
+- Added sprint-capacity modelling for per-person sickness, sprint volatility overlays, and backlog spillover behaviour.
+- Added a full sprint planning user guide chapter and several sprint-planning example files, including a large 60-task sprint example with historical data.
+- Added MCP bundle packaging support via `scripts/mkmcpbundle.sh`.
+
+### 🚀 Improvements
+- Improved CLI support for sprint planning with `simulate`-time overrides such as `--velocity-model` and `--no-sickness`.
+- Improved JSON, CSV, and HTML exporters to include sprint-planning outputs and diagnostics.
+- Improved validation and error reporting for sprint-planning project files and external history sources.
+- Improved generated documentation examples through template-driven example generation and faster parallel example rendering.
+- Improved top-level and script-level documentation so new sprint-planning workflows and build utilities are easier to discover.
+
+### 🐛 Bug Fixes
+- Fixed deterministic seeding for sickness modelling so repeated runs with the same `--seed` produce identical sprint-planning results.
+- Fixed several documentation and formatting issues in sprint-planning design and user-guide outputs.
+
+### 📚 Documentation
+- Added user documentation for sprint planning, including workflow, configuration, history-file formats, sickness modelling, and output interpretation.
+- Updated the README and command documentation to surface sprint-planning capabilities and newer simulation flags.
+- Expanded the scripts README so all maintained helper scripts and support files are described.
+
+### 🛠 Internal
+- Added broad test coverage for sprint planning, including parser, model, exporter, CLI, and statistical integration tests.
+- Added heavy-test marking and CI exclusion for longer-running statistical sprint tests.
+- Added helper scripts for regenerating sprint examples and for documenting/generated example maintenance.
+
+
 ## [v0.6.1] - 2026-03-21
 
 Release Type: patch
