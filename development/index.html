@@ -669,6 +669,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/sprint_planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint Planning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/constrained/" class="md-nav__link">
         
   
@@ -1127,6 +1155,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Local development workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#heavy-test-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heavy test selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3096,6 +3141,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Local development workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#heavy-test-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heavy test selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -4935,6 +4997,19 @@ In particular, <a href="https://github.com/johan162/mcprojsim/blob/main/bin/mcpr
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>make<span class="w"> </span><span class="nb">test</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>make<span class="w"> </span>docs-serve
 </span></code></pre></div>
+<h3 id="heavy-test-selection">Heavy test selection<a class="headerlink" href="#heavy-test-selection" title="Permanent link">&para;</a></h3>
+<p>Some long-running integration tests are marked with the <code>heavy</code> pytest marker.</p>
+<p>Use these commands during local development:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># run everything, including heavy tests</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># skip heavy tests (matches CI behavior)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not heavy&quot;</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># run only heavy tests</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;heavy&quot;</span>
+</span></code></pre></div>
+<p>The default CI test workflow excludes heavy tests with <code>-m "not heavy"</code>.</p>
 <h2 id="the-makefile-in-detail">The Makefile in detail<a class="headerlink" href="#the-makefile-in-detail" title="Permanent link">&para;</a></h2>
 <p>The Makefile provides a single entry point for common project tasks.
 Some targets are thin wrappers while others contain real workflow logic.</p>
@@ -4949,12 +5024,12 @@ Some targets are thin wrappers while others contain real workflow logic.</p>
 </ul>
 <h3 id="useful-everyday-targets">Useful everyday targets<a class="headerlink" href="#useful-everyday-targets" title="Permanent link">&para;</a></h3>
 <h4 id="setup-and-quality">Setup and quality<a class="headerlink" href="#setup-and-quality" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>make<span class="w"> </span>install
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>make<span class="w"> </span>check
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>make<span class="w"> </span><span class="nb">test</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>make<span class="w"> </span>test-short
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>make<span class="w"> </span>test-html
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>make<span class="w"> </span>pre-commit
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>make<span class="w"> </span>install
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>make<span class="w"> </span>check
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>make<span class="w"> </span><span class="nb">test</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>make<span class="w"> </span>test-short
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>make<span class="w"> </span>test-html
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>make<span class="w"> </span>pre-commit
 </span></code></pre></div>
 <p>Meaning:</p>
 <ul>
@@ -4966,17 +5041,17 @@ Some targets are thin wrappers while others contain real workflow logic.</p>
 <li><code>make pre-commit</code> runs checks plus a shorter test pass</li>
 </ul>
 <h4 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>make<span class="w"> </span>docs
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>make<span class="w"> </span>docs-serve
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>make<span class="w"> </span>docs-container-build
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>make<span class="w"> </span>docs-container-start
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>make<span class="w"> </span>docs-container-stop
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>make<span class="w"> </span>docs-container-status
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>make<span class="w"> </span>docs-container-logs
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>make<span class="w"> </span>docs-deploy
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>docs
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>make<span class="w"> </span>docs-serve
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>make<span class="w"> </span>docs-container-build
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>make<span class="w"> </span>docs-container-start
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>make<span class="w"> </span>docs-container-stop
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>make<span class="w"> </span>docs-container-status
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>make<span class="w"> </span>docs-container-logs
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>make<span class="w"> </span>docs-deploy
 </span></code></pre></div>
 <h4 id="packaging-and-release-support">Packaging and release support<a class="headerlink" href="#packaging-and-release-support" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>make<span class="w"> </span>build
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span>build
 </span></code></pre></div>
 <p>This runs a larger pipeline that includes:</p>
 <ul>
@@ -4988,13 +5063,13 @@ Some targets are thin wrappers while others contain real workflow logic.</p>
 <li>artifact verification</li>
 </ul>
 <h4 id="container-management">Container management<a class="headerlink" href="#container-management" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>make<span class="w"> </span>container-build
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>make<span class="w"> </span>container-build-proxy
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>make<span class="w"> </span>container-build-standard
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>make<span class="w"> </span>container-rebuild
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>make<span class="w"> </span>ghcr-login
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>make<span class="w"> </span>ghcr-push
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>make<span class="w"> </span>ghcr-logout
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>make<span class="w"> </span>container-build
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>make<span class="w"> </span>container-build-proxy
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>make<span class="w"> </span>container-build-standard
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>make<span class="w"> </span>container-rebuild
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>make<span class="w"> </span>ghcr-login
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>make<span class="w"> </span>ghcr-push
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>make<span class="w"> </span>ghcr-logout
 </span></code></pre></div>
 <h3 id="notes-for-maintainers">Notes for maintainers<a class="headerlink" href="#notes-for-maintainers" title="Permanent link">&para;</a></h3>
 <p>The Makefile includes some historical naming and a few targets that appear to have been adapted from an earlier project.
@@ -5014,8 +5089,8 @@ For a script-by-script overview, see <a href="https://github.com/johan162/mcproj
 <li><code>twine check</code></li>
 </ul>
 <p>Typical usage:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>./scripts/mkbld.sh
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>./scripts/mkbld.sh<span class="w"> </span>--dry-run
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>./scripts/mkbld.sh
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>./scripts/mkbld.sh<span class="w"> </span>--dry-run
 </span></code></pre></div>
 <p>Use this when you want a CI-like validation run locally.
 It is also the main quality gate invoked by the CI workflow.</p>
@@ -5037,9 +5112,9 @@ It is also the main quality gate invoked by the CI workflow.</p>
 <li>clean docs artifacts</li>
 </ul>
 <p>Typical usage:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>./scripts/mkdocs.sh<span class="w"> </span>serve
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>./scripts/mkdocs.sh<span class="w"> </span>build
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>./scripts/mkdocs.sh<span class="w"> </span>deploy
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>./scripts/mkdocs.sh<span class="w"> </span>serve
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>./scripts/mkdocs.sh<span class="w"> </span>build
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>./scripts/mkdocs.sh<span class="w"> </span>deploy
 </span></code></pre></div>
 <h3 id="docs-contctlsh"><code>docs-contctl.sh</code><a class="headerlink" href="#docs-contctlsh" title="Permanent link">&para;</a></h3>
 <p>Purpose:</p>
@@ -5047,10 +5122,10 @@ It is also the main quality gate invoked by the CI workflow.</p>
 <li>lifecycle manager for the docs container image built from <a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs">Dockerfile.docs</a></li>
 </ul>
 <p>Typical usage:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>./scripts/docs-contctl.sh<span class="w"> </span>start
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>./scripts/docs-contctl.sh<span class="w"> </span>status
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>./scripts/docs-contctl.sh<span class="w"> </span>logs<span class="w"> </span>--follow
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>./scripts/docs-contctl.sh<span class="w"> </span>stop
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>./scripts/docs-contctl.sh<span class="w"> </span>start
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>./scripts/docs-contctl.sh<span class="w"> </span>status
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>./scripts/docs-contctl.sh<span class="w"> </span>logs<span class="w"> </span>--follow
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>./scripts/docs-contctl.sh<span class="w"> </span>stop
 </span></code></pre></div>
 <h3 id="mkreleasesh"><code>mkrelease.sh</code><a class="headerlink" href="#mkreleasesh" title="Permanent link">&para;</a></h3>
 <p>Purpose:</p>
@@ -5109,44 +5184,44 @@ It therefore tries to:</p>
 </ul>
 <h3 id="build-the-main-container-with-raw-commands">Build the main container with raw commands<a class="headerlink" href="#build-the-main-container-with-raw-commands" title="Permanent link">&para;</a></h3>
 <h4 id="standard-build-with-podman">Standard build with Podman<a class="headerlink" href="#standard-build-with-podman" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>podman<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>mcprojsim:latest<span class="w"> </span>-t<span class="w"> </span>mcprojsim:<span class="k">$(</span>poetry<span class="w"> </span>version<span class="w"> </span>--short<span class="k">)</span><span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>podman<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>mcprojsim:latest<span class="w"> </span>-t<span class="w"> </span>mcprojsim:<span class="k">$(</span>poetry<span class="w"> </span>version<span class="w"> </span>--short<span class="k">)</span><span class="w"> </span>.
 </span></code></pre></div>
 <h4 id="standard-build-with-docker">Standard build with Docker<a class="headerlink" href="#standard-build-with-docker" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>mcprojsim:latest<span class="w"> </span>-t<span class="w"> </span>mcprojsim:<span class="k">$(</span>poetry<span class="w"> </span>version<span class="w"> </span>--short<span class="k">)</span><span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>mcprojsim:latest<span class="w"> </span>-t<span class="w"> </span>mcprojsim:<span class="k">$(</span>poetry<span class="w"> </span>version<span class="w"> </span>--short<span class="k">)</span><span class="w"> </span>.
 </span></code></pre></div>
 <h4 id="proxy-aware-build-with-podman">Proxy-aware build with Podman<a class="headerlink" href="#proxy-aware-build-with-podman" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>podman<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span>--secret<span class="w"> </span><span class="nv">id</span><span class="o">=</span>proxy_ca,src<span class="o">=</span>CA_proxy_fw_all.pem<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim:latest<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim:<span class="k">$(</span>poetry<span class="w"> </span>version<span class="w"> </span>--short<span class="k">)</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">  </span>.
-</span></code></pre></div>
-<h4 id="proxy-aware-build-with-docker">Proxy-aware build with Docker<a class="headerlink" href="#proxy-aware-build-with-docker" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>docker<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>podman<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span>--secret<span class="w"> </span><span class="nv">id</span><span class="o">=</span>proxy_ca,src<span class="o">=</span>CA_proxy_fw_all.pem<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim:latest<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim:<span class="k">$(</span>poetry<span class="w"> </span>version<span class="w"> </span>--short<span class="k">)</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">  </span>.
 </span></code></pre></div>
+<h4 id="proxy-aware-build-with-docker">Proxy-aware build with Docker<a class="headerlink" href="#proxy-aware-build-with-docker" title="Permanent link">&para;</a></h4>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>docker<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>--secret<span class="w"> </span><span class="nv">id</span><span class="o">=</span>proxy_ca,src<span class="o">=</span>CA_proxy_fw_all.pem<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim:latest<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim:<span class="k">$(</span>poetry<span class="w"> </span>version<span class="w"> </span>--short<span class="k">)</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">  </span>.
+</span></code></pre></div>
 <h3 id="build-the-main-container-with-make">Build the main container with Make<a class="headerlink" href="#build-the-main-container-with-make" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>make<span class="w"> </span>container-build
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>make<span class="w"> </span>container-build
 </span></code></pre></div>
 <p>This is the preferred wrapper target.
 It auto-detects whether a proxy-aware build should be used.</p>
 <p>Explicit variants:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>make<span class="w"> </span>container-build-standard
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>make<span class="w"> </span>container-build-proxy
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>make<span class="w"> </span>container-build-standard
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>make<span class="w"> </span>container-build-proxy
 </span></code></pre></div>
 <h3 id="run-the-main-container-directly">Run the main container directly<a class="headerlink" href="#run-the-main-container-directly" title="Permanent link">&para;</a></h3>
 <h4 id="podman">Podman<a class="headerlink" href="#podman" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work:Z&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work:Z&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work:Z&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work:Z&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
 <h4 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
 <h3 id="run-through-the-wrapper-script">Run through the wrapper script<a class="headerlink" href="#run-through-the-wrapper-script" title="Permanent link">&para;</a></h3>
 <p>The wrapper in <a href="https://github.com/johan162/mcprojsim/blob/main/bin/mcprojsim.sh">bin/mcprojsim.sh</a> provides a more convenient interface for both users and developers.
@@ -5158,36 +5233,36 @@ It:</p>
 <li>rewrites file paths when possible</li>
 </ul>
 <p>Typical usage:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>./bin/mcprojsim.sh<span class="w"> </span>--help
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>./bin/mcprojsim.sh<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>./bin/mcprojsim.sh<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>./bin/mcprojsim.sh<span class="w"> </span>--help
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>./bin/mcprojsim.sh<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>./bin/mcprojsim.sh<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
 <h2 id="documentation-build-workflow">Documentation build workflow<a class="headerlink" href="#documentation-build-workflow" title="Permanent link">&para;</a></h2>
 <p>There are two supported docs workflows.</p>
 <h3 id="fast-local-docs-workflow">Fast local docs workflow<a class="headerlink" href="#fast-local-docs-workflow" title="Permanent link">&para;</a></h3>
 <p>This is the best option when editing docs frequently.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>docs
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>docs
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>serve
 </span></code></pre></div>
 <p>Equivalent wrappers:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>make<span class="w"> </span>docs
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>make<span class="w"> </span>docs-serve
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>./scripts/mkdocs.sh<span class="w"> </span>serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>make<span class="w"> </span>docs
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>make<span class="w"> </span>docs-serve
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>./scripts/mkdocs.sh<span class="w"> </span>serve
 </span></code></pre></div>
 <h3 id="containerized-docs-workflow">Containerized docs workflow<a class="headerlink" href="#containerized-docs-workflow" title="Permanent link">&para;</a></h3>
 <p>This is useful when you want to validate the containerized docs image itself or mimic a deployment-like environment.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>make<span class="w"> </span>docs-container-build
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>make<span class="w"> </span>docs-container-start
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>make<span class="w"> </span>docs-container-status
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>make<span class="w"> </span>docs-container-logs
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>make<span class="w"> </span>docs-container-stop
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>make<span class="w"> </span>docs-container-build
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>make<span class="w"> </span>docs-container-start
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>make<span class="w"> </span>docs-container-status
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>make<span class="w"> </span>docs-container-logs
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>make<span class="w"> </span>docs-container-stop
 </span></code></pre></div>
 <p>Or directly:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>./scripts/docs-contctl.sh<span class="w"> </span>build
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>./scripts/docs-contctl.sh<span class="w"> </span>start<span class="w"> </span>-p<span class="w"> </span><span class="m">8100</span>
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>./scripts/docs-contctl.sh<span class="w"> </span>status
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>./scripts/docs-contctl.sh<span class="w"> </span>logs<span class="w"> </span>--follow
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>./scripts/docs-contctl.sh<span class="w"> </span>stop
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>./scripts/docs-contctl.sh<span class="w"> </span>build
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>./scripts/docs-contctl.sh<span class="w"> </span>start<span class="w"> </span>-p<span class="w"> </span><span class="m">8100</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>./scripts/docs-contctl.sh<span class="w"> </span>status
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>./scripts/docs-contctl.sh<span class="w"> </span>logs<span class="w"> </span>--follow
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>./scripts/docs-contctl.sh<span class="w"> </span>stop
 </span></code></pre></div>
 <h2 id="documentation-container-in-detail">Documentation container in detail<a class="headerlink" href="#documentation-container-in-detail" title="Permanent link">&para;</a></h2>
 <p>The docs image is defined in <a href="https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs">Dockerfile.docs</a>.
@@ -5213,31 +5288,31 @@ It is separate from the main CLI image.</p>
 </ul>
 <h3 id="build-the-docs-image-with-raw-commands">Build the docs image with raw commands<a class="headerlink" href="#build-the-docs-image-with-raw-commands" title="Permanent link">&para;</a></h3>
 <h4 id="standard-build-with-podman_1">Standard build with Podman<a class="headerlink" href="#standard-build-with-podman_1" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>podman<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.docs<span class="w"> </span>-t<span class="w"> </span>mcprojsim-docs<span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>podman<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.docs<span class="w"> </span>-t<span class="w"> </span>mcprojsim-docs<span class="w"> </span>.
 </span></code></pre></div>
 <h4 id="standard-build-with-docker_1">Standard build with Docker<a class="headerlink" href="#standard-build-with-docker_1" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.docs<span class="w"> </span>-t<span class="w"> </span>mcprojsim-docs<span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.docs<span class="w"> </span>-t<span class="w"> </span>mcprojsim-docs<span class="w"> </span>.
 </span></code></pre></div>
 <h4 id="proxy-aware-build">Proxy-aware build<a class="headerlink" href="#proxy-aware-build" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>podman<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.docs<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim-docs<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="w">  </span>.
-</span></code></pre></div>
-<p>or:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.docs<span class="w"> </span><span class="se">\</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>podman<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.docs<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim-docs<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="w">  </span>.
+</span></code></pre></div>
+<p>or:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>Dockerfile.docs<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim-docs<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">  </span>.
 </span></code></pre></div>
 <p>For the docs image, the CA file is expected in the build context when proxy support is enabled.
 See the certificate section below for the details.</p>
 <h3 id="run-the-docs-image-with-raw-commands">Run the docs image with raw commands<a class="headerlink" href="#run-the-docs-image-with-raw-commands" title="Permanent link">&para;</a></h3>
 <h4 id="podman_1">Podman<a class="headerlink" href="#podman_1" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>podman<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">9090</span>:80<span class="w"> </span>--name<span class="w"> </span>mcprojsim-docs<span class="w"> </span>mcprojsim-docs
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>podman<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">9090</span>:80<span class="w"> </span>--name<span class="w"> </span>mcprojsim-docs<span class="w"> </span>mcprojsim-docs
 </span></code></pre></div>
 <h4 id="docker_1">Docker<a class="headerlink" href="#docker_1" title="Permanent link">&para;</a></h4>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">9090</span>:80<span class="w"> </span>--name<span class="w"> </span>mcprojsim-docs<span class="w"> </span>mcprojsim-docs
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>docker<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span>--rm<span class="w"> </span>-p<span class="w"> </span><span class="m">9090</span>:80<span class="w"> </span>--name<span class="w"> </span>mcprojsim-docs<span class="w"> </span>mcprojsim-docs
 </span></code></pre></div>
 <p>Then open <a href="http://localhost:9090">http://localhost:9090</a>.</p>
 <h2 id="container-certificate-handling-behind-a-company-firewall">Container certificate handling behind a company firewall<a class="headerlink" href="#container-certificate-handling-behind-a-company-firewall" title="Permanent link">&para;</a></h2>
@@ -5278,10 +5353,10 @@ That difference is worth understanding.</p>
 <li>the build is safer for internal PKI material</li>
 </ul>
 <h3 id="raw-command-example">Raw command example<a class="headerlink" href="#raw-command-example" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>podman<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a><span class="w">  </span>--secret<span class="w"> </span><span class="nv">id</span><span class="o">=</span>proxy_ca,src<span class="o">=</span>CA_proxy_fw_all.pem<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim<span class="w"> </span>.
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>podman<span class="w"> </span>build<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="w">  </span>--build-arg<span class="w"> </span><span class="nv">USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a><span class="w">  </span>--secret<span class="w"> </span><span class="nv">id</span><span class="o">=</span>proxy_ca,src<span class="o">=</span>CA_proxy_fw_all.pem<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-33-4"><a id="__codelineno-33-4" name="__codelineno-33-4" href="#__codelineno-33-4"></a><span class="w">  </span>-t<span class="w"> </span>mcprojsim<span class="w"> </span>.
 </span></code></pre></div>
 <h3 id="makefile-support">Makefile support<a class="headerlink" href="#makefile-support" title="Permanent link">&para;</a></h3>
 <p>The Makefile makes this easier through:</p>
@@ -5314,7 +5389,7 @@ It expects a CA file in the build context when proxy support is enabled.</p>
 This differs from the main container, which uses a build secret.</p>
 <h3 id="docs-contctlsh-and-proxy-support"><code>docs-contctl.sh</code> and proxy support<a class="headerlink" href="#docs-contctlsh-and-proxy-support" title="Permanent link">&para;</a></h3>
 <p>The docs control script supports:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a><span class="nv">MCPROJSIM_USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>./scripts/docs-contctl.sh<span class="w"> </span>build
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="nv">MCPROJSIM_USE_PROXY_CA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span>./scripts/docs-contctl.sh<span class="w"> </span>build
 </span></code></pre></div>
 <p>However, that script currently passes the build arg and relies on the CA file being present in the build context.
 So if you are behind a corporate firewall, make sure <code>CA_proxy_fw_all.pem</code> exists in the project root before invoking the docs image build.</p>
@@ -5380,13 +5455,13 @@ It:</p>
 </ul>
 <h3 id="typical-usage">Typical usage<a class="headerlink" href="#typical-usage" title="Permanent link">&para;</a></h3>
 <p>Dry-run first:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch<span class="w"> </span>--dry-run
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch<span class="w"> </span>--dry-run
 </span></code></pre></div>
 <p>Actual release example:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch
 </span></code></pre></div>
 <p>Pre-release example:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.3.0rc1<span class="w"> </span>minor
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.3.0rc1<span class="w"> </span>minor
 </span></code></pre></div>
 <h3 id="preconditions">Preconditions<a class="headerlink" href="#preconditions" title="Permanent link">&para;</a></h3>
 <p>The script expects:</p>
@@ -5464,11 +5539,11 @@ That is the safest way to confirm:</p>
 <p>This script creates the GitHub Release object after the tag already exists and CI has completed.
 It is a separate step from <code>mkrelease.sh</code>.</p>
 <h3 id="typical-usage_1">Typical usage<a class="headerlink" href="#typical-usage_1" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>./scripts/mkghrelease.sh<span class="w"> </span>--dry-run
-</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a>./scripts/mkghrelease.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>./scripts/mkghrelease.sh<span class="w"> </span>--dry-run
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>./scripts/mkghrelease.sh
 </span></code></pre></div>
 <p>If needed:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>./scripts/mkghrelease.sh<span class="w"> </span>--pre-release
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>./scripts/mkghrelease.sh<span class="w"> </span>--pre-release
 </span></code></pre></div>
 <h3 id="preconditions_1">Preconditions<a class="headerlink" href="#preconditions_1" title="Permanent link">&para;</a></h3>
 <p>The script expects:</p>
@@ -5504,20 +5579,20 @@ You can override that behavior with <code>--pre-release</code>.</p>
 The actual package publishing is then handled by the GitHub Actions release workflow described later in this document.</p>
 <h2 id="suggested-release-sequence-for-maintainers">Suggested release sequence for maintainers<a class="headerlink" href="#suggested-release-sequence-for-maintainers" title="Permanent link">&para;</a></h2>
 <p>A practical end-to-end release flow is:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="c1"># 1. Validate the repository is ready</span>
-</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>./scripts/mkbld.sh
-</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>
-</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="c1"># 2. Preview the release steps</span>
-</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch<span class="w"> </span>--dry-run
-</span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>
-</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a><span class="c1"># 3. Execute the local release process</span>
-</span><span id="__span-39-8"><a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch
-</span><span id="__span-39-9"><a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a>
-</span><span id="__span-39-10"><a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a><span class="c1"># 4. Confirm workflows on main succeeded</span>
-</span><span id="__span-39-11"><a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a>gh<span class="w"> </span>run<span class="w"> </span>list<span class="w"> </span>--branch<span class="w"> </span>main<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
-</span><span id="__span-39-12"><a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a>
-</span><span id="__span-39-13"><a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a><span class="c1"># 5. Create the GitHub Release entry</span>
-</span><span id="__span-39-14"><a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>./scripts/mkghrelease.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="c1"># 1. Validate the repository is ready</span>
+</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>./scripts/mkbld.sh
+</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>
+</span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a><span class="c1"># 2. Preview the release steps</span>
+</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch<span class="w"> </span>--dry-run
+</span><span id="__span-40-6"><a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>
+</span><span id="__span-40-7"><a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a><span class="c1"># 3. Execute the local release process</span>
+</span><span id="__span-40-8"><a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch
+</span><span id="__span-40-9"><a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a>
+</span><span id="__span-40-10"><a id="__codelineno-40-10" name="__codelineno-40-10" href="#__codelineno-40-10"></a><span class="c1"># 4. Confirm workflows on main succeeded</span>
+</span><span id="__span-40-11"><a id="__codelineno-40-11" name="__codelineno-40-11" href="#__codelineno-40-11"></a>gh<span class="w"> </span>run<span class="w"> </span>list<span class="w"> </span>--branch<span class="w"> </span>main<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
+</span><span id="__span-40-12"><a id="__codelineno-40-12" name="__codelineno-40-12" href="#__codelineno-40-12"></a>
+</span><span id="__span-40-13"><a id="__codelineno-40-13" name="__codelineno-40-13" href="#__codelineno-40-13"></a><span class="c1"># 5. Create the GitHub Release entry</span>
+</span><span id="__span-40-14"><a id="__codelineno-40-14" name="__codelineno-40-14" href="#__codelineno-40-14"></a>./scripts/mkghrelease.sh
 </span></code></pre></div>
 <h2 id="compact-release-checklist">Compact release checklist<a class="headerlink" href="#compact-release-checklist" title="Permanent link">&para;</a></h2>
 <p>Use this checklist before creating a release.</p>
@@ -5687,50 +5762,50 @@ That is why <code>mkghrelease.sh</code> matters in the release flow.</p>
 </ol>
 <h2 id="common-developer-workflows">Common developer workflows<a class="headerlink" href="#common-developer-workflows" title="Permanent link">&para;</a></h2>
 <h3 id="fast-local-iteration">Fast local iteration<a class="headerlink" href="#fast-local-iteration" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev,docs
-</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/test_simulation.py
-</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>black<span class="w"> </span>src/<span class="w"> </span>tests/
-</span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev,docs
+</span><span id="__span-41-2"><a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/test_simulation.py
+</span><span id="__span-41-3"><a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>black<span class="w"> </span>src/<span class="w"> </span>tests/
+</span><span id="__span-41-4"><a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
 <h3 id="pre-pr-validation">Pre-PR validation<a class="headerlink" href="#pre-pr-validation" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>./scripts/mkbld.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>./scripts/mkbld.sh
 </span></code></pre></div>
 <p>or roughly equivalently:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>black<span class="w"> </span>--check<span class="w"> </span>src/<span class="w"> </span>tests/
-</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>flake8<span class="w"> </span>src/<span class="w"> </span>tests/
-</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>mypy<span class="w"> </span>src/
-</span><span id="__span-42-4"><a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest
-</span><span id="__span-42-5"><a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a>poetry<span class="w"> </span>build
-</span><span id="__span-42-6"><a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a>poetry<span class="w"> </span>run<span class="w"> </span>twine<span class="w"> </span>check<span class="w"> </span>dist/*
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>black<span class="w"> </span>--check<span class="w"> </span>src/<span class="w"> </span>tests/
+</span><span id="__span-43-2"><a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>flake8<span class="w"> </span>src/<span class="w"> </span>tests/
+</span><span id="__span-43-3"><a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>mypy<span class="w"> </span>src/
+</span><span id="__span-43-4"><a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest
+</span><span id="__span-43-5"><a id="__codelineno-43-5" name="__codelineno-43-5" href="#__codelineno-43-5"></a>poetry<span class="w"> </span>build
+</span><span id="__span-43-6"><a id="__codelineno-43-6" name="__codelineno-43-6" href="#__codelineno-43-6"></a>poetry<span class="w"> </span>run<span class="w"> </span>twine<span class="w"> </span>check<span class="w"> </span>dist/*
 </span></code></pre></div>
 <h3 id="docs-editing-workflow">Docs editing workflow<a class="headerlink" href="#docs-editing-workflow" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>docs
-</span><span id="__span-43-2"><a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>make<span class="w"> </span>docs-serve
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>docs
+</span><span id="__span-44-2"><a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>make<span class="w"> </span>docs-serve
 </span></code></pre></div>
 <h3 id="docs-container-validation">Docs container validation<a class="headerlink" href="#docs-container-validation" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>make<span class="w"> </span>docs-container-build
-</span><span id="__span-44-2"><a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>make<span class="w"> </span>docs-container-start
-</span><span id="__span-44-3"><a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>make<span class="w"> </span>docs-container-status
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>make<span class="w"> </span>docs-container-build
+</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>make<span class="w"> </span>docs-container-start
+</span><span id="__span-45-3"><a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>make<span class="w"> </span>docs-container-status
 </span></code></pre></div>
 <h3 id="main-container-validation">Main container validation<a class="headerlink" href="#main-container-validation" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>make<span class="w"> </span>container-build
-</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>./bin/mcprojsim.sh<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
-</span><span id="__span-45-3"><a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>./bin/mcprojsim.sh<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>make<span class="w"> </span>container-build
+</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>./bin/mcprojsim.sh<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
+</span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>./bin/mcprojsim.sh<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="poetry-is-installed-but-commands-fail">Poetry is installed but commands fail<a class="headerlink" href="#poetry-is-installed-but-commands-fail" title="Permanent link">&para;</a></h3>
 <p>Check:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>poetry<span class="w"> </span>env<span class="w"> </span>info
-</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev,docs
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>poetry<span class="w"> </span>env<span class="w"> </span>info
+</span><span id="__span-47-2"><a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev,docs
 </span></code></pre></div>
 <h3 id="mcprojsim-cli-is-not-found-inside-poetry"><code>mcprojsim</code> CLI is not found inside Poetry<a class="headerlink" href="#mcprojsim-cli-is-not-found-inside-poetry" title="Permanent link">&para;</a></h3>
 <p>Run:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>poetry<span class="w"> </span>install
-</span><span id="__span-47-2"><a id="__codelineno-47-2" name="__codelineno-47-2" href="#__codelineno-47-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>poetry<span class="w"> </span>install
+</span><span id="__span-48-2"><a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>--help
 </span></code></pre></div>
 <h3 id="docs-build-fails-due-to-missing-mkdocs-tooling">Docs build fails due to missing MkDocs tooling<a class="headerlink" href="#docs-build-fails-due-to-missing-mkdocs-tooling" title="Permanent link">&para;</a></h3>
 <p>Run:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>docs
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>docs
 </span></code></pre></div>
 <h3 id="container-build-fails-with-certificate-errors">Container build fails with certificate errors<a class="headerlink" href="#container-build-fails-with-certificate-errors" title="Permanent link">&para;</a></h3>
 <p>Check whether you are behind a corporate proxy.
@@ -5742,7 +5817,7 @@ If so:</p>
 </ul>
 <h3 id="mkghreleasesh-fails-because-workflows-are-still-running"><code>mkghrelease.sh</code> fails because workflows are still running<a class="headerlink" href="#mkghreleasesh-fails-because-workflows-are-still-running" title="Permanent link">&para;</a></h3>
 <p>Wait for GitHub Actions to finish:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a>gh<span class="w"> </span>run<span class="w"> </span>list<span class="w"> </span>--branch<span class="w"> </span>main<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a>gh<span class="w"> </span>run<span class="w"> </span>list<span class="w"> </span>--branch<span class="w"> </span>main<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
 <p>Then rerun the script.</p>
 <h3 id="release-script-stops-on-branch-or-cleanliness-checks">Release script stops on branch or cleanliness checks<a class="headerlink" href="#release-script-stops-on-branch-or-cleanliness-checks" title="Permanent link">&para;</a></h3>
@@ -5762,64 +5837,64 @@ The release automation is intentionally conservative and stops rather than guess
 <h2 id="appendix-common-commands-cheat-sheet">Appendix: common commands cheat sheet<a class="headerlink" href="#appendix-common-commands-cheat-sheet" title="Permanent link">&para;</a></h2>
 <p>This appendix collects the commands used most often during daily development and release work.</p>
 <h3 id="environment-setup">Environment setup<a class="headerlink" href="#environment-setup" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a>poetry<span class="w"> </span>config<span class="w"> </span>virtualenvs.in-project<span class="w"> </span><span class="nb">true</span>
-</span><span id="__span-50-2"><a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev,docs
-</span><span id="__span-50-3"><a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a>poetry<span class="w"> </span>env<span class="w"> </span>info
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a>poetry<span class="w"> </span>config<span class="w"> </span>virtualenvs.in-project<span class="w"> </span><span class="nb">true</span>
+</span><span id="__span-51-2"><a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev,docs
+</span><span id="__span-51-3"><a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a>poetry<span class="w"> </span>env<span class="w"> </span>info
 </span></code></pre></div>
 <h3 id="local-quality-checks">Local quality checks<a class="headerlink" href="#local-quality-checks" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest
-</span><span id="__span-51-2"><a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>black<span class="w"> </span>src/<span class="w"> </span>tests/
-</span><span id="__span-51-3"><a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>flake8<span class="w"> </span>src/<span class="w"> </span>tests/
-</span><span id="__span-51-4"><a id="__codelineno-51-4" name="__codelineno-51-4" href="#__codelineno-51-4"></a>poetry<span class="w"> </span>run<span class="w"> </span>mypy<span class="w"> </span>src/
-</span><span id="__span-51-5"><a id="__codelineno-51-5" name="__codelineno-51-5" href="#__codelineno-51-5"></a>./scripts/mkbld.sh
-</span><span id="__span-51-6"><a id="__codelineno-51-6" name="__codelineno-51-6" href="#__codelineno-51-6"></a>make<span class="w"> </span>check
-</span><span id="__span-51-7"><a id="__codelineno-51-7" name="__codelineno-51-7" href="#__codelineno-51-7"></a>make<span class="w"> </span><span class="nb">test</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>pytest
+</span><span id="__span-52-2"><a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>black<span class="w"> </span>src/<span class="w"> </span>tests/
+</span><span id="__span-52-3"><a id="__codelineno-52-3" name="__codelineno-52-3" href="#__codelineno-52-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>flake8<span class="w"> </span>src/<span class="w"> </span>tests/
+</span><span id="__span-52-4"><a id="__codelineno-52-4" name="__codelineno-52-4" href="#__codelineno-52-4"></a>poetry<span class="w"> </span>run<span class="w"> </span>mypy<span class="w"> </span>src/
+</span><span id="__span-52-5"><a id="__codelineno-52-5" name="__codelineno-52-5" href="#__codelineno-52-5"></a>./scripts/mkbld.sh
+</span><span id="__span-52-6"><a id="__codelineno-52-6" name="__codelineno-52-6" href="#__codelineno-52-6"></a>make<span class="w"> </span>check
+</span><span id="__span-52-7"><a id="__codelineno-52-7" name="__codelineno-52-7" href="#__codelineno-52-7"></a>make<span class="w"> </span><span class="nb">test</span>
 </span></code></pre></div>
 <h3 id="cli-smoke-tests">CLI smoke tests<a class="headerlink" href="#cli-smoke-tests" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>--help
-</span><span id="__span-52-2"><a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
-</span><span id="__span-52-3"><a id="__codelineno-52-3" name="__codelineno-52-3" href="#__codelineno-52-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
-</span><span id="__span-52-4"><a id="__codelineno-52-4" name="__codelineno-52-4" href="#__codelineno-52-4"></a>./scripts/verify_setup.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>--help
+</span><span id="__span-53-2"><a id="__codelineno-53-2" name="__codelineno-53-2" href="#__codelineno-53-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
+</span><span id="__span-53-3"><a id="__codelineno-53-3" name="__codelineno-53-3" href="#__codelineno-53-3"></a>poetry<span class="w"> </span>run<span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+</span><span id="__span-53-4"><a id="__codelineno-53-4" name="__codelineno-53-4" href="#__codelineno-53-4"></a>./scripts/verify_setup.sh
 </span></code></pre></div>
 <h3 id="documentation_1">Documentation<a class="headerlink" href="#documentation_1" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>serve
-</span><span id="__span-53-2"><a id="__codelineno-53-2" name="__codelineno-53-2" href="#__codelineno-53-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>build
-</span><span id="__span-53-3"><a id="__codelineno-53-3" name="__codelineno-53-3" href="#__codelineno-53-3"></a>make<span class="w"> </span>docs-serve
-</span><span id="__span-53-4"><a id="__codelineno-53-4" name="__codelineno-53-4" href="#__codelineno-53-4"></a>make<span class="w"> </span>docs
-</span><span id="__span-53-5"><a id="__codelineno-53-5" name="__codelineno-53-5" href="#__codelineno-53-5"></a>./scripts/mkdocs.sh<span class="w"> </span>serve
-</span><span id="__span-53-6"><a id="__codelineno-53-6" name="__codelineno-53-6" href="#__codelineno-53-6"></a>./scripts/mkdocs.sh<span class="w"> </span>build
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-54-1"><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a>poetry<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>serve
+</span><span id="__span-54-2"><a id="__codelineno-54-2" name="__codelineno-54-2" href="#__codelineno-54-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>build
+</span><span id="__span-54-3"><a id="__codelineno-54-3" name="__codelineno-54-3" href="#__codelineno-54-3"></a>make<span class="w"> </span>docs-serve
+</span><span id="__span-54-4"><a id="__codelineno-54-4" name="__codelineno-54-4" href="#__codelineno-54-4"></a>make<span class="w"> </span>docs
+</span><span id="__span-54-5"><a id="__codelineno-54-5" name="__codelineno-54-5" href="#__codelineno-54-5"></a>./scripts/mkdocs.sh<span class="w"> </span>serve
+</span><span id="__span-54-6"><a id="__codelineno-54-6" name="__codelineno-54-6" href="#__codelineno-54-6"></a>./scripts/mkdocs.sh<span class="w"> </span>build
 </span></code></pre></div>
 <h3 id="documentation-container">Documentation container<a class="headerlink" href="#documentation-container" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-54-1"><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a>make<span class="w"> </span>docs-container-build
-</span><span id="__span-54-2"><a id="__codelineno-54-2" name="__codelineno-54-2" href="#__codelineno-54-2"></a>make<span class="w"> </span>docs-container-start
-</span><span id="__span-54-3"><a id="__codelineno-54-3" name="__codelineno-54-3" href="#__codelineno-54-3"></a>make<span class="w"> </span>docs-container-status
-</span><span id="__span-54-4"><a id="__codelineno-54-4" name="__codelineno-54-4" href="#__codelineno-54-4"></a>make<span class="w"> </span>docs-container-logs
-</span><span id="__span-54-5"><a id="__codelineno-54-5" name="__codelineno-54-5" href="#__codelineno-54-5"></a>make<span class="w"> </span>docs-container-stop
-</span><span id="__span-54-6"><a id="__codelineno-54-6" name="__codelineno-54-6" href="#__codelineno-54-6"></a>./scripts/docs-contctl.sh<span class="w"> </span>build
-</span><span id="__span-54-7"><a id="__codelineno-54-7" name="__codelineno-54-7" href="#__codelineno-54-7"></a>./scripts/docs-contctl.sh<span class="w"> </span>start<span class="w"> </span>-p<span class="w"> </span><span class="m">8100</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-55-1"><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a>make<span class="w"> </span>docs-container-build
+</span><span id="__span-55-2"><a id="__codelineno-55-2" name="__codelineno-55-2" href="#__codelineno-55-2"></a>make<span class="w"> </span>docs-container-start
+</span><span id="__span-55-3"><a id="__codelineno-55-3" name="__codelineno-55-3" href="#__codelineno-55-3"></a>make<span class="w"> </span>docs-container-status
+</span><span id="__span-55-4"><a id="__codelineno-55-4" name="__codelineno-55-4" href="#__codelineno-55-4"></a>make<span class="w"> </span>docs-container-logs
+</span><span id="__span-55-5"><a id="__codelineno-55-5" name="__codelineno-55-5" href="#__codelineno-55-5"></a>make<span class="w"> </span>docs-container-stop
+</span><span id="__span-55-6"><a id="__codelineno-55-6" name="__codelineno-55-6" href="#__codelineno-55-6"></a>./scripts/docs-contctl.sh<span class="w"> </span>build
+</span><span id="__span-55-7"><a id="__codelineno-55-7" name="__codelineno-55-7" href="#__codelineno-55-7"></a>./scripts/docs-contctl.sh<span class="w"> </span>start<span class="w"> </span>-p<span class="w"> </span><span class="m">8100</span>
 </span></code></pre></div>
 <h3 id="main-container">Main container<a class="headerlink" href="#main-container" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-55-1"><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a>make<span class="w"> </span>container-build
-</span><span id="__span-55-2"><a id="__codelineno-55-2" name="__codelineno-55-2" href="#__codelineno-55-2"></a>make<span class="w"> </span>container-build-standard
-</span><span id="__span-55-3"><a id="__codelineno-55-3" name="__codelineno-55-3" href="#__codelineno-55-3"></a>make<span class="w"> </span>container-build-proxy
-</span><span id="__span-55-4"><a id="__codelineno-55-4" name="__codelineno-55-4" href="#__codelineno-55-4"></a>./bin/mcprojsim.sh<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
-</span><span id="__span-55-5"><a id="__codelineno-55-5" name="__codelineno-55-5" href="#__codelineno-55-5"></a>./bin/mcprojsim.sh<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
-</span><span id="__span-55-6"><a id="__codelineno-55-6" name="__codelineno-55-6" href="#__codelineno-55-6"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work:Z&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>--help
-</span><span id="__span-55-7"><a id="__codelineno-55-7" name="__codelineno-55-7" href="#__codelineno-55-7"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-56-1"><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a>make<span class="w"> </span>container-build
+</span><span id="__span-56-2"><a id="__codelineno-56-2" name="__codelineno-56-2" href="#__codelineno-56-2"></a>make<span class="w"> </span>container-build-standard
+</span><span id="__span-56-3"><a id="__codelineno-56-3" name="__codelineno-56-3" href="#__codelineno-56-3"></a>make<span class="w"> </span>container-build-proxy
+</span><span id="__span-56-4"><a id="__codelineno-56-4" name="__codelineno-56-4" href="#__codelineno-56-4"></a>./bin/mcprojsim.sh<span class="w"> </span>validate<span class="w"> </span>examples/sample_project.yaml
+</span><span id="__span-56-5"><a id="__codelineno-56-5" name="__codelineno-56-5" href="#__codelineno-56-5"></a>./bin/mcprojsim.sh<span class="w"> </span>simulate<span class="w"> </span>examples/sample_project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+</span><span id="__span-56-6"><a id="__codelineno-56-6" name="__codelineno-56-6" href="#__codelineno-56-6"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work:Z&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>--help
+</span><span id="__span-56-7"><a id="__codelineno-56-7" name="__codelineno-56-7" href="#__codelineno-56-7"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/work&quot;</span><span class="w"> </span>mcprojsim<span class="w"> </span>--help
 </span></code></pre></div>
 <h3 id="release-workflow">Release workflow<a class="headerlink" href="#release-workflow" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-56-1"><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch<span class="w"> </span>--dry-run
-</span><span id="__span-56-2"><a id="__codelineno-56-2" name="__codelineno-56-2" href="#__codelineno-56-2"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch
-</span><span id="__span-56-3"><a id="__codelineno-56-3" name="__codelineno-56-3" href="#__codelineno-56-3"></a>gh<span class="w"> </span>run<span class="w"> </span>list<span class="w"> </span>--branch<span class="w"> </span>main<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
-</span><span id="__span-56-4"><a id="__codelineno-56-4" name="__codelineno-56-4" href="#__codelineno-56-4"></a>./scripts/mkghrelease.sh<span class="w"> </span>--dry-run
-</span><span id="__span-56-5"><a id="__codelineno-56-5" name="__codelineno-56-5" href="#__codelineno-56-5"></a>./scripts/mkghrelease.sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-57-1"><a id="__codelineno-57-1" name="__codelineno-57-1" href="#__codelineno-57-1"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch<span class="w"> </span>--dry-run
+</span><span id="__span-57-2"><a id="__codelineno-57-2" name="__codelineno-57-2" href="#__codelineno-57-2"></a>./scripts/mkrelease.sh<span class="w"> </span><span class="m">0</span>.2.1<span class="w"> </span>patch
+</span><span id="__span-57-3"><a id="__codelineno-57-3" name="__codelineno-57-3" href="#__codelineno-57-3"></a>gh<span class="w"> </span>run<span class="w"> </span>list<span class="w"> </span>--branch<span class="w"> </span>main<span class="w"> </span>--limit<span class="w"> </span><span class="m">5</span>
+</span><span id="__span-57-4"><a id="__codelineno-57-4" name="__codelineno-57-4" href="#__codelineno-57-4"></a>./scripts/mkghrelease.sh<span class="w"> </span>--dry-run
+</span><span id="__span-57-5"><a id="__codelineno-57-5" name="__codelineno-57-5" href="#__codelineno-57-5"></a>./scripts/mkghrelease.sh
 </span></code></pre></div>
 <h3 id="registry-and-packaging">Registry and packaging<a class="headerlink" href="#registry-and-packaging" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-57-1"><a id="__codelineno-57-1" name="__codelineno-57-1" href="#__codelineno-57-1"></a>poetry<span class="w"> </span>build
-</span><span id="__span-57-2"><a id="__codelineno-57-2" name="__codelineno-57-2" href="#__codelineno-57-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>twine<span class="w"> </span>check<span class="w"> </span>dist/*
-</span><span id="__span-57-3"><a id="__codelineno-57-3" name="__codelineno-57-3" href="#__codelineno-57-3"></a>make<span class="w"> </span>ghcr-login
-</span><span id="__span-57-4"><a id="__codelineno-57-4" name="__codelineno-57-4" href="#__codelineno-57-4"></a>make<span class="w"> </span>ghcr-push<span class="w"> </span><span class="nv">GITHUB_USER</span><span class="o">=</span>&lt;github-user&gt;
-</span><span id="__span-57-5"><a id="__codelineno-57-5" name="__codelineno-57-5" href="#__codelineno-57-5"></a>make<span class="w"> </span>ghcr-logout
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-58-1"><a id="__codelineno-58-1" name="__codelineno-58-1" href="#__codelineno-58-1"></a>poetry<span class="w"> </span>build
+</span><span id="__span-58-2"><a id="__codelineno-58-2" name="__codelineno-58-2" href="#__codelineno-58-2"></a>poetry<span class="w"> </span>run<span class="w"> </span>twine<span class="w"> </span>check<span class="w"> </span>dist/*
+</span><span id="__span-58-3"><a id="__codelineno-58-3" name="__codelineno-58-3" href="#__codelineno-58-3"></a>make<span class="w"> </span>ghcr-login
+</span><span id="__span-58-4"><a id="__codelineno-58-4" name="__codelineno-58-4" href="#__codelineno-58-4"></a>make<span class="w"> </span>ghcr-push<span class="w"> </span><span class="nv">GITHUB_USER</span><span class="o">=</span>&lt;github-user&gt;
+</span><span id="__span-58-5"><a id="__codelineno-58-5" name="__codelineno-58-5" href="#__codelineno-58-5"></a>make<span class="w"> </span>ghcr-logout
 </span></code></pre></div>
 <h2 id="related-references">Related references<a class="headerlink" href="#related-references" title="Permanent link">&para;</a></h2>
 <ul>

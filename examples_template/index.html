@@ -663,6 +663,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/sprint_planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint Planning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/constrained/" class="md-nav__link">
         
   
@@ -1054,6 +1082,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sprint-planning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sprint Planning
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sprint Planning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#minimal-story-point-forecast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimal story-point forecast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-sprint-forecast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced sprint forecast
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tasks-mode-and-external-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tasks mode and external history
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#running-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1125,6 +1203,12 @@
 <li><a href="#natural-language-project-generation">Natural Language Project Generation</a><ul>
 <li><a href="#basic-text-input-dependency-only">Basic text input (dependency-only)</a></li>
 <li><a href="#text-input-with-resources-and-calendars-constrained">Text input with resources and calendars (constrained)</a></li>
+</ul>
+</li>
+<li><a href="#sprint-planning">Sprint Planning</a><ul>
+<li><a href="#minimal-story-point-forecast">Minimal story-point forecast</a></li>
+<li><a href="#advanced-sprint-forecast">Advanced sprint forecast</a></li>
+<li><a href="#tasks-mode-and-external-history">Tasks mode and external history</a></li>
 </ul>
 </li>
 <li><a href="#running-examples">Running Examples</a><ul>
@@ -1220,6 +1304,38 @@ bounds.</p>
 <p>The generated YAML includes full <code>resources:</code> and <code>calendars:</code> sections. Use <code>--validate-only</code> to check your description before generating:</p>
 <p>{{run:poetry run mcprojsim generate examples/nl_constrained_example.txt --validate-only}}</p>
 <p>See <code>examples/nl_example.txt</code> and <code>examples/nl_constrained_example.txt</code> in the repository.</p>
+<h2 id="sprint-planning">Sprint Planning<a class="headerlink" href="#sprint-planning" title="Permanent link">&para;</a></h2>
+<p>Sprint-planning examples combine the normal task simulation with a sprint-based forecast built from historical sprint results.</p>
+<h3 id="minimal-story-point-forecast">Minimal story-point forecast<a class="headerlink" href="#minimal-story-point-forecast" title="Permanent link">&para;</a></h3>
+<p>{{file:examples/sprint_planning_minimal.yaml}}</p>
+<p>{{run:poetry run mcprojsim simulate examples/sprint_planning_minimal.yaml --minimal --seed 42}}</p>
+<p>Key observations:</p>
+<ul>
+<li>Uses <code>story_points</code> as the sprint-capacity unit.</li>
+<li>Three historical sprint rows are enough to start forecasting.</li>
+<li>The sprint summary shows commitment guidance and sprint-count percentiles alongside the regular project forecast.</li>
+</ul>
+<h3 id="advanced-sprint-forecast">Advanced sprint forecast<a class="headerlink" href="#advanced-sprint-forecast" title="Permanent link">&para;</a></h3>
+<p>{{file:examples/sprint_planning_advanced.yaml}}</p>
+<p>{{run:poetry run mcprojsim simulate examples/sprint_planning_advanced.yaml --minimal --table --seed 42 --iterations 200}}</p>
+<p>Key observations:</p>
+<ul>
+<li><code>future_sprint_overrides</code> model known upcoming capacity reductions.</li>
+<li><code>volatility_overlay</code> adds random sprint-level disruption.</li>
+<li><code>spillover</code> plus <code>spillover_probability_override</code> let larger items partially carry into later sprints.</li>
+</ul>
+<h3 id="tasks-mode-and-external-history">Tasks mode and external history<a class="headerlink" href="#tasks-mode-and-external-history" title="Permanent link">&para;</a></h3>
+<p>Tasks mode is useful for service or maintenance backlogs where items are intentionally kept to similar size.</p>
+<p>{{file:examples/sprint_planning_tasks.yaml}}</p>
+<p>{{run:poetry run mcprojsim simulate examples/sprint_planning_tasks.yaml --minimal --seed 42}}</p>
+<p>The same sprint-planning workflow can load history from external data files:</p>
+<p>{{file:examples/sprint_planning_external_json.yaml}}</p>
+<p>{{file:examples/sprint_planning_history.json}}</p>
+<p>{{file:examples/sprint_planning_external_csv.toml}}</p>
+<p>{{file:examples/sprint_planning_history.csv}}</p>
+<p>Natural-language input also supports sprint-planning sections:</p>
+<p>{{file:examples/sprint_planning_nl.txt}}</p>
+<p>{{run:poetry run mcprojsim generate examples/sprint_planning_nl.txt -o .build/gen-examples/sprint_planning_nl.yaml &gt;/dev/null 2&gt;&amp;1 &amp;&amp; poetry run mcprojsim simulate .build/gen-examples/sprint_planning_nl.yaml --minimal --seed 42}}</p>
 <h2 id="running-examples">Running Examples<a class="headerlink" href="#running-examples" title="Permanent link">&para;</a></h2>
 <h3 id="common-cli-options">Common CLI options<a class="headerlink" href="#common-cli-options" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Basic simulation</span>
@@ -1297,6 +1413,30 @@ bounds.</p>
 <tr>
 <td><code>resource_cap_large_task.yaml</code></td>
 <td>Global coordination cap on large tasks</td>
+</tr>
+<tr>
+<td><code>sprint_planning_minimal.yaml</code></td>
+<td>Minimal story-point sprint forecast</td>
+</tr>
+<tr>
+<td><code>sprint_planning_advanced.yaml</code></td>
+<td>Advanced sprint forecast with spillover, volatility, and overrides</td>
+</tr>
+<tr>
+<td><code>sprint_planning_tasks.yaml</code></td>
+<td>Throughput-style sprint planning in <code>tasks</code> mode</td>
+</tr>
+<tr>
+<td><code>sprint_planning_external_json.yaml</code></td>
+<td>YAML project loading external JSON sprint history</td>
+</tr>
+<tr>
+<td><code>sprint_planning_external_csv.toml</code></td>
+<td>TOML project loading external CSV sprint history</td>
+</tr>
+<tr>
+<td><code>sprint_planning_nl.txt</code></td>
+<td>Natural-language sprint planning input</td>
 </tr>
 <tr>
 <td><code>nl_example.txt</code></td>

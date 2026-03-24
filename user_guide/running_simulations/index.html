@@ -672,6 +672,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../sprint_planning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sprint Planning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../constrained/" class="md-nav__link">
         
   
@@ -1685,6 +1713,21 @@
 <td>Target completion date (<code>YYYY-MM-DD</code>) to calculate probability of meeting</td>
 <td>none</td>
 </tr>
+<tr>
+<td><code>--distribution MODEL</code></td>
+<td>Override the default task duration distribution (<code>triangular</code> or <code>lognormal</code>). Takes precedence over the project-level <code>distribution</code> setting but <strong>not</strong> over a <code>distribution</code> set on an individual task.</td>
+<td>project file setting</td>
+</tr>
+<tr>
+<td><code>--velocity-model MODEL</code></td>
+<td>Override the sprint planning velocity model (<code>empirical</code> or <code>neg_binomial</code>). Applies only when sprint planning is enabled in the project file.</td>
+<td>project file setting</td>
+</tr>
+<tr>
+<td><code>--no-sickness</code></td>
+<td>Disable sickness modelling regardless of the project file setting. Applies only when sprint planning is enabled.</td>
+<td>off</td>
+</tr>
 </tbody>
 </table>
 <h3 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h3>
@@ -1723,6 +1766,15 @@
 </span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a>
 </span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="c1"># Staffing with table formatting</span>
 </span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing<span class="w"> </span>--table
+</span><span id="__span-8-36"><a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a>
+</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="c1"># Override default distribution to lognormal (tasks with an explicit distribution are unaffected)</span>
+</span><span id="__span-8-38"><a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--distribution<span class="w"> </span>lognormal
+</span><span id="__span-8-39"><a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a>
+</span><span id="__span-8-40"><a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="c1"># Sprint planning: switch velocity model to negative binomial</span>
+</span><span id="__span-8-41"><a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>--velocity-model<span class="w"> </span>neg_binomial
+</span><span id="__span-8-42"><a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a>
+</span><span id="__span-8-43"><a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a><span class="c1"># Sprint planning: disable sickness modelling</span>
+</span><span id="__span-8-44"><a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>--no-sickness
 </span></code></pre></div>
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>By default, the simulation prints a plain-text summary. With <code>--table</code> (<code>-t</code>), the confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are formatted as ASCII tables with column headers and box-drawing borders:</p>
