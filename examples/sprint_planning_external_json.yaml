@@ -1,0 +1,30 @@
+project:
+  name: "Sprint Planning External JSON"
+  start_date: "2026-05-04"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Foundation"
+    estimate:
+      story_points: 3
+  - id: "task_002"
+    name: "API"
+    estimate:
+      story_points: 5
+  - id: "task_003"
+    name: "UI"
+    estimate:
+      story_points: 8
+  - id: "task_004"
+    name: "Release"
+    estimate:
+      story_points: 3
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  history:
+    format: json
+    path: sprint_planning_history.json

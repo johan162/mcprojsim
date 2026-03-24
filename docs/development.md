@@ -227,6 +227,25 @@ make test
 make docs-serve
 ```
 
+### Heavy test selection
+
+Some long-running integration tests are marked with the `heavy` pytest marker.
+
+Use these commands during local development:
+
+```bash
+# run everything, including heavy tests
+poetry run pytest tests/
+
+# skip heavy tests (matches CI behavior)
+poetry run pytest tests/ -m "not heavy"
+
+# run only heavy tests
+poetry run pytest tests/ -m "heavy"
+```
+
+The default CI test workflow excludes heavy tests with `-m "not heavy"`.
+
 ## The Makefile in detail
 
 The Makefile provides a single entry point for common project tasks.

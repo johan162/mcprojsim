@@ -519,10 +519,32 @@ if [[ -z "$SDIST_FILE" ]]; then
 fi
 print_success "Found sdist: $(basename "$SDIST_FILE")"
 
-# 4.4: Validate artifact sizes
+# 4.4: Find MCP bundle (build it if missing)
+BUNDLE_FILE=$(find "$DIST_DIR" -name "${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip" | head -1)
+if [[ -z "$BUNDLE_FILE" ]]; then
+    print_warning "MCP bundle not found for version $FILE_VERSION_NUMBER — building now..."
+    if [[ "$DRY_RUN" == "true" ]]; then
+        print_warning "[DRY-RUN] Would run: ./scripts/mkmcpbundle.sh"
+        BUNDLE_FILE="${DIST_DIR}/${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip"
+    else
+        if ! "${SCRIPT_DIR}/mkmcpbundle.sh"; then
+            print_error "Failed to build MCP bundle"
+            exit 1
+        fi
+        BUNDLE_FILE=$(find "$DIST_DIR" -name "${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip" | head -1)
+        if [[ -z "$BUNDLE_FILE" ]]; then
+            print_error "MCP bundle still not found after build at dist/${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip"
+            exit 1
+        fi
+    fi
+fi
+print_success "Found MCP bundle: $(basename "$BUNDLE_FILE")"
+
+# 4.5: Validate artifact sizes
 print_sub_step "Validating artifact sizes..."
 WHEEL_SIZE=$(stat -f%z "$WHEEL_FILE" 2>/dev/null || stat -c%s "$WHEEL_FILE" 2>/dev/null)
 SDIST_SIZE=$(stat -f%z "$SDIST_FILE" 2>/dev/null || stat -c%s "$SDIST_FILE" 2>/dev/null)
+BUNDLE_SIZE=$(stat -f%z "$BUNDLE_FILE" 2>/dev/null || stat -c%s "$BUNDLE_FILE" 2>/dev/null || echo 0)
 
 if [[ "$WHEEL_SIZE" -lt 1000 ]]; then
     print_error "Wheel file suspiciously small: $WHEEL_SIZE bytes"
@@ -534,8 +556,14 @@ if [[ "$SDIST_SIZE" -lt 1000 ]]; then
     exit 1
 fi
 
-print_success "Wheel size: $(numfmt --to=iec-i --suffix=B "$WHEEL_SIZE" 2>/dev/null || echo "$WHEEL_SIZE bytes")"
-print_success "Sdist size: $(numfmt --to=iec-i --suffix=B "$SDIST_SIZE" 2>/dev/null || echo "$SDIST_SIZE bytes")"
+if [[ "$DRY_RUN" == "false" && "$BUNDLE_SIZE" -lt 1000 ]]; then
+    print_error "MCP bundle suspiciously small: $BUNDLE_SIZE bytes"
+    exit 1
+fi
+
+print_success "Wheel size:  $(numfmt --to=iec-i --suffix=B "$WHEEL_SIZE" 2>/dev/null || echo "$WHEEL_SIZE bytes")"
+print_success "Sdist size:  $(numfmt --to=iec-i --suffix=B "$SDIST_SIZE" 2>/dev/null || echo "$SDIST_SIZE bytes")"
+print_success "Bundle size: $(numfmt --to=iec-i --suffix=B "$BUNDLE_SIZE" 2>/dev/null || echo "$BUNDLE_SIZE bytes")"
 
 # =====================================
 # PHASE 5: RELEASE NOTES PREPARATION
@@ -627,7 +655,8 @@ GH_RELEASE_CMD="gh release create \"$LATEST_TAG\" \
     --title \"${PROGRAMNAME_PRETTY} $LATEST_TAG\" \
     --notes-file \"$RELEASE_NOTES_FILE\" \
     \"$WHEEL_FILE\" \
-    \"$SDIST_FILE\""
+    \"$SDIST_FILE\" \\
+    \"$BUNDLE_FILE\""
 
 if [[ "$IS_PRE_RELEASE" == "true" ]]; then
     GH_RELEASE_CMD="$GH_RELEASE_CMD --prerelease"
@@ -695,6 +724,7 @@ else
     echo "Artifacts uploaded:"
     echo "  - $(basename "$WHEEL_FILE")"
     echo "  - $(basename "$SDIST_FILE")"
+    echo "  - $(basename "$BUNDLE_FILE")"
     echo ""
     echo "Next steps:"
     echo "  1. Verify release on GitHub:"

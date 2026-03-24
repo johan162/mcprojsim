@@ -1,0 +1,44 @@
+project:
+  name: "Sprint Planning Minimal"
+  start_date: "2026-05-04"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Foundation"
+    estimate:
+      story_points: 3
+  - id: "task_002"
+    name: "Backend API"
+    estimate:
+      story_points: 5
+  - id: "task_003"
+    name: "Frontend"
+    estimate:
+      story_points: 8
+  - id: "task_004"
+    name: "Integration"
+    estimate:
+      story_points: 5
+  - id: "task_005"
+    name: "Release prep"
+    estimate:
+      story_points: 3
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  planning_confidence_level: 0.8
+  history:
+    - sprint_id: "SPR-001"
+      completed_story_points: 10
+      spillover_story_points: 1
+    - sprint_id: "SPR-002"
+      completed_story_points: 9
+      spillover_story_points: 2
+      added_story_points: 1
+    - sprint_id: "SPR-003"
+      completed_story_points: 11
+      spillover_story_points: 1
+      removed_story_points: 1

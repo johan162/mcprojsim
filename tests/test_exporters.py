@@ -9,6 +9,7 @@ from mcprojsim.exporters import JSONExporter, CSVExporter, HTMLExporter
 from mcprojsim.config import Config
 from mcprojsim.models.project import Project, ProjectMetadata, Task, TaskEstimate
 from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
+from mcprojsim.models.sprint_simulation import SprintPlanningResults
 import numpy as np
 
 
@@ -51,6 +52,88 @@ def sample_results():
     results.resource_wait_time_hours = 1.25
     results.resource_utilization = 0.72
     results.calendar_delay_time_hours = 3.5
+    return results
+
+
+@pytest.fixture
+def sample_sprint_results():
+    """Create sample sprint-planning results."""
+    results = SprintPlanningResults(
+        iterations=5,
+        project_name="Test Project",
+        sprint_length_weeks=2,
+        sprint_counts=np.array([2.0, 2.0, 3.0, 3.0, 4.0]),
+        random_seed=42,
+        start_date=date(2025, 1, 6),
+        planning_confidence_level=0.8,
+        removed_work_treatment="churn_only",
+        historical_diagnostics={
+            "sampling_mode": "matching_cadence",
+            "observation_count": 3,
+            "series_statistics": {
+                "completed_units": {
+                    "mean": 6.0,
+                    "median": 6.0,
+                    "std_dev": 0.82,
+                    "min": 5.0,
+                    "max": 7.0,
+                },
+                "spillover_units": {
+                    "mean": 0.67,
+                    "median": 1.0,
+                    "std_dev": 0.47,
+                    "min": 0.0,
+                    "max": 1.0,
+                },
+            },
+            "ratios": {
+                "spillover_ratio": {
+                    "mean": 0.1111,
+                    "median": 0.1000,
+                    "std_dev": 0.0500,
+                    "min": 0.0,
+                    "max": 0.2,
+                    "percentiles": {50: 0.1, 80: 0.15, 90: 0.18},
+                },
+                "scope_addition_ratio": {
+                    "mean": 0.0600,
+                    "median": 0.0500,
+                    "std_dev": 0.0300,
+                    "min": 0.0,
+                    "max": 0.1,
+                    "percentiles": {50: 0.05, 80: 0.08, 90: 0.09},
+                },
+            },
+            "correlations": {
+                "completed_units|spillover_units": -0.4200,
+                "completed_units|added_units": 0.3300,
+            },
+        },
+        planned_commitment_guidance=4.5,
+        carryover_statistics={"mean": 1.2, "p80": 2.0, "p90": 2.5, "max": 3.0},
+        spillover_statistics={
+            "aggregate_spillover_rate": {
+                "mean": 0.3,
+                "median": 0.25,
+                "p80": 0.5,
+                "p90": 0.6,
+                "max": 0.8,
+            }
+        },
+        disruption_statistics={
+            "enabled": True,
+            "configured_probability": 0.1,
+            "observed_frequency": 0.2,
+        },
+        burnup_percentiles=[
+            {"sprint_number": 1.0, "p50": 4.0, "p80": 5.0, "p90": 6.0},
+            {"sprint_number": 2.0, "p50": 8.0, "p80": 9.0, "p90": 10.0},
+        ],
+    )
+    results.calculate_statistics()
+    for percentile in (50, 80, 90):
+        results.percentile(percentile)
+        results.date_percentile(percentile)
     return results
 
 
@@ -105,6 +188,34 @@ class TestJSONExporter:
         assert "std_dev_hours" in stats
         assert "min_hours" in stats
         assert "max_hours" in stats
+
+    def test_json_contains_sprint_planning_section(
+        self, sample_results, sample_sprint_results, tmp_path
+    ):
+        """Test that JSON export includes sprint-planning data when provided."""
+        output_file = tmp_path / "results.json"
+        JSONExporter.export(
+            sample_results,
+            output_file,
+            sprint_results=sample_sprint_results,
+        )
+
+        with open(output_file, "r") as f:
+            data = json.load(f)
+
+        sprint_data = data["sprint_planning"]
+        assert sprint_data["sprint_length_weeks"] == 2
+        assert sprint_data["planned_commitment_guidance"] == pytest.approx(4.5)
+        assert (
+            sprint_data["historical_diagnostics"]["sampling_mode"] == "matching_cadence"
+        )
+        assert "80" in sprint_data["sprint_count_confidence_intervals"]
+        assert "spillover_ratio" in sprint_data["ratio_summaries"]
+        assert sprint_data["carryover_statistics"]["mean"] == pytest.approx(1.2)
+        assert sprint_data["burnup_percentiles"][0]["p80"] == pytest.approx(5.0)
+        assert sprint_data["historical_correlations"][
+            "completed_units|spillover_units"
+        ] == pytest.approx(-0.42)
 
     def test_numpy_encoder_integer(self):
         """Test NumpyEncoder handles numpy integers."""
@@ -226,6 +337,31 @@ class TestCSVExporter:
         assert "Effective Resource Utilization" in content
         assert "Calendar Delay Contribution (hours)" in content
 
+    def test_csv_contains_sprint_planning_section(
+        self, sample_results, sample_sprint_results, tmp_path
+    ):
+        """Test that CSV export includes sprint-planning data when provided."""
+        output_file = tmp_path / "results.csv"
+        CSVExporter.export(
+            sample_results,
+            output_file,
+            sprint_results=sample_sprint_results,
+        )
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Sprint Planning" in content
+        assert "Sprint Count Confidence Intervals" in content
+        assert "Historical Series Statistics" in content
+        assert "completed_units" in content
+        assert "Historical Ratio Summaries" in content
+        assert "spillover_ratio" in content
+        assert "Historical Correlations" in content
+        assert "completed_units|spillover_units" in content
+        assert "Carryover Diagnostics" in content
+        assert "Burn-up Percentiles" in content
+
 
 class TestHTMLExporter:
     """Tests for HTML exporter."""
@@ -279,6 +415,31 @@ class TestHTMLExporter:
 
         assert "Most Frequent Critical Paths" in content
         assert "task_001 -&gt; task_002" in content or "task_001 -> task_002" in content
+
+    def test_html_contains_sprint_planning_section(
+        self, sample_results, sample_sprint_results, tmp_path
+    ):
+        """Test that HTML export includes sprint-planning data when provided."""
+        output_file = tmp_path / "results.html"
+        HTMLExporter.export(
+            sample_results,
+            output_file,
+            sprint_results=sample_sprint_results,
+        )
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Sprint Planning Summary" in content
+        assert "Sprint Count Confidence Intervals" in content
+        assert "matching_cadence" in content
+        assert "completed_units" in content
+        assert "Historical Ratio Summaries" in content
+        assert "spillover_ratio" in content
+        assert "Historical Correlations" in content
+        assert "completed_units|spillover_units" in content
+        assert "Burn-up Percentiles" in content
+        assert "Observed Disruption Frequency" in content
 
     def test_json_critical_path_limit(self, sample_results, tmp_path):
         """Test JSON export respects critical path report limits."""

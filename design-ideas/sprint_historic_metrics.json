@@ -1,0 +1,299 @@
+{
+  "metricDefinitions": {
+    "committed_StoryPoints": "Sum of story points for issues present at sprint start; issues added during the sprint are excluded.",
+    "completed_StoryPoints": "Sum of story points for issues completed during the sprint, including issues added after sprint start.",
+    "addedIntraSprint_StoryPoints": "Sum of story points for issues flagged by Jira sprint report as added during the sprint.",
+    "removedInSprint_StoryPoints": "Sum of story points for issues Jira marks as punted/removed from the sprint during sprint execution.",
+    "spilledOver_StoryPoints": "Sum of story points for unfinished issues Jira reports as not completed in the current sprint at sprint close, including issues added during the sprint."
+  },
+  "sprints": [
+    {
+      "sprintUniqueID": "2025:Q1 Sprint 6",
+      "startDate": "2025-03-18T15:00:00.000+01:00",
+      "endDate": "2025-03-31T15:00:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 105.0,
+        "completed_StoryPoints": 85.0,
+        "addedIntraSprint_StoryPoints": 22.0,
+        "removedInSprint_StoryPoints": 22.0,
+        "spilledOver_StoryPoints": 6.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q2 Sprint 1",
+      "startDate": "2025-04-01T10:45:00.000+02:00",
+      "endDate": "2025-04-15T10:45:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 68.0,
+        "completed_StoryPoints": 62.0,
+        "addedIntraSprint_StoryPoints": 18.0,
+        "removedInSprint_StoryPoints": 1.0,
+        "spilledOver_StoryPoints": 17.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q2 Sprint 2",
+      "startDate": "2025-04-15T10:45:00.000+02:00",
+      "endDate": "2025-04-29T10:45:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 84.0,
+        "completed_StoryPoints": 73.0,
+        "addedIntraSprint_StoryPoints": 33.0,
+        "removedInSprint_StoryPoints": 13.0,
+        "spilledOver_StoryPoints": 18.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q2 Sprint 3",
+      "startDate": "2025-04-29T10:45:00.000+02:00",
+      "endDate": "2025-05-13T10:45:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 93.0,
+        "completed_StoryPoints": 81.0,
+        "addedIntraSprint_StoryPoints": 45.0,
+        "removedInSprint_StoryPoints": 21.0,
+        "spilledOver_StoryPoints": 18.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q2 Sprint 4",
+      "startDate": "2025-05-13T10:45:00.000+02:00",
+      "endDate": "2025-05-27T10:45:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 102.0,
+        "completed_StoryPoints": 92.0,
+        "addedIntraSprint_StoryPoints": 15.0,
+        "removedInSprint_StoryPoints": 0,
+        "spilledOver_StoryPoints": 25.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q2 Sprint 5",
+      "startDate": "2025-05-27T10:45:00.000+02:00",
+      "endDate": "2025-06-10T10:45:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 90.0,
+        "completed_StoryPoints": 43.0,
+        "addedIntraSprint_StoryPoints": 5.0,
+        "removedInSprint_StoryPoints": 15.0,
+        "spilledOver_StoryPoints": 32.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q2 Sprint 6",
+      "startDate": "2025-06-10T10:45:00.000+02:00",
+      "endDate": "2025-06-30T17:15:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 63.0,
+        "completed_StoryPoints": 66.0,
+        "addedIntraSprint_StoryPoints": 43.0,
+        "removedInSprint_StoryPoints": 40.0,
+        "spilledOver_StoryPoints": 0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q3 Sprint 1",
+      "startDate": "2025-07-01T09:15:00.000+02:00",
+      "endDate": "2025-07-15T09:15:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 67.0,
+        "completed_StoryPoints": 28.0,
+        "addedIntraSprint_StoryPoints": 9.0,
+        "removedInSprint_StoryPoints": 1.0,
+        "spilledOver_StoryPoints": 42.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q3 Sprint 2",
+      "startDate": "2025-07-15T09:15:00.000+02:00",
+      "endDate": "2025-07-29T09:15:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 80.0,
+        "completed_StoryPoints": 82.0,
+        "addedIntraSprint_StoryPoints": 22.0,
+        "removedInSprint_StoryPoints": 7.0,
+        "spilledOver_StoryPoints": 11.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q3 Sprint 3",
+      "startDate": "2025-07-29T09:15:00.000+02:00",
+      "endDate": "2025-08-12T09:15:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 39.0,
+        "completed_StoryPoints": 49.0,
+        "addedIntraSprint_StoryPoints": 14.0,
+        "removedInSprint_StoryPoints": 2.0,
+        "spilledOver_StoryPoints": 0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q3 Sprint 4",
+      "startDate": "2025-08-12T09:15:00.000+02:00",
+      "endDate": "2025-08-26T09:15:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 66.0,
+        "completed_StoryPoints": 86.0,
+        "addedIntraSprint_StoryPoints": 46.0,
+        "removedInSprint_StoryPoints": 7.0,
+        "spilledOver_StoryPoints": 5.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q3 Sprint 5",
+      "startDate": "2025-08-26T09:15:00.000+02:00",
+      "endDate": "2025-09-09T09:15:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 48.0,
+        "completed_StoryPoints": 25.0,
+        "addedIntraSprint_StoryPoints": 3.0,
+        "removedInSprint_StoryPoints": 0,
+        "spilledOver_StoryPoints": 23.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q3 Sprint 6",
+      "startDate": "2025-09-09T09:15:00.000+02:00",
+      "endDate": "2025-09-30T15:00:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 74.0,
+        "completed_StoryPoints": 69.0,
+        "addedIntraSprint_StoryPoints": 42.0,
+        "removedInSprint_StoryPoints": 33.0,
+        "spilledOver_StoryPoints": 2.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q4 Sprint 1",
+      "startDate": "2025-10-01T09:15:00.000+02:00",
+      "endDate": "2025-10-14T09:15:00.000+02:00",
+      "metrics": {
+        "committed_StoryPoints": 87.0,
+        "completed_StoryPoints": 71.0,
+        "addedIntraSprint_StoryPoints": 19.0,
+        "removedInSprint_StoryPoints": 7.0,
+        "spilledOver_StoryPoints": 28.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q4 Sprint 2",
+      "startDate": "2025-10-14T09:15:00.000+02:00",
+      "endDate": "2025-10-28T21:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 67.0,
+        "completed_StoryPoints": 86.0,
+        "addedIntraSprint_StoryPoints": 57.0,
+        "removedInSprint_StoryPoints": 10.0,
+        "spilledOver_StoryPoints": 26.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q4 Sprint 3",
+      "startDate": "2025-10-28T09:15:00.000+01:00",
+      "endDate": "2025-11-11T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 92.0,
+        "completed_StoryPoints": 95.0,
+        "addedIntraSprint_StoryPoints": 71.0,
+        "removedInSprint_StoryPoints": 26.0,
+        "spilledOver_StoryPoints": 40.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q4 Sprint 4",
+      "startDate": "2025-11-11T09:15:00.000+01:00",
+      "endDate": "2025-11-25T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 87.0,
+        "completed_StoryPoints": 55.0,
+        "addedIntraSprint_StoryPoints": 15.0,
+        "removedInSprint_StoryPoints": 13.0,
+        "spilledOver_StoryPoints": 31.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q4 Sprint 5",
+      "startDate": "2025-11-25T09:15:00.000+01:00",
+      "endDate": "2025-12-09T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 56.0,
+        "completed_StoryPoints": 44.0,
+        "addedIntraSprint_StoryPoints": 48.0,
+        "removedInSprint_StoryPoints": 23.0,
+        "spilledOver_StoryPoints": 31.0
+      }
+    },
+    {
+      "sprintUniqueID": "2025:Q4 Sprint 6",
+      "startDate": "2025-12-09T09:15:00.000+01:00",
+      "endDate": "2025-12-30T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 97.0,
+        "completed_StoryPoints": 92.0,
+        "addedIntraSprint_StoryPoints": 36.0,
+        "removedInSprint_StoryPoints": 10.0,
+        "spilledOver_StoryPoints": 20.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 1",
+      "startDate": "2026-01-02T09:15:00.000+01:00",
+      "endDate": "2026-01-20T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 99.0,
+        "completed_StoryPoints": 48.0,
+        "addedIntraSprint_StoryPoints": 21.0,
+        "removedInSprint_StoryPoints": 34.0,
+        "spilledOver_StoryPoints": 31.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 2",
+      "startDate": "2026-01-20T09:15:00.000+01:00",
+      "endDate": "2026-02-03T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 146.0,
+        "completed_StoryPoints": 91.0,
+        "addedIntraSprint_StoryPoints": 24.0,
+        "removedInSprint_StoryPoints": 50.0,
+        "spilledOver_StoryPoints": 26.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 3",
+      "startDate": "2026-02-03T09:15:00.000+01:00",
+      "endDate": "2026-02-17T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 104.0,
+        "completed_StoryPoints": 67.0,
+        "addedIntraSprint_StoryPoints": 22.0,
+        "removedInSprint_StoryPoints": 18.0,
+        "spilledOver_StoryPoints": 41.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 4",
+      "startDate": "2026-02-17T09:15:00.000+01:00",
+      "endDate": "2026-03-03T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 111.0,
+        "completed_StoryPoints": 46.0,
+        "addedIntraSprint_StoryPoints": 5.0,
+        "removedInSprint_StoryPoints": 0,
+        "spilledOver_StoryPoints": 70.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 5",
+      "startDate": "2026-03-03T09:15:00.000+01:00",
+      "endDate": "2026-03-17T09:15:00.000+01:00",
+      "metrics": {
+        "committed_StoryPoints": 129.0,
+        "completed_StoryPoints": 111.0,
+        "addedIntraSprint_StoryPoints": 27.0,
+        "removedInSprint_StoryPoints": 22.0,
+        "spilledOver_StoryPoints": 23.0
+      }
+    }
+  ]
+}

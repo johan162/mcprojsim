@@ -5,10 +5,12 @@ from typing import Any
 
 import yaml
 from click.testing import CliRunner
+import numpy as np
 
 from mcprojsim import __version__
 from mcprojsim.cli import cli
 from mcprojsim.config import DEFAULT_SIMULATION_ITERATIONS
+from mcprojsim.models.sprint_simulation import SprintPlanningResults
 from mcprojsim.simulation.distributions import fit_shifted_lognormal
 
 
@@ -140,6 +142,7 @@ class TestCli:
             project=None,
             config=None,
             critical_path_limit=None,
+            sprint_results=None,
         ):
             captured["output_path"] = str(output_path)
             captured["project"] = project
@@ -268,10 +271,370 @@ class TestCli:
             )
 
             result = runner.invoke(cli, ["simulate", str(project_file)])
-
         assert result.exit_code == 0
         assert "Most Frequent Critical Paths" in result.output
         assert "task_001 -> task_002" in result.output
+
+    def test_simulate_shows_sprint_planning_summary(self, monkeypatch) -> None:
+        """The simulate command should print sprint-planning results when enabled."""
+        runner = CliRunner()
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    iterations = 10
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        class FakeSprintEngine:
+            def __init__(self, iterations, random_seed) -> None:
+                pass
+
+            def run(self, project):
+                results = SprintPlanningResults(
+                    iterations=10,
+                    project_name=project.project.name,
+                    sprint_length_weeks=2,
+                    sprint_counts=np.array([2.0, 2.0, 3.0]),
+                    random_seed=42,
+                    planning_confidence_level=0.8,
+                    removed_work_treatment="churn_only",
+                    historical_diagnostics={
+                        "sampling_mode": "matching_cadence",
+                        "observation_count": 3,
+                        "series_statistics": {
+                            "completed_units": {
+                                "mean": 6.0,
+                                "median": 6.0,
+                                "std_dev": 0.5,
+                                "min": 5.0,
+                                "max": 7.0,
+                            }
+                        },
+                        "ratios": {
+                            "spillover_ratio": {
+                                "mean": 0.1111,
+                                "median": 0.1000,
+                                "std_dev": 0.0500,
+                                "percentiles": {50: 0.1, 80: 0.15, 90: 0.18},
+                            }
+                        },
+                        "correlations": {
+                            "completed_units|spillover_units": -0.4200,
+                        },
+                    },
+                    planned_commitment_guidance=4.0,
+                    carryover_statistics={"mean": 1.2},
+                    spillover_statistics={"aggregate_spillover_rate": {"mean": 0.3}},
+                    disruption_statistics={"observed_frequency": 0.2},
+                    burnup_percentiles=[
+                        {"sprint_number": 1.0, "p50": 3.0, "p80": 4.0, "p90": 5.0}
+                    ],
+                )
+                results.calculate_statistics()
+                for percentile in (50, 80, 90):
+                    results.percentile(percentile)
+                return results
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "planning_story_points": 3,
+                            }
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "story_points",
+                            "history": [
+                                {"sprint_id": "S1", "completed_story_points": 5},
+                                {"sprint_id": "S2", "completed_story_points": 6},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file)])
+
+        assert result.exit_code == 0
+        assert "Sprint Planning Summary:" in result.output
+        assert "Sprint Count Confidence Intervals:" in result.output
+        assert "Historical Sprint Series:" in result.output
+        assert "Historical Ratio Summaries:" in result.output
+        assert "spillover_ratio" in result.output
+        assert "Historical Correlations:" in result.output
+        assert "completed_units|spillover_units" in result.output
+        assert "Carryover Mean:" in result.output
+        assert "Burn-up Percentiles:" in result.output
+
+    def test_simulate_passes_sprint_results_to_exporters(self, monkeypatch) -> None:
+        """The simulate command should pass sprint results into exporter calls."""
+        runner = CliRunner()
+        captured: dict[str, Any] = {}
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    iterations = 10
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        class FakeSprintEngine:
+            def __init__(self, iterations, random_seed) -> None:
+                pass
+
+            def run(self, project):
+                results = SprintPlanningResults(
+                    iterations=10,
+                    project_name=project.project.name,
+                    sprint_length_weeks=2,
+                    sprint_counts=np.array([2.0, 2.0, 3.0]),
+                    random_seed=42,
+                    planning_confidence_level=0.8,
+                    removed_work_treatment="churn_only",
+                    historical_diagnostics={
+                        "sampling_mode": "matching_cadence",
+                        "observation_count": 3,
+                    },
+                    planned_commitment_guidance=4.0,
+                    carryover_statistics={"mean": 1.2},
+                    spillover_statistics={"aggregate_spillover_rate": {"mean": 0.3}},
+                    disruption_statistics={"observed_frequency": 0.2},
+                    burnup_percentiles=[
+                        {"sprint_number": 1.0, "p50": 3.0, "p80": 4.0, "p90": 5.0}
+                    ],
+                )
+                results.calculate_statistics()
+                for percentile in (50, 80, 90):
+                    results.percentile(percentile)
+                return results
+
+        def fake_json_export(
+            results,
+            output_path,
+            config=None,
+            critical_path_limit=None,
+            sprint_results=None,
+        ):
+            captured["json_sprint_results"] = sprint_results
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
+        monkeypatch.setattr("mcprojsim.cli.JSONExporter.export", fake_json_export)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "planning_story_points": 3,
+                            }
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "story_points",
+                            "history": [
+                                {"sprint_id": "S1", "completed_story_points": 5},
+                                {"sprint_id": "S2", "completed_story_points": 6},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                [
+                    "simulate",
+                    str(project_file),
+                    "--output-format",
+                    "json",
+                    "--output",
+                    "result",
+                    "--quiet",
+                ],
+            )
+
+        assert result.exit_code == 0
+        assert captured["json_sprint_results"] is not None
+
+    def test_simulate_warns_for_heterogeneous_tasks_mode(self, monkeypatch) -> None:
+        """The simulate command should warn when tasks mode uses uneven task sizes."""
+        runner = CliRunner()
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    iterations = 10
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        class FakeSprintEngine:
+            def __init__(self, iterations, random_seed) -> None:
+                pass
+
+            def run(self, project):
+                results = SprintPlanningResults(
+                    iterations=10,
+                    project_name=project.project.name,
+                    sprint_length_weeks=2,
+                    sprint_counts=np.array([1.0, 1.0, 2.0]),
+                    random_seed=42,
+                    planning_confidence_level=0.8,
+                    removed_work_treatment="churn_only",
+                    historical_diagnostics={
+                        "sampling_mode": "matching_cadence",
+                        "observation_count": 2,
+                    },
+                    planned_commitment_guidance=2.0,
+                )
+                results.calculate_statistics()
+                for percentile in (50, 80, 90):
+                    results.percentile(percentile)
+                return results
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Small Task",
+                                "estimate": {"low": 1, "expected": 1, "high": 2},
+                                "planning_story_points": 2,
+                            },
+                            {
+                                "id": "task_002",
+                                "name": "Large Task",
+                                "estimate": {"low": 3, "expected": 5, "high": 8},
+                                "planning_story_points": 8,
+                            },
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "tasks",
+                            "history": [
+                                {"sprint_id": "S1", "completed_tasks": 1},
+                                {"sprint_id": "S2", "completed_tasks": 2},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file)])
+
+        assert result.exit_code == 0
+        assert (
+            "Warning: Sprint planning is using 'tasks' capacity mode" in result.output
+        )
 
     def test_simulate_reports_time_and_memory(self, monkeypatch) -> None:
         """The simulate command should print elapsed time and memory usage."""
@@ -637,4 +1000,376 @@ tasks:
         assert result.exit_code != 0
         assert (
             "team_size is smaller than explicitly specified resources" in result.output
+        )
+
+    def test_no_sickness_flag_disables_sickness(self, monkeypatch) -> None:
+        """The --no-sickness flag should disable sickness modeling."""
+        runner = CliRunner()
+        captured_project: list[Any] = []
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    iterations = 10
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        class FakeSprintEngine:
+            def __init__(self, iterations, random_seed) -> None:
+                pass
+
+            def run(self, project):
+                captured_project.append(project)
+                results = SprintPlanningResults(
+                    iterations=10,
+                    project_name=project.project.name,
+                    sprint_length_weeks=2,
+                    sprint_counts=np.array([2.0, 3.0]),
+                    random_seed=42,
+                    planning_confidence_level=0.8,
+                    removed_work_treatment="churn_only",
+                    historical_diagnostics={
+                        "sampling_mode": "matching_cadence",
+                        "observation_count": 2,
+                    },
+                    planned_commitment_guidance=4.0,
+                    carryover_statistics={"mean": 0.0},
+                    spillover_statistics={"aggregate_spillover_rate": {"mean": 0.0}},
+                    disruption_statistics={"observed_frequency": 0.0},
+                    burnup_percentiles=[],
+                )
+                results.calculate_statistics()
+                return results
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "Sickness Test",
+                            "start_date": "2025-01-01",
+                            "team_size": 6,
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "planning_story_points": 3,
+                            }
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "story_points",
+                            "sickness": {"enabled": True},
+                            "history": [
+                                {"sprint_id": "S1", "completed_story_points": 5},
+                                {"sprint_id": "S2", "completed_story_points": 6},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli, ["simulate", str(project_file), "--no-sickness", "-q"]
+            )
+
+        assert result.exit_code == 0
+        assert len(captured_project) == 1
+        assert captured_project[0].sprint_planning.sickness.enabled is False
+
+    def test_sickness_requires_team_size(self) -> None:
+        """Sickness enabled without team_size should produce an error."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "No Team Size",
+                            "start_date": "2025-01-01",
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "planning_story_points": 3,
+                            }
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "story_points",
+                            "sickness": {"enabled": True},
+                            "history": [
+                                {"sprint_id": "S1", "completed_story_points": 5},
+                                {"sprint_id": "S2", "completed_story_points": 6},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file)])
+
+        assert "Sickness modeling is enabled but no team_size" in result.output
+
+    def test_sickness_falls_back_to_project_team_size(self, monkeypatch) -> None:
+        """Sickness with no local team_size should resolve from project metadata."""
+        runner = CliRunner()
+        captured_project: list[Any] = []
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    iterations = 10
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        class FakeSprintEngine:
+            def __init__(self, iterations, random_seed) -> None:
+                pass
+
+            def run(self, project):
+                captured_project.append(project)
+                results = SprintPlanningResults(
+                    iterations=10,
+                    project_name=project.project.name,
+                    sprint_length_weeks=2,
+                    sprint_counts=np.array([2.0, 3.0]),
+                    random_seed=42,
+                    planning_confidence_level=0.8,
+                    removed_work_treatment="churn_only",
+                    historical_diagnostics={
+                        "sampling_mode": "matching_cadence",
+                        "observation_count": 2,
+                    },
+                    planned_commitment_guidance=4.0,
+                    carryover_statistics={"mean": 0.0},
+                    spillover_statistics={"aggregate_spillover_rate": {"mean": 0.0}},
+                    disruption_statistics={"observed_frequency": 0.0},
+                    burnup_percentiles=[],
+                )
+                results.calculate_statistics()
+                return results
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "Fallback",
+                            "start_date": "2025-01-01",
+                            "team_size": 7,
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "planning_story_points": 3,
+                            }
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "story_points",
+                            "sickness": {"enabled": True},
+                            "history": [
+                                {"sprint_id": "S1", "completed_story_points": 5},
+                                {"sprint_id": "S2", "completed_story_points": 6},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file), "-q"])
+
+        assert result.exit_code == 0
+        assert len(captured_project) == 1
+        assert captured_project[0].sprint_planning.sickness.team_size == 7
+
+    def test_velocity_model_flag_overrides_project(self, monkeypatch) -> None:
+        """The --velocity-model flag should override the project file setting."""
+        runner = CliRunner()
+        captured_project: list[Any] = []
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    iterations = 10
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        class FakeSprintEngine:
+            def __init__(self, iterations, random_seed) -> None:
+                pass
+
+            def run(self, project):
+                captured_project.append(project)
+                results = SprintPlanningResults(
+                    iterations=10,
+                    project_name=project.project.name,
+                    sprint_length_weeks=2,
+                    sprint_counts=np.array([2.0, 3.0]),
+                    random_seed=42,
+                    planning_confidence_level=0.8,
+                    removed_work_treatment="churn_only",
+                    historical_diagnostics={
+                        "sampling_mode": "matching_cadence",
+                        "velocity_model": "neg_binomial",
+                        "observation_count": 2,
+                    },
+                    planned_commitment_guidance=4.0,
+                    carryover_statistics={"mean": 0.0},
+                    spillover_statistics={"aggregate_spillover_rate": {"mean": 0.0}},
+                    disruption_statistics={"observed_frequency": 0.0},
+                    burnup_percentiles=[],
+                )
+                results.calculate_statistics()
+                return results
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "NB Override",
+                            "start_date": "2025-01-01",
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "planning_story_points": 3,
+                            }
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "story_points",
+                            "history": [
+                                {"sprint_id": "S1", "completed_story_points": 5},
+                                {"sprint_id": "S2", "completed_story_points": 6},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                [
+                    "simulate",
+                    str(project_file),
+                    "--velocity-model",
+                    "neg_binomial",
+                    "-q",
+                ],
+            )
+
+        assert result.exit_code == 0
+        assert len(captured_project) == 1
+        assert (
+            captured_project[0].sprint_planning.velocity_model.value == "neg_binomial"
         )

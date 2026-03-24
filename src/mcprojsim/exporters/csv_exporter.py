@@ -8,6 +8,7 @@ from pathlib import Path
 from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
 from mcprojsim.models.simulation import SimulationResults
+from mcprojsim.models.sprint_simulation import SprintPlanningResults
 
 
 class CSVExporter:
@@ -19,6 +20,7 @@ class CSVExporter:
         output_path: Path | str,
         config: Config | None = None,
         critical_path_limit: int | None = None,
+        sprint_results: SprintPlanningResults | None = None,
     ) -> None:
         """Export results to CSV file.
 
@@ -271,3 +273,167 @@ class CSVExporter:
                         f"{row.efficiency:.4f}",
                     ]
                 )
+
+            if sprint_results is not None:
+                writer.writerow([])
+                writer.writerow(["Sprint Planning", ""])
+                writer.writerow(
+                    ["Sprint Length (weeks)", sprint_results.sprint_length_weeks]
+                )
+                writer.writerow(
+                    [
+                        "Planning Confidence Level",
+                        f"{sprint_results.planning_confidence_level:.0%}",
+                    ]
+                )
+                writer.writerow(
+                    ["Removed Work Treatment", sprint_results.removed_work_treatment]
+                )
+                writer.writerow(
+                    [
+                        "Planned Commitment Guidance",
+                        f"{sprint_results.planned_commitment_guidance:.2f}",
+                    ]
+                )
+                writer.writerow(
+                    [
+                        "Historical Sampling Mode",
+                        sprint_results.historical_diagnostics.get("sampling_mode", ""),
+                    ]
+                )
+                writer.writerow(
+                    [
+                        "Historical Observation Count",
+                        sprint_results.historical_diagnostics.get(
+                            "observation_count", 0
+                        ),
+                    ]
+                )
+                writer.writerow([])
+                writer.writerow(["Sprint Count Statistical Summary", ""])
+                writer.writerow(["Mean (sprints)", f"{sprint_results.mean:.2f}"])
+                writer.writerow(["Median (P50)", f"{sprint_results.median:.2f}"])
+                writer.writerow(["Std Dev (sprints)", f"{sprint_results.std_dev:.2f}"])
+                writer.writerow(["Min (sprints)", f"{sprint_results.min_sprints:.2f}"])
+                writer.writerow(["Max (sprints)", f"{sprint_results.max_sprints:.2f}"])
+                writer.writerow([])
+                writer.writerow(
+                    ["Sprint Count Confidence Intervals", "Sprints", "Delivery Date"]
+                )
+                for percentile, value in sorted(sprint_results.percentiles.items()):
+                    delivery_date = sprint_results.date_percentiles.get(percentile)
+                    writer.writerow(
+                        [
+                            f"P{percentile}",
+                            f"{value:.2f}",
+                            delivery_date.isoformat() if delivery_date else "",
+                        ]
+                    )
+
+                if sprint_results.carryover_statistics:
+                    writer.writerow([])
+                    writer.writerow(["Carryover Diagnostics", "Value"])
+                    for metric, value in sorted(
+                        sprint_results.carryover_statistics.items()
+                    ):
+                        writer.writerow([metric, value])
+
+                if sprint_results.spillover_statistics:
+                    writer.writerow([])
+                    writer.writerow(["Spillover Diagnostics", "Value"])
+                    aggregate_rate = sprint_results.spillover_statistics.get(
+                        "aggregate_spillover_rate",
+                        {},
+                    )
+                    for metric, value in sorted(aggregate_rate.items()):
+                        writer.writerow([f"aggregate_spillover_rate.{metric}", value])
+
+                if sprint_results.disruption_statistics:
+                    writer.writerow([])
+                    writer.writerow(["Disruption Diagnostics", "Value"])
+                    for metric, value in sorted(
+                        sprint_results.disruption_statistics.items()
+                    ):
+                        writer.writerow([metric, value])
+
+                if sprint_results.burnup_percentiles:
+                    writer.writerow([])
+                    writer.writerow(["Burn-up Percentiles", "P50", "P80", "P90"])
+                    for point in sprint_results.burnup_percentiles:
+                        writer.writerow(
+                            [
+                                f"Sprint {int(point['sprint_number'])}",
+                                point["p50"],
+                                point["p80"],
+                                point["p90"],
+                            ]
+                        )
+
+                series_statistics = sprint_results.historical_diagnostics.get(
+                    "series_statistics",
+                    {},
+                )
+                if series_statistics:
+                    writer.writerow([])
+                    writer.writerow(
+                        [
+                            "Historical Series Statistics",
+                            "Mean",
+                            "Median",
+                            "Std Dev",
+                            "Min",
+                            "Max",
+                        ]
+                    )
+                    for series_name, stats in sorted(series_statistics.items()):
+                        writer.writerow(
+                            [
+                                series_name,
+                                f"{stats['mean']:.2f}",
+                                f"{stats['median']:.2f}",
+                                f"{stats['std_dev']:.2f}",
+                                f"{stats['min']:.2f}",
+                                f"{stats['max']:.2f}",
+                            ]
+                        )
+
+                ratio_summaries = sprint_results.historical_diagnostics.get(
+                    "ratios",
+                    {},
+                )
+                if ratio_summaries:
+                    writer.writerow([])
+                    writer.writerow(
+                        [
+                            "Historical Ratio Summaries",
+                            "Mean",
+                            "Median",
+                            "Std Dev",
+                            "P50",
+                            "P80",
+                            "P90",
+                        ]
+                    )
+                    for ratio_name, stats in sorted(ratio_summaries.items()):
+                        percentiles = stats.get("percentiles", {})
+                        writer.writerow(
+                            [
+                                ratio_name,
+                                f"{stats['mean']:.4f}",
+                                f"{stats['median']:.4f}",
+                                f"{stats['std_dev']:.4f}",
+                                f"{percentiles.get(50, 0.0):.4f}",
+                                f"{percentiles.get(80, 0.0):.4f}",
+                                f"{percentiles.get(90, 0.0):.4f}",
+                            ]
+                        )
+
+                correlations = sprint_results.historical_diagnostics.get(
+                    "correlations",
+                    {},
+                )
+                if correlations:
+                    writer.writerow([])
+                    writer.writerow(["Historical Correlations", "Pearson Correlation"])
+                    for pair_name, value in sorted(correlations.items()):
+                        writer.writerow([pair_name, f"{value:.4f}"])

@@ -12,7 +12,9 @@ from mcprojsim.config import Config, DEFAULT_SIMULATION_ITERATIONS
 from mcprojsim.exporters import CSVExporter, HTMLExporter, JSONExporter
 from mcprojsim.models.project import Project
 from mcprojsim.models.simulation import SimulationResults
+from mcprojsim.models.sprint_simulation import SprintPlanningResults
 from mcprojsim.parsers import TOMLParser, YAMLParser
+from mcprojsim.planning.sprint_engine import SprintSimulationEngine
 from mcprojsim.simulation import SimulationEngine
 from mcprojsim.simulation.distributions import fit_shifted_lognormal
 from mcprojsim.utils import Validator, setup_logging
@@ -88,6 +90,394 @@ def _format_shifted_lognormal_parameters(
     return f"mu: {mu:.4f}, sigma: {sigma:.4f}, z-score: {z_score:.4f}"
 
 
+def _run_sprint_simulation_with_metrics(
+    engine: SprintSimulationEngine,
+    project: Project,
+) -> tuple[SprintPlanningResults, float, int | None]:
+    """Run sprint planning and collect elapsed time and peak memory delta."""
+    rss_before = _get_max_rss_bytes()
+    started_at = time.perf_counter()
+    results = engine.run(project)
+    elapsed_seconds = time.perf_counter() - started_at
+    rss_after = _get_max_rss_bytes()
+
+    peak_memory_bytes = None
+    if rss_before is not None and rss_after is not None:
+        peak_memory_bytes = max(0, rss_after - rss_before)
+
+    return results, elapsed_seconds, peak_memory_bytes
+
+
+def _echo_sprint_results(
+    sprint_results: SprintPlanningResults,
+    table: bool,
+    minimal: bool,
+) -> None:
+    """Print sprint-planning results to the CLI."""
+    import math
+
+    if table:
+        from tabulate import tabulate as _tabulate
+
+        summary_rows = [
+            ["Sprint Length", f"{sprint_results.sprint_length_weeks} weeks"],
+            [
+                "Planning Confidence Level",
+                f"{sprint_results.planning_confidence_level * 100:.0f}%",
+            ],
+            ["Removed Work Treatment", sprint_results.removed_work_treatment],
+            [
+                "Velocity Model",
+                str(
+                    sprint_results.historical_diagnostics.get(
+                        "velocity_model", "empirical"
+                    )
+                ),
+            ],
+            [
+                "Planned Commitment Guidance",
+                f"{sprint_results.planned_commitment_guidance:.2f}",
+            ],
+            [
+                "Historical Sampling Mode",
+                str(sprint_results.historical_diagnostics.get("sampling_mode", "")),
+            ],
+            [
+                "Historical Observations",
+                str(sprint_results.historical_diagnostics.get("observation_count", 0)),
+            ],
+            [
+                "Carryover Mean",
+                f"{sprint_results.carryover_statistics.get('mean', 0.0):.2f}",
+            ],
+            [
+                "Aggregate Spillover Rate",
+                f"{sprint_results.spillover_statistics.get('aggregate_spillover_rate', {}).get('mean', 0.0):.4f}",
+            ],
+            [
+                "Observed Disruption Frequency",
+                f"{sprint_results.disruption_statistics.get('observed_frequency', 0.0):.4f}",
+            ],
+        ]
+        sickness_diag = sprint_results.historical_diagnostics.get("sickness", {})
+        if sickness_diag.get("enabled"):
+            summary_rows.append(
+                ["Sickness Model", f"team_size={sickness_diag.get('team_size')}"]
+            )
+        nb_params = sprint_results.historical_diagnostics.get("neg_binomial_params")
+        if nb_params is not None:
+            summary_rows.append(["NB mu", f"{nb_params['mu']:.4f}"])
+            k_display = (
+                f"{nb_params['k']:.4f}"
+                if nb_params["k"] is not None
+                else "inf (Poisson fallback)"
+            )
+            summary_rows.append(["NB dispersion k", k_display])
+        stat_rows = [
+            ["Mean", f"{sprint_results.mean:.2f} sprints"],
+            ["Median (P50)", f"{sprint_results.median:.2f} sprints"],
+            ["Std Dev", f"{sprint_results.std_dev:.2f} sprints"],
+            ["Minimum", f"{sprint_results.min_sprints:.2f} sprints"],
+            ["Maximum", f"{sprint_results.max_sprints:.2f} sprints"],
+            [
+                "Coefficient of Variation",
+                f"{(sprint_results.std_dev / sprint_results.mean if sprint_results.mean > 0 else 0.0):.4f}",
+            ],
+        ]
+        percentile_rows = [
+            [
+                f"P{percentile}",
+                f"{value:.2f}",
+                delivery_date.isoformat() if delivery_date is not None else "",
+            ]
+            for percentile, value in sorted(sprint_results.percentiles.items())
+            for delivery_date in [sprint_results.date_percentiles.get(percentile)]
+        ]
+
+        click.echo("\nSprint Planning Summary:")
+        click.echo(
+            _tabulate(
+                summary_rows,
+                headers=["Field", "Value"],
+                tablefmt="simple_outline",
+                disable_numparse=True,
+            )
+        )
+        click.echo("\nSprint Count Statistical Summary:")
+        click.echo(
+            _tabulate(
+                stat_rows,
+                headers=["Metric", "Value"],
+                tablefmt="simple_outline",
+                disable_numparse=True,
+            )
+        )
+        click.echo("\nSprint Count Confidence Intervals:")
+        click.echo(
+            _tabulate(
+                percentile_rows,
+                headers=["Percentile", "Sprints", "Projected Delivery Date"],
+                tablefmt="simple_outline",
+                disable_numparse=True,
+            )
+        )
+
+        if not minimal:
+            series_statistics = sprint_results.historical_diagnostics.get(
+                "series_statistics",
+                {},
+            )
+            if series_statistics:
+                history_rows = [
+                    [
+                        series_name,
+                        f"{stats['mean']:.2f}",
+                        f"{stats['median']:.2f}",
+                        f"{stats['std_dev']:.2f}",
+                        f"{stats['min']:.2f}",
+                        f"{stats['max']:.2f}",
+                    ]
+                    for series_name, stats in sorted(series_statistics.items())
+                ]
+                click.echo("\nHistorical Sprint Series:")
+                click.echo(
+                    _tabulate(
+                        history_rows,
+                        headers=["Series", "Mean", "Median", "Std Dev", "Min", "Max"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+
+            ratio_summaries = sprint_results.historical_diagnostics.get(
+                "ratios",
+                {},
+            )
+            if ratio_summaries:
+                ratio_rows = [
+                    [
+                        ratio_name,
+                        f"{stats['mean']:.4f}",
+                        f"{stats['median']:.4f}",
+                        f"{stats['std_dev']:.4f}",
+                        f"{stats.get('percentiles', {}).get(50, 0.0):.4f}",
+                        f"{stats.get('percentiles', {}).get(80, 0.0):.4f}",
+                        f"{stats.get('percentiles', {}).get(90, 0.0):.4f}",
+                    ]
+                    for ratio_name, stats in sorted(ratio_summaries.items())
+                ]
+                click.echo("\nHistorical Ratio Summaries:")
+                click.echo(
+                    _tabulate(
+                        ratio_rows,
+                        headers=[
+                            "Ratio",
+                            "Mean",
+                            "Median",
+                            "Std Dev",
+                            "P50",
+                            "P80",
+                            "P90",
+                        ],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+
+            correlations = sprint_results.historical_diagnostics.get(
+                "correlations",
+                {},
+            )
+            if correlations:
+                correlation_rows = [
+                    [pair_name, f"{value:.4f}"]
+                    for pair_name, value in sorted(correlations.items())
+                ]
+                click.echo("\nHistorical Correlations:")
+                click.echo(
+                    _tabulate(
+                        correlation_rows,
+                        headers=["Series Pair", "Pearson Correlation"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+
+            if sprint_results.burnup_percentiles:
+                burnup_rows = [
+                    [
+                        int(point["sprint_number"]),
+                        f"{point['p50']:.2f}",
+                        f"{point['p80']:.2f}",
+                        f"{point['p90']:.2f}",
+                    ]
+                    for point in sprint_results.burnup_percentiles
+                ]
+                click.echo("\nBurn-up Percentiles:")
+                click.echo(
+                    _tabulate(
+                        burnup_rows,
+                        headers=["Sprint", "P50", "P80", "P90"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+    else:
+        click.echo("\nSprint Planning Summary:")
+        click.echo(f"Sprint Length: {sprint_results.sprint_length_weeks} weeks")
+        click.echo(
+            "Planning Confidence Level: "
+            f"{sprint_results.planning_confidence_level * 100:.0f}%"
+        )
+        click.echo(f"Removed Work Treatment: {sprint_results.removed_work_treatment}")
+        click.echo(
+            "Velocity Model: "
+            f"{sprint_results.historical_diagnostics.get('velocity_model', 'empirical')}"
+        )
+        click.echo(
+            "Planned Commitment Guidance: "
+            f"{sprint_results.planned_commitment_guidance:.2f}"
+        )
+        click.echo(
+            "Historical Sampling Mode: "
+            f"{sprint_results.historical_diagnostics.get('sampling_mode', '')}"
+        )
+        click.echo(
+            "Historical Observations: "
+            f"{sprint_results.historical_diagnostics.get('observation_count', 0)}"
+        )
+        nb_params = sprint_results.historical_diagnostics.get("neg_binomial_params")
+        if nb_params is not None:
+            click.echo(f"NB mu: {nb_params['mu']:.4f}")
+            if nb_params["k"] is not None:
+                click.echo(f"NB dispersion k: {nb_params['k']:.4f}")
+            else:
+                click.echo("NB dispersion k: inf (Poisson fallback)")
+        click.echo(
+            "Carryover Mean: "
+            f"{sprint_results.carryover_statistics.get('mean', 0.0):.2f}"
+        )
+        click.echo(
+            "Aggregate Spillover Rate: "
+            f"{sprint_results.spillover_statistics.get('aggregate_spillover_rate', {}).get('mean', 0.0):.4f}"
+        )
+        click.echo(
+            "Observed Disruption Frequency: "
+            f"{sprint_results.disruption_statistics.get('observed_frequency', 0.0):.4f}"
+        )
+        sickness_diag = sprint_results.historical_diagnostics.get("sickness", {})
+        if sickness_diag.get("enabled"):
+            click.echo(f"Sickness Model: team_size={sickness_diag.get('team_size')}")
+
+        click.echo("\nSprint Count Statistical Summary:")
+        click.echo(f"Mean: {sprint_results.mean:.2f} sprints")
+        click.echo(f"Median (P50): {sprint_results.median:.2f} sprints")
+        click.echo(f"Std Dev: {sprint_results.std_dev:.2f} sprints")
+        click.echo(f"Minimum: {sprint_results.min_sprints:.2f} sprints")
+        click.echo(f"Maximum: {sprint_results.max_sprints:.2f} sprints")
+        click.echo(
+            "Coefficient of Variation: "
+            f"{(sprint_results.std_dev / sprint_results.mean if sprint_results.mean > 0 else 0.0):.4f}"
+        )
+
+        click.echo("\nSprint Count Confidence Intervals:")
+        for percentile, value in sorted(sprint_results.percentiles.items()):
+            delivery_date = sprint_results.date_percentiles.get(percentile)
+            date_str = f"  ({delivery_date.isoformat()})" if delivery_date else ""
+            rounded_sprints = math.ceil(value) if not value.is_integer() else int(value)
+            click.echo(f"  P{percentile}: {rounded_sprints} sprints{date_str}")
+
+        if not minimal:
+            series_statistics = sprint_results.historical_diagnostics.get(
+                "series_statistics",
+                {},
+            )
+            if series_statistics:
+                click.echo("\nHistorical Sprint Series:")
+                for series_name, stats in sorted(series_statistics.items()):
+                    click.echo(
+                        f"  {series_name}: mean={stats['mean']:.2f}, "
+                        f"median={stats['median']:.2f}, std={stats['std_dev']:.2f}, "
+                        f"min={stats['min']:.2f}, max={stats['max']:.2f}"
+                    )
+
+            ratio_summaries = sprint_results.historical_diagnostics.get(
+                "ratios",
+                {},
+            )
+            if ratio_summaries:
+                click.echo("\nHistorical Ratio Summaries:")
+                for ratio_name, stats in sorted(ratio_summaries.items()):
+                    percentiles = stats.get("percentiles", {})
+                    click.echo(
+                        f"  {ratio_name}: mean={stats['mean']:.4f}, "
+                        f"median={stats['median']:.4f}, std={stats['std_dev']:.4f}, "
+                        f"P50={percentiles.get(50, 0.0):.4f}, "
+                        f"P80={percentiles.get(80, 0.0):.4f}, "
+                        f"P90={percentiles.get(90, 0.0):.4f}"
+                    )
+
+            correlations = sprint_results.historical_diagnostics.get(
+                "correlations",
+                {},
+            )
+            if correlations:
+                click.echo("\nHistorical Correlations:")
+                for pair_name, value in sorted(correlations.items()):
+                    click.echo(f"  {pair_name}: {value:.4f}")
+
+            if sprint_results.burnup_percentiles:
+                click.echo("\nBurn-up Percentiles:")
+                for point in sprint_results.burnup_percentiles:
+                    click.echo(
+                        f"  Sprint {int(point['sprint_number'])}: "
+                        f"P50={point['p50']:.2f}, "
+                        f"P80={point['p80']:.2f}, "
+                        f"P90={point['p90']:.2f}"
+                    )
+
+
+def _get_tasks_mode_heterogeneity_warning(project: Project) -> str | None:
+    """Return a warning when tasks-mode forecasting uses clearly uneven items."""
+    sprint_planning = project.sprint_planning
+    if sprint_planning is None or not sprint_planning.enabled:
+        return None
+    if sprint_planning.capacity_mode != "tasks":
+        return None
+    if len(project.tasks) < 2:
+        return None
+
+    planning_sizes: list[int] = []
+    for task in project.tasks:
+        planning_size = task.get_planning_story_points()
+        if planning_size is not None:
+            planning_sizes.append(planning_size)
+    if len(planning_sizes) >= 2:
+        if max(planning_sizes) > min(planning_sizes):
+            return (
+                "Warning: Sprint planning is using 'tasks' capacity mode, but task "
+                "planning sizes are heterogeneous. Throughput-based forecasting is "
+                "most reliable when items are roughly comparable in size."
+            )
+        return None
+
+    expected_estimates = [
+        float(task.estimate.expected)
+        for task in project.tasks
+        if task.estimate.expected is not None
+    ]
+    if len(expected_estimates) >= 2 and max(expected_estimates) > min(
+        expected_estimates
+    ):
+        return (
+            "Warning: Sprint planning is using 'tasks' capacity mode, but task "
+            "estimates vary across the backlog. Throughput-based forecasting is most "
+            "reliable when items are roughly comparable in size."
+        )
+
+    return None
+
+
 @click.group()
 @click.version_option(version=__version__, prog_name="mcprojsim")
 def cli() -> None:
@@ -161,6 +551,17 @@ def cli() -> None:
         "statistical summaries, and calendar confidence intervals only."
     ),
 )
+@click.option(
+    "--velocity-model",
+    type=click.Choice(["empirical", "neg_binomial"]),
+    default=None,
+    help="Override sprint planning velocity model (empirical or neg_binomial).",
+)
+@click.option(
+    "--no-sickness",
+    is_flag=True,
+    help="Disable sickness modeling regardless of project file settings.",
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -175,6 +576,8 @@ def simulate(
     table: bool,
     staffing: bool,
     minimal: bool,
+    velocity_model: Optional[str],
+    no_sickness: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     if quiet < 2:
@@ -205,6 +608,33 @@ def simulate(
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
+        tasks_mode_warning = _get_tasks_mode_heterogeneity_warning(project)
+        if tasks_mode_warning is not None and quiet < 2:
+            click.echo(tasks_mode_warning)
+
+        if velocity_model is not None and project.sprint_planning is not None:
+            from mcprojsim.models.project import SprintVelocityModel
+
+            project.sprint_planning.velocity_model = SprintVelocityModel(velocity_model)
+
+        if no_sickness and project.sprint_planning is not None:
+            project.sprint_planning.sickness.enabled = False
+
+        # Resolve sickness team_size from project metadata if needed
+        if (
+            project.sprint_planning is not None
+            and project.sprint_planning.sickness.enabled
+            and project.sprint_planning.sickness.team_size is None
+        ):
+            if project.project.team_size is not None:
+                project.sprint_planning.sickness.team_size = project.project.team_size
+            else:
+                click.echo(
+                    "Error: Sickness modeling is enabled but no team_size is set. "
+                    "Set team_size in sprint_planning.sickness or project metadata."
+                )
+                return
+
         # Run simulation
         logger.info(f"Running simulation with {iterations} iterations")
         engine = SimulationEngine(
@@ -216,6 +646,19 @@ def simulate(
         results, elapsed_seconds, peak_memory_bytes = _run_simulation_with_metrics(
             engine, project
         )
+        sprint_results: SprintPlanningResults | None = None
+        sprint_elapsed_seconds: float | None = None
+        sprint_peak_memory_bytes: int | None = None
+        if project.sprint_planning is not None and project.sprint_planning.enabled:
+            sprint_engine = SprintSimulationEngine(
+                iterations=iterations,
+                random_seed=seed,
+            )
+            (
+                sprint_results,
+                sprint_elapsed_seconds,
+                sprint_peak_memory_bytes,
+            ) = _run_sprint_simulation_with_metrics(sprint_engine, project)
         critical_path_limit = critical_paths or cfg.output.critical_path_report_limit
 
         if quiet < 2 and not minimal:
@@ -223,6 +666,14 @@ def simulate(
             click.echo(
                 "Peak simulation memory: " f"{_format_memory_size(peak_memory_bytes)}"
             )
+            if sprint_results is not None and sprint_elapsed_seconds is not None:
+                click.echo(
+                    f"Sprint planning time: {sprint_elapsed_seconds:.2f} seconds"
+                )
+                click.echo(
+                    "Peak sprint-planning memory: "
+                    f"{_format_memory_size(sprint_peak_memory_bytes)}"
+                )
 
         if quiet == 0:
             import math
@@ -633,6 +1084,9 @@ def simulate(
                             f"({record.count}/{results.iterations}, {record.frequency * 100:.1f}%)"
                         )
 
+            if sprint_results is not None:
+                _echo_sprint_results(sprint_results, table=table, minimal=minimal)
+
             # --- Staffing advisory (always shown) and full table (--staffing) ---
             if not minimal:
                 from mcprojsim.analysis.staffing import StaffingAnalyzer
@@ -747,33 +1201,61 @@ def simulate(
             for fmt in formats:
                 if fmt == "json":
                     output_file = base_output.with_suffix(".json")
-                    JSONExporter.export(
-                        results,
-                        output_file,
-                        config=cfg,
-                        critical_path_limit=critical_path_limit,
-                    )
+                    if sprint_results is not None:
+                        JSONExporter.export(
+                            results,
+                            output_file,
+                            config=cfg,
+                            critical_path_limit=critical_path_limit,
+                            sprint_results=sprint_results,
+                        )
+                    else:
+                        JSONExporter.export(
+                            results,
+                            output_file,
+                            config=cfg,
+                            critical_path_limit=critical_path_limit,
+                        )
                     if quiet == 0 and not minimal:
                         click.echo(f"\nResults exported to {output_file}")
                 elif fmt == "csv":
                     output_file = base_output.with_suffix(".csv")
-                    CSVExporter.export(
-                        results,
-                        output_file,
-                        config=cfg,
-                        critical_path_limit=critical_path_limit,
-                    )
+                    if sprint_results is not None:
+                        CSVExporter.export(
+                            results,
+                            output_file,
+                            config=cfg,
+                            critical_path_limit=critical_path_limit,
+                            sprint_results=sprint_results,
+                        )
+                    else:
+                        CSVExporter.export(
+                            results,
+                            output_file,
+                            config=cfg,
+                            critical_path_limit=critical_path_limit,
+                        )
                     if quiet == 0 and not minimal:
                         click.echo(f"Results exported to {output_file}")
                 elif fmt == "html":
                     output_file = base_output.with_suffix(".html")
-                    HTMLExporter.export(
-                        results,
-                        output_file,
-                        project=project,
-                        config=cfg,
-                        critical_path_limit=critical_path_limit,
-                    )
+                    if sprint_results is not None:
+                        HTMLExporter.export(
+                            results,
+                            output_file,
+                            project=project,
+                            config=cfg,
+                            critical_path_limit=critical_path_limit,
+                            sprint_results=sprint_results,
+                        )
+                    else:
+                        HTMLExporter.export(
+                            results,
+                            output_file,
+                            project=project,
+                            config=cfg,
+                            critical_path_limit=critical_path_limit,
+                        )
                     if quiet == 0 and not minimal:
                         click.echo(f"Results exported to {output_file}")
                 else:

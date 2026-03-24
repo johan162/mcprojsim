@@ -1,0 +1,63 @@
+[project]
+name = "Sprint Planning External CSV"
+start_date = "2026-05-04"
+confidence_levels = [50, 80, 90]
+
+[sprint_planning]
+enabled = true
+sprint_length_weeks = 1
+capacity_mode = "story_points"
+
+[sprint_planning.history]
+format = "csv"
+path = "sprint_planning_history.csv"
+
+[[tasks]]
+id = "task_001"
+name = "Support ticket A"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8
+
+[[tasks]]
+id = "task_002"
+name = "Support ticket B"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8
+
+[[tasks]]
+id = "task_003"
+name = "Support ticket C"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8
+
+[[tasks]]
+id = "task_004"
+name = "Support ticket D"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8
+
+[[tasks]]
+id = "task_005"
+name = "Support ticket E"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8

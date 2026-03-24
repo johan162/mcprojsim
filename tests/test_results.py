@@ -2,8 +2,10 @@
 
 import pytest
 import numpy as np
+from datetime import date
 
 from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
+from mcprojsim.models.sprint_simulation import SprintPlanningResults
 
 
 class TestSimulationResults:
@@ -156,3 +158,60 @@ class TestSimulationResults:
         assert diagnostics["resource_wait_time_hours"] == pytest.approx(2.0)
         assert diagnostics["resource_utilization"] == pytest.approx(0.66)
         assert diagnostics["calendar_delay_time_hours"] == pytest.approx(5.0)
+
+
+class TestSprintPlanningResults:
+    """Tests for sprint-planning results."""
+
+    @pytest.fixture
+    def sample_sprint_results(self):
+        """Create sample sprint-planning results."""
+        results = SprintPlanningResults(
+            iterations=5,
+            project_name="Sprint Project",
+            sprint_length_weeks=2,
+            sprint_counts=np.array([2.0, 3.0, 3.0, 4.0, 5.0]),
+            random_seed=42,
+            start_date=date(2025, 1, 6),
+            planning_confidence_level=0.80,
+            removed_work_treatment="churn_only",
+            historical_diagnostics={"sampling_mode": "matching_cadence"},
+            planned_commitment_guidance=4.5,
+            carryover_statistics={"mean": 1.2},
+            spillover_statistics={"aggregate_spillover_rate": {"mean": 0.3}},
+            disruption_statistics={"observed_frequency": 0.1},
+            burnup_percentiles=[{"sprint_number": 1.0, "p50": 3.0}],
+        )
+        return results
+
+    def test_calculate_statistics(self, sample_sprint_results):
+        """Sprint results should calculate basic descriptive statistics."""
+        sample_sprint_results.calculate_statistics()
+
+        assert sample_sprint_results.mean == pytest.approx(3.4)
+        assert sample_sprint_results.median == pytest.approx(3.0)
+        assert sample_sprint_results.std_dev > 0
+        assert sample_sprint_results.min_sprints == 2.0
+        assert sample_sprint_results.max_sprints == 5.0
+
+    def test_date_percentile_uses_sprint_boundaries(self, sample_sprint_results):
+        """Date projection should move by whole sprint boundaries."""
+        projected = sample_sprint_results.date_percentile(50)
+
+        assert projected == date(2025, 2, 3)
+
+    def test_to_dict(self, sample_sprint_results):
+        """Sprint results should serialize cleanly for exporters."""
+        sample_sprint_results.calculate_statistics()
+        sample_sprint_results.percentile(80)
+        sample_sprint_results.date_percentile(80)
+
+        data = sample_sprint_results.to_dict()
+
+        assert data["project_name"] == "Sprint Project"
+        assert data["sprint_length_weeks"] == 2
+        assert data["planned_commitment_guidance"] == pytest.approx(4.5)
+        assert data["carryover_statistics"]["mean"] == pytest.approx(1.2)
+        assert data["burnup_percentiles"][0]["p50"] == pytest.approx(3.0)
+        assert "statistics" in data
+        assert "date_percentiles" in data

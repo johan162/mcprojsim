@@ -4,7 +4,7 @@
 # to re-run certain tasks based on file changes.
 
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
-pre-commit clean maintainer-clean docs pdf pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
+pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all
 
@@ -151,6 +151,7 @@ USER_GUIDE_DOCS := \
 	docs/user_guide/task_estimation.md  \
 	docs/user_guide/risks.md  \
 	docs/user_guide/project_files.md  \
+	docs/user_guide/sprint_planning.md  \
 	docs/user_guide/constrained.md  \
 	docs/user_guide/running_simulations.md  \
 	docs/user_guide/interpreting_results.md  \
@@ -192,6 +193,17 @@ DIST_DIR := dist
 
 # Generic builddir for interim build artifacts (e.g. for PDF generation)
 BUILD_DIR := .build
+
+# Design ideas PDF output path
+DESIGN_IDEAS_DIR := design-ideas
+SPRINT_PLANNING_MD := $(DESIGN_IDEAS_DIR)/sprint-based-planning.md
+SPRINT_PLANNING_PDF := $(DESIGN_IDEAS_DIR)/sprint-based-planning.pdf
+SPRINT_PLANNING_DIST_DIR := $(BUILD_DIR)/design-ideas/sprint-based-planning
+SPRINT_PLANNING_TEMPLATE := $(DESIGN_IDEAS_DIR)/report_template.tex
+SPRINT_PLANNING_PANDOC_FILTER := scripts/pandoc_sprint_planning_table_widths.lua
+SPRINT_PLANNING_BODY_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_body.tex
+SPRINT_PLANNING_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.tex
+SPRINT_PLANNING_PDF_BUILT := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.pdf
 
 # Remove any hypen in PyPi specifi version number for wheel filename compliance
 PYPI_VERSION := $(shell echo $(VERSION) | tr -d '-')
@@ -238,7 +250,7 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running linter...$(NC)"
 	@poetry run flake8 $(SRC_DIR) $(TEST_DIR)
 # Run pyright as an additional linting step if available
-	@if command -v pyright >/dev/null 2>&1; then \
+	@if poetry run pyright --version >/dev/null 2>&1; then \
 		echo -e "$(DARKYELLOW)- Running pyright for additional linting...$(NC)"; \
 		if poetry run pyright $(SRC_DIR) $(TEST_DIR); then \
 			echo -e "$(GREEN)✓ Pyright linting passed$(NC)"; \
@@ -247,7 +259,7 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 			exit 1; \
 		fi \
 	else \
-		echo -e "$(YELLOW)⚠️  Warning: pyright not found, skipping pyright linting. Install with 'npm install -g pyright' for enhanced linting.$(NC)"; \
+		echo -e "$(YELLOW)⚠️  Warning: pyright not found, skipping pyright linting. Install with 'poetry install --with dev' for enhanced linting.$(NC)"; \
 	fi
 	@touch $(LINT_STAMP)
 	@echo -e "$(GREEN)✓ Lint run successfully$(NC)"
@@ -333,7 +345,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-pandoc|gen-examples|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
+	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-sprint-planning|pdf-pandoc|gen-examples|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
@@ -451,8 +463,8 @@ $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) 
 ## Target that updates the version number in the LaTeX template for the user guide PDF generation
 update-version: ## Update the version number in the LaTeX template for the user guide PDF generation
 	@echo -e "$(DARKYELLOW)- Updating version number in LaTeX template...$(NC)"
-	@sed -i.bak -E 's/Monte Carlo Project Simulation, v[0-9.]+/Monte Carlo Project Simulation, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
-	@if grep -q "Monte Carlo Project Simulation, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
+	@sed -i.bak -E 's/\\texttt{mcprojsim}, v[0-9.]+/\\texttt{mcprojsim}, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
+	@if grep -q "\\\texttt{mcprojsim}, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
 		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template$(NC)"; \
@@ -484,6 +496,29 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  #
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_DIST_DIR) $(USER_GUIDE_TEX) >/dev/null
 	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
 	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
+
+pdf-sprint-planning: $(SPRINT_PLANNING_PDF) ## Build the sprint-based planning design PDF
+	@:
+
+$(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(SPRINT_PLANNING_TEMPLATE) $(SPRINT_PLANNING_PANDOC_FILTER)
+	@echo -e "$(DARKYELLOW)- Building sprint-based planning PDF via LaTeX report pipeline...$(NC)"
+	@mkdir -p $(SPRINT_PLANNING_DIST_DIR)
+	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER) $(SPRINT_PLANNING_MD) -o $(SPRINT_PLANNING_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(SPRINT_PLANNING_BODY_TEX)
+	@rm -f $(SPRINT_PLANNING_BODY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Injecting body into design-ideas LaTeX template...$(NC)"
+	@awk -v body="$(SPRINT_PLANNING_BODY_TEX)" '\
+		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$(SPRINT_PLANNING_TEMPLATE) > $(SPRINT_PLANNING_TEX)
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
+	@cp $(SPRINT_PLANNING_PDF_BUILT) $(SPRINT_PLANNING_PDF)
+	@rm -f $(SPRINT_PLANNING_DIST_DIR)/*.aux $(SPRINT_PLANNING_DIST_DIR)/*.log $(SPRINT_PLANNING_DIST_DIR)/*.fls $(SPRINT_PLANNING_DIST_DIR)/*.fdb_latexmk 2>/dev/null || true
+	@echo -e "$(GREEN)✓ Sprint-based planning PDF built: $(SPRINT_PLANNING_PDF)$(NC)"
 
 pdf-pandoc: $(USER_GUIDE_PANDOC_PDF) ## Build fallback user guide PDF directly with Pandoc
 	@:

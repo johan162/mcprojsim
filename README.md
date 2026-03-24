@@ -6,7 +6,7 @@
 |**Documentation**|[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://johan162.github.io/mcprojsim/)|
 |**License**|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)|
 |**Release**|[![GitHub release](https://img.shields.io/github/v/release/johan162/mcprojsim?include_prereleases)](https://github.com/johan162/mcprojsim/releases)|
-|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen.svg)](coverage.svg)|
+|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)](coverage.svg)|
 |**Code Quality**|[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/) [![Linting: flake8](https://img.shields.io/badge/linting-flake8-yellowgreen)](https://flake8.pycqa.org/)|
 |Repo URL|[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat-square&logo=github&logoColor=white)](https://github.com/johan162/mcprojsim)|
 
@@ -44,6 +44,7 @@ It is intended for teams that want answers such as:
 - **Probability-of-date** — calculate the likelihood of finishing by a given target date (`--target-date`)
 - **Staffing analysis** — Brooks's Law–aware team-size recommendations for multiple experience profiles (`--staffing`)
 - **ASCII table output** — optional `--table` flag formats CLI results as bordered tables for easier reading
+- **Sprint planning** — Monte Carlo sprint forecasting with empirical or Negative Binomial velocity models, sickness modelling, item spillover, and historical metrics import (CSV or JSON)
 - Reproducible runs with explicit random seeds
 
 ## Recommended installation
@@ -119,6 +120,7 @@ Use the local document that matches your goal:
 - [docs/user_guide/your_first_project.md](docs/user_guide/your_first_project.md) — build a project file step by step
 - [docs/user_guide/project_files.md](docs/user_guide/project_files.md) — project file reference
 - [docs/user_guide/constrained.md](docs/user_guide/constrained.md) — resource/calendar-constrained scheduling, assignment behavior, and diagnostics
+- [docs/user_guide/sprint_planning.md](docs/user_guide/sprint_planning.md) — sprint planning, velocity models, sickness, and historical metric import
 - [docs/configuration.md](docs/configuration.md) — uncertainty factors and runtime configuration
 - [docs/examples.md](docs/examples.md) — example projects and usage patterns
 - [docs/api_reference.md](docs/api_reference.md) — Python API usage
@@ -154,6 +156,9 @@ mcprojsim simulate examples/sample_project.yaml --target-date 2026-06-01
 
 # Combine options
 mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml --table --verbose --seed 42
+
+# Sprint planning with negative binomial velocity model and sickness modelling
+mcprojsim simulate examples/sprint_nb_sickness_large.yaml --seed 42 --velocity-model neg_binomial
 ```
 
 ## MCP server integration
@@ -231,7 +236,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.6.1}
+  version = {0.7.0}
 }
 ```
 

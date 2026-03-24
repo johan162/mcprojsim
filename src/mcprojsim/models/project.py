@@ -17,6 +17,23 @@ from mcprojsim.config import (
     DEFAULT_CONFIDENCE_LEVELS,
     DEFAULT_PROBABILITY_GREEN_THRESHOLD,
     DEFAULT_PROBABILITY_RED_THRESHOLD,
+    DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU,
+    DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA,
+    DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
+    DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_ALPHA,
+    DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_BETA,
+    DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT,
+    DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE,
+    DEFAULT_SPRINT_SPILLOVER_MODEL,
+    DEFAULT_SPRINT_SPILLOVER_SIZE_BRACKETS,
+    DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS,
+    DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
+    DEFAULT_SPRINT_REMOVED_WORK_TREATMENT,
+    DEFAULT_SPRINT_VELOCITY_MODEL,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_LOW,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY,
     DEFAULT_STORY_POINT_VALUES,
     DEFAULT_UNCERTAINTY_FACTOR_LEVELS,
     EffortUnit,
@@ -35,6 +52,34 @@ class ImpactType(str, Enum):
 
     PERCENTAGE = "percentage"
     ABSOLUTE = "absolute"
+
+
+class SprintCapacityMode(str, Enum):
+    """Supported sprint planning capacity modes."""
+
+    STORY_POINTS = "story_points"
+    TASKS = "tasks"
+
+
+class RemovedWorkTreatment(str, Enum):
+    """How removed work should affect sprint forecasts."""
+
+    CHURN_ONLY = "churn_only"
+    REDUCE_BACKLOG = "reduce_backlog"
+
+
+class SprintSpilloverModel(str, Enum):
+    """Supported task spillover probability model families."""
+
+    TABLE = "table"
+    LOGISTIC = "logistic"
+
+
+class SprintVelocityModel(str, Enum):
+    """How future sprint velocity is modeled."""
+
+    EMPIRICAL = "empirical"
+    NEG_BINOMIAL = "neg_binomial"
 
 
 class TaskEstimate(BaseModel):
@@ -256,6 +301,13 @@ class Task(BaseModel):
     resources: List[str] = Field(default_factory=list)
     max_resources: int = Field(default=1, ge=1)
     min_experience_level: int = Field(default=1)
+    planning_story_points: Optional[int] = Field(default=None, gt=0)
+    priority: Optional[int] = None
+    spillover_probability_override: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
     risks: List[Risk] = Field(default_factory=list)
 
     @field_validator("min_experience_level")
@@ -269,6 +321,298 @@ class Task(BaseModel):
     def has_dependency(self, task_id: str) -> bool:
         """Check if this task depends on another task."""
         return task_id in self.dependencies
+
+    def get_planning_story_points(self) -> Optional[int]:
+        """Return the sprint-planning story point size for the task if available."""
+        if self.planning_story_points is not None:
+            return self.planning_story_points
+        return self.estimate.story_points
+
+
+class SprintHistoryEntry(BaseModel):
+    """Historical sprint outcome row for sprint-planning forecasts."""
+
+    sprint_id: str
+    sprint_length_weeks: Optional[int] = Field(default=None, gt=0)
+    completed_story_points: Optional[float] = Field(default=None, ge=0)
+    completed_tasks: Optional[int] = Field(default=None, ge=0)
+    spillover_story_points: float = Field(default=0, ge=0)
+    spillover_tasks: int = Field(default=0, ge=0)
+    added_story_points: float = Field(default=0, ge=0)
+    added_tasks: int = Field(default=0, ge=0)
+    removed_story_points: float = Field(default=0, ge=0)
+    removed_tasks: int = Field(default=0, ge=0)
+    holiday_factor: float = Field(default=1.0, gt=0)
+    end_date: Optional[date] = None
+    team_size: Optional[int] = Field(default=None, ge=0)
+    notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_unit_family(self) -> "SprintHistoryEntry":
+        """Validate required completed field and unit-family consistency."""
+        has_story_points = self.completed_story_points is not None
+        has_tasks = self.completed_tasks is not None
+
+        if has_story_points == has_tasks:
+            raise ValueError(
+                "Each sprint history entry must include exactly one of "
+                "'completed_story_points' or 'completed_tasks'"
+            )
+
+        if not self.sprint_id.strip():
+            raise ValueError("sprint_id must be a non-empty string")
+
+        if has_story_points and any(
+            field in self.model_fields_set
+            for field in ("spillover_tasks", "added_tasks", "removed_tasks")
+        ):
+            raise ValueError(
+                "Sprint history entries using 'completed_story_points' must not use "
+                "task-based spillover, added, or removed fields"
+            )
+
+        if has_tasks and any(
+            field in self.model_fields_set
+            for field in (
+                "spillover_story_points",
+                "added_story_points",
+                "removed_story_points",
+            )
+        ):
+            raise ValueError(
+                "Sprint history entries using 'completed_tasks' must not use "
+                "story-point-based spillover, added, or removed fields"
+            )
+
+        return self
+
+
+class FutureSprintOverrideSpec(BaseModel):
+    """Forward-looking capacity adjustment for a specific future sprint."""
+
+    sprint_number: Optional[int] = Field(default=None, gt=0)
+    start_date: Optional[date] = None
+    holiday_factor: float = Field(default=1.0, gt=0)
+    capacity_multiplier: float = Field(default=1.0, gt=0)
+    notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def validate_locator(self) -> "FutureSprintOverrideSpec":
+        """Require at least one targeting locator."""
+        if self.sprint_number is None and self.start_date is None:
+            raise ValueError(
+                "Future sprint overrides must define at least one locator: "
+                "'sprint_number' or 'start_date'"
+            )
+        return self
+
+    def effective_multiplier(self) -> float:
+        """Return the combined multiplier contributed by this override."""
+        return float(self.holiday_factor * self.capacity_multiplier)
+
+
+class SprintVolatilitySpec(BaseModel):
+    """Optional sprint-level disruption overlay."""
+
+    enabled: bool = False
+    disruption_probability: float = Field(
+        default=DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY,
+        ge=0.0,
+        le=1.0,
+    )
+    disruption_multiplier_low: float = Field(
+        default=DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_LOW,
+        gt=0,
+    )
+    disruption_multiplier_expected: float = Field(
+        default=DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED,
+        gt=0,
+    )
+    disruption_multiplier_high: float = Field(
+        default=DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH,
+        gt=0,
+    )
+
+    @model_validator(mode="after")
+    def validate_multiplier_range(self) -> "SprintVolatilitySpec":
+        """Require a valid triangular-style multiplier range."""
+        if not (
+            self.disruption_multiplier_low
+            <= self.disruption_multiplier_expected
+            <= self.disruption_multiplier_high
+        ):
+            raise ValueError(
+                "Volatility disruption multipliers must satisfy "
+                "low <= expected <= high"
+            )
+        return self
+
+
+class SprintSpilloverBracketSpec(BaseModel):
+    """One table-model spillover probability bracket."""
+
+    max_points: Optional[float] = Field(default=None, gt=0)
+    probability: float = Field(ge=0.0, le=1.0)
+
+
+def _default_spillover_brackets() -> list["SprintSpilloverBracketSpec"]:
+    """Build the default table-model spillover brackets."""
+    brackets: list[SprintSpilloverBracketSpec] = []
+    for bracket in DEFAULT_SPRINT_SPILLOVER_SIZE_BRACKETS:
+        probability = bracket["probability"]
+        assert probability is not None
+        brackets.append(
+            SprintSpilloverBracketSpec(
+                max_points=bracket["max_points"],
+                probability=float(probability),
+            )
+        )
+    return brackets
+
+
+class SprintSpilloverSpec(BaseModel):
+    """Task-level execution spillover model configuration."""
+
+    enabled: bool = False
+    model: SprintSpilloverModel = Field(
+        default=SprintSpilloverModel(DEFAULT_SPRINT_SPILLOVER_MODEL)
+    )
+    size_reference_points: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS,
+        gt=0,
+    )
+    size_brackets: list[SprintSpilloverBracketSpec] = Field(
+        default_factory=_default_spillover_brackets
+    )
+    consumed_fraction_alpha: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_ALPHA,
+        gt=0,
+    )
+    consumed_fraction_beta: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_BETA,
+        gt=0,
+    )
+    logistic_slope: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE,
+        gt=0,
+    )
+    logistic_intercept: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT
+    )
+
+    @model_validator(mode="after")
+    def validate_size_brackets(self) -> "SprintSpilloverSpec":
+        """Require ascending bracket thresholds and a catch-all bracket."""
+        previous_max = 0.0
+        saw_unbounded = False
+        for index, bracket in enumerate(self.size_brackets):
+            if saw_unbounded:
+                raise ValueError(
+                    "Spillover size_brackets must place the unbounded bracket last"
+                )
+            if bracket.max_points is None:
+                saw_unbounded = True
+                continue
+            if bracket.max_points <= previous_max:
+                raise ValueError(
+                    "Spillover size_brackets max_points values must be strictly "
+                    "ascending"
+                )
+            previous_max = bracket.max_points
+            if index == len(self.size_brackets) - 1:
+                saw_unbounded = True
+
+        if self.model == SprintSpilloverModel.TABLE and not self.size_brackets:
+            raise ValueError("Table spillover model requires at least one size bracket")
+
+        return self
+
+
+class SprintSicknessSpec(BaseModel):
+    """Optional per-person sickness model for sprint capacity."""
+
+    enabled: bool = False
+    team_size: Optional[int] = Field(default=None, gt=0)
+    probability_per_person_per_week: float = Field(
+        default=DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
+        gt=0.0,
+        lt=1.0,
+    )
+    duration_log_mu: float = Field(
+        default=DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU,
+    )
+    duration_log_sigma: float = Field(
+        default=DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA,
+        gt=0,
+    )
+
+
+class SprintPlanningSpec(BaseModel):
+    """Sprint-planning configuration for a project."""
+
+    enabled: bool = False
+    sprint_length_weeks: int = Field(gt=0)
+    capacity_mode: SprintCapacityMode
+    history: List[SprintHistoryEntry] = Field(default_factory=list)
+    planning_confidence_level: float = Field(
+        default=DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
+        gt=0,
+        lt=1,
+    )
+    removed_work_treatment: RemovedWorkTreatment = Field(
+        default=RemovedWorkTreatment(DEFAULT_SPRINT_REMOVED_WORK_TREATMENT)
+    )
+    future_sprint_overrides: list[FutureSprintOverrideSpec] = Field(
+        default_factory=list
+    )
+    volatility_overlay: SprintVolatilitySpec = Field(
+        default_factory=SprintVolatilitySpec
+    )
+    spillover: SprintSpilloverSpec = Field(default_factory=SprintSpilloverSpec)
+    velocity_model: SprintVelocityModel = Field(
+        default=SprintVelocityModel(DEFAULT_SPRINT_VELOCITY_MODEL)
+    )
+    sickness: SprintSicknessSpec = Field(default_factory=SprintSicknessSpec)
+
+    @model_validator(mode="after")
+    def validate_history(self) -> "SprintPlanningSpec":
+        """Validate sprint history consistency and minimum usable rows."""
+        sprint_ids = [entry.sprint_id for entry in self.history]
+        if len(sprint_ids) != len(set(sprint_ids)):
+            raise ValueError("Sprint history sprint_id values must be unique")
+
+        usable_rows = 0
+        for entry in self.history:
+            if entry.sprint_length_weeks is None:
+                entry.sprint_length_weeks = self.sprint_length_weeks
+
+            if self.capacity_mode == SprintCapacityMode.STORY_POINTS:
+                if entry.completed_story_points is None:
+                    raise ValueError(
+                        "Sprint history entries must use story-point fields when "
+                        "capacity_mode is 'story_points'"
+                    )
+                delivery_signal = (
+                    entry.completed_story_points + entry.spillover_story_points
+                )
+            else:
+                if entry.completed_tasks is None:
+                    raise ValueError(
+                        "Sprint history entries must use task-count fields when "
+                        "capacity_mode is 'tasks'"
+                    )
+                delivery_signal = entry.completed_tasks + entry.spillover_tasks
+
+            if delivery_signal > 0:
+                usable_rows += 1
+
+        if self.enabled and usable_rows < 2:
+            raise ValueError(
+                "Sprint planning requires at least two usable historical observations "
+                "with positive delivery signal"
+            )
+
+        return self
 
 
 class ProjectMetadata(BaseModel):
@@ -338,6 +682,7 @@ class Project(BaseModel):
     project_risks: List[Risk] = Field(default_factory=list)
     resources: List["ResourceSpec"] = Field(default_factory=list)
     calendars: List["CalendarSpec"] = Field(default_factory=list)
+    sprint_planning: Optional[SprintPlanningSpec] = None
 
     @model_validator(mode="after")
     def validate_project(self) -> "Project":
@@ -369,6 +714,7 @@ class Project(BaseModel):
         self._normalize_and_validate_resources()
         self._validate_calendars()
         self._validate_resource_references()
+        self._validate_sprint_planning()
 
         return self
 
@@ -493,6 +839,78 @@ class Project(BaseModel):
                 task.estimate.validate_effective_distribution(effective_distribution)
             except ValueError as error:
                 raise ValueError(f"Task {task.id}: {error}") from error
+
+    def _validate_sprint_planning(self) -> None:
+        """Validate sprint-planning settings that depend on project tasks."""
+        if self.sprint_planning is None or not self.sprint_planning.enabled:
+            return
+
+        if (
+            self.sprint_planning.capacity_mode == SprintCapacityMode.STORY_POINTS
+            or self.sprint_planning.spillover.enabled
+        ):
+            missing_story_points = [
+                task.id
+                for task in self.tasks
+                if task.get_planning_story_points() is None
+            ]
+            if missing_story_points:
+                missing = ", ".join(missing_story_points)
+                if (
+                    self.sprint_planning.capacity_mode
+                    == SprintCapacityMode.STORY_POINTS
+                ):
+                    raise ValueError(
+                        "Sprint planning in 'story_points' mode requires every task "
+                        "to have a resolvable planning story-point value. Missing "
+                        f"tasks: {missing}"
+                    )
+                raise ValueError(
+                    "Sprint planning spillover modeling requires every task to have "
+                    "a resolvable planning story-point value. Missing tasks: "
+                    f"{missing}"
+                )
+
+        self._validate_future_sprint_overrides()
+
+    def _validate_future_sprint_overrides(self) -> None:
+        """Validate forward-looking sprint override targeting and uniqueness."""
+        if self.sprint_planning is None:
+            return
+
+        sprint_days = self.sprint_planning.sprint_length_weeks * 7
+        seen_sprint_numbers: set[int] = set()
+        for override in self.sprint_planning.future_sprint_overrides:
+            resolved_sprint_number: Optional[int] = override.sprint_number
+
+            if override.start_date is not None:
+                delta_days = (override.start_date - self.project.start_date).days
+                if delta_days < 0 or delta_days % sprint_days != 0:
+                    raise ValueError(
+                        "Future sprint override start_date must align to a simulated "
+                        "sprint boundary"
+                    )
+                derived_sprint_number = (delta_days // sprint_days) + 1
+                if (
+                    override.sprint_number is not None
+                    and override.sprint_number != derived_sprint_number
+                ):
+                    raise ValueError(
+                        "Future sprint override sprint_number and start_date must "
+                        "resolve to the same sprint"
+                    )
+                resolved_sprint_number = derived_sprint_number
+
+            if resolved_sprint_number is None:
+                raise ValueError(
+                    "Future sprint override must resolve to a sprint number"
+                )
+
+            if resolved_sprint_number in seen_sprint_numbers:
+                raise ValueError(
+                    "Future sprint overrides must target unique simulated sprints"
+                )
+            seen_sprint_numbers.add(resolved_sprint_number)
 
     def get_task_by_id(self, task_id: str) -> Optional[Task]:
         """Get task by ID."""

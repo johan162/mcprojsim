@@ -21,6 +21,16 @@ from mcprojsim.models.project import (
     UncertaintyFactors,
 )
 from mcprojsim.config import Config
+from mcprojsim.models.project import (
+    SprintCapacityMode,
+    SprintHistoryEntry,
+    SprintPlanningSpec,
+    SprintSicknessSpec,
+    SprintVelocityModel,
+)
+from mcprojsim.planning.sprint_capacity import SprintCapacitySampler
+from mcprojsim.planning.sprint_planner import SprintPlanner
+from mcprojsim.planning.sprint_engine import SprintSimulationEngine
 
 
 class TestDistributionSampler:
@@ -135,6 +145,498 @@ class TestRiskEvaluator:
         assert total_impact == 8.0
 
 
+class TestSprintCapacitySampler:
+    """Tests for historical sprint normalization and sampling."""
+
+    def test_sampler_holiday_normalizes_delivery_side_only(self):
+        """Completed and spillover should be holiday-normalized; churn stays raw."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id="SPR-001",
+                    sprint_length_weeks=2,
+                    completed_story_points=8,
+                    spillover_story_points=4,
+                    added_story_points=2,
+                    removed_story_points=1,
+                    holiday_factor=0.5,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="SPR-002",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                    spillover_story_points=0,
+                    added_story_points=0,
+                    removed_story_points=0,
+                ),
+            ],
+        )
+
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        first_row = sampler.normalized_rows[0]
+
+        assert first_row.completed_units == pytest.approx(16.0)
+        assert first_row.spillover_units == pytest.approx(8.0)
+        assert first_row.added_units == pytest.approx(2.0)
+        assert first_row.removed_units == pytest.approx(1.0)
+
+    def test_sampler_resamples_matching_cadence_rows(self):
+        """Matching sprint cadence should sample whole normalized rows."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id="SPR-001",
+                    sprint_length_weeks=1,
+                    completed_story_points=3,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="SPR-002",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                    spillover_story_points=1,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="SPR-003",
+                    sprint_length_weeks=2,
+                    completed_story_points=8,
+                    spillover_story_points=2,
+                ),
+            ],
+        )
+
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(7))
+        samples = [sampler.sample() for _ in range(10)]
+
+        assert sampler.uses_weekly_fallback is False
+        assert {sample.sampling_mode for sample in samples} == {"matching_cadence"}
+        assert {sample.completed_units for sample in samples}.issubset({10.0, 8.0})
+        assert {sample.spillover_units for sample in samples}.issubset({1.0, 2.0})
+
+    def test_sampler_uses_weekly_fallback_for_missing_cadence(self):
+        """Missing target cadence should trigger weekly normalization fallback."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=3,
+            capacity_mode=SprintCapacityMode.TASKS,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id="SPR-001",
+                    sprint_length_weeks=1,
+                    completed_tasks=4,
+                    spillover_tasks=1,
+                    added_tasks=2,
+                    removed_tasks=0,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="SPR-002",
+                    sprint_length_weeks=2,
+                    completed_tasks=12,
+                    spillover_tasks=2,
+                    added_tasks=4,
+                    removed_tasks=2,
+                ),
+            ],
+        )
+
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(7))
+        sample = sampler.sample()
+
+        weekly_rows = sampler._build_weekly_rows()
+        expected_rng = np.random.RandomState(7)
+        expected_indices = [expected_rng.randint(0, len(weekly_rows)) for _ in range(3)]
+        expected_completed = sum(
+            weekly_rows[index].completed_units for index in expected_indices
+        )
+        expected_spillover = sum(
+            weekly_rows[index].spillover_units for index in expected_indices
+        )
+        expected_added = sum(
+            weekly_rows[index].added_units for index in expected_indices
+        )
+        expected_removed = sum(
+            weekly_rows[index].removed_units for index in expected_indices
+        )
+
+        assert sampler.uses_weekly_fallback is True
+        assert sample.sampling_mode == "weekly_fallback"
+        assert sample.completed_units == pytest.approx(expected_completed)
+        assert sample.spillover_units == pytest.approx(expected_spillover)
+        assert sample.added_units == pytest.approx(expected_added)
+        assert sample.removed_units == pytest.approx(expected_removed)
+
+    def test_sampler_reports_historical_diagnostics(self):
+        """Historical diagnostics should include stats, ratios, and correlations."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id="SPR-001",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                    spillover_story_points=2,
+                    added_story_points=1,
+                    removed_story_points=1,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="SPR-002",
+                    sprint_length_weeks=2,
+                    completed_story_points=8,
+                    spillover_story_points=4,
+                    added_story_points=2,
+                    removed_story_points=0,
+                ),
+            ],
+        )
+
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        diagnostics = sampler.get_historical_diagnostics()
+
+        assert diagnostics["sampling_mode"] == "matching_cadence"
+        assert diagnostics["observation_count"] == 2
+        assert diagnostics["series_statistics"]["completed_units"][
+            "mean"
+        ] == pytest.approx(9.0)
+        assert diagnostics["ratios"]["spillover_ratio"]["percentiles"][50] >= 0
+        assert "completed_units|spillover_units" in diagnostics["correlations"]
+
+    def test_sampler_applies_volatility_and_future_override_to_completed_units(self):
+        """Volatility and future overrides should scale deliverable capacity only."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id="SPR-001",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                    added_story_points=4,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="SPR-002",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                    added_story_points=2,
+                ),
+            ],
+            volatility_overlay={
+                "enabled": True,
+                "disruption_probability": 1.0,
+                "disruption_multiplier_low": 0.5,
+                "disruption_multiplier_expected": 0.5,
+                "disruption_multiplier_high": 0.5,
+            },
+            future_sprint_overrides=[
+                {
+                    "sprint_number": 1,
+                    "holiday_factor": 0.8,
+                    "capacity_multiplier": 0.5,
+                }
+            ],
+        )
+
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        sample = sampler.sample(sprint_number=1, sprint_start_date=date(2025, 1, 1))
+
+        assert sample.nominal_completed_units == pytest.approx(10.0)
+        assert sample.completed_units == pytest.approx(2.0)
+        assert sample.added_units in {4.0, 2.0}
+        assert sample.disruption_applied is True
+
+    def test_sickness_multiplier_is_1_when_disabled(self):
+        """Disabled sickness model should produce multiplier of 1.0."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            history=[
+                SprintHistoryEntry(sprint_id="S1", completed_story_points=10),
+                SprintHistoryEntry(sprint_id="S2", completed_story_points=12),
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        sample = sampler.sample()
+        assert sample.sickness_multiplier == 1.0
+
+    def test_sickness_multiplier_is_1_when_team_size_is_none(self):
+        """Enabled sickness without team_size should produce multiplier of 1.0."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            sickness=SprintSicknessSpec(enabled=True, team_size=None),
+            history=[
+                SprintHistoryEntry(sprint_id="S1", completed_story_points=10),
+                SprintHistoryEntry(sprint_id="S2", completed_story_points=12),
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        sample = sampler.sample()
+        assert sample.sickness_multiplier == 1.0
+
+    def test_sickness_multiplier_reduces_capacity(self):
+        """Enabled sickness with high probability should visibly reduce capacity."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            sickness=SprintSicknessSpec(
+                enabled=True,
+                team_size=8,
+                probability_per_person_per_week=0.5,
+                duration_log_mu=1.5,
+                duration_log_sigma=0.3,
+            ),
+            history=[
+                SprintHistoryEntry(sprint_id="S1", completed_story_points=10),
+                SprintHistoryEntry(sprint_id="S2", completed_story_points=12),
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        multipliers = [sampler.sample().sickness_multiplier for _ in range(50)]
+        mean_multiplier = sum(multipliers) / len(multipliers)
+        assert mean_multiplier < 0.95
+        assert all(0.0 <= m <= 1.0 for m in multipliers)
+
+    def test_sickness_multiplier_is_reproducible_with_seed(self):
+        """Two samplers with the same seed should produce identical sickness draws."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            sickness=SprintSicknessSpec(
+                enabled=True,
+                team_size=6,
+            ),
+            history=[
+                SprintHistoryEntry(sprint_id="S1", completed_story_points=10),
+                SprintHistoryEntry(sprint_id="S2", completed_story_points=12),
+            ],
+        )
+        sampler_a = SprintCapacitySampler(spec, np.random.RandomState(99))
+        sampler_b = SprintCapacitySampler(spec, np.random.RandomState(99))
+        samples_a = [sampler_a.sample().sickness_multiplier for _ in range(20)]
+        samples_b = [sampler_b.sample().sickness_multiplier for _ in range(20)]
+        assert samples_a == samples_b
+
+    def test_sickness_multiplier_scales_completed_units(self):
+        """Sickness multiplier should reduce completed_units in the sample."""
+        spec_no_sickness = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id="S1",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="S2",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                ),
+            ],
+        )
+        spec_with_sickness = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            sickness=SprintSicknessSpec(
+                enabled=True,
+                team_size=8,
+                probability_per_person_per_week=0.5,
+                duration_log_mu=1.5,
+                duration_log_sigma=0.3,
+            ),
+            history=[
+                SprintHistoryEntry(
+                    sprint_id="S1",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="S2",
+                    sprint_length_weeks=2,
+                    completed_story_points=10,
+                ),
+            ],
+        )
+        sampler_clean = SprintCapacitySampler(
+            spec_no_sickness, np.random.RandomState(42)
+        )
+        sampler_sick = SprintCapacitySampler(
+            spec_with_sickness, np.random.RandomState(42)
+        )
+        clean_total = sum(sampler_clean.sample().completed_units for _ in range(50))
+        sick_total = sum(sampler_sick.sample().completed_units for _ in range(50))
+        assert sick_total < clean_total
+
+    def test_sickness_diagnostics_appear_in_output(self):
+        """Diagnostics should include sickness configuration."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            sickness=SprintSicknessSpec(enabled=True, team_size=5),
+            history=[
+                SprintHistoryEntry(sprint_id="S1", completed_story_points=10),
+                SprintHistoryEntry(sprint_id="S2", completed_story_points=12),
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        diag = sampler.get_historical_diagnostics()
+        assert diag["sickness"]["enabled"] is True
+        assert diag["sickness"]["team_size"] == 5
+        assert diag["sickness"]["probability_per_person_per_week"] == pytest.approx(
+            0.058
+        )
+
+    def test_neg_binomial_fit_overdispersed(self):
+        """NB fit on overdispersed data should give finite dispersion k."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            velocity_model=SprintVelocityModel.NEG_BINOMIAL,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id=f"S{i}",
+                    sprint_length_weeks=2,
+                    completed_story_points=v,
+                )
+                for i, v in enumerate([5, 12, 7, 15, 6, 14, 8], start=1)
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        diag = sampler.get_historical_diagnostics()
+        nb = diag["neg_binomial_params"]
+        assert nb["mu"] > 0
+        assert nb["k"] is not None
+        assert nb["overdispersed"] is True
+
+    def test_neg_binomial_fit_underdispersed_falls_back_to_poisson(self):
+        """NB fit when variance <= mean should give k=None (Poisson fallback)."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            velocity_model=SprintVelocityModel.NEG_BINOMIAL,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id=f"S{i}",
+                    sprint_length_weeks=2,
+                    completed_story_points=v,
+                )
+                for i, v in enumerate([10, 10, 10, 10], start=1)
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        diag = sampler.get_historical_diagnostics()
+        nb = diag["neg_binomial_params"]
+        assert nb["mu"] == pytest.approx(10.0)
+        assert nb["k"] is None
+        assert nb["overdispersed"] is False
+
+    def test_neg_binomial_sampling_produces_reasonable_values(self):
+        """NB sampling should produce positive values near historical mean."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            velocity_model=SprintVelocityModel.NEG_BINOMIAL,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id=f"S{i}",
+                    sprint_length_weeks=2,
+                    completed_story_points=v,
+                )
+                for i, v in enumerate([8, 10, 12, 9, 11], start=1)
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        samples = [sampler.sample() for _ in range(100)]
+        completed_values = [s.completed_units for s in samples]
+        mean_completed = sum(completed_values) / len(completed_values)
+        assert 5.0 < mean_completed < 20.0
+        assert all(s.sampling_mode == "neg_binomial" for s in samples)
+
+    def test_neg_binomial_is_reproducible_with_seed(self):
+        """Two NB samplers with the same seed should produce identical draws."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            velocity_model=SprintVelocityModel.NEG_BINOMIAL,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id=f"S{i}",
+                    sprint_length_weeks=2,
+                    completed_story_points=v,
+                )
+                for i, v in enumerate([8, 10, 12, 9, 11], start=1)
+            ],
+        )
+        sampler_a = SprintCapacitySampler(spec, np.random.RandomState(42))
+        sampler_b = SprintCapacitySampler(spec, np.random.RandomState(42))
+        a = [sampler_a.sample().completed_units for _ in range(20)]
+        b = [sampler_b.sample().completed_units for _ in range(20)]
+        assert a == b
+
+    def test_neg_binomial_diagnostics_report_velocity_model(self):
+        """Diagnostics should report neg_binomial velocity model and params."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=2,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            velocity_model=SprintVelocityModel.NEG_BINOMIAL,
+            history=[
+                SprintHistoryEntry(sprint_id="S1", completed_story_points=10),
+                SprintHistoryEntry(sprint_id="S2", completed_story_points=12),
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        diag = sampler.get_historical_diagnostics()
+        assert diag["velocity_model"] == "neg_binomial"
+        assert "neg_binomial_params" in diag
+        assert "mu" in diag["neg_binomial_params"]
+        assert "k" in diag["neg_binomial_params"]
+
+    def test_neg_binomial_weekly_fallback_sums_weekly_draws(self):
+        """NB with weekly fallback should sum weekly draws for longer sprints."""
+        spec = SprintPlanningSpec(
+            enabled=True,
+            sprint_length_weeks=3,
+            capacity_mode=SprintCapacityMode.STORY_POINTS,
+            velocity_model=SprintVelocityModel.NEG_BINOMIAL,
+            history=[
+                SprintHistoryEntry(
+                    sprint_id="S1",
+                    sprint_length_weeks=1,
+                    completed_story_points=5,
+                ),
+                SprintHistoryEntry(
+                    sprint_id="S2",
+                    sprint_length_weeks=1,
+                    completed_story_points=4,
+                ),
+            ],
+        )
+        sampler = SprintCapacitySampler(spec, np.random.RandomState(42))
+        assert sampler.uses_weekly_fallback is True
+        sample = sampler.sample()
+        assert sample.sampling_mode == "neg_binomial"
+        assert sample.completed_units >= 0
+
+
 class TestTaskScheduler:
     """Tests for task scheduler."""
 
@@ -243,6 +745,370 @@ class TestTaskScheduler:
 
         assert unconstrained_end == 4.0
         assert constrained_end == 8.0
+
+
+class TestSprintPlanner:
+    """Tests for dependency-aware sprint planning."""
+
+    def test_planner_orders_ready_tasks_by_priority_then_id(self):
+        """Ready queue ordering should prefer lower priority values then task ID."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_b",
+                    name="Task B",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=2,
+                    priority=2,
+                ),
+                Task(
+                    id="task_a",
+                    name="Task A",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=2,
+                    priority=1,
+                ),
+                Task(
+                    id="task_c",
+                    name="Task C",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=2,
+                ),
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.STORY_POINTS,
+                history=[
+                    SprintHistoryEntry(sprint_id="SPR-001", completed_story_points=10),
+                    SprintHistoryEntry(sprint_id="SPR-002", completed_story_points=8),
+                ],
+            ),
+        )
+
+        planner = SprintPlanner(project)
+        result = planner.plan_sprint(
+            completed_task_ids=set(),
+            sampled_outcome=sampled_outcome(6, 0, 0, 0),
+        )
+
+        assert result.ready_task_ids == ["task_a", "task_b", "task_c"]
+        assert result.completed_task_ids == ["task_a", "task_b", "task_c"]
+
+    def test_planner_unlocks_dependent_tasks_across_sprints(self):
+        """Tasks should become ready after dependencies complete in earlier sprints."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=2,
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=2,
+                    dependencies=["task_001"],
+                ),
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.STORY_POINTS,
+                history=[
+                    SprintHistoryEntry(sprint_id="SPR-001", completed_story_points=10),
+                    SprintHistoryEntry(sprint_id="SPR-002", completed_story_points=8),
+                ],
+            ),
+        )
+
+        planner = SprintPlanner(project)
+        sprint_one = planner.plan_sprint(set(), sampled_outcome(2, 0, 0, 0))
+        sprint_two = planner.plan_sprint(
+            set(sprint_one.completed_task_ids),
+            sampled_outcome(2, 0, 0, 0),
+        )
+
+        assert sprint_one.completed_task_ids == ["task_001"]
+        assert sprint_two.ready_task_ids == ["task_002"]
+        assert sprint_two.completed_task_ids == ["task_002"]
+
+    def test_planner_defers_non_fitting_tasks_without_capacity_charge(self):
+        """A non-fitting task should be deferred with remaining capacity preserved."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=3,
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=4,
+                ),
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.STORY_POINTS,
+                history=[
+                    SprintHistoryEntry(sprint_id="SPR-001", completed_story_points=10),
+                    SprintHistoryEntry(sprint_id="SPR-002", completed_story_points=8),
+                ],
+            ),
+        )
+
+        planner = SprintPlanner(project)
+        result = planner.plan_sprint(set(), sampled_outcome(5, 0, 0, 0))
+
+        assert result.completed_task_ids == ["task_001"]
+        assert result.deferred_task_ids == ["task_002"]
+        assert result.delivered_units == pytest.approx(3.0)
+        assert result.remaining_capacity == pytest.approx(2.0)
+
+    def test_planner_records_added_and_removed_scope_in_ledger(self):
+        """Added and removed work should be represented as explicit backlog entries."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                )
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.TASKS,
+                removed_work_treatment="churn_only",
+                history=[
+                    SprintHistoryEntry(sprint_id="SPR-001", completed_tasks=3),
+                    SprintHistoryEntry(sprint_id="SPR-002", completed_tasks=2),
+                ],
+            ),
+        )
+
+        planner = SprintPlanner(project)
+        result = planner.plan_sprint(set(), sampled_outcome(1, 0, 2, 1))
+
+        assert [(entry.entry_type, entry.units) for entry in result.ledger_entries] == [
+            ("added_scope", 2.0),
+            ("removed_scope", 1.0),
+        ]
+        assert result.ledger_entries[0].affects_remaining_backlog is True
+        assert result.ledger_entries[1].affects_remaining_backlog is False
+
+    def test_planner_creates_remainder_when_spillover_occurs(self):
+        """A pulled item that spills should consume capacity but earn no throughput."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=5,
+                    spillover_probability_override=1.0,
+                )
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.STORY_POINTS,
+                history=[
+                    SprintHistoryEntry(sprint_id="SPR-001", completed_story_points=10),
+                    SprintHistoryEntry(sprint_id="SPR-002", completed_story_points=8),
+                ],
+                spillover={
+                    "enabled": True,
+                    "consumed_fraction_alpha": 2.0,
+                    "consumed_fraction_beta": 2.0,
+                },
+            ),
+        )
+
+        planner = SprintPlanner(project, np.random.RandomState(3))
+        result = planner.plan_sprint(set(), sampled_outcome(5, 0, 0, 0))
+
+        assert result.completed_task_ids == []
+        assert result.spillover_event_count == 1
+        assert result.delivered_units == pytest.approx(0.0)
+        assert result.carryover_items[0].task_id == "task_001"
+        assert 0.0 < result.carryover_records[0].remaining_points < 5.0
+
+
+def sampled_outcome(
+    completed_units: float,
+    spillover_units: float,
+    added_units: float,
+    removed_units: float,
+):
+    """Build a sprint outcome sample for planner tests."""
+    from mcprojsim.planning.sprint_capacity import SprintOutcomeSample
+
+    return SprintOutcomeSample(
+        completed_units=completed_units,
+        spillover_units=spillover_units,
+        added_units=added_units,
+        removed_units=removed_units,
+        sampling_mode="test",
+    )
+
+
+class TestSprintSimulationEngine:
+    """Tests for sprint-planning engine iteration behavior."""
+
+    def test_engine_is_reproducible_with_fixed_seed(self):
+        """Two engines with the same seed should produce identical sprint counts."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=5,
+                )
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.STORY_POINTS,
+                history=[
+                    SprintHistoryEntry(sprint_id="SPR-001", completed_story_points=3),
+                    SprintHistoryEntry(sprint_id="SPR-002", completed_story_points=6),
+                ],
+            ),
+        )
+
+        engine_one = SprintSimulationEngine(iterations=6, random_seed=42)
+        engine_two = SprintSimulationEngine(iterations=6, random_seed=42)
+
+        results_one = engine_one.run(project)
+        results_two = engine_two.run(project)
+
+        assert np.array_equal(results_one.sprint_counts, results_two.sprint_counts)
+
+    def test_engine_completes_simple_task_mode_project(self):
+        """Task-count sprint mode should complete a one-task project in one sprint."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                )
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.TASKS,
+                history=[
+                    SprintHistoryEntry(sprint_id="SPR-001", completed_tasks=2),
+                    SprintHistoryEntry(sprint_id="SPR-002", completed_tasks=1),
+                ],
+            ),
+        )
+
+        results = SprintSimulationEngine(iterations=5, random_seed=7).run(project)
+
+        assert np.all(results.sprint_counts == 1)
+        assert results.percentile(50) == pytest.approx(1.0)
+
+    def test_engine_calculates_planned_commitment_guidance(self):
+        """Planned-load guidance should be computed from historical diagnostics."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=3,
+                )
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.STORY_POINTS,
+                planning_confidence_level=0.80,
+                history=[
+                    SprintHistoryEntry(
+                        sprint_id="SPR-001",
+                        completed_story_points=10,
+                        spillover_story_points=2,
+                        added_story_points=1,
+                        removed_story_points=1,
+                    ),
+                    SprintHistoryEntry(
+                        sprint_id="SPR-002",
+                        completed_story_points=8,
+                        spillover_story_points=4,
+                        added_story_points=2,
+                        removed_story_points=0,
+                    ),
+                ],
+            ),
+        )
+
+        results = SprintSimulationEngine(iterations=4, random_seed=5).run(project)
+
+        assert results.planned_commitment_guidance > 0
+        assert results.historical_diagnostics["sampling_mode"] == "matching_cadence"
+
+    def test_engine_reports_carryover_spillover_and_burnup_outputs(self):
+        """Spillover-enabled runs should emit carryover and burn-up diagnostics."""
+        project = Project(
+            project=ProjectMetadata(name="Sprint", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    planning_story_points=5,
+                    spillover_probability_override=1.0,
+                )
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.STORY_POINTS,
+                history=[
+                    SprintHistoryEntry(sprint_id="SPR-001", completed_story_points=10),
+                    SprintHistoryEntry(sprint_id="SPR-002", completed_story_points=10),
+                ],
+                spillover={
+                    "enabled": True,
+                    "consumed_fraction_alpha": 2.0,
+                    "consumed_fraction_beta": 2.0,
+                },
+                volatility_overlay={
+                    "enabled": True,
+                    "disruption_probability": 1.0,
+                    "disruption_multiplier_low": 1.0,
+                    "disruption_multiplier_expected": 1.0,
+                    "disruption_multiplier_high": 1.0,
+                },
+            ),
+        )
+
+        results = SprintSimulationEngine(iterations=3, random_seed=2).run(project)
+
+        assert results.carryover_statistics["mean"] > 0
+        assert results.spillover_statistics["aggregate_spillover_rate"]["mean"] > 0
+        assert results.disruption_statistics["observed_frequency"] == pytest.approx(1.0)
+        assert results.burnup_percentiles
+        assert {point["sprint_number"] for point in results.burnup_percentiles} >= {1.0}
 
     def test_schedule_tasks_with_productivity_and_max_resources(self):
         """Resource-constrained mode should scale elapsed duration by capacity."""

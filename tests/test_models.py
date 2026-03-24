@@ -5,12 +5,19 @@ from datetime import date
 
 from mcprojsim.config import DEFAULT_CONFIDENCE_LEVELS
 from mcprojsim.models.project import (
+    FutureSprintOverrideSpec,
     Project,
     ProjectMetadata,
+    RemovedWorkTreatment,
+    SprintCapacityMode,
+    SprintPlanningSpec,
+    SprintSpilloverSpec,
+    SprintVolatilitySpec,
     Task,
     TaskEstimate,
     Risk,
     RiskImpact,
+    SprintHistoryEntry,
     UncertaintyFactors,
     DistributionType,
     ImpactType,
@@ -296,6 +303,197 @@ class TestProject:
             ],
         )
         assert project.project.team_size == 5
+
+    def test_project_accepts_valid_sprint_planning_configuration(self):
+        """Sprint-planning config should validate when task sizing and history are valid."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Sprint Project",
+                start_date=date(2025, 1, 1),
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                    planning_story_points=3,
+                )
+            ],
+            sprint_planning=SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.STORY_POINTS,
+                history=[
+                    SprintHistoryEntry(
+                        sprint_id="SPR-001",
+                        completed_story_points=10,
+                        spillover_story_points=2,
+                    ),
+                    SprintHistoryEntry(
+                        sprint_id="SPR-002",
+                        completed_story_points=8,
+                        added_story_points=1,
+                    ),
+                ],
+                planning_confidence_level=0.75,
+                removed_work_treatment=RemovedWorkTreatment.CHURN_ONLY,
+            ),
+        )
+
+        assert project.sprint_planning is not None
+        assert project.sprint_planning.history[0].sprint_length_weeks == 2
+
+    def test_story_point_sprint_planning_requires_task_story_points(self):
+        """Story-point sprint mode should fail when a task lacks planning size."""
+        with pytest.raises(
+            ValueError,
+            match="requires every task to have a resolvable planning story-point value",
+        ):
+            Project(
+                project=ProjectMetadata(
+                    name="Sprint Project",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
+                    )
+                ],
+                sprint_planning=SprintPlanningSpec(
+                    enabled=True,
+                    sprint_length_weeks=2,
+                    capacity_mode=SprintCapacityMode.STORY_POINTS,
+                    history=[
+                        SprintHistoryEntry(
+                            sprint_id="SPR-001",
+                            completed_story_points=10,
+                        ),
+                        SprintHistoryEntry(
+                            sprint_id="SPR-002",
+                            completed_story_points=8,
+                        ),
+                    ],
+                ),
+            )
+
+    def test_sprint_history_rejects_mixed_unit_families(self):
+        """A sprint history row may not mix task and story-point fields."""
+        with pytest.raises(ValueError, match="must not use task-based"):
+            SprintHistoryEntry(
+                sprint_id="SPR-001",
+                completed_story_points=10,
+                spillover_tasks=1,
+            )
+
+    def test_enabled_sprint_planning_requires_two_usable_rows(self):
+        """Enabled sprint planning should require at least two usable history rows."""
+        with pytest.raises(
+            ValueError, match="at least two usable historical observations"
+        ):
+            SprintPlanningSpec(
+                enabled=True,
+                sprint_length_weeks=2,
+                capacity_mode=SprintCapacityMode.TASKS,
+                history=[
+                    SprintHistoryEntry(
+                        sprint_id="SPR-001",
+                        completed_tasks=0,
+                        spillover_tasks=0,
+                    )
+                ],
+            )
+
+    def test_future_sprint_override_requires_locator_alignment(self):
+        """Conflicting future override locators should fail project validation."""
+        with pytest.raises(
+            ValueError,
+            match="must resolve to the same sprint",
+        ):
+            Project(
+                project=ProjectMetadata(
+                    name="Sprint Project",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
+                        planning_story_points=3,
+                    )
+                ],
+                sprint_planning=SprintPlanningSpec(
+                    enabled=True,
+                    sprint_length_weeks=2,
+                    capacity_mode=SprintCapacityMode.STORY_POINTS,
+                    history=[
+                        SprintHistoryEntry(
+                            sprint_id="SPR-001",
+                            completed_story_points=10,
+                        ),
+                        SprintHistoryEntry(
+                            sprint_id="SPR-002",
+                            completed_story_points=8,
+                        ),
+                    ],
+                    future_sprint_overrides=[
+                        FutureSprintOverrideSpec(
+                            sprint_number=2,
+                            start_date=date(2025, 1, 1),
+                            holiday_factor=0.5,
+                        )
+                    ],
+                ),
+            )
+
+    def test_spillover_enabled_requires_planning_story_points(self):
+        """Tasks-mode spillover should require explicit planning story points."""
+        with pytest.raises(
+            ValueError,
+            match="spillover modeling requires every task to have a resolvable planning story-point value",
+        ):
+            Project(
+                project=ProjectMetadata(
+                    name="Sprint Project",
+                    start_date=date(2025, 1, 1),
+                ),
+                tasks=[
+                    Task(
+                        id="task_001",
+                        name="Task 1",
+                        estimate=TaskEstimate(low=1, expected=2, high=5),
+                    )
+                ],
+                sprint_planning=SprintPlanningSpec(
+                    enabled=True,
+                    sprint_length_weeks=2,
+                    capacity_mode=SprintCapacityMode.TASKS,
+                    history=[
+                        SprintHistoryEntry(
+                            sprint_id="SPR-001",
+                            completed_tasks=10,
+                        ),
+                        SprintHistoryEntry(
+                            sprint_id="SPR-002",
+                            completed_tasks=8,
+                        ),
+                    ],
+                    spillover=SprintSpilloverSpec(enabled=True),
+                ),
+            )
+
+    def test_volatility_spec_validates_multiplier_range(self):
+        """Volatility multipliers must stay ordered."""
+        with pytest.raises(ValueError, match="low <= expected <= high"):
+            SprintVolatilitySpec(
+                enabled=True,
+                disruption_probability=0.1,
+                disruption_multiplier_low=0.9,
+                disruption_multiplier_expected=0.7,
+                disruption_multiplier_high=0.8,
+            )
 
     def test_team_size_zero_is_valid(self):
         """team_size may be explicitly set to zero."""

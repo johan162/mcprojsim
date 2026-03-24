@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "mcprojsim"
-version = "0.6.1"
+version = "0.7.0"
 description = "Monte Carlo simulation system for software development effort estimation"
 readme = "README.md"
 authors = ["Johan Persson <johan162@gmail.com>"]
@@ -41,6 +41,7 @@ jinja2 = ">=3.0.0"
 scipy = ">=1.17.1"
 matplotlib = ">=3.5.0"
 tabulate = "^0.10.0"
+pyright = "^1.1.408"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=9.0.1"
@@ -122,6 +123,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "heavy: long-running integration tests that can be excluded in CI/CD",
+]
 addopts = [
     "--strict-markers",
     "--cov=mcprojsim",

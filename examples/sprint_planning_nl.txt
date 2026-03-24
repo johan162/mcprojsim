@@ -1,0 +1,22 @@
+Project: Sprint Planning from Text
+Start date: 2026-05-04
+Task 1:
+- Discovery
+- Story points: 3
+Task 2:
+- API implementation
+- Story points: 5
+Task 3:
+- Frontend integration
+- Story points: 8
+Sprint planning:
+- Sprint length: 2
+- Capacity mode: story points
+- Planning confidence level: 80%
+Sprint history SPR-001:
+- Done: 10 points
+- Carryover: 1 points
+Sprint history SPR-002:
+- Done: 9 points
+- Carryover: 2 points
+- Scope added: 1 points

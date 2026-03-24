@@ -13,10 +13,15 @@ documentation workflows, setup verification, and containerized docs serving.
     - [`mkbld.sh` - Main Build Script](#mkbldsh---main-build-script)
     - [`mkcovupd.sh` - Coverage Badge Updater](#mkcovupdsh---coverage-badge-updater)
     - [`mkrelease.sh` - Release Automation Script](#mkreleasesh---release-automation-script)
+    - [`mkrelease2.sh` - CI-Delegating Release Script](#mkrelease2sh---ci-delegating-release-script)
     - [`mkghrelease.sh` - GitHub Release Creator](#mkghreleasesh---github-release-creator)
+    - [`mkmcpbundle.sh` - MCP Bundle Builder](#mkmcpbundlesh---mcp-bundle-builder)
     - [`mkdocs.sh` - Documentation Automation Script](#mkdocssh---documentation-automation-script)
+    - [`gen-examples.sh` - Examples Page Generator](#gen-examplessh---examples-page-generator)
+    - [`gen_nb_sickness_example.py` - NB Sickness Example Generator](#gen_nb_sickness_examplepy---nb-sickness-example-generator)
     - [`verify_setup.sh` - Local Setup Verification](#verify_setupsh---local-setup-verification)
     - [`docs-contctl.sh` - Containerized Docs Server Manager](#docs-contctlsh---containerized-docs-server-manager)
+    - [`pandoc_sprint_planning_table_widths.lua` - Pandoc Lua Filter](#pandoc_sprint_planning_table_widthslua---pandoc-lua-filter)
   - [Typical Workflows](#typical-workflows)
     - [Daily Development Check](#daily-development-check)
     - [Fresh Local Setup Verification](#fresh-local-setup-verification)
@@ -127,6 +132,32 @@ Automates the local release workflow, including version bumping, quality gates, 
 - Pre-release versions should use the current Poetry / PEP 440 style, for example `0.2.0rc5`
 
 
+### `mkrelease2.sh` - CI-Delegating Release Script
+
+Alternative release script that merges to `main` and pushes, then delegates all quality gates, tagging, GitHub Release creation, and PyPI publishing to CI.
+
+```bash
+./scripts/mkrelease2.sh <version> [major|minor|patch] [OPTIONS]
+```
+
+**What it does:**
+1. Validates the repo state
+2. Bumps the version and updates `CHANGELOG.md` on `develop`
+3. Commits and pushes `develop`
+4. Squash-merges `develop` → `main` and pushes
+5. Merges `main` → `develop` (back-merge) and pushes
+
+CI then automatically runs lint, type-checking, and tests; builds and verifies artifacts; creates the git tag and GitHub Release; and publishes to PyPI.
+
+**Options:**
+- `--dry-run` - Preview without making changes
+- `--help`, `-h` - Display help message
+
+**When to prefer this over `mkrelease.sh`:**
+- Use `mkrelease2.sh` when your CI pipeline is configured to handle tagging and publishing automatically on merge to `main`.
+- Use `mkrelease.sh` for a fully local release pipeline where you run quality gates before pushing.
+
+
 ### `mkghrelease.sh` - GitHub Release Creator
 
 Creates a GitHub release with the `gh` CLI after the local release work and CI/artifact generation are complete.'
@@ -152,6 +183,29 @@ It will base the GitHub release on the latest tag on `main`
 - GitHub CLI installed and authenticated
 - Release artifacts already built in `dist/`
 - Typically run after `mkrelease.sh` and after CI completes successfully
+
+
+### `mkmcpbundle.sh` - MCP Bundle Builder
+
+Creates a versioned MCP server bundle zip file containing a manifest, a bootstrap script, and the project wheel.
+Useful for distributing the MCP server independently of PyPI.
+
+```bash
+./scripts/mkmcpbundle.sh [OPTIONS]
+```
+
+**What it does:**
+1. Reads the version from `pyproject.toml`
+2. Ensures a wheel exists in `dist/` (builds one if missing)
+3. Creates a bundle payload containing `manifest.json`, `bootstrap.sh`, and `README.md`
+4. Produces a versioned zip archive in `dist/`
+
+**Options:**
+- `--help` - Display help message
+
+**Requirements:**
+- `mkbld.sh` should be run first to ensure the wheel is up to date
+- Run from the project root
 
 
 ### `mkdocs.sh` - Documentation Automation Script
@@ -229,6 +283,49 @@ Manages the containerized documentation server built from `Dockerfile.docs`.
 - Use this script when you want the docs served from the same containerized environment used for docs image validation
 - Prefer `make docs-serve` or `poetry run mkdocs serve` for the fastest local editing feedback
 
+### `gen-examples.sh` - Examples Page Generator
+
+Generates `docs/examples.md` from the template `docs/examples_template.md` by expanding two placeholder types.
+
+```bash
+./scripts/gen-examples.sh [--jobs N] [template] [output]
+# or
+make gen-examples
+```
+
+**Placeholder types:**
+- `{{file:path}}` — inserts file contents in a fenced code block (language auto-detected from extension)
+- `{{run:command}}` — emits the user-facing command in a `bash` block, then inserts captured output in a `text` block
+
+**What it does:**
+1. **Pass 1** — scans the template for `{{run:...}}` commands, executes each unique command in parallel, and caches outputs under `.build/gen-examples/runs/`
+2. **Pass 2** — renders the final markdown by expanding all `{{file:...}}` and `{{run:...}}` placeholders using the cached outputs
+
+**Options:**
+- `--jobs N` — max number of parallel Pass 1 commands (`0` = no limit; default)
+- `--help` — display help message
+
+**Requirements:**
+- Run from the project root
+- `mcprojsim` must be installed and on `PATH` (or via `poetry run`) for `{{run:...}}` commands to produce output
+
+### `gen_nb_sickness_example.py` - NB Sickness Example Generator
+
+One-shot Python script that (re)generates `examples/sprint_nb_sickness_large.yaml` — a 60-task sprint planning example with a Negative Binomial velocity model and sickness modelling enabled.
+
+```bash
+poetry run python scripts/gen_nb_sickness_example.py
+```
+
+**What it does:**
+- Generates 60 tasks with lognormal estimates (story point sizes 3, 5, 8, 12) using a fixed random seed
+- First 30 tasks are independent; the remaining 30 each have 1–3 dependencies
+- Writes the YAML file directly to `examples/sprint_nb_sickness_large.yaml`
+
+**Requirements:**
+- `pyyaml` available (included in the `dev` and `mcp` dependency groups)
+- Run from the project root
+
 ## Typical Workflows
 
 ### Daily Development Check
@@ -295,7 +392,33 @@ poetry install --with dev
 
 - Install Podman and ensure the engine is running before using `docs-contctl.sh`
 
+**Problem: `pandoc_sprint_planning_table_widths.lua` not applied**
+
+- Ensure Pandoc is installed and that you pass `--lua-filter scripts/pandoc_sprint_planning_table_widths.lua` explicitly on the command line
+
 ## Related Files
+
+## Support Files
+
+### `pandoc_sprint_planning_table_widths.lua` - Pandoc Lua Filter
+
+A Pandoc Lua filter that overrides column widths for 3-column tables when converting sprint planning documentation to LaTeX/PDF output.
+It is not a standalone script — it is passed to `pandoc` via `--lua-filter`.
+
+```bash
+pandoc docs/user_guide/sprint_planning.md \
+  --lua-filter scripts/pandoc_sprint_planning_table_widths.lua \
+  -o sprint_planning.pdf
+```
+
+**Behavior:**
+- Only activates for LaTeX/PDF output (`FORMAT == "latex"`)
+- Only applies to tables with exactly 3 columns
+- Sets proportional column widths appropriate for the sprint planning reference table layout
+
+**Requirements:**
+- Pandoc installed (`brew install pandoc` or equivalent)
+- A LaTeX distribution for PDF output (e.g. MacTeX / TeX Live)
 
 - [Makefile](../Makefile) - Thin wrappers for common development and docs commands
 - [README.md](../README.md) - Main project usage and installation guide

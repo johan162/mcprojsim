@@ -15,6 +15,10 @@
   - [Natural Language Project Generation](#natural-language-project-generation)
     - [Basic text input (dependency-only)](#basic-text-input-dependency-only)
     - [Text input with resources and calendars (constrained)](#text-input-with-resources-and-calendars-constrained)
+  - [Sprint Planning](#sprint-planning)
+    - [Minimal story-point forecast](#minimal-story-point-forecast)
+    - [Advanced sprint forecast](#advanced-sprint-forecast)
+    - [Tasks mode and external history](#tasks-mode-and-external-history)
   - [Running Examples](#running-examples)
     - [Common CLI options](#common-cli-options)
     - [Additional example files](#additional-example-files)
@@ -1027,6 +1031,676 @@ See `examples/nl_example.txt` and `examples/nl_constrained_example.txt` in the r
 
 
 
+## Sprint Planning
+
+Sprint-planning examples combine the normal task simulation with a sprint-based forecast built from historical sprint results.
+
+### Minimal story-point forecast
+
+```yaml
+project:
+  name: "Sprint Planning Minimal"
+  start_date: "2026-05-04"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Foundation"
+    estimate:
+      story_points: 3
+  - id: "task_002"
+    name: "Backend API"
+    estimate:
+      story_points: 5
+  - id: "task_003"
+    name: "Frontend"
+    estimate:
+      story_points: 8
+  - id: "task_004"
+    name: "Integration"
+    estimate:
+      story_points: 5
+  - id: "task_005"
+    name: "Release prep"
+    estimate:
+      story_points: 3
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  planning_confidence_level: 0.8
+  history:
+    - sprint_id: "SPR-001"
+      completed_story_points: 10
+      spillover_story_points: 1
+    - sprint_id: "SPR-002"
+      completed_story_points: 9
+      spillover_story_points: 2
+      added_story_points: 1
+    - sprint_id: "SPR-003"
+      completed_story_points: 11
+      spillover_story_points: 1
+      removed_story_points: 1```
+
+```bash
+mcprojsim simulate examples/sprint_planning_minimal.yaml --minimal --seed 42
+```
+
+```text
+=== Simulation Results ===
+
+Project Overview:
+Project: Sprint Planning Minimal
+Hours per Day: 8.0
+Max Parallel Tasks: 5
+Schedule Mode: dependency_only
+
+Calendar Time Statistical Summary:
+Mean: 118.89 hours (15 working days)
+Median (P50): 115.18 hours
+Std Dev: 26.00 hours
+Minimum: 65.66 hours
+Maximum: 189.74 hours
+Coefficient of Variation: 0.2186
+Skewness: 0.4313
+Excess Kurtosis: -0.5763
+
+Project Effort Statistical Summary:
+Mean: 334.08 person-hours (42 person-days)
+Median (P50): 332.47 person-hours
+Std Dev: 34.77 person-hours
+Minimum: 232.35 person-hours
+Maximum: 460.47 person-hours
+Coefficient of Variation: 0.1041
+Skewness: 0.2056
+Excess Kurtosis: -0.1693
+
+Calendar Time Confidence Intervals:
+  P50: 115.18 hours (15 working days)  (2026-05-25)
+  P80: 142.80 hours (18 working days)  (2026-05-28)
+  P90: 156.82 hours (20 working days)  (2026-06-01)
+
+Sprint Planning Summary:
+Sprint Length: 2 weeks
+Planning Confidence Level: 80%
+Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Velocity Model: empirical
+Planned Commitment Guidance: 7.55
+Historical Sampling Mode: matching_cadence
+Historical Observations: 3
+Carryover Mean: 0.00
+Aggregate Spillover Rate: 0.0000
+Observed Disruption Frequency: 0.0000
+
+Sprint Count Statistical Summary:
+Mean: 3.00 sprints
+Median (P50): 3.00 sprints
+Std Dev: 0.00 sprints
+Minimum: 3.00 sprints
+Maximum: 3.00 sprints
+Coefficient of Variation: 0.0000
+
+Sprint Count Confidence Intervals:
+  P50: 3 sprints  (2026-06-01)
+  P80: 3 sprints  (2026-06-01)
+  P90: 3 sprints  (2026-06-01)
+```
+
+Key observations:
+
+- Uses `story_points` as the sprint-capacity unit.
+- Three historical sprint rows are enough to start forecasting.
+- The sprint summary shows commitment guidance and sprint-count percentiles alongside the regular project forecast.
+
+### Advanced sprint forecast
+
+```yaml
+project:
+  name: "Sprint Planning Advanced"
+  start_date: "2026-05-04"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Discovery"
+    estimate:
+      story_points: 3
+  - id: "task_002"
+    name: "Core API"
+    estimate:
+      story_points: 8
+  - id: "task_003"
+    name: "UI flow"
+    estimate:
+      story_points: 5
+  - id: "task_004"
+    name: "Reporting"
+    estimate:
+      story_points: 8
+    spillover_probability_override: 0.55
+  - id: "task_005"
+    name: "Hardening"
+    estimate:
+      story_points: 5
+  - id: "task_006"
+    name: "Rollout"
+    estimate:
+      story_points: 3
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  planning_confidence_level: 0.85
+  removed_work_treatment: reduce_backlog
+  future_sprint_overrides:
+    - sprint_number: 2
+      capacity_multiplier: 0.7
+      notes: "Shared release sprint"
+    - start_date: "2026-06-29"
+      holiday_factor: 0.8
+      notes: "Summer vacation period"
+  volatility_overlay:
+    enabled: true
+    disruption_probability: 0.25
+    disruption_multiplier_low: 0.6
+    disruption_multiplier_expected: 0.8
+    disruption_multiplier_high: 1.0
+  spillover:
+    enabled: true
+    model: logistic
+    size_reference_points: 5
+    consumed_fraction_alpha: 3.25
+    consumed_fraction_beta: 1.75
+  history:
+    - sprint_id: "SPR-001"
+      completed_story_points: 12
+      spillover_story_points: 1
+      added_story_points: 1
+    - sprint_id: "SPR-002"
+      completed_story_points: 10
+      spillover_story_points: 3
+      added_story_points: 2
+      removed_story_points: 1
+      holiday_factor: 0.9
+    - sprint_id: "SPR-003"
+      completed_story_points: 11
+      spillover_story_points: 2
+    - sprint_id: "SPR-004"
+      completed_story_points: 13
+      spillover_story_points: 1
+      removed_story_points: 1```
+
+```bash
+mcprojsim simulate examples/sprint_planning_advanced.yaml --minimal --table --seed 42 --iterations 200
+```
+
+```text
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────┬──────────────────────────┐
+│ Field              │ Value                    │
+├────────────────────┼──────────────────────────┤
+│ Project            │ Sprint Planning Advanced │
+│ Hours per Day      │ 8.0                      │
+│ Max Parallel Tasks │ 6                        │
+│ Schedule Mode      │ dependency_only          │
+└────────────────────┴──────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 136.97 hours (18 working days) │
+│ Median (P50)             │ 136.38 hours                   │
+│ Std Dev                  │ 23.09 hours                    │
+│ Minimum                  │ 84.80 hours                    │
+│ Maximum                  │ 188.66 hours                   │
+│ Coefficient of Variation │ 0.1686                         │
+│ Skewness                 │ 0.0783                         │
+│ Excess Kurtosis          │ -0.8139                        │
+└──────────────────────────┴────────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 455.70 person-hours (57 person-days) │
+│ Median (P50)             │ 456.26 person-hours                  │
+│ Std Dev                  │ 43.32 person-hours                   │
+│ Minimum                  │ 361.20 person-hours                  │
+│ Maximum                  │ 586.08 person-hours                  │
+│ Coefficient of Variation │ 0.0951                               │
+│ Skewness                 │ 0.0635                               │
+│ Excess Kurtosis          │ -0.2823                              │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │  136.38 │             18 │ 2026-05-28 │
+│ P80          │  158.59 │             20 │ 2026-06-01 │
+│ P90          │  169.52 │             22 │ 2026-06-03 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Sprint Planning Summary:
+┌───────────────────────────────┬─────────────────────────────────────┐
+│ Field                         │ Value                               │
+├───────────────────────────────┼─────────────────────────────────────┤
+│ Sprint Length                 │ 2 weeks                             │
+│ Planning Confidence Level     │ 85%                                 │
+│ Removed Work Treatment        │ RemovedWorkTreatment.REDUCE_BACKLOG │
+│ Velocity Model                │ empirical                           │
+│ Planned Commitment Guidance   │ 7.13                                │
+│ Historical Sampling Mode      │ matching_cadence                    │
+│ Historical Observations       │ 4                                   │
+│ Carryover Mean                │ 2.10                                │
+│ Aggregate Spillover Rate      │ 0.1981                              │
+│ Observed Disruption Frequency │ 0.7250                              │
+└───────────────────────────────┴─────────────────────────────────────┘
+
+Sprint Count Statistical Summary:
+┌──────────────────────────┬───────────────┐
+│ Metric                   │ Value         │
+├──────────────────────────┼───────────────┤
+│ Mean                     │ 4.93 sprints  │
+│ Median (P50)             │ 4.00 sprints  │
+│ Std Dev                  │ 1.63 sprints  │
+│ Minimum                  │ 3.00 sprints  │
+│ Maximum                  │ 18.00 sprints │
+│ Coefficient of Variation │ 0.3305        │
+└──────────────────────────┴───────────────┘
+
+Sprint Count Confidence Intervals:
+┌──────────────┬───────────┬───────────────────────────┐
+│ Percentile   │ Sprints   │ Projected Delivery Date   │
+├──────────────┼───────────┼───────────────────────────┤
+│ P50          │ 4.00      │ 2026-06-15                │
+│ P80          │ 5.00      │ 2026-06-29                │
+│ P90          │ 7.00      │ 2026-07-27                │
+└──────────────┴───────────┴───────────────────────────┘
+```
+
+Key observations:
+
+- `future_sprint_overrides` model known upcoming capacity reductions.
+- `volatility_overlay` adds random sprint-level disruption.
+- `spillover` plus `spillover_probability_override` let larger items partially carry into later sprints.
+
+### Tasks mode and external history
+
+Tasks mode is useful for service or maintenance backlogs where items are intentionally kept to similar size.
+
+```yaml
+project:
+  name: "Sprint Planning Tasks Mode"
+  start_date: "2026-05-04"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Bug fix A"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_002"
+    name: "Bug fix B"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_003"
+    name: "Bug fix C"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_004"
+    name: "Bug fix D"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_005"
+    name: "Bug fix E"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+  - id: "task_006"
+    name: "Bug fix F"
+    estimate:
+      low: 4
+      expected: 6
+      high: 8
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 1
+  capacity_mode: tasks
+  planning_confidence_level: 0.8
+  history:
+    - sprint_id: "SPR-001"
+      completed_tasks: 4
+      spillover_tasks: 1
+    - sprint_id: "SPR-002"
+      completed_tasks: 5
+      spillover_tasks: 0
+      added_tasks: 1
+    - sprint_id: "SPR-003"
+      completed_tasks: 4
+      spillover_tasks: 1
+      removed_tasks: 1```
+
+```bash
+mcprojsim simulate examples/sprint_planning_tasks.yaml --minimal --seed 42
+```
+
+```text
+=== Simulation Results ===
+
+Project Overview:
+Project: Sprint Planning Tasks Mode
+Hours per Day: 8.0
+Max Parallel Tasks: 6
+Schedule Mode: dependency_only
+
+Calendar Time Statistical Summary:
+Mean: 11.16 hours (2 working days)
+Median (P50): 11.21 hours
+Std Dev: 0.73 hours
+Minimum: 8.49 hours
+Maximum: 12.67 hours
+Coefficient of Variation: 0.0656
+Skewness: -0.3072
+Excess Kurtosis: -0.4514
+
+Project Effort Statistical Summary:
+Mean: 57.12 person-hours (8 person-days)
+Median (P50): 57.11 person-hours
+Std Dev: 3.15 person-hours
+Minimum: 44.41 person-hours
+Maximum: 68.77 person-hours
+Coefficient of Variation: 0.0551
+Skewness: -0.0057
+Excess Kurtosis: -0.0762
+
+Calendar Time Confidence Intervals:
+  P50: 11.21 hours (2 working days)  (2026-05-06)
+  P80: 11.84 hours (2 working days)  (2026-05-06)
+  P90: 12.11 hours (2 working days)  (2026-05-06)
+
+Sprint Planning Summary:
+Sprint Length: 1 weeks
+Planning Confidence Level: 80%
+Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Velocity Model: empirical
+Planned Commitment Guidance: 2.28
+Historical Sampling Mode: matching_cadence
+Historical Observations: 3
+Carryover Mean: 0.00
+Aggregate Spillover Rate: 0.0000
+Observed Disruption Frequency: 0.0000
+
+Sprint Count Statistical Summary:
+Mean: 2.00 sprints
+Median (P50): 2.00 sprints
+Std Dev: 0.00 sprints
+Minimum: 2.00 sprints
+Maximum: 2.00 sprints
+Coefficient of Variation: 0.0000
+
+Sprint Count Confidence Intervals:
+  P50: 2 sprints  (2026-05-11)
+  P80: 2 sprints  (2026-05-11)
+  P90: 2 sprints  (2026-05-11)
+```
+
+The same sprint-planning workflow can load history from external data files:
+
+```yaml
+project:
+  name: "Sprint Planning External JSON"
+  start_date: "2026-05-04"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Foundation"
+    estimate:
+      story_points: 3
+  - id: "task_002"
+    name: "API"
+    estimate:
+      story_points: 5
+  - id: "task_003"
+    name: "UI"
+    estimate:
+      story_points: 8
+  - id: "task_004"
+    name: "Release"
+    estimate:
+      story_points: 3
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  history:
+    format: json
+    path: sprint_planning_history.json```
+
+```json
+{
+  "metricDefinitions": {
+    "committed_StoryPoints": "Sum of story points for issues present at sprint start; issues added during the sprint are excluded.",
+    "completed_StoryPoints": "Sum of story points for issues completed during the sprint.",
+    "addedIntraSprint_StoryPoints": "Sum of story points for issues added during the sprint.",
+    "removedInSprint_StoryPoints": "Sum of story points removed from the sprint during execution.",
+    "spilledOver_StoryPoints": "Sum of story points not completed at sprint close."
+  },
+  "sprints": [
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 1",
+      "startDate": "2026-01-06T09:00:00.000+01:00",
+      "endDate": "2026-01-20",
+      "metrics": {
+        "committed_StoryPoints": 95.0,
+        "completed_StoryPoints": 78.0,
+        "addedIntraSprint_StoryPoints": 12.0,
+        "removedInSprint_StoryPoints": 6.0,
+        "spilledOver_StoryPoints": 11.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 2",
+      "endDate": "2026-02-03",
+      "metrics": {
+        "committed_StoryPoints": 88.0,
+        "completed_StoryPoints": 82.0
+      }
+    },
+    {
+      "sprintUniqueID": "2026:Q1 Sprint 3",
+      "metrics": {
+        "committed_StoryPoints": 91.0,
+        "completed_StoryPoints": 85.0,
+        "spilledOver_StoryPoints": 4.0
+      }
+    }
+  ]
+}
+```
+
+```toml
+[project]
+name = "Sprint Planning External CSV"
+start_date = "2026-05-04"
+confidence_levels = [50, 80, 90]
+
+[sprint_planning]
+enabled = true
+sprint_length_weeks = 1
+capacity_mode = "story_points"
+
+[sprint_planning.history]
+format = "csv"
+path = "sprint_planning_history.csv"
+
+[[tasks]]
+id = "task_001"
+name = "Support ticket A"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8
+
+[[tasks]]
+id = "task_002"
+name = "Support ticket B"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8
+
+[[tasks]]
+id = "task_003"
+name = "Support ticket C"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8
+
+[[tasks]]
+id = "task_004"
+name = "Support ticket D"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8
+
+[[tasks]]
+id = "task_005"
+name = "Support ticket E"
+planning_story_points = 3
+
+[tasks.estimate]
+low = 4
+expected = 6
+high = 8```
+
+```
+sprintUniqueID,committed_StoryPoints,completed_StoryPoints,addedIntraSprint_StoryPoints,removedInSprint_StoryPoints,spilledOver_StoryPoints,startDate,endDate
+2026:Q2 Sprint 1,32,28,4,2,2,2026-05-04T09:00:00.000+02:00,2026-05-11T09:00:00.000+02:00
+2026:Q2 Sprint 2,30,29,3,1,1,2026-05-11T09:00:00.000+02:00,2026-05-18T09:00:00.000+02:00
+```
+
+Natural-language input also supports sprint-planning sections:
+
+```text
+Project: Sprint Planning from Text
+Start date: 2026-05-04
+Task 1:
+- Discovery
+- Story points: 3
+Task 2:
+- API implementation
+- Story points: 5
+Task 3:
+- Frontend integration
+- Story points: 8
+Sprint planning:
+- Sprint length: 2
+- Capacity mode: story points
+- Planning confidence level: 80%
+Sprint history SPR-001:
+- Done: 10 points
+- Carryover: 1 points
+Sprint history SPR-002:
+- Done: 9 points
+- Carryover: 2 points
+- Scope added: 1 points```
+
+```bash
+mcprojsim generate examples/sprint_planning_nl.txt -o .build/gen-examples/sprint_planning_nl.yaml
+mcprojsim simulate .build/gen-examples/sprint_planning_nl.yaml --minimal --seed 42
+```
+
+```text
+=== Simulation Results ===
+
+Project Overview:
+Project: Sprint Planning from Text
+Hours per Day: 8.0
+Max Parallel Tasks: 3
+Schedule Mode: dependency_only
+
+Calendar Time Statistical Summary:
+Mean: 118.50 hours (15 working days)
+Median (P50): 115.22 hours
+Std Dev: 26.19 hours
+Minimum: 63.87 hours
+Maximum: 188.52 hours
+Coefficient of Variation: 0.2210
+Skewness: 0.4093
+Excess Kurtosis: -0.5588
+
+Project Effort Statistical Summary:
+Mean: 226.21 person-hours (29 person-days)
+Median (P50): 223.89 person-hours
+Std Dev: 30.93 person-hours
+Minimum: 143.14 person-hours
+Maximum: 338.00 person-hours
+Coefficient of Variation: 0.1368
+Skewness: 0.2634
+Excess Kurtosis: -0.3135
+
+Calendar Time Confidence Intervals:
+  P50: 115.22 hours (15 working days)  (2026-05-25)
+  P80: 142.26 hours (18 working days)  (2026-05-28)
+  P90: 156.49 hours (20 working days)  (2026-06-01)
+  P95: 166.67 hours (21 working days)  (2026-06-02)
+
+Sprint Planning Summary:
+Sprint Length: 2 weeks
+Planning Confidence Level: 80%
+Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Velocity Model: empirical
+Planned Commitment Guidance: 7.15
+Historical Sampling Mode: matching_cadence
+Historical Observations: 2
+Carryover Mean: 0.00
+Aggregate Spillover Rate: 0.0000
+Observed Disruption Frequency: 0.0000
+
+Sprint Count Statistical Summary:
+Mean: 2.00 sprints
+Median (P50): 2.00 sprints
+Std Dev: 0.00 sprints
+Minimum: 2.00 sprints
+Maximum: 2.00 sprints
+Coefficient of Variation: 0.0000
+
+Sprint Count Confidence Intervals:
+  P50: 2 sprints  (2026-05-18)
+  P80: 2 sprints  (2026-05-18)
+  P90: 2 sprints  (2026-05-18)
+```
+
+
+
 ## Running Examples
 
 ### Common CLI options
@@ -1077,6 +1751,12 @@ mcprojsim simulate examples/sample_project.yaml \
 | `team_size_demo_with_team_size.yaml` | `team_size` constrained scheduling |
 | `resource_cap_small_task.yaml` | Auto-capping on short tasks |
 | `resource_cap_large_task.yaml` | Global coordination cap on large tasks |
+| `sprint_planning_minimal.yaml` | Minimal story-point sprint forecast |
+| `sprint_planning_advanced.yaml` | Advanced sprint forecast with spillover, volatility, and overrides |
+| `sprint_planning_tasks.yaml` | Throughput-style sprint planning in `tasks` mode |
+| `sprint_planning_external_json.yaml` | YAML project loading external JSON sprint history |
+| `sprint_planning_external_csv.toml` | TOML project loading external CSV sprint history |
+| `sprint_planning_nl.txt` | Natural-language sprint planning input |
 | `nl_example.txt` | Natural language input (basic) |
 | `nl_constrained_example.txt` | Natural language input with resources |
 | `sample_config.yaml` | Custom configuration file |
