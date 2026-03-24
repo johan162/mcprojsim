@@ -1,0 +1,597 @@
+project:
+  name: 60-Task Sprint NB Sickness Example
+  start_date: '2026-04-06'
+  team_size: 8
+  confidence_levels:
+  - 50
+  - 80
+  - 90
+tasks:
+- id: task_001
+  name: Task 001
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_002
+  name: Task 002
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+- id: task_003
+  name: Task 003
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_004
+  name: Task 004
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_005
+  name: Task 005
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+- id: task_006
+  name: Task 006
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_007
+  name: Task 007
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_008
+  name: Task 008
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_009
+  name: Task 009
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+- id: task_010
+  name: Task 010
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_011
+  name: Task 011
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+- id: task_012
+  name: Task 012
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_013
+  name: Task 013
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_014
+  name: Task 014
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+- id: task_015
+  name: Task 015
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+- id: task_016
+  name: Task 016
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+- id: task_017
+  name: Task 017
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+- id: task_018
+  name: Task 018
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_019
+  name: Task 019
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_020
+  name: Task 020
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_021
+  name: Task 021
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_022
+  name: Task 022
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_023
+  name: Task 023
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_024
+  name: Task 024
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_025
+  name: Task 025
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_026
+  name: Task 026
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_027
+  name: Task 027
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_028
+  name: Task 028
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+- id: task_029
+  name: Task 029
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+- id: task_030
+  name: Task 030
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+- id: task_031
+  name: Task 031
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_013
+  - task_018
+  - task_028
+- id: task_032
+  name: Task 032
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+  dependencies:
+  - task_016
+  - task_018
+- id: task_033
+  name: Task 033
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_004
+- id: task_034
+  name: Task 034
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+  dependencies:
+  - task_006
+  - task_007
+  - task_031
+- id: task_035
+  name: Task 035
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+  dependencies:
+  - task_011
+- id: task_036
+  name: Task 036
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_004
+  - task_023
+  - task_027
+- id: task_037
+  name: Task 037
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+  dependencies:
+  - task_021
+- id: task_038
+  name: Task 038
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+  dependencies:
+  - task_013
+- id: task_039
+  name: Task 039
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_003
+  - task_038
+- id: task_040
+  name: Task 040
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_013
+  - task_023
+  - task_033
+- id: task_041
+  name: Task 041
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+  dependencies:
+  - task_024
+  - task_031
+  - task_038
+- id: task_042
+  name: Task 042
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+  dependencies:
+  - task_016
+- id: task_043
+  name: Task 043
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+  dependencies:
+  - task_006
+  - task_010
+  - task_021
+- id: task_044
+  name: Task 044
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_027
+  - task_028
+- id: task_045
+  name: Task 045
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+  dependencies:
+  - task_006
+- id: task_046
+  name: Task 046
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_023
+  - task_039
+  - task_043
+- id: task_047
+  name: Task 047
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_005
+  - task_010
+- id: task_048
+  name: Task 048
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_035
+- id: task_049
+  name: Task 049
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+  dependencies:
+  - task_034
+  - task_037
+- id: task_050
+  name: Task 050
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+  dependencies:
+  - task_037
+  - task_048
+- id: task_051
+  name: Task 051
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+  dependencies:
+  - task_005
+  - task_032
+  - task_046
+- id: task_052
+  name: Task 052
+  estimate:
+    distribution: lognormal
+    low: 2.75
+    expected: 5.0
+    high: 9.5
+  planning_story_points: 5
+  dependencies:
+  - task_005
+  - task_009
+  - task_032
+- id: task_053
+  name: Task 053
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+  dependencies:
+  - task_040
+  - task_042
+- id: task_054
+  name: Task 054
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+  dependencies:
+  - task_021
+  - task_025
+  - task_026
+- id: task_055
+  name: Task 055
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+  dependencies:
+  - task_008
+  - task_041
+- id: task_056
+  name: Task 056
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+  dependencies:
+  - task_014
+  - task_030
+- id: task_057
+  name: Task 057
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+  dependencies:
+  - task_004
+  - task_037
+- id: task_058
+  name: Task 058
+  estimate:
+    distribution: lognormal
+    low: 6.6
+    expected: 12.0
+    high: 22.8
+  planning_story_points: 12
+  dependencies:
+  - task_030
+  - task_031
+  - task_049
+- id: task_059
+  name: Task 059
+  estimate:
+    distribution: lognormal
+    low: 1.65
+    expected: 3.0
+    high: 5.7
+  planning_story_points: 3
+  dependencies:
+  - task_050
+- id: task_060
+  name: Task 060
+  estimate:
+    distribution: lognormal
+    low: 4.4
+    expected: 8.0
+    high: 15.2
+  planning_story_points: 8
+  dependencies:
+  - task_036
+  - task_058
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  velocity_model: neg_binomial
+  planning_confidence_level: 0.8
+  history:
+    format: json
+    path: sprint_planning_history.json
+  sickness:
+    enabled: true
+    team_size: 8
+    probability_per_person_per_week: 0.15
+    duration_log_mu: 1.1
+    duration_log_sigma: 0.9
