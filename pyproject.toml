@@ -123,6 +123,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "heavy: long-running integration tests that can be excluded in CI/CD",
+]
 addopts = [
     "--strict-markers",
     "--cov=mcprojsim",
