@@ -304,7 +304,9 @@ class TestEndToEnd:
     @pytest.fixture
     def sprint_nb_sickness_project_file(self, tmp_path):
         """Create a 60-task sprint project with external historical metrics."""
-        history_source = Path(__file__).resolve().parent / "sprint_historic_metrics.json"
+        history_source = (
+            Path(__file__).resolve().parent / "sprint_historic_metrics.json"
+        )
         history_target = tmp_path / "sprint_historic_metrics.json"
         with open(history_source, "r", encoding="utf-8") as source_file:
             history_payload = json.load(source_file)
@@ -404,7 +406,9 @@ class TestEndToEnd:
         for run_index in range(10):
             seed = 9000 + run_index
 
-            with_sickness_engine = SprintSimulationEngine(iterations=250, random_seed=seed)
+            with_sickness_engine = SprintSimulationEngine(
+                iterations=250, random_seed=seed
+            )
             with_sickness_results = with_sickness_engine.run(project)
             sickness_enabled_means.append(float(with_sickness_results.mean))
 
