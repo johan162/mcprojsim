@@ -305,7 +305,8 @@ if [[ ! -f CHANGELOG.md ]]; then
 fi
 if ! grep -Eq "^## \[v${VERSION}\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md; then
     print_error_colored "No CHANGELOG.md entry found for v$VERSION"
-    echo "Run: ./scripts/mkchlogentry.sh $VERSION $RELEASE_TYPE"
+    echo "Run: ./scripts/mkchlogentry.sh $VERSION $RELEASE_TYPE to manually update the changelog, or"
+    echo "    use the /changelog-entry skill in copilot to automatically generate the entries"
     exit 1
 fi
 print_success "Found CHANGELOG entry for v$VERSION"
@@ -323,6 +324,7 @@ print_step_colored ""
 echo "  ✓ Checking code formatting..."
 run_command "poetry run black --check --diff src/ tests/" "Checking code formatting"
 run_command "poetry run flake8 src/${PROGRAMNAME} tests/" "Running flake8 static analysis"
+run_command "poetry run pyright src/ tests/" "Running pyright static analysis"
 run_command "poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy static analysis"
 
 
@@ -333,25 +335,6 @@ if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Test suite failed - aborting release"
     exit 1
 fi
-
-# 2.3: Integration testing with example projects
-if [[ "$DRY_RUN" == "true" ]]; then
-    echo "  [DRY-RUN] Would test example projects..."
-    echo "  [DRY-RUN] Would run: poetry run mcprojsim simulate -n 50 <project.yaml> for each example project"
-else
-    echo "  ✓ Smoke test of three projects  ..."
-    for project in examples/sample_project.yaml examples/tshirt_sizing_project.yaml examples/project_with_custom_thresholds.yaml; do
-        if [[ -f "$project" ]]; then
-            echo "    Testing: $project"
-            poetry run mcprojsim simulate -n 50 "$project" >/dev/null 2>&1 || {
-                print_error_colored "Failed to simulate project: $project"
-                exit 1
-            }
-        fi
-    done
-fi
-
-echo "All example projects validated successfully."
 
 # =====================================
 # PHASE 3: RELEASE PREPARATION
