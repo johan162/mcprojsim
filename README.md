@@ -215,6 +215,8 @@ After restarting the assistant (needed to load the new MCP Server) ask for a sim
   Key stats: Mean ~233h (30 days) · Std dev ~38h · Both tasks are on the critical path 100% of the time.
 ```
 
+To get more statistics try:
+
 - ***"Show the summary statistics for this simulation in a table."***
 
 
