@@ -1,6 +1,6 @@
 #!/bin/bash
 # MCP Bundle Builder
-# Creates a versioned MCP server bundle zip with manifest + bootstrap script.
+# Creates a versioned MCP server bundle zip with manifest + launcher script.
 #
 # Usage:
 #   ./scripts/mkmcpbundle.sh
@@ -27,6 +27,7 @@ The script:
 3. Creates a bundle payload with:
    - manifest.json
    - bootstrap.sh
+   - launcher.sh
    - README.md
    - wheels/<mcprojsim wheel>
 4. Writes dist/mcprojsim-mcp-bundle-<version>.zip
@@ -95,6 +96,7 @@ cat > "${PAYLOAD_DIR}/manifest.json" <<EOF
   "version": "${VERSION}",
   "description": "mcprojsim MCP server bundle",
   "bootstrap": "bootstrap.sh",
+  "launcher": "launcher.sh",
   "entrypoint": "mcprojsim-mcp",
   "readme": "README.md"
 }
@@ -113,6 +115,7 @@ mcprojsim-mcp-bundle-${VERSION}/
 ├── README.md
 ├── manifest.json
 ├── bootstrap.sh
+├── launcher.sh
 └── wheels/
     └── mcprojsim-${VERSION}-py3-none-any.whl
 \`\`\`
@@ -125,68 +128,161 @@ mcprojsim-mcp-bundle-${VERSION}/
   | Internet access | Required on first run to download runtime dependencies from PyPI |
   | bash | Any modern version |
 
-## Installation — ONE-TIME SETUP
+## How \`launcher.sh\` works
 
-**This installation is permanent.** Once you complete the steps below, the mcprojsim MCP server will be available to your MCP client(s) automatically. You will only need to run the bootstrap script once.
+\`launcher.sh\` serves two roles in one script:
 
-### Step 1 — Extract the bundle
+1. **Installer** — on first run it creates a Python venv and installs \`mcprojsim\` into it.
+2. **Server launcher** — on every run it \`exec\`s the installed \`mcprojsim-mcp\` binary.
+
+Because of this dual role, **your MCP client's \`command\` must always point to \`launcher.sh\`**
+— not directly to the binary. The client calls \`command\` every time it needs to start the
+server. \`launcher.sh\` handles install-if-needed automatically.
+
+### \`--install-only\` flag
+
+Pass \`--install-only\` to install the server and exit cleanly, **without starting the server**:
+
+\`\`\`bash
+bash launcher.sh --install-only
+\`\`\`
+
+Use this flag when:
+- Pre-installing before the first client start
+- Verifying the installation from the command line
+- Automating installation from a script or agent
+
+Without this flag, \`launcher.sh\` starts the MCP server process (which speaks JSON-RPC on
+stdin/stdout and runs until the client disconnects). This is correct when called by an MCP
+client, but will appear to hang if run manually in a terminal.
+
+## How \`bootstrap.sh\` works
+
+\`bootstrap.sh\` is the recommended one-step installer. It:
+
+1. **Detects your MCP client** using a two-stage strategy:
+   - **Primary (location-based):** if the bundle lives inside \`~/.copilot/\` or \`~/.claude/\`,
+     the target client is known with certainty — no guessing required.
+   - **Fallback (directory presence):** if the bundle is in a neutral location, it checks
+     whether \`~/.copilot\` or \`~/.claude\` exist. If **both** exist it stops and asks you to
+     set \`MCP_CLIENT\` explicitly rather than silently picking the wrong one.
+   - Override at any time with \`MCP_CLIENT=<profile>\`.
+2. **Installs the server** — calls \`launcher.sh --install-only\` to create the venv and
+   install \`mcprojsim\`.
+3. **Writes the client config** — merges the \`mcprojsim\` server entry into the correct
+   config file for the detected client:
+   - Copilot CLI: \`~/.copilot/mcp-config.json\`
+   - Claude Desktop: \`~/Library/Application Support/Claude/claude_desktop_config.json\` (macOS)
+     or \`~/.config/claude/claude_desktop_config.json\` (Linux)
+   - Generic: prints a config snippet to paste manually
+
+The cleanest setup is to place the bundle **inside the target client's home directory**
+so detection is always unambiguous:
+
+\`\`\`bash
+~/.copilot/mcp/bundle/mcprojsim-mcp-bundle-${VERSION}/   # Copilot CLI
+~/.claude/mcp/bundle/mcprojsim-mcp-bundle-${VERSION}/    # Claude Desktop
+\`\`\`
+
+Run \`bootstrap.sh\` on first install and again when upgrading to a new bundle version.
+
+## Installation
+
+### Quick Install (Recommended)
+
+Extract the bundle into your client's home directory and run \`bootstrap.sh\`:
 
 \`\`\`bash
 unzip mcprojsim-mcp-bundle-${VERSION}.zip
-cd mcprojsim-mcp-bundle-${VERSION}
-\`\`\`
 
-### Step 2 — Run bootstrap (one time)
+# Copilot CLI (recommended path — enables unambiguous auto-detection):
+mkdir -p ~/.copilot/mcp/bundle
+mv mcprojsim-mcp-bundle-${VERSION} ~/.copilot/mcp/bundle/
+cd ~/.copilot/mcp/bundle/mcprojsim-mcp-bundle-${VERSION}
 
-\`\`\`bash
+# Claude Desktop:
+# mkdir -p ~/.claude/mcp/bundle
+# mv mcprojsim-mcp-bundle-${VERSION} ~/.claude/mcp/bundle/
+# cd ~/.claude/mcp/bundle/mcprojsim-mcp-bundle-${VERSION}
+
 bash bootstrap.sh
 \`\`\`
 
-The bootstrap script will:
-1. Detect the active client profile and install into a user-scoped root:
-  - Claude: \`~/.claude/mcp/servers/mcprojsim\`
-  - Copilot: \`~/.copilot/mcp/servers/mcprojsim\`
-  - Generic MCP clients: \`~/.mcp/servers/mcprojsim\`
-2. Create a Python venv at \`<install-root>/.venv\`
-3. Install the bundled \`mcprojsim\` wheel and \`mcp[cli]>=1.0.0\`
-4. Verify the server is running
+\`bootstrap.sh\` detects your client from its own location, installs the server, and writes
+the config file. Restart your MCP client when done.
 
-**After Step 2 completes successfully, the MCP server is permanently installed.**
-You do not need to run this bootstrap script again unless you are updating to a new bundle version.
+If you place the bundle in a neutral location (e.g. \`~/.local/share/\`) and only one client
+is installed, detection still works automatically. If both \`~/.copilot\` and \`~/.claude\`
+exist, set the profile explicitly:
 
-If you re-run the script, it will detect the existing installation and skip reinstall.
+\`\`\`bash
+MCP_CLIENT=copilot bash bootstrap.sh   # Copilot CLI
+MCP_CLIENT=claude  bash bootstrap.sh   # Claude Desktop
+MCP_CLIENT=generic bash bootstrap.sh   # install only, print config snippet
+\`\`\`
 
-### Explicit client selection (optional, one-time)
+### Manual Installation
+
+If you prefer full control over each step:
+
+#### Step 1 — Extract and place the bundle
+
+\`\`\`bash
+unzip mcprojsim-mcp-bundle-${VERSION}.zip
+mv mcprojsim-mcp-bundle-${VERSION} ~/.local/share/mcprojsim-mcp-bundle-${VERSION}
+cd ~/.local/share/mcprojsim-mcp-bundle-${VERSION}
+\`\`\`
+
+#### Step 2 — Pre-install the server
+
+\`\`\`bash
+bash launcher.sh --install-only
+\`\`\`
+
+The script will install the server, print the binary path, and exit — without starting
+the server. You can verify the result:
+
+\`\`\`bash
+~/.copilot/mcp/servers/mcprojsim/.venv/bin/mcprojsim-mcp --version  # Copilot CLI
+~/.claude/mcp/servers/mcprojsim/.venv/bin/mcprojsim-mcp --version   # Claude
+\`\`\`
+
+#### Step 3 — Configure your MCP client manually
+
+Point your MCP client's \`command\` at \`launcher.sh\` in the extracted folder (see
+**Configuring Your MCP Client** below). Subsequent starts skip the install and launch
+immediately.
+
+### Explicit client selection (optional)
 
 If auto-detection does not match your client, override it explicitly:
 
 \`\`\`bash
-# Force Claude profile (one time only)
-MCP_CLIENT=claude bash bootstrap.sh
-
-# Force Copilot profile (one time only)
-MCP_CLIENT=copilot bash bootstrap.sh
-
-# Force generic profile (one time only)
-MCP_CLIENT=generic bash bootstrap.sh
+MCP_CLIENT=claude  bash launcher.sh --install-only
+MCP_CLIENT=copilot bash launcher.sh --install-only
+MCP_CLIENT=generic bash launcher.sh --install-only
 \`\`\`
-
-After running once with your chosen profile, the server is permanently installed.
 
 ### Explicit install root (optional)
 
 \`\`\`bash
-MCPROJSIM_MCP_HOME=/my/custom/path/mcprojsim-mcp bash bootstrap.sh
+MCPROJSIM_MCP_HOME=/my/custom/path/mcprojsim bash bootstrap.sh
 \`\`\`
 
 ## After Installation
 
-Once the bootstrap completes successfully, your MCP server is permanently installed and running.
-You may now need to configure your MCP client to use the server (see below).
+The server installs into a user-scoped venv under the detected client profile:
+- Claude:   \`~/.claude/mcp/servers/mcprojsim/.venv\`
+- Copilot:  \`~/.copilot/mcp/servers/mcprojsim/.venv\`
+- Generic:  \`~/.mcp/servers/mcprojsim/.venv\`
+
+Configure your MCP client to use \`launcher.sh\` as the server command (see below).
 
 ## Configuring Your MCP Client
 
-After running \`bootstrap.sh\`, configure your client to connect to the server.
+The MCP client starts the server by running \`command\` each session. Set \`command\` to
+the absolute path of \`launcher.sh\` — it handles install-if-needed then launches the
+server via \`exec\`, making it both the installer and the persistent launcher.
 
 ### Claude Desktop
 
@@ -195,48 +291,40 @@ After running \`bootstrap.sh\`, configure your client to connect to the server.
    open ~/Library/Application\\ Support/Claude/claude_desktop_config.json
    \`\`\`
 
-2. Add (or update) the mcprojsim server entry:
+2. Add (or update) the mcprojsim server entry using the **absolute path** to \`launcher.sh\`:
    \`\`\`json
    {
      "mcpServers": {
        "mcprojsim": {
-         "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
+         "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/launcher.sh"
        }
      }
    }
    \`\`\`
-   Replace \`/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}\` with the full path to your extracted bundle.
 
-3. Save the file. Claude Desktop will automatically restart and load the server.
+3. Save the file and restart Claude Desktop. The server installs and starts automatically.
 
 ### Copilot / VS Code Agent
 
-Copilot in VS Code typically auto-discovers MCP servers via the MCP client protocol.
-If you need explicit configuration:
-
 1. Open VS Code settings (\`Cmd+,\`).
 2. Search for \`MCP\` or \`mcpServers\`.
-3. Add your server:
+3. Add the server entry using the **absolute path** to \`launcher.sh\`:
    \`\`\`json
    "mcpServers": {
      "mcprojsim": {
-       "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
+       "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/launcher.sh"
      }
    }
    \`\`\`
-
-4. Reload VS Code. The server will be available immediately.
+4. Reload VS Code.
 
 ### Generic MCP Clients
-
-For any other MCP-compatible client, update your client's MCP server configuration
-to include:
 
 \`\`\`json
 {
   "mcpServers": {
     "mcprojsim": {
-      "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
+      "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/launcher.sh"
     }
   }
 }
@@ -247,25 +335,32 @@ and format of this configuration file.
 
 ## Automated Installation for Agents
 
-An automation agent can install and configure this server with:
+An automation agent can install and configure this server with a single command:
 
 \`\`\`bash
-BUNDLE_DIR="\$(cd "\$(dirname bootstrap.sh)" && pwd)"
-BOOTSTRAP="\${BUNDLE_DIR}/bootstrap.sh"
-
-# Step 1: Run bootstrap in background to install
-bash "\${BOOTSTRAP}" &
-MCP_PID=\$!
-sleep 2 && kill "\${MCP_PID}" 2>/dev/null || true
-
-# Step 2: Read the manifest
-cat "\${BUNDLE_DIR}/manifest.json"
-
-# Step 3: Configure the client with BOOTSTRAP path
-# (update client config with "command": "\${BOOTSTRAP}")
+unzip mcprojsim-mcp-bundle-${VERSION}.zip
+mkdir -p ~/.copilot/mcp/bundle
+mv mcprojsim-mcp-bundle-${VERSION} ~/.copilot/mcp/bundle/
+bash ~/.copilot/mcp/bundle/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh
 \`\`\`
 
-Then update your MCP client config with the absolute \`\${BOOTSTRAP}\` path as the command.
+Placing the bundle inside \`~/.copilot/\` guarantees unambiguous client detection — no
+\`MCP_CLIENT\` override needed even when multiple clients are installed. For more
+granular control:
+
+\`\`\`bash
+BUNDLE_DIR="\${HOME}/.copilot/mcp/bundle/mcprojsim-mcp-bundle-${VERSION}"
+
+# Install + configure in one step
+bash "\${BUNDLE_DIR}/bootstrap.sh"
+
+# Or: install only, then write the client config manually
+bash "\${BUNDLE_DIR}/launcher.sh" --install-only
+# Add "command": "\${BUNDLE_DIR}/launcher.sh" to your MCP client config
+
+# Read the manifest for version metadata
+cat "\${BUNDLE_DIR}/manifest.json"
+\`\`\`
 
 ## Available MCP Tools
 
@@ -388,7 +483,7 @@ Confidence Intervals:
 
 To upgrade to a newer bundle version:
 1. Download and extract the new bundle zip.
-2. Update the MCP client \`command\` path to the new \`bootstrap.sh\`.
+2. Move it to a permanent location and run \`bash bootstrap.sh\` in the new bundle directory.
 3. Restart the MCP client.
 
 The old install root can be removed after confirming the new version works.
@@ -403,9 +498,9 @@ The old install root can be removed after confirming the new version works.
 - If the wheel is still missing, the zip may be corrupted. Download and extract the bundle again.
 
 **"python3: command not found"**
-- Set \`PYTHON_CMD\` to an explicit Python 3.14 path and re-run bootstrap:
+- Set \`PYTHON_CMD\` to an explicit Python 3.14 path and re-run the launcher:
   \`\`\`bash
-  PYTHON_CMD=/usr/local/bin/python3.14 bash bootstrap.sh
+  PYTHON_CMD=/usr/local/bin/python3.14 bash launcher.sh
   \`\`\`
 - If you don't know where Python is installed, find it with:
   \`\`\`bash
@@ -415,41 +510,45 @@ The old install root can be removed after confirming the new version works.
   \`\`\`
 
 **pip install fails with network error**
-- The first bootstrap run downloads dependencies from PyPI. Ensure you have internet connectivity.
+- The first launcher run downloads dependencies from PyPI. Ensure you have internet connectivity.
 - If behind a corporate proxy, configure pip to use your proxy:
   \`\`\`bash
   pip install --proxy [user:passwd@]proxy.server:port ...
   \`\`\`
 - Or set environment variables:
   \`\`\`bash
-  HTTP_PROXY=http://proxy.server:port HTTPS_PROXY=http://proxy.server:port bash bootstrap.sh
+  HTTP_PROXY=http://proxy.server:port HTTPS_PROXY=http://proxy.server:port bash launcher.sh --install-only
   \`\`\`
 
 **Installation hangs or takes a long time**
-- The first run may take 1-2 minutes while downloading and installing dependencies.
-- If it hangs, interrupt (Ctrl+C) and re-run with verbose output:
+- Use \`--install-only\` so the script exits after installation instead of starting the server:
   \`\`\`bash
-  bash -x bootstrap.sh
+  bash launcher.sh --install-only
+  \`\`\`
+- The first run may take 1-2 minutes while downloading and installing dependencies.
+- If it still hangs, interrupt (Ctrl+C) and re-run with verbose output:
+  \`\`\`bash
+  bash -x launcher.sh --install-only
   \`\`\`
 
 ### Client Configuration Issues
 
 **MCP client cannot start server (Claude, Copilot, etc.)**
-- Verify the \`command\` path in your client config points to the correct \`bootstrap.sh\`:
+- Verify the \`command\` path in your client config points to the correct \`launcher.sh\`:
   \`\`\`bash
-  ls -l /path/to/bootstrap.sh
+  ls -l /path/to/launcher.sh
   \`\`\`
 - Confirm the path is absolute (starts with \`/\`), not relative.
 - Restart your client after updating the configuration.
 
 **Server appears in configuration but doesn't connect**
-- Check that the bootstrap script is executable:
+- Check that the launcher script is executable:
   \`\`\`bash
-  chmod +x /path/to/bootstrap.sh
+  chmod +x /path/to/launcher.sh
   \`\`\`
-- Verify the installed server can start manually:
+- Verify the server is installed correctly:
   \`\`\`bash
-  /path/to/bootstrap.sh --help
+  bash /path/to/launcher.sh --install-only
   \`\`\`
 - Check your client's logs for error messages (e.g., \`~/.claude/logs\` for Claude).
 
@@ -458,17 +557,17 @@ The old install root can be removed after confirming the new version works.
   \`\`\`bash
   ls -la ~/.claude/mcp/servers/mcprojsim/
   \`\`\`
-- If missing, re-run bootstrap:
+- If missing, re-run the launcher to reinstall:
   \`\`\`bash
   cd /path/to/mcprojsim-mcp-bundle-${VERSION}
-  bash bootstrap.sh
+  bash launcher.sh --install-only
   \`\`\`
 
-**"Permission denied" when running bootstrap**
+**"Permission denied" when running launcher**
 - Make the script executable:
   \`\`\`bash
-  chmod +x bootstrap.sh
-  bash bootstrap.sh
+  chmod +x launcher.sh
+  bash launcher.sh --install-only
   \`\`\`
 
 ### Server Not Appearing in Client
@@ -479,33 +578,42 @@ The old install root can be removed after confirming the new version works.
    ls ~/.claude/mcp/servers/mcprojsim/   # for Claude
    ls ~/.copilot/mcp/servers/mcprojsim/  # for Copilot
    \`\`\`
-2. Confirm it's in the client config with the correct command path.
+2. Confirm it's in the client config with the correct absolute path to \`launcher.sh\`.
 3. Restart the client (close and reopen).
 4. Check the client's MCP server status (e.g., in Copilot's settings, look for MCP server list).
 
 ### Getting Help
 
 If you encounter other issues:
-1. Check that \`bootstrap.sh\` runs without errors:
+1. Re-run \`bootstrap.sh\` (or \`launcher.sh --install-only\`) to check for errors:
    \`\`\`bash
    cd /path/to/mcprojsim-mcp-bundle-${VERSION}
    bash bootstrap.sh
    \`\`\`
 2. Verify the Python venv was created and has the server installed:
    \`\`\`bash
-   ~/.claude/mcp/servers/mcprojsim/.venv/bin/mcprojsim-mcp --help
+   ~/.claude/mcp/servers/mcprojsim/.venv/bin/mcprojsim-mcp --version
    \`\`\`
 3. Run with bash debug mode for detailed logging:
    \`\`\`bash
-   bash -x bootstrap.sh 2>&1 | tail -50
+   bash -x launcher.sh --install-only 2>&1 | tail -50
    \`\`\`
 EOF
 
-cat > "${PAYLOAD_DIR}/bootstrap.sh" <<'EOF'
+cat > "${PAYLOAD_DIR}/launcher.sh" <<'EOF'
 #!/bin/bash
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --install-only: install the server (if needed) and exit without starting it.
+# Useful for pre-installation, agent automation, and manual verification.
+INSTALL_ONLY=0
+if [[ "${1:-}" == "--install-only" ]]; then
+    INSTALL_ONLY=1
+    shift
+fi
+
 CLIENT_PROFILE="${MCP_CLIENT:-}"
 
 if [[ -z "${CLIENT_PROFILE}" ]]; then
@@ -562,12 +670,160 @@ if [[ ! -x "${VENV_DIR}/bin/mcprojsim-mcp" ]]; then
     "${PYTHON_CMD}" -m venv "${VENV_DIR}"
     "${VENV_DIR}/bin/pip" install --upgrade pip >/dev/null 2>&1
     "${VENV_DIR}/bin/pip" install "${WHEEL_PATH}" "mcp[cli]>=1.0.0" >/dev/null 2>&1
-    echo "[mcprojsim] Installation complete. Server is now permanently available." >&2
+    echo "[mcprojsim] Installation complete." >&2
 else
-    echo "[mcprojsim] Already installed at ${INSTALL_ROOT}. Starting server..." >&2
+    echo "[mcprojsim] Already installed at ${INSTALL_ROOT}." >&2
+fi
+
+if [[ "${INSTALL_ONLY}" == "1" ]]; then
+    echo "[mcprojsim] Server binary: ${VENV_DIR}/bin/mcprojsim-mcp" >&2
+    exit 0
 fi
 
 exec "${VENV_DIR}/bin/mcprojsim-mcp" "$@"
+EOF
+chmod +x "${PAYLOAD_DIR}/launcher.sh"
+
+cat > "${PAYLOAD_DIR}/bootstrap.sh" <<'EOF'
+#!/bin/bash
+# bootstrap.sh — One-step installer and MCP client configurator for mcprojsim.
+#
+# Detects your MCP client, installs the server via launcher.sh, and writes
+# the appropriate client configuration file — all in one step.
+#
+# Usage:
+#   bash bootstrap.sh                      # auto-detect client
+#   MCP_CLIENT=copilot bash bootstrap.sh   # Copilot CLI
+#   MCP_CLIENT=claude  bash bootstrap.sh   # Claude Desktop
+#   MCP_CLIENT=generic bash bootstrap.sh   # install only, print config snippet
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ── Detect client profile ─────────────────────────────────────────────────────
+CLIENT_PROFILE="${MCP_CLIENT:-}"
+if [[ -z "${CLIENT_PROFILE}" ]]; then
+  COPILOT_BASE="${COPILOT_HOME:-${HOME}/.copilot}"
+  CLAUDE_BASE="${CLAUDE_HOME:-${HOME}/.claude}"
+
+  # Primary signal: use the script's own location.
+  # A bundle placed inside ~/.copilot/ or ~/.claude/ unambiguously identifies
+  # the target client without relying on which directories happen to exist.
+  if [[ "${SCRIPT_DIR}" == "${COPILOT_BASE}"/* ]]; then
+    CLIENT_PROFILE="copilot"
+  elif [[ "${SCRIPT_DIR}" == "${CLAUDE_BASE}"/* ]]; then
+    CLIENT_PROFILE="claude"
+  else
+    # Fallback: directory presence — but refuse to guess when both exist.
+    HAS_COPILOT=0; HAS_CLAUDE=0
+    [[ -n "${COPILOT_HOME:-}" || -d "${HOME}/.copilot" ]] && HAS_COPILOT=1
+    [[ -n "${CLAUDE_HOME:-}"  || -d "${HOME}/.claude"  ]] && HAS_CLAUDE=1
+
+    if [[ "${HAS_COPILOT}" == "1" && "${HAS_CLAUDE}" == "1" ]]; then
+      echo "[mcprojsim] Error: both ~/.copilot and ~/.claude detected." >&2
+      echo "[mcprojsim] Cannot determine target client automatically." >&2
+      echo "[mcprojsim] Re-run with an explicit profile:" >&2
+      echo "[mcprojsim]   MCP_CLIENT=copilot bash bootstrap.sh" >&2
+      echo "[mcprojsim]   MCP_CLIENT=claude  bash bootstrap.sh" >&2
+      exit 1
+    elif [[ "${HAS_COPILOT}" == "1" ]]; then
+      CLIENT_PROFILE="copilot"
+    elif [[ "${HAS_CLAUDE}" == "1" ]]; then
+      CLIENT_PROFILE="claude"
+    else
+      CLIENT_PROFILE="generic"
+    fi
+  fi
+fi
+
+case "${CLIENT_PROFILE}" in
+  claude|Claude|CLAUDE)    CLIENT_PROFILE="claude"   ;;
+  copilot|Copilot|COPILOT) CLIENT_PROFILE="copilot"  ;;
+  *)                       CLIENT_PROFILE="generic"  ;;
+esac
+
+echo "[mcprojsim] Client profile : ${CLIENT_PROFILE}"
+
+# ── Resolve config file path ───────────────────────────────────────────────────
+case "${CLIENT_PROFILE}" in
+  copilot)
+    if [[ -n "${COPILOT_HOME:-}" ]]; then
+      COPILOT_BASE="${COPILOT_HOME}"
+    elif [[ -n "${XDG_CONFIG_HOME:-}" ]]; then
+      COPILOT_BASE="${XDG_CONFIG_HOME}/copilot"
+    else
+      COPILOT_BASE="${HOME}/.copilot"
+    fi
+    CONFIG_FILE="${COPILOT_BASE}/mcp-config.json"
+    ;;
+  claude)
+    case "$(uname -s)" in
+      Darwin) CLAUDE_CONFIG_DIR="${HOME}/Library/Application Support/Claude" ;;
+      *)      CLAUDE_CONFIG_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}/claude" ;;
+    esac
+    CONFIG_FILE="${CLAUDE_CONFIG_DIR}/claude_desktop_config.json"
+    ;;
+  *)
+    CONFIG_FILE=""
+    ;;
+esac
+
+# ── Install the server ─────────────────────────────────────────────────────────
+bash "${SCRIPT_DIR}/launcher.sh" --install-only
+LAUNCHER_ABS="${SCRIPT_DIR}/launcher.sh"
+
+# ── Write client config ────────────────────────────────────────────────────────
+if [[ -z "${CONFIG_FILE}" ]]; then
+  echo ""
+  echo "[mcprojsim] Generic profile — add the following to your MCP client config:"
+  echo ""
+  printf '  {\n    "mcpServers": {\n      "mcprojsim": {\n        "command": "%s"\n      }\n    }\n  }\n' "${LAUNCHER_ABS}"
+  echo ""
+  exit 0
+fi
+
+MCPROJSIM_CONFIG_FILE="${CONFIG_FILE}" \
+MCPROJSIM_LAUNCHER_ABS="${LAUNCHER_ABS}" \
+MCPROJSIM_CLIENT="${CLIENT_PROFILE}" \
+python3 - <<'PYEOF'
+import json, os, sys
+
+config_file = os.environ["MCPROJSIM_CONFIG_FILE"]
+launcher    = os.environ["MCPROJSIM_LAUNCHER_ABS"]
+client      = os.environ["MCPROJSIM_CLIENT"]
+
+entries = {
+    "copilot": {"type": "stdio", "command": launcher, "args": [], "tools": ["*"]},
+    "claude":  {"command": launcher},
+}
+entry = entries.get(client, {"command": launcher})
+
+if os.path.exists(config_file):
+    with open(config_file) as f:
+        try:
+            config = json.load(f)
+        except json.JSONDecodeError:
+            print("[mcprojsim] Warning: existing config unreadable — overwriting.", file=sys.stderr)
+            config = {}
+else:
+    config = {}
+
+config.setdefault("mcpServers", {})["mcprojsim"] = entry
+
+config_dir = os.path.dirname(config_file)
+if config_dir:
+    os.makedirs(config_dir, exist_ok=True)
+
+with open(config_file, "w") as f:
+    json.dump(config, f, indent=2)
+    f.write("\n")
+
+print(f"[mcprojsim] Config written : {config_file}")
+PYEOF
+
+echo ""
+echo "[mcprojsim] ✓ Done. Restart your MCP client to activate the server."
 EOF
 chmod +x "${PAYLOAD_DIR}/bootstrap.sh"
 
