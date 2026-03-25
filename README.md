@@ -49,7 +49,12 @@ It is intended for teams that want answers such as:
 
 ## Recommended installation
 
-For most end users, `pipx` is the simplest way to install `mcprojsim` as a CLI tool.
+For most users running `mcprojsim` through an MCP-capable assistant, the recommended path is the **MCP bundle artifact** from GitHub Releases.
+
+If the machine has Python 3.14+, you can typically ask your assistant to install and configure the bundle directly.
+That means no manual `pip`, `pipx`, or environment setup commands are required in normal MCP-client workflows.
+
+For direct terminal-only CLI usage (without MCP), `pipx` remains the simplest manual install path:
 
 ```bash
 python3 -m pip install --user pipx
@@ -164,6 +169,18 @@ mcprojsim simulate examples/sprint_nb_sickness_large.yaml --seed 42 --velocity-m
 ## MCP server integration
 
 `mcprojsim` can run as a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server, letting AI assistants such as GitHub Copilot, Claude Desktop, or any MCP-compatible client generate project files, validate descriptions, and run simulations conversationally.
+
+### Preferred install path: MCP bundle artifact
+
+Each release includes an MCP bundle artifact: `mcprojsim-mcp-bundle-<version>.zip`.
+
+On systems with Python 3.14+, the preferred workflow is to ask your MCP-capable assistant to install/configure this bundle.
+In that workflow, no manual package-install commands are needed.
+
+Example prompt to your assistant:
+"Install the latest mcprojsim MCP bundle from GitHub Releases and configure it for this workspace."
+
+If you prefer a manual install path, use one of the options below.
 
 Install with the optional MCP dependency group:
 
