@@ -177,8 +177,76 @@ Each release includes an MCP bundle artifact: `mcprojsim-mcp-bundle-<version>.zi
 On systems with Python 3.14+, the preferred workflow is to ask your MCP-capable assistant to install/configure this bundle.
 In that workflow, no manual package-install commands are needed.
 
-Example prompt to your assistant:
-"Install the latest mcprojsim MCP bundle from GitHub Releases and configure it for this workspace."
+Example prompt to your assistant to install:
+
+- ***"Download and install the latest mcprojsim MCP server from GitHub Releases. Follow the README.md for 
+installation instructions."***
+
+Once installed the server exposes three tools:
+
+| Tool | Description |
+|------|-------------|
+| `generate_project_file` | Convert a natural-language project description into a valid YAML project file |
+| `validate_project_description` | Check a description for missing data or inconsistencies without generating a file |
+| `simulate_project` | Generate, validate, and simulate in one step — returns full statistical results |
+
+
+### A basic example of a prompt
+
+After restarting the assistant (needed to load the new MCP Server) ask for a simple project simulation:
+
+- ***"Simulate a project that starts 2025-05-01 and has two M-size tasks that depends on each-other. Show the result for all complete date percentiles in a table."*** 
+
+```txt
+● Here are the simulation results for the two-task project (sequential M→M, starting 2025-05-01):
+
+  ┌────────────┬───────┬──────────────┬───────────────┐
+  │ Percentile │ Hours │ Working Days │ Delivery Date │
+  ├────────────┼───────┼──────────────┼───────────────┤
+  │ P50        │ 230.8 │ 29           │ 2025-06-11    │
+  ├────────────┼───────┼──────────────┼───────────────┤
+  │ P80        │ 265.3 │ 34           │ 2025-06-18    │
+  ├────────────┼───────┼──────────────┼───────────────┤
+  │ P90        │ 283.4 │ 36           │ 2025-06-20    │
+  ├────────────┼───────┼──────────────┼───────────────┤
+  │ P95        │ 298.7 │ 38           │ 2025-06-24    │
+  └────────────┴───────┴──────────────┴───────────────┘
+
+  Key stats: Mean ~233h (30 days) · Std dev ~38h · Both tasks are on the critical path 100% of the time.
+```
+
+To get more statistics try:
+
+- ***"Show the summary statistics for this simulation in a table."***
+
+
+```txt
+● From the previous simulation results:
+
+  ┌──────────────────────────┬────────────────────────────────┐
+  │ Statistic                │ Value                          │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Mean                     │ 232.64 hours (30 working days) │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Median (P50)             │ 230.82 hours (29 working days) │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Std Dev                  │ 37.97 hours                    │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Coefficient of Variation │ 0.1632                         │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Skewness                 │ 0.2703                         │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Excess Kurtosis          │ -0.3336                        │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Iterations               │ 10,000                         │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Hours per Day            │ 8.0                            │
+  └──────────────────────────┴────────────────────────────────┘
+```
+
+
+
+### Manual install path
 
 If you prefer a manual install path, use one of the options below.
 
@@ -206,13 +274,6 @@ Add the server to your MCP client configuration (e.g. VS Code `settings.json` or
 }
 ```
 
-The server exposes three tools:
-
-| Tool | Description |
-|------|-------------|
-| `generate_project_file` | Convert a natural-language project description into a valid YAML project file |
-| `validate_project_description` | Check a description for missing data or inconsistencies without generating a file |
-| `simulate_project` | Generate, validate, and simulate in one step — returns full statistical results |
 
 ## For developers
 
@@ -253,7 +314,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.7.3}
+  version = {0.7.4}
 }
 ```
 

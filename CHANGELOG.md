@@ -1,3 +1,17 @@
+## [v0.7.4] - 2026-03-25
+
+Release Type: patch
+
+### 📋 Summary
+This release improves the MCP onboarding flow for assistant-driven installs. It clarifies how users should ask their assistant to install the MCP bundle, adds a concrete first-run simulation example, and makes the follow-up workflow easier to discover.
+
+### 🚀 Improvements
+- Improved README MCP installation guidance with a more explicit assistant prompt for downloading and installing the latest server from GitHub Releases
+
+### 📚 Documentation
+- Updated the README MCP section to explain that the assistant should be restarted after installation so the new server is loaded as well as how to specify a simple project in naturl language
+
+
 ## [v0.7.3] - 2026-03-25
 
 Release Type: patch
