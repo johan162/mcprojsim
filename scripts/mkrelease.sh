@@ -360,6 +360,17 @@ else
     sed -i.bak -E 's/^  version *= *\{.*\}/  version = {'"$VERSION"'}/' README.md
 fi
 
+# Generate PDF version of User Guide for release assets
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo "  [DRY-RUN] Would generate PDF version of User Guide for release assets"
+    echo "  [DRY-RUN] Would run: pandoc docs/user_guide.md -o docs/user_guide.pdf"
+else
+    echo "  ✓ Generating PDF version of User Guide for release assets..."
+    make pdf || {
+        print_warning_colored "Makefile target 'pdf' failed. Skipping PDF generation."
+    }
+fi
+
 # 3.2: Generate changelog entry
 if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [DRY-RUN] Would prepare changelog..."
@@ -423,7 +434,7 @@ print_step_colored "🎯 PHASE 4: RELEASE EXECUTION"
 print_step_colored ""
 
 # 4.1: Commit version updates
-run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md" "Staging release files..."
+run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md docs/user_guide/report_template.tex docs/examples.md" "Staging release files..."
 run_command "git commit -m \"chore(release): prepare $VERSION
 
 - Update version to $VERSION
