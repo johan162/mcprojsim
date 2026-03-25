@@ -1,3 +1,23 @@
+## [v0.7.1] - 2026-03-25
+
+Release Type: patch
+
+### 📋 Summary
+This release improves release packaging and installation guidance. It hardens GitHub release artifact validation, adds the User Guide PDF as an uploaded release artifact, and updates docs text to emphasize MCP bundle-based setup workflows.
+
+### 🚀 Improvements
+- Improved `scripts/mkghrelease.sh` to fail fast when required release artifacts are missing before attempting release creation.
+- Improved release artifact validation by requiring both `dist/mcprojsim-mcp-bundle-<version>.zip` and `mcprojsim_user_guide-v<version>.pdf`.
+- Improved GitHub release uploads to include the User Guide PDF as a first-class release artifact.
+
+### 📚 Documentation
+- Updated README installation guidance to prioritize the MCP bundle artifact workflow for MCP-capable assistants.
+- Expanded README MCP section with explicit MCP bundle install guidance and an assistant prompt example.
+
+### 🛠 Internal
+- Updated the User Guide PDF front-page template version label for release alignment.
+
+
 ## [v0.7.0] - 2026-03-24
 
 Release Type: minor
