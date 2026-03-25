@@ -19,6 +19,7 @@ This release improves release tooling workflows and MCP bundle installation guid
 - Created `scripts/mkchlogentry.sh` script (240 lines) with version validation, duplicate detection, template generation, and environment awareness.
 - Updated release script validation to check for CHANGELOG entry format: `^## \[v<version>\] - <YYYY-MM-DD>$`.
 - Added `.github/skills/changelog-entry/SKILL.md` Copilot skill for AI-assisted CHANGELOG entry creation.
+- Added proposal for new pipeline setup.
 
 
 ## [v0.7.1] - 2026-03-25
