@@ -488,16 +488,34 @@ print_success "dist/ directory exists"
 # 4.2: Extract version from tag (without 'v' prefix)
 VERSION_NUMBER=${LATEST_TAG#v}
 
-# 4.3: Find expected artifacts
+# 4.3: Define expected artifact names
 
 # For pre-release tags we must modify the version as the python build tools
 # strip the "-rcN" to loose the '-' sign and appends it directly on the nuber, e.g. 1.0.0rc1
 
 # Strip the '-' from the version for pre-releases
 FILE_VERSION_NUMBER=${VERSION_NUMBER//-rc/rc}
+EXPECTED_BUNDLE_FILE="${DIST_DIR}/${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip"
+EXPECTED_USER_GUIDE_FILE="mcprojsim_user_guide-v${VERSION_NUMBER}.pdf"
+
+# 4.4: Fail fast if required release artifacts are missing
+print_sub_step "Checking required release artifacts..."
+if [[ ! -f "$EXPECTED_BUNDLE_FILE" ]]; then
+    print_error "Required MCP bundle is missing: $EXPECTED_BUNDLE_FILE"
+    exit 1
+fi
+if [[ ! -f "$EXPECTED_USER_GUIDE_FILE" ]]; then
+    print_error "Required user guide PDF is missing: $EXPECTED_USER_GUIDE_FILE"
+    exit 1
+fi
+print_success "Required artifacts found: $(basename "$EXPECTED_BUNDLE_FILE"), $(basename "$EXPECTED_USER_GUIDE_FILE")"
+
+# 4.5: Find expected artifacts
 print_sub_step "Locating artifacts with version $FILE_VERSION_NUMBER..."
 WHEEL_FILE=$(find "$DIST_DIR" -name "${PROGRAMNAME}-${FILE_VERSION_NUMBER}-*.whl" | head -1)
 SDIST_FILE=$(find "$DIST_DIR" -name "${PROGRAMNAME}-${FILE_VERSION_NUMBER}.tar.gz" | head -1)
+BUNDLE_FILE="$EXPECTED_BUNDLE_FILE"
+USER_GUIDE_FILE="$EXPECTED_USER_GUIDE_FILE"
 
 if [[ -z "$WHEEL_FILE" ]]; then
     print_error "Wheel file not found for version $VERSION_NUMBER"
@@ -518,33 +536,15 @@ if [[ -z "$SDIST_FILE" ]]; then
     exit 1
 fi
 print_success "Found sdist: $(basename "$SDIST_FILE")"
-
-# 4.4: Find MCP bundle (build it if missing)
-BUNDLE_FILE=$(find "$DIST_DIR" -name "${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip" | head -1)
-if [[ -z "$BUNDLE_FILE" ]]; then
-    print_warning "MCP bundle not found for version $FILE_VERSION_NUMBER — building now..."
-    if [[ "$DRY_RUN" == "true" ]]; then
-        print_warning "[DRY-RUN] Would run: ./scripts/mkmcpbundle.sh"
-        BUNDLE_FILE="${DIST_DIR}/${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip"
-    else
-        if ! "${SCRIPT_DIR}/mkmcpbundle.sh"; then
-            print_error "Failed to build MCP bundle"
-            exit 1
-        fi
-        BUNDLE_FILE=$(find "$DIST_DIR" -name "${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip" | head -1)
-        if [[ -z "$BUNDLE_FILE" ]]; then
-            print_error "MCP bundle still not found after build at dist/${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip"
-            exit 1
-        fi
-    fi
-fi
 print_success "Found MCP bundle: $(basename "$BUNDLE_FILE")"
+print_success "Found user guide PDF: $(basename "$USER_GUIDE_FILE")"
 
-# 4.5: Validate artifact sizes
+# 4.6: Validate artifact sizes
 print_sub_step "Validating artifact sizes..."
 WHEEL_SIZE=$(stat -f%z "$WHEEL_FILE" 2>/dev/null || stat -c%s "$WHEEL_FILE" 2>/dev/null)
 SDIST_SIZE=$(stat -f%z "$SDIST_FILE" 2>/dev/null || stat -c%s "$SDIST_FILE" 2>/dev/null)
 BUNDLE_SIZE=$(stat -f%z "$BUNDLE_FILE" 2>/dev/null || stat -c%s "$BUNDLE_FILE" 2>/dev/null || echo 0)
+USER_GUIDE_SIZE=$(stat -f%z "$USER_GUIDE_FILE" 2>/dev/null || stat -c%s "$USER_GUIDE_FILE" 2>/dev/null || echo 0)
 
 if [[ "$WHEEL_SIZE" -lt 1000 ]]; then
     print_error "Wheel file suspiciously small: $WHEEL_SIZE bytes"
@@ -561,9 +561,15 @@ if [[ "$DRY_RUN" == "false" && "$BUNDLE_SIZE" -lt 1000 ]]; then
     exit 1
 fi
 
+if [[ "$USER_GUIDE_SIZE" -lt 1000 ]]; then
+    print_error "User guide PDF suspiciously small: $USER_GUIDE_SIZE bytes"
+    exit 1
+fi
+
 print_success "Wheel size:  $(numfmt --to=iec-i --suffix=B "$WHEEL_SIZE" 2>/dev/null || echo "$WHEEL_SIZE bytes")"
 print_success "Sdist size:  $(numfmt --to=iec-i --suffix=B "$SDIST_SIZE" 2>/dev/null || echo "$SDIST_SIZE bytes")"
 print_success "Bundle size: $(numfmt --to=iec-i --suffix=B "$BUNDLE_SIZE" 2>/dev/null || echo "$BUNDLE_SIZE bytes")"
+print_success "Guide size:  $(numfmt --to=iec-i --suffix=B "$USER_GUIDE_SIZE" 2>/dev/null || echo "$USER_GUIDE_SIZE bytes")"
 
 # =====================================
 # PHASE 5: RELEASE NOTES PREPARATION
@@ -656,7 +662,8 @@ GH_RELEASE_CMD="gh release create \"$LATEST_TAG\" \
     --notes-file \"$RELEASE_NOTES_FILE\" \
     \"$WHEEL_FILE\" \
     \"$SDIST_FILE\" \\
-    \"$BUNDLE_FILE\""
+    \"$BUNDLE_FILE\" \
+    \"$USER_GUIDE_FILE\""
 
 if [[ "$IS_PRE_RELEASE" == "true" ]]; then
     GH_RELEASE_CMD="$GH_RELEASE_CMD --prerelease"
@@ -725,6 +732,7 @@ else
     echo "  - $(basename "$WHEEL_FILE")"
     echo "  - $(basename "$SDIST_FILE")"
     echo "  - $(basename "$BUNDLE_FILE")"
+    echo "  - $(basename "$USER_GUIDE_FILE")"
     echo ""
     echo "Next steps:"
     echo "  1. Verify release on GitHub:"
