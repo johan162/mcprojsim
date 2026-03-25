@@ -10,6 +10,7 @@ documentation workflows, setup verification, and containerized docs serving.
 - [Table of Contents](#table-of-contents)
   - [Script Conventions](#script-conventions)
   - [Scripts Overview](#scripts-overview)
+    - [`mkchlogentry.sh` - CHANGELOG Entry Script](#mkchlogentrysh---changelog-entry-script)
     - [`mkbld.sh` - Main Build Script](#mkbldsh---main-build-script)
     - [`mkcovupd.sh` - Coverage Badge Updater](#mkcovupdsh---coverage-badge-updater)
     - [`mkrelease.sh` - Release Automation Script](#mkreleasesh---release-automation-script)
@@ -70,6 +71,35 @@ Runs the main quality and packaging pipeline and is the primary script used by C
 - `htmlcov/`
 - `dist/`
 
+### `mkchlogentry.sh` - CHANGELOG Entry Script
+
+Creates and prepends a new release-entry template in the top-level `CHANGELOG.md`.
+Run this before `mkrelease.sh`.
+
+```bash
+./scripts/mkchlogentry.sh <version> [major|minor|patch] [OPTIONS]
+```
+
+**Examples:**
+```bash
+./scripts/mkchlogentry.sh 0.7.2 patch
+./scripts/mkchlogentry.sh 0.8.0 minor --dry-run
+```
+
+**What it does:**
+1. Validates the requested version format
+2. Refuses to create duplicate entries for an existing version
+3. Prepends a new entry using the established release layout
+4. Leaves `CHANGELOG.md` ready for the developer to replace placeholders with final release notes
+
+**Options:**
+- `--dry-run` - Preview the entry without modifying files
+- `--help`, `-h` - Display help message
+
+**Requirements:**
+- Run from the project root
+- Update the generated placeholder bullets before running `mkrelease.sh`
+
 ### `mkcovupd.sh` - Coverage Badge Updater
 
 Updates the coverage badge in the top-level `README.md` from the current `coverage.xml` report.
@@ -104,7 +134,7 @@ Updates the coverage badge in the top-level `README.md` from the current `covera
 
 ### `mkrelease.sh` - Release Automation Script
 
-Automates the local release workflow, including version bumping, quality gates, changelog updates, and git operations.
+Automates the local release workflow, including version bumping, quality gates, changelog validation, and git operations.
 
 ```bash
 ./scripts/mkrelease.sh <version> [major|minor|patch] [OPTIONS]
@@ -120,7 +150,7 @@ Automates the local release workflow, including version bumping, quality gates, 
 1. Validates the requested version and release prerequisites
 2. Runs the project quality gates
 3. Updates the Poetry version in `pyproject.toml`
-4. Updates release-related files such as `CHANGELOG.md` with a new template entry that has to be completed by the developer
+4. Verifies that `CHANGELOG.md` already contains an entry for the requested version
 5. Performs the configured branch / tag workflow. This means tagging `develop` and squash merge `develop` to `main` and also back-sync `main` to `develop` 
 
 **Options:**
@@ -130,6 +160,7 @@ Automates the local release workflow, including version bumping, quality gates, 
 **Notes:**
 - Versioning is Poetry-driven; package version data is not edited manually in `__init__.py`
 - Pre-release versions should use the current Poetry / PEP 440 style, for example `0.2.0rc5`
+- Run `mkchlogentry.sh` first to create the new `CHANGELOG.md` entry before starting the release
 
 
 ### `mkrelease2.sh` - CI-Delegating Release Script
@@ -357,6 +388,11 @@ make docs-container-start
 ### Release Workflow
 
 ```bash
+# Create the changelog entry first
+./scripts/mkchlogentry.sh 0.2.0rc5 minor
+
+# Edit CHANGELOG.md and replace the placeholder bullets
+
 # Preview the release steps first
 ./scripts/mkrelease.sh 0.2.0rc5 minor --dry-run
 

@@ -253,7 +253,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.7.1}
+  version = {0.7.2}
 }
 ```
 

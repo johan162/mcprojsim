@@ -1,6 +1,6 @@
 #!/bin/bash
 # mcprojsim Release Script
-# Description: Automates the release process for mcprojsim, including versioning and changelog generation.
+# Description: Automates the release process for mcprojsim, including versioning and release validation.
 # CI/CD Support: No. Can not be run in CI as it requires user interaction.
 # Usage: ./scripts/mkrelease.sh <version> [major|minor|patch] [--dry-run] [--help]
 #
@@ -128,9 +128,9 @@ QUALITY GATES:
     ✓ Version consistency across all project files
 
 WORKFLOW:
-    1. Pre-release validation (repository state, version format)
+    1. Pre-release validation (repository state, version format, changelog presence)
     2. Comprehensive testing (unit tests, integration, static analysis)
-    3. Release preparation (version updates, changelog generation)
+    3. Release preparation (version updates, release assets)
     4. Release execution (git commit, merge, tag, push)
     5. Post-release cleanup (sync branches, clean artifacts)
 
@@ -138,6 +138,7 @@ REQUIREMENTS:
     • Must be run from project root directory
     • Must be on 'develop' branch with clean working directory
     • Requires: git, python, poetry, gh
+    • Requires an existing CHANGELOG.md entry for the planned version
     • Requires Poetry dev dependencies installed (run: poetry install)
 
 SAFETY:
@@ -296,6 +297,20 @@ check_condition '[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(rc[1-9][0-9]?)?$ ]]' "
 # 1.6: Check if version already exists
 check_condition '! git tag | grep -q "v${VERSION}\$"' "Tag v$VERSION already exists"
 
+# 1.7: Check if CHANGELOG entry exists for the planned version
+print_sub_step "Verifying CHANGELOG.md contains an entry for v$VERSION..."
+if [[ ! -f CHANGELOG.md ]]; then
+    print_error_colored "CHANGELOG.md not found. Run ./scripts/mkchlogentry.sh $VERSION $RELEASE_TYPE first."
+    exit 1
+fi
+if ! grep -Eq "^## \[v${VERSION}\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md; then
+    print_error_colored "No CHANGELOG.md entry found for v$VERSION"
+    echo "Run: ./scripts/mkchlogentry.sh $VERSION $RELEASE_TYPE to manually update the changelog, or"
+    echo "    use the /changelog-entry skill in copilot to automatically generate the entries"
+    exit 1
+fi
+print_success "Found CHANGELOG entry for v$VERSION"
+
 # =====================================
 # PHASE 2: UNIT TESTING & STATIC ANALYSIS
 # =====================================
@@ -309,6 +324,7 @@ print_step_colored ""
 echo "  ✓ Checking code formatting..."
 run_command "poetry run black --check --diff src/ tests/" "Checking code formatting"
 run_command "poetry run flake8 src/${PROGRAMNAME} tests/" "Running flake8 static analysis"
+run_command "poetry run pyright src/ tests/" "Running pyright static analysis"
 run_command "poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports" "Running mypy static analysis"
 
 
@@ -319,25 +335,6 @@ if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Test suite failed - aborting release"
     exit 1
 fi
-
-# 2.3: Integration testing with example projects
-if [[ "$DRY_RUN" == "true" ]]; then
-    echo "  [DRY-RUN] Would test example projects..."
-    echo "  [DRY-RUN] Would run: poetry run mcprojsim simulate -n 50 <project.yaml> for each example project"
-else
-    echo "  ✓ Smoke test of three projects  ..."
-    for project in examples/sample_project.yaml examples/tshirt_sizing_project.yaml examples/project_with_custom_thresholds.yaml; do
-        if [[ -f "$project" ]]; then
-            echo "    Testing: $project"
-            poetry run mcprojsim simulate -n 50 "$project" >/dev/null 2>&1 || {
-                print_error_colored "Failed to simulate project: $project"
-                exit 1
-            }
-        fi
-    done
-fi
-
-echo "All example projects validated successfully."
 
 # =====================================
 # PHASE 3: RELEASE PREPARATION
@@ -360,58 +357,15 @@ else
     sed -i.bak -E 's/^  version *= *\{.*\}/  version = {'"$VERSION"'}/' README.md
 fi
 
-# 3.2: Generate changelog entry
+# Generate PDF version of User Guide for release assets
 if [[ "$DRY_RUN" == "true" ]]; then
-    echo "  [DRY-RUN] Would prepare changelog..."
-    echo "  [DRY-RUN] Would create CHANGELOG_ENTRY.tmp with template for v$VERSION"
-    echo "  [DRY-RUN] Would prepend to CHANGELOG.md or create new file"
-    echo "  [DRY-RUN] Would prompt user to edit changelog (skipped in dry-run)"
+    echo "  [DRY-RUN] Would generate PDF version of User Guide for release assets"
+    echo "  [DRY-RUN] Would run: pandoc docs/user_guide.md -o docs/user_guide.pdf"
 else
-    echo "  ✓ Preparing changelog..."
-    CHANGELOG_DATE=$(date +%Y-%m-%d)
-
-    # Create temporary changelog entry (customize as needed)
-    cat > CHANGELOG_ENTRY.tmp << EOF
-## [v$VERSION] - $CHANGELOG_DATE
-
-Release Type: $RELEASE_TYPE
-
-### 📋 Summary
-- [Brief summary of the release]
-
-### ⚠️ Breaking Changes
-- [Breaking changes]
-
-### ✨ Additions
-- [New features]
-
-### 🚀 Improvements
-- [Improvements]
-
-### 🐛 Bug Fixes
-- [Bug fixes]
-
-### 📚 Documentation
-- [Documentation changes]
-
-### 🛠 Internal
-- [Internal changes]
-
-EOF
-
-    # Prepend to existing CHANGELOG.md (create if doesn't exist)
-    if [[ -f CHANGELOG.md ]]; then
-        cat CHANGELOG_ENTRY.tmp CHANGELOG.md > CHANGELOG_NEW.tmp
-        mv CHANGELOG_NEW.tmp CHANGELOG.md
-    else
-        mv CHANGELOG_ENTRY.tmp CHANGELOG.md
-    fi
-    rm -f CHANGELOG_ENTRY.tmp
-
-    echo ""
-    echo "⚠️  PLEASE EDIT CHANGELOG.md to add specific release notes"
-    echo "   Press Enter when changelog is ready, or Ctrl+C to abort"
-    read -r
+    echo "  ✓ Generating PDF version of User Guide for release assets..."
+    make pdf || {
+        print_warning_colored "Makefile target 'pdf' failed. Skipping PDF generation."
+    }
 fi
 
 # =====================================
@@ -423,7 +377,7 @@ print_step_colored "🎯 PHASE 4: RELEASE EXECUTION"
 print_step_colored ""
 
 # 4.1: Commit version updates
-run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md" "Staging release files..."
+run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md docs/user_guide/report_template.tex docs/examples.md" "Staging release files..."
 run_command "git commit -m \"chore(release): prepare $VERSION
 
 - Update version to $VERSION

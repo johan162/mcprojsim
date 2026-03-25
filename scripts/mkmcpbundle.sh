@@ -103,37 +103,31 @@ EOF
 cat > "${PAYLOAD_DIR}/README.md" <<EOF
 # mcprojsim MCP Server Bundle — v${VERSION}
 
-This self-contained bundle installs the **mcprojsim** MCP server so that
-AI assistants (GitHub Copilot, Claude Desktop, and any other MCP-compatible
-client) can generate, validate, and simulate software project schedules using
-Monte Carlo analysis.
-
----
+This bundle installs the **mcprojsim** MCP server for any MCP-compatible client.
+Installation is user-scoped by default and does not depend on any editor.
 
 ## Bundle Contents
 
 \`\`\`
 mcprojsim-mcp-bundle-${VERSION}/
-├── README.md          ← this file
-├── manifest.json      ← bundle metadata
-├── bootstrap.sh       ← install + launch script
+├── README.md
+├── manifest.json
+├── bootstrap.sh
 └── wheels/
     └── mcprojsim-${VERSION}-py3-none-any.whl
 \`\`\`
 
----
+  ## Prerequisites
 
-## Prerequisites
+  | Requirement | Version |
+  |---|---|
+  | Python | >= 3.14 |
+  | Internet access | Required on first run to download runtime dependencies from PyPI |
+  | bash | Any modern version |
 
-| Requirement | Version |
-|---|---|
-| Python | ≥ 3.14 |
-| Internet access | Required on first run — pip downloads mcprojsim's runtime dependencies (numpy, scipy, matplotlib, pydantic, click, jinja2, etc.) and \`mcp[cli]\` from PyPI |
-| bash | Any modern version |
+## Installation — ONE-TIME SETUP
 
----
-
-## Installation
+**This installation is permanent.** Once you complete the steps below, the mcprojsim MCP server will be available to your MCP client(s) automatically. You will only need to run the bootstrap script once.
 
 ### Step 1 — Extract the bundle
 
@@ -142,154 +136,153 @@ unzip mcprojsim-mcp-bundle-${VERSION}.zip
 cd mcprojsim-mcp-bundle-${VERSION}
 \`\`\`
 
-### Step 2 — Run bootstrap (installs dependencies and the server)
+### Step 2 — Run bootstrap (one time)
 
 \`\`\`bash
 bash bootstrap.sh
 \`\`\`
 
-The bootstrap script:
-1. Creates a Python virtual environment at \`.venv/\` inside the bundle directory
-   (all packages are installed there — nothing is written to the system Python)
-2. Installs the bundled \`mcprojsim\` wheel from \`wheels/\`
-3. pip automatically resolves and downloads mcprojsim's runtime dependencies
-   from PyPI: \`numpy\`, \`scipy\`, \`matplotlib\`, \`pydantic\`, \`click\`,
-   \`jinja2\`, \`pyyaml\`, \`tabulate\`, \`tomli-w\`
-4. Downloads and installs \`mcp[cli]>=1.0.0\` and its dependencies from PyPI
-5. Starts the MCP server process via the \`mcprojsim-mcp\` entry point
+The bootstrap script will:
+1. Detect the active client profile and install into a user-scoped root:
+  - Claude: \`~/.claude/mcp/servers/mcprojsim\`
+  - Copilot: \`~/.copilot/mcp/servers/mcprojsim\`
+  - Generic MCP clients: \`~/.mcp/servers/mcprojsim\`
+2. Create a Python venv at \`<install-root>/.venv\`
+3. Install the bundled \`mcprojsim\` wheel and \`mcp[cli]>=1.0.0\`
+4. Verify the server is running
 
-Re-running \`bootstrap.sh\` is safe — it skips installation if the venv already exists.
+**After Step 2 completes successfully, the MCP server is permanently installed.**
+You do not need to run this bootstrap script again unless you are updating to a new bundle version.
 
-### Custom venv location (optional)
+If you re-run the script, it will detect the existing installation and skip reinstall.
 
-\`\`\`bash
-MCPROJSIM_MCP_VENV=/opt/mcprojsim-venv bash bootstrap.sh
-\`\`\`
+### Explicit client selection (optional, one-time)
 
-### Custom Python interpreter (optional)
+If auto-detection does not match your client, override it explicitly:
 
 \`\`\`bash
-PYTHON_CMD=python3.14 bash bootstrap.sh
+# Force Claude profile (one time only)
+MCP_CLIENT=claude bash bootstrap.sh
+
+# Force Copilot profile (one time only)
+MCP_CLIENT=copilot bash bootstrap.sh
+
+# Force generic profile (one time only)
+MCP_CLIENT=generic bash bootstrap.sh
 \`\`\`
 
----
+After running once with your chosen profile, the server is permanently installed.
 
-## Configure Your MCP Client
+### Explicit install root (optional)
 
-Copy the absolute path to \`bootstrap.sh\` (e.g. \`/path/to/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh\`)
-and add it to your client's MCP configuration.
-
-### VS Code — \`.vscode/mcp.json\`
-
-\`\`\`json
-{
-  "servers": {
-    "mcprojsim": {
-      "type": "stdio",
-      "command": "/ABSOLUTE/PATH/TO/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
-    }
-  }
-}
+\`\`\`bash
+MCPROJSIM_MCP_HOME=/my/custom/path/mcprojsim-mcp bash bootstrap.sh
 \`\`\`
 
-### VS Code — \`settings.json\` (user or workspace)
+## After Installation
 
-\`\`\`json
-{
-  "mcp": {
-    "servers": {
-      "mcprojsim": {
-        "type": "stdio",
-        "command": "/ABSOLUTE/PATH/TO/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
-      }
-    }
-  }
-}
-\`\`\`
+Once the bootstrap completes successfully, your MCP server is permanently installed and running.
+You may now need to configure your MCP client to use the server (see below).
 
-### Claude Desktop — \`claude_desktop_config.json\`
+## Configuring Your MCP Client
+
+After running \`bootstrap.sh\`, configure your client to connect to the server.
+
+### Claude Desktop
+
+1. Open the Claude Desktop configuration file:
+   \`\`\`bash
+   open ~/Library/Application\\ Support/Claude/claude_desktop_config.json
+   \`\`\`
+
+2. Add (or update) the mcprojsim server entry:
+   \`\`\`json
+   {
+     "mcpServers": {
+       "mcprojsim": {
+         "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
+       }
+     }
+   }
+   \`\`\`
+   Replace \`/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}\` with the full path to your extracted bundle.
+
+3. Save the file. Claude Desktop will automatically restart and load the server.
+
+### Copilot / VS Code Agent
+
+Copilot in VS Code typically auto-discovers MCP servers via the MCP client protocol.
+If you need explicit configuration:
+
+1. Open VS Code settings (\`Cmd+,\`).
+2. Search for \`MCP\` or \`mcpServers\`.
+3. Add your server:
+   \`\`\`json
+   "mcpServers": {
+     "mcprojsim": {
+       "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
+     }
+   }
+   \`\`\`
+
+4. Reload VS Code. The server will be available immediately.
+
+### Generic MCP Clients
+
+For any other MCP-compatible client, update your client's MCP server configuration
+to include:
 
 \`\`\`json
 {
   "mcpServers": {
     "mcprojsim": {
-      "command": "/ABSOLUTE/PATH/TO/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
+      "command": "/absolute/path/to/mcprojsim-mcp-bundle-${VERSION}/bootstrap.sh"
     }
   }
 }
 \`\`\`
 
----
+Refer to your client's MCP configuration documentation for the exact location
+and format of this configuration file.
 
-## Automated Installation for AI Agents
+## Automated Installation for Agents
 
-An AI agent (e.g., a remote Copilot chat session) can install and configure
-this server by following these instructions verbatim.
+An automation agent can install and configure this server with:
 
-### Agent installation procedure
+\`\`\`bash
+BUNDLE_DIR="\$(cd "\$(dirname bootstrap.sh)" && pwd)"
+BOOTSTRAP="\${BUNDLE_DIR}/bootstrap.sh"
 
-1. Locate the extracted bundle directory.  The \`manifest.json\` and
-   \`bootstrap.sh\` files must be present at its root.
+# Step 1: Run bootstrap in background to install
+bash "\${BOOTSTRAP}" &
+MCP_PID=\$!
+sleep 2 && kill "\${MCP_PID}" 2>/dev/null || true
 
-2. Determine the absolute path to \`bootstrap.sh\`:
-   \`\`\`bash
-   BUNDLE_DIR="\$(cd "\$(dirname bootstrap.sh)" && pwd)"
-   BOOTSTRAP="\${BUNDLE_DIR}/bootstrap.sh"
-   \`\`\`
+# Step 2: Read the manifest
+cat "\${BUNDLE_DIR}/manifest.json"
 
-3. Run the bootstrap to install the venv and start the server once to verify
-   it launches:
-   \`\`\`bash
-   bash "\${BOOTSTRAP}" &
-   MCP_PID=\$!
-   sleep 2 && kill "\${MCP_PID}" 2>/dev/null || true
-   \`\`\`
+# Step 3: Configure the client with BOOTSTRAP path
+# (update client config with "command": "\${BOOTSTRAP}")
+\`\`\`
 
-4. Read \`manifest.json\` to confirm metadata:
-   \`\`\`bash
-   cat "\${BUNDLE_DIR}/manifest.json"
-   # Expected: name=mcprojsim, version=${VERSION}, entrypoint=mcprojsim-mcp
-   \`\`\`
-
-5. Determine the correct MCP config file for the active client:
-   - **VS Code workspace**: \`.vscode/mcp.json\` (create if absent)
-   - **VS Code user settings**: \`~/Library/Application Support/Code/User/settings.json\` (macOS)
-   - **Claude Desktop**: \`~/Library/Application Support/Claude/claude_desktop_config.json\` (macOS)
-
-6. Insert (or merge) the following server entry, replacing the path:
-   \`\`\`json
-   {
-     "servers": {
-       "mcprojsim": {
-         "type": "stdio",
-         "command": "\${BOOTSTRAP}"
-       }
-     }
-   }
-   \`\`\`
-
-7. Reload the MCP client so it picks up the new server.
-
----
+Then update your MCP client config with the absolute \`\${BOOTSTRAP}\` path as the command.
 
 ## Available MCP Tools
 
-Once connected, the following tools are available to the AI assistant.
+Once connected, the MCP server exposes these tools:
 
 ### \`generate_project_file\`
 
-Converts a plain-text project description into a valid \`mcprojsim\` YAML
-project specification.
+Converts a plain-text project description into valid \`mcprojsim\` YAML.
 
-**Input:** \`description\` (string) — semi-structured text with project name,
-start date, numbered tasks, sizing estimates (T-shirt or story points), and
-optional resource/calendar definitions.
+Input:
+- \`description\` (string): semi-structured project text
 
-**Returns:** YAML project file content ready to pass to \`mcprojsim simulate\`.
+Output:
+- YAML project file content
 
-**Example call:**
+Example input:
 \`\`\`
-generate_project_file(description=\"\"\"
 Project name: Portal Redesign
 Start date: 2026-04-01
 
@@ -301,98 +294,211 @@ Task 2:
 - Backend API
 - Depends on Task 1
 - Size: XL
-
-Task 3:
-- Frontend integration
-- Depends on Task 2
-- Size: L
-\"\"\")
 \`\`\`
 
----
+Example output (truncated):
+\`\`\`yaml
+name: Portal Redesign
+start_date: 2026-04-01
+tasks:
+  - id: task_1
+    name: Design mockups
+    t_shirt_size: M
+  - id: task_2
+    name: Backend API
+    t_shirt_size: XL
+    dependencies: [task_1]
+\`\`\`
+
+Example input:
+
+Even some quite unstructured descriptions can be parsed:
+
+\`\`\`
+Simulate a project that starts at 2026-05-01 and have two tasks, task 1 and task 2. Both tasks has size
+  "M". Task 2 depends on Task 1. What date are we 95% sure the work is done?
+\`\`\`
+
+Example output:
+
+\`\`\`txt
+For the dependency chain Task 1 -> Task 2, the P95 completion date is 2026-06-24.
+
+So you’re about 95% confident the project is done by June 24, 2026.
+\`\`\`
+
 
 ### \`validate_project_description\`
 
-Checks a project description for parse errors and missing fields without
-generating a file.
+Checks a project description for parse issues without generating a file.
 
-**Input:** \`description\` (string)
+Input:
+- \`description\` (string)
 
-**Returns:** Validation report listing any warnings or errors.
+Output:
+- Validation result text (errors/warnings or valid status)
 
----
+Example output:
+\`\`\`
+Validation issues:
+  - WARNING: No start date specified.
+\`\`\`
 
 ### \`simulate_project\`
 
-Parses a project description and immediately runs a Monte Carlo simulation,
-returning statistics, confidence intervals, delivery dates, critical paths,
-sensitivity analysis, schedule slack, and risk impact.
+Generates a project model from text and runs Monte Carlo simulation directly.
 
-**Inputs:**
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| \`description\` | string | required | Plain-text project description |
-| \`iterations\` | int | 10000 | Number of Monte Carlo iterations |
-| \`seed\` | int or null | null | Random seed for reproducibility |
-| \`config_yaml\` | string or null | null | Optional YAML config overrides |
+Inputs:
+- \`description\` (string, required)
+- \`iterations\` (int, default: 10000)
+- \`seed\` (int or null, default: null)
+- \`config_yaml\` (string or null, default: null)
 
-**Returns:** Multi-section text report including generated YAML, statistics,
-percentile delivery dates, sensitivity correlation, schedule slack,
-risk impact, and most-frequent critical paths.
+Output:
+- Multi-section report with generated YAML, percentiles, dates, sensitivity,
+  slack, risk impact, and critical paths
 
----
+Example output excerpt:
+\`\`\`
+=== Simulation Results ===
+Project: Portal Redesign
+Iterations: 10000
+Mean: 842.31 hours
+Median (P50): 821.45 hours
+Confidence Intervals:
+  P50: 821.45 hours
+  P80: 943.20 hours
+  P90: 1012.76 hours
+\`\`\`
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
-| \`MCPROJSIM_MCP_VENV\` | \`<bundle>/.venv\` | Override the venv location |
-| \`PYTHON_CMD\` | \`python3\` | Override the Python interpreter used to create the venv |
-
----
+| \`MCP_CLIENT\` | auto-detected | Client profile: \`claude\`, \`copilot\`, or \`generic\` |
+| \`MCPROJSIM_MCP_HOME\` | profile-specific | Override install root directly |
+| \`MCPROJSIM_MCP_VENV\` | \`<MCPROJSIM_MCP_HOME>/.venv\` | Override venv location |
+| \`CLAUDE_HOME\` | \`~/.claude\` | Base Claude home directory |
+| \`COPILOT_HOME\` | \`~/.copilot\` | Base Copilot home directory |
+| \`MCP_CLIENT_HOME\` | unset | Base home for generic MCP profile |
+| \`XDG_CONFIG_HOME\` | platform default | Fallback base for profile directories |
+| \`PYTHON_CMD\` | \`python3\` | Python executable used to create the venv |
 
 ## Updating the Server
 
 To upgrade to a newer bundle version:
-
 1. Download and extract the new bundle zip.
-2. Update the \`command\` path in your MCP config to point to the new
-   \`bootstrap.sh\`.
-3. Restart your MCP client.
+2. Update the MCP client \`command\` path to the new \`bootstrap.sh\`.
+3. Restart the MCP client.
 
-The old venv directory can be deleted once you are satisfied with the upgrade.
-
----
+The old install root can be removed after confirming the new version works.
 
 ## Troubleshooting
 
+### Bootstrap Issues
+
 **"No mcprojsim wheel found in bundle wheels/ directory."**
-The \`wheels/\` directory is empty or the zip was extracted incorrectly.
-Re-extract the zip and verify \`wheels/mcprojsim-${VERSION}-py3-none-any.whl\` is present.
+- Re-extract the bundle zip file completely.
+- Verify that \`wheels/mcprojsim-${VERSION}-py3-none-any.whl\` exists in the extracted directory.
+- If the wheel is still missing, the zip may be corrupted. Download and extract the bundle again.
 
 **"python3: command not found"**
-Python 3.14 is not on your PATH. Install it or set \`PYTHON_CMD\`:
-\`\`\`bash
-PYTHON_CMD=/usr/local/bin/python3.14 bash bootstrap.sh
-\`\`\`
+- Set \`PYTHON_CMD\` to an explicit Python 3.14 path and re-run bootstrap:
+  \`\`\`bash
+  PYTHON_CMD=/usr/local/bin/python3.14 bash bootstrap.sh
+  \`\`\`
+- If you don't know where Python is installed, find it with:
+  \`\`\`bash
+  which python3
+  # or
+  which python3.14
+  \`\`\`
 
 **pip install fails with network error**
-The bootstrap script downloads \`mcp[cli]\` from PyPI on first run.
-Ensure the machine has internet access, or pre-populate the venv manually:
-\`\`\`bash
-pip install --target . "mcp[cli]>=1.0.0"
-\`\`\`
+- The first bootstrap run downloads dependencies from PyPI. Ensure you have internet connectivity.
+- If behind a corporate proxy, configure pip to use your proxy:
+  \`\`\`bash
+  pip install --proxy [user:passwd@]proxy.server:port ...
+  \`\`\`
+- Or set environment variables:
+  \`\`\`bash
+  HTTP_PROXY=http://proxy.server:port HTTPS_PROXY=http://proxy.server:port bash bootstrap.sh
+  \`\`\`
 
-**MCP client shows "server not found"**
-Verify the \`command\` path in your config is the absolute path to \`bootstrap.sh\`
-and that the file is executable (\`chmod +x bootstrap.sh\`).
+**Installation hangs or takes a long time**
+- The first run may take 1-2 minutes while downloading and installing dependencies.
+- If it hangs, interrupt (Ctrl+C) and re-run with verbose output:
+  \`\`\`bash
+  bash -x bootstrap.sh
+  \`\`\`
 
----
+### Client Configuration Issues
 
-## License
+**MCP client cannot start server (Claude, Copilot, etc.)**
+- Verify the \`command\` path in your client config points to the correct \`bootstrap.sh\`:
+  \`\`\`bash
+  ls -l /path/to/bootstrap.sh
+  \`\`\`
+- Confirm the path is absolute (starts with \`/\`), not relative.
+- Restart your client after updating the configuration.
 
-MIT — see the project repository for full license text:
-https://github.com/johan162/mcprojsim
+**Server appears in configuration but doesn't connect**
+- Check that the bootstrap script is executable:
+  \`\`\`bash
+  chmod +x /path/to/bootstrap.sh
+  \`\`\`
+- Verify the installed server can start manually:
+  \`\`\`bash
+  /path/to/bootstrap.sh --help
+  \`\`\`
+- Check your client's logs for error messages (e.g., \`~/.claude/logs\` for Claude).
+
+**Claude Desktop reports "Server crashed" or similar**
+- The server may not be finding its venv. Verify the install root exists:
+  \`\`\`bash
+  ls -la ~/.claude/mcp/servers/mcprojsim/
+  \`\`\`
+- If missing, re-run bootstrap:
+  \`\`\`bash
+  cd /path/to/mcprojsim-mcp-bundle-${VERSION}
+  bash bootstrap.sh
+  \`\`\`
+
+**"Permission denied" when running bootstrap**
+- Make the script executable:
+  \`\`\`bash
+  chmod +x bootstrap.sh
+  bash bootstrap.sh
+  \`\`\`
+
+### Server Not Appearing in Client
+
+**Agent doesn't see mcprojsim tools**
+1. Confirm it's installed:
+   \`\`\`bash
+   ls ~/.claude/mcp/servers/mcprojsim/   # for Claude
+   ls ~/.copilot/mcp/servers/mcprojsim/  # for Copilot
+   \`\`\`
+2. Confirm it's in the client config with the correct command path.
+3. Restart the client (close and reopen).
+4. Check the client's MCP server status (e.g., in Copilot's settings, look for MCP server list).
+
+### Getting Help
+
+If you encounter other issues:
+1. Check that \`bootstrap.sh\` runs without errors:
+   \`\`\`bash
+   cd /path/to/mcprojsim-mcp-bundle-${VERSION}
+   bash bootstrap.sh
+   \`\`\`
+2. Verify the Python venv was created and has the server installed:
+   \`\`\`bash
+   ~/.claude/mcp/servers/mcprojsim/.venv/bin/mcprojsim-mcp --help
+   \`\`\`
+3. Run with bash debug mode for detailed logging:
+   \`\`\`bash
+   bash -x bootstrap.sh 2>&1 | tail -50
+   \`\`\`
 EOF
 
 cat > "${PAYLOAD_DIR}/bootstrap.sh" <<'EOF'
@@ -400,7 +506,47 @@ cat > "${PAYLOAD_DIR}/bootstrap.sh" <<'EOF'
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV_DIR="${MCPROJSIM_MCP_VENV:-${SCRIPT_DIR}/.venv}"
+CLIENT_PROFILE="${MCP_CLIENT:-}"
+
+if [[ -z "${CLIENT_PROFILE}" ]]; then
+  if [[ -n "${CLAUDE_HOME:-}" || -d "${HOME}/.claude" ]]; then
+    CLIENT_PROFILE="claude"
+  elif [[ -n "${COPILOT_HOME:-}" || -d "${HOME}/.copilot" ]]; then
+    CLIENT_PROFILE="copilot"
+  else
+    CLIENT_PROFILE="generic"
+  fi
+fi
+
+case "${CLIENT_PROFILE}" in
+  claude|Claude|CLAUDE)
+    CLAUDE_BASE="${CLAUDE_HOME:-${HOME}/.claude}"
+    DEFAULT_INSTALL_ROOT="${CLAUDE_BASE}/mcp/servers/mcprojsim"
+    ;;
+  copilot|Copilot|COPILOT)
+    if [[ -n "${COPILOT_HOME:-}" ]]; then
+      COPILOT_BASE="${COPILOT_HOME}"
+    elif [[ -n "${XDG_CONFIG_HOME:-}" ]]; then
+      COPILOT_BASE="${XDG_CONFIG_HOME}/copilot"
+    else
+      COPILOT_BASE="${HOME}/.copilot"
+    fi
+    DEFAULT_INSTALL_ROOT="${COPILOT_BASE}/mcp/servers/mcprojsim"
+    ;;
+  *)
+    if [[ -n "${MCP_CLIENT_HOME:-}" ]]; then
+      GENERIC_BASE="${MCP_CLIENT_HOME}"
+    elif [[ -n "${XDG_CONFIG_HOME:-}" ]]; then
+      GENERIC_BASE="${XDG_CONFIG_HOME}/mcp"
+    else
+      GENERIC_BASE="${HOME}/.mcp"
+    fi
+    DEFAULT_INSTALL_ROOT="${GENERIC_BASE}/servers/mcprojsim"
+    ;;
+esac
+
+INSTALL_ROOT="${MCPROJSIM_MCP_HOME:-${DEFAULT_INSTALL_ROOT}}"
+VENV_DIR="${MCPROJSIM_MCP_VENV:-${INSTALL_ROOT}/.venv}"
 PYTHON_CMD="${PYTHON_CMD:-python3}"
 WHEEL_PATH="$(ls "${SCRIPT_DIR}"/wheels/mcprojsim-*.whl | head -n 1)"
 
@@ -409,10 +555,16 @@ if [[ -z "${WHEEL_PATH}" ]]; then
     exit 1
 fi
 
-if [[ ! -x "${VENV_DIR}/bin/python" ]]; then
+mkdir -p "${INSTALL_ROOT}"
+
+if [[ ! -x "${VENV_DIR}/bin/mcprojsim-mcp" ]]; then
+    echo "[mcprojsim] Installing MCP server to ${INSTALL_ROOT}..."
     "${PYTHON_CMD}" -m venv "${VENV_DIR}"
-    "${VENV_DIR}/bin/pip" install --upgrade pip
-    "${VENV_DIR}/bin/pip" install "${WHEEL_PATH}" "mcp[cli]>=1.0.0"
+    "${VENV_DIR}/bin/pip" install --upgrade pip >/dev/null 2>&1
+    "${VENV_DIR}/bin/pip" install "${WHEEL_PATH}" "mcp[cli]>=1.0.0" >/dev/null 2>&1
+    echo "[mcprojsim] Installation complete. Server is now permanently available." >&2
+else
+    echo "[mcprojsim] Already installed at ${INSTALL_ROOT}. Starting server..." >&2
 fi
 
 exec "${VENV_DIR}/bin/mcprojsim-mcp" "$@"

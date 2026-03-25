@@ -594,58 +594,10 @@ sed -n "/^## \[$LATEST_TAG\]/,/^## \[/p" "$CHANGELOG_FILE" | sed '$d' > "$RELEAS
 EXTRACT_STATUS=$?
 
 if [[ $EXTRACT_STATUS -ne 0 ]] || [[ ! -s "$RELEASE_NOTES_FILE" ]]; then
-    print_warning "Could not extract release notes for $LATEST_TAG from CHANGELOG.md"
-    echo "Creating default release notes template..."
-    cat > "$RELEASE_NOTES_FILE" << EOF
-## Release $LATEST_TAG
-
-### 📋 Summary
-[Add release summary here]
-
-### ✨ Additions
-- [List new features]
-
-### 🚀 Improvements
-- [List improvements]
-
-### 🐛 Bug Fixes
-- [List bug fixes]
-
-### 🛠 Internal
-- [List internal changes]
-
----
-For full details, see [CHANGELOG.md](https://github.com/${GITHUB_USER}/${PROGRAMNAME}/blob/main/CHANGELOG.md)
-EOF
-fi
-
-print_success "Release notes prepared in $RELEASE_NOTES_FILE"
-
-# 5.2: Let user edit release notes
-echo ""
-print_warning "Please review and edit the release notes"
-print_info "Opening editor... (save and close when done, or delete all content to abort)"
-echo ""
-echo "Press Enter to open editor..."
-read -r
-
-# Determine editor
-EDITOR=${EDITOR:-${VISUAL:-nano}}
-
-if [[ "$DRY_RUN" == "true" ]]; then
-    print_warning "[DRY-RUN] Would open $EDITOR to edit $RELEASE_NOTES_FILE"
-else
-    "$EDITOR" "$RELEASE_NOTES_FILE"
-fi
-
-# 5.3: Check if user aborted
-if [[ ! -s "$RELEASE_NOTES_FILE" ]]; then
-    print_error "Release notes file is empty - aborting release creation"
-    rm -f "$RELEASE_NOTES_FILE"
+    print_error "Could not extract release notes for $LATEST_TAG from CHANGELOG.md"
     exit 1
 fi
 
-print_success "Release notes ready"
 
 # =====================================
 # PHASE 6: CREATE GITHUB RELEASE

@@ -1,3 +1,26 @@
+## [v0.7.2] - 2026-03-25
+
+Release Type: patch
+
+### 📋 Summary
+This release improves release tooling workflows and MCP bundle installation guidance. It separates CHANGELOG entry creation into a reusable script, strengthens release validation, and significantly enhances the MCP bundle with explicit client configuration instructions, comprehensive troubleshooting, and clear messaging about permanent, one-time installation.
+
+### 🚀 Improvements
+- Improved release workflow by separating CHANGELOG entry generation into `scripts/mkchlogentry.sh`, a standalone reusable script with color-coded output and validation.
+- Improved `scripts/mkrelease.sh` to validate pre-existing CHANGELOG entries before proceeding with release (fail-fast guarantee).
+- Improved MCP bundle troubleshooting section with expanded coverage of bootstrap issues, client configuration issues, and per-client diagnostic guidance.Improved the README and user guide to clarify the installation.
+
+### 📚 Documentation
+- Added `scripts/mkchlogentry.sh` documentation to scripts README with usage examples and validation rules.
+- Updated Release Workflow example in scripts README to include the new `mkchlogentry.sh` step before release.
+- Expanded MCP bundle README with Prerequisites section, Configuring Your MCP Client section with per-client walkthroughs, and Getting Help troubleshooting guidance.
+
+### 🛠 Internal
+- Created `scripts/mkchlogentry.sh` script (240 lines) with version validation, duplicate detection, template generation, and environment awareness.
+- Updated release script validation to check for CHANGELOG entry format: `^## \[v<version>\] - <YYYY-MM-DD>$`.
+- Added `.github/skills/changelog-entry/SKILL.md` Copilot skill for AI-assisted CHANGELOG entry creation.
+
+
 ## [v0.7.1] - 2026-03-25
 
 Release Type: patch
