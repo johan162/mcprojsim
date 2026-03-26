@@ -197,14 +197,23 @@ BUILD_DIR := .build
 
 # Design ideas PDF output path
 DESIGN_IDEAS_DIR := design-ideas
+DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template.tex
+
 SPRINT_PLANNING_MD := $(DESIGN_IDEAS_DIR)/sprint-based-planning.md
 SPRINT_PLANNING_PDF := $(DESIGN_IDEAS_DIR)/sprint-based-planning.pdf
-SPRINT_PLANNING_DIST_DIR := $(BUILD_DIR)/design-ideas/sprint-based-planning
-SPRINT_PLANNING_TEMPLATE := $(DESIGN_IDEAS_DIR)/report_template.tex
+SPRINT_PLANNING_DIST_DIR := $(BUILD_DIR)/design-ideas/sprint-planning
 SPRINT_PLANNING_PANDOC_FILTER := scripts/pandoc_sprint_planning_table_widths.lua
 SPRINT_PLANNING_BODY_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_body.tex
 SPRINT_PLANNING_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.tex
 SPRINT_PLANNING_PDF_BUILT := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.pdf
+
+TSHIRT_CATEGORY_MD := $(DESIGN_IDEAS_DIR)/tshirt-categories.md
+TSHIRT_CATEGORY_PDF := $(DESIGN_IDEAS_DIR)/tshirt-categories.pdf
+TSHIRT_CATEGORY_DIST_DIR := $(BUILD_DIR)/design-ideas/tshirt-categories
+TSHIRT_CATEGORY_BODY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_body.tex
+TSHIRT_CATEGORY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_report.tex
+TSHIRT_CATEGORY_PDF_BUILT := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_report.pdf
+
 
 # Remove any hypen in PyPi specifi version number for wheel filename compliance
 PYPI_VERSION := $(shell echo $(VERSION) | tr -d '-')
@@ -511,10 +520,10 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  #
 	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
 	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
 
-pdf-sprint-planning: $(SPRINT_PLANNING_PDF) ## Build the sprint-based planning design PDF
+pdf-design: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) ## Build all the design documents PDFs
 	@:
 
-$(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(SPRINT_PLANNING_TEMPLATE) $(SPRINT_PLANNING_PANDOC_FILTER)
+$(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(DESIGN_LATEX_TEMPLATE) $(SPRINT_PLANNING_PANDOC_FILTER)
 	@echo -e "$(DARKYELLOW)- Building sprint-based planning PDF via LaTeX report pipeline...$(NC)"
 	@mkdir -p $(SPRINT_PLANNING_DIST_DIR)
 	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
@@ -526,13 +535,75 @@ $(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(SPRINT_PLANNING_TEMPLATE) $(SPRI
 		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
-		$(SPRINT_PLANNING_TEMPLATE) > $(SPRINT_PLANNING_TEX)
+		$(DESIGN_LATEX_TEMPLATE) > $(SPRINT_PLANNING_TEX)
+# Read the version from the first line of the markdown file (assuming it is in the format: "Version: x.y.z") 
+# and replace the version placeholder "{{VERSION}}" in the LaTeX template	
+	@VERSION_FROM_MD=$$(head -n 1 $(SPRINT_PLANNING_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
+	sed -i.bak -E "s/\{\{VERSION\}\}/$$VERSION_FROM_MD/g" $(SPRINT_PLANNING_TEX); \
+	if grep -q "$$VERSION_FROM_MD" $(SPRINT_PLANNING_TEX); then \
+		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$(NC)"; \
+		exit 1; \
+	fi; 
+# Use the first heading in the markdown file as the title and replace the "{{TITLE}}" placeholder in the LaTeX template
+	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $(SPRINT_PLANNING_MD) | sed -E 's/#\s*(.+)/\1/'); \
+	sed -i.bak -E "s/\{\{TITLE\}\}/$$TITLE_FROM_MD/g" $(SPRINT_PLANNING_TEX); \
+	if grep -q "$$TITLE_FROM_MD" $(SPRINT_PLANNING_TEX); then \
+		echo -e "$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$(NC)"; \
+		exit 1; \
+	fi
+	@rm -f $(SPRINT_PLANNING_TEX).bak		
 	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
 	@cp $(SPRINT_PLANNING_PDF_BUILT) $(SPRINT_PLANNING_PDF)
 	@rm -f $(SPRINT_PLANNING_DIST_DIR)/*.aux $(SPRINT_PLANNING_DIST_DIR)/*.log $(SPRINT_PLANNING_DIST_DIR)/*.fls $(SPRINT_PLANNING_DIST_DIR)/*.fdb_latexmk 2>/dev/null || true
 	@echo -e "$(GREEN)✓ Sprint-based planning PDF built: $(SPRINT_PLANNING_PDF)$(NC)"
+
+
+$(TSHIRT_CATEGORY_PDF): $(TSHIRT_CATEGORY_MD) $(DESIGN_LATEX_TEMPLATE)
+	@echo -e "$(DARKYELLOW)- Building t-shirt category PDF via LaTeX report pipeline...$(NC)"
+	mkdir -p $(TSHIRT_CATEGORY_DIST_DIR)
+	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(TSHIRT_CATEGORY_MD) -o $(TSHIRT_CATEGORY_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(TSHIRT_CATEGORY_BODY_TEX)
+	@rm -f $(TSHIRT_CATEGORY_BODY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Injecting body into design-ideas LaTeX template...$(NC)"
+	@awk -v body="$(TSHIRT_CATEGORY_BODY_TEX)" '\
+		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$(DESIGN_LATEX_TEMPLATE) > $(TSHIRT_CATEGORY_TEX)
+# Read the version from the first line of the markdown file (assuming it is in the format: "Version: x.y.z") 
+# and replace the version placeholder "{{VERSION}}" in the LaTeX template	
+	@VERSION_FROM_MD=$$(head -n 1 $(TSHIRT_CATEGORY_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
+	sed -i.bak -E "s/\{\{VERSION\}\}/$$VERSION_FROM_MD/g" $(TSHIRT_CATEGORY_TEX); \
+	if grep -q "$$VERSION_FROM_MD" $(TSHIRT_CATEGORY_TEX); then \
+		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$(NC)"; \
+		exit 1; \
+	fi; 
+# Use the first heading in the markdown file as the title and replace the "{{TITLE}}" placeholder in the LaTeX template
+	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $(TSHIRT_CATEGORY_MD) | sed -E 's/#\s*(.+)/\1/'); \
+	sed -i.bak -E "s/\{\{TITLE\}\}/$$TITLE_FROM_MD/g" $(TSHIRT_CATEGORY_TEX); \
+	if grep -q "$$TITLE_FROM_MD" $(TSHIRT_CATEGORY_TEX); then \
+		echo -e "$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$(NC)"; \
+		exit 1; \
+	fi
+	@rm -f $(TSHIRT_CATEGORY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(TSHIRT_CATEGORY_DIST_DIR) $(TSHIRT_CATEGORY_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(TSHIRT_CATEGORY_DIST_DIR) $(TSHIRT_CATEGORY_TEX) >/dev/null
+	@cp $(TSHIRT_CATEGORY_PDF_BUILT) $(TSHIRT_CATEGORY_PDF)
+	@rm -f $(TSHIRT_CATEGORY_DIST_DIR)/*.aux $(TSHIRT_CATEGORY_DIST_DIR)/*.log $(TSHIRT_CATEGORY_DIST_DIR)/*.fls $(TSHIRT_CATEGORY_DIST_DIR)/*.fdb_latexmk 2>/dev/null || true
+	@echo -e "$(GREEN)✓ T-shirt category PDF built: $(TSHIRT_CATEGORY_PDF)$(NC)"
+
 
 pdf-pandoc: $(USER_GUIDE_PANDOC_PDF) ## Build fallback user guide PDF directly with Pandoc
 	@:

@@ -1,4 +1,6 @@
-# Design document: Multi-Category T-Shirt Sizes
+Version: 1.0.0
+
+# Multi-Category T-Shirt Sizes
 
 ## TL;DR 
 Add named T-shirt size categories (`bug`, `story`, `epic`, `business`, `initiative`) so teams can express differently-scoped work with the right calibration. `t_shirt_size: "M"` keeps working exactly as today. A new qualified form `t_shirt_size: "epic.M"` resolves to a different category.
@@ -338,7 +340,7 @@ Full per-size values are defined in the canonical schema above.
 
 
 
-## Implementation Steps (Verification-Driven)
+# Implementation Steps (Verification-Driven)
 
 ## Phase 1: Config foundation
 Success criteria:

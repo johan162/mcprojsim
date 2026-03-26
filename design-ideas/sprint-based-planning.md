@@ -1,4 +1,6 @@
-# Sprint-Based Planning: Design Proposal
+Version: 1.1.0
+
+# Sprint-Based Planning
 
 ## Executive Summary
 
