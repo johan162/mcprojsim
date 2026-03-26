@@ -52,7 +52,7 @@ Relevant configuration is in [pyproject.toml](https://github.com/johan162/mcproj
 
 Key points from the current setup:
 
-- Python requirement: `>=3.14`
+- Python requirement: `>=3.13`
 - runtime dependencies live under `[tool.poetry.dependencies]`
 - developer tools live under `[tool.poetry.group.dev.dependencies]`
 - docs tooling lives under `[tool.poetry.group.docs.dependencies]`
@@ -434,7 +434,7 @@ It is a multi-stage build.
 #### Builder stage
 The `builder` stage:
 
-- starts from `python:3.14-slim`
+- starts from `python:3.13-slim`
 - installs Poetry
 - copies the package source and packaging metadata
 - optionally appends a proxy CA certificate to the system bundle
@@ -445,7 +445,7 @@ The `builder` stage:
 #### Runtime stage
 The `runtime` stage:
 
-- starts from `python:3.14-slim`
+- starts from `python:3.13-slim`
 - creates a non-root `mcprojsim` user
 - copies the built `.venv`
 - sets `PATH` so the CLI entry point is available
@@ -1074,7 +1074,7 @@ File: [ci.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows
 The `build-and-test` job:
 
 - runs on `ubuntu-latest`
-- uses Python `3.14`
+- uses Python `3.13`
 - installs `graphviz`
 - installs Poetry with `pipx`
 - enables in-project virtual environments
@@ -1114,7 +1114,7 @@ File: [docs.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflo
 The `build` job:
 
 - checks out with full history
-- sets up Python `3.14`
+- sets up Python `3.13`
 - installs Poetry
 - runs `poetry install --with docs`
 - creates the `docs/CHANGELOG.md` symlink
@@ -1157,7 +1157,7 @@ That is why `mkghrelease.sh` matters in the release flow.
 The workflow:
 
 - checks out the repo
-- sets up Python `3.14`
+- sets up Python `3.13`
 - validates the tag format type
 - installs Poetry and caches `.venv`
 - installs dev-only tooling without the project root package

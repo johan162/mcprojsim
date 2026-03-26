@@ -124,7 +124,7 @@ Important boundaries:
 
 ## Key conventions
 
-- Use strict typing in `src/`. The repo is configured for Python 3.14, strict `mypy`, and Pydantic v2 validators. Tests are still type-checked, but with looser rules than source files.
+- Use strict typing in `src/`. The repo is configured for Python 3.13, strict `mypy`, and Pydantic v2 validators. Tests are still type-checked, but with looser rules than source files.
 - Reuse `Config` defaults instead of hardcoding T-shirt sizes, story-point mappings, thresholds, output limits, or staffing constants in new code.
 - Symbolic estimates are config-driven. If a task uses `t_shirt_size` or `story_points`, do not add `unit` in the project file; the unit comes from config and is enforced by model validation.
 - Explicit estimates are normalized to canonical hours during simulation. Be careful to preserve the distinction between elapsed duration and total effort when changing results, analysis, or exporters.

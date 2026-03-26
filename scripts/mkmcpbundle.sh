@@ -124,7 +124,7 @@ mcprojsim-mcp-bundle-${VERSION}/
 
   | Requirement | Version |
   |---|---|
-  | Python | >= 3.14 |
+  | Python | >= 3.13 |
   | Internet access | Required on first run to download runtime dependencies from PyPI |
   | bash | Any modern version |
 
@@ -498,15 +498,15 @@ The old install root can be removed after confirming the new version works.
 - If the wheel is still missing, the zip may be corrupted. Download and extract the bundle again.
 
 **"python3: command not found"**
-- Set \`PYTHON_CMD\` to an explicit Python 3.14 path and re-run the launcher:
+- Set \`PYTHON_CMD\` to an explicit Python 3.13 path and re-run the launcher:
   \`\`\`bash
-  PYTHON_CMD=/usr/local/bin/python3.14 bash launcher.sh
+  PYTHON_CMD=/usr/local/bin/python3.13 bash launcher.sh
   \`\`\`
 - If you don't know where Python is installed, find it with:
   \`\`\`bash
   which python3
   # or
-  which python3.14
+  which python3.13
   \`\`\`
 
 **pip install fails with network error**

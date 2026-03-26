@@ -17,7 +17,7 @@ def _resolve_version() -> str:
             with pyproject_path.open("rb") as pyproject_file:
                 ver: str = tomllib.load(pyproject_file)["tool"]["poetry"]["version"]
                 return ver
-        except FileNotFoundError, KeyError, tomllib.TOMLDecodeError:
+        except (FileNotFoundError, KeyError, tomllib.TOMLDecodeError):
             return "0.0.0+unknown"
 
 

@@ -2,7 +2,7 @@
 
 | Category | Link |
 |----------|--------|
-|**Package**|[![PyPI version](https://img.shields.io/pypi/v/mcprojsim.svg)](https://pypi.org/project/mcprojsim/) [![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/downloads/)|
+|**Package**|[![PyPI version](https://img.shields.io/pypi/v/mcprojsim.svg)](https://pypi.org/project/mcprojsim/) [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)|
 |**Documentation**|[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://johan162.github.io/mcprojsim/)|
 |**License**|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)|
 |**Release**|[![GitHub release](https://img.shields.io/github/v/release/johan162/mcprojsim?include_prereleases)](https://github.com/johan162/mcprojsim/releases)|
@@ -51,7 +51,7 @@ It is intended for teams that want answers such as:
 
 For most users running `mcprojsim` through an MCP-capable assistant, the recommended path is the **MCP bundle artifact** from GitHub Releases.
 
-If the machine has Python 3.14+, you can typically ask your assistant to install and configure the bundle directly.
+If the machine has Python 3.13+, you can typically ask your assistant to install and configure the bundle directly.
 That means no manual `pip`, `pipx`, or environment setup commands are required in normal MCP-client workflows.
 
 For direct terminal-only CLI usage (without MCP), `pipx` remains the simplest manual install path:
@@ -174,7 +174,7 @@ mcprojsim simulate examples/sprint_nb_sickness_large.yaml --seed 42 --velocity-m
 
 Each release includes an MCP bundle artifact: `mcprojsim-mcp-bundle-<version>.zip`.
 
-On systems with Python 3.14+, the preferred workflow is to ask your MCP-capable assistant to install/configure this bundle.
+On systems with Python 3.13+, the preferred workflow is to ask your MCP-capable assistant to install/configure this bundle.
 In that workflow, no manual package-install commands are needed.
 
 Example prompt to your assistant to install:

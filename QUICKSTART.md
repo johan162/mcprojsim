@@ -14,7 +14,7 @@ In the next few minutes you will:
 
 You need:
 
-- Python 3.14 or newer
+- Python 3.13 or newer
 - a terminal
 - `pipx` for the easiest CLI install
 
