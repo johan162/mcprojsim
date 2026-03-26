@@ -1003,9 +1003,7 @@ class TestCli:
             f"z-score: {default_z:.4f}"
         ) in result.output
 
-    def test_config_uses_user_default_when_present(
-        self, monkeypatch, tmp_path
-    ) -> None:
+    def test_config_uses_user_default_when_present(self, monkeypatch, tmp_path) -> None:
         """config should use user-level default config when available."""
         runner = CliRunner()
         user_config = tmp_path / "configuration.yaml"

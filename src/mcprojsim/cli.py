@@ -610,7 +610,9 @@ def _apply_sprint_defaults(project: Project, cfg: Config) -> None:
         sprint_planning.spillover.logistic_slope
         == DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE
     ):
-        sprint_planning.spillover.logistic_slope = sprint_defaults.spillover_logistic_slope
+        sprint_planning.spillover.logistic_slope = (
+            sprint_defaults.spillover_logistic_slope
+        )
     if (
         sprint_planning.spillover.logistic_intercept
         == DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT
@@ -628,8 +630,13 @@ def _apply_sprint_defaults(project: Project, cfg: Config) -> None:
         sprint_planning.sickness.probability_per_person_per_week = (
             sprint_defaults.sickness.probability_per_person_per_week
         )
-    if sprint_planning.sickness.duration_log_mu == DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU:
-        sprint_planning.sickness.duration_log_mu = sprint_defaults.sickness.duration_log_mu
+    if (
+        sprint_planning.sickness.duration_log_mu
+        == DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU
+    ):
+        sprint_planning.sickness.duration_log_mu = (
+            sprint_defaults.sickness.duration_log_mu
+        )
     if (
         sprint_planning.sickness.duration_log_sigma
         == DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA
@@ -1585,8 +1592,7 @@ def config(config_file: Optional[str], generate: bool) -> None:
         f"{cfg.sprint_defaults.planning_confidence_level}"
     )
     click.echo(
-        "  Removed work treatment: "
-        f"{cfg.sprint_defaults.removed_work_treatment}"
+        "  Removed work treatment: " f"{cfg.sprint_defaults.removed_work_treatment}"
     )
     click.echo(f"  Velocity model: {cfg.sprint_defaults.velocity_model}")
     click.echo(
