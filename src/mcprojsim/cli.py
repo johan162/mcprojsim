@@ -1346,28 +1346,25 @@ def validate(project_file: str, verbose: bool) -> None:
         raise click.Abort()
 
 
-@cli.group()
-def config() -> None:
-    """Configuration management commands."""
-    pass
-
-
-@config.command(name="show")
+@cli.command(name="config")
 @click.option("--config-file", "-c", type=click.Path(exists=True), help="Config file")
 @click.option(
     "--generate",
     is_flag=True,
     help="Generate a default configuration file at ~/.mcprojsim/config.yaml.",
 )
-def show_config(config_file: Optional[str], generate: bool) -> None:
-    """Show current configuration."""
+def config(config_file: Optional[str], generate: bool) -> None:
+    """Show current configuration and optionally generate a default config file."""
     if generate:
         generated_config_path = _get_generated_default_config_path()
         generated_config_path.parent.mkdir(parents=True, exist_ok=True)
 
         default_cfg = Config.get_default()
         generated_config_path.write_text(
-            yaml.safe_dump(default_cfg.model_dump(mode="json"), sort_keys=False),
+            yaml.safe_dump(
+                default_cfg.model_dump(mode="json", exclude_none=True),
+                sort_keys=False,
+            ),
             encoding="utf-8",
         )
         click.echo(f"Generated default configuration: {generated_config_path}")

@@ -226,6 +226,14 @@ staffing:
   effort_percentile: 80  # use P80 effort and elapsed time
 ```
 
+If `staffing.effort_percentile` is omitted, mean effort and mean elapsed time are used. The mean effort is calculated as the average total effort across all iterations, and the mean elapsed time is the average project duration. If the distribution is symmetric, the mean and median (P50) will be close, but for skewed distributions they can differ significantly. 
+
+If the percentile is set to a higher value like 80 or 90, the staffing recommendation will be based on a more conservative estimate of effort and elapsed time, which can lead to recommending more staff to mitigate the risk of overruns. A staffing percentile of 90, for example, would recommend a team size that has a 90% chance of completing the project within the estimated effort and time, providing a buffer against uncertainty.
+
+The reason we say both effort and elapsed time is that the staffing model considers both how much total work there is (effort) and how long the project takes (elapsed time) to determine how many people are needed. A higher effort percentile means the model assumes a higher total workload, while a higher elapsed time percentile means it assumes a longer project duration. Both factors influence the recommended team size to ensure the project can be completed within the desired confidence level.
+
+The reason they are not separated into `staffing.effort_percentile` and `staffing.elapsed_time_percentile` is that they are inherently linked in the staffing model. The number of staff needed depends on both the total effort and the project duration, so it makes sense to use the same confidence level for both to maintain consistency in the risk tolerance. If they were set separately, it could lead to conflicting recommendations (e.g., a high effort percentile but a low elapsed time percentile might recommend more staff than necessary, or vice versa). By using a single `effort_percentile`, we ensure that the staffing recommendation is based on a coherent risk profile.
+
 With this setting the output changes to:
 
 ```text
@@ -233,7 +241,7 @@ Staffing (based on P80 effort percentile): 3 people recommended (mixed team), 42
   Total effort: 1,024 person-hours (128 person-days) | Parallelism ratio: 1.6
 ```
 
-Using a higher percentile produces more conservative staffing recommendations because it accounts for higher-effort scenarios.
+Using a higher percentile produces more conservative staffing (since we want to be more confident in our recommendations because it accounts for higher-effort scenarios).
 
 Pass `--staffing` to expand this into a full table for each experience profile (senior, mixed, junior). With `--table`:
 

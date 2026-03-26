@@ -1048,7 +1048,6 @@ output:
   critical_path_report_limit: 2
 
 staffing:
-  effort_percentile: null
   min_individual_productivity: 0.25
   experience_profiles:
     senior:
@@ -1322,11 +1321,11 @@ This section controls the staffing analysis added to CLI output and exports.
 
 | Field | Required | Type | Default | Constraints | Notes |
 |---|---|---|---|---|---|
-| `effort_percentile` | No | integer or `null` | `null` | `1..99` when set | Uses that effort percentile instead of the mean for staffing calculations |
+| `effort_percentile` | No | integer | omitted | `1..99` when set | Uses that effort percentile instead of the mean for staffing calculations |
 | `min_individual_productivity` | No | float | `0.25` | `> 0`, `<= 1` | Lower bound on each person's productivity after communication overhead is applied |
 | `experience_profiles` | No | mapping | built-in defaults | profile values validated individually | Defines named team profiles |
 
-When `effort_percentile` is `null`, staffing uses the mean total effort and mean elapsed time. When it is set, staffing uses the matching percentile for both effort and elapsed time, for example P80 effort with P80 elapsed time.
+When `effort_percentile` is omitted, staffing uses the mean total effort and mean elapsed time. When it is set, staffing uses the matching percentile for both effort and elapsed time, for example P80 effort with P80 elapsed time.
 
 ### How `min_individual_productivity` affects team-size efficiency
 

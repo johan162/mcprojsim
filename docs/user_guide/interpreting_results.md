@@ -595,7 +595,7 @@ This results in more people or more calendar time, but protects against schedule
 
 | Setting | Behaviour | Use when |
 |---------|-----------|----------|
-| *(omitted or null)* | Mean effort and elapsed time | You want the most likely recommendation |
+| *(omitted)* | Mean effort and elapsed time | You want the most likely recommendation |
 | `effort_percentile: 50` | Median effort / elapsed time | Similar to mean for symmetric distributions |
 | `effort_percentile: 80` | P80 effort / elapsed time | Moderate risk aversion |
 | `effort_percentile: 90` | P90 effort / elapsed time | Conservative / high-stakes projects |

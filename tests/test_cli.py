@@ -980,11 +980,11 @@ class TestCli:
         assert "Simulation time: 12.34 seconds" in result.output
         assert "Peak simulation memory: 64.00 MiB" in result.output
 
-    def test_config_show_displays_shifted_lognormal_parameters(self) -> None:
-        """The config show command should include derived log-normal parameters."""
+    def test_config_displays_shifted_lognormal_parameters(self) -> None:
+        """The config command should include derived log-normal parameters."""
         runner = CliRunner()
 
-        result = runner.invoke(cli, ["config", "show"])
+        result = runner.invoke(cli, ["config"])
 
         assert result.exit_code == 0
         default_z = 1.6448536269514722
@@ -1003,10 +1003,10 @@ class TestCli:
             f"z-score: {default_z:.4f}"
         ) in result.output
 
-    def test_config_show_uses_user_default_when_present(
+    def test_config_uses_user_default_when_present(
         self, monkeypatch, tmp_path
     ) -> None:
-        """config show should use user-level default config when available."""
+        """config should use user-level default config when available."""
         runner = CliRunner()
         user_config = tmp_path / "configuration.yaml"
         user_config.write_text(
@@ -1017,13 +1017,13 @@ class TestCli:
             lambda: user_config,
         )
 
-        result = runner.invoke(cli, ["config", "show"])
+        result = runner.invoke(cli, ["config"])
 
         assert result.exit_code == 0
         assert f"Configuration from {user_config}:" in result.output
         assert "default_category: story" in result.output
 
-    def test_config_show_generate_creates_default_config_file(
+    def test_config_generate_creates_default_config_file(
         self, monkeypatch, tmp_path
     ) -> None:
         """--generate should create ~/.mcprojsim/config.yaml with default values."""
@@ -1035,17 +1035,17 @@ class TestCli:
             lambda: generated_path,
         )
 
-        result = runner.invoke(cli, ["config", "show", "--generate"])
+        result = runner.invoke(cli, ["config", "--generate"])
 
         assert result.exit_code == 0
         assert f"Generated default configuration: {generated_path}" in result.output
         assert generated_path.exists()
 
         generated_data = yaml.safe_load(generated_path.read_text(encoding="utf-8"))
-        expected_data = Config.get_default().model_dump(mode="json")
+        expected_data = Config.get_default().model_dump(mode="json", exclude_none=True)
         assert generated_data == expected_data
 
-    def test_config_show_generate_creates_parent_directory(
+    def test_config_generate_creates_parent_directory(
         self, monkeypatch, tmp_path
     ) -> None:
         """--generate should create the parent directory when it does not exist."""
@@ -1059,13 +1059,13 @@ class TestCli:
             lambda: generated_path,
         )
 
-        result = runner.invoke(cli, ["config", "show", "--generate"])
+        result = runner.invoke(cli, ["config", "--generate"])
 
         assert result.exit_code == 0
         assert generated_dir.exists()
         assert generated_path.exists()
 
-    def test_config_show_uses_custom_lognormal_percentile(self, tmp_path) -> None:
+    def test_config_uses_custom_lognormal_percentile(self, tmp_path) -> None:
         """Custom config percentiles should change displayed z-scores and fit."""
         runner = CliRunner()
         config_file = tmp_path / "config.yaml"
@@ -1079,7 +1079,7 @@ class TestCli:
             )
         )
 
-        result = runner.invoke(cli, ["config", "show", "-c", str(config_file)])
+        result = runner.invoke(cli, ["config", "-c", str(config_file)])
 
         assert result.exit_code == 0
         custom_z = 1.2815515655446008
