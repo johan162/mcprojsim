@@ -436,33 +436,24 @@ If you want to use a custom configuration file with T-shirt estimates, add a `t_
 
 ```yaml
 t_shirt_sizes:
-  XS:
-    low: 0.5
-    expected: 1
-    high: 2
-  S:
-    low: 1
-    expected: 2
-    high: 4
-  M:
-    low: 3
-    expected: 5
-    high: 8
-  L:
-    low: 5
-    expected: 8
-    high: 13
-  XL:
-    low: 8
-    expected: 13
-    high: 21
-  XXL:
-    low: 13
-    expected: 21
-    high: 34
+  story:
+    XS:
+      low: 3
+      expected: 5
+      high: 15
+    S:
+      low: 5
+      expected: 16
+      high: 40
+    M:
+      low: 40
+      expected: 60
+      high: 120
+
+t_shirt_size_default_category: story
 ```
 
-These are the same default mappings provided by the application itself. If you run without a custom configuration file, those built-in sizes are available automatically.
+The application ships with built-in mappings for multiple categories (`bug`, `story`, `epic`, `business`, `initiative`) and defaults bare sizes like `M` to the `epic` category. In this example, `t_shirt_size_default_category: story` makes bare sizes use story-scale values instead.
 
 If you do use your own configuration file and want to use T-shirt sizes, make sure that file includes a `t_shirt_sizes` section. The simulation engine resolves the label by looking it up in the active configuration, and it raises an error if the size is unknown.
 

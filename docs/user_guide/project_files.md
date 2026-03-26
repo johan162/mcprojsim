@@ -477,7 +477,7 @@ t_shirt_sizes:
       expected: 520
       high: 1400
 
-t_shirt_size_default_category: story
+t_shirt_size_default_category: epic
 
 story_points:
   5:
@@ -1136,7 +1136,7 @@ t_shirt_sizes:
       expected: 480
       high: 1200
 
-t_shirt_size_default_category: story
+t_shirt_size_default_category: epic
 ```
 
 ### Supported fields for each category/size entry
@@ -1185,7 +1185,7 @@ t_shirt_sizes:
       expected: 65
       high: 130
 
-t_shirt_size_default_category: story
+t_shirt_size_default_category: epic
 ```
 
 With this override, only `story.M` changes. Other built-in categories and sizes remain available.

@@ -593,7 +593,7 @@ t_shirt_sizes:
       expected: 480
       high: 1200
 
-t_shirt_size_default_category: story
+t_shirt_size_default_category: epic
 ```
 
 Then run the simulation with:
