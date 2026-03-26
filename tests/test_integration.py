@@ -703,9 +703,10 @@ class TestCLIIntegration:
         ).run(project)
 
         assert results.mean > 0
-        assert results.task_durations["task_epic"].mean() > results.task_durations[
-            "task_story"
-        ].mean()
+        assert (
+            results.task_durations["task_epic"].mean()
+            > results.task_durations["task_story"].mean()
+        )
 
     def test_unknown_tshirt_category_reports_valid_categories(self, tmp_path):
         """Unknown category errors should include the available categories."""

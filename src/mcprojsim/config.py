@@ -70,7 +70,7 @@ DEFAULT_UNCERTAINTY_FACTORS = {
     "team_distribution": {"colocated": 1.0, "distributed": 1.25},
     "integration_complexity": {"low": 1.0, "medium": 1.15, "high": 1.35},
 }
-DEFAULT_T_SHIRT_SIZE_VALUES = {
+DEFAULT_T_SHIRT_SIZE_VALUES: dict[str, dict[str, dict[str, float]]] = {
     "story": {
         "XS": {"low": 3, "expected": 5, "high": 15},
         "S": {"low": 5, "expected": 16, "high": 40},
@@ -144,8 +144,7 @@ def _build_default_config_data() -> dict[str, Any]:
         "uncertainty_factors": deepcopy(DEFAULT_UNCERTAINTY_FACTORS),
         "t_shirt_sizes": {
             category: {
-                size: deepcopy(values)
-                for size, values in category_sizes.items()
+                size: deepcopy(values) for size, values in category_sizes.items()
             }
             for category, category_sizes in DEFAULT_T_SHIRT_SIZE_VALUES.items()
         },
@@ -489,7 +488,9 @@ class Config(BaseModel):
         """Resolve a T-shirt size token to a concrete estimate range."""
         raw_size = size.strip()
         if not raw_size:
-            raise ValueError("Invalid t_shirt_size format ''. Use '<category>.<size>' or '<size>'.")
+            raise ValueError(
+                "Invalid t_shirt_size format ''. Use '<category>.<size>' or '<size>'."
+            )
 
         if raw_size.count(".") > 1:
             raise ValueError(

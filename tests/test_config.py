@@ -282,9 +282,7 @@ class TestTShirtConfigCompatibility:
             yaml.safe_dump(
                 {
                     "t_shirt_sizes": {
-                        "story": {
-                            "M": {"low": 10, "expected": 20, "high": 30}
-                        }
+                        "story": {"M": {"low": 10, "expected": 20, "high": 30}}
                     },
                     "t_shirt_size_categories": {
                         "bug": {"M": {"low": 1, "expected": 2, "high": 3}}
@@ -307,9 +305,7 @@ class TestTShirtConfigCompatibility:
                 {
                     "t_shirt_sizes": {
                         "M": {"low": 40, "expected": 60, "high": 120},
-                        "story": {
-                            "L": {"low": 160, "expected": 240, "high": 500}
-                        },
+                        "story": {"L": {"low": 160, "expected": 240, "high": 500}},
                     }
                 }
             )
