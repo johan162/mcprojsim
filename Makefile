@@ -8,6 +8,10 @@ pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-ex
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all
 
+# Makefile itself as a dependency to ensure it is re-evaluated when changed
+# NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
+# and then this line will be silently ignored.´unless you have upgrade make via brew or similar.	
+.EXTRA_PREREQS := $(firstword $(MAKEFILE_LIST))
 
 # Make behavior
 .DEFAULT_GOAL := help
