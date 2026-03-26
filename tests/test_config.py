@@ -151,7 +151,7 @@ class TestTShirtSizes:
             "business",
             "initiative",
         ]
-        assert config.t_shirt_size_default_category == "story"
+        assert config.t_shirt_size_default_category == "epic"
 
         for size in ("XS", "S", "M", "L", "XL", "XXL"):
             assert size in config.t_shirt_sizes["story"]
@@ -163,15 +163,15 @@ class TestTShirtSizes:
 
         xs = config.get_t_shirt_size("XS")
         assert xs is not None
-        assert xs.low == 3
-        assert xs.expected == 5
-        assert xs.high == 15
+        assert xs.low == 20
+        assert xs.expected == 40
+        assert xs.high == 60
 
         m = config.get_t_shirt_size("M")
         assert m is not None
-        assert m.low == 40
-        assert m.expected == 60
-        assert m.high == 120
+        assert m.low == 120
+        assert m.expected == 240
+        assert m.high == 400
 
         bug_m = config.get_t_shirt_size("bug.M")
         assert bug_m is not None
@@ -181,9 +181,9 @@ class TestTShirtSizes:
 
         xxl = config.get_t_shirt_size("XXL")
         assert xxl is not None
-        assert xxl.low == 400
-        assert xxl.expected == 500
-        assert xxl.high == 1200
+        assert xxl.low == 1200
+        assert xxl.expected == 2000
+        assert xxl.high == 3200
 
     def test_tshirt_long_form_aliases(self):
         """Test long-form T-shirt values resolve to canonical abbreviations."""
@@ -191,11 +191,11 @@ class TestTShirtSizes:
 
         medium = config.get_t_shirt_size("Medium")
         assert medium is not None
-        assert medium.expected == 60
+        assert medium.expected == 240
 
         qualified = config.get_t_shirt_size("Epic.Large")
         assert qualified is not None
-        assert qualified.expected == 1200
+        assert qualified.expected == 480
 
     def test_get_unknown_tshirt_size_returns_none(self):
         """Test compatibility helper returns None for unknown values."""

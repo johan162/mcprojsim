@@ -861,9 +861,7 @@ class TestCLIIntegration:
         assert story_data["statistics"]["mean_hours"] == pytest.approx(
             story_results.mean
         )
-        assert epic_data["statistics"]["mean_hours"] == pytest.approx(
-            epic_results.mean
-        )
+        assert epic_data["statistics"]["mean_hours"] == pytest.approx(epic_results.mean)
         assert story_results.mean < epic_results.mean
 
         story_means: list[float] = []
@@ -891,7 +889,9 @@ class TestCLIIntegration:
 
         mean_delta = statistics.mean(paired_deltas)
         stdev_delta = statistics.stdev(paired_deltas)
-        lower_bound_95 = mean_delta - 1.96 * (stdev_delta / math.sqrt(len(paired_deltas)))
+        lower_bound_95 = mean_delta - 1.96 * (
+            stdev_delta / math.sqrt(len(paired_deltas))
+        )
 
         assert statistics.mean(story_means) < statistics.mean(epic_means)
         assert all(delta > 0 for delta in paired_deltas)

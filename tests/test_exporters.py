@@ -482,7 +482,8 @@ class TestHTMLExporter:
                     "story": {
                         "M": {"low": 10, "expected": 20, "high": 30},
                     }
-                }
+                },
+                "t_shirt_size_default_category": "story",
             }
         )
 
@@ -525,7 +526,7 @@ class TestHTMLExporter:
         with open(output_file, "r") as f:
             content = f.read()
 
-        assert "epic.M (200.0, 480.0, 1200.0)" in content
+        assert "epic.M (120.0, 240.0, 400.0)" in content
 
     def test_html_uses_default_config_for_tshirt_display_when_none_provided(
         self, tmp_path
@@ -560,7 +561,7 @@ class TestHTMLExporter:
         with open(output_file, "r") as f:
             content = f.read()
 
-        assert "M (40.0, 60.0, 120.0)" in content
+        assert "M (120.0, 240.0, 400.0)" in content
 
     def test_html_uses_active_config_for_story_point_display(self, tmp_path):
         """Test that HTML uses the provided config for Story Point effort display."""

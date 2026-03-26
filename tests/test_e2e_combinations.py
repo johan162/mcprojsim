@@ -909,7 +909,7 @@ class TestUnitConversionConsistency:
                     {
                         "id": "t1",
                         "name": "Story task",
-                        "estimate": {"t_shirt_size": "M"},
+                        "estimate": {"t_shirt_size": "story.M"},
                         "dependencies": [],
                     },
                     {

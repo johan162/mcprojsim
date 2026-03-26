@@ -818,7 +818,7 @@ class TestCli:
         default_z = 1.6448536269514722
         tshirt_mu, tshirt_sigma = fit_shifted_lognormal(40, 60, 120, default_z)
         story_mu, story_sigma = fit_shifted_lognormal(3, 5, 8, default_z)
-        assert "default_category: story" in result.output
+        assert "default_category: epic" in result.output
         assert "categories: story, bug, epic, business, initiative" in result.output
         assert (
             "lognormal params: "
@@ -852,7 +852,7 @@ class TestCli:
         tshirt_mu, tshirt_sigma = fit_shifted_lognormal(4, 6, 10, custom_z)
         story_mu, story_sigma = fit_shifted_lognormal(2, 3, 7, custom_z)
         assert "High percentile for 'high' value: P90" in result.output
-        assert "default_category: story" in result.output
+        assert "default_category: epic" in result.output
         assert (
             "lognormal params: "
             f"mu: {tshirt_mu:.4f}, sigma: {tshirt_sigma:.4f}, "
