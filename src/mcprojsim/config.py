@@ -88,12 +88,12 @@ DEFAULT_T_SHIRT_SIZE_VALUES: dict[str, dict[str, dict[str, float]]] = {
         "XXL": {"low": 40, "expected": 80, "high": 200},
     },
     "epic": {
-        "XS": {"low": 40, "expected": 80, "high": 200},
-        "S": {"low": 80, "expected": 200, "high": 600},
-        "M": {"low": 200, "expected": 480, "high": 1200},
-        "L": {"low": 480, "expected": 1200, "high": 3000},
-        "XL": {"low": 1200, "expected": 2400, "high": 6000},
-        "XXL": {"low": 2400, "expected": 4800, "high": 12000},
+        "XS": {"low": 20, "expected": 40, "high": 60},
+        "S": {"low": 60, "expected": 120, "high": 170},
+        "M": {"low": 120, "expected": 240, "high": 400},
+        "L": {"low": 290, "expected": 480, "high": 700},
+        "XL": {"low": 600, "expected": 1000, "high": 1500},
+        "XXL": {"low": 1200, "expected": 2000, "high": 3200},
     },
     "business": {
         "XS": {"low": 400, "expected": 800, "high": 2000},
@@ -112,7 +112,7 @@ DEFAULT_T_SHIRT_SIZE_VALUES: dict[str, dict[str, dict[str, float]]] = {
         "XXL": {"low": 80000, "expected": 160000, "high": 400000},
     },
 }
-DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY = "story"
+DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY = "epic"
 T_SHIRT_SIZE_TOKEN_ALIASES = {
     "XS": "XS",
     "S": "S",
@@ -126,7 +126,15 @@ T_SHIRT_SIZE_TOKEN_ALIASES = {
     "LARGE": "L",
     "EXTRA_LARGE": "XL",
     "EXTRA_EXTRA_LARGE": "XXL",
+    "MED": "M",
+    "LRG": "L",
+    "XLRG": "XL",
+    "XXLRG": "XXL",
+    "EXTRA-SMALL": "XS",
+    "EXTRA-LARGE": "XL",
+    "EXTRA-EXTRA-LARGE": "XXL",
 }
+
 DEFAULT_STORY_POINT_VALUES = {
     1: {"low": 0.5, "expected": 1, "high": 3},
     2: {"low": 1, "expected": 2, "high": 4},
