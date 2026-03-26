@@ -1013,6 +1013,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#sprintsimulationengine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SprintSimulationEngine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sprintplanningresults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SprintPlanningResults
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1274,6 +1296,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#staffinganalyzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StaffingAnalyzer
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1296,6 +1329,17 @@
     <span class="md-ellipsis">
       
         Validator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setup_logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        setup_logging
       
     </span>
   </a>
@@ -1474,6 +1518,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#sprintsimulationengine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SprintSimulationEngine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sprintplanningresults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SprintPlanningResults
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1735,6 +1801,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#staffinganalyzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StaffingAnalyzer
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1757,6 +1834,17 @@
     <span class="md-ellipsis">
       
         Validator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setup_logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        setup_logging
       
     </span>
   </a>
@@ -1847,6 +1935,7 @@
 <li>File parsers from <code>mcprojsim.parsers</code></li>
 <li>Exporters from <code>mcprojsim.exporters</code></li>
 <li>Analysis helpers from <code>mcprojsim.analysis</code></li>
+<li>Sprint-planning APIs from <code>mcprojsim.planning</code> and <code>mcprojsim.models.sprint_simulation</code></li>
 <li>Configuration from <code>mcprojsim.config</code></li>
 </ul>
 <p>Internal helper modules under <code>mcprojsim.simulation</code> and <code>mcprojsim.utils</code> are usable, but they are less central to the day-to-day library workflow.</p>
@@ -1863,7 +1952,7 @@
 </span></code></pre></div>
 <p>Use these imports when you want the shortest path for common programmatic usage.</p>
 <h2 id="simulation-workflow">Simulation Workflow<a class="headerlink" href="#simulation-workflow" title="Permanent link">&para;</a></h2>
-<p>The standard workflow is:</p>
+<p>The standard schedule-simulation workflow is:</p>
 <ol>
 <li>Load a project definition with <code>YAMLParser</code> or <code>TOMLParser</code></li>
 <li>Optionally load a <code>Config</code></li>
@@ -1894,19 +1983,36 @@
 </span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="n">JSONExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="s2">&quot;results.json&quot;</span><span class="p">)</span>
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="n">HTMLExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="s2">&quot;results.html&quot;</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
 </span></code></pre></div>
+<p>Sprint-planning workflow (when <code>project.sprint_planning.enabled</code> is true):</p>
+<ol>
+<li>Load a <code>Project</code></li>
+<li>Run <code>SprintSimulationEngine</code></li>
+<li>Inspect <code>SprintPlanningResults</code></li>
+</ol>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">YAMLParser</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.planning.sprint_engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">SprintSimulationEngine</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">project</span> <span class="o">=</span> <span class="n">YAMLParser</span><span class="p">()</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;sprint_project.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">SprintSimulationEngine</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">results</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">90</span><span class="p">))</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">date_percentile</span><span class="p">(</span><span class="mi">90</span><span class="p">))</span>
+</span></code></pre></div>
 <h2 id="core-api">Core API<a class="headerlink" href="#core-api" title="Permanent link">&para;</a></h2>
 <h3 id="simulationengine"><code>SimulationEngine</code><a class="headerlink" href="#simulationengine" title="Permanent link">&para;</a></h3>
 <p>Main entry point for Monte Carlo simulation.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEngine</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">SimulationEngine</span><span class="p">(</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">results</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEngine</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">SimulationEngine</span><span class="p">(</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">show_progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">results</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Key constructor parameters:</p>
 <ul>
@@ -1938,18 +2044,51 @@
 <ul>
 <li><code>calculate_statistics()</code></li>
 <li><code>percentile(p: int) -&gt; float</code></li>
+<li><code>effort_percentile(p: int) -&gt; float</code></li>
 <li><code>get_critical_path() -&gt; dict[str, float]</code></li>
+<li><code>get_critical_path_sequences(top_n: int | None = None) -&gt; list[CriticalPathRecord]</code></li>
+<li><code>get_most_frequent_critical_path() -&gt; CriticalPathRecord | None</code></li>
 <li><code>get_histogram_data(bins: int = 50)</code></li>
+<li><code>probability_of_completion(target_hours: float) -&gt; float</code></li>
+<li><code>total_effort_hours() -&gt; float</code></li>
+<li><code>get_risk_impact_summary() -&gt; dict[str, dict[str, float]]</code></li>
 <li><code>to_dict() -&gt; dict[str, Any]</code></li>
 </ul>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">median</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P80: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">criticality</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_critical_path</span><span class="p">()</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">for</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">criticality</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">task_id</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">median</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P80: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">criticality</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_critical_path</span><span class="p">()</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">for</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">criticality</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">task_id</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </span></code></pre></div>
+<h3 id="sprintsimulationengine"><code>SprintSimulationEngine</code><a class="headerlink" href="#sprintsimulationengine" title="Permanent link">&para;</a></h3>
+<p>Entry point for sprint-planning Monte Carlo simulation.</p>
+<p>Import path:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.planning.sprint_engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">SprintSimulationEngine</span>
+</span></code></pre></div>
+<p>Constructor parameters:</p>
+<ul>
+<li><code>iterations</code></li>
+<li><code>random_seed</code></li>
+</ul>
+<p>Key method:</p>
+<ul>
+<li><code>run(project: Project) -&gt; SprintPlanningResults</code></li>
+</ul>
+<h3 id="sprintplanningresults"><code>SprintPlanningResults</code><a class="headerlink" href="#sprintplanningresults" title="Permanent link">&para;</a></h3>
+<p>Result model for sprint-planning simulations.</p>
+<p>Import path:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.models.sprint_simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">SprintPlanningResults</span>
+</span></code></pre></div>
+<p>Useful methods:</p>
+<ul>
+<li><code>calculate_statistics()</code></li>
+<li><code>percentile(p: int) -&gt; float</code></li>
+<li><code>date_percentile(p: int) -&gt; date | None</code></li>
+<li><code>delivery_date_for_sprints(sprint_count: float) -&gt; date | None</code></li>
+<li><code>to_dict() -&gt; dict[str, Any]</code></li>
+</ul>
 <h2 id="project-models">Project Models<a class="headerlink" href="#project-models" title="Permanent link">&para;</a></h2>
 <p>The data model layer is richer than the previous version of this page suggested.</p>
 <h3 id="project"><code>Project</code><a class="headerlink" href="#project" title="Permanent link">&para;</a></h3>
@@ -1959,8 +2098,9 @@
 <li><code>project</code>: <code>ProjectMetadata</code></li>
 <li><code>tasks</code>: <code>list[Task]</code></li>
 <li><code>project_risks</code>: <code>list[Risk]</code></li>
-<li><code>resources</code>: <code>list[dict[str, Any]]</code></li>
-<li><code>calendars</code>: <code>list[dict[str, Any]]</code></li>
+<li><code>resources</code>: <code>list[ResourceSpec]</code></li>
+<li><code>calendars</code>: <code>list[CalendarSpec]</code></li>
+<li><code>sprint_planning</code>: <code>SprintPlanningSpec | None</code></li>
 </ul>
 <p>Key method:</p>
 <ul>
@@ -1976,6 +2116,9 @@
 <li><code>confidence_levels</code></li>
 <li><code>probability_red_threshold</code></li>
 <li><code>probability_green_threshold</code></li>
+<li><code>hours_per_day</code></li>
+<li><code>distribution</code></li>
+<li><code>team_size</code></li>
 </ul>
 <h3 id="task"><code>Task</code><a class="headerlink" href="#task" title="Permanent link">&para;</a></h3>
 <p>Represents a single work item in the project network.</p>
@@ -2045,6 +2188,7 @@
 <ul>
 <li><code>DistributionType</code></li>
 <li><code>ImpactType</code></li>
+<li><code>EffortUnit</code></li>
 </ul>
 <h2 id="parsers">Parsers<a class="headerlink" href="#parsers" title="Permanent link">&para;</a></h2>
 <h3 id="yamlparser"><code>YAMLParser</code><a class="headerlink" href="#yamlparser" title="Permanent link">&para;</a></h3>
@@ -2055,18 +2199,18 @@
 <li><code>parse_dict(data) -&gt; Project</code></li>
 <li><code>validate_file(file_path) -&gt; tuple[bool, str]</code></li>
 </ul>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">YAMLParser</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">YAMLParser</span><span class="p">()</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">project</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">is_valid</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">YAMLParser</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">YAMLParser</span><span class="p">()</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">project</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">is_valid</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="tomlparser"><code>TOMLParser</code><a class="headerlink" href="#tomlparser" title="Permanent link">&para;</a></h3>
 <p>Same interface as <code>YAMLParser</code>, but for TOML project files.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">TOMLParser</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">TOMLParser</span><span class="p">()</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">project</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;project.toml&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">TOMLParser</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">TOMLParser</span><span class="p">()</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">project</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;project.toml&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <h3 id="config"><code>Config</code><a class="headerlink" href="#config" title="Permanent link">&para;</a></h3>
@@ -2077,7 +2221,10 @@
 <li><code>Config.get_default() -&gt; Config</code></li>
 <li><code>get_uncertainty_multiplier(factor_name, level) -&gt; float</code></li>
 <li><code>get_t_shirt_size(size) -&gt; TShirtSizeConfig | None</code></li>
+<li><code>get_t_shirt_categories() -&gt; list[str]</code></li>
+<li><code>resolve_t_shirt_size(size) -&gt; TShirtSizeConfig</code></li>
 <li><code>get_story_point(points) -&gt; StoryPointConfig | None</code></li>
+<li><code>get_lognormal_high_z_value() -&gt; float</code></li>
 </ul>
 <p>Important nested models:</p>
 <ul>
@@ -2087,37 +2234,39 @@
 <li><code>StoryPointConfig</code></li>
 <li><code>UncertaintyFactorConfig</code></li>
 </ul>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">load_from_file</span><span class="p">(</span><span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">multiplier</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_uncertainty_multiplier</span><span class="p">(</span><span class="s2">&quot;team_experience&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">)</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">size</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_t_shirt_size</span><span class="p">(</span><span class="s2">&quot;L&quot;</span><span class="p">)</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">story_points</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_story_point</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">load_from_file</span><span class="p">(</span><span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">multiplier</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_uncertainty_multiplier</span><span class="p">(</span><span class="s2">&quot;team_experience&quot;</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">)</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">size</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_t_shirt_size</span><span class="p">(</span><span class="s2">&quot;L&quot;</span><span class="p">)</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">epic_size</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">resolve_t_shirt_size</span><span class="p">(</span><span class="s2">&quot;epic.M&quot;</span><span class="p">)</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">categories</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_t_shirt_categories</span><span class="p">()</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="n">story_points</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_story_point</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="exporters">Exporters<a class="headerlink" href="#exporters" title="Permanent link">&para;</a></h2>
 <h3 id="jsonexporter"><code>JSONExporter</code><a class="headerlink" href="#jsonexporter" title="Permanent link">&para;</a></h3>
 <p>Exports summary results, percentiles, histogram data, and critical-path output to JSON.</p>
 <p>Method:</p>
 <ul>
-<li><code>export(results: SimulationResults, output_path) -&gt; None</code></li>
+<li><code>export(results, output_path, config=None, critical_path_limit=None, sprint_results=None) -&gt; None</code></li>
 </ul>
 <h3 id="csvexporter"><code>CSVExporter</code><a class="headerlink" href="#csvexporter" title="Permanent link">&para;</a></h3>
 <p>Exports summary results, percentiles, critical path, and histogram table to CSV.</p>
 <p>Method:</p>
 <ul>
-<li><code>export(results: SimulationResults, output_path) -&gt; None</code></li>
+<li><code>export(results, output_path, config=None, critical_path_limit=None, sprint_results=None) -&gt; None</code></li>
 </ul>
 <h3 id="htmlexporter"><code>HTMLExporter</code><a class="headerlink" href="#htmlexporter" title="Permanent link">&para;</a></h3>
 <p>Exports a formatted HTML report.</p>
 <p>Method:</p>
 <ul>
-<li><code>export(results: SimulationResults, output_path, project: Project | None = None, config: Config | None = None) -&gt; None</code></li>
+<li><code>export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None) -&gt; None</code></li>
 </ul>
 <p>If <code>project</code> is provided, the report can show richer task effort information. If <code>config</code> is also provided, T-shirt-sized tasks and Story Point tasks are rendered using the active simulation configuration rather than only default mappings.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLExporter</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">HTMLExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="s2">&quot;results.html&quot;</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLExporter</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">HTMLExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="s2">&quot;results.html&quot;</span><span class="p">,</span> <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="analysis-helpers">Analysis Helpers<a class="headerlink" href="#analysis-helpers" title="Permanent link">&para;</a></h2>
 <p>These APIs are currently exported but were missing from the previous documentation page.</p>
@@ -2142,6 +2291,14 @@
 <ul>
 <li><code>get_criticality_index(results: SimulationResults) -&gt; dict[str, float]</code></li>
 <li><code>get_most_critical_tasks(results: SimulationResults, threshold: float = 0.5) -&gt; list[str]</code></li>
+<li><code>get_most_frequent_paths(results: SimulationResults, top_n: int | None = None) -&gt; list[CriticalPathRecord]</code></li>
+</ul>
+<h3 id="staffinganalyzer"><code>StaffingAnalyzer</code><a class="headerlink" href="#staffinganalyzer" title="Permanent link">&para;</a></h3>
+<p>Provides staffing recommendations and team-size tables using simulation results plus staffing config.</p>
+<p>Methods:</p>
+<ul>
+<li><code>calculate_staffing_table(results: SimulationResults, config: Config) -&gt; list[StaffingRow]</code></li>
+<li><code>recommend_team_size(results: SimulationResults, config: Config) -&gt; list[StaffingRecommendation]</code></li>
 </ul>
 <h2 id="validation-utility">Validation Utility<a class="headerlink" href="#validation-utility" title="Permanent link">&para;</a></h2>
 <h3 id="validator"><code>Validator</code><a class="headerlink" href="#validator" title="Permanent link">&para;</a></h3>
@@ -2151,9 +2308,13 @@
 <li><code>validate_file(file_path) -&gt; tuple[bool, str]</code></li>
 </ul>
 <p>This is a simple convenience wrapper that selects <code>YAMLParser</code> or <code>TOMLParser</code> based on file extension.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Validator</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">is_valid</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">Validator</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Validator</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">is_valid</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">Validator</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="setup_logging"><code>setup_logging</code><a class="headerlink" href="#setup_logging" title="Permanent link">&para;</a></h3>
+<p>Also exported from <code>mcprojsim.utils</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_logging</span>
 </span></code></pre></div>
 <h2 id="not-a-stable-user-facing-api">Not a Stable User-Facing API?<a class="headerlink" href="#not-a-stable-user-facing-api" title="Permanent link">&para;</a></h2>
 <p>The following modules are currently imported in <code>mcprojsim.simulation</code> and <code>mcprojsim.utils</code>, but they are more internal and subject to change without deprecation. They are not intended for direct use by library consumers, but they are technically accessible if you want to experiment or build on top of them.</p>
@@ -2166,9 +2327,9 @@
 <h2 id="natural-language-parser">Natural Language Parser<a class="headerlink" href="#natural-language-parser" title="Permanent link">&para;</a></h2>
 <h3 id="nlprojectparser"><code>NLProjectParser</code><a class="headerlink" href="#nlprojectparser" title="Permanent link">&para;</a></h3>
 <p>Converts semi-structured, plain-text project descriptions into valid mcprojsim YAML project files. Also available via the <code>mcprojsim generate</code> CLI command and the MCP server's <code>generate_project_file</code> tool.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.nl_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">NLProjectParser</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">NLProjectParser</span><span class="p">()</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.nl_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">NLProjectParser</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">NLProjectParser</span><span class="p">()</span>
 </span></code></pre></div>
 <p>Methods:</p>
 <ul>
@@ -2186,24 +2347,27 @@
 <li><code>Estimate: 3/5/10 days</code> (low/expected/high)</li>
 <li><code>Depends on Task 1, Task 3</code></li>
 </ul>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="s2">Project name: Website Redesign</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="s2">Start date: 2026-06-01</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="s2">Task 1: Design mockups</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="s2">- Size: M</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="s2">Task 2: Frontend implementation</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="s2">- Size: L</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="s2">- Depends on Task 1</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="s2">&quot;&quot;&quot;</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="n">yaml_output</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_and_generate</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="s2">Project name: Website Redesign</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="s2">Start date: 2026-06-01</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="s2">Task 1: Design mockups</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="s2">- Size: M</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="s2">Task 2: Frontend implementation</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="s2">- Size: L</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="s2">- Depends on Task 1</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="n">yaml_output</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_and_generate</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="data-classes">Data classes<a class="headerlink" href="#data-classes" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>ParsedProject</code> — extracted project-level data (<code>name</code>, <code>start_date</code>, <code>hours_per_day</code>, <code>tasks</code>, <code>confidence_levels</code>)</li>
-<li><code>ParsedTask</code> — extracted task data (<code>name</code>, <code>t_shirt_size</code>, <code>story_points</code>, <code>min_estimate</code>/<code>expected_estimate</code>/<code>max_estimate</code>, <code>dependency_refs</code>)</li>
+<li><code>ParsedTask</code> — extracted task data (<code>name</code>, <code>t_shirt_size</code>, <code>story_points</code>, <code>low_estimate</code>/<code>expected_estimate</code>/<code>high_estimate</code>, <code>dependency_refs</code>)</li>
+<li><code>ParsedResource</code> — extracted resource data (<code>name</code>, <code>availability</code>, <code>experience_level</code>, <code>productivity_level</code>, <code>calendar</code>, <code>sickness_prob</code>, <code>planned_absence</code>)</li>
+<li><code>ParsedCalendar</code> — extracted calendar data (<code>id</code>, <code>work_hours_per_day</code>, <code>work_days</code>, <code>holidays</code>)</li>
+<li><code>ParsedSprintPlanning</code> — extracted sprint-planning settings (<code>enabled</code>, <code>sprint_length_weeks</code>, <code>capacity_mode</code>, <code>history</code>, ...)</li>
 </ul>
 
 

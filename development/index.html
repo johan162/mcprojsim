@@ -4823,7 +4823,7 @@ It brings together the operational detail that does not belong in the end-user q
 <p>Relevant configuration is in <a href="https://github.com/johan162/mcprojsim/blob/main/pyproject.toml">pyproject.toml</a>.</p>
 <p>Key points from the current setup:</p>
 <ul>
-<li>Python requirement: <code>&gt;=3.14</code></li>
+<li>Python requirement: <code>&gt;=3.13</code></li>
 <li>runtime dependencies live under <code>[tool.poetry.dependencies]</code></li>
 <li>developer tools live under <code>[tool.poetry.group.dev.dependencies]</code></li>
 <li>docs tooling lives under <code>[tool.poetry.group.docs.dependencies]</code></li>
@@ -5155,7 +5155,7 @@ It is a multi-stage build.</p>
 <h4 id="builder-stage">Builder stage<a class="headerlink" href="#builder-stage" title="Permanent link">&para;</a></h4>
 <p>The <code>builder</code> stage:</p>
 <ul>
-<li>starts from <code>python:3.14-slim</code></li>
+<li>starts from <code>python:3.13-slim</code></li>
 <li>installs Poetry</li>
 <li>copies the package source and packaging metadata</li>
 <li>optionally appends a proxy CA certificate to the system bundle</li>
@@ -5166,7 +5166,7 @@ It is a multi-stage build.</p>
 <h4 id="runtime-stage">Runtime stage<a class="headerlink" href="#runtime-stage" title="Permanent link">&para;</a></h4>
 <p>The <code>runtime</code> stage:</p>
 <ul>
-<li>starts from <code>python:3.14-slim</code></li>
+<li>starts from <code>python:3.13-slim</code></li>
 <li>creates a non-root <code>mcprojsim</code> user</li>
 <li>copies the built <code>.venv</code></li>
 <li>sets <code>PATH</code> so the CLI entry point is available</li>
@@ -5654,7 +5654,7 @@ The actual package publishing is then handled by the GitHub Actions release work
 <p>The <code>build-and-test</code> job:</p>
 <ul>
 <li>runs on <code>ubuntu-latest</code></li>
-<li>uses Python <code>3.14</code></li>
+<li>uses Python <code>3.13</code></li>
 <li>installs <code>graphviz</code></li>
 <li>installs Poetry with <code>pipx</code></li>
 <li>enables in-project virtual environments</li>
@@ -5688,7 +5688,7 @@ If you want to reproduce CI locally, <code>./scripts/mkbld.sh</code> is the clos
 <p>The <code>build</code> job:</p>
 <ul>
 <li>checks out with full history</li>
-<li>sets up Python <code>3.14</code></li>
+<li>sets up Python <code>3.13</code></li>
 <li>installs Poetry</li>
 <li>runs <code>poetry install --with docs</code></li>
 <li>creates the <code>docs/CHANGELOG.md</code> symlink</li>
@@ -5725,7 +5725,7 @@ That is why <code>mkghrelease.sh</code> matters in the release flow.</p>
 <p>The workflow:</p>
 <ul>
 <li>checks out the repo</li>
-<li>sets up Python <code>3.14</code></li>
+<li>sets up Python <code>3.13</code></li>
 <li>validates the tag format type</li>
 <li>installs Poetry and caches <code>.venv</code></li>
 <li>installs dev-only tooling without the project root package</li>

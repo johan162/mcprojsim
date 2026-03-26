@@ -754,6 +754,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sprint-setting-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sprint setting precedence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#command-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1664,6 +1675,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sprint-setting-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sprint setting precedence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#command-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2331,6 +2353,21 @@
 <li>At least two usable historical sprint observations with positive delivery signal</li>
 </ol>
 <p>There is no separate sprint-planning CLI command. Sprint planning is activated during <code>mcprojsim simulate</code> when the project file contains <code>sprint_planning.enabled: true</code>.</p>
+<p>You can define company-wide sprint defaults in <code>config.yaml</code> under <code>sprint_defaults</code> (for example sickness probabilities, velocity model, and planning confidence). When a project relies on built-in sprint defaults, <code>mcprojsim</code> applies values from <code>sprint_defaults</code>.</p>
+<h2 id="sprint-setting-precedence">Sprint setting precedence<a class="headerlink" href="#sprint-setting-precedence" title="Permanent link">&para;</a></h2>
+<p>When multiple sources define sprint-planning behavior, <code>mcprojsim</code> resolves values in this order (highest to lowest priority):</p>
+<ol>
+<li>CLI flags</li>
+<li>Project <code>sprint_planning</code> fields</li>
+<li>Global <code>sprint_defaults</code> in <code>config.yaml</code></li>
+<li>Built-in defaults</li>
+</ol>
+<p>Examples:</p>
+<ul>
+<li><code>--velocity-model</code> overrides both project and config values</li>
+<li>a value set in project <code>sprint_planning</code> overrides <code>sprint_defaults</code></li>
+<li><code>sprint_defaults</code> provides company-wide defaults when project fields are not explicitly set</li>
+</ul>
 <p>A historical row is usable when all of the following are true:</p>
 <ul>
 <li>it uses the correct unit family for the selected <code>capacity_mode</code></li>
@@ -3007,10 +3044,10 @@
 </ul>
 <p>Historical <code>holiday_factor</code> is then used to normalize delivered and spillover work to an equivalent full-capacity sprint:</p>
 <p>$$
-    ext{normalized completed} = \frac{\text{completed}}{\text{holiday factor}}
+  \text{normalized completed} = \frac{\text{completed}}{\text{holiday factor}}
 $$</p>
 <p>$$
-    ext{normalized spillover} = \frac{\text{spillover}}{\text{holiday factor}}
+  \text{normalized spillover} = \frac{\text{spillover}}{\text{holiday factor}}
 $$</p>
 <p>This means a sprint with reduced availability is not treated as evidence that the team permanently has lower underlying capacity.</p>
 <h3 id="step-2-build-the-sampling-distribution-from-history">Step 2: build the sampling distribution from history<a class="headerlink" href="#step-2-build-the-sampling-distribution-from-history" title="Permanent link">&para;</a></h3>
@@ -3186,7 +3223,7 @@ $$</p>
 <p>With the default <code>empirical</code> model, this is a discrete distribution based on the normalized history. With the <code>neg_binomial</code> model, the distribution is parametric with mean and dispersion estimated from history.</p>
 <p>If volatility, future overrides, or sickness modeling are enabled, the effective velocity becomes:</p>
 <p>$$
-    ext{effective velocity} = \text{nominal velocity} \times \text{volatility multiplier} \times \text{future override multiplier} \times \text{sickness multiplier}
+  \text{effective velocity} = \text{nominal velocity} \times \text{volatility multiplier} \times \text{future override multiplier} \times \text{sickness multiplier}
 $$</p>
 <h4 id="spillover-added-scope-and-removed-scope-at-the-sprint-level">Spillover, added scope, and removed scope at the sprint level<a class="headerlink" href="#spillover-added-scope-and-removed-scope-at-the-sprint-level" title="Permanent link">&para;</a></h4>
 <p>In the empirical model, these are sampled from the same historical row as velocity, not independently from separate fitted distributions. That preserves empirical row-level dependence between these quantities.</p>
@@ -3306,6 +3343,33 @@ The three default parameters are derived from published European and OECD labour
 <li><code>table</code>: a deterministic lookup based on the item's planning story points</li>
 <li><code>logistic</code>: a logistic curve</li>
 </ul>
+<p>Logistic mode uses exactly this sequence:</p>
+<ol>
+<li>compute scaled points with a lower clamp:</li>
+</ol>
+<p>$$
+z = \max!\left(\frac{x}{r}, 10^{-6}\right)
+$$</p>
+<ol>
+<li>compute the logit value:</li>
+</ol>
+<p>$$
+\ell = s \cdot \ln(z) + b
+$$</p>
+<ol>
+<li>convert to probability:</li>
+</ol>
+<p>$$
+p_i = \frac{1}{1 + e^{-\ell}}
+$$</p>
+<p>where:</p>
+<ul>
+<li>$x$ is the item's planning story points</li>
+<li>$r$ is <code>size_reference_points</code></li>
+<li>$s$ is <code>logistic_slope</code></li>
+<li>$b$ is <code>logistic_intercept</code></li>
+</ul>
+<p>The clamp on $z$ is important: it prevents invalid $\ln(0)$ or negative-log inputs when very small values appear.</p>
 <p>For the logistic model, the probability is:</p>
 <p>$$
 p_i = \frac{1}{1 + e^{-\left(s \cdot \ln(x / r) + b\right)}}
@@ -3317,16 +3381,63 @@ $$</p>
 <li>$s$ is <code>logistic_slope</code></li>
 <li>$b$ is <code>logistic_intercept</code></li>
 </ul>
+<p>Interpretation of slope and intercept:</p>
+<ul>
+<li><code>logistic_slope</code> controls sensitivity to item size in log-space. Larger values make probability rise faster as $x$ increases.</li>
+<li><code>logistic_intercept</code> shifts the curve up or down. At the reference size ($x=r$), the probability is:</li>
+</ul>
+<p>$$
+p(x=r) = \frac{1}{1 + e^{-b}}
+$$</p>
+<p>With the built-in defaults ($s=1.9$, $b=-1.9924301646902063$), this baseline is approximately 0.12.</p>
 <p>If spillover occurs, the completed fraction is sampled from:</p>
 <p>$$
-    ext{Beta}(\alpha, \beta)
+  \text{Beta}(\alpha, \beta)
 $$</p>
 <p>with:</p>
 <ul>
 <li>$\alpha$ = <code>consumed_fraction_alpha</code></li>
 <li>$\beta$ = <code>consumed_fraction_beta</code></li>
 </ul>
+<p>Then the sampled fraction is clamped to:</p>
+<p>$$
+  \text{consumed fraction} \in [10^{-6}, 0.999999]
+$$</p>
+<p>This guarantees both consumed and remaining work are strictly positive in the spillover branch.</p>
 <p>The remaining fraction becomes carryover into the next sprint.</p>
+<p>In implementation terms, if an item with size $u$ spills over:</p>
+<p>$$
+u_{\text{consumed}} = u \cdot f
+$$</p>
+<p>$$
+u_{\text{remaining}} = u \cdot (1-f)
+$$</p>
+<p>where $f$ is the clamped Beta sample. If $u_{\text{remaining}} \le 10^{-9}$, no carryover item is created.</p>
+<p>How <code>consumed_fraction_alpha</code> and <code>consumed_fraction_beta</code> affect behavior:</p>
+<ul>
+<li>Mean consumed fraction:</li>
+</ul>
+<p>$$
+\mathbb{E}[f] = \frac{\alpha}{\alpha + \beta}
+$$</p>
+<ul>
+<li>Variance:</li>
+</ul>
+<p>$$
+\mathrm{Var}(f) = \frac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)}
+$$</p>
+<p>Interpretation:</p>
+<ul>
+<li>higher <code>consumed_fraction_alpha</code> shifts spillover events toward "mostly completed before carryover"</li>
+<li>higher <code>consumed_fraction_beta</code> shifts spillover events toward "mostly carried over"</li>
+<li>larger values of both parameters (with similar ratio) produce tighter clustering around the mean</li>
+</ul>
+<p>With built-in defaults (<code>alpha=3.25</code>, <code>beta=1.75</code>):</p>
+<p>$$
+\mathbb{E}[f] = \frac{3.25}{3.25+1.75} = 0.65
+$$</p>
+<p>So, on average, a spillover event consumes about 65% of an item and carries about 35% into the next sprint (before clamping and tiny-remainder guard).</p>
+<p>Spillover itself is a Bernoulli event using the computed probability $p_i$: if a uniform draw is below $p_i$, spillover happens; otherwise the item completes normally.</p>
 <h3 id="what-is-estimated-from-history-and-what-is-configured-directly">What is estimated from history, and what is configured directly<a class="headerlink" href="#what-is-estimated-from-history-and-what-is-configured-directly" title="Permanent link">&para;</a></h3>
 <p>This is the practical summary:</p>
 <p>Estimated from historical data:</p>
@@ -3368,7 +3479,7 @@ $$</p>
 <p>It then combines historical percentiles into a conservative planning heuristic.</p>
 <p>For confidence level $q$, the current implementation is approximately:</p>
 <p>$$
-    ext{guidance} = P50(\text{completed}) \times \left(1 - P_q(\text{spillover ratio})\right) \times \left(1 - P_q(\text{removal ratio})\right) - P_q(\text{scope added})
+  \text{guidance} = P50(\text{completed}) \times \left(1 - P_q(\text{spillover ratio})\right) \times \left(1 - P_q(\text{removal ratio})\right) - P_q(\text{scope added})
 $$</p>
 <p>This produces a conservative "what should we plan for" number in the current capacity unit.</p>
 <p>It is important to read this as a heuristic derived from historical percentiles, not as the mean of a fitted probability distribution.</p>
