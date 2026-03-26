@@ -543,6 +543,12 @@ def cli() -> None:
     help="Show full staffing analysis table with team-size recommendations.",
 )
 @click.option(
+    "--tshirt-category",
+    type=str,
+    default=None,
+    help="Override default T-shirt category for bare size tokens.",
+)
+@click.option(
     "--minimal",
     "-m",
     is_flag=True,
@@ -575,6 +581,7 @@ def simulate(
     target_date: Optional[str],
     table: bool,
     staffing: bool,
+    tshirt_category: Optional[str],
     minimal: bool,
     velocity_model: Optional[str],
     no_sickness: bool,
@@ -592,6 +599,21 @@ def simulate(
         else:
             cfg = Config.get_default()
             logger.info("Using default configuration")
+
+        if tshirt_category is not None:
+            normalized_category = tshirt_category.strip().lower()
+            valid_categories = cfg.get_t_shirt_categories()
+            if normalized_category not in valid_categories:
+                allowed = ", ".join(valid_categories)
+                raise ValueError(
+                    "Invalid value for --tshirt-category: "
+                    f"'{tshirt_category}'. Valid categories: {allowed}"
+                )
+            cfg.t_shirt_size_default_category = normalized_category
+            logger.info(
+                "Overriding T-shirt default category to %s",
+                normalized_category,
+            )
 
         # Parse project file
         project_path = Path(project_file)
@@ -1325,21 +1347,27 @@ def show_config(config_file: Optional[str]) -> None:
     lognormal_z_score = cfg.get_lognormal_high_z_value()
 
     click.echo(f"\nT-Shirt Sizes (unit: {cfg.t_shirt_size_unit.value}):")
-    for size, config in cfg.t_shirt_sizes.items():
-        click.echo(f"  {size}:")
-        click.echo(
-            f"    low: {config.low}, expected: {config.expected}, high: {config.high}"
-        )
-        click.echo(
-            "    lognormal params: "
-            + _format_shifted_lognormal_parameters(
-                f"T-shirt size {size}",
-                config.low,
-                config.expected,
-                config.high,
-                lognormal_z_score,
+    click.echo(f"  default_category: {cfg.t_shirt_size_default_category}")
+    click.echo(f"  categories: {', '.join(cfg.get_t_shirt_categories())}")
+    for category, size_map in cfg.t_shirt_sizes.items():
+        click.echo(f"  {category}:")
+        for size, size_config in size_map.items():
+            click.echo(f"    {size}:")
+            click.echo(
+                "      "
+                f"low: {size_config.low}, expected: {size_config.expected}, "
+                f"high: {size_config.high}"
             )
-        )
+            click.echo(
+                "      lognormal params: "
+                + _format_shifted_lognormal_parameters(
+                    f"T-shirt size {category}.{size}",
+                    size_config.low,
+                    size_config.expected,
+                    size_config.high,
+                    lognormal_z_score,
+                )
+            )
 
     click.echo(f"\nStory Points (unit: {cfg.story_point_unit.value}):")
     for points, sp_config in sorted(cfg.story_points.items()):

@@ -422,12 +422,7 @@ class SimulationEngine:
         resolved_unit: EffortUnit | None = None
 
         if estimate.t_shirt_size is not None:
-            resolved_config = self.config.get_t_shirt_size(estimate.t_shirt_size)
-            if resolved_config is None:
-                raise ValueError(
-                    f"Unknown T-shirt size: {estimate.t_shirt_size}. "
-                    f"Available sizes: {', '.join(self.config.t_shirt_sizes.keys())}"
-                )
+            resolved_config = self.config.resolve_t_shirt_size(estimate.t_shirt_size)
             resolved_unit = self.config.t_shirt_size_unit
 
         elif estimate.story_points is not None:

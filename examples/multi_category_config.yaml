@@ -1,0 +1,29 @@
+# Example configuration for multi-category T-shirt sizing.
+# Bare t_shirt_size values resolve via t_shirt_size_default_category.
+# Qualified values can use category.size (for example: epic.M).
+
+t_shirt_sizes:
+  story:
+    XS: {low: 3, expected: 5, high: 15}
+    S: {low: 5, expected: 16, high: 40}
+    M: {low: 40, expected: 60, high: 120}
+    L: {low: 160, expected: 240, high: 500}
+    XL: {low: 320, expected: 400, high: 750}
+    XXL: {low: 400, expected: 500, high: 1200}
+  bug:
+    XS: {low: 0.5, expected: 1, high: 4}
+    S: {low: 1, expected: 3, high: 10}
+    M: {low: 3, expected: 8, high: 24}
+    L: {low: 8, expected: 20, high: 60}
+    XL: {low: 20, expected: 40, high: 100}
+    XXL: {low: 40, expected: 80, high: 200}
+  epic:
+    XS: {low: 40, expected: 80, high: 200}
+    S: {low: 80, expected: 200, high: 600}
+    M: {low: 200, expected: 480, high: 1200}
+    L: {low: 480, expected: 1200, high: 3000}
+    XL: {low: 1200, expected: 2400, high: 6000}
+    XXL: {low: 2400, expected: 4800, high: 12000}
+
+t_shirt_size_default_category: epic
+t_shirt_size_unit: hours

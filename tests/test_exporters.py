@@ -477,7 +477,13 @@ class TestHTMLExporter:
         )
 
         config = Config.model_validate(
-            {"t_shirt_sizes": {"M": {"low": 10, "expected": 20, "high": 30}}}
+            {
+                "t_shirt_sizes": {
+                    "story": {
+                        "M": {"low": 10, "expected": 20, "high": 30},
+                    }
+                }
+            }
         )
 
         output_file = tmp_path / "results.html"
@@ -487,6 +493,39 @@ class TestHTMLExporter:
             content = f.read()
 
         assert "M (10.0, 20.0, 30.0)" in content
+
+    def test_html_renders_qualified_tshirt_label(self, tmp_path):
+        """Qualified category.size labels should be rendered in HTML output."""
+        results = SimulationResults(
+            iterations=3,
+            project_name="Qualified T-Shirt Project",
+            durations=np.array([10.0, 11.0, 12.0]),
+            task_durations={"task_001": np.array([4.0, 5.0, 6.0])},
+            critical_path_frequency={"task_001": 3},
+        )
+        results.calculate_statistics()
+        results.percentile(50)
+
+        project = Project(
+            project=ProjectMetadata(
+                name="Qualified T-Shirt Project", start_date=date(2025, 1, 1)
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Sized Task",
+                    estimate=TaskEstimate(t_shirt_size="epic.M"),
+                )
+            ],
+        )
+
+        output_file = tmp_path / "qualified_results.html"
+        HTMLExporter.export(results, output_file, project=project)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "epic.M (200.0, 480.0, 1200.0)" in content
 
     def test_html_uses_default_config_for_tshirt_display_when_none_provided(
         self, tmp_path

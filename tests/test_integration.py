@@ -668,3 +668,99 @@ class TestCLIIntegration:
         assert 0.5 * 8 <= task_sp1_durations.min() <= 3.0 * 8
         assert 3.0 * 8 <= task_sp5_durations.min() <= 8.0 * 8
         assert 8.0 * 8 <= task_sp13_durations.min() <= 21.0 * 8
+
+    def test_mixed_bare_and_qualified_tshirt_values(self, tmp_path):
+        """A project may mix bare and qualified T-shirt values."""
+        data = {
+            "project": {"name": "Mixed T-Shirt", "start_date": "2025-01-01"},
+            "tasks": [
+                {
+                    "id": "task_story",
+                    "name": "Story Task",
+                    "estimate": {"t_shirt_size": "M"},
+                    "dependencies": [],
+                },
+                {
+                    "id": "task_epic",
+                    "name": "Epic Task",
+                    "estimate": {"t_shirt_size": "epic.M"},
+                    "dependencies": [],
+                },
+            ],
+        }
+
+        file_path = tmp_path / "mixed_tshirt.yaml"
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
+
+        parser = YAMLParser()
+        project = parser.parse_file(file_path)
+        results = SimulationEngine(
+            iterations=200,
+            random_seed=42,
+            config=Config.get_default(),
+            show_progress=False,
+        ).run(project)
+
+        assert results.mean > 0
+        assert results.task_durations["task_epic"].mean() > results.task_durations[
+            "task_story"
+        ].mean()
+
+    def test_unknown_tshirt_category_reports_valid_categories(self, tmp_path):
+        """Unknown category errors should include the available categories."""
+        data = {
+            "project": {"name": "Bad Category", "start_date": "2025-01-01"},
+            "tasks": [
+                {
+                    "id": "task_001",
+                    "name": "Task",
+                    "estimate": {"t_shirt_size": "foo.M"},
+                    "dependencies": [],
+                }
+            ],
+        }
+
+        file_path = tmp_path / "bad_category.yaml"
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
+
+        parser = YAMLParser()
+        project = parser.parse_file(file_path)
+
+        with pytest.raises(ValueError, match="Valid categories"):
+            SimulationEngine(
+                iterations=10,
+                random_seed=42,
+                config=Config.get_default(),
+                show_progress=False,
+            ).run(project)
+
+    def test_unknown_tshirt_size_reports_valid_sizes(self, tmp_path):
+        """Unknown size errors should list valid sizes for that category."""
+        data = {
+            "project": {"name": "Bad Size", "start_date": "2025-01-01"},
+            "tasks": [
+                {
+                    "id": "task_001",
+                    "name": "Task",
+                    "estimate": {"t_shirt_size": "epic.HUGE"},
+                    "dependencies": [],
+                }
+            ],
+        }
+
+        file_path = tmp_path / "bad_size.yaml"
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
+
+        parser = YAMLParser()
+        project = parser.parse_file(file_path)
+
+        with pytest.raises(ValueError, match="Valid sizes for category 'epic'"):
+            SimulationEngine(
+                iterations=10,
+                random_seed=42,
+                config=Config.get_default(),
+                show_progress=False,
+            ).run(project)

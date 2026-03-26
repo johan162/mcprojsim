@@ -107,6 +107,54 @@ class TaskEstimate(BaseModel):
     story_points: Optional[int] = Field(default=None, gt=0)
     unit: Optional[EffortUnit] = Field(default=None)
 
+    @field_validator("t_shirt_size", mode="before")
+    @classmethod
+    def validate_tshirt_scalar(cls, value: Any) -> Any:
+        """Validate strict scalar requirements for t_shirt_size."""
+        if value is None:
+            return value
+        if not isinstance(value, str):
+            raise ValueError(
+                "Invalid t_shirt_size value "
+                f"{value} (type {type(value).__name__}). Expected non-empty string."
+            )
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError(
+                "Invalid t_shirt_size value '' (type str). Expected non-empty string."
+            )
+        return stripped
+
+    @field_validator("t_shirt_size")
+    @classmethod
+    def validate_tshirt_token_format(cls, value: Optional[str]) -> Optional[str]:
+        """Validate accepted t_shirt_size token shapes."""
+        if value is None:
+            return value
+
+        if value.count(".") > 1:
+            raise ValueError(
+                f"Invalid t_shirt_size format '{value}'. Use '<category>.<size>' or '<size>'."
+            )
+
+        def _is_alpha_token(token: str) -> bool:
+            normalized = token.strip().replace("-", "_").replace(" ", "_")
+            return bool(normalized) and normalized.replace("_", "").isalpha()
+
+        if "." in value:
+            category, size = value.split(".")
+            if not _is_alpha_token(category) or not _is_alpha_token(size):
+                raise ValueError(
+                    f"Invalid t_shirt_size format '{value}'. Use '<category>.<size>' or '<size>'."
+                )
+            return value
+
+        if not _is_alpha_token(value):
+            raise ValueError(
+                f"Invalid t_shirt_size format '{value}'. Use '<category>.<size>' or '<size>'."
+            )
+        return value
+
     @model_validator(mode="after")
     def validate_distribution(self) -> "TaskEstimate":
         """Validate distribution parameters."""

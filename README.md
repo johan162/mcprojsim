@@ -35,6 +35,7 @@ It is intended for teams that want answers such as:
 - **Risk modelling** - Task-level and project-level risk modeling
 - **Uncertainty factors** - Configurable uncertainty factors such as team experience and requirements maturity
 - **T-Shirt and Story Point** - T-shirt size and story point symbolic estimates with configurable unit defaults
+- **Multi-category T-shirt sizing** - Category-aware symbolic sizing (for example `bug.M`, `story.M`, `epic.M`) with a configurable default category and CLI override (`--tshirt-category`)
 - **Multiple export formats** - Exported results in JSON, CSV, and HTML formats
 - **Result analysis** - Critical path and sensitivity-oriented analysis outputs
 - **Sensitivity analysis** — Spearman rank correlation identifies which tasks most influence total duration

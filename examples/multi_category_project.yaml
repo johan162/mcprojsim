@@ -1,0 +1,22 @@
+project:
+  name: "Multi-Category T-Shirt Demo"
+  start_date: "2026-01-05"
+
+tasks:
+  - id: "task_001"
+    name: "Unqualified default category task"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: []
+
+  - id: "task_002"
+    name: "Long-form default category task"
+    estimate:
+      t_shirt_size: "Medium"
+    dependencies: []
+
+  - id: "task_003"
+    name: "Explicit epic category task"
+    estimate:
+      t_shirt_size: "epic.M"
+    dependencies: ["task_001"]

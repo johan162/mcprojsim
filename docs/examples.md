@@ -110,7 +110,7 @@ See `examples/quickstart_example.yaml` in the repository.
 
 ## T-Shirt Sizing
 
-For quick estimation using relative sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`). T-shirt sizes map to default effort ranges that are configurable via the [configuration file](user_guide/task_estimation.md#t-shirt-size-estimates).
+For quick estimation using relative sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`) with category-aware calibration. Bare values like `M` resolve via the configured default category, and qualified values like `epic.M` resolve directly. T-shirt mappings are configurable via the [configuration file](user_guide/task_estimation.md#t-shirt-size-estimates).
 
 ```yaml
 project:
@@ -235,7 +235,7 @@ Calendar Time Confidence Intervals:
   P99: 5055.58 hours (632 working days)  (2028-04-04)
 ```
 
-Key observations: two independent starting tasks yield `Max Parallel Tasks: 2`. The wide P10–P99 spread (349–632 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.
+Key observations: two independent starting tasks yield `Max Parallel Tasks: 2`. The wide P10–P99 spread (349–632 working days) reflects uncertainty in symbolic sizing for large effort items.
 
 Note: T-shirt size and story point estimates must **not** include a `unit` field in the project file. The unit is controlled by the configuration.
 

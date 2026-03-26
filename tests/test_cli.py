@@ -198,6 +198,112 @@ class TestCli:
         assert captured["html_config"].get_t_shirt_size("M").expected == 20
         assert captured["critical_path_limit"] == 2
 
+    def test_simulate_tshirt_category_override(self, monkeypatch) -> None:
+        """The simulate command should override default T-shirt category."""
+        runner = CliRunner()
+        captured: dict[str, Any] = {}
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                captured["config"] = config
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"t_shirt_size": "M"},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                [
+                    "simulate",
+                    str(project_file),
+                    "--tshirt-category",
+                    "epic",
+                    "--quiet",
+                ],
+            )
+
+        assert result.exit_code == 0
+        assert captured["config"].t_shirt_size_default_category == "epic"
+
+    def test_simulate_invalid_tshirt_category_override(self) -> None:
+        """Invalid --tshirt-category values should fail with clear guidance."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                [
+                    "simulate",
+                    str(project_file),
+                    "--tshirt-category",
+                    "foo",
+                ],
+            )
+
+        assert result.exit_code != 0
+        assert "Invalid value for --tshirt-category" in result.output
+        assert "Valid categories:" in result.output
+
     def test_simulate_shows_critical_path_sequences(self, monkeypatch) -> None:
         """The simulate command should print the most frequent critical paths."""
         runner = CliRunner()
@@ -712,8 +818,10 @@ class TestCli:
         default_z = 1.6448536269514722
         tshirt_mu, tshirt_sigma = fit_shifted_lognormal(40, 60, 120, default_z)
         story_mu, story_sigma = fit_shifted_lognormal(3, 5, 8, default_z)
+        assert "default_category: story" in result.output
+        assert "categories: story, bug, epic, business, initiative" in result.output
         assert (
-            "    lognormal params: "
+            "lognormal params: "
             f"mu: {tshirt_mu:.4f}, sigma: {tshirt_sigma:.4f}, "
             f"z-score: {default_z:.4f}"
         ) in result.output
@@ -744,8 +852,9 @@ class TestCli:
         tshirt_mu, tshirt_sigma = fit_shifted_lognormal(4, 6, 10, custom_z)
         story_mu, story_sigma = fit_shifted_lognormal(2, 3, 7, custom_z)
         assert "High percentile for 'high' value: P90" in result.output
+        assert "default_category: story" in result.output
         assert (
-            "    lognormal params: "
+            "lognormal params: "
             f"mu: {tshirt_mu:.4f}, sigma: {tshirt_sigma:.4f}, "
             f"z-score: {custom_z:.4f}"
         ) in result.output

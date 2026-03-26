@@ -41,7 +41,7 @@ When `mcprojsim` loads a configuration file, it does **not** replace the built-i
 
 This means you can override only the values you care about.
 
-For example, if you define only `t_shirt_sizes.M`, the built-in mappings for `XS`, `S`, `L`, `XL`, and `XXL` remain available.
+For example, if you define only `t_shirt_sizes.story.M`, the built-in mappings for the remaining sizes and categories remain available.
 
 ## Top-level configuration structure
 
@@ -49,6 +49,7 @@ The current configuration schema supports these top-level keys:
 
 - `uncertainty_factors`
 - `t_shirt_sizes`
+- `t_shirt_size_default_category`
 - `t_shirt_size_unit`
 - `story_points`
 - `story_point_unit`
@@ -86,14 +87,22 @@ uncertainty_factors:
     high: 1.35
 
 t_shirt_sizes:
-  XS:
-    low: 0.5
-    expected: 1
-    high: 2
-  M:
-    low: 3
-    expected: 5
-    high: 8
+  story:
+    XS:
+      low: 3
+      expected: 5
+      high: 15
+    M:
+      low: 40
+      expected: 60
+      high: 120
+  epic:
+    M:
+      low: 200
+      expected: 480
+      high: 1200
+
+t_shirt_size_default_category: "story"
 
 t_shirt_size_unit: "hours"
 
@@ -206,7 +215,36 @@ If you override only part of either mapping table, the remaining built-in defaul
 
 Tasks may use `t_shirt_size` instead of explicit `min` / `expected` / `max` values.
 
-Built-in size keys:
+Canonical configuration shape:
+
+```yaml
+t_shirt_sizes:
+  story:
+    XS: {low: 3, expected: 5, high: 15}
+    M: {low: 40, expected: 60, high: 120}
+  bug:
+    M: {low: 3, expected: 8, high: 24}
+  epic:
+    M: {low: 200, expected: 480, high: 1200}
+
+t_shirt_size_default_category: story
+```
+
+Project-file values can be:
+
+- bare size: `M` (resolved via `t_shirt_size_default_category`)
+- qualified size: `epic.M`
+- long-form aliases: `Medium`, `Epic.Large`
+
+Built-in category keys:
+
+- `bug`
+- `story`
+- `epic`
+- `business`
+- `initiative`
+
+Built-in size keys (per category):
 
 - `XS`
 - `S`
@@ -215,26 +253,40 @@ Built-in size keys:
 - `XL`
 - `XXL`
 
-Built-in defaults:
+Built-in `story` defaults:
 
 | Size | `min` | `expected` | `max` |
 |---|---:|---:|---:|
-| `XS` | 0.5 | 1 | 2 |
-| `S` | 1 | 2 | 4 |
-| `M` | 3 | 5 | 8 |
-| `L` | 5 | 8 | 13 |
-| `XL` | 8 | 13 | 21 |
-| `XXL` | 13 | 21 | 34 |
+| `XS` | 3 | 5 | 15 |
+| `S` | 5 | 16 | 40 |
+| `M` | 40 | 60 | 120 |
+| `L` | 160 | 240 | 500 |
+| `XL` | 320 | 400 | 750 |
+| `XXL` | 400 | 500 | 1200 |
 
-Example override:
+Canonical override example:
 
 ```yaml
 t_shirt_sizes:
-  M:
-    low: 4
-    expected: 6
-    high: 9
+  story:
+    M:
+      low: 45
+      expected: 65
+      high: 130
+  epic:
+    M:
+      low: 240
+      expected: 520
+      high: 1400
+
+t_shirt_size_default_category: story
 ```
+
+Backward compatibility:
+
+- legacy flat maps under `t_shirt_sizes` are accepted and migrated to `t_shirt_sizes.<default_category>`
+- transitional alias key `t_shirt_size_categories` is accepted as input
+- defining both `t_shirt_sizes` and `t_shirt_size_categories` in one file is rejected
 
 ## Shifted log-normal configuration
 

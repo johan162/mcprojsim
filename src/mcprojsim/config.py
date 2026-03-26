@@ -71,12 +71,61 @@ DEFAULT_UNCERTAINTY_FACTORS = {
     "integration_complexity": {"low": 1.0, "medium": 1.15, "high": 1.35},
 }
 DEFAULT_T_SHIRT_SIZE_VALUES = {
-    "XS": {"low": 3, "expected": 5, "high": 15},
-    "S": {"low": 5, "expected": 16, "high": 40},
-    "M": {"low": 40, "expected": 60, "high": 120},
-    "L": {"low": 160, "expected": 240, "high": 500},
-    "XL": {"low": 320, "expected": 400, "high": 750},
-    "XXL": {"low": 400, "expected": 500, "high": 1200},
+    "story": {
+        "XS": {"low": 3, "expected": 5, "high": 15},
+        "S": {"low": 5, "expected": 16, "high": 40},
+        "M": {"low": 40, "expected": 60, "high": 120},
+        "L": {"low": 160, "expected": 240, "high": 500},
+        "XL": {"low": 320, "expected": 400, "high": 750},
+        "XXL": {"low": 400, "expected": 500, "high": 1200},
+    },
+    "bug": {
+        "XS": {"low": 0.5, "expected": 1, "high": 4},
+        "S": {"low": 1, "expected": 3, "high": 10},
+        "M": {"low": 3, "expected": 8, "high": 24},
+        "L": {"low": 8, "expected": 20, "high": 60},
+        "XL": {"low": 20, "expected": 40, "high": 100},
+        "XXL": {"low": 40, "expected": 80, "high": 200},
+    },
+    "epic": {
+        "XS": {"low": 40, "expected": 80, "high": 200},
+        "S": {"low": 80, "expected": 200, "high": 600},
+        "M": {"low": 200, "expected": 480, "high": 1200},
+        "L": {"low": 480, "expected": 1200, "high": 3000},
+        "XL": {"low": 1200, "expected": 2400, "high": 6000},
+        "XXL": {"low": 2400, "expected": 4800, "high": 12000},
+    },
+    "business": {
+        "XS": {"low": 400, "expected": 800, "high": 2000},
+        "S": {"low": 800, "expected": 2000, "high": 5000},
+        "M": {"low": 2000, "expected": 4000, "high": 10000},
+        "L": {"low": 4000, "expected": 8000, "high": 20000},
+        "XL": {"low": 8000, "expected": 16000, "high": 40000},
+        "XXL": {"low": 16000, "expected": 32000, "high": 80000},
+    },
+    "initiative": {
+        "XS": {"low": 2000, "expected": 4000, "high": 10000},
+        "S": {"low": 4000, "expected": 10000, "high": 25000},
+        "M": {"low": 10000, "expected": 20000, "high": 50000},
+        "L": {"low": 20000, "expected": 40000, "high": 100000},
+        "XL": {"low": 40000, "expected": 80000, "high": 200000},
+        "XXL": {"low": 80000, "expected": 160000, "high": 400000},
+    },
+}
+DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY = "story"
+T_SHIRT_SIZE_TOKEN_ALIASES = {
+    "XS": "XS",
+    "S": "S",
+    "M": "M",
+    "L": "L",
+    "XL": "XL",
+    "XXL": "XXL",
+    "EXTRA_SMALL": "XS",
+    "SMALL": "S",
+    "MEDIUM": "M",
+    "LARGE": "L",
+    "EXTRA_LARGE": "XL",
+    "EXTRA_EXTRA_LARGE": "XXL",
 }
 DEFAULT_STORY_POINT_VALUES = {
     1: {"low": 0.5, "expected": 1, "high": 3},
@@ -94,9 +143,13 @@ def _build_default_config_data() -> dict[str, Any]:
     return {
         "uncertainty_factors": deepcopy(DEFAULT_UNCERTAINTY_FACTORS),
         "t_shirt_sizes": {
-            size: deepcopy(values)
-            for size, values in DEFAULT_T_SHIRT_SIZE_VALUES.items()
+            category: {
+                size: deepcopy(values)
+                for size, values in category_sizes.items()
+            }
+            for category, category_sizes in DEFAULT_T_SHIRT_SIZE_VALUES.items()
         },
+        "t_shirt_size_default_category": DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY,
         "t_shirt_size_unit": EffortUnit.HOURS.value,
         "story_points": {
             points: deepcopy(values)
@@ -150,6 +203,100 @@ def _merge_nested_dicts(
             merged[key] = value
 
     return merged
+
+
+def _is_tshirt_estimate_leaf(candidate: Any) -> bool:
+    if not isinstance(candidate, dict):
+        return False
+    keys = set(candidate.keys())
+    return keys == {"low", "expected", "high"}
+
+
+def _normalize_tshirt_size_token(size_token: str) -> Optional[str]:
+    normalized = size_token.strip().replace("-", "_").replace(" ", "_").upper()
+    return T_SHIRT_SIZE_TOKEN_ALIASES.get(normalized)
+
+
+def _normalize_t_shirt_size_map(
+    categories: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    normalized_categories: dict[str, dict[str, Any]] = {}
+    for raw_category, raw_sizes in categories.items():
+        category_name = str(raw_category).strip().lower()
+        if not category_name:
+            raise ValueError("Invalid empty t_shirt_size category name in config")
+        if not isinstance(raw_sizes, dict):
+            raise ValueError(
+                "Invalid t_shirt_sizes config shape. Each category must map to a "
+                "dictionary of size estimates."
+            )
+        normalized_sizes: dict[str, Any] = {}
+        for raw_size, estimate in raw_sizes.items():
+            canonical_size = _normalize_tshirt_size_token(str(raw_size))
+            if canonical_size is None:
+                raise ValueError(
+                    f"Invalid t_shirt_size token '{raw_size}' in category "
+                    f"'{category_name}'. Use one of XS, S, M, L, XL, XXL."
+                )
+            normalized_sizes[canonical_size] = estimate
+        normalized_categories[category_name] = normalized_sizes
+    return normalized_categories
+
+
+def _normalize_t_shirt_config_input(data: dict[str, Any]) -> dict[str, Any]:
+    normalized = deepcopy(data)
+    canonical_key = "t_shirt_sizes"
+    alias_key = "t_shirt_size_categories"
+
+    has_canonical = canonical_key in normalized
+    has_alias = alias_key in normalized
+
+    if has_canonical and has_alias:
+        raise ValueError(
+            "Config cannot define both 't_shirt_sizes' and "
+            "'t_shirt_size_categories'. Use only 't_shirt_sizes'."
+        )
+
+    if has_alias:
+        normalized[canonical_key] = normalized.pop(alias_key)
+
+    if canonical_key not in normalized:
+        return normalized
+
+    raw_sizes = normalized[canonical_key]
+    if not isinstance(raw_sizes, dict):
+        return normalized
+
+    entries = list(raw_sizes.values())
+    if len(entries) == 0:
+        return normalized
+
+    all_leaf_entries = all(_is_tshirt_estimate_leaf(entry) for entry in entries)
+    all_nested_entries = all(isinstance(entry, dict) for entry in entries) and all(
+        all(_is_tshirt_estimate_leaf(leaf) for leaf in entry.values())
+        for entry in entries
+    )
+
+    if all_leaf_entries:
+        raw_default_category = normalized.get(
+            "t_shirt_size_default_category", DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY
+        )
+        default_category = str(raw_default_category).strip().lower()
+        if not default_category:
+            default_category = DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY
+        normalized[canonical_key] = _normalize_t_shirt_size_map(
+            {default_category: raw_sizes}
+        )
+        return normalized
+
+    if all_nested_entries:
+        normalized[canonical_key] = _normalize_t_shirt_size_map(raw_sizes)
+        return normalized
+
+    raise ValueError(
+        "Invalid t_shirt_sizes config shape. Use either a flat size map or a "
+        "nested '<category>: <size>: {low, expected, high}' map."
+    )
 
 
 class UncertaintyFactorConfig(BaseModel):
@@ -266,7 +413,10 @@ class Config(BaseModel):
     """Complete application configuration."""
 
     uncertainty_factors: Dict[str, Dict[str, float]] = Field(default_factory=dict)
-    t_shirt_sizes: Dict[str, TShirtSizeConfig] = Field(default_factory=dict)
+    t_shirt_sizes: Dict[str, Dict[str, TShirtSizeConfig]] = Field(default_factory=dict)
+    t_shirt_size_default_category: str = Field(
+        default=DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY
+    )
     t_shirt_size_unit: EffortUnit = Field(default=EffortUnit.HOURS)
     story_points: Dict[int, StoryPointConfig] = Field(default_factory=dict)
     story_point_unit: EffortUnit = Field(default=EffortUnit.DAYS)
@@ -292,7 +442,8 @@ class Config(BaseModel):
         with open(config_path, "r") as f:
             data = yaml.safe_load(f) or {}
 
-        merged_data = _merge_nested_dicts(_build_default_config_data(), data)
+        normalized_data = _normalize_t_shirt_config_input(data)
+        merged_data = _merge_nested_dicts(_build_default_config_data(), normalized_data)
         return cls.model_validate(merged_data)
 
     @classmethod
@@ -320,12 +471,76 @@ class Config(BaseModel):
         """Get T-shirt size configuration.
 
         Args:
-            size: T-shirt size (e.g., 'XS', 'S', 'M', 'L', 'XL', 'XXL')
+            size: T-shirt size token (for example 'M' or 'epic.M')
 
         Returns:
-            TShirtSizeConfig object or None if not found
+            TShirtSizeConfig object or None if not found or invalid
         """
-        return self.t_shirt_sizes.get(size)
+        try:
+            return self.resolve_t_shirt_size(size)
+        except ValueError:
+            return None
+
+    def get_t_shirt_categories(self) -> list[str]:
+        """Return configured T-shirt categories in declaration order."""
+        return list(self.t_shirt_sizes.keys())
+
+    def resolve_t_shirt_size(self, size: str) -> TShirtSizeConfig:
+        """Resolve a T-shirt size token to a concrete estimate range."""
+        raw_size = size.strip()
+        if not raw_size:
+            raise ValueError("Invalid t_shirt_size format ''. Use '<category>.<size>' or '<size>'.")
+
+        if raw_size.count(".") > 1:
+            raise ValueError(
+                f"Invalid t_shirt_size format '{size}'. Use '<category>.<size>' or '<size>'."
+            )
+
+        category_name: str
+        size_token: str
+        if "." in raw_size:
+            category_part, size_part = raw_size.split(".")
+            if not category_part or not size_part:
+                raise ValueError(
+                    f"Invalid t_shirt_size format '{size}'. Use '<category>.<size>' or '<size>'."
+                )
+            category_name = category_part.strip().lower()
+            size_token = size_part.strip()
+        else:
+            category_name = self.t_shirt_size_default_category.strip().lower()
+            size_token = raw_size
+
+        if category_name not in self.t_shirt_sizes:
+            valid_categories = ", ".join(self.get_t_shirt_categories())
+            raise ValueError(
+                f"Invalid t_shirt_size category '{category_name}' in '{size}'. "
+                f"Valid categories: {valid_categories}"
+            )
+
+        canonical_size = _normalize_tshirt_size_token(size_token)
+        if canonical_size is None:
+            normalized_candidate = (
+                size_token.strip().replace("-", "_").replace(" ", "_").upper()
+            )
+            if normalized_candidate and normalized_candidate.replace("_", "").isalpha():
+                valid_sizes = ", ".join(self.t_shirt_sizes[category_name].keys())
+                raise ValueError(
+                    f"Invalid t_shirt_size '{size}'. Valid sizes for category "
+                    f"'{category_name}': {valid_sizes}"
+                )
+            raise ValueError(
+                f"Invalid t_shirt_size format '{size}'. Use '<category>.<size>' or '<size>'."
+            )
+
+        category_sizes = self.t_shirt_sizes[category_name]
+        resolved = category_sizes.get(canonical_size)
+        if resolved is None:
+            valid_sizes = ", ".join(category_sizes.keys())
+            raise ValueError(
+                f"Invalid t_shirt_size '{size}'. Valid sizes for category "
+                f"'{category_name}': {valid_sizes}"
+            )
+        return resolved
 
     def get_story_point(self, points: int) -> Optional[StoryPointConfig]:
         """Get Story Point configuration.

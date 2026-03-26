@@ -29,7 +29,7 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 | Method | Input | Resolved to | Best for |
 |--------|-------|-------------|----------|
 | **Explicit range** | `low`, `expected`, `high` | Used directly | Teams comfortable giving numeric day estimates |
-| **T-shirt size** | `t_shirt_size` (e.g., `"M"`) | Looked up in config → `low`, `expected`, `high` | Early-stage or relative estimation |
+| **T-shirt size** | `t_shirt_size` (e.g., `"M"` or `"epic.M"`) | Looked up in config → `low`, `expected`, `high` | Early-stage or relative estimation |
 | **Story points** | `story_points` (e.g., `5`) | Looked up in config → `low`, `expected`, `high` | Teams using story point estimation practices |
 
 All three methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
@@ -332,24 +332,24 @@ If we assume the $\ln(F_i)$ are independent and identically distributed, then by
 
 ## T-shirt size estimates
 
-T-shirt sizing is a relative estimation technique where tasks are classified into categories such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`. This is useful when teams are more comfortable with relative comparisons ("this is a medium-sized task") than with specific day estimates.
+T-shirt sizing is a relative estimation technique where tasks are classified into sizes such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`, now scoped by named categories (`bug`, `story`, `epic`, `business`, `initiative`). This is useful when teams need different calibration levels across planning horizons.
 
-In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) in the configuration file. During simulation, the size label is resolved to its numeric range, and then the triangular distribution is used for sampling — exactly as if the numeric values had been specified directly.
+In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) inside a category in the configuration file. During simulation, a bare value like `M` resolves through `t_shirt_size_default_category` (default: `story`), while a qualified value like `epic.M` resolves directly.
 
 ### Default T-shirt size mappings
 
 The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_unit` in the configuration file).
 
-| Size | min (hours) | expected (hours) | max (hours) |
+| Size (`story`) | min (hours) | expected (hours) | max (hours) |
 |------|-------------|--------------------|-----------|
-| `XS` | 0.5         | 1                  | 2          |
-| `S`  | 1           | 2                  | 4          |
-| `M`  | 3           | 5                  | 8          |
-| `L`  | 5           | 8                  | 13         |
-| `XL` | 8           | 13                 | 21         |
-| `XXL`| 13          | 21                 | 34         |
+| `XS` | 3           | 5                  | 15         |
+| `S`  | 5           | 16                 | 40         |
+| `M`  | 40          | 60                 | 120        |
+| `L`  | 160         | 240                | 500        |
+| `XL` | 320         | 400                | 750        |
+| `XXL`| 400         | 500                | 1200       |
 
-The values follow a Fibonacci-like progression, which gives a natural scaling where larger sizes have proportionally wider ranges — reflecting greater uncertainty in larger tasks.
+The built-in `story` values follow a Fibonacci-like progression, which gives a natural scaling where larger sizes have proportionally wider ranges and uncertainty.
 
 ### Specifying a T-shirt size estimate
 
@@ -364,13 +364,27 @@ tasks:
     dependencies: []
 ```
 
-This is equivalent to writing:
+You can also use a qualified value:
 
 ```yaml
 estimate:
-  low: 3
-  expected: 5
-  high: 8
+  t_shirt_size: "epic.M"
+```
+
+Bare long-form aliases are accepted too, for example:
+
+```yaml
+estimate:
+  t_shirt_size: "Medium"
+```
+
+The bare `"M"` example above is equivalent to writing:
+
+```yaml
+estimate:
+  low: 40
+  expected: 60
+  high: 120
   unit: "hours"
 ```
 
@@ -430,33 +444,21 @@ The default mappings can be overridden in the configuration file. This allows or
 ```yaml
 # config.yaml
 t_shirt_sizes:
-  XS:
-    low: 0.25
-    expected: 0.5
-    high: 1
-  S:
-    low: 0.5
-    expected: 1
-    high: 2
-  M:
-    low: 1
-    expected: 2
-    high: 4
-  L:
-    low: 2
-    expected: 4
-    high: 7
-  XL:
-    low: 4
-    expected: 7
-    high: 12
-  XXL:
-    low: 7
-    expected: 12
-    high: 20
+  story:
+    M:
+      low: 45
+      expected: 65
+      high: 130
+  epic:
+    M:
+      low: 240
+      expected: 520
+      high: 1400
+
+t_shirt_size_default_category: story
 ```
 
-Any sizes you define in the configuration file replace the defaults entirely for that size. You can also define only the sizes your team uses — for instance, if you only use `S`, `M`, and `L`, you only need to define those three.
+Any category/size values you define in the configuration file override those defaults while untouched categories and sizes remain available.
 
 ### Choosing the unit for T-shirt sizes
 

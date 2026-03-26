@@ -136,6 +136,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
 | `-m`, `--minimal` | Show minimal console output: version, project overview, calendar/effort statistical summaries, and calendar confidence intervals only | off |
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
+| `--tshirt-category CATEGORY` | Override default T-shirt category for bare values like `M` during this run | config setting |
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
 | `--distribution MODEL` | Override the default task duration distribution (`triangular` or `lognormal`). Takes precedence over the project-level `distribution` setting but **not** over a `distribution` set on an individual task. | project file setting |
 | `--velocity-model MODEL` | Override the sprint planning velocity model (`empirical` or `neg_binomial`). Applies only when sprint planning is enabled in the project file. | project file setting |
@@ -176,6 +177,9 @@ mcprojsim simulate project.yaml --minimal
 
 # Show staffing recommendations
 mcprojsim simulate project.yaml --staffing
+
+# Override bare T-shirt sizes to use the epic category
+mcprojsim simulate project.yaml --tshirt-category epic
 
 # Staffing with table formatting
 mcprojsim simulate project.yaml --staffing --table

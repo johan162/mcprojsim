@@ -359,7 +359,13 @@ unit = "days"
 
 ### 3. T-shirt-size estimate
 
-This form lets the task refer to a symbolic size such as `XS`, `M`, or `XL`.
+This form lets the task refer to a symbolic size token.
+
+Supported token forms:
+
+- bare size: `M`
+- qualified category/size: `epic.M`
+- long-form size aliases: `Medium`, `Epic.Large`
 
 #### Supported fields
 
@@ -385,6 +391,11 @@ If the chosen size does not exist in the active configuration, simulation raises
 ```yaml
 estimate:
   t_shirt_size: "M"
+```
+
+```yaml
+estimate:
+  t_shirt_size: "epic.M"
 ```
 
 #### TOML example
@@ -455,10 +466,18 @@ Built-in defaults exist for both styles, and a custom configuration file may ove
 
 ```yaml
 t_shirt_sizes:
-  M:
-    low: 4
-    expected: 6
-    high: 9
+  story:
+    M:
+      low: 45
+      expected: 65
+      high: 130
+  epic:
+    M:
+      low: 240
+      expected: 520
+      high: 1400
+
+t_shirt_size_default_category: story
 
 story_points:
   5:
@@ -1100,9 +1119,27 @@ These are also the names used by the current project-file model under `tasks[].u
 
 ## The `t_shirt_sizes` section
 
-This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric effort ranges.
+This section maps symbolic T-shirt sizes to numeric effort ranges by category.
 
-### Supported fields for each size
+Canonical shape:
+
+```yaml
+t_shirt_sizes:
+  story:
+    M:
+      low: 40
+      expected: 60
+      high: 120
+  epic:
+    M:
+      low: 200
+      expected: 480
+      high: 1200
+
+t_shirt_size_default_category: story
+```
+
+### Supported fields for each category/size entry
 
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
@@ -1110,7 +1147,15 @@ This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric ef
 | `expected` | Yes | float | — | `> 0` |
 | `max` | Yes | float | — | `> 0` |
 
-### Built-in size keys
+### Built-in category keys
+
+- `bug`
+- `story`
+- `epic`
+- `business`
+- `initiative`
+
+### Built-in size keys (per category)
 
 - `XS`
 - `S`
@@ -1119,28 +1164,31 @@ This section maps symbolic T-shirt sizes such as `S`, `M`, or `XL` to numeric ef
 - `XL`
 - `XXL`
 
-### Built-in defaults
+### Built-in `story` defaults
 
 | Size | `min` | `expected` | `max` |
 |---|---:|---:|---:|
-| `XS` | 0.5 | 1 | 2 |
-| `S` | 1 | 2 | 4 |
-| `M` | 3 | 5 | 8 |
-| `L` | 5 | 8 | 13 |
-| `XL` | 8 | 13 | 21 |
-| `XXL` | 13 | 21 | 34 |
+| `XS` | 3 | 5 | 15 |
+| `S` | 5 | 16 | 40 |
+| `M` | 40 | 60 | 120 |
+| `L` | 160 | 240 | 500 |
+| `XL` | 320 | 400 | 750 |
+| `XXL` | 400 | 500 | 1200 |
 
 ### Example override
 
 ```yaml
 t_shirt_sizes:
-  M:
-    low: 4
-    expected: 6
-    high: 9
+  story:
+    M:
+      low: 45
+      expected: 65
+      high: 130
+
+t_shirt_size_default_category: story
 ```
 
-With this override, only `M` changes. The other built-in sizes remain available.
+With this override, only `story.M` changes. Other built-in categories and sizes remain available.
 
 ## The `t_shirt_size_unit` field
 
@@ -1162,7 +1210,7 @@ This field controls the unit used for all values in `t_shirt_sizes`.
 t_shirt_size_unit: "days"
 ```
 
-If a task uses `estimate.t_shirt_size: "M"`, the simulator resolves that size using the configured range and then converts the chosen unit to internal hours.
+If a task uses `estimate.t_shirt_size: "M"`, the simulator resolves it through `t_shirt_size_default_category`. A qualified value like `estimate.t_shirt_size: "epic.M"` resolves directly to that category.
 
 ## The `story_points` section
 
