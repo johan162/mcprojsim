@@ -186,6 +186,7 @@ LINT_STAMP := $(STAMP_DIR)/lint-stamp
 TYPECHECK_STAMP := $(STAMP_DIR)/typecheck-stamp
 INSTALL_STAMP := $(STAMP_DIR)/install-stamp
 TEST_STAMP := $(STAMP_DIR)/test-stamp
+TEST_ALL_STAMP := $(STAMP_DIR)/test-all-stamp
 GHCR_LOGIN_STAMP := $(STAMP_DIR)/ghcr-login-stamp
 
 # Build package files
@@ -217,7 +218,17 @@ $(TEST_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running tests in parallel with coverage check...$(NC)"
 	@if poetry run pytest -n auto --cov=app --cov-report= --cov-report=xml --cov-fail-under=${COVERAGE} -s -q; then \
 		touch $(TEST_STAMP); \
-		echo -e "$(GREEN)✓ All tests passed with required coverage$(NC)"; \
+		echo -e "$(GREEN)✓ All non-heavy tests passed with required coverage$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Tests failed or coverage below ${COVERAGE}%$(NC)"; \
+		exit 1; \
+	fi
+
+$(TEST_ALL_STAMP): $(SRC_FILES) $(TEST_FILES)
+	@echo -e "$(DARKYELLOW)- Running tests in parallel with coverage check...$(NC)"
+	@if poetry run pytest -m "heavy or not heavy" -n auto --cov=app --cov-report= --cov-report=xml --cov-fail-under=${COVERAGE} -s -q; then \
+		touch $(TEST_ALL_STAMP); \
+		echo -e "$(GREEN)✓ All tests (including heavy) passed with required coverage$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Tests failed or coverage below ${COVERAGE}%$(NC)"; \
 		exit 1; \
@@ -370,14 +381,17 @@ reinstall: clean-venv clean install ## Reinstall the project from scratch
 # The targets: test-short, test-param, and test-html will always be run on invocation.
 # Plain test target wilkl ony be run when needed (source- or test-file changes)
 # =============================================================================================
-test: $(INSTALL_STAMP) $(TEST_STAMP) ## Run tests in parallel, terminal coverage report
+test: $(TEST_STAMP) ## Run tests in parallel, terminal coverage report
 	@:
 
-test-short: $(INSTALL_STAMP) ## Run tests in parallel with minimal output, no coverage
+test-all: $(TEST_ALL_STAMP) ## Run all tests (including heavy) in parallel, terminal coverage report
+	@:
+
+test-short: ## Run tests in parallel with minimal output, no coverage
 	@echo -e "$(DARKYELLOW)- Starting short test without coverage...$(NC)"	
 	@poetry run pytest -n auto -q --no-cov
 
-test-html: $(INSTALL_STAMP) ## Run tests in parallel, HTML & XML coverage report
+test-html: ## Run tests in parallel, HTML & XML coverage report
 	@echo -e "$(DARKYELLOW)- Starting parallel test coverage...$(NC)"
 	@poetry run pytest -q -n auto --cov=src/mcprojsime --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
 	@echo -e "$(GREEN)✓ Test coverage report generated in \"coverage.xml\" and \"htmlcov/index.html\"$(NC)"
