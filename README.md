@@ -61,7 +61,9 @@ mcprojsim --version
 
 For the fastest first run, start with [QUICKSTART.md](QUICKSTART.md). For the fuller documentation path after that, use the published [User Guide](https://johan162.github.io/mcprojsim/).
 
-> [!TIP] There is also a prepared Docker image if you prefer to use an isolated environment to run in. There is also a accompaning script in `bin/mcprojsim.sh` to run the program in the container in the same way as the Python executable installed via `pipx`
+> [!TIP] 
+> There is also a prepared Docker image if you prefer to use an isolated environment to run in. 
+> There is also a accompaning script in `bin/mcprojsim.sh` to run the program in the container in the same way as the Python executable installed via `pipx`
 
 
 ## Minimal example
