@@ -1,10 +1,10 @@
 # Design document: Multi-Category T-Shirt Sizes
 
 ## TL;DR 
-Add named T-shirt size categories (bug, story, epic, business, initiative) so teams can express differently-scoped work with the right calibration. `t_shirt_size: "M"` keeps working exactly as today. A new qualified form `t_shirt_size: "epic.M"` resolves to a different category. 
+Add named T-shirt size categories (`bug`, `story`, `epic`, `business`, `initiative`) so teams can express differently-scoped work with the right calibration. `t_shirt_size: "M"` keeps working exactly as today. A new qualified form `t_shirt_size: "epic.M"` resolves to a different category.
 
-Config structure is extended with a `t_shirt_size_categories` top-level key. 
-A `t_shirt_size_default_category` setting (default: story) controls the legacy resolution path. A `--tshirt-category`  CLI flag overrides it at run time.
+Config keeps `t_shirt_sizes` as the canonical top-level key and extends it to a nested category map. The transitional alias key `t_shirt_size_categories` is accepted as input and normalized to canonical `t_shirt_sizes` during load.
+A `t_shirt_size_default_category` setting (default: `story`) controls the legacy resolution path. A `--tshirt-category` CLI flag overrides it at run time.
 
 
 ## Overview
@@ -27,12 +27,12 @@ Today a single global T-shirt size table forces a compromise between precision a
 
 Beyond the magnitude problem, there is also a communication problem. When a product manager writes `M` on a roadmap item, they typically mean something much larger than what a developer means by `M` on a Jira ticket. Named categories give both groups a precise shared vocabulary and allow the same simulation tool to reason about work at every level of planning granularity.
 
----
 
 
 
 
----
+
+
 
 ## Design
 
@@ -278,6 +278,9 @@ estimate:
 ```
 Error: value must be a non-empty string. Blank and numeric values are rejected at model validation time.
 
+Implementation note:
+- `t_shirt_size` must be validated as a strict string type (no numeric coercion).
+
 #### Not supported: qualifying a numeric value
 ```yaml
 estimate:
@@ -293,7 +296,7 @@ estimate:
 ```
 Error: `t_shirt_size` and `unit` are mutually exclusive. Category provides the unit context.
 
----
+
 
 ## Error Handling Contract
 
@@ -314,7 +317,10 @@ All user-facing failures should include exact invalid input and suggested valid 
 5. Invalid qualified syntax:
 `Invalid t_shirt_size format 'epic..M'. Use '<category>.<size>' or '<size>'.`
 
----
+6. Invalid scalar type for `t_shirt_size`:
+`Invalid t_shirt_size value 42 (type int). Expected non-empty string.`
+
+
 
 ## Defaults for Built-In Categories
 
@@ -330,7 +336,7 @@ All user-facing failures should include exact invalid input and suggested valid 
 
 Full per-size values are defined in the canonical schema above.
 
----
+
 
 ## Implementation Steps (Verification-Driven)
 
@@ -375,7 +381,8 @@ Changes:
 1. Update `TaskEstimate.validate_distribution` to accept:
    - bare token form (`<size>`)
    - qualified token form (`<category>.<size>`)
-2. Keep distribution exclusivity behavior unchanged.
+3. Keep distribution exclusivity behavior unchanged.
+4. Enforce strict string validation for `t_shirt_size` so numeric values are not coerced into strings.
 
 Verify:
 `pytest tests/test_models.py --no-cov`
@@ -489,7 +496,7 @@ Example requirements:
 3. Show mixed `M`, `Medium`, and `epic.M` in a project.
 
 Verify:
-`poetry run mcprojsim validate -i examples/multi_category_project.yaml`
+`poetry run mcprojsim validate examples/multi_category_project.yaml`
 
 ## Phase 9: Grammar and docs
 Files:
@@ -508,7 +515,7 @@ Required updates:
 Verify:
 `poetry run mkdocs build`
 
----
+
 
 ## Relevant Files
 
@@ -536,7 +543,7 @@ Examples/docs files:
 - `docs/user_guide/task_estimation.md`
 - `docs/user_guide/project_files.md`
 
----
+
 
 ## Full Verification Sequence
 1. `pytest tests/test_config.py --no-cov`
@@ -547,7 +554,7 @@ Examples/docs files:
 6. `poetry run pytest tests/ -m "not heavy" -n auto --cov=src/mcprojsim --cov-fail-under=80`
 7. `poetry run mkdocs build`
 
----
+
 
 ## Scope Decisions
 1. `t_shirt_size_unit` remains global (no per-category units).
