@@ -1,5 +1,8 @@
 # Monte Carlo Project Simulator (mcprojsim)
 
+
+**Stop guessing deadlines. Start simulating them !**
+
 | Category | Link |
 |----------|--------|
 |**Package**|[![PyPI version](https://img.shields.io/pypi/v/mcprojsim.svg)](https://pypi.org/project/mcprojsim/) [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)|
@@ -24,38 +27,24 @@ It is intended for teams that want answers such as:
 
 ## Key features
 
-- **Natural language project input** — generate valid project files from plain-text descriptions using `mcprojsim generate`
-- **Selectable iterations** - Monte Carlo schedule simulation with configurable iteration counts
-- **Multiple distributions** - Range-based task estimates using triangular and log-normal distributions
-- **Selection of units** - Unit-aware estimation: supports hours, days, and weeks with automatic conversion to a canonical hours-based internal representation
-- **Work hours per day** - Configurable `hours_per_day` per project, with working-day and delivery-date reporting
-- **Dependency scheduling** - Task dependencies and schedule-aware project duration calculation
-- **Constrained scheduling** - Resource- and calendar-aware scheduling mode with automatic activation when resources are present (explicit or team-size generated)
-- **Resource handling** - Task/resource constraints (`resources`, `max_resources`, `min_experience_level`), availability, productivity, experience levels, and calendar/absence/sickness effects
-- **Risk modelling** - Task-level and project-level risk modeling
-- **Uncertainty factors** - Configurable uncertainty factors such as team experience and requirements maturity
-- **T-Shirt and Story Point** - T-shirt size and story point symbolic estimates with configurable unit defaults
-- **Multi-category T-shirt sizing** - Category-aware symbolic sizing (for example `bug.M`, `story.M`, `epic.M`) with a configurable default category and CLI override (`--tshirt-category`)
-- **Multiple export formats** - Exported results in JSON, CSV, and HTML formats
-- **Result analysis** - Critical path and sensitivity-oriented analysis outputs
-- **Sensitivity analysis** — Spearman rank correlation identifies which tasks most influence total duration
-- **Schedule slack** — CPM-based total float calculation highlights critical vs. buffered tasks
-- **Risk impact analysis** — per-task trigger rates, mean impact, and mean-when-triggered statistics
-- **Statistical distribution metrics** — skewness, excess kurtosis, and coefficient of variation for the overall schedule distribution
-- **Probability-of-date** — calculate the likelihood of finishing by a given target date (`--target-date`)
-- **Staffing analysis** — Brooks's Law–aware team-size recommendations for multiple experience profiles (`--staffing`)
-- **ASCII table output** — optional `--table` flag formats CLI results as bordered tables for easier reading
-- **Sprint planning** — Monte Carlo sprint forecasting with empirical or Negative Binomial velocity models, sickness modelling, item spillover, and historical metrics import (CSV or JSON)
-- Reproducible runs with explicit random seeds
+- Monte Carlo schedule simulation with configurable iterations and reproducible seeds
+- Range-based estimates using explicit low/expected/high values, T-shirt sizes, story points, and multi-category symbolic sizing
+- Dependency-only scheduling plus resource- and calendar-constrained scheduling when resources are present
+- Risk and uncertainty modeling for both tasks and the overall project
+- Analysis outputs including percentiles, delivery dates, critical paths, sensitivity, slack, risk impact, staffing guidance, and target-date probability
+- JSON, CSV, and HTML exports, plus optional ASCII table output in the CLI
+- Natural-language project generation from plain text with `mcprojsim generate`
+- MCP server support for assistant-driven generation, validation, and simulation workflows
+- Sprint planning support with empirical or negative binomial velocity models, sickness modelling, spillover, and historical metrics import
 
 ## Recommended installation
 
-For most users running `mcprojsim` through an MCP-capable assistant, the recommended path is the **MCP bundle artifact** from GitHub Releases.
+Most users fall into one of two paths:
 
-If the machine has Python 3.13+, you can typically ask your assistant to install and configure the bundle directly.
-That means no manual `pip`, `pipx`, or environment setup commands are required in normal MCP-client workflows.
+- **Terminal-first CLI usage**: install with `pipx`.
+- **MCP-assisted usage**: use the released MCP bundle or the optional MCP package install described in [docs/user_guide/mcp-server.md](docs/user_guide/mcp-server.md).
 
-For direct terminal-only CLI usage (without MCP), `pipx` remains the simplest manual install path:
+For direct terminal-only CLI usage, `pipx` remains the simplest manual install path:
 
 ```bash
 python3 -m pip install --user pipx
@@ -70,7 +59,7 @@ mcprojsim --help
 mcprojsim --version
 ```
 
-For a first-run walkthrough, see the 10-min [QUICKSTART.md](QUICKSTART.md). After this we recommend going through the [User Guide](https://johan162.github.io/mcprojsim/)
+For the fastest first run, start with [QUICKSTART.md](QUICKSTART.md). For the fuller documentation path after that, use the published [User Guide](https://johan162.github.io/mcprojsim/).
 
 ## Minimal example
 
@@ -107,7 +96,7 @@ mcprojsim validate project.yaml
 Run a simulation:
 
 ```bash
-mcprojsim simulate project.yaml --seed 12345
+mcprojsim simulate project.yaml --seed 12345 --table
 ```
 
 Typical outputs (see the `--help` for how to specify output) include:
@@ -118,20 +107,17 @@ Typical outputs (see the `--help` for how to specify output) include:
 
 ## Documentation map
 
-Use the local document that matches your goal:
+Use the entry point that matches your goal:
 
-- [QUICKSTART.md](QUICKSTART.md) — installation paths, first commands, container usage, and local setup
-- [docs/getting_started.md](docs/getting_started.md) — first simulation walkthrough
-- [docs/user_guide/introduction.md](docs/user_guide/introduction.md) — concepts behind Monte Carlo estimation
-- [docs/user_guide/your_first_project.md](docs/user_guide/your_first_project.md) — build a project file step by step
-- [docs/user_guide/project_files.md](docs/user_guide/project_files.md) — project file reference
-- [docs/user_guide/constrained.md](docs/user_guide/constrained.md) — resource/calendar-constrained scheduling, assignment behavior, and diagnostics
-- [docs/user_guide/sprint_planning.md](docs/user_guide/sprint_planning.md) — sprint planning, velocity models, sickness, and historical metric import
-- [docs/configuration.md](docs/configuration.md) — uncertainty factors and runtime configuration
-- [docs/examples.md](docs/examples.md) — example projects and usage patterns
-- [docs/api_reference.md](docs/api_reference.md) — Python API usage
+|Documentation Link|Purpose|
+|------------------|-------|
+| [QUICKSTART.md](QUICKSTART.md) | Fastest terminal-based first run |
+| [User Documentation](https://johan162.github.io/mcprojsim/) | The full documentation site |
+| [User Guide](https://johan162.github.io/mcprojsim/user_guide/getting_started/) | The User Guide section |
+| [Development Guide](https://johan162.github.io/mcprojsim/development/) | contributor and source-checkout workflows |
 
-The full published documentation is also available at <https://johan162.github.io/mcprojsim/>.
+
+Additional runnable examples can be seen in the [Examples section](https://johan162.github.io/mcprojsim/examples/) of the user guide or in the project directory [examples/](examples/).
 
 ## Example commands
 
@@ -142,158 +128,56 @@ mcprojsim generate examples/nl_example.txt -o my_project.yaml
 # Validate an input file
 mcprojsim validate examples/sample_project.yaml
 
-# Run a default simulation
-mcprojsim simulate examples/sample_project.yaml
-
-# Use a custom configuration
-mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml
-
-# Run resource/calendar-constrained scheduling example
-mcprojsim simulate examples/resource_cap_small_task.yaml --seed 42 --table
-
-# Reproduce a run exactly
+# Run a reproducible simulation
 mcprojsim simulate examples/sample_project.yaml --seed 42
 
-# Format output as ASCII tables
-mcprojsim simulate examples/sample_project.yaml --table
+# Use a custom configuration
+mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml --seed 42
 
 # Calculate probability of meeting a target date
 mcprojsim simulate examples/sample_project.yaml --target-date 2026-06-01
 
-# Combine options
-mcprojsim simulate examples/sample_project.yaml --config examples/sample_config.yaml --table --verbose --seed 42
-
-# Sprint planning with negative binomial velocity model and sickness modelling
-mcprojsim simulate examples/sprint_nb_sickness_large.yaml --seed 42 --velocity-model neg_binomial
+# Format tabular sections for easier reading
+mcprojsim simulate examples/sample_project.yaml --table --seed 42
 ```
+
+For full CLI coverage, including constrained scheduling, sprint planning, quiet/minimal modes, staffing, and export options, see [docs/user_guide/running_simulations.md](docs/user_guide/running_simulations.md).
 
 ## MCP server integration
 
 `mcprojsim` can run as a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server, letting AI assistants such as GitHub Copilot, Claude Desktop, or any MCP-compatible client generate project files, validate descriptions, and run simulations conversationally.
 
-### Preferred install path: MCP bundle artifact
+Preferred path: install the released MCP bundle artifact from GitHub Releases with your assistant, or follow the manual setup in [docs/user_guide/mcp-server.md](docs/user_guide/mcp-server.md).
 
-Each release includes an MCP bundle artifact: `mcprojsim-mcp-bundle-<version>.zip`.
-
-On systems with Python 3.13+, the preferred workflow is to ask your MCP-capable assistant to install/configure this bundle.
-In that workflow, no manual package-install commands are needed.
-
-Example prompt to your assistant to install:
-
-- ***"Download and install the latest mcprojsim MCP server from GitHub Releases. Follow the README.md for 
-installation instructions."***
-
-Once installed the server exposes three tools:
-
-| Tool | Description |
-|------|-------------|
-| `generate_project_file` | Convert a natural-language project description into a valid YAML project file |
-| `validate_project_description` | Check a description for missing data or inconsistencies without generating a file |
-| `simulate_project` | Generate, validate, and simulate in one step — returns full statistical results |
+For end-to-end setup, installation tradeoffs, and natural-language input examples, see [docs/user_guide/mcp-server.md](docs/user_guide/mcp-server.md).
 
 
-### A basic example of a prompt
-
-After restarting the assistant (needed to load the new MCP Server) ask for a simple project simulation:
-
-- ***"Simulate a project that starts 2025-05-01 and has two M-size tasks that depends on each-other. Show the result for all complete date percentiles in a table."*** 
+### Example prompt to get your assistant to install `mcprojsim`:
 
 ```txt
-● Here are the simulation results for the two-task project (sequential M→M, starting 2025-05-01):
-
-  ┌────────────┬───────┬──────────────┬───────────────┐
-  │ Percentile │ Hours │ Working Days │ Delivery Date │
-  ├────────────┼───────┼──────────────┼───────────────┤
-  │ P50        │ 230.8 │ 29           │ 2025-06-11    │
-  ├────────────┼───────┼──────────────┼───────────────┤
-  │ P80        │ 265.3 │ 34           │ 2025-06-18    │
-  ├────────────┼───────┼──────────────┼───────────────┤
-  │ P90        │ 283.4 │ 36           │ 2025-06-20    │
-  ├────────────┼───────┼──────────────┼───────────────┤
-  │ P95        │ 298.7 │ 38           │ 2025-06-24    │
-  └────────────┴───────┴──────────────┴───────────────┘
-
-  Key stats: Mean ~233h (30 days) · Std dev ~38h · Both tasks are on the critical path 100% of the time.
+Download and install the latest mcprojsim MCP server from GitHub Releases. Follow the README.md for installation instructions.
 ```
 
-To get more statistics try:
-
-- ***"Show the summary statistics for this simulation in a table."***
-
-
-```txt
-● From the previous simulation results:
-
-  ┌──────────────────────────┬────────────────────────────────┐
-  │ Statistic                │ Value                          │
-  ├──────────────────────────┼────────────────────────────────┤
-  │ Mean                     │ 232.64 hours (30 working days) │
-  ├──────────────────────────┼────────────────────────────────┤
-  │ Median (P50)             │ 230.82 hours (29 working days) │
-  ├──────────────────────────┼────────────────────────────────┤
-  │ Std Dev                  │ 37.97 hours                    │
-  ├──────────────────────────┼────────────────────────────────┤
-  │ Coefficient of Variation │ 0.1632                         │
-  ├──────────────────────────┼────────────────────────────────┤
-  │ Skewness                 │ 0.2703                         │
-  ├──────────────────────────┼────────────────────────────────┤
-  │ Excess Kurtosis          │ -0.3336                        │
-  ├──────────────────────────┼────────────────────────────────┤
-  │ Iterations               │ 10,000                         │
-  ├──────────────────────────┼────────────────────────────────┤
-  │ Hours per Day            │ 8.0                            │
-  └──────────────────────────┴────────────────────────────────┘
-```
-
-
-
-### Manual install path
-
-If you prefer a manual install path, use one of the options below.
-
-Install with the optional MCP dependency group:
-
-```bash
-pipx install "mcprojsim[mcp]"
-```
-
-Or, from a source checkout:
-
-```bash
-poetry install --with mcp
-```
-
-Add the server to your MCP client configuration (e.g. VS Code `settings.json` or Claude Desktop `claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "mcprojsim": {
-      "command": "mcprojsim-mcp"
-    }
-  }
-}
-```
+See the MCP server [detailed documentation](https://johan162.github.io/mcprojsim/user_guide/mcp-server/#what-is-the-mcp-server) for examples of using the server.
 
 
 ## For developers
 
 If you want to work from a source checkout, run tests, build docs, or use containers, start with:
 
-- [QUICKSTART.md](QUICKSTART.md)
-- [scripts/README.md](scripts/README.md)
-- [docs/index.md](docs/index.md)
-
-The detailed developer documentation (including how to configure and build the container) is available at
-
 - [docs/development.md](docs/development.md)
+- [scripts/README.md](scripts/README.md)
+
+Use [QUICKSTART.md](QUICKSTART.md) only for the fastest end-user first run. The detailed developer documentation, including Poetry workflow, Make targets, scripts, containers, and release steps, lives in [docs/development.md](docs/development.md).
+
+The full published documentation is also available at <https://johan162.github.io/mcprojsim/>.
 
 ## Contributing
 
 Contributions are welcome.
 
 1. Fork the repository
-2. Read the [Developer Guide](docs/development.md) to set up your environment and understand the codebase
+2. Read the [Developer Guide](https://johan162.github.io/mcprojsim/development/) to set up your environment and understand the codebase
 3. Create a feature branch
 4. Make your changes with tests
 5. Use the `./scripts/mkbld.sh` script to build and test your changes locally

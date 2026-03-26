@@ -2,6 +2,8 @@
 
 This guide is for end users who want to get from installation to a first simulation as quickly as possible.
 
+It intentionally follows one tactical happy path: one install method, one tiny example, one simulation command, and one report export. For broader install options, deeper explanations, and extended workflows, continue with the User Guide chapter at `docs/user_guide/getting_started.md`.
+
 In the next few minutes you will:
 
 1. install `mcprojsim`
@@ -65,7 +67,7 @@ Generate the project file:
 mcprojsim generate description.txt -o quickstart_project.yaml
 ```
 
-That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), including qualified forms like `epic.M`, story points, or explicit `low/expected/high` estimates. Bare T-shirt values resolve via the configured default category. See the [MCP Server & Natural Language Input](docs/user_guide/mcp-server.md) guide for the full input format.
+That is it — the generated `quickstart_project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), including qualified forms like `epic.M`, story points, or explicit `low/expected/high` estimates. Bare T-shirt values resolve via the configured default category. See the [MCP Server & Natural Language Input](docs/user_guide/mcp-server.md) guide for the full input format.
 
 ??? tip "Alternative: write the YAML by hand"
 
@@ -101,7 +103,6 @@ See the [project file reference](docs/user_guide/project_files.md) for all avail
 
 This example is intentionally small — two tasks, one dependency, but that is enough for a meaningful first simulation!
 
-`
 ## 3. Validate the file
 
 Before simulating, validate the input:
@@ -128,7 +129,7 @@ What this does:
 
 - runs the default number of simulation iterations
 - uses `--seed 42` so the result is reproducible
-- writes result files into your current working directory
+- prints a summary to the terminal
 
 You should see a summary with values such as:
 
@@ -139,9 +140,11 @@ You should see a summary with values such as:
 
 The output will now be the following:
 
+(Example output only: exact version string, timing, and numeric values depend on your installed release and random inputs.)
+
 ```bash
-% mcprojsim simulate quickstart_example.yaml --seed 42 --table
-mcprojsim, version 0.4.7
+% mcprojsim simulate quickstart_project.yaml --seed 42 --table
+mcprojsim, version 0.8.0
 Progress: 100.0% (10000/10000)
 
 === Simulation Results ===
@@ -229,19 +232,19 @@ The first part of the generated HTML is shown below to give you a preview of wha
 Run again with more iterations:
 
 ```bash
-mcprojsim simulate project.yaml --iterations 50000 --seed 42 --table
+mcprojsim simulate quickstart_project.yaml --iterations 50000 --seed 42 --table
 ```
 
 Use a custom configuration file:
 
 ```bash
-mcprojsim simulate project.yaml --config my_config.yaml --seed 42 --table
+mcprojsim simulate quickstart_project.yaml --config my_config.yaml --seed 42 --table
 ```
 
 Suppress progress output:
 
 ```bash
-mcprojsim simulate project.yaml --quiet
+mcprojsim simulate quickstart_project.yaml --quiet
 ```
 
 ## What the main results mean
@@ -259,9 +262,9 @@ A common practical pattern is:
 
 ## If you want to go further
 
-After this first run, the best next documents are:
+After this first run, move to the fuller User Guide path below. This Quick Start stays intentionally short and tactical; the chapters below are the long-form, maintained references:
 
-- [docs/getting_started.md](docs/getting_started.md) — a fuller walkthrough
+- [docs/user_guide/getting_started.md](docs/user_guide/getting_started.md) — a fuller walkthrough
 - [docs/user_guide/introduction.md](docs/user_guide/introduction.md) — Monte Carlo concepts
 - [docs/user_guide/your_first_project.md](docs/user_guide/your_first_project.md) — build richer project files step by step
 - [docs/user_guide/project_files.md](docs/user_guide/project_files.md) — project file reference
@@ -270,12 +273,12 @@ After this first run, the best next documents are:
 
 ## Need a different installation path?
 
-This guide intentionally focuses on the fastest end-user path.
+This guide intentionally focuses on the fastest end-user path for a first successful run.
 
 If `pipx` is not the right fit, see:
 
 - [README.md](README.md) for the project overview
 - [docs/user_guide/getting_started.md](docs/user_guide/getting_started.md) for basic install and first-run material
-- [scripts/README.md](scripts/README.md) if you are working from a source checkout here is a description for how ti use the helper scripts to set up a local development environment and run tests.
+- [scripts/README.md](scripts/README.md) if you are working from a source checkout and want helper scripts for local setup and test commands.
 
-If you are a developer, see the [Development Guide](docs/development_guide.md) for instructions on setting up a local development environment, running tests, and contributing to the project.
+If you are a developer, see [docs/development.md](docs/development.md) for instructions on setting up a local development environment, running tests, and contributing to the project.

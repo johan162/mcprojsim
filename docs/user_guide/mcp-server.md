@@ -24,9 +24,31 @@ When an MCP client connects to the server, the AI assistant can invoke these too
 
 The MCP server has one additional dependency beyond the core `mcprojsim` package: the `mcp` Python library. It is declared as an optional dependency group so it does not affect users who do not need the server.
 
+## Ways to install the server
+
+There are two main ways to install the server
+
+1. [Recommended] Ask your assitant to download and install the server from GitHub
+
+2. Download the project, setup the development environment and build the server locally your self.
+
+## Ask your assistane
+
+Use the following example prompt to get your assistant to install `mcprojsim`:
+
+```txt
+Download and install the latest mcprojsim MCP server from GitHub Releases. Follow the README.md for installation instructions.
+```
+
+Depending on which assistant you use (e.g. `copilot-cli`, `claude-desktop`, ...) and you general instructions you might get different questions to approve various file-operations in order to
+setup the server.
+
+
+## Download project and install manually
+
 ### Step 1: Install mcprojsim with MCP support
 
-If you already have the project checked out and use Poetry:
+If you already have the project checked out and use Poetry you can install it with:
 
 ```bash
 poetry install --with mcp
@@ -80,6 +102,69 @@ Every MCP client has its own configuration format. Below are examples for common
 
 !!! note
     If you installed `mcprojsim` inside a Poetry virtual environment, you may need to specify the full path to the entry point. You can find it with `poetry run which mcprojsim-mcp`.
+
+
+## A basic example of a prompt that uses the MCP Server
+
+After restarting the assistant (needed to load the new MCP Server) ask for a simple project simulation:
+
+```txt
+Simulate a project that starts 2025-05-01 and has two M-size tasks that depends on each-other. Show the result for all complete date percentiles in a table.
+```
+
+An example output would be
+
+```txt
+● Here are the simulation results for the two-task project (sequential M→M, starting 2025-05-01):
+
+  ┌────────────┬───────┬──────────────┬───────────────┐
+  │ Percentile │ Hours │ Working Days │ Delivery Date │
+  ├────────────┼───────┼──────────────┼───────────────┤
+  │ P50        │ 230.8 │ 29           │ 2025-06-11    │
+  ├────────────┼───────┼──────────────┼───────────────┤
+  │ P80        │ 265.3 │ 34           │ 2025-06-18    │
+  ├────────────┼───────┼──────────────┼───────────────┤
+  │ P90        │ 283.4 │ 36           │ 2025-06-20    │
+  ├────────────┼───────┼──────────────┼───────────────┤
+  │ P95        │ 298.7 │ 38           │ 2025-06-24    │
+  └────────────┴───────┴──────────────┴───────────────┘
+
+  Key stats: Mean ~233h (30 days) · Std dev ~38h · Both tasks are on the critical path 100% of the time.
+```
+
+You can then continue to explore more of the statistics with aanother prompt
+
+```txt
+Show the summary statistics for this simulation in a table.
+```
+
+which could result in something simlar to this table:
+
+```txt
+● From the previous simulation results:
+
+  ┌──────────────────────────┬────────────────────────────────┐
+  │ Statistic                │ Value                          │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Mean                     │ 232.64 hours (30 working days) │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Median (P50)             │ 230.82 hours (29 working days) │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Std Dev                  │ 37.97 hours                    │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Coefficient of Variation │ 0.1632                         │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Skewness                 │ 0.2703                         │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Excess Kurtosis          │ -0.3336                        │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Iterations               │ 10,000                         │
+  ├──────────────────────────┼────────────────────────────────┤
+  │ Hours per Day            │ 8.0                            │
+  └──────────────────────────┴────────────────────────────────┘
+```
+
+
 
 
 
