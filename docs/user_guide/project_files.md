@@ -1370,7 +1370,7 @@ where:
 Finally, the **Efficiency** shown in the staffing table is calculated relative to the fastest team size found for that profile:
 
 $$
-	ext{Efficiency}(n) = \frac{T_{min}}{T(n)}
+  \text{Efficiency}(n) = \frac{T_{min}}{T(n)}
 $$
 
 So `min_individual_productivity` affects efficiency indirectly:

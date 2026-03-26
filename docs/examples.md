@@ -1599,8 +1599,7 @@ planning_story_points = 3
 [tasks.estimate]
 low = 4
 expected = 6
-high = 8
-```
+high = 8```
 
 ```
 sprintUniqueID,committed_StoryPoints,completed_StoryPoints,addedIntraSprint_StoryPoints,removedInSprint_StoryPoints,spilledOver_StoryPoints,startDate,endDate
