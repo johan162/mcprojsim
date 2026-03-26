@@ -1,6 +1,7 @@
 """Integration tests."""
 
 import json
+import math
 import random
 import statistics
 from pathlib import Path
@@ -592,20 +593,21 @@ class TestCLIIntegration:
         assert results.mean > 0
         assert results.std_dev > 0
 
-        # Check that task durations are reasonable for their sizes
-        # XS: 3-15 hours, M: 40-120 hours, L: 160-500 hours
         task_xs_durations = results.task_durations["task_xs"]
         task_m_durations = results.task_durations["task_m"]
         task_l_durations = results.task_durations["task_l"]
+        xs_config = config.resolve_t_shirt_size("XS")
+        m_config = config.resolve_t_shirt_size("M")
+        l_config = config.resolve_t_shirt_size("L")
 
         # XS should be smallest on average
         assert task_xs_durations.mean() < task_m_durations.mean()
         assert task_m_durations.mean() < task_l_durations.mean()
 
         # Check reasonable ranges
-        assert 3.0 <= task_xs_durations.min() <= 15.0
-        assert 40.0 <= task_m_durations.min() <= 120.0
-        assert 160.0 <= task_l_durations.min() <= 500.0
+        assert xs_config.low <= task_xs_durations.min() <= xs_config.high
+        assert m_config.low <= task_m_durations.min() <= m_config.high
+        assert l_config.low <= task_l_durations.min() <= l_config.high
 
     def test_story_point_sizing_simulation(self, tmp_path):
         """Test simulation with Story Point estimates."""
@@ -695,10 +697,12 @@ class TestCLIIntegration:
 
         parser = YAMLParser()
         project = parser.parse_file(file_path)
+        config = Config.get_default()
+        config.t_shirt_size_default_category = "story"
         results = SimulationEngine(
             iterations=200,
             random_seed=42,
-            config=Config.get_default(),
+            config=config,
             show_progress=False,
         ).run(project)
 
@@ -765,3 +769,130 @@ class TestCLIIntegration:
                 config=Config.get_default(),
                 show_progress=False,
             ).run(project)
+
+    def test_story_category_finishes_faster_than_epic_for_large_tshirt_project(
+        self, tmp_path
+    ):
+        """Story-category symbolic sizing should complete faster than epic sizing."""
+        size_cycle = ["XS", "S", "M", "L", "XL", "XXL"]
+        tasks: list[dict[str, object]] = []
+
+        for index in range(30):
+            task_id = f"task_{index + 1:03d}"
+            size = size_cycle[index % len(size_cycle)]
+
+            if index < 10:
+                dependencies: list[str] = []
+            else:
+                dependency_count = ((index - 10) % 3) + 1
+                dependency_start = max(0, index - dependency_count - 2)
+                dependencies = [
+                    f"task_{dep_index + 1:03d}"
+                    for dep_index in range(
+                        dependency_start, dependency_start + dependency_count
+                    )
+                ]
+
+            tasks.append(
+                {
+                    "id": task_id,
+                    "name": f"Task {index + 1}",
+                    "estimate": {"t_shirt_size": size},
+                    "dependencies": dependencies,
+                }
+            )
+
+        project_data = {
+            "project": {
+                "name": "Large T-Shirt Category Comparison",
+                "start_date": "2026-01-05",
+                "confidence_levels": [50, 80, 90],
+            },
+            "tasks": tasks,
+        }
+
+        project_file = tmp_path / "large_tshirt_category_project.yaml"
+        with open(project_file, "w") as f:
+            yaml.dump(project_data, f, sort_keys=False)
+
+        parser = YAMLParser()
+        project = parser.parse_file(project_file)
+
+        independent_tasks = [task for task in project.tasks if not task.dependencies]
+        dependent_tasks = [task for task in project.tasks if task.dependencies]
+
+        assert len(project.tasks) == 30
+        assert len(independent_tasks) == 10
+        assert len(dependent_tasks) == 20
+        assert all(1 <= len(task.dependencies) <= 3 for task in dependent_tasks)
+
+        story_config = Config.get_default()
+        story_config.t_shirt_size_default_category = "story"
+
+        epic_config = Config.get_default()
+        epic_config.t_shirt_size_default_category = "epic"
+
+        story_results = SimulationEngine(
+            iterations=400,
+            random_seed=4242,
+            config=story_config,
+            show_progress=False,
+        ).run(project)
+        epic_results = SimulationEngine(
+            iterations=400,
+            random_seed=4242,
+            config=epic_config,
+            show_progress=False,
+        ).run(project)
+
+        story_output = tmp_path / "story_category_results.json"
+        epic_output = tmp_path / "epic_category_results.json"
+        JSONExporter.export(story_results, story_output, config=story_config)
+        JSONExporter.export(epic_results, epic_output, config=epic_config)
+
+        assert story_output.exists()
+        assert epic_output.exists()
+
+        with open(story_output, "r") as f:
+            story_data = json.load(f)
+        with open(epic_output, "r") as f:
+            epic_data = json.load(f)
+
+        assert story_data["statistics"]["mean_hours"] == pytest.approx(
+            story_results.mean
+        )
+        assert epic_data["statistics"]["mean_hours"] == pytest.approx(
+            epic_results.mean
+        )
+        assert story_results.mean < epic_results.mean
+
+        story_means: list[float] = []
+        epic_means: list[float] = []
+        paired_deltas: list[float] = []
+
+        for run_index in range(10):
+            seed = 7000 + run_index
+            story_run = SimulationEngine(
+                iterations=250,
+                random_seed=seed,
+                config=story_config,
+                show_progress=False,
+            ).run(project)
+            epic_run = SimulationEngine(
+                iterations=250,
+                random_seed=seed,
+                config=epic_config,
+                show_progress=False,
+            ).run(project)
+
+            story_means.append(float(story_run.mean))
+            epic_means.append(float(epic_run.mean))
+            paired_deltas.append(float(epic_run.mean - story_run.mean))
+
+        mean_delta = statistics.mean(paired_deltas)
+        stdev_delta = statistics.stdev(paired_deltas)
+        lower_bound_95 = mean_delta - 1.96 * (stdev_delta / math.sqrt(len(paired_deltas)))
+
+        assert statistics.mean(story_means) < statistics.mean(epic_means)
+        assert all(delta > 0 for delta in paired_deltas)
+        assert lower_bound_95 > 0
