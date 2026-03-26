@@ -162,6 +162,7 @@ USER_GUIDE_DOCS := \
 	docs/user_guide/constrained.md  \
 	docs/user_guide/running_simulations.md  \
 	docs/user_guide/interpreting_results.md  \
+	docs/user_guide/configuration.md  \
 	docs/user_guide/mcp-server.md \
 	docs/examples.md
 
