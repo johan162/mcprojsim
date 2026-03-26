@@ -496,7 +496,7 @@ VERSION_NUMBER=${LATEST_TAG#v}
 # Strip the '-' from the version for pre-releases
 FILE_VERSION_NUMBER=${VERSION_NUMBER//-rc/rc}
 EXPECTED_BUNDLE_FILE="${DIST_DIR}/${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip"
-EXPECTED_USER_GUIDE_FILE="mcprojsim_user_guide-v${VERSION_NUMBER}.pdf"
+EXPECTED_USER_GUIDE_FILE="${DIST_DIR}/mcprojsim_user_guide-v${VERSION_NUMBER}.pdf"
 
 # 4.4: Fail fast if required release artifacts are missing
 print_sub_step "Checking required release artifacts..."

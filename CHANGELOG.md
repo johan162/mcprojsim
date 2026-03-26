@@ -1,3 +1,22 @@
+## [v0.8.1] - 2026-03-27
+
+Release Type: patch
+
+### 📋 Summary
+This release is a documentation improvement. It streamlines onboarding flow between README, QUICKSTART, and the User Guide to reduce duplication and improve navigation.
+
+### 📚 Documentation
+- Updated README wording for clearer onboarding guidance and MCP usage pointers
+- Updated QUICKSTART text to align with current CLI behavior and reduce overlap with the User Guide
+- Made QUICKSTART part of the user guide to offer a rendered version
+- Refined documentation wording and formatting across onboarding sections for consistency
+- Improved top-level README structure by shortening repeated sections and clarifying install and navigation paths
+- Improved documentation flow so users are routed more clearly between QUICKSTART, User Guide, and development references
+
+### 🛠 Internal
+- Updated generated User Guide PDF artifact content as part of the docs update cycle and use dist directory
+
+
 ## [v0.8.0] - 2026-03-26
 
 Release Type: minor

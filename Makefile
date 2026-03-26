@@ -122,6 +122,9 @@ endif
 SRC_DIR := src
 TEST_DIR := tests
 DOCS_DIR := docs
+DIST_DIR := dist
+BUILD_DIR := .build
+
 DOCS_CONTAINER_SCRIPT := ./scripts/docs-contctl.sh
 
 # Server configuration
@@ -137,14 +140,14 @@ VERSION := $(shell grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
 CONTAINER_NAME := $(PROJECT)
 
 # User guide PDF output path
-USER_GUIDE_PDF := mcprojsim_user_guide-v$(VERSION).pdf
-USER_GUIDE_PANDOC_PDF := user_guide_pandoc.pdf
-USER_GUIDE_DIST_DIR := .build/user-guide
-USER_GUIDE_TEMPLATE := docs/user_guide/report_template.tex
-USER_GUIDE_CONCAT_MD := $(USER_GUIDE_DIST_DIR)/user_guide_concat.md
-USER_GUIDE_BODY_TEX := $(USER_GUIDE_DIST_DIR)/user_guide_body.tex
-USER_GUIDE_TEX := $(USER_GUIDE_DIST_DIR)/user_guide_report.tex
-USER_GUIDE_PDF_BUILT := $(USER_GUIDE_DIST_DIR)/user_guide_report.pdf
+USER_GUIDE_PDF := $(DIST_DIR)/mcprojsim_user_guide-v$(VERSION).pdf
+USER_GUIDE_PANDOC_PDF := $(DIST_DIR)/user_guide_pandoc-v$(VERSION).pdf
+USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
+USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
+USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
+USER_GUIDE_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body.tex
+USER_GUIDE_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report.tex
+USER_GUIDE_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report.pdf
 
 # Doc files for User Guide PDF generation
 USER_GUIDE_DOCS := \
@@ -159,6 +162,7 @@ USER_GUIDE_DOCS := \
 	docs/user_guide/constrained.md  \
 	docs/user_guide/running_simulations.md  \
 	docs/user_guide/interpreting_results.md  \
+	docs/user_guide/configuration.md  \
 	docs/user_guide/mcp-server.md \
 	docs/examples.md
 
@@ -193,16 +197,20 @@ TEST_STAMP := $(STAMP_DIR)/test-stamp
 TEST_ALL_STAMP := $(STAMP_DIR)/test-all-stamp
 GHCR_LOGIN_STAMP := $(STAMP_DIR)/ghcr-login-stamp
 
-# Build package files
-DIST_DIR := dist
+# ================================================================================================
+# Design Document Variables and Targets
+# ================================================================================================
 
-# Generic builddir for interim build artifacts (e.g. for PDF generation)
-BUILD_DIR := .build
-
-# Design ideas PDF output path
+# Design ideas PDF output paths
 DESIGN_IDEAS_DIR := design-ideas
+
+# Generic Latex template to use for all design documents - 
+# it will have a placeholder for content injection and some basic styling, 
+# but the content will be generated from the respective markdown files 
+# for each design document
 DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template.tex
 
+# Sprint planning design document specific variables
 SPRINT_PLANNING_MD := $(DESIGN_IDEAS_DIR)/sprint-based-planning.md
 SPRINT_PLANNING_PDF := $(DESIGN_IDEAS_DIR)/sprint-based-planning.pdf
 SPRINT_PLANNING_DIST_DIR := $(BUILD_DIR)/design-ideas/sprint-planning
@@ -211,6 +219,7 @@ SPRINT_PLANNING_BODY_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_bo
 SPRINT_PLANNING_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.tex
 SPRINT_PLANNING_PDF_BUILT := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.pdf
 
+# T-shirt category design document specific variables
 TSHIRT_CATEGORY_MD := $(DESIGN_IDEAS_DIR)/tshirt-categories.md
 TSHIRT_CATEGORY_PDF := $(DESIGN_IDEAS_DIR)/tshirt-categories.pdf
 TSHIRT_CATEGORY_DIST_DIR := $(BUILD_DIR)/design-ideas/tshirt-categories
@@ -218,8 +227,7 @@ TSHIRT_CATEGORY_BODY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_body.t
 TSHIRT_CATEGORY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_report.tex
 TSHIRT_CATEGORY_PDF_BUILT := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_report.pdf
 
-
-# Remove any hypen in PyPi specifi version number for wheel filename compliance
+# Remove any hypen in PyPi specific version number for wheel filename compliance
 PYPI_VERSION := $(shell echo $(VERSION) | tr -d '-')
 BUILD_WHEEL := $(DIST_DIR)/$(PYPI_NAME)-$(PYPI_VERSION)-py3-none-any.whl
 BUILD_SDIST := $(DIST_DIR)/$(PYPI_NAME)-$(PYPI_VERSION).tar.gz
@@ -278,7 +286,6 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 		echo -e "$(RED)✗ Error: Flake8 linting failed$(NC)"; \
 		exit 1; \
 	fi
-# Run pyright as an additional linting step if available
 	@if poetry run pyright --version >/dev/null 2>&1; then \
 		echo -e "$(DARKYELLOW)- Running pyright for additional linting...$(NC)"; \
 		if poetry run pyright --level error $(SRC_DIR) $(TEST_DIR); then \
@@ -378,7 +385,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-sprint-planning|pdf-pandoc|gen-examples|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
+	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-design|pdf-pandoc|gen-examples|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
@@ -468,7 +475,7 @@ clean: ## Clean up build artifacts, caches, and timestamp files. Keep the .venv 
 	@rm -rf .coverage coverage.xml
 	@rm -rf htmlcov
 	@rm -rf site
-	@rm -rf $(USER_GUIDE_DIST_DIR)
+	@rm -rf $(USER_GUIDE_BUILD_DIR)
 	@rm -rf .mypy_cache
 	@rm -rf $(STAMP_DIR)
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
@@ -486,7 +493,7 @@ maintainer-clean: ## Perform a thorough cleanup including virtual environment, c
 # ============================================================================================
 # Documentation Targets
 # ============================================================================================
-docs: $(DOC_STAMP) ## Build the project documentation with MkDocs
+docs: $(DOC_STAMP) ## Build the HTML project documentation with MkDocs
 	@:
 
 gen-examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
@@ -514,7 +521,7 @@ pdf: $(USER_GUIDE_PDF)  ## Build the user guide PDF
 
 $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  ## Build user guide via custom LaTeX report template + pdflatex
 	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
-	@mkdir -p $(USER_GUIDE_DIST_DIR)
+	@mkdir -p $(USER_GUIDE_BUILD_DIR)
 	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
 	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_CONCAT_MD)
 	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
@@ -528,12 +535,12 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  #
 		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$(USER_GUIDE_TEMPLATE) > $(USER_GUIDE_TEX)
 	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_DIST_DIR) $(USER_GUIDE_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_DIST_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
 	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
 	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
 
-pdf-design: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) ## Build all the design documents PDFs
+pdf-design: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) ## Build all the PDF versions of the design documents
 	@:
 
 $(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(DESIGN_LATEX_TEMPLATE) $(SPRINT_PLANNING_PANDOC_FILTER)

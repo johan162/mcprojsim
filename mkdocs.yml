@@ -41,6 +41,7 @@ theme:
     repo: fontawesome/brands/github
 nav:
   - Home: index.md
+  - Quick Start: QUICKSTART.md
   - User Guide:
       - Getting Started: user_guide/getting_started.md
       - Introduction: user_guide/introduction.md
@@ -53,12 +54,12 @@ nav:
       - Resource and Calendar Constrained Scheduling: user_guide/constrained.md
       - Running Simulations: user_guide/running_simulations.md
       - Interpreting Results: user_guide/interpreting_results.md
+      - Configuration: user_guide/configuration.md
       - MCP Server: user_guide/mcp-server.md
       - Examples: examples.md
-  - Development: development.md
-  - Configuration: configuration.md
+  - Dev Guide: development.md
   - API Reference: api_reference.md
-  - Formal Grammar: grammar.md
+  - EBNF Grammar: grammar.md
 
 plugins:
   - search
