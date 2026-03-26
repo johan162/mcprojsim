@@ -23,6 +23,8 @@ class TestConfig:
         assert "technical_complexity" in config.uncertainty_factors
         assert config.simulation.default_iterations == 10000
         assert config.lognormal.high_percentile == 95
+        assert config.sprint_defaults.velocity_model == "empirical"
+        assert config.sprint_defaults.sickness.probability_per_person_per_week == 0.058
 
     def test_default_confidence_levels_include_p25_and_p99(self):
         """Test the shared default confidence levels include P25 and P99."""
@@ -79,6 +81,29 @@ class TestConfig:
         assert config.simulation.max_stored_critical_paths == 20
         assert config.get_t_shirt_size("M") is not None
         assert config.get_story_point(5) is not None
+
+    def test_load_from_file_overrides_sprint_defaults(self, tmp_path):
+        """Sprint defaults should load and merge from configuration files."""
+        config_data = {
+            "sprint_defaults": {
+                "velocity_model": "neg_binomial",
+                "planning_confidence_level": 0.9,
+                "sickness": {
+                    "enabled": True,
+                    "probability_per_person_per_week": 0.08,
+                },
+            }
+        }
+
+        config_file = tmp_path / "config.yaml"
+        with open(config_file, "w") as f:
+            yaml.dump(config_data, f)
+
+        config = Config.load_from_file(config_file)
+        assert config.sprint_defaults.velocity_model == "neg_binomial"
+        assert config.sprint_defaults.planning_confidence_level == 0.9
+        assert config.sprint_defaults.sickness.enabled is True
+        assert config.sprint_defaults.sickness.probability_per_person_per_week == 0.08
 
     def test_load_from_file_merges_symbolic_defaults(self, tmp_path):
         """Test loading config preserves built-in symbolic defaults not overridden."""

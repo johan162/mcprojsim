@@ -1716,3 +1716,141 @@ tasks:
         assert (
             captured_project[0].sprint_planning.velocity_model.value == "neg_binomial"
         )
+
+    def test_simulate_applies_sprint_defaults_from_config(self, monkeypatch) -> None:
+        """Global sprint_defaults should apply when project uses built-in defaults."""
+        runner = CliRunner()
+        captured_project: list[Any] = []
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    iterations = 10
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        class FakeSprintEngine:
+            def __init__(self, iterations, random_seed) -> None:
+                pass
+
+            def run(self, project):
+                captured_project.append(project)
+                results = SprintPlanningResults(
+                    iterations=10,
+                    project_name=project.project.name,
+                    sprint_length_weeks=2,
+                    sprint_counts=np.array([2.0, 3.0]),
+                    random_seed=42,
+                    planning_confidence_level=project.sprint_planning.planning_confidence_level,
+                    removed_work_treatment=project.sprint_planning.removed_work_treatment.value,
+                    historical_diagnostics={
+                        "sampling_mode": "matching_cadence",
+                        "velocity_model": project.sprint_planning.velocity_model.value,
+                        "observation_count": 2,
+                    },
+                    planned_commitment_guidance=4.0,
+                    carryover_statistics={"mean": 0.0},
+                    spillover_statistics={"aggregate_spillover_rate": {"mean": 0.0}},
+                    disruption_statistics={"observed_frequency": 0.0},
+                    burnup_percentiles=[],
+                )
+                results.calculate_statistics()
+                return results
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            config_file = Path("config.yaml")
+
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "Sprint Defaults",
+                            "start_date": "2025-01-01",
+                            "team_size": 6,
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "planning_story_points": 3,
+                            }
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "story_points",
+                            "history": [
+                                {"sprint_id": "S1", "completed_story_points": 5},
+                                {"sprint_id": "S2", "completed_story_points": 6},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            config_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "sprint_defaults": {
+                            "planning_confidence_level": 0.9,
+                            "removed_work_treatment": "reduce_backlog",
+                            "velocity_model": "neg_binomial",
+                            "sickness": {
+                                "enabled": True,
+                                "probability_per_person_per_week": 0.08,
+                                "duration_log_mu": 0.6,
+                                "duration_log_sigma": 0.5,
+                            },
+                        }
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                ["simulate", str(project_file), "--config", str(config_file), "-q"],
+            )
+
+        assert result.exit_code == 0
+        assert len(captured_project) == 1
+        sprint = captured_project[0].sprint_planning
+        assert sprint is not None
+        assert sprint.planning_confidence_level == 0.9
+        assert sprint.removed_work_treatment.value == "reduce_backlog"
+        assert sprint.velocity_model.value == "neg_binomial"
+        assert sprint.sickness.enabled is True
+        assert sprint.sickness.probability_per_person_per_week == 0.08
+        assert sprint.sickness.duration_log_mu == 0.6
+        assert sprint.sickness.duration_log_sigma == 0.5

@@ -9,7 +9,26 @@ import click
 import yaml
 
 from mcprojsim import __version__
-from mcprojsim.config import Config, DEFAULT_SIMULATION_ITERATIONS
+from mcprojsim.config import (
+    Config,
+    DEFAULT_SIMULATION_ITERATIONS,
+    DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
+    DEFAULT_SPRINT_REMOVED_WORK_TREATMENT,
+    DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU,
+    DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA,
+    DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
+    DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_ALPHA,
+    DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_BETA,
+    DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT,
+    DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE,
+    DEFAULT_SPRINT_SPILLOVER_MODEL,
+    DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS,
+    DEFAULT_SPRINT_VELOCITY_MODEL,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_LOW,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY,
+)
 from mcprojsim.exporters import CSVExporter, HTMLExporter, JSONExporter
 from mcprojsim.models.project import Project
 from mcprojsim.models.simulation import SimulationResults
@@ -504,6 +523,122 @@ def _get_tasks_mode_heterogeneity_warning(project: Project) -> str | None:
     return None
 
 
+def _apply_sprint_defaults(project: Project, cfg: Config) -> None:
+    """Apply company-wide sprint defaults when project values use built-in defaults."""
+    sprint_planning = project.sprint_planning
+    if sprint_planning is None or not sprint_planning.enabled:
+        return
+
+    sprint_defaults = cfg.sprint_defaults
+
+    if (
+        sprint_planning.planning_confidence_level
+        == DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL
+    ):
+        sprint_planning.planning_confidence_level = (
+            sprint_defaults.planning_confidence_level
+        )
+
+    if (
+        sprint_planning.removed_work_treatment.value
+        == DEFAULT_SPRINT_REMOVED_WORK_TREATMENT
+    ):
+        sprint_planning.removed_work_treatment = type(
+            sprint_planning.removed_work_treatment
+        )(sprint_defaults.removed_work_treatment)
+
+    if sprint_planning.velocity_model.value == DEFAULT_SPRINT_VELOCITY_MODEL:
+        sprint_planning.velocity_model = type(sprint_planning.velocity_model)(
+            sprint_defaults.velocity_model
+        )
+
+    if (
+        sprint_planning.volatility_overlay.disruption_probability
+        == DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY
+    ):
+        sprint_planning.volatility_overlay.disruption_probability = (
+            sprint_defaults.volatility_disruption_probability
+        )
+    if (
+        sprint_planning.volatility_overlay.disruption_multiplier_low
+        == DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_LOW
+    ):
+        sprint_planning.volatility_overlay.disruption_multiplier_low = (
+            sprint_defaults.volatility_disruption_multiplier_low
+        )
+    if (
+        sprint_planning.volatility_overlay.disruption_multiplier_expected
+        == DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED
+    ):
+        sprint_planning.volatility_overlay.disruption_multiplier_expected = (
+            sprint_defaults.volatility_disruption_multiplier_expected
+        )
+    if (
+        sprint_planning.volatility_overlay.disruption_multiplier_high
+        == DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH
+    ):
+        sprint_planning.volatility_overlay.disruption_multiplier_high = (
+            sprint_defaults.volatility_disruption_multiplier_high
+        )
+
+    if sprint_planning.spillover.model.value == DEFAULT_SPRINT_SPILLOVER_MODEL:
+        sprint_planning.spillover.model = type(sprint_planning.spillover.model)(
+            sprint_defaults.spillover_model
+        )
+    if (
+        sprint_planning.spillover.size_reference_points
+        == DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS
+    ):
+        sprint_planning.spillover.size_reference_points = (
+            sprint_defaults.spillover_size_reference_points
+        )
+    if (
+        sprint_planning.spillover.consumed_fraction_alpha
+        == DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_ALPHA
+    ):
+        sprint_planning.spillover.consumed_fraction_alpha = (
+            sprint_defaults.spillover_consumed_fraction_alpha
+        )
+    if (
+        sprint_planning.spillover.consumed_fraction_beta
+        == DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_BETA
+    ):
+        sprint_planning.spillover.consumed_fraction_beta = (
+            sprint_defaults.spillover_consumed_fraction_beta
+        )
+    if (
+        sprint_planning.spillover.logistic_slope
+        == DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE
+    ):
+        sprint_planning.spillover.logistic_slope = sprint_defaults.spillover_logistic_slope
+    if (
+        sprint_planning.spillover.logistic_intercept
+        == DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT
+    ):
+        sprint_planning.spillover.logistic_intercept = (
+            sprint_defaults.spillover_logistic_intercept
+        )
+
+    if sprint_planning.sickness.enabled is False:
+        sprint_planning.sickness.enabled = sprint_defaults.sickness.enabled
+    if (
+        sprint_planning.sickness.probability_per_person_per_week
+        == DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK
+    ):
+        sprint_planning.sickness.probability_per_person_per_week = (
+            sprint_defaults.sickness.probability_per_person_per_week
+        )
+    if sprint_planning.sickness.duration_log_mu == DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU:
+        sprint_planning.sickness.duration_log_mu = sprint_defaults.sickness.duration_log_mu
+    if (
+        sprint_planning.sickness.duration_log_sigma
+        == DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA
+    ):
+        sprint_planning.sickness.duration_log_sigma = (
+            sprint_defaults.sickness.duration_log_sigma
+        )
+
+
 @click.group()
 @click.version_option(version=__version__, prog_name="mcprojsim")
 def cli() -> None:
@@ -654,6 +789,8 @@ def simulate(
         logger.info(f"Loading project from {project_file}")
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
+
+        _apply_sprint_defaults(project, cfg)
 
         tasks_mode_warning = _get_tasks_mode_heterogeneity_warning(project)
         if tasks_mode_warning is not None and quiet < 2:
@@ -1440,6 +1577,52 @@ def config(config_file: Optional[str], generate: bool) -> None:
     click.echo(f"  Histogram bins: {cfg.output.histogram_bins}")
     click.echo(
         "  Critical path report limit: " f"{cfg.output.critical_path_report_limit}"
+    )
+
+    click.echo("\nSprint Defaults:")
+    click.echo(
+        "  Planning confidence level: "
+        f"{cfg.sprint_defaults.planning_confidence_level}"
+    )
+    click.echo(
+        "  Removed work treatment: "
+        f"{cfg.sprint_defaults.removed_work_treatment}"
+    )
+    click.echo(f"  Velocity model: {cfg.sprint_defaults.velocity_model}")
+    click.echo(
+        "  Volatility disruption probability: "
+        f"{cfg.sprint_defaults.volatility_disruption_probability}"
+    )
+    click.echo(
+        "  Volatility disruption multiplier (low/expected/high): "
+        f"{cfg.sprint_defaults.volatility_disruption_multiplier_low}/"
+        f"{cfg.sprint_defaults.volatility_disruption_multiplier_expected}/"
+        f"{cfg.sprint_defaults.volatility_disruption_multiplier_high}"
+    )
+    click.echo(f"  Spillover model: {cfg.sprint_defaults.spillover_model}")
+    click.echo(
+        "  Spillover size reference points: "
+        f"{cfg.sprint_defaults.spillover_size_reference_points}"
+    )
+    click.echo(
+        "  Spillover consumed fraction alpha/beta: "
+        f"{cfg.sprint_defaults.spillover_consumed_fraction_alpha}/"
+        f"{cfg.sprint_defaults.spillover_consumed_fraction_beta}"
+    )
+    click.echo(
+        "  Spillover logistic slope/intercept: "
+        f"{cfg.sprint_defaults.spillover_logistic_slope}/"
+        f"{cfg.sprint_defaults.spillover_logistic_intercept}"
+    )
+    click.echo(f"  Sickness enabled: {cfg.sprint_defaults.sickness.enabled}")
+    click.echo(
+        "  Sickness probability per person per week: "
+        f"{cfg.sprint_defaults.sickness.probability_per_person_per_week}"
+    )
+    click.echo(
+        "  Sickness duration log mu/sigma: "
+        f"{cfg.sprint_defaults.sickness.duration_log_mu}/"
+        f"{cfg.sprint_defaults.sickness.duration_log_sigma}"
     )
 
 

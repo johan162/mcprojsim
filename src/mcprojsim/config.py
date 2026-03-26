@@ -4,7 +4,7 @@ from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from statistics import NormalDist
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Literal, Optional, cast
 
 import yaml
 from pydantic import BaseModel, Field
@@ -192,6 +192,28 @@ def _build_default_config_data() -> dict[str, Any]:
                     "productivity_factor": 0.65,
                     "communication_overhead": 0.08,
                 },
+            },
+        },
+        "sprint_defaults": {
+            "planning_confidence_level": DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
+            "removed_work_treatment": DEFAULT_SPRINT_REMOVED_WORK_TREATMENT,
+            "velocity_model": DEFAULT_SPRINT_VELOCITY_MODEL,
+            "volatility_disruption_probability": DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY,
+            "volatility_disruption_multiplier_low": DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_LOW,
+            "volatility_disruption_multiplier_expected": DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED,
+            "volatility_disruption_multiplier_high": DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH,
+            "spillover_model": DEFAULT_SPRINT_SPILLOVER_MODEL,
+            "spillover_size_reference_points": DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS,
+            "spillover_size_brackets": deepcopy(DEFAULT_SPRINT_SPILLOVER_SIZE_BRACKETS),
+            "spillover_consumed_fraction_alpha": DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_ALPHA,
+            "spillover_consumed_fraction_beta": DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_BETA,
+            "spillover_logistic_slope": DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE,
+            "spillover_logistic_intercept": DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT,
+            "sickness": {
+                "enabled": False,
+                "probability_per_person_per_week": DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
+                "duration_log_mu": DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU,
+                "duration_log_sigma": DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA,
             },
         },
     }
@@ -400,6 +422,92 @@ class StaffingConfig(BaseModel):
     )
 
 
+class SprintSicknessDefaultsConfig(BaseModel):
+    """Company-wide defaults for sprint sickness modeling."""
+
+    enabled: bool = False
+    probability_per_person_per_week: float = Field(
+        default=DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
+        gt=0.0,
+        lt=1.0,
+    )
+    duration_log_mu: float = Field(default=DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU)
+    duration_log_sigma: float = Field(
+        default=DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA,
+        gt=0,
+    )
+
+
+class SprintDefaultsConfig(BaseModel):
+    """Company-wide defaults for sprint-planning behavior."""
+
+    planning_confidence_level: float = Field(
+        default=DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
+        gt=0,
+        lt=1,
+    )
+    removed_work_treatment: Literal["churn_only", "reduce_backlog"] = Field(
+        default=cast(
+            Literal["churn_only", "reduce_backlog"],
+            DEFAULT_SPRINT_REMOVED_WORK_TREATMENT,
+        )
+    )
+    velocity_model: Literal["empirical", "neg_binomial"] = Field(
+        default=cast(
+            Literal["empirical", "neg_binomial"],
+            DEFAULT_SPRINT_VELOCITY_MODEL,
+        )
+    )
+    volatility_disruption_probability: float = Field(
+        default=DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY,
+        ge=0.0,
+        le=1.0,
+    )
+    volatility_disruption_multiplier_low: float = Field(
+        default=DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_LOW,
+        ge=0.0,
+    )
+    volatility_disruption_multiplier_expected: float = Field(
+        default=DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED,
+        ge=0.0,
+    )
+    volatility_disruption_multiplier_high: float = Field(
+        default=DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH,
+        ge=0.0,
+    )
+    spillover_model: Literal["table", "logistic"] = Field(
+        default=cast(
+            Literal["table", "logistic"],
+            DEFAULT_SPRINT_SPILLOVER_MODEL,
+        )
+    )
+    spillover_size_reference_points: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS,
+        gt=0,
+    )
+    spillover_size_brackets: list[dict[str, float | None]] = Field(
+        default_factory=lambda: deepcopy(DEFAULT_SPRINT_SPILLOVER_SIZE_BRACKETS)
+    )
+    spillover_consumed_fraction_alpha: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_ALPHA,
+        gt=0,
+    )
+    spillover_consumed_fraction_beta: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_BETA,
+        gt=0,
+    )
+    spillover_logistic_slope: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE,
+        gt=0,
+    )
+    spillover_logistic_intercept: float = Field(
+        default=DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT,
+    )
+    sickness: SprintSicknessDefaultsConfig = Field(
+        default_factory=SprintSicknessDefaultsConfig
+    )
+
+
 class EstimateRangeConfig(BaseModel):
     """Range configuration for a symbolic estimate."""
 
@@ -431,6 +539,7 @@ class Config(BaseModel):
     lognormal: LogNormalConfig = Field(default_factory=LogNormalConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     staffing: StaffingConfig = Field(default_factory=StaffingConfig)
+    sprint_defaults: SprintDefaultsConfig = Field(default_factory=SprintDefaultsConfig)
 
     @classmethod
     def load_from_file(cls, config_path: Path | str) -> "Config":
