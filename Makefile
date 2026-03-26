@@ -272,11 +272,16 @@ $(DOC_STAMP): $(DOC_FILES)
 
 $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running linter...$(NC)"
-	@poetry run flake8 $(SRC_DIR) $(TEST_DIR)
+	@if poetry run flake8 $(SRC_DIR) $(TEST_DIR); then \
+		echo -e "$(GREEN)✓ Flake8 linting passed$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Flake8 linting failed$(NC)"; \
+		exit 1; \
+	fi
 # Run pyright as an additional linting step if available
 	@if poetry run pyright --version >/dev/null 2>&1; then \
 		echo -e "$(DARKYELLOW)- Running pyright for additional linting...$(NC)"; \
-		if poetry run pyright $(SRC_DIR) $(TEST_DIR); then \
+		if poetry run pyright --level error $(SRC_DIR) $(TEST_DIR); then \
 			echo -e "$(GREEN)✓ Pyright linting passed$(NC)"; \
 		else \
 			echo -e "$(RED)✗ Error: Pyright linting failed$(NC)"; \
@@ -290,9 +295,13 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(TYPECHECK_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running type checker...$(NC)"
-	@poetry run mypy src/ tests/ --strict
+	@if poetry run mypy src/ tests/ --strict; then \
+		echo -e "$(GREEN)✓ Mypy type checking passed$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Mypy type checking failed$(NC)"; \
+		exit 1; \
+	fi
 	@touch $(TYPECHECK_STAMP)
-	@echo -e "$(GREEN)✓ Typecheck target runs successfully$(NC)"
 
 $(INSTALL_STAMP): pyproject.toml $(LOCK_FILE)
 	@echo -e "$(DARKYELLOW)- Installing dependencies...$(NC)"
