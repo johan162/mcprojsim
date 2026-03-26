@@ -1,3 +1,31 @@
+## [v0.8.0] - 2026-03-26
+
+Release Type: minor
+
+### 📋 Summary
+The main new feature is introduction of category-based T-shirt sizing, making Epics the default estimation category. This allows teams to express differently-scoped work with the right calibration. For example, `t_shirt_size: "M"` continues to work as before, but a new qualified form `t_shirt_size: "bug.M"` resolves to a different category with its own size definitions. This release also adds support for reading configuration from `~/.mcprojsim`, enabling persistent user-level config without modifying project files. By default the following categories are available: `story`, `bug`, `epic`, `business`, and `initiative` with `epic` as the default category. 
+
+### ✨ Additions
+- Added category-based T-shirt size system, allowing tasks to reference sizes in the context of Epic, Story, or other configurable categories
+- Added support for reading configuration from `~/.mcprojsim`, enabling persistent user-level config without modifying project files
+- Added new CLI flag `--tshirt-category` to override the default T-shirt size category for a simulation run
+- Added new CLI flag to the `config` command `--generate` to generate a configuration file in `~/.mcprojsim` with the default configuration values as a starting point for user-level configuration.
+
+### 🚀 Improvements
+- Migrated tooling and docs build to only require Python 3.13+ (and not 3.14+ as before) to support a wider user base while still using modern language features
+- Updated all documentation examples to use the new T-shirt size categories and reflect the new Epic-as default behavior
+
+### 📚 Documentation
+- Updated documentation and generated examples to reflect T-shirt size categories and Epic-as-default behaviour
+- Synchronized API reference documentation with the current code base
+- Fixed a few minor typos and formatting issues in the documentation, specially some typos in LaTeX formulas.
+
+### 🛠 Internal
+- Made the Makefile an implicit dependency for all targets (requires GNU Make ≥ 4.3). Some general improvements to fail-fast and give clearer feedback on failure for all targets, especially type-checking and linting targets. Updated the documentation to reflect the new Makefile usage and target structure.
+- Only runb non-heavy tests by default; heavy tests are opt-in, added new target in Makefile for running all tests including heavy ones (`make test-all`)
+- Reworked the creation of PDF version of design documents to use a single LaTeX template and a more robust generation process, improving consistency, formatting, and maintainability.
+
+
 ## [v0.7.4] - 2026-03-25
 
 Release Type: patch
