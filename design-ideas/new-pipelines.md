@@ -127,7 +127,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: "3.14"
+  PYTHON_VERSION: "3.13"
   POETRY_NO_INTERACTION: "1"
   POETRY_VIRTUALENVS_IN_PROJECT: "true"
 

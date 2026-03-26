@@ -205,34 +205,34 @@ Max Parallel Tasks: 2
 Schedule Mode: dependency_only
 
 Calendar Time Statistical Summary:
-Mean: 3491.26 hours (437 working days)
-Median (P50): 3422.83 hours
-Std Dev: 578.05 hours
-Minimum: 2189.84 hours
-Maximum: 6092.89 hours
-Coefficient of Variation: 0.1656
-Skewness: 0.5892
-Excess Kurtosis: 0.1221
+Mean: 9139.12 hours (1143 working days)
+Median (P50): 9026.56 hours
+Std Dev: 1330.03 hours
+Minimum: 5637.10 hours
+Maximum: 14631.87 hours
+Coefficient of Variation: 0.1455
+Skewness: 0.4609
+Excess Kurtosis: 0.1204
 
 Project Effort Statistical Summary:
-Mean: 3476.64 person-hours (435 person-days)
-Median (P50): 3419.67 person-hours
-Std Dev: 508.01 person-hours
-Minimum: 2284.80 person-hours
-Maximum: 5287.37 person-hours
-Coefficient of Variation: 0.1461
-Skewness: 0.4073
-Excess Kurtosis: -0.4388
+Mean: 9177.16 person-hours (1148 person-days)
+Median (P50): 9116.60 person-hours
+Std Dev: 1131.90 person-hours
+Minimum: 5968.67 person-hours
+Maximum: 12762.03 person-hours
+Coefficient of Variation: 0.1233
+Skewness: 0.1534
+Excess Kurtosis: -0.4970
 
 Calendar Time Confidence Intervals:
-  P10: 2791.21 hours (349 working days)  (2027-03-04)
-  P50: 3422.83 hours (428 working days)  (2027-06-23)
-  P75: 3869.17 hours (484 working days)  (2027-09-09)
-  P80: 3981.40 hours (498 working days)  (2027-09-29)
-  P85: 4103.10 hours (513 working days)  (2027-10-20)
-  P90: 4273.10 hours (535 working days)  (2027-11-19)
-  P95: 4516.80 hours (565 working days)  (2027-12-31)
-  P99: 5055.58 hours (632 working days)  (2028-04-04)
+  P10: 7499.79 hours (938 working days)  (2029-06-06)
+  P50: 9026.56 hours (1129 working days)  (2030-02-28)
+  P75: 10010.94 hours (1252 working days)  (2030-08-20)
+  P80: 10249.62 hours (1282 working days)  (2030-10-01)
+  P85: 10519.72 hours (1315 working days)  (2030-11-15)
+  P90: 10883.39 hours (1361 working days)  (2031-01-20)
+  P95: 11455.40 hours (1432 working days)  (2031-04-29)
+  P99: 12716.79 hours (1590 working days)  (2031-12-05)
 ```
 
 Key observations: two independent starting tasks yield `Max Parallel Tasks: 2`. The wide P10–P99 spread (349–632 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.
@@ -888,30 +888,30 @@ Max Parallel Tasks: 1
 Schedule Mode: dependency_only
 
 Calendar Time Statistical Summary:
-Mean: 1670.31 hours (209 working days)
-Median (P50): 1654.52 hours
-Std Dev: 210.88 hours
-Minimum: 1169.56 hours
-Maximum: 2433.52 hours
-Coefficient of Variation: 0.1263
-Skewness: 0.3511
-Excess Kurtosis: -0.2986
+Mean: 3679.64 hours (460 working days)
+Median (P50): 3668.32 hours
+Std Dev: 422.02 hours
+Minimum: 2428.15 hours
+Maximum: 5140.73 hours
+Coefficient of Variation: 0.1147
+Skewness: 0.0908
+Excess Kurtosis: -0.2639
 
 Project Effort Statistical Summary:
-Mean: 1670.31 person-hours (209 person-days)
-Median (P50): 1654.52 person-hours
-Std Dev: 210.88 person-hours
-Minimum: 1169.56 person-hours
-Maximum: 2433.52 person-hours
-Coefficient of Variation: 0.1263
-Skewness: 0.3511
-Excess Kurtosis: -0.2986
+Mean: 3679.64 person-hours (460 person-days)
+Median (P50): 3668.32 person-hours
+Std Dev: 422.02 person-hours
+Minimum: 2428.15 person-hours
+Maximum: 5140.73 person-hours
+Coefficient of Variation: 0.1147
+Skewness: 0.0908
+Excess Kurtosis: -0.2639
 
 Calendar Time Confidence Intervals:
-  P50: 1654.52 hours (207 working days)  (2027-03-18)
-  P80: 1853.22 hours (232 working days)  (2027-04-22)
-  P90: 1957.49 hours (245 working days)  (2027-05-11)
-  P95: 2040.64 hours (256 working days)  (2027-05-26)
+  P50: 3668.32 hours (459 working days)  (2028-03-06)
+  P80: 4046.01 hours (506 working days)  (2028-05-10)
+  P90: 4235.46 hours (530 working days)  (2028-06-13)
+  P95: 4386.72 hours (549 working days)  (2028-07-10)
 ```
 
 ### Text input with resources and calendars (constrained)

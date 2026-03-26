@@ -23,34 +23,62 @@ uncertainty_factors:
     medium: 1.15    # Moderate integration
     high: 1.35      # Complex integration with multiple systems
 
-# T-shirt size effort estimates (in days)
-# These are used when tasks specify t_shirt_size instead of explicit low/expected/high
-# Values follow a Fibonacci-like sequence for natural scaling
+# T-shirt size effort estimates by category (in days)
+# Bare values like "M" resolve through t_shirt_size_default_category.
+# Qualified values like "epic.M" resolve through the named category.
 t_shirt_sizes:
-  XS:
-    low: 0.5
-    expected: 1
-    high: 2
-  S:
-    low: 1
-    expected: 2
-    high: 4
-  M:
-    low: 3
-    expected: 5
-    high: 8
-  L:
-    low: 5
-    expected: 8
-    high: 13
-  XL:
-    low: 8
-    expected: 13
-    high: 21
-  XXL:
-    low: 13
-    expected: 21
-    high: 34
+  story:
+    XS:
+      low: 0.5
+      expected: 1
+      high: 2
+    S:
+      low: 1
+      expected: 2
+      high: 4
+    M:
+      low: 3
+      expected: 5
+      high: 8
+    L:
+      low: 5
+      expected: 8
+      high: 13
+    XL:
+      low: 8
+      expected: 13
+      high: 21
+    XXL:
+      low: 13
+      expected: 21
+      high: 34
+  epic:
+    XS:
+      low: 20
+      expected: 30
+      high: 50
+    S:
+      low: 30
+      expected: 50
+      high: 80
+    M:
+      low: 50
+      expected: 80
+      high: 130
+    L:
+      low: 80
+      expected: 130
+      high: 210
+    XL:
+      low: 130
+      expected: 210
+      high: 340
+    XXL:
+      low: 210
+      expected: 340
+      high: 550
+
+t_shirt_size_default_category: story
 
 simulation:
   default_iterations: 10000

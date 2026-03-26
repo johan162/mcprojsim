@@ -23,6 +23,8 @@ class TestConfig:
         assert "technical_complexity" in config.uncertainty_factors
         assert config.simulation.default_iterations == 10000
         assert config.lognormal.high_percentile == 95
+        assert config.sprint_defaults.velocity_model == "empirical"
+        assert config.sprint_defaults.sickness.probability_per_person_per_week == 0.058
 
     def test_default_confidence_levels_include_p25_and_p99(self):
         """Test the shared default confidence levels include P25 and P99."""
@@ -79,6 +81,29 @@ class TestConfig:
         assert config.simulation.max_stored_critical_paths == 20
         assert config.get_t_shirt_size("M") is not None
         assert config.get_story_point(5) is not None
+
+    def test_load_from_file_overrides_sprint_defaults(self, tmp_path):
+        """Sprint defaults should load and merge from configuration files."""
+        config_data = {
+            "sprint_defaults": {
+                "velocity_model": "neg_binomial",
+                "planning_confidence_level": 0.9,
+                "sickness": {
+                    "enabled": True,
+                    "probability_per_person_per_week": 0.08,
+                },
+            }
+        }
+
+        config_file = tmp_path / "config.yaml"
+        with open(config_file, "w") as f:
+            yaml.dump(config_data, f)
+
+        config = Config.load_from_file(config_file)
+        assert config.sprint_defaults.velocity_model == "neg_binomial"
+        assert config.sprint_defaults.planning_confidence_level == 0.9
+        assert config.sprint_defaults.sickness.enabled is True
+        assert config.sprint_defaults.sickness.probability_per_person_per_week == 0.08
 
     def test_load_from_file_merges_symbolic_defaults(self, tmp_path):
         """Test loading config preserves built-in symbolic defaults not overridden."""
@@ -141,45 +166,178 @@ class TestTShirtSizes:
     """Tests for T-shirt size configuration."""
 
     def test_default_tshirt_sizes(self):
-        """Test default T-shirt sizes are defined."""
+        """Test default T-shirt categories and sizes are defined."""
         config = Config.get_default()
 
-        assert "XS" in config.t_shirt_sizes
-        assert "S" in config.t_shirt_sizes
-        assert "M" in config.t_shirt_sizes
-        assert "L" in config.t_shirt_sizes
-        assert "XL" in config.t_shirt_sizes
-        assert "XXL" in config.t_shirt_sizes
+        assert config.get_t_shirt_categories() == [
+            "story",
+            "bug",
+            "epic",
+            "business",
+            "initiative",
+        ]
+        assert config.t_shirt_size_default_category == "epic"
+
+        for size in ("XS", "S", "M", "L", "XL", "XXL"):
+            assert size in config.t_shirt_sizes["story"]
+            assert size in config.t_shirt_sizes["bug"]
 
     def test_tshirt_size_values(self):
         """Test T-shirt size values are correctly configured."""
         config = Config.get_default()
 
-        # Test a few sizes
         xs = config.get_t_shirt_size("XS")
         assert xs is not None
-        assert xs.low == 3
-        assert xs.expected == 5
-        assert xs.high == 15
+        assert xs.low == 20
+        assert xs.expected == 40
+        assert xs.high == 60
 
         m = config.get_t_shirt_size("M")
         assert m is not None
-        assert m.low == 40
-        assert m.expected == 60
-        assert m.high == 120
+        assert m.low == 120
+        assert m.expected == 240
+        assert m.high == 400
+
+        bug_m = config.get_t_shirt_size("bug.M")
+        assert bug_m is not None
+        assert bug_m.low == 3
+        assert bug_m.expected == 8
+        assert bug_m.high == 24
 
         xxl = config.get_t_shirt_size("XXL")
         assert xxl is not None
-        assert xxl.low == 400
-        assert xxl.expected == 500
-        assert xxl.high == 1200
+        assert xxl.low == 1200
+        assert xxl.expected == 2000
+        assert xxl.high == 3200
 
-    def test_get_unknown_tshirt_size(self):
-        """Test getting unknown T-shirt size returns None."""
+    def test_tshirt_long_form_aliases(self):
+        """Test long-form T-shirt values resolve to canonical abbreviations."""
         config = Config.get_default()
 
-        size = config.get_t_shirt_size("XXXL")
-        assert size is None
+        medium = config.get_t_shirt_size("Medium")
+        assert medium is not None
+        assert medium.expected == 240
+
+        qualified = config.get_t_shirt_size("Epic.Large")
+        assert qualified is not None
+        assert qualified.expected == 480
+
+    def test_get_unknown_tshirt_size_returns_none(self):
+        """Test compatibility helper returns None for unknown values."""
+        config = Config.get_default()
+
+        assert config.get_t_shirt_size("XXXL") is None
+        assert config.get_t_shirt_size("foo.M") is None
+
+    def test_resolve_unknown_category_raises_clear_error(self):
+        """Unknown category errors should include valid categories."""
+        config = Config.get_default()
+
+        with pytest.raises(ValueError, match="Valid categories"):
+            config.resolve_t_shirt_size("foo.M")
+
+    def test_resolve_unknown_size_raises_clear_error(self):
+        """Unknown size errors should include valid sizes for category."""
+        config = Config.get_default()
+
+        with pytest.raises(ValueError, match="Valid sizes for category 'epic'"):
+            config.resolve_t_shirt_size("epic.HUGE")
+
+    def test_resolve_invalid_dotted_format_raises(self):
+        """Invalid dotted formats should provide the contract message."""
+        config = Config.get_default()
+
+        with pytest.raises(ValueError, match="Use '<category>.<size>' or '<size>'"):
+            config.resolve_t_shirt_size("epic.sub.M")
+
+
+class TestTShirtConfigCompatibility:
+    """Tests for compatibility and migration behaviors."""
+
+    def test_old_flat_tshirt_map_migrates_to_default_category(self, tmp_path):
+        """Old flat t_shirt_sizes map should be migrated to the default category."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "t_shirt_size_default_category": "bug",
+                    "t_shirt_sizes": {
+                        "M": {"low": 2, "expected": 4, "high": 8},
+                    },
+                }
+            )
+        )
+
+        config = Config.load_from_file(config_file)
+
+        bug_m = config.get_t_shirt_size("M")
+        assert bug_m is not None
+        assert bug_m.expected == 4
+        story_m = config.get_t_shirt_size("story.M")
+        assert story_m is not None
+        assert story_m.expected == 60
+
+    def test_alias_key_is_accepted_and_normalized(self, tmp_path):
+        """Transitional alias key should load as canonical t_shirt_sizes."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "t_shirt_size_categories": {
+                        "initiative": {
+                            "M": {"low": 9000, "expected": 10000, "high": 12000}
+                        }
+                    },
+                    "t_shirt_size_default_category": "initiative",
+                }
+            )
+        )
+
+        config = Config.load_from_file(config_file)
+
+        assert "initiative" in config.t_shirt_sizes
+        resolved = config.get_t_shirt_size("M")
+        assert resolved is not None
+        assert resolved.expected == 10000
+
+    def test_conflicting_canonical_and_alias_keys_fail(self, tmp_path):
+        """Config should reject both canonical and alias keys together."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "t_shirt_sizes": {
+                        "story": {"M": {"low": 10, "expected": 20, "high": 30}}
+                    },
+                    "t_shirt_size_categories": {
+                        "bug": {"M": {"low": 1, "expected": 2, "high": 3}}
+                    },
+                }
+            )
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="cannot define both 't_shirt_sizes' and 't_shirt_size_categories'",
+        ):
+            Config.load_from_file(config_file)
+
+    def test_mixed_flat_and_nested_shape_fails(self, tmp_path):
+        """Config should reject mixed flat and nested structures."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "t_shirt_sizes": {
+                        "M": {"low": 40, "expected": 60, "high": 120},
+                        "story": {"L": {"low": 160, "expected": 240, "high": 500}},
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Invalid t_shirt_sizes config shape"):
+            Config.load_from_file(config_file)
 
 
 class TestStoryPoints:

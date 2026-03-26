@@ -41,7 +41,7 @@ When `mcprojsim` loads a configuration file, it does **not** replace the built-i
 
 This means you can override only the values you care about.
 
-For example, if you define only `t_shirt_sizes.M`, the built-in mappings for `XS`, `S`, `L`, `XL`, and `XXL` remain available.
+For example, if you define only `t_shirt_sizes.story.M`, the built-in mappings for the remaining sizes and categories remain available.
 
 ## Top-level configuration structure
 
@@ -49,6 +49,7 @@ The current configuration schema supports these top-level keys:
 
 - `uncertainty_factors`
 - `t_shirt_sizes`
+- `t_shirt_size_default_category`
 - `t_shirt_size_unit`
 - `story_points`
 - `story_point_unit`
@@ -56,6 +57,7 @@ The current configuration schema supports these top-level keys:
 - `lognormal`
 - `output`
 - `staffing`
+- `sprint_defaults`
 
 ## Full example
 
@@ -86,14 +88,22 @@ uncertainty_factors:
     high: 1.35
 
 t_shirt_sizes:
-  XS:
-    low: 0.5
-    expected: 1
-    high: 2
-  M:
-    low: 3
-    expected: 5
-    high: 8
+  story:
+    XS:
+      low: 3
+      expected: 5
+      high: 15
+    M:
+      low: 40
+      expected: 60
+      high: 120
+  epic:
+    M:
+      low: 200
+      expected: 480
+      high: 1200
+
+t_shirt_size_default_category: "story"
 
 t_shirt_size_unit: "hours"
 
@@ -128,7 +138,6 @@ output:
   critical_path_report_limit: 2
 
 staffing:
-  effort_percentile: null
   min_individual_productivity: 0.25
   experience_profiles:
     senior:
@@ -140,6 +149,35 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
+
+sprint_defaults:
+  planning_confidence_level: 0.8
+  removed_work_treatment: churn_only
+  velocity_model: empirical
+  volatility_disruption_probability: 0.0
+  volatility_disruption_multiplier_low: 1.0
+  volatility_disruption_multiplier_expected: 1.0
+  volatility_disruption_multiplier_high: 1.0
+  spillover_model: table
+  spillover_size_reference_points: 5.0
+  spillover_size_brackets:
+    - max_points: 2.0
+      probability: 0.05
+    - max_points: 5.0
+      probability: 0.12
+    - max_points: 8.0
+      probability: 0.25
+    - max_points: null
+      probability: 0.40
+  spillover_consumed_fraction_alpha: 3.25
+  spillover_consumed_fraction_beta: 1.75
+  spillover_logistic_slope: 1.9
+  spillover_logistic_intercept: -1.9924301646902063
+  sickness:
+    enabled: false
+    probability_per_person_per_week: 0.058
+    duration_log_mu: 0.693
+    duration_log_sigma: 0.75
 ```
 
 ## Uncertainty factors
@@ -206,7 +244,36 @@ If you override only part of either mapping table, the remaining built-in defaul
 
 Tasks may use `t_shirt_size` instead of explicit `min` / `expected` / `max` values.
 
-Built-in size keys:
+Canonical configuration shape:
+
+```yaml
+t_shirt_sizes:
+  story:
+    XS: {low: 3, expected: 5, high: 15}
+    M: {low: 40, expected: 60, high: 120}
+  bug:
+    M: {low: 3, expected: 8, high: 24}
+  epic:
+    M: {low: 200, expected: 480, high: 1200}
+
+t_shirt_size_default_category: story
+```
+
+Project-file values can be:
+
+- bare size: `M` (resolved via `t_shirt_size_default_category`)
+- qualified size: `epic.M`
+- long-form aliases: `Medium`, `Epic.Large`
+
+Built-in category keys:
+
+- `bug`
+- `story`
+- `epic`
+- `business`
+- `initiative`
+
+Built-in size keys (per category):
 
 - `XS`
 - `S`
@@ -215,26 +282,40 @@ Built-in size keys:
 - `XL`
 - `XXL`
 
-Built-in defaults:
+Built-in `story` defaults:
 
 | Size | `min` | `expected` | `max` |
 |---|---:|---:|---:|
-| `XS` | 0.5 | 1 | 2 |
-| `S` | 1 | 2 | 4 |
-| `M` | 3 | 5 | 8 |
-| `L` | 5 | 8 | 13 |
-| `XL` | 8 | 13 | 21 |
-| `XXL` | 13 | 21 | 34 |
+| `XS` | 3 | 5 | 15 |
+| `S` | 5 | 16 | 40 |
+| `M` | 40 | 60 | 120 |
+| `L` | 160 | 240 | 500 |
+| `XL` | 320 | 400 | 750 |
+| `XXL` | 400 | 500 | 1200 |
 
-Example override:
+Canonical override example:
 
 ```yaml
 t_shirt_sizes:
-  M:
-    low: 4
-    expected: 6
-    high: 9
+  story:
+    M:
+      low: 45
+      expected: 65
+      high: 130
+  epic:
+    M:
+      low: 240
+      expected: 520
+      high: 1400
+
+t_shirt_size_default_category: story
 ```
+
+Backward compatibility:
+
+- legacy flat maps under `t_shirt_sizes` are accepted and migrated to `t_shirt_sizes.<default_category>`
+- transitional alias key `t_shirt_size_categories` is accepted as input
+- defining both `t_shirt_sizes` and `t_shirt_size_categories` in one file is rejected
 
 ## Shifted log-normal configuration
 
@@ -419,13 +500,13 @@ The `staffing` section controls the staffing analysis shown in CLI output and ex
 
 | Field | Type | Default | Meaning |
 |---|---|---|---|
-| `effort_percentile` | integer or `null` | `null` | Use a specific effort percentile such as P80 instead of the mean |
+| `effort_percentile` | integer (optional) | omitted | Use a specific effort percentile such as P80 instead of the mean |
 | `min_individual_productivity` | float | `0.25` | Lower bound on per-person productivity after communication overhead |
 | `experience_profiles` | mapping | built-in defaults | Named team profiles used for staffing recommendations |
 
 ### `effort_percentile`
 
-When `effort_percentile` is `null`, staffing uses mean total effort and mean elapsed time.
+When `effort_percentile` is omitted, staffing uses mean total effort and mean elapsed time.
 
 When it is set, staffing uses the matching percentile for both:
 
@@ -491,18 +572,67 @@ staffing:
 ## Viewing current configuration
 
 ```bash
-mcprojsim config show
-mcprojsim config show --config-file config.yaml
+mcprojsim config
+mcprojsim config --config-file config.yaml
 ```
 
-The `config show` output includes the most relevant effective settings, including:
+The `config` output includes the most relevant effective settings, including:
 
 - default iteration count,
 - random seed,
 - max stored critical paths,
 - output histogram settings,
 - critical path report limit,
-- staffing settings.
+- staffing settings,
+- sprint defaults.
+
+## Sprint planning precedence
+
+Sprint-planning values are resolved in this order (highest to lowest priority):
+
+1. CLI flags
+2. Project `sprint_planning` fields
+3. Global `sprint_defaults`
+4. Built-in defaults
+
+This lets you keep company-wide defaults in `sprint_defaults`, set project-specific behavior in the project file, and still override per run with CLI flags.
+
+For sprint-planning field details and examples, see [Sprint planning](user_guide/sprint_planning.md).
+
+## Sprint default logistic spillover parameters
+
+The global keys `sprint_defaults.spillover_logistic_slope` and `sprint_defaults.spillover_logistic_intercept` control the logistic spillover probability curve used when project spillover model is `logistic`.
+
+The planner computes probability in log-space from planning story points:
+
+$$
+z = \max\!\left(\frac{x}{r}, 10^{-6}\right),\quad
+\ell = s \cdot \ln(z) + b,\quad
+p = \frac{1}{1 + e^{-\ell}}
+$$
+
+where:
+
+- $x$ = item planning story points
+- $r$ = `spillover_size_reference_points`
+- $s$ = `spillover_logistic_slope`
+- $b$ = `spillover_logistic_intercept`
+
+At the reference size ($x=r$), baseline probability is:
+
+$$
+p(x=r) = \frac{1}{1 + e^{-b}}
+$$
+
+For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see [Sprint planning](user_guide/sprint_planning.md#item-spillover).
+
+`sprint_defaults.spillover_consumed_fraction_alpha` and `sprint_defaults.spillover_consumed_fraction_beta` are the Beta-distribution shape parameters for the consumed fraction during spillover events. Their expected consumed fraction is:
+
+$$
+\mathbb{E}[f] = \frac{\alpha}{\alpha + \beta}
+$$
+
+Increasing `alpha` raises typical consumed fraction; increasing `beta` lowers it.
 
 ## Validation rules
 

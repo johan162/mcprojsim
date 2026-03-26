@@ -6,9 +6,29 @@ import time
 from typing import Optional, Union
 
 import click
+import yaml
 
 from mcprojsim import __version__
-from mcprojsim.config import Config, DEFAULT_SIMULATION_ITERATIONS
+from mcprojsim.config import (
+    Config,
+    DEFAULT_SIMULATION_ITERATIONS,
+    DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
+    DEFAULT_SPRINT_REMOVED_WORK_TREATMENT,
+    DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU,
+    DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA,
+    DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
+    DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_ALPHA,
+    DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_BETA,
+    DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT,
+    DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE,
+    DEFAULT_SPRINT_SPILLOVER_MODEL,
+    DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS,
+    DEFAULT_SPRINT_VELOCITY_MODEL,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_LOW,
+    DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY,
+)
 from mcprojsim.exporters import CSVExporter, HTMLExporter, JSONExporter
 from mcprojsim.models.project import Project
 from mcprojsim.models.simulation import SimulationResults
@@ -18,6 +38,31 @@ from mcprojsim.planning.sprint_engine import SprintSimulationEngine
 from mcprojsim.simulation import SimulationEngine
 from mcprojsim.simulation.distributions import fit_shifted_lognormal
 from mcprojsim.utils import Validator, setup_logging
+
+
+def _get_user_default_config_path() -> Path:
+    """Return the default user-level configuration file path."""
+    return Path.home() / ".mcprojsim" / "configuration.yaml"
+
+
+def _get_generated_default_config_path() -> Path:
+    """Return the output path for generated default configuration."""
+    return Path.home() / ".mcprojsim" / "config.yaml"
+
+
+def _load_config_with_user_default(
+    config_file: Optional[str],
+) -> tuple[Config, Path | None]:
+    """Load config with precedence: CLI file > user default file > built-in defaults."""
+    if config_file:
+        config_path = Path(config_file)
+        return Config.load_from_file(config_path), config_path
+
+    user_config_path = _get_user_default_config_path()
+    if user_config_path.exists():
+        return Config.load_from_file(user_config_path), user_config_path
+
+    return Config.get_default(), None
 
 
 def _get_max_rss_bytes() -> int | None:
@@ -478,6 +523,129 @@ def _get_tasks_mode_heterogeneity_warning(project: Project) -> str | None:
     return None
 
 
+def _apply_sprint_defaults(project: Project, cfg: Config) -> None:
+    """Apply company-wide sprint defaults when project values use built-in defaults."""
+    sprint_planning = project.sprint_planning
+    if sprint_planning is None or not sprint_planning.enabled:
+        return
+
+    sprint_defaults = cfg.sprint_defaults
+
+    if (
+        sprint_planning.planning_confidence_level
+        == DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL
+    ):
+        sprint_planning.planning_confidence_level = (
+            sprint_defaults.planning_confidence_level
+        )
+
+    if (
+        sprint_planning.removed_work_treatment.value
+        == DEFAULT_SPRINT_REMOVED_WORK_TREATMENT
+    ):
+        sprint_planning.removed_work_treatment = type(
+            sprint_planning.removed_work_treatment
+        )(sprint_defaults.removed_work_treatment)
+
+    if sprint_planning.velocity_model.value == DEFAULT_SPRINT_VELOCITY_MODEL:
+        sprint_planning.velocity_model = type(sprint_planning.velocity_model)(
+            sprint_defaults.velocity_model
+        )
+
+    if (
+        sprint_planning.volatility_overlay.disruption_probability
+        == DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY
+    ):
+        sprint_planning.volatility_overlay.disruption_probability = (
+            sprint_defaults.volatility_disruption_probability
+        )
+    if (
+        sprint_planning.volatility_overlay.disruption_multiplier_low
+        == DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_LOW
+    ):
+        sprint_planning.volatility_overlay.disruption_multiplier_low = (
+            sprint_defaults.volatility_disruption_multiplier_low
+        )
+    if (
+        sprint_planning.volatility_overlay.disruption_multiplier_expected
+        == DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED
+    ):
+        sprint_planning.volatility_overlay.disruption_multiplier_expected = (
+            sprint_defaults.volatility_disruption_multiplier_expected
+        )
+    if (
+        sprint_planning.volatility_overlay.disruption_multiplier_high
+        == DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH
+    ):
+        sprint_planning.volatility_overlay.disruption_multiplier_high = (
+            sprint_defaults.volatility_disruption_multiplier_high
+        )
+
+    if sprint_planning.spillover.model.value == DEFAULT_SPRINT_SPILLOVER_MODEL:
+        sprint_planning.spillover.model = type(sprint_planning.spillover.model)(
+            sprint_defaults.spillover_model
+        )
+    if (
+        sprint_planning.spillover.size_reference_points
+        == DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS
+    ):
+        sprint_planning.spillover.size_reference_points = (
+            sprint_defaults.spillover_size_reference_points
+        )
+    if (
+        sprint_planning.spillover.consumed_fraction_alpha
+        == DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_ALPHA
+    ):
+        sprint_planning.spillover.consumed_fraction_alpha = (
+            sprint_defaults.spillover_consumed_fraction_alpha
+        )
+    if (
+        sprint_planning.spillover.consumed_fraction_beta
+        == DEFAULT_SPRINT_SPILLOVER_CONSUMED_FRACTION_BETA
+    ):
+        sprint_planning.spillover.consumed_fraction_beta = (
+            sprint_defaults.spillover_consumed_fraction_beta
+        )
+    if (
+        sprint_planning.spillover.logistic_slope
+        == DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE
+    ):
+        sprint_planning.spillover.logistic_slope = (
+            sprint_defaults.spillover_logistic_slope
+        )
+    if (
+        sprint_planning.spillover.logistic_intercept
+        == DEFAULT_SPRINT_SPILLOVER_LOGISTIC_INTERCEPT
+    ):
+        sprint_planning.spillover.logistic_intercept = (
+            sprint_defaults.spillover_logistic_intercept
+        )
+
+    if sprint_planning.sickness.enabled is False:
+        sprint_planning.sickness.enabled = sprint_defaults.sickness.enabled
+    if (
+        sprint_planning.sickness.probability_per_person_per_week
+        == DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK
+    ):
+        sprint_planning.sickness.probability_per_person_per_week = (
+            sprint_defaults.sickness.probability_per_person_per_week
+        )
+    if (
+        sprint_planning.sickness.duration_log_mu
+        == DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU
+    ):
+        sprint_planning.sickness.duration_log_mu = (
+            sprint_defaults.sickness.duration_log_mu
+        )
+    if (
+        sprint_planning.sickness.duration_log_sigma
+        == DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA
+    ):
+        sprint_planning.sickness.duration_log_sigma = (
+            sprint_defaults.sickness.duration_log_sigma
+        )
+
+
 @click.group()
 @click.version_option(version=__version__, prog_name="mcprojsim")
 def cli() -> None:
@@ -543,6 +711,12 @@ def cli() -> None:
     help="Show full staffing analysis table with team-size recommendations.",
 )
 @click.option(
+    "--tshirt-category",
+    type=str,
+    default=None,
+    help="Override default T-shirt category for bare size tokens.",
+)
+@click.option(
     "--minimal",
     "-m",
     is_flag=True,
@@ -575,6 +749,7 @@ def simulate(
     target_date: Optional[str],
     table: bool,
     staffing: bool,
+    tshirt_category: Optional[str],
     minimal: bool,
     velocity_model: Optional[str],
     no_sickness: bool,
@@ -586,12 +761,26 @@ def simulate(
 
     try:
         # Load configuration
-        if config:
-            cfg = Config.load_from_file(config)
-            logger.info(f"Loaded configuration from {config}")
+        cfg, loaded_config_path = _load_config_with_user_default(config)
+        if loaded_config_path is not None:
+            logger.info(f"Loaded configuration from {loaded_config_path}")
         else:
-            cfg = Config.get_default()
-            logger.info("Using default configuration")
+            logger.info("Using built-in default configuration")
+
+        if tshirt_category is not None:
+            normalized_category = tshirt_category.strip().lower()
+            valid_categories = cfg.get_t_shirt_categories()
+            if normalized_category not in valid_categories:
+                allowed = ", ".join(valid_categories)
+                raise ValueError(
+                    "Invalid value for --tshirt-category: "
+                    f"'{tshirt_category}'. Valid categories: {allowed}"
+                )
+            cfg.t_shirt_size_default_category = normalized_category
+            logger.info(
+                "Overriding T-shirt default category to %s",
+                normalized_category,
+            )
 
         # Parse project file
         project_path = Path(project_file)
@@ -607,6 +796,8 @@ def simulate(
         logger.info(f"Loading project from {project_file}")
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
+
+        _apply_sprint_defaults(project, cfg)
 
         tasks_mode_warning = _get_tasks_mode_heterogeneity_warning(project)
         if tasks_mode_warning is not None and quiet < 2:
@@ -1299,21 +1490,33 @@ def validate(project_file: str, verbose: bool) -> None:
         raise click.Abort()
 
 
-@cli.group()
-def config() -> None:
-    """Configuration management commands."""
-    pass
-
-
-@config.command(name="show")
+@cli.command(name="config")
 @click.option("--config-file", "-c", type=click.Path(exists=True), help="Config file")
-def show_config(config_file: Optional[str]) -> None:
-    """Show current configuration."""
-    if config_file:
-        cfg = Config.load_from_file(config_file)
-        click.echo(f"Configuration from {config_file}:")
+@click.option(
+    "--generate",
+    is_flag=True,
+    help="Generate a default configuration file at ~/.mcprojsim/config.yaml.",
+)
+def config(config_file: Optional[str], generate: bool) -> None:
+    """Show current configuration and optionally generate a default config file."""
+    if generate:
+        generated_config_path = _get_generated_default_config_path()
+        generated_config_path.parent.mkdir(parents=True, exist_ok=True)
+
+        default_cfg = Config.get_default()
+        generated_config_path.write_text(
+            yaml.safe_dump(
+                default_cfg.model_dump(mode="json", exclude_none=True),
+                sort_keys=False,
+            ),
+            encoding="utf-8",
+        )
+        click.echo(f"Generated default configuration: {generated_config_path}")
+
+    cfg, loaded_config_path = _load_config_with_user_default(config_file)
+    if loaded_config_path is not None:
+        click.echo(f"Configuration from {loaded_config_path}:")
     else:
-        cfg = Config.get_default()
         click.echo("Default configuration:")
 
     click.echo("\nUncertainty Factors:")
@@ -1325,21 +1528,27 @@ def show_config(config_file: Optional[str]) -> None:
     lognormal_z_score = cfg.get_lognormal_high_z_value()
 
     click.echo(f"\nT-Shirt Sizes (unit: {cfg.t_shirt_size_unit.value}):")
-    for size, config in cfg.t_shirt_sizes.items():
-        click.echo(f"  {size}:")
-        click.echo(
-            f"    low: {config.low}, expected: {config.expected}, high: {config.high}"
-        )
-        click.echo(
-            "    lognormal params: "
-            + _format_shifted_lognormal_parameters(
-                f"T-shirt size {size}",
-                config.low,
-                config.expected,
-                config.high,
-                lognormal_z_score,
+    click.echo(f"  default_category: {cfg.t_shirt_size_default_category}")
+    click.echo(f"  categories: {', '.join(cfg.get_t_shirt_categories())}")
+    for category, size_map in cfg.t_shirt_sizes.items():
+        click.echo(f"  {category}:")
+        for size, size_config in size_map.items():
+            click.echo(f"    {size}:")
+            click.echo(
+                "      "
+                f"low: {size_config.low}, expected: {size_config.expected}, "
+                f"high: {size_config.high}"
             )
-        )
+            click.echo(
+                "      lognormal params: "
+                + _format_shifted_lognormal_parameters(
+                    f"T-shirt size {category}.{size}",
+                    size_config.low,
+                    size_config.expected,
+                    size_config.high,
+                    lognormal_z_score,
+                )
+            )
 
     click.echo(f"\nStory Points (unit: {cfg.story_point_unit.value}):")
     for points, sp_config in sorted(cfg.story_points.items()):
@@ -1375,6 +1584,51 @@ def show_config(config_file: Optional[str]) -> None:
     click.echo(f"  Histogram bins: {cfg.output.histogram_bins}")
     click.echo(
         "  Critical path report limit: " f"{cfg.output.critical_path_report_limit}"
+    )
+
+    click.echo("\nSprint Defaults:")
+    click.echo(
+        "  Planning confidence level: "
+        f"{cfg.sprint_defaults.planning_confidence_level}"
+    )
+    click.echo(
+        "  Removed work treatment: " f"{cfg.sprint_defaults.removed_work_treatment}"
+    )
+    click.echo(f"  Velocity model: {cfg.sprint_defaults.velocity_model}")
+    click.echo(
+        "  Volatility disruption probability: "
+        f"{cfg.sprint_defaults.volatility_disruption_probability}"
+    )
+    click.echo(
+        "  Volatility disruption multiplier (low/expected/high): "
+        f"{cfg.sprint_defaults.volatility_disruption_multiplier_low}/"
+        f"{cfg.sprint_defaults.volatility_disruption_multiplier_expected}/"
+        f"{cfg.sprint_defaults.volatility_disruption_multiplier_high}"
+    )
+    click.echo(f"  Spillover model: {cfg.sprint_defaults.spillover_model}")
+    click.echo(
+        "  Spillover size reference points: "
+        f"{cfg.sprint_defaults.spillover_size_reference_points}"
+    )
+    click.echo(
+        "  Spillover consumed fraction alpha/beta: "
+        f"{cfg.sprint_defaults.spillover_consumed_fraction_alpha}/"
+        f"{cfg.sprint_defaults.spillover_consumed_fraction_beta}"
+    )
+    click.echo(
+        "  Spillover logistic slope/intercept: "
+        f"{cfg.sprint_defaults.spillover_logistic_slope}/"
+        f"{cfg.sprint_defaults.spillover_logistic_intercept}"
+    )
+    click.echo(f"  Sickness enabled: {cfg.sprint_defaults.sickness.enabled}")
+    click.echo(
+        "  Sickness probability per person per week: "
+        f"{cfg.sprint_defaults.sickness.probability_per_person_per_week}"
+    )
+    click.echo(
+        "  Sickness duration log mu/sigma: "
+        f"{cfg.sprint_defaults.sickness.duration_log_mu}/"
+        f"{cfg.sprint_defaults.sickness.duration_log_sigma}"
     )
 
 

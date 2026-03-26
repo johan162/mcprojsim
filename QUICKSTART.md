@@ -14,7 +14,7 @@ In the next few minutes you will:
 
 You need:
 
-- Python 3.14 or newer
+- Python 3.13 or newer
 - a terminal
 - `pipx` for the easiest CLI install
 
@@ -65,11 +65,11 @@ Generate the project file:
 mcprojsim generate description.txt -o quickstart_project.yaml
 ```
 
-That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See the [MCP Server & Natural Language Input](docs/user_guide/mcp-server.md) guide for the full input format.
+That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), including qualified forms like `epic.M`, story points, or explicit `low/expected/high` estimates. Bare T-shirt values resolve via the configured default category. See the [MCP Server & Natural Language Input](docs/user_guide/mcp-server.md) guide for the full input format.
 
 ??? tip "Alternative: write the YAML by hand"
 
-    If you prefer full control, create `quickstart_project.yaml` manually where you can specify all available fields. The minimum required fields are `project.name`, `project.start_date`, and at least one task with an estimate. In the previous we used T-shirt sizes for the estimates, but here is the same project with explicit `low/expected/high` estimates in days:
+    If you prefer full control, create `quickstart_project.yaml` manually where you can specify all available fields. The minimum required fields are `project.name`, `project.start_date`, and at least one task with an estimate. In the previous example we used T-shirt sizes for the estimates, but here is the same project with explicit `low/expected/high` estimates in days:
 
     ```yaml
     project:

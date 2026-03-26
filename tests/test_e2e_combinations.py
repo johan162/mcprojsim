@@ -900,6 +900,37 @@ class TestUnitConversionConsistency:
         ).run(project)
         assert results.mean > 0
 
+    def test_qualified_tshirt_values_produce_results(self):
+        """Qualified category.size T-shirt values should resolve in simulations."""
+        project = Project.model_validate(
+            {
+                "project": {"name": "ts-qualified", "start_date": "2026-03-01"},
+                "tasks": [
+                    {
+                        "id": "t1",
+                        "name": "Story task",
+                        "estimate": {"t_shirt_size": "story.M"},
+                        "dependencies": [],
+                    },
+                    {
+                        "id": "t2",
+                        "name": "Epic task",
+                        "estimate": {"t_shirt_size": "epic.M"},
+                        "dependencies": [],
+                    },
+                ],
+            }
+        )
+        config = build_config({"t_shirt_size_unit": "hours"})
+        results = SimulationEngine(
+            iterations=200,
+            random_seed=42,
+            config=config,
+            show_progress=False,
+        ).run(project)
+        assert results.mean > 0
+        assert results.task_durations["t2"].mean() > results.task_durations["t1"].mean()
+
     @pytest.mark.parametrize("config_unit", ["hours", "days", "weeks"])
     def test_story_point_config_unit_produces_results(self, config_unit: str):
         """Story point estimates work with any config unit."""

@@ -316,7 +316,7 @@ class TestCSVExporter:
                     try:
                         float(parts[0])
                         histogram_data_rows += 1
-                    except ValueError, IndexError:
+                    except (ValueError, IndexError):
                         pass
 
         # Should have at least some histogram bins
@@ -477,7 +477,14 @@ class TestHTMLExporter:
         )
 
         config = Config.model_validate(
-            {"t_shirt_sizes": {"M": {"low": 10, "expected": 20, "high": 30}}}
+            {
+                "t_shirt_sizes": {
+                    "story": {
+                        "M": {"low": 10, "expected": 20, "high": 30},
+                    }
+                },
+                "t_shirt_size_default_category": "story",
+            }
         )
 
         output_file = tmp_path / "results.html"
@@ -487,6 +494,39 @@ class TestHTMLExporter:
             content = f.read()
 
         assert "M (10.0, 20.0, 30.0)" in content
+
+    def test_html_renders_qualified_tshirt_label(self, tmp_path):
+        """Qualified category.size labels should be rendered in HTML output."""
+        results = SimulationResults(
+            iterations=3,
+            project_name="Qualified T-Shirt Project",
+            durations=np.array([10.0, 11.0, 12.0]),
+            task_durations={"task_001": np.array([4.0, 5.0, 6.0])},
+            critical_path_frequency={"task_001": 3},
+        )
+        results.calculate_statistics()
+        results.percentile(50)
+
+        project = Project(
+            project=ProjectMetadata(
+                name="Qualified T-Shirt Project", start_date=date(2025, 1, 1)
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Sized Task",
+                    estimate=TaskEstimate(t_shirt_size="epic.M"),
+                )
+            ],
+        )
+
+        output_file = tmp_path / "qualified_results.html"
+        HTMLExporter.export(results, output_file, project=project)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "epic.M (120.0, 240.0, 400.0)" in content
 
     def test_html_uses_default_config_for_tshirt_display_when_none_provided(
         self, tmp_path
@@ -521,7 +561,7 @@ class TestHTMLExporter:
         with open(output_file, "r") as f:
             content = f.read()
 
-        assert "M (40.0, 60.0, 120.0)" in content
+        assert "M (120.0, 240.0, 400.0)" in content
 
     def test_html_uses_active_config_for_story_point_display(self, tmp_path):
         """Test that HTML uses the provided config for Story Point effort display."""

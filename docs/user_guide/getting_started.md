@@ -15,7 +15,7 @@ What you'll learn
 
 You need:
 
-- **Python 3.14 or newer**
+- **Python 3.13 or newer**
 - A terminal
 - `pipx` for the easiest CLI install (recommended), or `pip`
 

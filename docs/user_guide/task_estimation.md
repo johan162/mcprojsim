@@ -29,7 +29,7 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 | Method | Input | Resolved to | Best for |
 |--------|-------|-------------|----------|
 | **Explicit range** | `low`, `expected`, `high` | Used directly | Teams comfortable giving numeric day estimates |
-| **T-shirt size** | `t_shirt_size` (e.g., `"M"`) | Looked up in config → `low`, `expected`, `high` | Early-stage or relative estimation |
+| **T-shirt size** | `t_shirt_size` (e.g., `"M"` or `"epic.M"`) | Looked up in config → `low`, `expected`, `high` | Early-stage or relative estimation |
 | **Story points** | `story_points` (e.g., `5`) | Looked up in config → `low`, `expected`, `high` | Teams using story point estimation practices |
 
 All three methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
@@ -332,24 +332,50 @@ If we assume the $\ln(F_i)$ are independent and identically distributed, then by
 
 ## T-shirt size estimates
 
-T-shirt sizing is a relative estimation technique where tasks are classified into categories such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`. This is useful when teams are more comfortable with relative comparisons ("this is a medium-sized task") than with specific day estimates.
+T-shirt sizing is a relative estimation technique where tasks are classified into sizes such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`, now scoped by named categories (`bug`, `story`, `epic`, `business`, `initiative`). This is useful when teams need different calibration levels across planning horizons.
 
-In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) in the configuration file. During simulation, the size label is resolved to its numeric range, and then the triangular distribution is used for sampling — exactly as if the numeric values had been specified directly.
+In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) inside a category in the configuration file. During simulation, a bare value like `M` resolves through `t_shirt_size_default_category` (default: `epic`), while a qualified value like `epic.M` resolves directly.
 
 ### Default T-shirt size mappings
 
 The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_unit` in the configuration file).
 
-| Size | min (hours) | expected (hours) | max (hours) |
-|------|-------------|--------------------|-----------|
-| `XS` | 0.5         | 1                  | 2          |
-| `S`  | 1           | 2                  | 4          |
-| `M`  | 3           | 5                  | 8          |
-| `L`  | 5           | 8                  | 13         |
-| `XL` | 8           | 13                 | 21         |
-| `XXL`| 13          | 21                 | 34         |
+The built-in default category is `epic`, so a bare value like `M` resolves as `epic.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
 
-The values follow a Fibonacci-like progression, which gives a natural scaling where larger sizes have proportionally wider ranges — reflecting greater uncertainty in larger tasks.
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
+| `bug` | `XS` | 0.5 | 1 | 4 |
+| `bug` | `S` | 1 | 3 | 10 |
+| `bug` | `M` | 3 | 8 | 24 |
+| `bug` | `L` | 8 | 20 | 60 |
+| `bug` | `XL` | 20 | 40 | 100 |
+| `bug` | `XXL` | 40 | 80 | 200 |
+| `story` | `XS` | 3 | 5 | 15 |
+| `story` | `S` | 5 | 16 | 40 |
+| `story` | `M` | 40 | 60 | 120 |
+| `story` | `L` | 160 | 240 | 500 |
+| `story` | `XL` | 320 | 400 | 750 |
+| `story` | `XXL` | 400 | 500 | 1200 |
+| `epic` | `XS` | 20 | 40 | 60 |
+| `epic` | `S` | 60 | 120 | 170 |
+| `epic` | `M` | 120 | 240 | 400 |
+| `epic` | `L` | 290 | 480 | 700 |
+| `epic` | `XL` | 600 | 1000 | 1500 |
+| `epic` | `XXL` | 1200 | 2000 | 3200 |
+| `business` | `XS` | 400 | 800 | 2000 |
+| `business` | `S` | 800 | 2000 | 5000 |
+| `business` | `M` | 2000 | 4000 | 10000 |
+| `business` | `L` | 4000 | 8000 | 20000 |
+| `business` | `XL` | 8000 | 16000 | 40000 |
+| `business` | `XXL` | 16000 | 32000 | 80000 |
+| `initiative` | `XS` | 2000 | 4000 | 10000 |
+| `initiative` | `S` | 4000 | 10000 | 25000 |
+| `initiative` | `M` | 10000 | 20000 | 50000 |
+| `initiative` | `L` | 20000 | 40000 | 100000 |
+| `initiative` | `XL` | 40000 | 80000 | 200000 |
+| `initiative` | `XXL` | 80000 | 160000 | 400000 |
+
+These category-specific defaults let you keep the same symbolic size scale while tuning absolute magnitude for different planning scopes.
 
 ### Specifying a T-shirt size estimate
 
@@ -364,15 +390,31 @@ tasks:
     dependencies: []
 ```
 
-This is equivalent to writing:
+You can also use a qualified value:
 
 ```yaml
 estimate:
-  low: 3
-  expected: 5
-  high: 8
+  t_shirt_size: "epic.M"
+```
+
+Bare long-form aliases are accepted too, for example:
+
+```yaml
+estimate:
+  t_shirt_size: "Medium"
+```
+
+With the built-in defaults, the bare `"M"` example above is equivalent to writing:
+
+```yaml
+estimate:
+  low: 120
+  expected: 240
+  high: 400
   unit: "hours"
 ```
+
+If you want story-scale values instead, either use a qualified value (`story.M`) or set `t_shirt_size_default_category: story` in your configuration.
 
 The resolution happens automatically when the simulation runs. The resolved values are then converted to hours internally (if they are not already in hours) using the project's `hours_per_day` setting.
 
@@ -430,33 +472,21 @@ The default mappings can be overridden in the configuration file. This allows or
 ```yaml
 # config.yaml
 t_shirt_sizes:
-  XS:
-    low: 0.25
-    expected: 0.5
-    high: 1
-  S:
-    low: 0.5
-    expected: 1
-    high: 2
-  M:
-    low: 1
-    expected: 2
-    high: 4
-  L:
-    low: 2
-    expected: 4
-    high: 7
-  XL:
-    low: 4
-    expected: 7
-    high: 12
-  XXL:
-    low: 7
-    expected: 12
-    high: 20
+  story:
+    M:
+      low: 45
+      expected: 65
+      high: 130
+  epic:
+    M:
+      low: 240
+      expected: 520
+      high: 1400
+
+t_shirt_size_default_category: epic
 ```
 
-Any sizes you define in the configuration file replace the defaults entirely for that size. You can also define only the sizes your team uses — for instance, if you only use `S`, `M`, and `L`, you only need to define those three.
+Any category/size values you define in the configuration file override those defaults while untouched categories and sizes remain available.
 
 ### Choosing the unit for T-shirt sizes
 
@@ -467,18 +497,19 @@ The numeric ranges in the T-shirt size mappings are interpreted in the unit spec
 t_shirt_size_unit: "hours"
 
 t_shirt_sizes:
-  S:
-    low: 1
-    expected: 2
-    high: 4       # 1–4 hours
-  M:
-    low: 3
-    expected: 5
-    high: 8       # 3–8 hours
-  L:
-    low: 5
-    expected: 8
-    high: 13      # 5–13 hours
+  story:
+    S:
+      low: 1
+      expected: 2
+      high: 4       # 1-4 hours
+    M:
+      low: 3
+      expected: 5
+      high: 8       # 3-8 hours
+    L:
+      low: 5
+      expected: 8
+      high: 13      # 5-13 hours
 ```
 
 If your team thinks about T-shirt sizes in terms of working days rather than hours, set `t_shirt_size_unit` to `"days"`. The simulator will then convert the ranges to hours using `hours_per_day`:
@@ -488,18 +519,19 @@ If your team thinks about T-shirt sizes in terms of working days rather than hou
 t_shirt_size_unit: "days"
 
 t_shirt_sizes:
-  S:
-    low: 0.5
-    expected: 1
-    high: 2       # 0.5–2 days → 4–16 hours (at 8 hours/day)
-  M:
-    low: 1
-    expected: 2
-    high: 4       # 1–4 days → 8–32 hours
-  L:
-    low: 2
-    expected: 4
-    high: 7       # 2–7 days → 16–56 hours
+  story:
+    S:
+      low: 0.5
+      expected: 1
+      high: 2       # 0.5-2 days -> 4-16 hours (at 8 hours/day)
+    M:
+      low: 1
+      expected: 2
+      high: 4       # 1-4 days -> 8-32 hours
+    L:
+      low: 2
+      expected: 4
+      high: 7       # 2-7 days -> 16-56 hours
 ```
 
 The unit setting applies to **all** T-shirt sizes in the configuration. You cannot mix units across individual sizes — the `t_shirt_size_unit` value governs the entire mapping. The project file never specifies a unit for T-shirt size estimates; the unit is always determined by this configuration setting.

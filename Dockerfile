@@ -13,7 +13,7 @@
 # -----------------------------------------------------------------------------
 # Stage 1: Builder - Install dependencies and build the package
 # -----------------------------------------------------------------------------
-FROM python:3.14-slim AS builder
+FROM python:3.13-slim AS builder
 
 # Build argument to enable proxy/CA certificate handling
 # Usage: docker build --build-arg USE_PROXY_CA=true ...
@@ -107,7 +107,7 @@ RUN find /build/.venv -type d -name '__pycache__' -prune -exec rm -rf '{}' + \
 # -----------------------------------------------------------------------------
 # Stage 2: Runtime - Minimal container for execution
 # -----------------------------------------------------------------------------
-FROM python:3.14-slim AS runtime
+FROM python:3.13-slim AS runtime
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

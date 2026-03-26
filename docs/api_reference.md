@@ -9,6 +9,7 @@ The most stable entry points are:
 - File parsers from `mcprojsim.parsers`
 - Exporters from `mcprojsim.exporters`
 - Analysis helpers from `mcprojsim.analysis`
+- Sprint-planning APIs from `mcprojsim.planning` and `mcprojsim.models.sprint_simulation`
 - Configuration from `mcprojsim.config`
 
 Internal helper modules under `mcprojsim.simulation` and `mcprojsim.utils` are usable, but they are less central to the day-to-day library workflow.
@@ -31,7 +32,7 @@ Use these imports when you want the shortest path for common programmatic usage.
 
 ## Simulation Workflow
 
-The standard workflow is:
+The standard schedule-simulation workflow is:
 
 1. Load a project definition with `YAMLParser` or `TOMLParser`
 2. Optionally load a `Config`
@@ -62,6 +63,25 @@ print(results.get_critical_path())
 
 JSONExporter.export(results, "results.json")
 HTMLExporter.export(results, "results.html", project=project, config=config)
+```
+
+Sprint-planning workflow (when `project.sprint_planning.enabled` is true):
+
+1. Load a `Project`
+2. Run `SprintSimulationEngine`
+3. Inspect `SprintPlanningResults`
+
+```python
+from mcprojsim.parsers import YAMLParser
+from mcprojsim.planning.sprint_engine import SprintSimulationEngine
+
+project = YAMLParser().parse_file("sprint_project.yaml")
+engine = SprintSimulationEngine(iterations=5000, random_seed=42)
+results = engine.run(project)
+
+print(results.mean)
+print(results.percentile(90))
+print(results.date_percentile(90))
 ```
 
 ## Core API
@@ -115,8 +135,14 @@ Useful methods:
 
 - `calculate_statistics()`
 - `percentile(p: int) -> float`
+- `effort_percentile(p: int) -> float`
 - `get_critical_path() -> dict[str, float]`
+- `get_critical_path_sequences(top_n: int | None = None) -> list[CriticalPathRecord]`
+- `get_most_frequent_critical_path() -> CriticalPathRecord | None`
 - `get_histogram_data(bins: int = 50)`
+- `probability_of_completion(target_hours: float) -> float`
+- `total_effort_hours() -> float`
+- `get_risk_impact_summary() -> dict[str, dict[str, float]]`
 - `to_dict() -> dict[str, Any]`
 
 ```python
@@ -128,6 +154,43 @@ criticality = results.get_critical_path()
 for task_id, value in criticality.items():
     print(task_id, value)
 ```
+
+### `SprintSimulationEngine`
+
+Entry point for sprint-planning Monte Carlo simulation.
+
+Import path:
+
+```python
+from mcprojsim.planning.sprint_engine import SprintSimulationEngine
+```
+
+Constructor parameters:
+
+- `iterations`
+- `random_seed`
+
+Key method:
+
+- `run(project: Project) -> SprintPlanningResults`
+
+### `SprintPlanningResults`
+
+Result model for sprint-planning simulations.
+
+Import path:
+
+```python
+from mcprojsim.models.sprint_simulation import SprintPlanningResults
+```
+
+Useful methods:
+
+- `calculate_statistics()`
+- `percentile(p: int) -> float`
+- `date_percentile(p: int) -> date | None`
+- `delivery_date_for_sprints(sprint_count: float) -> date | None`
+- `to_dict() -> dict[str, Any]`
 
 ## Project Models
 
@@ -142,8 +205,9 @@ Key fields:
 - `project`: `ProjectMetadata`
 - `tasks`: `list[Task]`
 - `project_risks`: `list[Risk]`
-- `resources`: `list[dict[str, Any]]`
-- `calendars`: `list[dict[str, Any]]`
+- `resources`: `list[ResourceSpec]`
+- `calendars`: `list[CalendarSpec]`
+- `sprint_planning`: `SprintPlanningSpec | None`
 
 Key method:
 
@@ -160,6 +224,9 @@ Stores top-level project settings such as:
 - `confidence_levels`
 - `probability_red_threshold`
 - `probability_green_threshold`
+- `hours_per_day`
+- `distribution`
+- `team_size`
 
 ### `Task`
 
@@ -237,6 +304,7 @@ The following enums are also part of the model API:
 
 - `DistributionType`
 - `ImpactType`
+- `EffortUnit`
 
 ## Parsers
 
@@ -281,7 +349,10 @@ Important methods:
 - `Config.get_default() -> Config`
 - `get_uncertainty_multiplier(factor_name, level) -> float`
 - `get_t_shirt_size(size) -> TShirtSizeConfig | None`
+- `get_t_shirt_categories() -> list[str]`
+- `resolve_t_shirt_size(size) -> TShirtSizeConfig`
 - `get_story_point(points) -> StoryPointConfig | None`
+- `get_lognormal_high_z_value() -> float`
 
 Important nested models:
 
@@ -298,6 +369,8 @@ config = Config.load_from_file("config.yaml")
 
 multiplier = config.get_uncertainty_multiplier("team_experience", "high")
 size = config.get_t_shirt_size("L")
+epic_size = config.resolve_t_shirt_size("epic.M")
+categories = config.get_t_shirt_categories()
 story_points = config.get_story_point(5)
 ```
 
@@ -309,7 +382,7 @@ Exports summary results, percentiles, histogram data, and critical-path output t
 
 Method:
 
-- `export(results: SimulationResults, output_path) -> None`
+- `export(results, output_path, config=None, critical_path_limit=None, sprint_results=None) -> None`
 
 ### `CSVExporter`
 
@@ -317,7 +390,7 @@ Exports summary results, percentiles, critical path, and histogram table to CSV.
 
 Method:
 
-- `export(results: SimulationResults, output_path) -> None`
+- `export(results, output_path, config=None, critical_path_limit=None, sprint_results=None) -> None`
 
 ### `HTMLExporter`
 
@@ -325,7 +398,7 @@ Exports a formatted HTML report.
 
 Method:
 
-- `export(results: SimulationResults, output_path, project: Project | None = None, config: Config | None = None) -> None`
+- `export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None) -> None`
 
 If `project` is provided, the report can show richer task effort information. If `config` is also provided, T-shirt-sized tasks and Story Point tasks are rendered using the active simulation configuration rather than only default mappings.
 
@@ -366,6 +439,16 @@ Methods:
 
 - `get_criticality_index(results: SimulationResults) -> dict[str, float]`
 - `get_most_critical_tasks(results: SimulationResults, threshold: float = 0.5) -> list[str]`
+- `get_most_frequent_paths(results: SimulationResults, top_n: int | None = None) -> list[CriticalPathRecord]`
+
+### `StaffingAnalyzer`
+
+Provides staffing recommendations and team-size tables using simulation results plus staffing config.
+
+Methods:
+
+- `calculate_staffing_table(results: SimulationResults, config: Config) -> list[StaffingRow]`
+- `recommend_team_size(results: SimulationResults, config: Config) -> list[StaffingRecommendation]`
 
 ## Validation Utility
 
@@ -383,6 +466,14 @@ This is a simple convenience wrapper that selects `YAMLParser` or `TOMLParser` b
 from mcprojsim.utils import Validator
 
 is_valid, error = Validator.validate_file("project.yaml")
+```
+
+### `setup_logging`
+
+Also exported from `mcprojsim.utils`:
+
+```python
+from mcprojsim.utils import setup_logging
 ```
 
 ## Not a Stable User-Facing API?
@@ -442,4 +533,7 @@ yaml_output = parser.parse_and_generate(description)
 ### Data classes
 
 - `ParsedProject` — extracted project-level data (`name`, `start_date`, `hours_per_day`, `tasks`, `confidence_levels`)
-- `ParsedTask` — extracted task data (`name`, `t_shirt_size`, `story_points`, `min_estimate`/`expected_estimate`/`max_estimate`, `dependency_refs`)
+- `ParsedTask` — extracted task data (`name`, `t_shirt_size`, `story_points`, `low_estimate`/`expected_estimate`/`high_estimate`, `dependency_refs`)
+- `ParsedResource` — extracted resource data (`name`, `availability`, `experience_level`, `productivity_level`, `calendar`, `sickness_prob`, `planned_absence`)
+- `ParsedCalendar` — extracted calendar data (`id`, `work_hours_per_day`, `work_days`, `holidays`)
+- `ParsedSprintPlanning` — extracted sprint-planning settings (`enabled`, `sprint_length_weeks`, `capacity_mode`, `history`, ...)

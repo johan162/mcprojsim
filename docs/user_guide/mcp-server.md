@@ -582,10 +582,18 @@ The generated YAML uses symbolic estimates (`t_shirt_size: "M"` or `story_points
 
 ```yaml
 t_shirt_sizes:
-  M:
-    low: 3
-    expected: 5
-    high: 8
+  story:
+    M:
+      low: 40
+      expected: 60
+      high: 120
+  epic:
+    M:
+      low: 200
+      expected: 480
+      high: 1200
+
+t_shirt_size_default_category: epic
 ```
 
 Then run the simulation with:

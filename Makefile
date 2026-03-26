@@ -6,8 +6,12 @@
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
 pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
-container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all
+container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all, black, flake8, mypy
 
+# Makefile itself as a dependency to ensure it is re-evaluated when changed
+# NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
+# and then this line will be silently ignored.´unless you have upgrade make via brew or similar.	
+.EXTRA_PREREQS := $(firstword $(MAKEFILE_LIST))
 
 # Make behavior
 .DEFAULT_GOAL := help
@@ -186,6 +190,7 @@ LINT_STAMP := $(STAMP_DIR)/lint-stamp
 TYPECHECK_STAMP := $(STAMP_DIR)/typecheck-stamp
 INSTALL_STAMP := $(STAMP_DIR)/install-stamp
 TEST_STAMP := $(STAMP_DIR)/test-stamp
+TEST_ALL_STAMP := $(STAMP_DIR)/test-all-stamp
 GHCR_LOGIN_STAMP := $(STAMP_DIR)/ghcr-login-stamp
 
 # Build package files
@@ -196,14 +201,23 @@ BUILD_DIR := .build
 
 # Design ideas PDF output path
 DESIGN_IDEAS_DIR := design-ideas
+DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template.tex
+
 SPRINT_PLANNING_MD := $(DESIGN_IDEAS_DIR)/sprint-based-planning.md
 SPRINT_PLANNING_PDF := $(DESIGN_IDEAS_DIR)/sprint-based-planning.pdf
-SPRINT_PLANNING_DIST_DIR := $(BUILD_DIR)/design-ideas/sprint-based-planning
-SPRINT_PLANNING_TEMPLATE := $(DESIGN_IDEAS_DIR)/report_template.tex
+SPRINT_PLANNING_DIST_DIR := $(BUILD_DIR)/design-ideas/sprint-planning
 SPRINT_PLANNING_PANDOC_FILTER := scripts/pandoc_sprint_planning_table_widths.lua
 SPRINT_PLANNING_BODY_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_body.tex
 SPRINT_PLANNING_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.tex
 SPRINT_PLANNING_PDF_BUILT := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.pdf
+
+TSHIRT_CATEGORY_MD := $(DESIGN_IDEAS_DIR)/tshirt-categories.md
+TSHIRT_CATEGORY_PDF := $(DESIGN_IDEAS_DIR)/tshirt-categories.pdf
+TSHIRT_CATEGORY_DIST_DIR := $(BUILD_DIR)/design-ideas/tshirt-categories
+TSHIRT_CATEGORY_BODY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_body.tex
+TSHIRT_CATEGORY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_report.tex
+TSHIRT_CATEGORY_PDF_BUILT := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_report.pdf
+
 
 # Remove any hypen in PyPi specifi version number for wheel filename compliance
 PYPI_VERSION := $(shell echo $(VERSION) | tr -d '-')
@@ -217,7 +231,17 @@ $(TEST_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running tests in parallel with coverage check...$(NC)"
 	@if poetry run pytest -n auto --cov=app --cov-report= --cov-report=xml --cov-fail-under=${COVERAGE} -s -q; then \
 		touch $(TEST_STAMP); \
-		echo -e "$(GREEN)✓ All tests passed with required coverage$(NC)"; \
+		echo -e "$(GREEN)✓ All non-heavy tests passed with required coverage$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Tests failed or coverage below ${COVERAGE}%$(NC)"; \
+		exit 1; \
+	fi
+
+$(TEST_ALL_STAMP): $(SRC_FILES) $(TEST_FILES)
+	@echo -e "$(DARKYELLOW)- Running tests in parallel with coverage check...$(NC)"
+	@if poetry run pytest -m "heavy or not heavy" -n auto --cov=app --cov-report= --cov-report=xml --cov-fail-under=${COVERAGE} -s -q; then \
+		touch $(TEST_ALL_STAMP); \
+		echo -e "$(GREEN)✓ All tests (including heavy) passed with required coverage$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Tests failed or coverage below ${COVERAGE}%$(NC)"; \
 		exit 1; \
@@ -248,11 +272,16 @@ $(DOC_STAMP): $(DOC_FILES)
 
 $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running linter...$(NC)"
-	@poetry run flake8 $(SRC_DIR) $(TEST_DIR)
+	@if poetry run flake8 $(SRC_DIR) $(TEST_DIR); then \
+		echo -e "$(GREEN)✓ Flake8 linting passed$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Flake8 linting failed$(NC)"; \
+		exit 1; \
+	fi
 # Run pyright as an additional linting step if available
 	@if poetry run pyright --version >/dev/null 2>&1; then \
 		echo -e "$(DARKYELLOW)- Running pyright for additional linting...$(NC)"; \
-		if poetry run pyright $(SRC_DIR) $(TEST_DIR); then \
+		if poetry run pyright --level error $(SRC_DIR) $(TEST_DIR); then \
 			echo -e "$(GREEN)✓ Pyright linting passed$(NC)"; \
 		else \
 			echo -e "$(RED)✗ Error: Pyright linting failed$(NC)"; \
@@ -266,9 +295,13 @@ $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(TYPECHECK_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running type checker...$(NC)"
-	@poetry run mypy src/ tests/ --strict
+	@if poetry run mypy src/ tests/ --strict; then \
+		echo -e "$(GREEN)✓ Mypy type checking passed$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Mypy type checking failed$(NC)"; \
+		exit 1; \
+	fi
 	@touch $(TYPECHECK_STAMP)
-	@echo -e "$(GREEN)✓ Typecheck target runs successfully$(NC)"
 
 $(INSTALL_STAMP): pyproject.toml $(LOCK_FILE)
 	@echo -e "$(DARKYELLOW)- Installing dependencies...$(NC)"
@@ -370,14 +403,17 @@ reinstall: clean-venv clean install ## Reinstall the project from scratch
 # The targets: test-short, test-param, and test-html will always be run on invocation.
 # Plain test target wilkl ony be run when needed (source- or test-file changes)
 # =============================================================================================
-test: $(INSTALL_STAMP) $(TEST_STAMP) ## Run tests in parallel, terminal coverage report
+test: $(TEST_STAMP) ## Run tests in parallel, terminal coverage report
 	@:
 
-test-short: $(INSTALL_STAMP) ## Run tests in parallel with minimal output, no coverage
+test-all: $(TEST_ALL_STAMP) ## Run all tests (including heavy) in parallel, terminal coverage report
+	@:
+
+test-short: ## Run tests in parallel with minimal output, no coverage
 	@echo -e "$(DARKYELLOW)- Starting short test without coverage...$(NC)"	
 	@poetry run pytest -n auto -q --no-cov
 
-test-html: $(INSTALL_STAMP) ## Run tests in parallel, HTML & XML coverage report
+test-html: ## Run tests in parallel, HTML & XML coverage report
 	@echo -e "$(DARKYELLOW)- Starting parallel test coverage...$(NC)"
 	@poetry run pytest -q -n auto --cov=src/mcprojsime --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
 	@echo -e "$(GREEN)✓ Test coverage report generated in \"coverage.xml\" and \"htmlcov/index.html\"$(NC)"
@@ -388,13 +424,13 @@ test-html: $(INSTALL_STAMP) ## Run tests in parallel, HTML & XML coverage report
 check: format lint typecheck ## Run all code quality checks
 	@:
 
-lint: $(LINT_STAMP) ## Run linting checks with flake8
+lint, flake8: $(LINT_STAMP) ## Run linting checks with flake8
 	@:
 
-format: $(FORMAT_STAMP) ## Format code with black
+format, black: $(FORMAT_STAMP) ## Format code with black
 	@:
 
-typecheck: $(TYPECHECK_STAMP) ## Run strict type checking with mypy
+typecheck, mypy: $(TYPECHECK_STAMP) ## Run strict type checking with mypy
 	@:
 
 pre-commit: $(INSTALL_STAMP) ## Run pre-commit checks (format, lint, typecheck)
@@ -497,10 +533,10 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  #
 	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
 	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
 
-pdf-sprint-planning: $(SPRINT_PLANNING_PDF) ## Build the sprint-based planning design PDF
+pdf-design: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) ## Build all the design documents PDFs
 	@:
 
-$(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(SPRINT_PLANNING_TEMPLATE) $(SPRINT_PLANNING_PANDOC_FILTER)
+$(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(DESIGN_LATEX_TEMPLATE) $(SPRINT_PLANNING_PANDOC_FILTER)
 	@echo -e "$(DARKYELLOW)- Building sprint-based planning PDF via LaTeX report pipeline...$(NC)"
 	@mkdir -p $(SPRINT_PLANNING_DIST_DIR)
 	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
@@ -512,13 +548,75 @@ $(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(SPRINT_PLANNING_TEMPLATE) $(SPRI
 		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
-		$(SPRINT_PLANNING_TEMPLATE) > $(SPRINT_PLANNING_TEX)
+		$(DESIGN_LATEX_TEMPLATE) > $(SPRINT_PLANNING_TEX)
+# Read the version from the first line of the markdown file (assuming it is in the format: "Version: x.y.z") 
+# and replace the version placeholder "{{VERSION}}" in the LaTeX template	
+	@VERSION_FROM_MD=$$(head -n 1 $(SPRINT_PLANNING_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
+	sed -i.bak -E "s/\{\{VERSION\}\}/$$VERSION_FROM_MD/g" $(SPRINT_PLANNING_TEX); \
+	if grep -q "$$VERSION_FROM_MD" $(SPRINT_PLANNING_TEX); then \
+		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$(NC)"; \
+		exit 1; \
+	fi; 
+# Use the first heading in the markdown file as the title and replace the "{{TITLE}}" placeholder in the LaTeX template
+	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $(SPRINT_PLANNING_MD) | sed -E 's/#\s*(.+)/\1/'); \
+	sed -i.bak -E "s/\{\{TITLE\}\}/$$TITLE_FROM_MD/g" $(SPRINT_PLANNING_TEX); \
+	if grep -q "$$TITLE_FROM_MD" $(SPRINT_PLANNING_TEX); then \
+		echo -e "$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$(NC)"; \
+		exit 1; \
+	fi
+	@rm -f $(SPRINT_PLANNING_TEX).bak		
 	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
 	@cp $(SPRINT_PLANNING_PDF_BUILT) $(SPRINT_PLANNING_PDF)
 	@rm -f $(SPRINT_PLANNING_DIST_DIR)/*.aux $(SPRINT_PLANNING_DIST_DIR)/*.log $(SPRINT_PLANNING_DIST_DIR)/*.fls $(SPRINT_PLANNING_DIST_DIR)/*.fdb_latexmk 2>/dev/null || true
 	@echo -e "$(GREEN)✓ Sprint-based planning PDF built: $(SPRINT_PLANNING_PDF)$(NC)"
+
+
+$(TSHIRT_CATEGORY_PDF): $(TSHIRT_CATEGORY_MD) $(DESIGN_LATEX_TEMPLATE)
+	@echo -e "$(DARKYELLOW)- Building t-shirt category PDF via LaTeX report pipeline...$(NC)"
+	mkdir -p $(TSHIRT_CATEGORY_DIST_DIR)
+	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(TSHIRT_CATEGORY_MD) -o $(TSHIRT_CATEGORY_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(TSHIRT_CATEGORY_BODY_TEX)
+	@rm -f $(TSHIRT_CATEGORY_BODY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Injecting body into design-ideas LaTeX template...$(NC)"
+	@awk -v body="$(TSHIRT_CATEGORY_BODY_TEX)" '\
+		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$(DESIGN_LATEX_TEMPLATE) > $(TSHIRT_CATEGORY_TEX)
+# Read the version from the first line of the markdown file (assuming it is in the format: "Version: x.y.z") 
+# and replace the version placeholder "{{VERSION}}" in the LaTeX template	
+	@VERSION_FROM_MD=$$(head -n 1 $(TSHIRT_CATEGORY_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
+	sed -i.bak -E "s/\{\{VERSION\}\}/$$VERSION_FROM_MD/g" $(TSHIRT_CATEGORY_TEX); \
+	if grep -q "$$VERSION_FROM_MD" $(TSHIRT_CATEGORY_TEX); then \
+		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$(NC)"; \
+		exit 1; \
+	fi; 
+# Use the first heading in the markdown file as the title and replace the "{{TITLE}}" placeholder in the LaTeX template
+	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $(TSHIRT_CATEGORY_MD) | sed -E 's/#\s*(.+)/\1/'); \
+	sed -i.bak -E "s/\{\{TITLE\}\}/$$TITLE_FROM_MD/g" $(TSHIRT_CATEGORY_TEX); \
+	if grep -q "$$TITLE_FROM_MD" $(TSHIRT_CATEGORY_TEX); then \
+		echo -e "$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$(NC)"; \
+		exit 1; \
+	fi
+	@rm -f $(TSHIRT_CATEGORY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(TSHIRT_CATEGORY_DIST_DIR) $(TSHIRT_CATEGORY_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(TSHIRT_CATEGORY_DIST_DIR) $(TSHIRT_CATEGORY_TEX) >/dev/null
+	@cp $(TSHIRT_CATEGORY_PDF_BUILT) $(TSHIRT_CATEGORY_PDF)
+	@rm -f $(TSHIRT_CATEGORY_DIST_DIR)/*.aux $(TSHIRT_CATEGORY_DIST_DIR)/*.log $(TSHIRT_CATEGORY_DIST_DIR)/*.fls $(TSHIRT_CATEGORY_DIST_DIR)/*.fdb_latexmk 2>/dev/null || true
+	@echo -e "$(GREEN)✓ T-shirt category PDF built: $(TSHIRT_CATEGORY_PDF)$(NC)"
+
 
 pdf-pandoc: $(USER_GUIDE_PANDOC_PDF) ## Build fallback user guide PDF directly with Pandoc
 	@:

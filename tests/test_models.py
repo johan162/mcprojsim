@@ -101,6 +101,31 @@ class TestTaskEstimate:
         assert estimate.expected is None
         assert estimate.high is None
 
+    def test_tshirt_size_qualified_valid(self):
+        """Test qualified category.size T-shirt token."""
+        estimate = TaskEstimate(t_shirt_size="epic.M")
+        assert estimate.t_shirt_size == "epic.M"
+
+    def test_tshirt_size_long_form_valid(self):
+        """Test long-form size token is accepted."""
+        estimate = TaskEstimate(t_shirt_size="Medium")
+        assert estimate.t_shirt_size == "Medium"
+
+    def test_tshirt_size_invalid_dotted_syntax(self):
+        """Test invalid dotted syntax is rejected."""
+        with pytest.raises(ValueError, match="Use '<category>.<size>' or '<size>'"):
+            TaskEstimate(t_shirt_size="epic..M")
+
+    def test_tshirt_size_numeric_value_rejected(self):
+        """Test non-string t_shirt_size values are rejected."""
+        with pytest.raises(ValueError, match="Expected non-empty string"):
+            TaskEstimate(t_shirt_size=42)
+
+    def test_tshirt_size_blank_value_rejected(self):
+        """Test blank t_shirt_size values are rejected."""
+        with pytest.raises(ValueError, match="Expected non-empty string"):
+            TaskEstimate(t_shirt_size="")
+
     def test_tshirt_size_with_unit_rejected(self):
         """Test T-shirt size rejects unit in project file."""
         with pytest.raises(

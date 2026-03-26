@@ -57,6 +57,23 @@ To run sprint planning you need three things:
 
 There is no separate sprint-planning CLI command. Sprint planning is activated during `mcprojsim simulate` when the project file contains `sprint_planning.enabled: true`.
 
+You can define company-wide sprint defaults in `config.yaml` under `sprint_defaults` (for example sickness probabilities, velocity model, and planning confidence). When a project relies on built-in sprint defaults, `mcprojsim` applies values from `sprint_defaults`.
+
+## Sprint setting precedence
+
+When multiple sources define sprint-planning behavior, `mcprojsim` resolves values in this order (highest to lowest priority):
+
+1. CLI flags
+2. Project `sprint_planning` fields
+3. Global `sprint_defaults` in `config.yaml`
+4. Built-in defaults
+
+Examples:
+
+- `--velocity-model` overrides both project and config values
+- a value set in project `sprint_planning` overrides `sprint_defaults`
+- `sprint_defaults` provides company-wide defaults when project fields are not explicitly set
+
 A historical row is usable when all of the following are true:
 
 - it uses the correct unit family for the selected `capacity_mode`
@@ -467,11 +484,11 @@ The chosen unit family depends on `capacity_mode`:
 Historical `holiday_factor` is then used to normalize delivered and spillover work to an equivalent full-capacity sprint:
 
 $$
-	ext{normalized completed} = \frac{\text{completed}}{\text{holiday factor}}
+  \text{normalized completed} = \frac{\text{completed}}{\text{holiday factor}}
 $$
 
 $$
-	ext{normalized spillover} = \frac{\text{spillover}}{\text{holiday factor}}
+  \text{normalized spillover} = \frac{\text{spillover}}{\text{holiday factor}}
 $$
 
 This means a sprint with reduced availability is not treated as evidence that the team permanently has lower underlying capacity.
@@ -623,7 +640,7 @@ With the default `empirical` model, this is a discrete distribution based on the
 If volatility, future overrides, or sickness modeling are enabled, the effective velocity becomes:
 
 $$
-	ext{effective velocity} = \text{nominal velocity} \times \text{volatility multiplier} \times \text{future override multiplier} \times \text{sickness multiplier}
+  \text{effective velocity} = \text{nominal velocity} \times \text{volatility multiplier} \times \text{future override multiplier} \times \text{sickness multiplier}
 $$
 
 #### Spillover, added scope, and removed scope at the sprint level
@@ -740,6 +757,35 @@ The global model can be:
 - `table`: a deterministic lookup based on the item's planning story points
 - `logistic`: a logistic curve
 
+Logistic mode uses exactly this sequence:
+
+1. compute scaled points with a lower clamp:
+
+$$
+z = \max\!\left(\frac{x}{r}, 10^{-6}\right)
+$$
+
+2. compute the logit value:
+
+$$
+\ell = s \cdot \ln(z) + b
+$$
+
+3. convert to probability:
+
+$$
+p_i = \frac{1}{1 + e^{-\ell}}
+$$
+
+where:
+
+- $x$ is the item's planning story points
+- $r$ is `size_reference_points`
+- $s$ is `logistic_slope`
+- $b$ is `logistic_intercept`
+
+The clamp on $z$ is important: it prevents invalid $\ln(0)$ or negative-log inputs when very small values appear.
+
 For the logistic model, the probability is:
 
 $$
@@ -753,10 +799,21 @@ where:
 - $s$ is `logistic_slope`
 - $b$ is `logistic_intercept`
 
+Interpretation of slope and intercept:
+
+- `logistic_slope` controls sensitivity to item size in log-space. Larger values make probability rise faster as $x$ increases.
+- `logistic_intercept` shifts the curve up or down. At the reference size ($x=r$), the probability is:
+
+$$
+p(x=r) = \frac{1}{1 + e^{-b}}
+$$
+
+With the built-in defaults ($s=1.9$, $b=-1.9924301646902063$), this baseline is approximately 0.12.
+
 If spillover occurs, the completed fraction is sampled from:
 
 $$
-	ext{Beta}(\alpha, \beta)
+  \text{Beta}(\alpha, \beta)
 $$
 
 with:
@@ -764,7 +821,57 @@ with:
 - $\alpha$ = `consumed_fraction_alpha`
 - $\beta$ = `consumed_fraction_beta`
 
+Then the sampled fraction is clamped to:
+
+$$
+  \text{consumed fraction} \in [10^{-6}, 0.999999]
+$$
+
+This guarantees both consumed and remaining work are strictly positive in the spillover branch.
+
 The remaining fraction becomes carryover into the next sprint.
+
+In implementation terms, if an item with size $u$ spills over:
+
+$$
+u_{\text{consumed}} = u \cdot f
+$$
+
+$$
+u_{\text{remaining}} = u \cdot (1-f)
+$$
+
+where $f$ is the clamped Beta sample. If $u_{\text{remaining}} \le 10^{-9}$, no carryover item is created.
+
+How `consumed_fraction_alpha` and `consumed_fraction_beta` affect behavior:
+
+- Mean consumed fraction:
+
+$$
+\mathbb{E}[f] = \frac{\alpha}{\alpha + \beta}
+$$
+
+- Variance:
+
+$$
+\mathrm{Var}(f) = \frac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)}
+$$
+
+Interpretation:
+
+- higher `consumed_fraction_alpha` shifts spillover events toward "mostly completed before carryover"
+- higher `consumed_fraction_beta` shifts spillover events toward "mostly carried over"
+- larger values of both parameters (with similar ratio) produce tighter clustering around the mean
+
+With built-in defaults (`alpha=3.25`, `beta=1.75`):
+
+$$
+\mathbb{E}[f] = \frac{3.25}{3.25+1.75} = 0.65
+$$
+
+So, on average, a spillover event consumes about 65% of an item and carries about 35% into the next sprint (before clamping and tiny-remainder guard).
+
+Spillover itself is a Bernoulli event using the computed probability $p_i$: if a uniform draw is below $p_i$, spillover happens; otherwise the item completes normally.
 
 ### What is estimated from history, and what is configured directly
 
@@ -819,7 +926,7 @@ It then combines historical percentiles into a conservative planning heuristic.
 For confidence level $q$, the current implementation is approximately:
 
 $$
-	ext{guidance} = P50(\text{completed}) \times \left(1 - P_q(\text{spillover ratio})\right) \times \left(1 - P_q(\text{removal ratio})\right) - P_q(\text{scope added})
+  \text{guidance} = P50(\text{completed}) \times \left(1 - P_q(\text{spillover ratio})\right) \times \left(1 - P_q(\text{removal ratio})\right) - P_q(\text{scope added})
 $$
 
 This produces a conservative "what should we plan for" number in the current capacity unit.

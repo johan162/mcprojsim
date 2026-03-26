@@ -104,7 +104,17 @@ This document provides a complete formal grammar specification for Monte Carlo P
 <tshirt_estimate> ::= "t_shirt_size:" <tshirt_size>
                      # unit must NOT be specified; it comes from configuration
 
-<tshirt_size> ::= "XS" | "S" | "M" | "L" | "XL" | "XXL"
+<tshirt_size> ::= <bare_tshirt_size> | <qualified_tshirt_size>
+
+<bare_tshirt_size> ::= <tshirt_size_token>
+
+<qualified_tshirt_size> ::= <category_name> "." <tshirt_size_token>
+
+<tshirt_size_token> ::= "XS" | "S" | "M" | "L" | "XL" | "XXL"
+                      | "EXTRA_SMALL" | "SMALL" | "MEDIUM"
+                      | "LARGE" | "EXTRA_LARGE" | "EXTRA_EXTRA_LARGE"
+
+<category_name> ::= <identifier>
 
 <story_point_estimate> ::= "story_points:" <story_point_value>
                           # unit must NOT be specified; it comes from configuration
@@ -311,10 +321,13 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
 3. **Estimate Validity** (Log-Normal):
    - `low` < `expected` < `high`
 4. **Estimate Validity** (T-Shirt Size):
-   - Must be one of: `XS`, `S`, `M`, `L`, `XL`, `XXL`
+   - Must be either `<size>` or `<category>.<size>`
+   - Matching is case-insensitive for both category and size
    - Values are resolved from configuration file
+   - Bare values resolve through `t_shirt_size_default_category` (default: `story`)
    - `unit` must NOT be specified in the project file; unit comes from `t_shirt_size_unit` in config (default: `"hours"`)
-   - Default values (in hours):
+   - Built-in categories: `bug`, `story`, `epic`, `business`, `initiative`
+   - Default `story` values (in hours):
      * `XS`: min=3, expected=5, max=15
      * `S`: min=5, expected=16, max=40
      * `M`: min=40, expected=60, max=120
@@ -507,7 +520,9 @@ See `src/mcprojsim/models/` for the complete Pydantic model definitions that enf
 
 ## T-Shirt Size Configuration
 
-T-shirt sizes can be customized via a configuration file. The default values (listed in the [Semantic Constraints](#semantic-constraints) section above) follow a Fibonacci-like progression. See [Task Estimation — T-Shirt Size Estimates](user_guide/task_estimation.md#t-shirt-size-estimates) for the full default mapping table and customization guidance, and [Configuration](configuration.md) for the configuration file format.
+T-shirt sizes are configured under `t_shirt_sizes` as a nested map: `<category> -> <size> -> {low, expected, high}`. Backward compatibility remains for old flat `t_shirt_sizes` maps and for the transitional alias key `t_shirt_size_categories` (input-only). If both keys are present in one config, validation fails.
+
+See [Task Estimation — T-Shirt Size Estimates](user_guide/task_estimation.md#t-shirt-size-estimates) for examples and [Configuration](configuration.md) for full config details.
 
 ## Story Point Configuration
 
