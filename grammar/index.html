@@ -27,7 +27,7 @@
     
     
       
-        <title>Formal Grammar - Monte Carlo Project Simulator</title>
+        <title>EBNF Grammar - Monte Carlo Project Simulator</title>
       
     
     
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Formal Grammar
+              EBNF Grammar
             
           </span>
         </div>
@@ -245,6 +245,25 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="../QUICKSTART.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
     
     
       <li class="md-tabs__item">
@@ -272,26 +291,7 @@
   
     
   
-  Development
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../configuration/" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Configuration
+  Dev Guide
 
       </a>
     </li>
@@ -331,7 +331,7 @@
   
     
   
-  Formal Grammar
+  EBNF Grammar
 
       </a>
     </li>
@@ -416,6 +416,33 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../QUICKSTART.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -432,10 +459,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -453,8 +480,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -779,6 +806,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/mcp-server/" class="md-nav__link">
         
   
@@ -849,34 +904,7 @@
   <span class="md-ellipsis">
     
   
-    Development
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../configuration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuration
+    Dev Guide
   
 
     
@@ -939,7 +967,7 @@
   <span class="md-ellipsis">
     
   
-    Formal Grammar
+    EBNF Grammar
   
 
     
@@ -957,7 +985,7 @@
   <span class="md-ellipsis">
     
   
-    Formal Grammar
+    EBNF Grammar
   
 
     
@@ -1898,7 +1926,7 @@
 <p>See <code>src/mcprojsim/models/</code> for the complete Pydantic model definitions that enforce this grammar.</p>
 <h2 id="t-shirt-size-configuration">T-Shirt Size Configuration<a class="headerlink" href="#t-shirt-size-configuration" title="Permanent link">&para;</a></h2>
 <p>T-shirt sizes are configured under <code>t_shirt_sizes</code> as a nested map: <code>&lt;category&gt; -&gt; &lt;size&gt; -&gt; {low, expected, high}</code>. Backward compatibility remains for old flat <code>t_shirt_sizes</code> maps and for the transitional alias key <code>t_shirt_size_categories</code> (input-only). If both keys are present in one config, validation fails.</p>
-<p>See <a href="../user_guide/task_estimation/#t-shirt-size-estimates">Task Estimation — T-Shirt Size Estimates</a> for examples and <a href="../configuration/">Configuration</a> for full config details.</p>
+<p>See <a href="../user_guide/task_estimation/#t-shirt-size-estimates">Task Estimation — T-Shirt Size Estimates</a> for examples and <a href="configuration.md">Configuration</a> for full config details.</p>
 <h2 id="story-point-configuration">Story Point Configuration<a class="headerlink" href="#story-point-configuration" title="Permanent link">&para;</a></h2>
 <p>Story Point mappings can be customized via a configuration file in the same way. The default values are listed in the <a href="#semantic-constraints">Semantic Constraints</a> section above. See <a href="../user_guide/task_estimation/#story-point-estimates">Task Estimation — Story Point Estimates</a> for the full default mapping table and customization guidance.</p>
 <p>To view the current configuration including T-shirt sizes and Story Point mappings, use:</p>
@@ -1909,7 +1937,7 @@
 <li><a href="../user_guide/getting_started/">Getting Started</a> - Install and run your first simulation</li>
 <li><a href="../examples/">Examples</a> - Complete working examples</li>
 <li><a href="../api_reference/">API Reference</a> - Detailed API documentation</li>
-<li><a href="../configuration/">Configuration</a> - Configuration options</li>
+<li><a href="configuration.md">Configuration</a> - Configuration options</li>
 </ul>
 
 

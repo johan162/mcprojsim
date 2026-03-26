@@ -12,19 +12,19 @@
         <meta name="author" content="Johan Persson">
       
       
-        <link rel="canonical" href="https://johan162.github.io/mcprojsim/configuration/">
+        <link rel="canonical" href="https://johan162.github.io/mcprojsim/user_guide/configuration/">
       
       
-        <link rel="prev" href="../development/">
+        <link rel="prev" href="../interpreting_results/">
       
       
-        <link rel="next" href="../api_reference/">
+        <link rel="next" href="../mcp-server/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
@@ -33,10 +33,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,9 +55,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -96,7 +96,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Monte Carlo Project Simulator" class="md-header__button md-logo" aria-label="Monte Carlo Project Simulator" data-md-component="logo">
+    <a href="../.." title="Monte Carlo Project Simulator" class="md-header__button md-logo" aria-label="Monte Carlo Project Simulator" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -229,7 +229,7 @@
   
   
     <li class="md-tabs__item">
-      <a href=".." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -247,10 +247,31 @@
   
   
   
+    <li class="md-tabs__item">
+      <a href="../../QUICKSTART.md" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
     
     
-      <li class="md-tabs__item">
-        <a href="../user_guide/getting_started/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../getting_started/" class="md-tabs__link">
           
   
   
@@ -268,34 +289,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../development/" class="md-tabs__link">
+      <a href="../../development/" class="md-tabs__link">
         
   
   
     
   
-  Development
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-    
-  
-  
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
-        
-  
-  
-    
-  
-  Configuration
+  Dev Guide
 
       </a>
     </li>
@@ -308,7 +308,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../api_reference/" class="md-tabs__link">
+      <a href="../../api_reference/" class="md-tabs__link">
         
   
   
@@ -327,13 +327,13 @@
   
   
     <li class="md-tabs__item">
-      <a href="../grammar/" class="md-tabs__link">
+      <a href="../../grammar/" class="md-tabs__link">
         
   
   
     
   
-  Formal Grammar
+  EBNF Grammar
 
       </a>
     </li>
@@ -362,7 +362,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Monte Carlo Project Simulator" class="md-nav__button md-logo" aria-label="Monte Carlo Project Simulator" data-md-component="logo">
+    <a href="../.." title="Monte Carlo Project Simulator" class="md-nav__button md-logo" aria-label="Monte Carlo Project Simulator" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -392,7 +392,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -418,26 +418,56 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../../QUICKSTART.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -455,8 +485,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -473,7 +503,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/getting_started/" class="md-nav__link">
+      <a href="../getting_started/" class="md-nav__link">
         
   
   
@@ -501,7 +531,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/introduction/" class="md-nav__link">
+      <a href="../introduction/" class="md-nav__link">
         
   
   
@@ -529,7 +559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/your_first_project/" class="md-nav__link">
+      <a href="../your_first_project/" class="md-nav__link">
         
   
   
@@ -557,7 +587,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/uncertainty_factors/" class="md-nav__link">
+      <a href="../uncertainty_factors/" class="md-nav__link">
         
   
   
@@ -585,7 +615,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/task_estimation/" class="md-nav__link">
+      <a href="../task_estimation/" class="md-nav__link">
         
   
   
@@ -613,7 +643,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/risks/" class="md-nav__link">
+      <a href="../risks/" class="md-nav__link">
         
   
   
@@ -641,7 +671,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/project_files/" class="md-nav__link">
+      <a href="../project_files/" class="md-nav__link">
         
   
   
@@ -669,7 +699,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/sprint_planning/" class="md-nav__link">
+      <a href="../sprint_planning/" class="md-nav__link">
         
   
   
@@ -697,7 +727,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/constrained/" class="md-nav__link">
+      <a href="../constrained/" class="md-nav__link">
         
   
   
@@ -725,7 +755,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/running_simulations/" class="md-nav__link">
+      <a href="../running_simulations/" class="md-nav__link">
         
   
   
@@ -753,7 +783,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_guide/interpreting_results/" class="md-nav__link">
+      <a href="../interpreting_results/" class="md-nav__link">
         
   
   
@@ -776,96 +806,6 @@
             
               
                 
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../user_guide/mcp-server/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    MCP Server
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Examples
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../development/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Development
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
   
   
     
@@ -1325,6 +1265,70 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp-server/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
@@ -1333,7 +1337,34 @@
   
   
     <li class="md-nav__item">
-      <a href="../api_reference/" class="md-nav__link">
+      <a href="../../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dev Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api_reference/" class="md-nav__link">
         
   
   
@@ -1360,14 +1391,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../grammar/" class="md-nav__link">
+      <a href="../../grammar/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Formal Grammar
+    EBNF Grammar
   
 
     
@@ -2265,7 +2296,7 @@ the shifted log-normal distribution.</p>
 <p>Default: <code>"days"</code></p>
 <h3 id="important-note">Important note<a class="headerlink" href="#important-note" title="Permanent link">&para;</a></h3>
 <p>Story Point and T-shirt-size estimates in the <strong>project file</strong> must <strong>not</strong> include their own <code>unit</code> field. The unit comes from the configuration via <code>story_point_unit</code> and <code>t_shirt_size_unit</code>.</p>
-<p>See <a href="../user_guide/task_estimation/#t-shirt-size-estimates">Task Estimation</a> and <a href="../user_guide/task_estimation/#story-point-estimates">Task Estimation</a> for more guidance.</p>
+<p>See <a href="user_guide/task_estimation.md#t-shirt-size-estimates">Task Estimation</a> and <a href="user_guide/task_estimation.md#story-point-estimates">Task Estimation</a> for more guidance.</p>
 <h2 id="simulation-settings">Simulation settings<a class="headerlink" href="#simulation-settings" title="Permanent link">&para;</a></h2>
 <p>The <code>simulation</code> section controls default run behavior.</p>
 <table>
@@ -2512,7 +2543,7 @@ $$</p>
 <li>Built-in defaults</li>
 </ol>
 <p>This lets you keep company-wide defaults in <code>sprint_defaults</code>, set project-specific behavior in the project file, and still override per run with CLI flags.</p>
-<p>For sprint-planning field details and examples, see <a href="../user_guide/sprint_planning/">Sprint planning</a>.</p>
+<p>For sprint-planning field details and examples, see <a href="user_guide/sprint_planning.md">Sprint planning</a>.</p>
 <h2 id="sprint-default-logistic-spillover-parameters">Sprint default logistic spillover parameters<a class="headerlink" href="#sprint-default-logistic-spillover-parameters" title="Permanent link">&para;</a></h2>
 <p>The global keys <code>sprint_defaults.spillover_logistic_slope</code> and <code>sprint_defaults.spillover_logistic_intercept</code> control the logistic spillover probability curve used when project spillover model is <code>logistic</code>.</p>
 <p>The planner computes probability in log-space from planning story points:</p>
@@ -2532,7 +2563,7 @@ $$</p>
 <p>$$
 p(x=r) = \frac{1}{1 + e^{-b}}
 $$</p>
-<p>For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see <a href="../user_guide/sprint_planning/#item-spillover">Sprint planning</a>.</p>
+<p>For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see <a href="user_guide/sprint_planning.md#item-spillover">Sprint planning</a>.</p>
 <p><code>sprint_defaults.spillover_consumed_fraction_alpha</code> and <code>sprint_defaults.spillover_consumed_fraction_beta</code> are the Beta-distribution shape parameters for the consumed fraction during spillover events. Their expected consumed fraction is:</p>
 <p>$$
 \mathbb{E}[f] = \frac{\alpha}{\alpha + \beta}
@@ -2670,10 +2701,10 @@ $$</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
