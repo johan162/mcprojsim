@@ -6,6 +6,7 @@ import time
 from typing import Optional, Union
 
 import click
+import yaml
 
 from mcprojsim import __version__
 from mcprojsim.config import Config, DEFAULT_SIMULATION_ITERATIONS
@@ -18,6 +19,31 @@ from mcprojsim.planning.sprint_engine import SprintSimulationEngine
 from mcprojsim.simulation import SimulationEngine
 from mcprojsim.simulation.distributions import fit_shifted_lognormal
 from mcprojsim.utils import Validator, setup_logging
+
+
+def _get_user_default_config_path() -> Path:
+    """Return the default user-level configuration file path."""
+    return Path.home() / ".mcprojsim" / "configuration.yaml"
+
+
+def _get_generated_default_config_path() -> Path:
+    """Return the output path for generated default configuration."""
+    return Path.home() / ".mcprojsim" / "config.yaml"
+
+
+def _load_config_with_user_default(
+    config_file: Optional[str],
+) -> tuple[Config, Path | None]:
+    """Load config with precedence: CLI file > user default file > built-in defaults."""
+    if config_file:
+        config_path = Path(config_file)
+        return Config.load_from_file(config_path), config_path
+
+    user_config_path = _get_user_default_config_path()
+    if user_config_path.exists():
+        return Config.load_from_file(user_config_path), user_config_path
+
+    return Config.get_default(), None
 
 
 def _get_max_rss_bytes() -> int | None:
@@ -593,12 +619,11 @@ def simulate(
 
     try:
         # Load configuration
-        if config:
-            cfg = Config.load_from_file(config)
-            logger.info(f"Loaded configuration from {config}")
+        cfg, loaded_config_path = _load_config_with_user_default(config)
+        if loaded_config_path is not None:
+            logger.info(f"Loaded configuration from {loaded_config_path}")
         else:
-            cfg = Config.get_default()
-            logger.info("Using default configuration")
+            logger.info("Using built-in default configuration")
 
         if tshirt_category is not None:
             normalized_category = tshirt_category.strip().lower()
@@ -1329,13 +1354,28 @@ def config() -> None:
 
 @config.command(name="show")
 @click.option("--config-file", "-c", type=click.Path(exists=True), help="Config file")
-def show_config(config_file: Optional[str]) -> None:
+@click.option(
+    "--generate",
+    is_flag=True,
+    help="Generate a default configuration file at ~/.mcprojsim/config.yaml.",
+)
+def show_config(config_file: Optional[str], generate: bool) -> None:
     """Show current configuration."""
-    if config_file:
-        cfg = Config.load_from_file(config_file)
-        click.echo(f"Configuration from {config_file}:")
+    if generate:
+        generated_config_path = _get_generated_default_config_path()
+        generated_config_path.parent.mkdir(parents=True, exist_ok=True)
+
+        default_cfg = Config.get_default()
+        generated_config_path.write_text(
+            yaml.safe_dump(default_cfg.model_dump(mode="json"), sort_keys=False),
+            encoding="utf-8",
+        )
+        click.echo(f"Generated default configuration: {generated_config_path}")
+
+    cfg, loaded_config_path = _load_config_with_user_default(config_file)
+    if loaded_config_path is not None:
+        click.echo(f"Configuration from {loaded_config_path}:")
     else:
-        cfg = Config.get_default()
         click.echo("Default configuration:")
 
     click.echo("\nUncertainty Factors:")

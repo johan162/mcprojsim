@@ -6,12 +6,23 @@ from typing import Any
 import yaml
 from click.testing import CliRunner
 import numpy as np
+import pytest
 
 from mcprojsim import __version__
 from mcprojsim.cli import cli
-from mcprojsim.config import DEFAULT_SIMULATION_ITERATIONS
+from mcprojsim.config import DEFAULT_SIMULATION_ITERATIONS, Config
 from mcprojsim.models.sprint_simulation import SprintPlanningResults
 from mcprojsim.simulation.distributions import fit_shifted_lognormal
+
+
+@pytest.fixture(autouse=True)
+def isolate_user_default_config_path(monkeypatch, tmp_path) -> None:
+    """Keep tests independent from any real user-level config file."""
+    isolated_path = tmp_path / "no-user-config.yaml"
+    monkeypatch.setattr(
+        "mcprojsim.cli._get_user_default_config_path",
+        lambda: isolated_path,
+    )
 
 
 class TestCli:
@@ -303,6 +314,167 @@ class TestCli:
         assert result.exit_code != 0
         assert "Invalid value for --tshirt-category" in result.output
         assert "Valid categories:" in result.output
+
+    def test_simulate_loads_user_default_config_when_present(
+        self, monkeypatch, tmp_path
+    ) -> None:
+        """simulate should load ~/.mcprojsim/configuration.yaml when it exists."""
+        runner = CliRunner()
+        captured: dict[str, Any] = {}
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                captured["config"] = config
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+
+        user_config = tmp_path / "configuration.yaml"
+        user_config.write_text(
+            yaml.safe_dump(
+                {
+                    "t_shirt_sizes": {
+                        "story": {"M": {"low": 10, "expected": 20, "high": 30}}
+                    },
+                    "t_shirt_size_default_category": "story",
+                }
+            )
+        )
+        monkeypatch.setattr(
+            "mcprojsim.cli._get_user_default_config_path",
+            lambda: user_config,
+        )
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"t_shirt_size": "M"},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file), "--quiet"])
+
+        assert result.exit_code == 0
+        assert captured["config"].t_shirt_size_default_category == "story"
+        assert captured["config"].t_shirt_sizes["story"]["M"].expected == 20.0
+
+    def test_simulate_cli_config_overrides_user_default(
+        self, monkeypatch, tmp_path
+    ) -> None:
+        """--config should take precedence over user default configuration."""
+        runner = CliRunner()
+        captured: dict[str, Any] = {}
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                captured["config"] = config
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+
+        user_config = tmp_path / "configuration.yaml"
+        user_config.write_text(
+            yaml.safe_dump({"t_shirt_size_default_category": "story"})
+        )
+        monkeypatch.setattr(
+            "mcprojsim.cli._get_user_default_config_path",
+            lambda: user_config,
+        )
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            cli_config = Path("cli_config.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"t_shirt_size": "M"},
+                            }
+                        ],
+                    }
+                )
+            )
+            cli_config.write_text(
+                yaml.safe_dump({"t_shirt_size_default_category": "bug"})
+            )
+
+            result = runner.invoke(
+                cli,
+                ["simulate", str(project_file), "--config", str(cli_config), "--quiet"],
+            )
+
+        assert result.exit_code == 0
+        assert captured["config"].t_shirt_size_default_category == "bug"
 
     def test_simulate_shows_critical_path_sequences(self, monkeypatch) -> None:
         """The simulate command should print the most frequent critical paths."""
@@ -830,6 +1002,68 @@ class TestCli:
             f"mu: {story_mu:.4f}, sigma: {story_sigma:.4f}, "
             f"z-score: {default_z:.4f}"
         ) in result.output
+
+    def test_config_show_uses_user_default_when_present(
+        self, monkeypatch, tmp_path
+    ) -> None:
+        """config show should use user-level default config when available."""
+        runner = CliRunner()
+        user_config = tmp_path / "configuration.yaml"
+        user_config.write_text(
+            yaml.safe_dump({"t_shirt_size_default_category": "story"})
+        )
+        monkeypatch.setattr(
+            "mcprojsim.cli._get_user_default_config_path",
+            lambda: user_config,
+        )
+
+        result = runner.invoke(cli, ["config", "show"])
+
+        assert result.exit_code == 0
+        assert f"Configuration from {user_config}:" in result.output
+        assert "default_category: story" in result.output
+
+    def test_config_show_generate_creates_default_config_file(
+        self, monkeypatch, tmp_path
+    ) -> None:
+        """--generate should create ~/.mcprojsim/config.yaml with default values."""
+        runner = CliRunner()
+        generated_path = tmp_path / ".mcprojsim" / "config.yaml"
+
+        monkeypatch.setattr(
+            "mcprojsim.cli._get_generated_default_config_path",
+            lambda: generated_path,
+        )
+
+        result = runner.invoke(cli, ["config", "show", "--generate"])
+
+        assert result.exit_code == 0
+        assert f"Generated default configuration: {generated_path}" in result.output
+        assert generated_path.exists()
+
+        generated_data = yaml.safe_load(generated_path.read_text(encoding="utf-8"))
+        expected_data = Config.get_default().model_dump(mode="json")
+        assert generated_data == expected_data
+
+    def test_config_show_generate_creates_parent_directory(
+        self, monkeypatch, tmp_path
+    ) -> None:
+        """--generate should create the parent directory when it does not exist."""
+        runner = CliRunner()
+        generated_dir = tmp_path / "missing" / "nested" / ".mcprojsim"
+        generated_path = generated_dir / "config.yaml"
+        assert not generated_dir.exists()
+
+        monkeypatch.setattr(
+            "mcprojsim.cli._get_generated_default_config_path",
+            lambda: generated_path,
+        )
+
+        result = runner.invoke(cli, ["config", "show", "--generate"])
+
+        assert result.exit_code == 0
+        assert generated_dir.exists()
+        assert generated_path.exists()
 
     def test_config_show_uses_custom_lognormal_percentile(self, tmp_path) -> None:
         """Custom config percentiles should change displayed z-scores and fit."""
