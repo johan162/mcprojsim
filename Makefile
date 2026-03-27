@@ -499,7 +499,7 @@ docs: $(DOC_STAMP) ## Build the HTML project documentation with MkDocs
 gen-examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
 	@:
 
-$(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) $(INSTALL_STAMP)
+$(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) 
 	@echo -e "$(DARKYELLOW)- Generating examples documentation from template...$(NC)"
 	@bash $(EXAMPLES_GENERATOR)
 
