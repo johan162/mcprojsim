@@ -59,7 +59,7 @@ mcprojsim --help
 mcprojsim --version
 ```
 
-For the fastest first run, start with [QUICKSTART.md](QUICKSTART.md). For the fuller documentation path after that, use the published [User Guide](https://johan162.github.io/mcprojsim/).
+For the fastest first run, start with [Quickstart Guide](https://johan162.github.io/mcprojsim/quickstart/). For the fuller documentation path after that, use the published [User Guide](https://johan162.github.io/mcprojsim/).
 
 > [!TIP] 
 > There is also a prepared Docker image if you prefer to use an isolated environment to run in. 
@@ -116,7 +116,7 @@ Use the entry point that matches your goal:
 
 |Documentation Link|Purpose|
 |------------------|-------|
-| [QUICKSTART.md](QUICKSTART.md) | Fastest terminal-based first run |
+| [Quickstart Guide](https://johan162.github.io/mcprojsim/quickstart/) | Fastest terminal-based first run |
 | [User Documentation](https://johan162.github.io/mcprojsim/) | The full documentation site |
 | [User Guide](https://johan162.github.io/mcprojsim/user_guide/getting_started/) | The User Guide section |
 | [Development Guide](https://johan162.github.io/mcprojsim/development/) | contributor and source-checkout workflows |
