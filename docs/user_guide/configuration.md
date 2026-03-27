@@ -420,7 +420,7 @@ Default: `"days"`
 
 Story Point and T-shirt-size estimates in the **project file** must **not** include their own `unit` field. The unit comes from the configuration via `story_point_unit` and `t_shirt_size_unit`.
 
-See [Task Estimation](user_guide/task_estimation.md#t-shirt-size-estimates) and [Task Estimation](user_guide/task_estimation.md#story-point-estimates) for more guidance.
+See [Task Estimation](task_estimation.md#t-shirt-size-estimates) and [Task Estimation](task_estimation.md#story-point-estimates) for more guidance.
 
 ## Simulation settings
 
@@ -597,7 +597,7 @@ Sprint-planning values are resolved in this order (highest to lowest priority):
 
 This lets you keep company-wide defaults in `sprint_defaults`, set project-specific behavior in the project file, and still override per run with CLI flags.
 
-For sprint-planning field details and examples, see [Sprint planning](user_guide/sprint_planning.md).
+For sprint-planning field details and examples, see [Sprint planning](sprint_planning.md).
 
 ## Sprint default logistic spillover parameters
 
@@ -624,7 +624,7 @@ $$
 p(x=r) = \frac{1}{1 + e^{-b}}
 $$
 
-For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see [Sprint planning](user_guide/sprint_planning.md#item-spillover).
+For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see [Sprint planning](sprint_planning.md#item-spillover).
 
 `sprint_defaults.spillover_consumed_fraction_alpha` and `sprint_defaults.spillover_consumed_fraction_beta` are the Beta-distribution shape parameters for the consumed fraction during spillover events. Their expected consumed fraction is:
 

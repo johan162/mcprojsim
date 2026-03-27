@@ -136,7 +136,7 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 
     Customize uncertainty factors, T-shirt size mappings, story point scales, and output settings.
 
-    [:octicons-arrow-right-24: Configuration](configuration.md)
+    [:octicons-arrow-right-24: Configuration](user_guide/configuration.md)
 
 </div>
 

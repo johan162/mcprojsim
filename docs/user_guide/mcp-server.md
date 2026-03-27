@@ -687,7 +687,7 @@ Then run the simulation with:
 mcprojsim simulate my_project.yaml --config config.yaml
 ```
 
-See [Configuration](../configuration.md) for full details on customizing the mappings.
+See [Configuration](configuration.md) for full details on customizing the mappings.
 
 ### Generating files for quick "what-if" scenarios
 

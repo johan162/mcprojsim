@@ -526,6 +526,26 @@ if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     exit 1
 fi
 
+# 7.4 Generate PDF version of User Guide for release assets
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo "  [DRY-RUN] Would generate PDF version of User Guide for release assets"
+else
+    echo "  ✓ Generating PDF version of User Guide for release assets..."
+    make pdf || {
+        print_warning_colored "Makefile target 'pdf' failed. Skipping PDF generation."
+    }
+fi
+
+# 7.5 Generate MCP Bundle for release assets
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo "  [DRY-RUN] Would generate MCP Bundle for release assets"
+else
+    echo "  ✓ Generating MCP Bundle for release assets..."
+    mkmcpbundle.sh || {
+        print_warning_colored "MCP Bundle generation failed. Skipping bundle creation."
+    }
+fi 
+
 # =====================================
 # PHASE 8: RELEASE SUMMARY
 # =====================================

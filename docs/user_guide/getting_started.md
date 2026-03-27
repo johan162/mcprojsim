@@ -261,7 +261,7 @@ mcprojsim simulate project.yaml --quiet
 - [Your First Project](your_first_project.md) — build a richer project file step by step
 - [Task Estimation](task_estimation.md) — T-shirt sizes, story points, and explicit ranges
 - [Project Files](project_files.md) — complete project file reference
-- [Configuration](../configuration.md) — customize uncertainty factors and mappings
+- [Configuration](configuration.md) — customize uncertainty factors and mappings
 - [Examples](../examples.md) — working example projects
 
 ## Try these example projects
@@ -274,6 +274,6 @@ mcprojsim simulate project.yaml --quiet
 
 - Beginner: follow this chapter and open the HTML report to inspect results.
 - Intermediate: read [Your First Project](your_first_project.md) and [Task Estimation](task_estimation.md) to improve input quality.
-- Advanced: explore [Configuration](../configuration.md), [Constrained Scheduling](constrained.md), and [MCP Server](mcp-server.md) for automation and integrations.
+- Advanced: explore [Configuration](configuration.md), [Constrained Scheduling](constrained.md), and [MCP Server](mcp-server.md) for automation and integrations.
 
 \newpage
