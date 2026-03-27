@@ -248,7 +248,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../quickstart.md" class="md-tabs__link">
+      <a href="../../quickstart/" class="md-tabs__link">
         
   
   
@@ -419,7 +419,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../quickstart.md" class="md-nav__link">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -2296,7 +2296,7 @@ the shifted log-normal distribution.</p>
 <p>Default: <code>"days"</code></p>
 <h3 id="important-note">Important note<a class="headerlink" href="#important-note" title="Permanent link">&para;</a></h3>
 <p>Story Point and T-shirt-size estimates in the <strong>project file</strong> must <strong>not</strong> include their own <code>unit</code> field. The unit comes from the configuration via <code>story_point_unit</code> and <code>t_shirt_size_unit</code>.</p>
-<p>See <a href="user_guide/task_estimation.md#t-shirt-size-estimates">Task Estimation</a> and <a href="user_guide/task_estimation.md#story-point-estimates">Task Estimation</a> for more guidance.</p>
+<p>See <a href="../task_estimation/#t-shirt-size-estimates">Task Estimation</a> and <a href="../task_estimation/#story-point-estimates">Task Estimation</a> for more guidance.</p>
 <h2 id="simulation-settings">Simulation settings<a class="headerlink" href="#simulation-settings" title="Permanent link">&para;</a></h2>
 <p>The <code>simulation</code> section controls default run behavior.</p>
 <table>
@@ -2543,7 +2543,7 @@ $$</p>
 <li>Built-in defaults</li>
 </ol>
 <p>This lets you keep company-wide defaults in <code>sprint_defaults</code>, set project-specific behavior in the project file, and still override per run with CLI flags.</p>
-<p>For sprint-planning field details and examples, see <a href="user_guide/sprint_planning.md">Sprint planning</a>.</p>
+<p>For sprint-planning field details and examples, see <a href="../sprint_planning/">Sprint planning</a>.</p>
 <h2 id="sprint-default-logistic-spillover-parameters">Sprint default logistic spillover parameters<a class="headerlink" href="#sprint-default-logistic-spillover-parameters" title="Permanent link">&para;</a></h2>
 <p>The global keys <code>sprint_defaults.spillover_logistic_slope</code> and <code>sprint_defaults.spillover_logistic_intercept</code> control the logistic spillover probability curve used when project spillover model is <code>logistic</code>.</p>
 <p>The planner computes probability in log-space from planning story points:</p>
@@ -2563,7 +2563,7 @@ $$</p>
 <p>$$
 p(x=r) = \frac{1}{1 + e^{-b}}
 $$</p>
-<p>For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see <a href="user_guide/sprint_planning.md#item-spillover">Sprint planning</a>.</p>
+<p>For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see <a href="../sprint_planning/#item-spillover">Sprint planning</a>.</p>
 <p><code>sprint_defaults.spillover_consumed_fraction_alpha</code> and <code>sprint_defaults.spillover_consumed_fraction_beta</code> are the Beta-distribution shape parameters for the consumed fraction during spillover events. Their expected consumed fraction is:</p>
 <p>$$
 \mathbb{E}[f] = \frac{\alpha}{\alpha + \beta}
