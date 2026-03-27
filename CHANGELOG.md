@@ -1,3 +1,19 @@
+## [v0.8.2] - 2026-03-27
+
+Release Type: patch
+
+### 📋 Summary
+This release refines documentation structure and keeps onboarding content aligned between repository files and the published docs. It also adjusts examples generation behavior to reduce unnecessary churn during docs updates.
+
+### 📚 Documentation
+- Restructured documentation layout and moved Quickstart content into the docs tree for rendered user-guide visibility
+- Updated supporting documentation text and navigation details for consistency
+
+### 🛠 Internal
+- Updated release-maintenance commits for changelog bump and develop/main synchronization as part of the patch cycle
+- Improved examples generation workflow to be less aggressive and produce fewer unnecessary updates
+
+
 ## [v0.8.1] - 2026-03-27
 
 Release Type: patch
