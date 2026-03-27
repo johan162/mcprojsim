@@ -1,3 +1,21 @@
+## [v0.8.3] - 2026-03-27
+
+Release Type: patch
+
+### 📋 Summary
+This release improves documentation packaging and structure for end users. 
+
+### 🐛 Bug Fixes
+- Fixed broken links in the documentation so referenced pages resolve correctly
+
+### 📚 Documentation
+- Include Quickstart Guide in Doc site
+
+### 🛠 Internal
+- Updated release-maintenance commits for changelog bump and develop/main synchronization as part of the patch cycle
+- Added generation of the User Guide PDF and MCP bundle artifacts as part of the automated release workflow
+
+
 ## [v0.8.2] - 2026-03-27
 
 Release Type: patch
