@@ -59,7 +59,7 @@ mcprojsim --help
 mcprojsim --version
 ```
 
-For the fastest first run, start with [QUICKSTART.md](QUICKSTART.md). For the fuller documentation path after that, use the published [User Guide](https://johan162.github.io/mcprojsim/).
+For the fastest first run, start with [Quickstart Guide](https://johan162.github.io/mcprojsim/quickstart/). For the fuller documentation path after that, use the published [User Guide](https://johan162.github.io/mcprojsim/).
 
 > [!TIP] 
 > There is also a prepared Docker image if you prefer to use an isolated environment to run in. 
@@ -116,7 +116,7 @@ Use the entry point that matches your goal:
 
 |Documentation Link|Purpose|
 |------------------|-------|
-| [QUICKSTART.md](QUICKSTART.md) | Fastest terminal-based first run |
+| [Quickstart Guide](https://johan162.github.io/mcprojsim/quickstart/) | Fastest terminal-based first run |
 | [User Documentation](https://johan162.github.io/mcprojsim/) | The full documentation site |
 | [User Guide](https://johan162.github.io/mcprojsim/user_guide/getting_started/) | The User Guide section |
 | [Development Guide](https://johan162.github.io/mcprojsim/development/) | contributor and source-checkout workflows |
@@ -166,34 +166,6 @@ Download and install the latest mcprojsim MCP server from GitHub Releases. Follo
 See the MCP server [detailed documentation](https://johan162.github.io/mcprojsim/user_guide/mcp-server/#what-is-the-mcp-server) for examples of using the server.
 
 
-## For developers
-
-If you want to work from a source checkout, run tests, build docs, or use containers, start with:
-
-- [docs/development.md](docs/development.md)
-- [scripts/README.md](scripts/README.md)
-
-Use [QUICKSTART.md](QUICKSTART.md) only for the fastest end-user first run. The detailed developer documentation, including Poetry workflow, Make targets, scripts, containers, and release steps, lives in [docs/development.md](docs/development.md).
-
-The full published documentation is also available at <https://johan162.github.io/mcprojsim/>.
-
-## Contributing
-
-Contributions are welcome.
-
-1. Fork the repository
-2. Read the [Developer Guide](https://johan162.github.io/mcprojsim/development/) to set up your environment and understand the codebase
-3. Create a feature branch
-4. Make your changes with tests
-5. Use the `./scripts/mkbld.sh` script to build and test your changes locally
-6. Submit a pull request
-
-## Support
-
-- Bug reports: [MCProjSim Issues](https://github.com/johan162/mcprojsim/issues)
-- Full documentation: [MCProjSim Documentation](https://johan162.github.io/mcprojsim/)
-
-
 ## Citation
 
 If you use this tool in research or project planning, please cite:
@@ -204,7 +176,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.8.1}
+  version = {0.8.2}
 }
 ```
 

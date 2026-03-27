@@ -155,3 +155,15 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 ## License
 
 MIT License — see [LICENSE](https://github.com/johan162/mcprojsim/blob/main/LICENSE) for details.
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork the repository
+2. Read the [Developer Guide](https://johan162.github.io/mcprojsim/development/) to set up your environment and understand the codebase
+3. Create a feature branch
+4. Make your changes with tests
+5. Use the `./scripts/mkbld.sh` script to build and test your changes locally
+6. Submit a pull request
+
