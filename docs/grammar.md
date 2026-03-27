@@ -522,7 +522,7 @@ See `src/mcprojsim/models/` for the complete Pydantic model definitions that enf
 
 T-shirt sizes are configured under `t_shirt_sizes` as a nested map: `<category> -> <size> -> {low, expected, high}`. Backward compatibility remains for old flat `t_shirt_sizes` maps and for the transitional alias key `t_shirt_size_categories` (input-only). If both keys are present in one config, validation fails.
 
-See [Task Estimation — T-Shirt Size Estimates](user_guide/task_estimation.md#t-shirt-size-estimates) for examples and [Configuration](configuration.md) for full config details.
+See [Task Estimation — T-Shirt Size Estimates](user_guide/task_estimation.md#t-shirt-size-estimates) for examples and [Configuration](user_guide/configuration.md) for full config details.
 
 ## Story Point Configuration
 
@@ -539,4 +539,4 @@ mcprojsim config show
 - [Getting Started](user_guide/getting_started.md) - Install and run your first simulation
 - [Examples](examples.md) - Complete working examples
 - [API Reference](api_reference.md) - Detailed API documentation
-- [Configuration](configuration.md) - Configuration options
+- [Configuration](user_guide/configuration.md) - Configuration options

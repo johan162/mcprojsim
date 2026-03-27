@@ -67,7 +67,7 @@ Generate the project file:
 mcprojsim generate description.txt -o quickstart_project.yaml
 ```
 
-That is it — the generated `quickstart_project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), including qualified forms like `epic.M`, story points, or explicit `low/expected/high` estimates. Bare T-shirt values resolve via the configured default category. See the [MCP Server & Natural Language Input](docs/user_guide/mcp-server.md) guide for the full input format.
+That is it — the generated `quickstart_project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), including qualified forms like `epic.M`, story points, or explicit `low/expected/high` estimates. Bare T-shirt values resolve via the configured default category. See the [MCP Server & Natural Language Input](user_guide/mcp-server.md) guide for the full input format.
 
 ??? tip "Alternative: write the YAML by hand"
 
@@ -99,7 +99,7 @@ That is it — the generated `quickstart_project.yaml` is ready for validation a
         dependencies: ["task_001"]
     ```
 
-See the [project file reference](docs/user_guide/project_files.md) for all available fields.
+See the [project file reference](user_guide/project_files.md) for all available fields.
 
 This example is intentionally small — two tasks, one dependency, but that is enough for a meaningful first simulation!
 
@@ -264,12 +264,12 @@ A common practical pattern is:
 
 After this first run, move to the fuller User Guide path below. This Quick Start stays intentionally short and tactical; the chapters below are the long-form, maintained references:
 
-- [docs/user_guide/getting_started.md](docs/user_guide/getting_started.md) — a fuller walkthrough
-- [docs/user_guide/introduction.md](docs/user_guide/introduction.md) — Monte Carlo concepts
-- [docs/user_guide/your_first_project.md](docs/user_guide/your_first_project.md) — build richer project files step by step
-- [docs/user_guide/project_files.md](docs/user_guide/project_files.md) — project file reference
-- [docs/configuration.md](docs/configuration.md) — uncertainty factors and config
-- [docs/examples.md](docs/examples.md) — example projects
+- [Getting Started](user_guide/getting_started.md) — a fuller walkthrough
+- [Introduction](user_guide/introduction.md) — Monte Carlo concepts
+- [Your First Project](user_guide/your_first_project.md) — build richer project files step by step
+- [Project Files](user_guide/project_files.md) — project file reference
+- [Configuration](user_guide/configuration.md) — uncertainty factors and config
+- [Examples](examples.md) — example projects
 
 ## Need a different installation path?
 
@@ -277,8 +277,6 @@ This guide intentionally focuses on the fastest end-user path for a first succes
 
 If `pipx` is not the right fit, see:
 
-- [README.md](README.md) for the project overview
-- [docs/user_guide/getting_started.md](docs/user_guide/getting_started.md) for basic install and first-run material
-- [scripts/README.md](scripts/README.md) if you are working from a source checkout and want helper scripts for local setup and test commands.
+- [Getting Started](user_guide/getting_started.md) for basic install and first-run material
 
-If you are a developer, see [docs/development.md](docs/development.md) for instructions on setting up a local development environment, running tests, and contributing to the project.
+If you are a developer, see [Development](development.md) for instructions on setting up a local development environment, running tests, and contributing to the project.
