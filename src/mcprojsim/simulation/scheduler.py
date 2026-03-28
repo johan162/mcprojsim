@@ -1,12 +1,16 @@
 """Task scheduler with dependency and optional resource constraints."""
 
+import logging
 import math
+from collections import deque
 from datetime import date, timedelta
 from typing import Dict, List, Literal, Set, overload
 
 import numpy as np
 
 from mcprojsim.models.project import CalendarSpec, Project, ResourceSpec
+
+logger = logging.getLogger(__name__)
 
 
 class TaskScheduler:
@@ -302,6 +306,11 @@ class TaskScheduler:
             else:
                 # Fallback safety (should not happen for valid inputs)
                 # Use dependency-only schedule for any unscheduled tasks.
+                logger.warning(
+                    "Resource-constrained scheduler stalled with %d task(s) "
+                    "remaining; falling back to dependency-only scheduling.",
+                    len(remaining),
+                )
                 fallback = self._schedule_tasks_dependency_only(task_durations)
                 for task_id in remaining:
                     schedule[task_id] = fallback[task_id]
@@ -685,13 +694,11 @@ class TaskScheduler:
                 in_degree[task.id] += 1
 
         # Queue of tasks with no dependencies
-        queue: List[str] = [
-            task_id for task_id, degree in in_degree.items() if degree == 0
-        ]
+        queue = deque(task_id for task_id, degree in in_degree.items() if degree == 0)
         sorted_tasks: List[str] = []
 
         while queue:
-            task_id = queue.pop(0)
+            task_id = queue.popleft()
             sorted_tasks.append(task_id)
 
             # Reduce in-degree for dependent tasks
@@ -740,8 +747,7 @@ class TaskScheduler:
                 # No successors: latest finish = project end
                 latest_start[task_id] = project_end - schedule[task_id]["duration"]
             else:
-                # Latest start = earliest latest-start of successors minus nothing
-                # Actually: LF = min(LS of successors), LS = LF - duration
+                # LF = min(LS of successors), LS = LF - duration
                 min_succ_ls = min(latest_start[succ] for succ in successors[task_id])
                 latest_start[task_id] = min_succ_ls - schedule[task_id]["duration"]
 
