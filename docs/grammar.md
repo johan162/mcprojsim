@@ -23,6 +23,35 @@ This document provides a complete formal grammar specification for Monte Carlo P
                    [<resources_section>]
                    [<calendars_section>]
 
+# Optional Config File Structure (`--config`)
+<config_file> ::= { <config_top_level_entry> }
+
+<config_top_level_entry> ::= <simulation_config>
+                           | <distribution_config>
+                           | <uncertainty_multipliers_config>
+                           | <story_points_config>
+                           | <tshirt_sizes_config>
+                           | <output_config>
+                           | <staffing_config>
+                           | <constrained_scheduling_config>
+                           | <sprint_defaults_config>
+
+<constrained_scheduling_config> ::= "constrained_scheduling:"
+                                    "sickness_prob:" <probability>
+                                    # Default: 0.0
+                                    # Used as fallback for resources that omit resources[*].sickness_prob
+
+<sprint_defaults_config> ::= "sprint_defaults:"
+                             [<sprint_sickness_defaults_config>]
+
+<sprint_sickness_defaults_config> ::= "sickness:"
+                                      ["enabled:" <boolean>]
+                                      ["probability_per_person_per_week:" <probability>]
+                                      ["duration_log_mu:" <float>]
+                                      ["duration_log_sigma:" <positive_number>]
+                                      # duration_log_mu default: 0.693
+                                      # duration_log_sigma default: 0.75
+
 # Project Section
 <project_section> ::= "project:" 
                       <project_metadata>
@@ -279,6 +308,8 @@ This document provides a complete formal grammar specification for Monte Carlo P
 
 <float> ::= <integer> "." <digit> { <digit> }
 
+<boolean> ::= "true" | "false"
+
 <digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 
 <letter> ::= "a".."z" | "A".."Z"
@@ -373,13 +404,28 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
    - `experience_level` must be one of `1`, `2`, `3`
    - `productivity_level` must be in range [0.1, 2.0]
    - `sickness_prob` must be in range [0.0, 1.0]
-4. **Calendar Constraints**:
+4. **Constrained Scheduling Sickness Precedence**:
+  - Effective constrained-scheduling sickness probability resolves in this order:
+    1. `resources[*].sickness_prob` from project file (when explicitly set)
+    2. `constrained_scheduling.sickness_prob` from config file
+    3. built-in default `0.0`
+5. **Calendar Constraints**:
    - Calendar IDs must be unique
    - `work_days` entries must be integers in range `1..7`
    - Holiday and planned-absence dates must be valid ISO-8601 dates
-5. **Reference Integrity**:
+6. **Reference Integrity**:
    - Task-level `resources` entries must reference existing resource names
    - Resource `calendar` must reference an existing calendar ID, or `default` if no explicit calendars are defined
+
+### Configuration Constraints
+
+1. **Constrained Scheduling Defaults**:
+  - `constrained_scheduling.sickness_prob` must be in range [0.0, 1.0]
+2. **Sprint Sickness Defaults**:
+  - `sprint_defaults.sickness.probability_per_person_per_week` must be in range (0.0, 1.0)
+  - `sprint_defaults.sickness.duration_log_sigma` must be > 0
+  - `sprint_defaults.sickness.duration_log_mu` is a real number used as the log-normal location parameter
+  - **Shared across both modes**: `duration_log_mu` and `duration_log_sigma` are configured once under `sprint_defaults.sickness` and apply to both constrained scheduling and sprint-planning modes. Only the sickness probability settings are mode-specific (`constrained_scheduling.sickness_prob` vs. `sprint_defaults.sickness.probability_per_person_per_week`).
 
 ### Risk Constraints
 

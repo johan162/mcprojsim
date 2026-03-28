@@ -429,8 +429,8 @@ Built-in default brackets:
 | `enabled` | `false` | Enable per-person sickness absence modeling |
 | `team_size` | project `team_size` | Number of team members. Falls back to the top-level project `team_size` if omitted |
 | `probability_per_person_per_week` | `0.058` | Probability that any one person starts a sickness episode in a given week |
-| `duration_log_mu` | `0.693` | $\mu$ of the LogNormal duration distribution (log-scale). Default gives a median of 2 days |
-| `duration_log_sigma` | `0.75` | $\sigma$ of the LogNormal duration distribution (log-scale). Default gives mean ≈ 2.6 days, P90 ≈ 5.5 days |
+| `duration_log_mu` | `0.693` | $\mu$ of the LogNormal duration distribution (log-scale). Default gives a median of 2 days. **Shared with constrained scheduling.** |
+| `duration_log_sigma` | `0.75` | $\sigma$ of the LogNormal duration distribution (log-scale). Default gives mean ≈ 2.6 days, P90 ≈ 5.5 days. **Shared with constrained scheduling.** |
 
 ## How the simulation uses these fields
 
@@ -448,7 +448,7 @@ More concretely:
 
 - `holiday_factor` normalizes historical completed and spillover work to an equivalent full-capacity sprint before resampling
 - `future_sprint_overrides` scale future sampled capacity for specific sprints
-- when sickness modeling is enabled, a per-sprint sickness multiplier reduces capacity based on simulated team absences
+- when sickness modeling is enabled, a per-sprint sickness multiplier reduces capacity based on simulated team absences (duration parameters are shared with constrained scheduling, if both are used)
 - `removed_work_treatment: churn_only` records removed work as churn but does not shrink the remaining backlog
 - `removed_work_treatment: reduce_backlog` subtracts removed work from the remaining backlog
 - `priority` affects which ready tasks are pulled first

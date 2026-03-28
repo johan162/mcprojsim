@@ -444,7 +444,13 @@ This progression highlights how resource constraints and then calendar constrain
 
 ## Example 4: Add sickness and planned absence
 
-Sickness is configured per resource via `sickness_prob` (0.0 to 1.0), and explicit days off are set with `planned_absence`.
+Sickness has three related configuration layers:
+
+- `constrained_scheduling.sickness_prob` is the default per-resource sickness probability used when a resource omits `sickness_prob`,
+- `resources[*].sickness_prob` controls/overrides probability for that specific resource,
+- `sprint_defaults.sickness.duration_log_mu` and `sprint_defaults.sickness.duration_log_sigma` control the shared log-normal duration model used when sickness occurs.
+
+Explicit days off are set with `planned_absence`.
 
 ```yaml
 resources:
@@ -464,7 +470,36 @@ resources:
 ```
 
 !!! note
-    `sickness_prob` is currently configured in the **project file** (per resource), not in the global config file as it is based an individal assessment. If not specified it is the same as specifying sick probability as `0.0`
+    `resources[*].sickness_prob` is configured in the project file per resource. If omitted, constrained scheduling falls back to `constrained_scheduling.sickness_prob` from the config file. If neither is set, the effective default remains `0.0`.
+
+### Optional config for default sickness probability
+
+```yaml
+constrained_scheduling:
+  sickness_prob: 0.03
+```
+
+With this setting:
+
+- resources with explicit `sickness_prob` keep their own value,
+- resources without `sickness_prob` use `0.03`,
+- omitting this config block keeps the legacy `0.0` default.
+
+### Optional config for sickness duration
+
+If you want the constrained scheduler to assume shorter or longer sickness episodes, add this to your config file and run with `--config`:
+
+```yaml
+sprint_defaults:
+  sickness:
+    duration_log_mu: 1.10
+    duration_log_sigma: 0.90
+```
+
+This does not change who gets sick. It changes how long an absence tends to last once a sickness event occurs.
+
+!!! note
+    The duration parameters (`duration_log_mu` and `duration_log_sigma`) are configured once under `sprint_defaults.sickness` and apply to **both constrained scheduling and sprint planning**. This ensures consistent absence duration modeling across both forecasting modes. Sickness probabilities, however, have separate mode-specific defaults: `constrained_scheduling.sickness_prob` (constrained mode only) and `sprint_defaults.sickness.probability_per_person_per_week` (sprint planning only).
 
 
 
@@ -671,11 +706,14 @@ Use these with `mcprojsim simulate`:
 
 ### In the config file (`--config`)
 
-Use config files for simulation/reporting defaults (for example output settings and uncertainty multipliers). They do **not** replace per-resource sickness settings in the project file.
+Use config files for simulation/reporting defaults and shared stochastic model parameters. They do **not** replace per-resource sickness probabilities in the project file, but they can now define the shared sickness-duration distribution used by constrained scheduling.
 
 Example:
 
 ```yaml
+constrained_scheduling:
+  sickness_prob: 0.03
+
 simulation:
   default_iterations: 30000
 
@@ -685,6 +723,11 @@ output:
 
 staffing:
   effort_percentile: 80
+
+sprint_defaults:
+  sickness:
+    duration_log_mu: 1.10
+    duration_log_sigma: 0.90
 ```
 
 

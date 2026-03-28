@@ -57,6 +57,7 @@ The current configuration schema supports these top-level keys:
 - `lognormal`
 - `output`
 - `staffing`
+- `constrained_scheduling`
 - `sprint_defaults`
 
 ## Full example
@@ -149,6 +150,9 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
+
+constrained_scheduling:
+  sickness_prob: 0.0
 
 sprint_defaults:
   planning_confidence_level: 0.8
@@ -599,6 +603,53 @@ This lets you keep company-wide defaults in `sprint_defaults`, set project-speci
 
 For sprint-planning field details and examples, see [Sprint planning](sprint_planning.md).
 
+## Constrained scheduling defaults
+
+`constrained_scheduling.sickness_prob` sets the default sickness probability for
+resources in constrained scheduling when a resource does not specify
+`sickness_prob` in the project file.
+
+Precedence:
+
+1. `resources[*].sickness_prob` in project file
+2. `constrained_scheduling.sickness_prob` in config
+3. built-in default `0.0`
+
+Example:
+
+```yaml
+constrained_scheduling:
+  sickness_prob: 0.03
+```
+
+if you omit this key, resources without `sickness_prob` still behave as `0.0`.
+
+## Sickness duration defaults
+
+The keys under `sprint_defaults.sickness` now serve two related purposes:
+
+- sprint-planning sickness modeling,
+- resource-constrained scheduler sickness duration modeling.
+
+Specifically:
+
+- `probability_per_person_per_week` is used by sprint planning,
+- `duration_log_mu` and `duration_log_sigma` define the shared log-normal duration model for sickness episodes,
+- per-resource `sickness_prob` still belongs in the project file because it is resource-specific.
+
+Example:
+
+```yaml
+sprint_defaults:
+  sickness:
+    enabled: false
+    probability_per_person_per_week: 0.058
+    duration_log_mu: 0.693
+    duration_log_sigma: 0.75
+```
+
+If you raise `duration_log_mu` or `duration_log_sigma`, constrained schedules with non-zero `resources[*].sickness_prob` will tend to experience longer sickness-driven absences.
+
 ## Sprint default logistic spillover parameters
 
 The global keys `sprint_defaults.spillover_logistic_slope` and `sprint_defaults.spillover_logistic_intercept` control the logistic spillover probability curve used when project spillover model is `logistic`.
@@ -649,6 +700,7 @@ The configuration model validates these constraints directly:
 - `staffing.min_individual_productivity` must be greater than 0 and at most 1,
 - `experience_profiles[*].productivity_factor` must be greater than 0,
 - `experience_profiles[*].communication_overhead` must be between 0 and 1.
+- `constrained_scheduling.sickness_prob` must be between 0 and 1.
 
 ## Related settings in the project file
 
