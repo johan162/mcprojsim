@@ -630,6 +630,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#quick-command-and-flag-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick command and flag map
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick command and flag map">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commands-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands at a glance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-simulate-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common simulate flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-smallest-possible-project-file" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1317,6 +1356,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#quick-command-and-flag-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick command and flag map
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick command and flag map">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#commands-at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commands at a glance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-simulate-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common simulate flags
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-smallest-possible-project-file" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1597,6 +1675,103 @@
 <li>Express work with Story Points.</li>
 </ol>
 <p>At each step we will run the simulation and look at how the results change.</p>
+<h2 id="quick-command-and-flag-map">Quick command and flag map<a class="headerlink" href="#quick-command-and-flag-map" title="Permanent link">&para;</a></h2>
+<p>This chapter focuses on building the project file step-by-step, but it helps to know the full CLI surface area up front.</p>
+<h3 id="commands-at-a-glance">Commands at a glance<a class="headerlink" href="#commands-at-a-glance" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mcprojsim generate INPUT_FILE</code></td>
+<td>Generate a project YAML file from plain-text input</td>
+</tr>
+<tr>
+<td><code>mcprojsim validate PROJECT_FILE</code></td>
+<td>Validate a project file without simulating</td>
+</tr>
+<tr>
+<td><code>mcprojsim simulate PROJECT_FILE</code></td>
+<td>Run Monte Carlo simulation and optionally export reports</td>
+</tr>
+<tr>
+<td><code>mcprojsim config show</code></td>
+<td>Show active configuration</td>
+</tr>
+</tbody>
+</table>
+<h3 id="common-simulate-flags">Common <code>simulate</code> flags<a class="headerlink" href="#common-simulate-flags" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>What it controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--iterations</code>, <code>-n</code></td>
+<td>Number of Monte Carlo iterations</td>
+</tr>
+<tr>
+<td><code>--seed</code>, <code>-s</code></td>
+<td>Reproducibility seed</td>
+</tr>
+<tr>
+<td><code>--config</code>, <code>-c</code></td>
+<td>Custom config file</td>
+</tr>
+<tr>
+<td><code>--output-format</code>, <code>-f</code></td>
+<td>Export format(s): json, csv, html</td>
+</tr>
+<tr>
+<td><code>--output</code>, <code>-o</code></td>
+<td>Export output base path</td>
+</tr>
+<tr>
+<td><code>--critical-paths</code></td>
+<td>Number of critical path sequences shown/exported</td>
+</tr>
+<tr>
+<td><code>--table</code>, <code>-t</code></td>
+<td>Render CLI tabular sections as ASCII tables</td>
+</tr>
+<tr>
+<td><code>--minimal</code>, <code>-m</code></td>
+<td>Minimal console output mode</td>
+</tr>
+<tr>
+<td><code>--quiet</code>, <code>-q</code>, <code>-qq</code></td>
+<td>Reduce or suppress normal CLI output</td>
+</tr>
+<tr>
+<td><code>--staffing</code></td>
+<td>Expanded staffing recommendation tables</td>
+</tr>
+<tr>
+<td><code>--tshirt-category</code></td>
+<td>Override default T-shirt category</td>
+</tr>
+<tr>
+<td><code>--velocity-model</code></td>
+<td>Override sprint velocity model for how historic data are used (<code>empirical</code>/<code>neg_binomial</code>)</td>
+</tr>
+<tr>
+<td><code>--no-sickness</code></td>
+<td>Disable sprint sickness modeling</td>
+</tr>
+<tr>
+<td><code>--include-historic-base</code></td>
+<td>Add Historic Base section/series in HTML+JSON exports</td>
+</tr>
+</tbody>
+</table>
+<p>For full details, defaults, and examples, see <a href="../running_simulations/">Running simulations</a>.</p>
 <h2 id="the-smallest-possible-project-file">The smallest possible project file<a class="headerlink" href="#the-smallest-possible-project-file" title="Permanent link">&para;</a></h2>
 <p>The simplest useful project file contains two top-level sections:</p>
 <ul>

@@ -3017,12 +3017,12 @@
 <tr>
 <td><code>duration_log_mu</code></td>
 <td style="text-align: right;"><code>0.693</code></td>
-<td>$\mu$ of the LogNormal duration distribution (log-scale). Default gives a median of 2 days</td>
+<td>$\mu$ of the LogNormal duration distribution (log-scale). Default gives a median of 2 days. <strong>Shared with constrained scheduling.</strong></td>
 </tr>
 <tr>
 <td><code>duration_log_sigma</code></td>
 <td style="text-align: right;"><code>0.75</code></td>
-<td>$\sigma$ of the LogNormal duration distribution (log-scale). Default gives mean ≈ 2.6 days, P90 ≈ 5.5 days</td>
+<td>$\sigma$ of the LogNormal duration distribution (log-scale). Default gives mean ≈ 2.6 days, P90 ≈ 5.5 days. <strong>Shared with constrained scheduling.</strong></td>
 </tr>
 </tbody>
 </table>
@@ -3041,7 +3041,7 @@
 <ul>
 <li><code>holiday_factor</code> normalizes historical completed and spillover work to an equivalent full-capacity sprint before resampling</li>
 <li><code>future_sprint_overrides</code> scale future sampled capacity for specific sprints</li>
-<li>when sickness modeling is enabled, a per-sprint sickness multiplier reduces capacity based on simulated team absences</li>
+<li>when sickness modeling is enabled, a per-sprint sickness multiplier reduces capacity based on simulated team absences (duration parameters are shared with constrained scheduling, if both are used)</li>
 <li><code>removed_work_treatment: churn_only</code> records removed work as churn but does not shrink the remaining backlog</li>
 <li><code>removed_work_treatment: reduce_backlog</code> subtracts removed work from the remaining backlog</li>
 <li><code>priority</code> affects which ready tasks are pulled first</li>

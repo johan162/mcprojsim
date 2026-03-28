@@ -1753,12 +1753,17 @@
 </tr>
 <tr>
 <td><code>--velocity-model MODEL</code></td>
-<td>Override the sprint planning velocity model (<code>empirical</code> or <code>neg_binomial</code>). Applies only when sprint planning is enabled in the project file.</td>
+<td>Override the sprint planning velocity model for how to use historic data (<code>empirical</code> or <code>neg_binomial</code>). Applies only when sprint planning is enabled in the project file.</td>
 <td>project file setting</td>
 </tr>
 <tr>
 <td><code>--no-sickness</code></td>
 <td>Disable sickness modelling regardless of the project file setting. Applies only when sprint planning is enabled.</td>
+<td>off</td>
+</tr>
+<tr>
+<td><code>--include-historic-base</code></td>
+<td>Add a <code>Historic Base</code> section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under <code>sprint_planning.historic_base</code>.</td>
 <td>off</td>
 </tr>
 </tbody>
@@ -1811,6 +1816,9 @@
 </span><span id="__span-8-45"><a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a>
 </span><span id="__span-8-46"><a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a><span class="c1"># Sprint planning: disable sickness modelling</span>
 </span><span id="__span-8-47"><a id="__codelineno-8-47" name="__codelineno-8-47" href="#__codelineno-8-47"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>--no-sickness
+</span><span id="__span-8-48"><a id="__codelineno-8-48" name="__codelineno-8-48" href="#__codelineno-8-48"></a>
+</span><span id="__span-8-49"><a id="__codelineno-8-49" name="__codelineno-8-49" href="#__codelineno-8-49"></a><span class="c1"># Include Historic Base in HTML/JSON exports</span>
+</span><span id="__span-8-50"><a id="__codelineno-8-50" name="__codelineno-8-50" href="#__codelineno-8-50"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>-f<span class="w"> </span>json,html<span class="w"> </span>--include-historic-base
 </span></code></pre></div>
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>By default, the simulation prints a plain-text summary. With <code>--table</code> (<code>-t</code>), the confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are formatted as ASCII tables with column headers and box-drawing borders:</p>
