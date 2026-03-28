@@ -18,6 +18,7 @@ from mcprojsim.models.project import (
     TaskEstimate,
     Risk,
     DistributionType,
+    ResourceSpec,
     UncertaintyFactors,
 )
 from mcprojsim.config import Config
@@ -101,6 +102,38 @@ class TestDistributionSampler:
         estimate.distribution = "invalid_distribution"  # type: ignore
 
         with pytest.raises(ValueError, match="Unknown distribution type"):
+            sampler.sample(estimate)
+
+    def test_sample_triangular_missing_values_raises(self):
+        """Missing triangular parameters should raise a clear ValueError."""
+        sampler = DistributionSampler(np.random.RandomState(42))
+        estimate = TaskEstimate.model_construct(
+            distribution=DistributionType.TRIANGULAR,
+            low=None,
+            expected=2.0,
+            high=5.0,
+            t_shirt_size=None,
+            story_points=None,
+            unit=None,
+        )
+
+        with pytest.raises(ValueError, match="Triangular distribution requires"):
+            sampler.sample(estimate)
+
+    def test_sample_lognormal_missing_values_raises(self):
+        """Missing lognormal parameters should raise a clear ValueError."""
+        sampler = DistributionSampler(np.random.RandomState(42))
+        estimate = TaskEstimate.model_construct(
+            distribution=DistributionType.LOGNORMAL,
+            low=1.0,
+            expected=None,
+            high=5.0,
+            t_shirt_size=None,
+            story_points=None,
+            unit=None,
+        )
+
+        with pytest.raises(ValueError, match="Lognormal distribution requires"):
             sampler.sample(estimate)
 
 
@@ -745,6 +778,46 @@ class TestTaskScheduler:
 
         assert unconstrained_end == 4.0
         assert constrained_end == 8.0
+
+    def test_resource_scheduler_fallback_emits_warning(self, caplog):
+        """When constrained scheduling stalls, fallback should emit a warning."""
+        project = Project(
+            project=ProjectMetadata(name="Fallback", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                    dependencies=["task_001"],
+                ),
+            ],
+            resources=[
+                ResourceSpec(name="dev_1", experience_level=2, productivity_level=1.0)
+            ],
+        )
+        scheduler = TaskScheduler(project)
+
+        scheduler._find_next_time_with_capacity = (  # type: ignore[method-assign]
+            lambda *args, **kwargs: None
+        )
+
+        with caplog.at_level("WARNING"):
+            schedule = scheduler.schedule_tasks(
+                {"task_001": 3.0, "task_002": 4.0},
+                use_resource_constraints=True,
+            )
+
+        assert "task_001" in schedule
+        assert "task_002" in schedule
+        assert any(
+            "falling back to dependency-only scheduling" in message
+            for message in caplog.messages
+        )
 
 
 class TestSprintPlanner:
