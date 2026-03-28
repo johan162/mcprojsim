@@ -2,7 +2,62 @@
 
 The goal is to implement all MVP requirements in `docs/mcprojsim_reqs.md` to be able to reach 1.0.0
 
-## Not implemented yet
+## Long term ideas
+
+### Post-1.0 Themes
+
+- Forecast calibration and trustworthiness.
+- Better handling of non-stationary teams and changing backlog behavior.
+- Stronger scenario planning and policy simulation.
+- MCP and NL parser upgrades that reduce user ambiguity and rework.
+
+### High-Value New Functionality (No UI)
+
+1. Backtesting and calibration reports.
+    - Automatically replay past projects/sprints and score forecast quality.
+    - Report calibration metrics like coverage of P50/P80/P90, Brier-like reliability, and bias drift.
+    - This is one of the highest ROI features because it tells users when to trust the model.
+
+2. Regime-change detection.
+    - Detect shifts in throughput behavior (team changes, major process changes, roadmap phase shifts).
+    - Use rolling windows and change-point tests to split historical data into coherent eras.
+    - Forecast from recent regime only or weighted regimes.
+
+3. Hierarchical uncertainty modeling.
+    - Separate uncertainty into team-level, item-level, and systemic volatility.
+    - This enables more realistic sensitivity and better “what if team changes by X” analysis.
+    
+4. Dependency-risk propagation.
+    - Model delay contagion through dependency networks.
+    - Add network-level fragility metrics (single-point-of-failure tasks, bottleneck centrality).
+
+5. Advanced scenario engine.
+    - Policy simulations such as WIP limits, staffing changes, batch size changes, planned interruption policies.
+    - Return comparative distributions rather than single-run outputs.
+
+6. Portfolio-level planning.
+    - Multiple concurrent projects sharing teams/capacity with contention.
+    - This unlocks strategic planning, not just per-project estimation.
+
+7. MCP Server: Obvious Next Features
+
+    - Structured explain endpoint. Return “why this forecast” with top drivers, assumptions, and confidence caveats.
+    - Scenario compare endpoint. Accept baseline plus N variants, return ranked deltas for P50/P80/P90 and risk flags.
+    - Batch validation/simulation endpoint. Validate or simulate many project specs in one request, useful for CI or portfolio jobs.
+    - Contract hardening. Stable schemas, versioned response formats, explicit deprecation policy.
+    - Provenance metadata. Include model version, config hash, input digest, random seed, and diagnostics for reproducibility.
+
+8. NL Parser: Obvious Next Features
+
+    - Clarification-first parsing mode. If ambiguous fields exist, return targeted clarification questions instead of silent assumptions.
+    - Round-trip confidence and uncertainty tags. For each parsed field: confidence level, inferred-from text span, and ambiguity reason.
+    - Incremental editing support. “Apply patch” semantics to existing project specs from new natural language deltas.
+    - Better dependency and date extraction. Detect relative sequencing language, sprint references, and implicit milestone constraints.
+    - Domain lexicon + synonym packs. Team-specific vocabulary mapping (story synonyms, role names, effort idioms).
+    - Strict/lenient parse profiles. Strict for production pipelines, lenient for ideation, both with transparent diagnostics.
+
+
+## Not yet implemented of current specification
 
 ### 1. Two-pass critical-path-aware simulation mode (FR-034, FR-042)
 
@@ -17,6 +72,7 @@ Current state:
 - no CLI or config toggle to enable two-pass mode
 - no acceptance tests for pass-delta behavior
 
+
 ### 2. Environment-based configuration selection (FR-012)
 
 Current state:
@@ -29,17 +85,8 @@ What is missing:
 - no built-in `dev` / `prod` / `team` environment profile selection
 - no environment-aware config resolution
 
-### 3. Sickness duration configuration in config.yaml (FR-040)
 
-Sickness duration distribution parameters are hardcoded in the scheduler (`sigma=0.5`, `mode_days=2.0`). The requirements specify these should be configurable via configuration.
-
-What is missing:
-
-- no sickness configuration section in `config.yaml` schema
-- no way to override sickness-duration mode or dispersion per project or config file
-- per-member `sickness_prob` is configurable but the duration model is not
-
-### 4. Pluggable distribution and risk model architecture (NFR-008)
+### 3. Pluggable distribution and risk model architecture (NFR-008)
 
 The requirements specify that distribution types and risk models should be pluggable/extensible.
 
@@ -121,7 +168,118 @@ What is missing:
 - Migration guidance for adopting explicit team/resource definitions (FR-036)
 
 
+# Roadmap
+
+## Conservative release plan post-1.0.0
+
+### v1.1.x - Forecast trust and calibration baseline (non-breaking)
+
+Goals:
+
+- Add backtesting workflows that replay historical projects/sprints.
+- Add reliability metrics (P50/P80/P90 coverage, bias, spread diagnostics).
+- Add reproducibility metadata in outputs and MCP responses (seed/config/model version).
+
+Release gates:
+
+- deterministic backtesting in CI
+- calibration report available in JSON/HTML/CLI
+- no schema or contract breaks
+
+### v1.2.x - Workflow and automation expansion (non-breaking)
+
+Goals:
+
+- Scenario compare mode (baseline plus N alternatives with delta summaries).
+- Clarification-first NL parsing for ambiguous input.
+- MCP batch validate/simulate endpoints for CI and portfolio pipelines.
+- Parser confidence tags and better diagnostics.
+
+Release gates:
+
+- scenario regression corpus stable
+- reduced parse-rework in acceptance tests
+- stable batch MCP endpoints
+
+### v2.0.0 - Contracted schemas and explainability overhaul (breaking)
+
+Goals:
+
+- Versioned JSON/MCP schemas with explicit compatibility policy.
+- Standardized output field naming and payload shape.
+- Structured explain payloads (drivers, assumptions, caveats).
+- Remove/deprecate ambiguous legacy aliases.
+
+Release gates:
+
+- migration checker command published
+- migration guide with before/after examples
+- contract test suite passing for CLI/exporters/MCP
+
+### v2.1.x-v2.2.x - Regime-aware forecasting and robust resampling (non-breaking)
+
+Goals:
+
+- Detect throughput regime shifts/change points.
+- Add regime-weighted forecast modes (recent-only, blended, auto).
+- Add robust temporal resampling (moving/block bootstrap, disruption-conditioned sampling).
+- Add explicit forecast reliability score in reports.
+
+Release gates:
+
+- better calibration than v2.0 on regime-shift benchmarks
+- no regression on stable-history benchmarks
+
+### v3.0.0 - Bayesian model family and optional MCMC backend (breaking)
+
+Goals:
+
+- Introduce Bayesian model family configuration.
+- Represent parameter uncertainty explicitly in forecast diagnostics.
+- Add optional MCMC backend for advanced inference use cases.
+- Keep a fast non-MCMC mode for runtime-sensitive workflows.
+
+Release gates:
+
+- posterior predictive checks and calibration thresholds pass
+- runtime/performance envelope documented
+- v2-to-v3 config migration tooling available
+
+### v3.1.x+ - Portfolio and policy simulation expansion
+
+Goals:
+
+- Shared-capacity multi-project simulation.
+- Policy simulation (WIP caps, staffing policies, interruption controls).
+- MCP scenario orchestration for portfolio-level analysis.
+
+Notes:
+
+- Use a later major only if the core project data model changes materially.
+
+## Why majors are warranted in this plan
+
+- v2.0.0: output/API contract and schema normalization affects integrations.
+- v3.0.0: core statistical semantics and configuration model changes.
+
+
+## MCMC positioning
+
+- MCMC is valid once sufficient historical depth and calibration evidence justify it.
+- Keep it out of immediate post-1.0 releases until v1.x/v2.x trust metrics prove need.
+
+
+
 # Completed
+
+
+### Sickness duration configuration in config.yaml (FR-040)
+
+- Sickness duration distribution parameters can be set in config file for the scheduler. 
+- sickness configuration section in `config.yaml` schema
+- override sickness-duration mode or dispersion per project or config file
+- per-member `sickness_prob` is configurable 
+
 
 ### Resource-constrained scheduling and calendar enforcement (FR-009, FR-026–FR-039)
 
