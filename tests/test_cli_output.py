@@ -347,7 +347,11 @@ class TestSimulateExports:
         captured = {}
 
         def fake_json_export(
-            results, output_path, config=None, critical_path_limit=None
+            results,
+            output_path,
+            config=None,
+            critical_path_limit=None,
+            **kwargs,
         ):
             captured["path"] = str(output_path)
 
