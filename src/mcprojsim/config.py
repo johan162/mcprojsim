@@ -178,7 +178,7 @@ def _build_default_config_data() -> dict[str, Any]:
             "critical_path_report_limit": DEFAULT_CRITICAL_PATH_REPORT_LIMIT,
         },
         "staffing": {
-            "dividual_productivity": 0.25,
+            "min_individual_productivity": 0.25,
             "experience_profiles": {
                 "senior": {
                     "productivity_factor": 1.0,
