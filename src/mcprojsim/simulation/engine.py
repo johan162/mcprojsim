@@ -68,7 +68,7 @@ class SimulationEngine:
         Returns:
             Simulation results
         """
-        scheduler = TaskScheduler(project, self.random_state)
+        scheduler = TaskScheduler(project, self.random_state, self.config)
         hours_per_day = project.project.hours_per_day
 
         # Storage for results

@@ -1,0 +1,33 @@
+project:
+  name: "Sprint Sickness Duration Demo"
+  start_date: "2026-04-01"
+  team_size: 6
+
+tasks:
+  - id: "task_001"
+    name: "Task A"
+    estimate: { low: 8, expected: 16, high: 24 }
+    planning_story_points: 3
+
+  - id: "task_002"
+    name: "Task B"
+    estimate: { low: 16, expected: 24, high: 40 }
+    planning_story_points: 5
+    dependencies: ["task_001"]
+
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  history:
+    - sprint_id: "S1"
+      completed_story_points: 22
+    - sprint_id: "S2"
+      completed_story_points: 26
+  sickness:
+    enabled: true
+    team_size: 6
+    # Keep these default-like so config defaults are easy to demonstrate.
+    probability_per_person_per_week: 0.058
+    duration_log_mu: 0.693
+    duration_log_sigma: 0.75

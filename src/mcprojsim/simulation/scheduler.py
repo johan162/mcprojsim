@@ -8,6 +8,7 @@ from typing import Dict, List, Literal, Set, overload
 
 import numpy as np
 
+from mcprojsim.config import Config
 from mcprojsim.models.project import CalendarSpec, Project, ResourceSpec
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class TaskScheduler:
         self,
         project: Project,
         random_state: np.random.RandomState | None = None,
+        config: Config | None = None,
     ):
         """Initialize scheduler with project.
 
@@ -51,6 +53,7 @@ class TaskScheduler:
         self.project = project
         self.task_map = {task.id: task for task in project.tasks}
         self.random_state = random_state or np.random.RandomState()
+        self.config = config or Config.get_default()
 
     @overload
     def schedule_tasks(
@@ -398,11 +401,12 @@ class TaskScheduler:
             name: set() for name in resource_map.keys()
         }
 
-        sigma = 0.5
-        mode_days = 2.0
-        mu = math.log(mode_days) + sigma * sigma
+        sickness_defaults = self.config.sprint_defaults.sickness
+        mu = sickness_defaults.duration_log_mu
+        sigma = sickness_defaults.duration_log_sigma
 
         for resource_name, resource in resource_map.items():
+            sickness_prob = self._resource_sickness_probability(resource)
             current_day = 0
             while current_day < horizon_days:
                 d = start_date + timedelta(days=current_day)
@@ -413,7 +417,7 @@ class TaskScheduler:
                     default_calendar,
                     preplanned_absence_only=True,
                 ):
-                    if self.random_state.random() < resource.sickness_prob:
+                    if self.random_state.random() < sickness_prob:
                         sickness_len = max(
                             1, int(round(self.random_state.lognormal(mu, sigma)))
                         )
@@ -426,6 +430,17 @@ class TaskScheduler:
                 current_day += 1
 
         return sickness_by_resource
+
+    def _resource_sickness_probability(self, resource: ResourceSpec) -> float:
+        """Resolve per-resource sickness probability with config fallback.
+
+        Precedence:
+        1. Explicit `resource.sickness_prob` in project file
+        2. `config.constrained_scheduling.sickness_prob`
+        """
+        if "sickness_prob" in resource.model_fields_set:
+            return resource.sickness_prob
+        return self.config.constrained_scheduling.sickness_prob
 
     def _resolve_calendar(
         self,

@@ -1,0 +1,26 @@
+project:
+  name: "Constrained Sickness Duration Demo"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+
+tasks:
+  - id: "task_001"
+    name: "Requirements"
+    estimate: { low: 8, expected: 16, high: 24 }
+
+  - id: "task_002"
+    name: "Implementation"
+    estimate: { low: 40, expected: 64, high: 96 }
+    dependencies: ["task_001"]
+
+resources:
+  # Omits sickness_prob -> uses constrained_scheduling.sickness_prob from config.
+  - name: "alice"
+    experience_level: 3
+    productivity_level: 1.0
+
+  # Explicit value overrides constrained_scheduling.sickness_prob.
+  - name: "bob"
+    experience_level: 2
+    productivity_level: 0.9
+    sickness_prob: 0.06
