@@ -1,3 +1,34 @@
+## [v0.9.0] - 2026-03-28
+
+Release Type: minor
+
+### 📋 Summary
+This release extends constrained scheduling and export capabilities with clearer sickness-default behavior and richer historic sprint context in reports. 
+It also strengthens verification through additional targeted tests and supporting documentation updates.
+
+### ✨ Additions
+- Added `constrained_scheduling.sickness_prob` in config as a default per-resource sickness probability fallback for constrained scheduling
+- Added `--include-historic-base` support for simulation exports so historic baseline rows can be included in JSON and shown in HTML reports
+- Added additional constrained-scheduling test coverage and direct CLI integration tests for simulation behavior
+
+### 🚀 Improvements
+- Improved simulation and reporting behavior by clarifying shared sickness duration defaults across constrained scheduling and sprint planning
+- Improved algorithm efficiency in core simulation paths
+
+### 🐛 Bug Fixes
+- Fixed outdated export test behavior to align with current exporter call signatures
+- Fixed assert usage in tests to use explicit value checks
+- Fixed minor typos in build/documentation files
+
+### 📚 Documentation
+- Updated formal grammar and user-guide sections to clarify that sickness duration parameters are shared while sickness probabilities are mode-specific
+- Updated constrained and sprint-planning documentation with clearer configuration guidance and examples
+- Improved requirement documentation coverage for T-shirt category behavior
+
+### 🛠 Internal
+- Updated roadmap content and maintenance notes for the next development cycle
+
+
 ## [v0.8.3] - 2026-03-27
 
 Release Type: patch
