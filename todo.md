@@ -1,17 +1,21 @@
-# Project TODO for MVP
+# Project Roadmap
+
+## Getting to MVP
 
 The goal is to implement all MVP requirements in `docs/mcprojsim_reqs.md` to be able to reach 1.0.0
 
-## Long term ideas
 
-### Post-1.0 Themes
+## Post-MVP (1.0.0) Themes
+
+Ideas on what to focus future development on
 
 - Forecast calibration and trustworthiness.
 - Better handling of non-stationary teams and changing backlog behavior.
 - Stronger scenario planning and policy simulation.
 - MCP and NL parser upgrades that reduce user ambiguity and rework.
 
-### High-Value New Functionality (No UI)
+
+### High-Value New Functionality 
 
 1. Backtesting and calibration reports.
     - Automatically replay past projects/sprints and score forecast quality.
@@ -57,7 +61,7 @@ The goal is to implement all MVP requirements in `docs/mcprojsim_reqs.md` to be 
     - Strict/lenient parse profiles. Strict for production pipelines, lenient for ideation, both with transparent diagnostics.
 
 
-## Not yet implemented of current specification
+## Not yet fully implemented in current specification
 
 ### 1. Two-pass critical-path-aware simulation mode (FR-034, FR-042)
 
