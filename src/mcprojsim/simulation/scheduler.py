@@ -1,12 +1,17 @@
 """Task scheduler with dependency and optional resource constraints."""
 
+import logging
 import math
+from collections import deque
 from datetime import date, timedelta
 from typing import Dict, List, Literal, Set, overload
 
 import numpy as np
 
+from mcprojsim.config import Config
 from mcprojsim.models.project import CalendarSpec, Project, ResourceSpec
+
+logger = logging.getLogger(__name__)
 
 
 class TaskScheduler:
@@ -37,6 +42,7 @@ class TaskScheduler:
         self,
         project: Project,
         random_state: np.random.RandomState | None = None,
+        config: Config | None = None,
     ):
         """Initialize scheduler with project.
 
@@ -47,6 +53,7 @@ class TaskScheduler:
         self.project = project
         self.task_map = {task.id: task for task in project.tasks}
         self.random_state = random_state or np.random.RandomState()
+        self.config = config or Config.get_default()
 
     @overload
     def schedule_tasks(
@@ -302,6 +309,11 @@ class TaskScheduler:
             else:
                 # Fallback safety (should not happen for valid inputs)
                 # Use dependency-only schedule for any unscheduled tasks.
+                logger.warning(
+                    "Resource-constrained scheduler stalled with %d task(s) "
+                    "remaining; falling back to dependency-only scheduling.",
+                    len(remaining),
+                )
                 fallback = self._schedule_tasks_dependency_only(task_durations)
                 for task_id in remaining:
                     schedule[task_id] = fallback[task_id]
@@ -389,11 +401,12 @@ class TaskScheduler:
             name: set() for name in resource_map.keys()
         }
 
-        sigma = 0.5
-        mode_days = 2.0
-        mu = math.log(mode_days) + sigma * sigma
+        sickness_defaults = self.config.sprint_defaults.sickness
+        mu = sickness_defaults.duration_log_mu
+        sigma = sickness_defaults.duration_log_sigma
 
         for resource_name, resource in resource_map.items():
+            sickness_prob = self._resource_sickness_probability(resource)
             current_day = 0
             while current_day < horizon_days:
                 d = start_date + timedelta(days=current_day)
@@ -404,7 +417,7 @@ class TaskScheduler:
                     default_calendar,
                     preplanned_absence_only=True,
                 ):
-                    if self.random_state.random() < resource.sickness_prob:
+                    if self.random_state.random() < sickness_prob:
                         sickness_len = max(
                             1, int(round(self.random_state.lognormal(mu, sigma)))
                         )
@@ -417,6 +430,17 @@ class TaskScheduler:
                 current_day += 1
 
         return sickness_by_resource
+
+    def _resource_sickness_probability(self, resource: ResourceSpec) -> float:
+        """Resolve per-resource sickness probability with config fallback.
+
+        Precedence:
+        1. Explicit `resource.sickness_prob` in project file
+        2. `config.constrained_scheduling.sickness_prob`
+        """
+        if "sickness_prob" in resource.model_fields_set:
+            return resource.sickness_prob
+        return self.config.constrained_scheduling.sickness_prob
 
     def _resolve_calendar(
         self,
@@ -685,13 +709,11 @@ class TaskScheduler:
                 in_degree[task.id] += 1
 
         # Queue of tasks with no dependencies
-        queue: List[str] = [
-            task_id for task_id, degree in in_degree.items() if degree == 0
-        ]
+        queue = deque(task_id for task_id, degree in in_degree.items() if degree == 0)
         sorted_tasks: List[str] = []
 
         while queue:
-            task_id = queue.pop(0)
+            task_id = queue.popleft()
             sorted_tasks.append(task_id)
 
             # Reduce in-degree for dependent tasks
@@ -740,8 +762,7 @@ class TaskScheduler:
                 # No successors: latest finish = project end
                 latest_start[task_id] = project_end - schedule[task_id]["duration"]
             else:
-                # Latest start = earliest latest-start of successors minus nothing
-                # Actually: LF = min(LS of successors), LS = LF - duration
+                # LF = min(LS of successors), LS = LF - duration
                 min_succ_ls = min(latest_start[succ] for succ in successors[task_id])
                 latest_start[task_id] = min_succ_ls - schedule[task_id]["duration"]
 

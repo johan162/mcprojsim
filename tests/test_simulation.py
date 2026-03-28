@@ -3,6 +3,7 @@
 import pytest
 import numpy as np
 from datetime import date
+from typing import Any, cast
 
 from mcprojsim.simulation.distributions import (
     DistributionSampler,
@@ -18,6 +19,7 @@ from mcprojsim.models.project import (
     TaskEstimate,
     Risk,
     DistributionType,
+    ResourceSpec,
     UncertaintyFactors,
 )
 from mcprojsim.config import Config
@@ -101,6 +103,38 @@ class TestDistributionSampler:
         estimate.distribution = "invalid_distribution"  # type: ignore
 
         with pytest.raises(ValueError, match="Unknown distribution type"):
+            sampler.sample(estimate)
+
+    def test_sample_triangular_missing_values_raises(self):
+        """Missing triangular parameters should raise a clear ValueError."""
+        sampler = DistributionSampler(np.random.RandomState(42))
+        estimate = TaskEstimate.model_construct(
+            distribution=DistributionType.TRIANGULAR,
+            low=None,
+            expected=2.0,
+            high=5.0,
+            t_shirt_size=None,
+            story_points=None,
+            unit=None,
+        )
+
+        with pytest.raises(ValueError, match="Triangular distribution requires"):
+            sampler.sample(estimate)
+
+    def test_sample_lognormal_missing_values_raises(self):
+        """Missing lognormal parameters should raise a clear ValueError."""
+        sampler = DistributionSampler(np.random.RandomState(42))
+        estimate = TaskEstimate.model_construct(
+            distribution=DistributionType.LOGNORMAL,
+            low=1.0,
+            expected=None,
+            high=5.0,
+            t_shirt_size=None,
+            story_points=None,
+            unit=None,
+        )
+
+        with pytest.raises(ValueError, match="Lognormal distribution requires"):
             sampler.sample(estimate)
 
 
@@ -745,6 +779,207 @@ class TestTaskScheduler:
 
         assert unconstrained_end == 4.0
         assert constrained_end == 8.0
+
+    def test_resource_scheduler_fallback_emits_warning(self, caplog):
+        """When constrained scheduling stalls, fallback should emit a warning."""
+        project = Project(
+            project=ProjectMetadata(name="Fallback", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                    dependencies=["task_001"],
+                ),
+            ],
+            resources=[
+                ResourceSpec(name="dev_1", experience_level=2, productivity_level=1.0)
+            ],
+        )
+        scheduler = TaskScheduler(project)
+
+        scheduler._find_next_time_with_capacity = (  # type: ignore[method-assign]
+            lambda *args, **kwargs: None
+        )
+
+        with caplog.at_level("WARNING"):
+            schedule = scheduler.schedule_tasks(
+                {"task_001": 3.0, "task_002": 4.0},
+                use_resource_constraints=True,
+            )
+
+        assert "task_001" in schedule
+        assert "task_002" in schedule
+        assert any(
+            "falling back to dependency-only scheduling" in message
+            for message in caplog.messages
+        )
+
+    def test_sickness_absence_uses_configured_duration_parameters(self):
+        """Resource sickness absences should use configured lognormal params."""
+        project = Project(
+            project=ProjectMetadata(name="Sickness", start_date=date(2025, 1, 6)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                )
+            ],
+            resources=[
+                ResourceSpec(
+                    name="dev_1",
+                    experience_level=2,
+                    productivity_level=1.0,
+                    sickness_prob=1.0,
+                )
+            ],
+        )
+        config = Config.model_validate(
+            {
+                "sprint_defaults": {
+                    "sickness": {
+                        "duration_log_mu": 1.5,
+                        "duration_log_sigma": 0.3,
+                    }
+                }
+            }
+        )
+
+        class StubRandomState:
+            def __init__(self) -> None:
+                self.lognormal_calls: list[tuple[float, float]] = []
+
+            def random(self) -> float:
+                return 0.0
+
+            def lognormal(self, mu: float, sigma: float) -> float:
+                self.lognormal_calls.append((mu, sigma))
+                return 2.4
+
+        stub_random = StubRandomState()
+        scheduler = TaskScheduler(
+            project,
+            cast(Any, stub_random),
+            config,
+        )
+
+        absences = scheduler._generate_sickness_absence(
+            {"dev_1": project.resources[0]},
+            date(2025, 1, 6),
+            2,
+            {},
+            None,
+        )
+
+        assert stub_random.lognormal_calls == [(1.5, 0.3)]
+        assert absences["dev_1"] == {date(2025, 1, 6), date(2025, 1, 7)}
+
+    def test_sickness_absence_uses_default_config_parameters_when_unspecified(self):
+        """Resource sickness absences should fall back to shared config defaults."""
+        project = Project(
+            project=ProjectMetadata(name="Sickness", start_date=date(2025, 1, 6)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                )
+            ],
+            resources=[
+                ResourceSpec(
+                    name="dev_1",
+                    experience_level=2,
+                    productivity_level=1.0,
+                    sickness_prob=1.0,
+                )
+            ],
+        )
+
+        class StubRandomState:
+            def __init__(self) -> None:
+                self.lognormal_calls: list[tuple[float, float]] = []
+
+            def random(self) -> float:
+                return 0.0
+
+            def lognormal(self, mu: float, sigma: float) -> float:
+                self.lognormal_calls.append((mu, sigma))
+                return 1.0
+
+        stub_random = StubRandomState()
+        scheduler = TaskScheduler(project, cast(Any, stub_random))
+
+        scheduler._generate_sickness_absence(
+            {"dev_1": project.resources[0]},
+            date(2025, 1, 6),
+            1,
+            {},
+            None,
+        )
+
+        defaults = Config.get_default().sprint_defaults.sickness
+        assert stub_random.lognormal_calls == [
+            (defaults.duration_log_mu, defaults.duration_log_sigma)
+        ]
+
+    def test_resource_sickness_prob_uses_config_default_when_unspecified(self):
+        """Resource sickness_prob should use constrained_scheduling default when unset."""
+        project = Project(
+            project=ProjectMetadata(name="Sickness", start_date=date(2025, 1, 6)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                )
+            ],
+            resources=[
+                {
+                    "name": "dev_1",
+                    "experience_level": 2,
+                    "productivity_level": 1.0,
+                }
+            ],
+        )
+        config = Config.model_validate(
+            {"constrained_scheduling": {"sickness_prob": 0.05}}
+        )
+        scheduler = TaskScheduler(project, config=config)
+
+        assert scheduler._resource_sickness_probability(project.resources[0]) == 0.05
+
+    def test_resource_sickness_prob_in_resource_overrides_config_default(self):
+        """Explicit resource sickness_prob should override config default."""
+        project = Project(
+            project=ProjectMetadata(name="Sickness", start_date=date(2025, 1, 6)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                )
+            ],
+            resources=[
+                {
+                    "name": "dev_1",
+                    "experience_level": 2,
+                    "productivity_level": 1.0,
+                    "sickness_prob": 0.0,
+                }
+            ],
+        )
+        config = Config.model_validate(
+            {"constrained_scheduling": {"sickness_prob": 0.2}}
+        )
+        scheduler = TaskScheduler(project, config=config)
+
+        assert scheduler._resource_sickness_probability(project.resources[0]) == 0.0
 
 
 class TestSprintPlanner:
@@ -1463,6 +1698,63 @@ class TestSimulationEngine:
         assert results.resource_wait_time_hours >= 0.0
         assert results.calendar_delay_time_hours >= 0.0
         assert 0.0 <= results.resource_utilization <= 1.0
+
+    def test_engine_passes_config_to_task_scheduler(self, monkeypatch, simple_project):
+        """SimulationEngine should pass its active config into TaskScheduler."""
+        captured: dict[str, Config] = {}
+
+        class FakeTaskScheduler:
+            def __init__(self, project, random_state, config) -> None:
+                captured["config"] = config
+
+            def schedule_tasks(
+                self,
+                task_durations,
+                *,
+                use_resource_constraints=False,
+                return_diagnostics=False,
+                start_date=None,
+                hours_per_day=8.0,
+            ):
+                return {"task_001": {"start": 0.0, "end": 1.0, "duration": 1.0}}, {
+                    "resource_wait_time_hours": 0.0,
+                    "resource_utilization": 0.0,
+                    "calendar_delay_time_hours": 0.0,
+                }
+
+            def max_parallel_tasks(self, schedule):
+                return 1
+
+            def calculate_slack(self, schedule):
+                return {"task_001": 0.0}
+
+            def get_critical_paths(self, schedule):
+                return [("task_001",)]
+
+        config = Config.model_validate(
+            {
+                "sprint_defaults": {
+                    "sickness": {
+                        "duration_log_mu": 1.2,
+                        "duration_log_sigma": 0.2,
+                    }
+                }
+            }
+        )
+        engine = SimulationEngine(
+            iterations=1,
+            random_seed=42,
+            config=config,
+            show_progress=False,
+        )
+
+        monkeypatch.setattr(
+            "mcprojsim.simulation.engine.TaskScheduler", FakeTaskScheduler
+        )
+
+        engine.run(simple_project)
+
+        assert captured["config"] is config
 
     def test_run_simulation_computes_updated_default_percentiles(self, simple_project):
         """Test simulation computes P25 and P99 for projects using default levels."""

@@ -1,0 +1,18 @@
+# Demonstrates sickness-duration configuration (mu/sigma) shared by:
+# 1) constrained scheduling resource absences
+# 2) sprint-planning sickness capacity model
+
+# Constrained scheduling default sickness probability for resources that omit
+# resources[*].sickness_prob in the project file.
+constrained_scheduling:
+  sickness_prob: 0.03
+
+# Shared sickness-duration model (lognormal).
+# Used by constrained scheduling when a sickness event occurs,
+# and by sprint planning when sickness modeling is enabled.
+sprint_defaults:
+  sickness:
+    enabled: true
+    probability_per_person_per_week: 0.08
+    duration_log_mu: 1.10
+    duration_log_sigma: 0.90

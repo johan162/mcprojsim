@@ -154,11 +154,13 @@ class TestCli:
             config=None,
             critical_path_limit=None,
             sprint_results=None,
+            include_historic_base=False,
         ):
             captured["output_path"] = str(output_path)
             captured["project"] = project
             captured["html_config"] = config
             captured["critical_path_limit"] = critical_path_limit
+            captured["include_historic_base"] = include_historic_base
 
         monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
         monkeypatch.setattr("mcprojsim.cli.HTMLExporter.export", fake_export)
@@ -208,6 +210,7 @@ class TestCli:
         assert captured["html_config"] is captured["engine_config"]
         assert captured["html_config"].get_t_shirt_size("M").expected == 20
         assert captured["critical_path_limit"] == 2
+        assert captured["include_historic_base"] is False
 
     def test_simulate_tshirt_category_override(self, monkeypatch) -> None:
         """The simulate command should override default T-shirt category."""
@@ -759,8 +762,12 @@ class TestCli:
             config=None,
             critical_path_limit=None,
             sprint_results=None,
+            project=None,
+            include_historic_base=False,
         ):
             captured["json_sprint_results"] = sprint_results
+            captured["json_project"] = project
+            captured["json_include_historic_base"] = include_historic_base
 
         monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
         monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
@@ -808,6 +815,147 @@ class TestCli:
 
         assert result.exit_code == 0
         assert captured["json_sprint_results"] is not None
+        assert captured["json_project"] is not None
+        assert captured["json_include_historic_base"] is False
+
+    def test_simulate_passes_include_historic_base_to_exporters(
+        self, monkeypatch
+    ) -> None:
+        """simulate should pass include_historic_base to JSON and HTML exporters."""
+        runner = CliRunner()
+        captured: dict[str, Any] = {}
+
+        class FakeEngine:
+            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+                pass
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    min_duration = 1.0
+                    max_duration = 1.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    iterations = 10
+                    random_seed = 42
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+                    schedule_mode = "dependency_only"
+                    resource_constraints_active = False
+                    resource_wait_time_hours = 0.0
+                    resource_utilization = 0.0
+                    calendar_delay_time_hours = 0.0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def get_critical_path(self):
+                        return {}
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                    def get_histogram_data(self, bins=50):
+                        import numpy as np
+
+                        return np.array([0.0, 1.0]), np.array([1])
+
+                return FakeResults()
+
+        class FakeSprintEngine:
+            def __init__(self, iterations, random_seed) -> None:
+                pass
+
+            def run(self, project):
+                results = SprintPlanningResults(
+                    iterations=10,
+                    project_name=project.project.name,
+                    sprint_length_weeks=2,
+                    sprint_counts=np.array([2.0, 2.0, 3.0]),
+                    random_seed=42,
+                    planning_confidence_level=0.8,
+                    removed_work_treatment="churn_only",
+                    historical_diagnostics={
+                        "sampling_mode": "matching_cadence",
+                        "observation_count": 3,
+                    },
+                    planned_commitment_guidance=4.0,
+                    carryover_statistics={"mean": 1.2},
+                    spillover_statistics={"aggregate_spillover_rate": {"mean": 0.3}},
+                    disruption_statistics={"observed_frequency": 0.2},
+                )
+                results.calculate_statistics()
+                results.percentile(50)
+                return results
+
+        def fake_json_export(*args, **kwargs):
+            captured["json_include_historic_base"] = kwargs.get("include_historic_base")
+
+        def fake_html_export(*args, **kwargs):
+            captured["html_include_historic_base"] = kwargs.get("include_historic_base")
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("mcprojsim.cli.SprintSimulationEngine", FakeSprintEngine)
+        monkeypatch.setattr("mcprojsim.cli.JSONExporter.export", fake_json_export)
+        monkeypatch.setattr("mcprojsim.cli.HTMLExporter.export", fake_html_export)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                                "planning_story_points": 3,
+                            }
+                        ],
+                        "sprint_planning": {
+                            "enabled": True,
+                            "sprint_length_weeks": 2,
+                            "capacity_mode": "story_points",
+                            "history": [
+                                {"sprint_id": "S1", "completed_story_points": 5},
+                                {"sprint_id": "S2", "completed_story_points": 6},
+                            ],
+                        },
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                [
+                    "simulate",
+                    str(project_file),
+                    "--output-format",
+                    "json,html",
+                    "--output",
+                    "result",
+                    "--include-historic-base",
+                    "--quiet",
+                ],
+            )
+
+        assert result.exit_code == 0
+        assert captured["json_include_historic_base"] is True
+        assert captured["html_include_historic_base"] is True
 
     def test_simulate_warns_for_heterogeneous_tasks_mode(self, monkeypatch) -> None:
         """The simulate command should warn when tasks mode uses uneven task sizes."""

@@ -24,6 +24,7 @@ class TestConfig:
         assert config.simulation.default_iterations == 10000
         assert config.lognormal.high_percentile == 95
         assert config.sprint_defaults.velocity_model == "empirical"
+        assert config.constrained_scheduling.sickness_prob == 0.0
         assert config.sprint_defaults.sickness.probability_per_person_per_week == 0.058
 
     def test_default_confidence_levels_include_p25_and_p99(self):
@@ -104,6 +105,21 @@ class TestConfig:
         assert config.sprint_defaults.planning_confidence_level == 0.9
         assert config.sprint_defaults.sickness.enabled is True
         assert config.sprint_defaults.sickness.probability_per_person_per_week == 0.08
+
+    def test_load_from_file_overrides_constrained_scheduling_defaults(self, tmp_path):
+        """Constrained scheduling defaults should load from configuration file."""
+        config_data = {
+            "constrained_scheduling": {
+                "sickness_prob": 0.03,
+            }
+        }
+
+        config_file = tmp_path / "config.yaml"
+        with open(config_file, "w") as f:
+            yaml.dump(config_data, f)
+
+        config = Config.load_from_file(config_file)
+        assert config.constrained_scheduling.sickness_prob == pytest.approx(0.03)
 
     def test_load_from_file_merges_symbolic_defaults(self, tmp_path):
         """Test loading config preserves built-in symbolic defaults not overridden."""

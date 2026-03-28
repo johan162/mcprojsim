@@ -108,3 +108,20 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
+
+# Default sickness probability for resources that omit resources[*].sickness_prob
+constrained_scheduling:
+  sickness_prob: 0.0
+
+# Shared defaults for sprint-planning models and the constrained scheduler's
+# sickness-duration distribution. Per-resource sickness probability still
+# belongs in the project file via resources[*].sickness_prob.
+sprint_defaults:
+  planning_confidence_level: 0.8
+  removed_work_treatment: churn_only
+  velocity_model: empirical
+  sickness:
+    enabled: false
+    probability_per_person_per_week: 0.058
+    duration_log_mu: 0.693
+    duration_log_sigma: 0.75

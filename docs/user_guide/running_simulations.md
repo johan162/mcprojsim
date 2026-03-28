@@ -139,8 +139,9 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `--tshirt-category CATEGORY` | Override default T-shirt category for bare values like `M` during this run | config setting |
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
 | `--distribution MODEL` | Override the default task duration distribution (`triangular` or `lognormal`). Takes precedence over the project-level `distribution` setting but **not** over a `distribution` set on an individual task. | project file setting |
-| `--velocity-model MODEL` | Override the sprint planning velocity model (`empirical` or `neg_binomial`). Applies only when sprint planning is enabled in the project file. | project file setting |
+| `--velocity-model MODEL` | Override the sprint planning velocity model for how to use historic data (`empirical` or `neg_binomial`). Applies only when sprint planning is enabled in the project file. | project file setting |
 | `--no-sickness` | Disable sickness modelling regardless of the project file setting. Applies only when sprint planning is enabled. | off |
+| `--include-historic-base` | Add a `Historic Base` section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under `sprint_planning.historic_base`. | off |
 
 ### Examples
 
@@ -192,6 +193,9 @@ mcprojsim simulate sprint_project.yaml --velocity-model neg_binomial
 
 # Sprint planning: disable sickness modelling
 mcprojsim simulate sprint_project.yaml --no-sickness
+
+# Include Historic Base in HTML/JSON exports
+mcprojsim simulate sprint_project.yaml -f json,html --include-historic-base
 ```
 
 ### Output

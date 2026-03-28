@@ -6,7 +6,7 @@
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
 pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
-container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all, black, flake8, mypy
+container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all  black flake8 mypy
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -125,23 +125,23 @@ DOCS_DIR := docs
 DIST_DIR := dist
 BUILD_DIR := .build
 
-DOCS_CONTAINER_SCRIPT := ./scripts/docs-contctl.sh
-
-# Server configuration
+# Documentation Container Server configuration
 SERVER_HOST := 0.0.0.0
-# SERVER_PORT := 8000
 DOCS_PORT := 8100
+DOCS_CONTAINER_SCRIPT := ./scripts/docs-contctl.sh
 
 # Project settings
 PROJECT := mcprojsim
 APP_NAME := MCProjSim
-PYPI_NAME := mcprojsim
+PYPI_NAME := $(PROJECT)
 VERSION := $(shell grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
+
+# Container related settings
 CONTAINER_NAME := $(PROJECT)
 
 # User guide PDF output path
-USER_GUIDE_PDF := $(DIST_DIR)/mcprojsim_user_guide-v$(VERSION).pdf
-USER_GUIDE_PANDOC_PDF := $(DIST_DIR)/user_guide_pandoc-v$(VERSION).pdf
+USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-v$(VERSION).pdf
+USER_GUIDE_PANDOC_PDF := $(DIST_DIR)/$(PROJECT)_user_guide_pandoc-v$(VERSION).pdf
 USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
 USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
 USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
@@ -422,7 +422,7 @@ test-short: ## Run tests in parallel with minimal output, no coverage
 
 test-html: ## Run tests in parallel, HTML & XML coverage report
 	@echo -e "$(DARKYELLOW)- Starting parallel test coverage...$(NC)"
-	@poetry run pytest -q -n auto --cov=src/mcprojsime --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
+	@poetry run pytest -q -n auto --cov=src/$(PROJECT) --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
 	@echo -e "$(GREEN)✓ Test coverage report generated in \"coverage.xml\" and \"htmlcov/index.html\"$(NC)"
 
 # ============================================================================================
@@ -431,13 +431,13 @@ test-html: ## Run tests in parallel, HTML & XML coverage report
 check: format lint typecheck ## Run all code quality checks
 	@:
 
-lint, flake8: $(LINT_STAMP) ## Run linting checks with flake8
+lint flake8: $(LINT_STAMP) ## Run linting checks with flake8
 	@:
 
-format, black: $(FORMAT_STAMP) ## Format code with black
+format black: $(FORMAT_STAMP) ## Format code with black
 	@:
 
-typecheck, mypy: $(TYPECHECK_STAMP) ## Run strict type checking with mypy
+typecheck mypy: $(TYPECHECK_STAMP) ## Run strict type checking with mypy
 	@:
 
 pre-commit: $(INSTALL_STAMP) ## Run pre-commit checks (format, lint, typecheck)
@@ -506,8 +506,8 @@ $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES)
 ## Target that updates the version number in the LaTeX template for the user guide PDF generation
 update-version: ## Update the version number in the LaTeX template for the user guide PDF generation
 	@echo -e "$(DARKYELLOW)- Updating version number in LaTeX template...$(NC)"
-	@sed -i.bak -E 's/\\texttt{mcprojsim}, v[0-9.]+/\\texttt{mcprojsim}, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
-	@if grep -q "\\\texttt{mcprojsim}, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
+	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
+	@if grep -q "\\\texttt{$(PROJECT)}, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
 		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template$(NC)"; \

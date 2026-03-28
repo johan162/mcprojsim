@@ -21,6 +21,40 @@ In this chapter we will build the input in six stages:
 
 At each step we will run the simulation and look at how the results change.
 
+## Quick command and flag map
+
+This chapter focuses on building the project file step-by-step, but it helps to know the full CLI surface area up front.
+
+### Commands at a glance
+
+| Command | Purpose |
+|---------|---------|
+| `mcprojsim generate INPUT_FILE` | Generate a project YAML file from plain-text input |
+| `mcprojsim validate PROJECT_FILE` | Validate a project file without simulating |
+| `mcprojsim simulate PROJECT_FILE` | Run Monte Carlo simulation and optionally export reports |
+| `mcprojsim config show` | Show active configuration |
+
+### Common `simulate` flags
+
+| Flag | What it controls |
+|------|------------------|
+| `--iterations`, `-n` | Number of Monte Carlo iterations |
+| `--seed`, `-s` | Reproducibility seed |
+| `--config`, `-c` | Custom config file |
+| `--output-format`, `-f` | Export format(s): json, csv, html |
+| `--output`, `-o` | Export output base path |
+| `--critical-paths` | Number of critical path sequences shown/exported |
+| `--table`, `-t` | Render CLI tabular sections as ASCII tables |
+| `--minimal`, `-m` | Minimal console output mode |
+| `--quiet`, `-q`, `-qq` | Reduce or suppress normal CLI output |
+| `--staffing` | Expanded staffing recommendation tables |
+| `--tshirt-category` | Override default T-shirt category  |
+| `--velocity-model` | Override sprint velocity model for how historic data are used (`empirical`/`neg_binomial`) |
+| `--no-sickness` | Disable sprint sickness modeling |
+| `--include-historic-base` | Add Historic Base section/series in HTML+JSON exports |
+
+For full details, defaults, and examples, see [Running simulations](running_simulations.md).
+
 ## The smallest possible project file
 
 The simplest useful project file contains two top-level sections:

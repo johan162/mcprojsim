@@ -1,4 +1,4 @@
-Version: 1.0.0
+Version: 1.1.0
 
 # Multi-Category T-Shirt Sizes
 
@@ -28,11 +28,6 @@ The implementation is structured as nine sequential phases, each with a concrete
 Today a single global T-shirt size table forces a compromise between precision at the top and bottom of the scale. A `story.M` is around 40–120 hours of development work. An `epic.M` represents a feature spanning several sprints. A `business.M` is a substantial cross-team program. These are fundamentally different magnitudes of effort and deserve different calibration tables. Keeping them in a single table produces estimates that are either too coarse for developers planning their sprint or too detailed for executives planning a quarter.
 
 Beyond the magnitude problem, there is also a communication problem. When a product manager writes `M` on a roadmap item, they typically mean something much larger than what a developer means by `M` on a Jira ticket. Named categories give both groups a precise shared vocabulary and allow the same simulation tool to reason about work at every level of planning granularity.
-
-
-
-
-
 
 
 
@@ -340,7 +335,9 @@ Full per-size values are defined in the canonical schema above.
 
 
 
-# Implementation Steps (Verification-Driven)
+# Implementation  
+
+The implementation plan is divided in phases that each can be fully verified with integration tests.
 
 ## Phase 1: Config foundation
 Success criteria:
@@ -565,3 +562,147 @@ Examples/docs files:
 4. Backward compatibility remains for old flat `t_shirt_sizes`.
 5. Parser layers remain pass-through; resolution is centralized in config/engine.
 6. Out of scope: auto-detect category, MCP category parameter, per-size custom units.
+
+
+# Formal Requirements
+
+The requirements below describe the implemented multi-category T-shirt sizing behavior as it currently exists in the product. They are grouped by configuration, project-file semantics, runtime resolution, CLI behavior, output behavior, validation, and implementation structure. SHALL denotes mandatory implemented behavior. MAY denotes explicitly permitted optional behavior.
+
+## Configuration Requirements
+
+### FR-TS-001: Category-Based T-Shirt Sizing Integration
+- The system SHALL support category-based T-shirt sizing as an extension of the existing symbolic estimate mechanism.
+- Existing project files that use bare T-shirt values such as `M` SHALL remain valid.
+- Category-based T-shirt sizing SHALL coexist with explicit numeric estimates and story-point estimates without changing their existing semantics.
+
+### FR-TS-002: Built-In Categories and Defaults
+- The system SHALL ship with five built-in T-shirt categories: `story`, `bug`, `epic`, `business`, and `initiative`.
+- The built-in default category for bare T-shirt tokens SHALL be `epic`.
+- The built-in category ordering exposed by configuration and CLI reporting SHALL be `story`, `bug`, `epic`, `business`, `initiative`.
+- The system SHALL ship built-in size tables for each category as part of the default configuration payload.
+- The global unit for T-shirt size mappings SHALL default to `hours`.
+
+### FR-TS-003: Canonical Configuration Shape
+- The canonical configuration key SHALL be `t_shirt_sizes`.
+- The canonical shape of `t_shirt_sizes` SHALL be a nested mapping of category name to size token to estimate range object.
+- Each estimate range object SHALL contain `low`, `expected`, and `high` numeric values.
+- The configuration SHALL expose a single `t_shirt_size_default_category` field used to resolve bare T-shirt tokens.
+- The configuration SHALL expose a single global `t_shirt_size_unit` field used for all T-shirt categories.
+
+### FR-TS-004: Configuration Merge Semantics
+- File-based configuration overrides SHALL be merged onto the built-in defaults rather than replacing the entire T-shirt sizing structure.
+- A user configuration MAY override a single category or a single size entry while leaving the remaining built-in categories and sizes available.
+- Partial category overrides SHALL preserve any untouched built-in size entries for that category.
+
+### FR-TS-005: Backward-Compatible Configuration Input
+- The system SHALL accept the legacy flat-map form of `t_shirt_sizes` where size tokens are defined directly under `t_shirt_sizes` without a category layer.
+- When the legacy flat-map form is provided, the system SHALL normalize it into the category identified by `t_shirt_size_default_category`.
+- If `t_shirt_size_default_category` is omitted while normalizing a legacy flat-map form, the system SHALL use `epic` as the default category.
+- The system SHALL accept `t_shirt_size_categories` as an input alias for `t_shirt_sizes`.
+- When `t_shirt_size_categories` is provided, the system SHALL normalize it to the canonical `t_shirt_sizes` key before validation and merge behavior are applied.
+- The system SHALL reject configurations that define both `t_shirt_sizes` and `t_shirt_size_categories`.
+- The system SHALL reject mixed flat and nested structures under `t_shirt_sizes`.
+
+### FR-TS-006: Configuration Token Normalization
+- Category names in configuration SHALL be normalized case-insensitively to lowercase.
+- Size keys in configuration SHALL be normalized to canonical short tokens.
+- The system SHALL reject empty category names in configuration.
+- The system SHALL reject category entries that do not map to a dictionary of size estimates.
+- The system SHALL reject unknown size tokens in configuration with a message that names the invalid token and the category in which it appeared.
+
+## Project File Requirements
+
+### FR-TS-007: Supported Task Estimate Syntax
+- A task estimate MAY specify `t_shirt_size` as either a bare size token or a qualified `category.size` token.
+- A bare size token SHALL resolve through `t_shirt_size_default_category`.
+- A qualified token SHALL resolve directly against the named category.
+- A task estimate MAY use long-form size names instead of short abbreviations.
+- A task estimate SHALL NOT contain more than one dot in `t_shirt_size`.
+
+### FR-TS-008: Strict Scalar Validation
+- The `t_shirt_size` field SHALL be validated as a strict non-empty string.
+- Numeric, boolean, null-coerced, and blank-string values SHALL be rejected rather than silently converted.
+- The accepted token shape SHALL be alphabetic after normalization of spaces, hyphens, and underscores.
+- Invalid dotted syntax such as `epic..M` or `epic.sub.M` SHALL be rejected with the documented format guidance.
+
+### FR-TS-009: Accepted Size Aliases
+- Size matching SHALL be case-insensitive.
+- The system SHALL accept the canonical short forms `XS`, `S`, `M`, `L`, `XL`, and `XXL`.
+- The system SHALL accept long-form aliases equivalent to extra small, small, medium, large, extra large, and extra extra large.
+- The system SHALL accept the short aliases `MED`, `LRG`, `XLRG`, and `XXLRG`.
+- The system SHALL treat hyphen, underscore, and space variants of supported aliases as equivalent during normalization.
+- Category matching SHALL be case-insensitive.
+- The system SHALL NOT define category aliases beyond case-insensitive matching of the configured category names.
+
+### FR-TS-010: Symbolic Estimate Exclusivity
+- A task estimate SHALL allow at most one symbolic estimate mode at a time.
+- A task estimate SHALL reject any case where both `t_shirt_size` and `story_points` are provided.
+- When `t_shirt_size` is present, the project file SHALL NOT specify `unit`.
+- The unit for a T-shirt estimate SHALL come exclusively from configuration.
+- Explicit numeric estimate validation rules SHALL remain unchanged when `t_shirt_size` is absent.
+
+## Runtime Resolution Requirements
+
+### FR-TS-011: Resolution API Semantics
+- The configuration layer SHALL expose a strict resolution path that either returns a resolved T-shirt estimate range or raises a validation error.
+- The configuration layer MAY also expose a compatibility helper that returns no result instead of raising on invalid input.
+- Bare values such as `M` SHALL resolve using the currently active `t_shirt_size_default_category`.
+- Qualified values such as `epic.M` SHALL resolve using the explicitly named category regardless of the default category.
+- Mixed bare and qualified T-shirt values SHALL be supported within the same project.
+
+### FR-TS-012: Unknown Category and Size Handling
+- If a qualified token references a category that does not exist in the active configuration, resolution SHALL fail with an error that includes the invalid category and the list of valid categories.
+- If a token references a size that is not defined in the resolved category, resolution SHALL fail with an error that includes the invalid value and the list of valid sizes for that category.
+- If a token is syntactically malformed rather than merely unknown, resolution SHALL fail with a format error instructing the user to use either `category.size` or `size`.
+
+### FR-TS-013: Simulation-Engine Resolution
+- The simulation engine SHALL resolve T-shirt estimates at runtime through the configuration resolver before sampling task durations.
+- The simulation engine SHALL use the globally configured `t_shirt_size_unit` as the unit for resolved T-shirt ranges.
+- The simulation engine SHALL preserve the existing project-level distribution selection behavior when constructing the resolved estimate.
+- Resolution failures arising from invalid T-shirt category or size tokens SHALL surface as user-visible errors rather than being silently ignored.
+
+## CLI Requirements
+
+### FR-TS-014: Per-Run Default Category Override
+- The `simulate` command SHALL support a `tshirt-category` option that overrides the default category used for bare T-shirt tokens during that run.
+- The CLI override SHALL be applied after configuration loading and before project simulation.
+- The CLI override SHALL be validated against the categories present in the active merged configuration.
+- CLI category override matching SHALL be case-insensitive.
+- If the CLI override category is invalid, the command SHALL exit with an error that includes the invalid value and the list of valid categories.
+
+### FR-TS-015: Configuration Reporting
+- The `config` command SHALL report the active T-shirt unit.
+- The `config` command SHALL report the active default T-shirt category.
+- The `config` command SHALL report the available category names.
+- The `config` command SHALL report the configured `low`, `expected`, and `high` values for each category and size entry.
+- The `config` command SHALL reflect user-level configuration overrides when such overrides are active.
+
+## Output Requirements
+
+### FR-TS-016: Exporter Labeling
+- Output that displays task estimate labels SHALL preserve the user-specified T-shirt token form.
+- HTML export SHALL render bare labels such as `M` together with the resolved numeric range from the active configuration.
+- HTML export SHALL render qualified labels such as `epic.M` without collapsing them to bare forms.
+- When a caller provides an explicit configuration object to the exporter, the exporter SHALL use that configuration when rendering resolved T-shirt ranges.
+
+## Validation Requirements
+
+### FR-TS-017: Error Contract
+- Invalid scalar types for `t_shirt_size` SHALL identify the rejected value and its runtime type.
+- Blank-string `t_shirt_size` values SHALL be rejected as empty-string errors rather than as generic format errors.
+- Invalid dotted formats SHALL produce the message pattern that instructs the user to use `category.size` or `size`.
+- Unknown categories SHALL produce an error that includes the valid categories.
+- Unknown sizes SHALL produce an error that includes the valid sizes for the resolved category.
+- Conflicting canonical and alias config keys SHALL produce an explicit single-source-of-truth error.
+- Invalid `t_shirt_sizes` structure SHALL produce an explicit shape error.
+
+## Implementation Structure Requirements
+
+### FR-TS-018: Responsibility Boundaries
+- Raw project parsing SHALL continue to pass T-shirt tokens through as strings rather than resolving them in the parser layer.
+- Project-model validation SHALL own strict scalar validation, symbolic exclusivity checks, and syntactic token-shape validation.
+- Configuration SHALL own category normalization, alias normalization, backward-compatibility migration, category lookup, and size-token normalization.
+- The simulation engine SHALL own final runtime resolution of T-shirt estimates into numeric ranges and units.
+- CLI SHALL own per-run default-category override behavior.
+- Exporters SHALL consume the already-defined configuration semantics rather than re-implementing independent T-shirt resolution rules.
+

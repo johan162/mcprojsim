@@ -52,6 +52,7 @@ DEFAULT_SPRINT_VELOCITY_MODEL = "empirical"
 DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK = 0.058
 DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU = 0.693
 DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA = 0.75
+DEFAULT_CONSTRAINED_SCHEDULING_SICKNESS_PROB = 0.0
 DEFAULT_PROBABILITY_RED_THRESHOLD = 0.50
 DEFAULT_PROBABILITY_GREEN_THRESHOLD = 0.90
 DEFAULT_LOGNORMAL_HIGH_PERCENTILE = 95
@@ -178,7 +179,7 @@ def _build_default_config_data() -> dict[str, Any]:
             "critical_path_report_limit": DEFAULT_CRITICAL_PATH_REPORT_LIMIT,
         },
         "staffing": {
-            "dividual_productivity": 0.25,
+            "min_individual_productivity": 0.25,
             "experience_profiles": {
                 "senior": {
                     "productivity_factor": 1.0,
@@ -193,6 +194,9 @@ def _build_default_config_data() -> dict[str, Any]:
                     "communication_overhead": 0.08,
                 },
             },
+        },
+        "constrained_scheduling": {
+            "sickness_prob": DEFAULT_CONSTRAINED_SCHEDULING_SICKNESS_PROB,
         },
         "sprint_defaults": {
             "planning_confidence_level": DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
@@ -422,6 +426,21 @@ class StaffingConfig(BaseModel):
     )
 
 
+class ConstrainedSchedulingConfig(BaseModel):
+    """Defaults for resource-constrained scheduling behavior."""
+
+    sickness_prob: float = Field(
+        default=DEFAULT_CONSTRAINED_SCHEDULING_SICKNESS_PROB,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Default per-resource sickness probability used by constrained "
+            "scheduling when a resource does not specify sickness_prob in the "
+            "project file."
+        ),
+    )
+
+
 class SprintSicknessDefaultsConfig(BaseModel):
     """Company-wide defaults for sprint sickness modeling."""
 
@@ -539,6 +558,9 @@ class Config(BaseModel):
     lognormal: LogNormalConfig = Field(default_factory=LogNormalConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     staffing: StaffingConfig = Field(default_factory=StaffingConfig)
+    constrained_scheduling: ConstrainedSchedulingConfig = Field(
+        default_factory=ConstrainedSchedulingConfig
+    )
     sprint_defaults: SprintDefaultsConfig = Field(default_factory=SprintDefaultsConfig)
 
     @classmethod

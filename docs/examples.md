@@ -1760,3 +1760,7 @@ mcprojsim simulate examples/sample_project.yaml \
 | `nl_example.txt` | Natural language input (basic) |
 | `nl_constrained_example.txt` | Natural language input with resources |
 | `sample_config.yaml` | Custom configuration file |
+| `constrained_sickness_defaults_config.yaml` | Config fallback sickness probability for constrained scheduling |
+| `sickness_duration_dual_mode_config.yaml` | Shared sickness-duration config (mu/sigma) for constrained and sprint planning |
+| `constrained_sickness_duration_demo.yaml` | Constrained scheduling demo that consumes config sickness defaults |
+| `sprint_sickness_duration_demo.yaml` | Sprint-planning demo that consumes config sickness defaults |

@@ -1,0 +1,11 @@
+# Example config for constrained scheduling sickness defaults.
+# Applies only when a resource in the project file omits resources[*].sickness_prob.
+
+constrained_scheduling:
+  sickness_prob: 0.03
+
+# Shared sickness-duration model used when sickness occurs.
+sprint_defaults:
+  sickness:
+    duration_log_mu: 1.25
+    duration_log_sigma: 0.70
