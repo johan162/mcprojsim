@@ -10,6 +10,8 @@ import numpy as np
 
 from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
+from mcprojsim.exporters.historic_base import build_historic_base
+from mcprojsim.models.project import Project
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.models.sprint_simulation import SprintPlanningResults
 
@@ -37,6 +39,8 @@ class JSONExporter:
         config: Config | None = None,
         critical_path_limit: int | None = None,
         sprint_results: SprintPlanningResults | None = None,
+        project: Project | None = None,
+        include_historic_base: bool = False,
     ) -> None:
         """Export results to JSON file.
 
@@ -54,6 +58,8 @@ class JSONExporter:
             config,
             critical_path_limit,
             sprint_results,
+            project,
+            include_historic_base,
         )
 
         with open(output_path, "w") as f:
@@ -65,6 +71,8 @@ class JSONExporter:
         config: Config | None = None,
         critical_path_limit: int | None = None,
         sprint_results: SprintPlanningResults | None = None,
+        project: Project | None = None,
+        include_historic_base: bool = False,
     ) -> Dict[str, Any]:
         """Prepare data for JSON export.
 
@@ -166,7 +174,14 @@ class JSONExporter:
         }
 
         if sprint_results is not None:
-            data["sprint_planning"] = JSONExporter._prepare_sprint_data(sprint_results)
+            sprint_payload: Dict[str, Any] = JSONExporter._prepare_sprint_data(
+                sprint_results
+            )
+            if include_historic_base:
+                historic_base = build_historic_base(project)
+                if historic_base is not None:
+                    sprint_payload["historic_base"] = historic_base
+            data["sprint_planning"] = sprint_payload
 
         return data
 

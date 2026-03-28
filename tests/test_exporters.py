@@ -137,6 +137,45 @@ def sample_sprint_results():
     return results
 
 
+@pytest.fixture
+def sample_project_with_history() -> Project:
+    """Create a project with sprint-planning history for historic-base exports."""
+    return Project.model_validate(
+        {
+            "project": {"name": "Test Project", "start_date": "2025-01-01"},
+            "tasks": [
+                {
+                    "id": "task_001",
+                    "name": "Task 1",
+                    "planning_story_points": 3,
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
+            "sprint_planning": {
+                "enabled": True,
+                "sprint_length_weeks": 2,
+                "capacity_mode": "story_points",
+                "history": [
+                    {
+                        "sprint_id": "S1",
+                        "completed_story_points": 24,
+                        "spillover_story_points": 6,
+                        "added_story_points": 3,
+                        "removed_story_points": 1,
+                    },
+                    {
+                        "sprint_id": "S2",
+                        "completed_story_points": 20,
+                        "spillover_story_points": 4,
+                        "added_story_points": 2,
+                        "removed_story_points": 2,
+                    },
+                ],
+            },
+        }
+    )
+
+
 class TestJSONExporter:
     """Tests for JSON exporter."""
 
@@ -216,6 +255,33 @@ class TestJSONExporter:
         assert sprint_data["historical_correlations"][
             "completed_units|spillover_units"
         ] == pytest.approx(-0.42)
+
+    def test_json_includes_historic_base_when_requested(
+        self,
+        sample_results,
+        sample_sprint_results,
+        sample_project_with_history,
+        tmp_path,
+    ):
+        """JSON export should include historic baseline rows and summary when enabled."""
+        output_file = tmp_path / "results.json"
+        JSONExporter.export(
+            sample_results,
+            output_file,
+            sprint_results=sample_sprint_results,
+            project=sample_project_with_history,
+            include_historic_base=True,
+        )
+
+        with open(output_file, "r") as f:
+            data = json.load(f)
+
+        historic_base = data["sprint_planning"]["historic_base"]
+        assert historic_base["unit_label"] == "story_points"
+        assert historic_base["summary"]["observation_count"] == 2
+        assert historic_base["rows"][0]["sprint_id"] == "S1"
+        assert historic_base["rows"][0]["committed"] == pytest.approx(31.0)
+        assert historic_base["rows"][0]["completed"] == pytest.approx(24.0)
 
     def test_numpy_encoder_integer(self):
         """Test NumpyEncoder handles numpy integers."""
@@ -431,6 +497,8 @@ class TestHTMLExporter:
             content = f.read()
 
         assert "Sprint Planning Summary" in content
+        assert "Capacity Mode" in content
+        assert "Planning Unit" in content
         assert "Sprint Count Confidence Intervals" in content
         assert "matching_cadence" in content
         assert "completed_units" in content
@@ -440,6 +508,34 @@ class TestHTMLExporter:
         assert "completed_units|spillover_units" in content
         assert "Burn-up Percentiles" in content
         assert "Observed Disruption Frequency" in content
+        assert "Attention Flags" in content
+        assert "Heuristic Delivery Risk Assessment" in content
+        assert "Predictability of Future Sprints" in content
+
+    def test_html_contains_historic_base_when_requested(
+        self,
+        sample_results,
+        sample_sprint_results,
+        sample_project_with_history,
+        tmp_path,
+    ):
+        """HTML should render Historic Base section when the flag is enabled."""
+        output_file = tmp_path / "results.html"
+        HTMLExporter.export(
+            sample_results,
+            output_file,
+            project=sample_project_with_history,
+            sprint_results=sample_sprint_results,
+            include_historic_base=True,
+        )
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Historic Base" in content
+        assert "Historic Statistical Summary" in content
+        assert "Historic Sprint Velocity" in content
+        assert "S1" in content
 
     def test_json_critical_path_limit(self, sample_results, tmp_path):
         """Test JSON export respects critical path report limits."""

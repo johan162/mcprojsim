@@ -736,6 +736,14 @@ def cli() -> None:
     is_flag=True,
     help="Disable sickness modeling regardless of project file settings.",
 )
+@click.option(
+    "--include-historic-base",
+    is_flag=True,
+    help=(
+        "Include a Historic Base section in HTML output and matching historic "
+        "baseline payload in JSON output when sprint planning history is available."
+    ),
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -753,6 +761,7 @@ def simulate(
     minimal: bool,
     velocity_model: Optional[str],
     no_sickness: bool,
+    include_historic_base: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     if quiet < 2:
@@ -1399,6 +1408,8 @@ def simulate(
                             config=cfg,
                             critical_path_limit=critical_path_limit,
                             sprint_results=sprint_results,
+                            project=project,
+                            include_historic_base=include_historic_base,
                         )
                     else:
                         JSONExporter.export(
@@ -1406,6 +1417,8 @@ def simulate(
                             output_file,
                             config=cfg,
                             critical_path_limit=critical_path_limit,
+                            project=project,
+                            include_historic_base=include_historic_base,
                         )
                     if quiet == 0 and not minimal:
                         click.echo(f"\nResults exported to {output_file}")
@@ -1438,6 +1451,7 @@ def simulate(
                             config=cfg,
                             critical_path_limit=critical_path_limit,
                             sprint_results=sprint_results,
+                            include_historic_base=include_historic_base,
                         )
                     else:
                         HTMLExporter.export(
@@ -1446,6 +1460,7 @@ def simulate(
                             project=project,
                             config=cfg,
                             critical_path_limit=critical_path_limit,
+                            include_historic_base=include_historic_base,
                         )
                     if quiet == 0 and not minimal:
                         click.echo(f"Results exported to {output_file}")

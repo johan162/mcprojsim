@@ -13,6 +13,7 @@ from jinja2 import Template
 from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
 from mcprojsim.config import DEFAULT_CONFIDENCE_LEVELS
+from mcprojsim.exporters.historic_base import build_historic_base
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.models.project import Project
 from mcprojsim.models.sprint_simulation import SprintPlanningResults
@@ -177,6 +178,27 @@ HTML_TEMPLATE = """
             margin: 10px 0 0 0;
             font-size: 14px;
             color: #555;
+        }
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .risk-badge.low {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .risk-badge.moderate {
+            background-color: #fff8e1;
+            color: #f57f17;
+        }
+        .risk-badge.high {
+            background-color: #ffebee;
+            color: #c62828;
         }
     </style>
 </head>
@@ -586,9 +608,12 @@ HTML_TEMPLATE = """
         <table>
             <tbody>
                 <tr><td class="metric">Sprint Length</td><td class="value">{{ sprint_summary.sprint_length_weeks }} weeks</td></tr>
+                <tr><td class="metric">Capacity Mode</td><td class="value">{{ sprint_summary.capacity_mode }}</td></tr>
+                <tr><td class="metric">Planning Unit</td><td class="value">{{ sprint_summary.planning_unit_label }}</td></tr>
                 <tr><td class="metric">Planning Confidence Level</td><td class="value">{{ sprint_summary.planning_confidence_percent }}%</td></tr>
                 <tr><td class="metric">Removed Work Treatment</td><td class="value">{{ sprint_summary.removed_work_treatment }}</td></tr>
                 <tr><td class="metric">Planned Commitment Guidance</td><td class="value">{{ sprint_summary.planned_commitment_guidance }}</td></tr>
+                <tr><td class="metric">Velocity Model</td><td class="value">{{ sprint_summary.velocity_model }}</td></tr>
                 <tr><td class="metric">Historical Sampling Mode</td><td class="value">{{ sprint_summary.sampling_mode }}</td></tr>
                 <tr><td class="metric">Historical Observations</td><td class="value">{{ sprint_summary.observation_count }}</td></tr>
                 <tr><td class="metric">Carryover Mean</td><td class="value">{{ sprint_summary.carryover_mean }}</td></tr>
@@ -596,6 +621,43 @@ HTML_TEMPLATE = """
                 <tr><td class="metric">Observed Disruption Frequency</td><td class="value">{{ sprint_summary.observed_disruption_frequency }}</td></tr>
             </tbody>
         </table>
+
+        {% if sprint_summary.attention_flags %}
+        <h4>Attention Flags</h4>
+        <table>
+            <thead>
+                <tr><th>Signal</th><th>Interpretation</th></tr>
+            </thead>
+            <tbody>
+                {% for signal, interpretation in sprint_summary.attention_flags %}
+                <tr>
+                    <td>{{ signal }}</td>
+                    <td>{{ interpretation }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if sprint_summary.risk_assessment %}
+        <h4>Heuristic Delivery Risk Assessment</h4>
+        <table>
+            <tbody>
+                <tr>
+                    <td class="metric">Risk Level</td>
+                    <td class="value">
+                        <span class="risk-badge {{ sprint_summary.risk_assessment.css_class }}">{{ sprint_summary.risk_assessment.level }}</span>
+                    </td>
+                </tr>
+                <tr><td class="metric">Risk Score</td><td class="value">{{ sprint_summary.risk_assessment.score }}</td></tr>
+                <tr><td class="metric">Predictability of Future Sprints</td><td class="value">{{ sprint_summary.risk_assessment.predictability }}</td></tr>
+                <tr><td class="metric">Historical Throughput Volatility (CV)</td><td class="value">{{ sprint_summary.risk_assessment.throughput_cv }}</td></tr>
+                <tr><td class="metric">Forecast Sprint-Count Volatility (CV)</td><td class="value">{{ sprint_summary.risk_assessment.forecast_cv }}</td></tr>
+                <tr><td class="metric">P90 vs P50 Spread</td><td class="value">{{ sprint_summary.risk_assessment.p90_p50_spread_ratio }}</td></tr>
+                <tr><td class="metric">Heuristic Interpretation</td><td class="value">{{ sprint_summary.risk_assessment.summary }}</td></tr>
+            </tbody>
+        </table>
+        {% endif %}
 
         <h4>Sprint Count Confidence Intervals</h4>
         <table>
@@ -612,6 +674,13 @@ HTML_TEMPLATE = """
                 {% endfor %}
             </tbody>
         </table>
+
+        {% if sprint_burnup_image %}
+        <h4>Burn-up Forecast Curves</h4>
+        <div style="text-align: center;">
+            <img src="data:image/png;base64,{{ sprint_burnup_image }}" alt="Sprint burn-up forecast curves" style="max-width: 100%; height: auto;">
+        </div>
+        {% endif %}
 
         {% if sprint_summary.series_statistics %}
         <h4>Historical Series Statistics</h4>
@@ -694,6 +763,37 @@ HTML_TEMPLATE = """
     </div>
     {% endif %}
 
+    {% if historic_base %}
+    <div class="section">
+        <h3>Historic Base</h3>
+        <p class="staffing-meta">
+            Historic baseline in <strong>{{ historic_base.unit_label }}</strong>.
+            Committed is approximated as completed + spillover + removed for each sprint.
+        </p>
+
+        <h4>Historic Statistical Summary</h4>
+        <table>
+            <tbody>
+                <tr><td class="metric">Observations</td><td class="value">{{ historic_base.summary.observation_count }}</td></tr>
+                <tr><td class="metric">Mean Committed</td><td class="value">{{ historic_base.summary.mean_committed }}</td></tr>
+                <tr><td class="metric">Mean Completed</td><td class="value">{{ historic_base.summary.mean_completed }}</td></tr>
+                <tr><td class="metric">Mean Completion Rate</td><td class="value">{{ historic_base.summary.mean_completion_rate }}</td></tr>
+                <tr><td class="metric">Std Dev Committed</td><td class="value">{{ historic_base.summary.std_committed }}</td></tr>
+                <tr><td class="metric">Std Dev Completed</td><td class="value">{{ historic_base.summary.std_completed }}</td></tr>
+                <tr><td class="metric">Min Completed</td><td class="value">{{ historic_base.summary.min_completed }}</td></tr>
+                <tr><td class="metric">Max Completed</td><td class="value">{{ historic_base.summary.max_completed }}</td></tr>
+            </tbody>
+        </table>
+
+        {% if historic_base_image %}
+        <h4>Historic Sprint Velocity</h4>
+        <div style="text-align: center;">
+            <img src="data:image/png;base64,{{ historic_base_image }}" alt="Historic committed and completed sprint velocity" style="max-width: 100%; height: auto;">
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="section">
         <p><em>Report generated by Monte Carlo Project Simulator (mcprojsim)</em></p>
     </div>
@@ -713,6 +813,7 @@ class HTMLExporter:
         config: Config | None = None,
         critical_path_limit: int | None = None,
         sprint_results: SprintPlanningResults | None = None,
+        include_historic_base: bool = False,
     ) -> None:
         """Export results to HTML file.
 
@@ -778,6 +879,10 @@ class HTMLExporter:
 
         # Generate sensitivity tornado chart
         sensitivity_image = HTMLExporter._generate_sensitivity_image(results)
+        sprint_context = HTMLExporter._prepare_sprint_context(sprint_results, project)
+        sprint_burnup_image = HTMLExporter._generate_sprint_burnup_image(sprint_results)
+        historic_base = build_historic_base(project) if include_historic_base else None
+        historic_base_image = HTMLExporter._generate_historic_base_image(historic_base)
 
         # Prepare schedule slack data (sorted by slack ascending, hours ceiled)
         schedule_slack = (
@@ -847,7 +952,12 @@ class HTMLExporter:
             risk_impact_data=risk_impact_data,
             max_parallel_tasks=results.max_parallel_tasks,
             effort_stats=HTMLExporter._compute_effort_stats(results),
-            sprint_summary=HTMLExporter._prepare_sprint_context(sprint_results),
+            sprint_summary=sprint_context,
+            sprint_burnup_image=sprint_burnup_image,
+            historic_base=HTMLExporter._format_historic_base_for_template(
+                historic_base
+            ),
+            historic_base_image=historic_base_image,
             **HTMLExporter._prepare_staffing_context(results, effective_config),
         )
 
@@ -887,10 +997,19 @@ class HTMLExporter:
     @staticmethod
     def _prepare_sprint_context(
         sprint_results: SprintPlanningResults | None,
+        project: Project | None,
     ) -> dict[str, Any] | None:
         """Prepare sprint-planning context for HTML rendering."""
         if sprint_results is None:
             return None
+
+        capacity_mode = HTMLExporter._resolve_sprint_capacity_mode(
+            sprint_results,
+            project,
+        )
+        planning_unit_label = (
+            "story points" if capacity_mode == "story_points" else "tasks"
+        )
 
         series_statistics = sprint_results.historical_diagnostics.get(
             "series_statistics",
@@ -898,12 +1017,28 @@ class HTMLExporter:
         )
         ratio_summaries = sprint_results.historical_diagnostics.get("ratios", {})
         correlations = sprint_results.historical_diagnostics.get("correlations", {})
+        risk_assessment = HTMLExporter._build_sprint_risk_assessment(
+            sprint_results,
+            series_statistics,
+            ratio_summaries,
+        )
+        attention_flags = HTMLExporter._build_sprint_attention_flags(
+            sprint_results,
+            series_statistics,
+            ratio_summaries,
+        )
         return {
             "sprint_length_weeks": sprint_results.sprint_length_weeks,
+            "capacity_mode": capacity_mode,
+            "planning_unit_label": planning_unit_label,
             "planning_confidence_percent": int(
                 round(sprint_results.planning_confidence_level * 100)
             ),
             "removed_work_treatment": sprint_results.removed_work_treatment,
+            "velocity_model": sprint_results.historical_diagnostics.get(
+                "velocity_model",
+                "empirical",
+            ),
             "planned_commitment_guidance": f"{sprint_results.planned_commitment_guidance:.2f}",
             "sampling_mode": sprint_results.historical_diagnostics.get(
                 "sampling_mode",
@@ -958,6 +1093,8 @@ class HTMLExporter:
                 (pair_name, f"{value:.4f}")
                 for pair_name, value in sorted(correlations.items())
             ],
+            "attention_flags": attention_flags,
+            "risk_assessment": risk_assessment,
             "burnup_percentiles": [
                 (
                     int(point["sprint_number"]),
@@ -968,6 +1105,358 @@ class HTMLExporter:
                 for point in sprint_results.burnup_percentiles
             ],
         }
+
+    @staticmethod
+    def _resolve_sprint_capacity_mode(
+        sprint_results: SprintPlanningResults,
+        project: Project | None,
+    ) -> str:
+        if project is not None and project.sprint_planning is not None:
+            return str(project.sprint_planning.capacity_mode.value)
+
+        historical_mode = sprint_results.historical_diagnostics.get("capacity_mode")
+        if isinstance(historical_mode, str) and historical_mode in {
+            "story_points",
+            "tasks",
+        }:
+            return historical_mode
+
+        return "story_points"
+
+    @staticmethod
+    def _build_sprint_attention_flags(
+        sprint_results: SprintPlanningResults,
+        series_statistics: dict[str, Any],
+        ratio_summaries: dict[str, Any],
+    ) -> list[tuple[str, str]]:
+        flags: list[tuple[str, str]] = []
+
+        observation_count = int(
+            sprint_results.historical_diagnostics.get("observation_count", 0)
+        )
+        if observation_count < 5:
+            flags.append(
+                (
+                    "Very small history sample",
+                    "Fewer than 5 observations means percentiles can shift quickly as new data arrives",
+                )
+            )
+        elif observation_count < 10:
+            flags.append(
+                (
+                    "Limited history sample",
+                    "Fewer than 10 observations reduces confidence in stable trend detection",
+                )
+            )
+
+        completed_stats = series_statistics.get("completed_units", {})
+        throughput_mean = float(completed_stats.get("mean", 0.0) or 0.0)
+        throughput_std = float(completed_stats.get("std_dev", 0.0) or 0.0)
+        throughput_cv = throughput_std / throughput_mean if throughput_mean > 0 else 0.0
+        if throughput_cv >= 0.35:
+            flags.append(
+                (
+                    "High throughput volatility",
+                    "Historical completion output varies strongly sprint-to-sprint, reducing forecast stability",
+                )
+            )
+
+        spillover_ratio = ratio_summaries.get("spillover_ratio", {})
+        spillover_mean = float(spillover_ratio.get("mean", 0.0) or 0.0)
+        if spillover_mean >= 0.30:
+            flags.append(
+                (
+                    "Sustained spillover pressure",
+                    "A high average spillover ratio suggests plans regularly exceed effective capacity",
+                )
+            )
+
+        observed_disruption = float(
+            sprint_results.disruption_statistics.get("observed_frequency", 0.0) or 0.0
+        )
+        if observed_disruption >= 0.25:
+            flags.append(
+                (
+                    "Frequent disruptions",
+                    "Disruption events are common enough to materially widen sprint outcome uncertainty",
+                )
+            )
+
+        return flags
+
+    @staticmethod
+    def _build_sprint_risk_assessment(
+        sprint_results: SprintPlanningResults,
+        series_statistics: dict[str, Any],
+        ratio_summaries: dict[str, Any],
+    ) -> dict[str, str]:
+        observation_count = int(
+            sprint_results.historical_diagnostics.get("observation_count", 0)
+        )
+
+        completed_stats = series_statistics.get("completed_units", {})
+        throughput_mean = float(completed_stats.get("mean", 0.0) or 0.0)
+        throughput_std = float(completed_stats.get("std_dev", 0.0) or 0.0)
+        throughput_cv = throughput_std / throughput_mean if throughput_mean > 0 else 0.0
+
+        forecast_cv = (
+            sprint_results.std_dev / sprint_results.mean
+            if sprint_results.mean > 0
+            else 0.0
+        )
+
+        p50 = sprint_results.percentiles.get(50)
+        p90 = sprint_results.percentiles.get(90)
+        spread_ratio = (
+            (p90 - p50) / p50
+            if p50 is not None and p90 is not None and p50 > 0
+            else 0.0
+        )
+
+        spillover_ratio = ratio_summaries.get("spillover_ratio", {})
+        spillover_mean = float(spillover_ratio.get("mean", 0.0) or 0.0)
+
+        observed_disruption = float(
+            sprint_results.disruption_statistics.get("observed_frequency", 0.0) or 0.0
+        )
+
+        score = 0
+        if observation_count < 5:
+            score += 2
+        elif observation_count < 10:
+            score += 1
+
+        if throughput_cv >= 0.35:
+            score += 2
+        elif throughput_cv >= 0.20:
+            score += 1
+
+        if spillover_mean >= 0.35:
+            score += 2
+        elif spillover_mean >= 0.20:
+            score += 1
+
+        if observed_disruption >= 0.30:
+            score += 2
+        elif observed_disruption >= 0.15:
+            score += 1
+
+        if forecast_cv >= 0.30:
+            score += 2
+        elif forecast_cv >= 0.20:
+            score += 1
+
+        if spread_ratio >= 0.50:
+            score += 2
+        elif spread_ratio >= 0.25:
+            score += 1
+
+        if score >= 9:
+            level = "Very High"
+            css_class = "high"
+        elif score >= 6:
+            level = "High"
+            css_class = "high"
+        elif score >= 3:
+            level = "Moderate"
+            css_class = "moderate"
+        else:
+            level = "Low"
+            css_class = "low"
+
+        if (
+            observation_count >= 12
+            and throughput_cv < 0.20
+            and forecast_cv < 0.20
+            and observed_disruption < 0.15
+        ):
+            predictability = "High"
+            summary = "Historical volatility is controlled and sample size is strong, so future sprint outcomes are comparatively predictable."
+        elif observation_count >= 8 and throughput_cv < 0.30 and forecast_cv < 0.30:
+            predictability = "Moderate"
+            summary = "Forecasts are directionally useful, but volatility signals suggest maintaining moderate delivery buffers."
+        else:
+            predictability = "Low"
+            summary = "Historic volatility and/or limited history reduce confidence that recent cadence will strongly predict future sprint outcomes."
+
+        return {
+            "level": level,
+            "css_class": css_class,
+            "score": str(score),
+            "predictability": predictability,
+            "throughput_cv": f"{throughput_cv:.3f}",
+            "forecast_cv": f"{forecast_cv:.3f}",
+            "p90_p50_spread_ratio": f"{spread_ratio:.3f}",
+            "summary": summary,
+        }
+
+    @staticmethod
+    def _generate_sprint_burnup_image(
+        sprint_results: SprintPlanningResults | None,
+    ) -> str:
+        """Generate a base64-encoded sprint burn-up forecast image."""
+        if not MATPLOTLIB_AVAILABLE or sprint_results is None:
+            return ""
+
+        if not sprint_results.burnup_percentiles:
+            return ""
+
+        try:
+            sprint_numbers = [
+                int(point["sprint_number"])
+                for point in sprint_results.burnup_percentiles
+            ]
+            p50 = [float(point["p50"]) for point in sprint_results.burnup_percentiles]
+            p80 = [float(point["p80"]) for point in sprint_results.burnup_percentiles]
+            p90 = [float(point["p90"]) for point in sprint_results.burnup_percentiles]
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+
+            ax.plot(
+                sprint_numbers,
+                p50,
+                marker="o",
+                color="#2E7D32",
+                linewidth=2,
+                label="P50",
+            )
+            ax.plot(
+                sprint_numbers,
+                p80,
+                marker="o",
+                color="#F9A825",
+                linewidth=2,
+                label="P80",
+            )
+            ax.plot(
+                sprint_numbers,
+                p90,
+                marker="o",
+                color="#C62828",
+                linewidth=2,
+                label="P90",
+            )
+            ax.fill_between(sprint_numbers, p50, p90, color="#FFE0B2", alpha=0.35)
+
+            ax.set_xlabel("Sprint Number", fontsize=12, fontweight="bold")
+            ax.set_ylabel("Cumulative Planned Units", fontsize=12, fontweight="bold")
+            ax.set_title(
+                "Sprint Burn-up Forecast (P50/P80/P90)",
+                fontsize=14,
+                fontweight="bold",
+                pad=16,
+            )
+            ax.grid(True, alpha=0.25, linestyle="--")
+            ax.legend(loc="upper left", framealpha=0.9)
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+            plt.tight_layout()
+
+            buffer = BytesIO()
+            plt.savefig(buffer, format="png", dpi=100, bbox_inches="tight")
+            plt.close(fig)
+            buffer.seek(0)
+
+            return base64.b64encode(buffer.read()).decode("utf-8")
+
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _format_historic_base_for_template(
+        historic_base: dict[str, Any] | None,
+    ) -> dict[str, Any] | None:
+        """Format historic base values for HTML table rendering."""
+        if historic_base is None:
+            return None
+
+        summary = historic_base["summary"]
+        return {
+            "unit_label": historic_base["unit_label"],
+            "summary": {
+                "observation_count": summary["observation_count"],
+                "mean_committed": f"{summary['mean_committed']:.2f}",
+                "mean_completed": f"{summary['mean_completed']:.2f}",
+                "mean_completion_rate": f"{summary['mean_completion_rate']:.3f}",
+                "std_committed": f"{summary['std_committed']:.2f}",
+                "std_completed": f"{summary['std_completed']:.2f}",
+                "min_completed": f"{summary['min_completed']:.2f}",
+                "max_completed": f"{summary['max_completed']:.2f}",
+            },
+            "rows": historic_base["rows"],
+        }
+
+    @staticmethod
+    def _generate_historic_base_image(historic_base: dict[str, Any] | None) -> str:
+        """Generate a grouped bar chart for committed vs completed per historic sprint."""
+        if not MATPLOTLIB_AVAILABLE or historic_base is None:
+            return ""
+
+        rows = historic_base.get("rows", [])
+        if not rows:
+            return ""
+
+        try:
+            sprint_labels = [row["sprint_id"] for row in rows]
+            committed = [float(row["committed"]) for row in rows]
+            completed = [float(row["completed"]) for row in rows]
+
+            x = np.arange(len(sprint_labels))
+            width = 0.38
+
+            fig_width = max(10, len(sprint_labels) * 1.1)
+            fig, ax = plt.subplots(figsize=(fig_width, 5.5))
+
+            ax.bar(
+                x - width / 2,
+                committed,
+                width,
+                label="Committed",
+                color="#90CAF9",
+                edgecolor="#1976D2",
+                linewidth=1,
+            )
+            ax.bar(
+                x + width / 2,
+                completed,
+                width,
+                label="Completed",
+                color="#A5D6A7",
+                edgecolor="#2E7D32",
+                linewidth=1,
+            )
+
+            ax.set_xlabel("Historic Sprint", fontsize=12, fontweight="bold")
+            ax.set_ylabel(
+                f"Units ({historic_base['unit_label']})",
+                fontsize=12,
+                fontweight="bold",
+            )
+            ax.set_title(
+                "Historic Sprint Velocity (Committed vs Completed)",
+                fontsize=14,
+                fontweight="bold",
+                pad=14,
+            )
+            ax.set_xticks(x)
+            ax.set_xticklabels(sprint_labels, rotation=25, ha="right")
+            ax.grid(True, axis="y", alpha=0.25, linestyle="--")
+            ax.legend(loc="upper left", framealpha=0.9)
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+            plt.tight_layout()
+
+            buffer = BytesIO()
+            plt.savefig(buffer, format="png", dpi=100, bbox_inches="tight")
+            plt.close(fig)
+            buffer.seek(0)
+
+            return base64.b64encode(buffer.read()).decode("utf-8")
+
+        except Exception:
+            return ""
 
     @staticmethod
     def _prepare_staffing_context(
