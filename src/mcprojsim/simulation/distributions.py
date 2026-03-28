@@ -52,20 +52,28 @@ class DistributionSampler:
         """
         distribution = estimate.distribution or DistributionType.TRIANGULAR
         if distribution == DistributionType.TRIANGULAR:
-            assert (
-                estimate.low is not None
-                and estimate.expected is not None
-                and estimate.high is not None
-            )
+            if (
+                estimate.low is None
+                or estimate.expected is None
+                or estimate.high is None
+            ):
+                raise ValueError(
+                    "Triangular distribution requires low, expected, and high; "
+                    f"got low={estimate.low}, expected={estimate.expected}, high={estimate.high}"
+                )
             return self._sample_triangular(
                 estimate.low, estimate.expected, estimate.high
             )
         elif distribution == DistributionType.LOGNORMAL:
-            assert (
-                estimate.low is not None
-                and estimate.expected is not None
-                and estimate.high is not None
-            )
+            if (
+                estimate.low is None
+                or estimate.expected is None
+                or estimate.high is None
+            ):
+                raise ValueError(
+                    "Lognormal distribution requires low, expected, and high; "
+                    f"got low={estimate.low}, expected={estimate.expected}, high={estimate.high}"
+                )
             return self._sample_lognormal(
                 estimate.low,
                 estimate.expected,
