@@ -324,7 +324,7 @@ Beyond the syntactic grammar above, the following semantic constraints must be s
    - Must be either `<size>` or `<category>.<size>`
    - Matching is case-insensitive for both category and size
    - Values are resolved from configuration file
-   - Bare values resolve through `t_shirt_size_default_category` (default: `story`)
+   - Bare values resolve through `t_shirt_size_default_category` (default: `epic`)
    - `unit` must NOT be specified in the project file; unit comes from `t_shirt_size_unit` in config (default: `"hours"`)
    - Built-in categories: `bug`, `story`, `epic`, `business`, `initiative`
    - Default `story` values (in hours):
