@@ -103,21 +103,21 @@ Implement with strict guardrails:
 
 ## Proposed Technical Design
 
-### 1. Introduce Constrained Assignment Policy
+### Introduce Constrained Assignment Policy
 
 Add a constrained scheduling policy field in config:
 
 ```yaml
 constrained_scheduling:
   sickness_prob: 0.0
-  assignment_mode: greedy_single_pass   # greedy_single_pass | criticality_two_pass
+  assignment_mode: greedy_single_pass   # greedy_single_pass or criticality_two_pass
   pass1_iterations: 1000                # optional cap for pass-1 ranking
   priority_blend_alpha: 1.0             # optional, default pure criticality ranking
 ```
 
 Default remains `greedy_single_pass`.
 
-### 2. Add CLI Override
+### Add CLI Override
 
 Add optional simulate-time overrides:
 - `--two-pass` (enables `criticality_two_pass` for this run)
@@ -126,16 +126,17 @@ Add optional simulate-time overrides:
 CLI precedence should follow existing pattern:
 - CLI override > config file > defaults.
 
-### 3. Two-Pass Flow in Engine
+
+### Two-Pass Flow in Engine
 
 When policy is `criticality_two_pass` and constrained scheduling is active:
 
 1. **Pass 1 (baseline constrained policy)**
    - Run constrained scheduling baseline across pass-1 iteration budget.
    - Compute task criticality index from pass-1 critical path frequency:
-     \[
+     $$
      CI(t) = \frac{critical\_count(t)}{pass1\_iterations}
-     \]
+     $$
    - Produce a deterministic rank vector, tie-breaking by task ID.
 
 2. **Pass 2 (criticality-prioritized policy)**
@@ -147,7 +148,7 @@ When policy is `criticality_two_pass` and constrained scheduling is active:
 3. **Delta computation**
    - Compare pass-2 vs pass-1 aggregate metrics and expose deltas.
 
-### 4. Scheduler Policy Injection
+### Scheduler Policy Injection
 
 Refactor scheduler minimally to support task-order strategy injection.
 
@@ -167,7 +168,7 @@ Hard constraints remain unchanged:
 - calendar/sickness availability,
 - non-preemptive execution.
 
-### 5. Traceability Payload
+### Traceability Payload
 
 Extend `SimulationResults` with optional two-pass trace object.
 
@@ -200,7 +201,7 @@ Include in:
 - CSV export (new section),
 - HTML export (summary panel).
 
-### 6. Determinism Strategy
+### Determinism Strategy
 
 Two robust options:
 
@@ -215,7 +216,7 @@ Two robust options:
 
 Recommendation: implement paired replay for schedule-driven delta accuracy.
 
-### 7. Performance Controls
+### Performance Controls
 
 - `pass1_iterations` default less than full iterations (for example 1000).
 - If total iterations < pass1 budget, use full iterations.
