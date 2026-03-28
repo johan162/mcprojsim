@@ -6,7 +6,7 @@
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
 pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
-container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all, black, flake8, mypy
+container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all  black flake8 mypy
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -431,13 +431,13 @@ test-html: ## Run tests in parallel, HTML & XML coverage report
 check: format lint typecheck ## Run all code quality checks
 	@:
 
-lint, flake8: $(LINT_STAMP) ## Run linting checks with flake8
+lint flake8: $(LINT_STAMP) ## Run linting checks with flake8
 	@:
 
-format, black: $(FORMAT_STAMP) ## Format code with black
+format black: $(FORMAT_STAMP) ## Format code with black
 	@:
 
-typecheck, mypy: $(TYPECHECK_STAMP) ## Run strict type checking with mypy
+typecheck mypy: $(TYPECHECK_STAMP) ## Run strict type checking with mypy
 	@:
 
 pre-commit: $(INSTALL_STAMP) ## Run pre-commit checks (format, lint, typecheck)
