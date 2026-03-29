@@ -134,25 +134,32 @@ $$($1_PDF): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$(DESIGN_LATEX_TEMPLATE) > $$($1_TEX)
-	@VERSION_FROM_MD=$$$$(head -n 1 $$($1_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
-	echo -e "$$(GREEN)✓ $$$$VERSION_FROM_MD $$(NC)"; \
-	sed -i.bak -E "s/\{\{VERSION\}\}/$$$$VERSION_FROM_MD/g" $$($1_TEX); \
-	if ! grep -q "$$$$VERSION_FROM_MD" $$($1_TEX); then \
+	@VERSION_FROM_MD=$$$$(head -n 1 $$($1_MD) | sed -E 's/^Version:[[:space:]]*//'); \
+	if [ -z "$$$$VERSION_FROM_MD" ]; then \
+		echo -e "$$(RED)✗ Error: Could not extract Version from first line of $$($1_MD)$$(NC)"; \
+		exit 1; \
+	fi; \
+	TITLE_FROM_MD=$$$$(grep -m 1 '^# ' $$($1_MD) | sed -E 's/^#[[:space:]]+//'); \
+	if [ -z "$$$$TITLE_FROM_MD" ]; then \
+		echo -e "$$(RED)✗ Error: Could not extract title from $$($1_MD)$$(NC)"; \
+		exit 1; \
+	fi; \
+	sed -i.bak -E "s/\{\{VERSION\}\}/Version: $$$$VERSION_FROM_MD/g" $$($1_TEX); \
+	sed -i.bak -E "s/\{\{TITLE\}\}/$$$$TITLE_FROM_MD/g" $$($1_TEX); \
+	if ! grep -q "Version: $$$$VERSION_FROM_MD" $$($1_TEX); then \
 		echo -e "$$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$$(NC)"; \
 		exit 1; \
-	fi
-	@TITLE_FROM_MD=$$$$(grep -m 1 '^# ' $$($1_MD) | sed -E 's/#\s*(.+)/\1/'); \
-	sed -i.bak -E "s/\{\{TITLE\}\}/$$$$TITLE_FROM_MD/g" $$($1_TEX); \
+	fi; \
 	if ! grep -q "$$$$TITLE_FROM_MD" $$($1_TEX); then \
 		echo -e "$$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$$(NC)"; \
 		exit 1; \
-	fi
-	@rm -f $$($1_TEX).bak
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null
-	@cp $$($1_PDF_BUILT) $$($1_PDF)
-	@rm -rf $$($1_DIST_DIR)
-	@echo -e "$$(GREEN)✓ $2 PDF built: $$(DARKYELLOW)$$($1_PDF)$$(NC)"
+	fi; \
+	rm -f $$($1_TEX).bak; \
+	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
+	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
+	cp $$($1_PDF_BUILT) $$($1_PDF); \
+	rm -rf $$($1_DIST_DIR); \
+	echo -e "$$(GREEN)✓ $2 PDF (Version:  $$$$VERSION_FROM_MD) built: $$(DARKYELLOW)$$($1_PDF)$$(NC)"
 endef
 
 help: ## Show this help message
