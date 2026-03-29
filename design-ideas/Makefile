@@ -51,6 +51,7 @@ UNDERLINE := \033[4m
 
 # Build dir
 BUILD_DIR := .build
+BUILD_DESIGN_DIR := $(BUILD_DIR)/design-ideas
 SCRIPTS_DIR := ../scripts
 DESIGN_IDEAS_DIR := .
 
@@ -61,37 +62,36 @@ DESIGN_IDEAS_DIR := .
 DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template.tex
 
 # Sprint planning design document specific variables
-SPRINT_PLANNING_MD := $(DESIGN_IDEAS_DIR)/sprint-based-planning.md
-SPRINT_PLANNING_PDF := $(DESIGN_IDEAS_DIR)/sprint-based-planning.pdf
-SPRINT_PLANNING_DIST_DIR := $(BUILD_DIR)/design-ideas/sprint-planning
+SPRINT_PLANNING_BASENAME := $(DESIGN_IDEAS_DIR)/sprint-based-planning
+SPRINT_PLANNING_MD := $(DESIGN_IDEAS_DIR)/$(SPRINT_PLANNING_BASENAME).md
+SPRINT_PLANNING_PDF := $(DESIGN_IDEAS_DIR)/$(SPRINT_PLANNING_BASENAME).pdf
+SPRINT_PLANNING_DIST_DIR := $(BUILD_DESIGN_DIR)/$(SPRINT_PLANNING_BASENAME)
 SPRINT_PLANNING_PANDOC_FILTER := $(SCRIPTS_DIR)/pandoc_sprint_planning_table_widths.lua
-SPRINT_PLANNING_BODY_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_body.tex
-SPRINT_PLANNING_TEX := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.tex
-SPRINT_PLANNING_PDF_BUILT := $(SPRINT_PLANNING_DIST_DIR)/sprint-based-planning_report.pdf
-
-# T-shirt category design document specific variables
-TSHIRT_CATEGORY_MD := $(DESIGN_IDEAS_DIR)/tshirt-categories.md
-TSHIRT_CATEGORY_PDF := $(DESIGN_IDEAS_DIR)/tshirt-categories.pdf
-TSHIRT_CATEGORY_DIST_DIR := $(BUILD_DIR)/design-ideas/tshirt-categories
-TSHIRT_CATEGORY_BODY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_body.tex
-TSHIRT_CATEGORY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_report.tex
-TSHIRT_CATEGORY_PDF_BUILT := $(TSHIRT_CATEGORY_DIST_DIR)/tshirt-categories_report.pdf
-
-# Multi-phased simulaton design document specific variables
-MULTIPHASE_SIM_MD := $(DESIGN_IDEAS_DIR)/multiphase-simulation.md
-MULTIPHASE_SIM_PDF := $(DESIGN_IDEAS_DIR)/multiphase-simulation.pdf
-MULTIPHASE_SIM_DIST_DIR := $(BUILD_DIR)/design-ideas/multiphase-simulation
-MULTIPHASE_SIM_BODY_TEX := $(MULTIPHASE_SIM_DIST_DIR)/multiphase-simulation_body.tex
-MULTIPHASE_SIM_TEX := $(MULTIPHASE_SIM_DIST_DIR)/multiphase-simulation_report.tex
-MULTIPHASE_SIM_PDF_BUILT := $(MULTIPHASE_SIM_DIST_DIR)/multiphase-simulation_report.pdf
-
-# Macto arguments for the DESIGN_DOC_PDF_RULE macro
+SPRINT_PLANNING_BODY_TEX := $(SPRINT_PLANNING_DIST_DIR)/$(SPRINT_PLANNING_BASENAME)_body.tex
+SPRINT_PLANNING_TEX := $(SPRINT_PLANNING_DIST_DIR)/$(SPRINT_PLANNING_BASENAME)_report.tex
+SPRINT_PLANNING_PDF_BUILT := $(SPRINT_PLANNING_DIST_DIR)/$(SPRINT_PLANNING_BASENAME)_report.pdf
 SPRINT_PLANNING_PANDOC_OPTS := --lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER)
 SPRINT_PLANNING_EXTRA_DEPS := $(SPRINT_PLANNING_PANDOC_FILTER)
 
+# T-shirt category design document specific variables
+TSHIRT_CATEGORY_BASENAME := $(DESIGN_IDEAS_DIR)/tshirt-categories
+TSHIRT_CATEGORY_MD := $(DESIGN_IDEAS_DIR)/$(TSHIRT_CATEGORY_BASENAME).md
+TSHIRT_CATEGORY_PDF := $(DESIGN_IDEAS_DIR)/$(TSHIRT_CATEGORY_BASENAME).pdf
+TSHIRT_CATEGORY_DIST_DIR := $(BUILD_DESIGN_DIR)/$(TSHIRT_CATEGORY_BASENAME)
+TSHIRT_CATEGORY_BODY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/$(TSHIRT_CATEGORY_BASENAME)_body.tex
+TSHIRT_CATEGORY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/$(TSHIRT_CATEGORY_BASENAME)_report.tex
+TSHIRT_CATEGORY_PDF_BUILT := $(TSHIRT_CATEGORY_DIST_DIR)/$(TSHIRT_CATEGORY_BASENAME)_report.pdf
 TSHIRT_CATEGORY_PANDOC_OPTS :=
 TSHIRT_CATEGORY_EXTRA_DEPS :=
 
+# Multi-phased simulaton design document specific variables
+MULTIPHASE_SIM_BASENAME := $(DESIGN_IDEAS_DIR)/multiphase-simulation
+MULTIPHASE_SIM_MD := $(DESIGN_IDEAS_DIR)/$(MULTIPHASE_SIM_BASENAME).md
+MULTIPHASE_SIM_PDF := $(DESIGN_IDEAS_DIR)/$(MULTIPHASE_SIM_BASENAME).pdf
+MULTIPHASE_SIM_DIST_DIR := $(BUILD_DESIGN_DIR)/$(MULTIPHASE_SIM_BASENAME)
+MULTIPHASE_SIM_BODY_TEX := $(MULTIPHASE_SIM_DIST_DIR)/$(MULTIPHASE_SIM_BASENAME)_body.tex
+MULTIPHASE_SIM_TEX := $(MULTIPHASE_SIM_DIST_DIR)/$(MULTIPHASE_SIM_BASENAME)_report.tex
+MULTIPHASE_SIM_PDF_BUILT := $(MULTIPHASE_SIM_DIST_DIR)/$(MULTIPHASE_SIM_BASENAME)_report.pdf
 MULTIPHASE_SIM_PANDOC_OPTS :=
 MULTIPHASE_SIM_EXTRA_DEPS :=
 
@@ -157,9 +157,9 @@ $$($1_PDF): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR
 	rm -f $$($1_TEX).bak; \
 	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
 	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
-	cp $$($1_PDF_BUILT) $$($1_PDF); \
+	cp $$($1_PDF_BUILT) $$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
 	rm -rf $$($1_DIST_DIR); \
-	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$($1_PDF)$$(NC)"
+	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
 
 help: ## Show this help message
@@ -171,7 +171,7 @@ $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
 clean: ## Clean all generated files
-	@rm -rf $(BUILD_DIR) $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF)
+	@rm -rf $(BUILD_DIR) $(SPRINT_PLANNING_BASENAME)-*.pdf $(TSHIRT_CATEGORY_BASENAME)-*.pdf $(MULTIPHASE_SIM_BASENAME)-*.pdf
 	@echo -e "$(GREEN)✓ Cleaned all generated files$(NC)"
 
 pdf-design: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) ## Build all the PDF versions of the design documents
