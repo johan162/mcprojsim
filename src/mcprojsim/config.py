@@ -1,7 +1,7 @@
 """Configuration management for uncertainty factors and simulation settings."""
 
 from copy import deepcopy
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
 from statistics import NormalDist
 from typing import Any, Dict, Literal, Optional, cast

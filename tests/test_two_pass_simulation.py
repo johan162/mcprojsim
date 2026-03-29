@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import numpy as np
+import pydantic
 import pytest
 
 from mcprojsim.config import (
@@ -162,8 +163,6 @@ class TestConstrainedSchedulingConfig:
 
     def test_pass1_iterations_must_be_positive(self):
         """pass1_iterations must be > 0."""
-        import pydantic
-
         with pytest.raises((pydantic.ValidationError, ValueError)):
             Config.model_validate(
                 {
