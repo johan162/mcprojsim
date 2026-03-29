@@ -677,7 +677,6 @@ ghcr-logout: ## Logout from GitHub Container Registry
 ghcr-clean: ghcr-logout container-clean-images ## Clean up GHCR login and local images
 	@:
 
-
 # ============================================================================================
 # Git Operations Targets
 # ============================================================================================
@@ -700,6 +699,15 @@ pull-all: ## Pull all local branches that exist on origin
 	git checkout $$current_branch
 	@echo -e "$(GREEN)✓ All branches pulled$(NC)"
 
+# ============================================================================================
+# Create PDFs of design documentation for distribution
+# Calls the default target od the Makefile in `desig-ides/`
+# ============================================================================================
+pdf-design: ## Create a PDF of the design documentation for distribution
+	@echo -e "$(DARKYELLOW)- Building design documentation PDFs...$(NC)"
+	@$(MAKE) -C design-ideas >/dev/null 
+	@echo -e "$(GREEN)✓ Design documentation PDFs created in design-docs/dist/$(NC)"
+	
 
 ### End of Makefile
 

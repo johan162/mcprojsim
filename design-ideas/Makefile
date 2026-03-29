@@ -1,6 +1,6 @@
 # Makefile for Design Documentation in MCProjSim project
 
-.PHONY: pdf-design help clean
+.PHONY: pdf-design help clean really-clean
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -49,6 +49,7 @@ UNDERLINE := \033[4m
 # Project Wide variable configurations
 # ============================================================================================
 BUILD_DIR := .build
+DIST_DIR := dist
 BUILD_DESIGN_DIR := $(BUILD_DIR)/design-ideas
 STAMP_DIR := .makefile-stamps
 SCRIPTS_DIR := ../scripts
@@ -71,10 +72,10 @@ $1_BASENAME := $2
 $1_MD := $(DESIGN_IDEAS_DIR)/$$($1_BASENAME).md
 $1_PDF := $(DESIGN_IDEAS_DIR)/$$($1_BASENAME).pdf
 $1_STAMP := $(STAMP_DIR)/$$($1_BASENAME)-pdf.stamp
-$1_DIST_DIR := $(BUILD_DESIGN_DIR)/$$($1_BASENAME)
-$1_BODY_TEX := $$($1_DIST_DIR)/$$($1_BASENAME)_body.tex
-$1_TEX := $$($1_DIST_DIR)/$$($1_BASENAME)_report.tex
-$1_PDF_BUILT := $$($1_DIST_DIR)/$$($1_BASENAME)_report.pdf
+$1_BUILD_DIR := $(BUILD_DESIGN_DIR)/$$($1_BASENAME)
+$1_BODY_TEX := $$($1_BUILD_DIR)/$$($1_BASENAME)_body.tex
+$1_TEX := $$($1_BUILD_DIR)/$$($1_BASENAME)_report.tex
+$1_PDF_BUILT := $$($1_BUILD_DIR)/$$($1_BASENAME)_report.pdf
 $1_PANDOC_OPTS := $3
 $1_EXTRA_DEPS := $4
 endef
@@ -109,9 +110,9 @@ endef
 define DESIGN_DOC_PDF_RULE
 $$($1_PDF): $$($1_STAMP)
 
-$$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR) $$(STAMP_DIR)
+$$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR) $$(STAMP_DIR) $$(DIST_DIR)
 	@echo -e "\n$$(DARKYELLOW)- Building $2 PDF via LaTeX report pipeline...$$(NC)"
-	@mkdir -p $$($1_DIST_DIR)
+	@mkdir -p $$($1_BUILD_DIR)
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $$($1_PANDOC_OPTS) $$($1_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
@@ -141,12 +142,12 @@ $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_D
 		exit 1; \
 	fi; \
 	rm -f $$($1_TEX).bak; \
-	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
-	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
-	cp $$($1_PDF_BUILT) $$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
+	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; \
+	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; \
+	cp $$($1_PDF_BUILT) $$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
 	touch $$($1_STAMP); \
-	rm -rf $$($1_DIST_DIR); \
-	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
+	rm -rf $$($1_BUILD_DIR); \
+	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DIST_DIR)/$$(DARKGRAY)$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
 
 # ============================================================================================
@@ -173,12 +174,15 @@ $(BUILD_DIR):
 $(STAMP_DIR):
 	@mkdir -p $(STAMP_DIR)
 
+$(DIST_DIR):
+	@mkdir -p $(DIST_DIR)
+
 clean: ## Clean all generated intermediate documentation files
 	@rm -rf $(BUILD_DIR) $(STAMP_DIR) 
 	@echo -e "$(GREEN)✓ Cleaned all generated documentation files$(NC)"
 
 really-clean: ## Clean all generated intermediate documentation files and all generated PDFs in the design-ideas directory
-	@rm -rf $(BUILD_DIR) $(STAMP_DIR) $(SPRINT_PLANNING_BASENAME)-*.pdf $(TSHIRT_CATEGORY_BASENAME)-*.pdf $(MULTIPHASE_SIM_BASENAME)-*.pdf $(SENSITIVITY_ANALYSIS_BASENAME)-*.pdf $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF)
+	@rm -rf $(BUILD_DIR) $(STAMP_DIR) $(DIST_DIR)
 	@echo -e "$(GREEN)✓ Really cleaned all generated documentation files and PDFs$(NC)"
 
 pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF) ## Build all the PDF versions of the design documents
