@@ -1,4 +1,4 @@
-Version: 2.0.0
+Version: 2.0.1
 
 # Multi-Phased Constrained Simulation
 
@@ -7,6 +7,7 @@ Version: 2.0.0
 `mcprojsim` currently uses a deterministic single-pass greedy scheduler in constrained mode: ready tasks are processed in sorted task ID order and resources are assigned in sorted resource name order. This is correct, reproducible, and aligned with current FR-033/FR-038 behavior, but it does not use any explicit criticality-aware prioritization when resource contention exists.
 
 FR-034 and FR-042 describe a future two-pass mode where:
+
 1. Pass 1 computes constrained criticality indices.
 2. Pass 2 schedules with those indices as task priority.
 3. The system reports pass-1 vs pass-2 deltas for traceability.
@@ -14,6 +15,7 @@ FR-034 and FR-042 describe a future two-pass mode where:
 Recommendation: implement the two-pass mode as an optional constrained-scheduling policy with default disabled. The expected benefit is lower tail-risk (`P80/P90/P95`) and reduced makespan in contention-heavy dependency networks. The primary tradeoff is runtime cost (roughly 2x constrained scheduling work) and extra implementation complexity around deterministic traceability.
 
 The best-fit design for this repository is:
+
 - Keep existing single-pass greedy as the default policy.
 - Add a constrained scheduling assignment policy enum.
 - Run a baseline constrained pass to compute global criticality rank.
