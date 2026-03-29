@@ -1,4 +1,4 @@
-Version: 1.0.0
+Version: 2.0.0
 
 # Multi-Phased Constrained Simulation
 
@@ -216,6 +216,41 @@ Two robust options:
 
 Recommendation: implement paired replay for schedule-driven delta accuracy.
 
+### Paired Replay Cache Architecture
+
+Implementation sketch for cache structure:
+
+```python
+class DurationCache:
+    """Stores sampled durations from pass-1 for replay in pass-2."""
+    
+    def __init__(self):
+        # Key: (iteration_index, task_id)
+        # Value: sampled task duration (hours)
+        self._cache: dict[tuple[int, str], float] = {}
+    
+    def store(self, iteration_idx: int, task_id: str, duration_hours: float) -> None:
+        """Called during pass-1 after sampling each task in iteration i."""
+        self._cache[(iteration_idx, task_id)] = duration_hours
+    
+    def retrieve(self, iteration_idx: int, task_id: str) -> float:
+        """Called during pass-2 to fetch the cached duration."""
+        key = (iteration_idx, task_id)
+        if key not in self._cache:
+            raise KeyError(f"No cached duration for task {task_id} iteration {iteration_idx}")
+        return self._cache[key]
+```
+
+**Integration points:**
+
+- **Pass-1 (lines post-sampling)**: After `SimulationEngine._sample_task_duration(task_id)` returns duration, call `cache.store(iteration_i, task_id, duration)`
+- **Pass-2 (lines pre-scheduling)**: Before `TaskScheduler._schedule_tasks_with_resources(...)`, inject a sampler override that pulls from `cache.retrieve(iteration_i, task_id)` instead of re-sampling
+- **Ordering**: Store immediately after sampling (before any scheduling), retrieve during pass-2 scheduler in same iteration order
+
+**Memory estimate**: For 10,000 iterations and 100 tasks, ~4–8 MB (float64 per entry).
+
+**Determinism check**: Two runs with same seed and cache must produce bit-identical results; add regression assertion in tests.
+
 ### Performance Controls
 
 - `pass1_iterations` default less than full iterations (for example 1000).
@@ -280,10 +315,35 @@ Risk controls:
 
 ## Phase 4: Pass-1 Criticality Rank Computation
 
+### Criticality Index Definition
+
+The criticality index (CI) for a task t is computed as:
+
+$$CI(t) = \frac{\text{iterations where } t \text{ appears in ANY critical path}}{\text{pass1_iterations}}$$
+
+A task **appears in a critical path** if it is part of any path whose total duration equals the project's critical path length in that iteration. When multiple equally-long critical paths exist, the task is counted if it appears in ANY of them.
+
+**Concrete Example:**
+
+Consider 3 iterations with the following critical path lengths and membership:
+
+| Iteration | Critical Path Length | Tasks in ANY Path | CI(TaskA) | CI(TaskB) | CI(TaskC) |
+|-----------|----------------------|-------------------|-----------|-----------|----------|
+| 1         | 100h                | A, B              | 1         | 1         | 0        |
+| 2         | 100h                | A, C              | 1         | 0         | 1        |
+| 3         | 100h                | B, C              | 0         | 1         | 1        |
+
+Result: `CI(A) = 2/3 ≈ 0.667`, `CI(B) = 2/3 ≈ 0.667`, `CI(C) = 2/3 ≈ 0.667`. All tied; sorting by task ID produces deterministic order.
+
+### Tie-Breaking Rule
+
+When two tasks have identical CI values, order by **lexicographic task ID**. This ensures determinism independent of task insertion order.
+
 Success criteria:
 - engine can run pass-1 constrained baseline,
 - criticality index map produced and stable for fixed seed,
-- tie-breaking stable by task ID.
+- tie-breaking stable by lexicographic task ID,
+- worked example in acceptance test fixture verifies CI computation matches manual calculation.
 
 Files:
 - `src/mcprojsim/simulation/engine.py`
@@ -292,10 +352,12 @@ Files:
 
 Verify:
 - new tests asserting deterministic rank vector with fixed seed,
+- fixture-based test showing CI(task) computation against known iteration history,
 - no constraint violation regressions.
 
 Risk controls:
-- isolate ranking logic into helper with explicit unit tests.
+- isolate ranking logic into helper with explicit unit tests,
+- add defensive assertion: CI(t) must be in range [0.0, 1.0].
 
 ## Phase 5: Pass-2 Prioritized Scheduling
 
@@ -343,27 +405,186 @@ Risk controls:
 - additive export schema only,
 - avoid renaming existing output fields.
 
+## Test Fixtures and Acceptance Scenarios
+
+Before Phase 7 begins, establish concrete test fixtures that can be used throughout acceptance testing.
+
+### Fixture 1: Resource Contention Benchmark Project
+
+A minimal 7-task project with clear contention that benefits from two-pass scheduling:
+
+```yaml
+# test_fixture_contention.yaml
+project:
+  name: contention-benchmark
+  task_groups:
+    - id: critical_chain
+      tasks:
+        - task_id: A1
+          description: "Critical start"
+          duration_hours: 10
+          dependencies: []
+        - task_id: A2
+          description: "Critical middle"
+          duration_hours: 15
+          dependencies: [A1]
+        - task_id: A3
+          description: "Critical end"
+          duration_hours: 10
+          dependencies: [A2]
+    
+    - id: parallel_branch
+      tasks:
+        - task_id: B1
+          description: "Parallel start (competes for dev-senior)"
+          duration_hours: 20
+          dependencies: []
+        - task_id: B2
+          description: "Parallel continuation"
+          duration_hours: 10
+          dependencies: [B1]
+    
+    - id: joining_tasks
+      tasks:
+        - task_id: C1
+          description: "Joins both branches"
+          duration_hours: 5
+          dependencies: [A3, B2]
+        - task_id: C2
+          description: "Final integration"
+          duration_hours: 8
+          dependencies: [C1]
+
+resources:
+  - resource_id: dev-senior
+    max_capacity: 1.0
+  - resource_id: dev-junior
+    max_capacity: 1.0
+
+assignments:
+  - task_id: A1
+    resource_id: dev-senior
+  - task_id: A2
+    resource_id: dev-senior
+  - task_id: A3
+    resource_id: dev-senior
+  - task_id: B1
+    resource_id: dev-senior  # <-- Contention: B1 wants senior but A-chain is critical
+  - task_id: B2
+    resource_id: dev-junior
+  - task_id: C1
+    resource_id: dev-junior
+  - task_id: C2
+    resource_id: dev-junior
+```
+
+**Expected behavior:**
+- **Single-pass (greedy by ID)**: Tasks sorted A1, A2, A3, B1, B2, C1, C2. B1 waits for A2 to complete on dev-senior (contention). Makespan ≈ 10 + 15 + 10 + (waits for A-chain) + 5 + 8 ≈ 58–60 hours.
+- **Two-pass (criticality-aware)**: Pass-1 identifies A-chain as 100% critical. Pass-2 prioritizes A-chain, schedules B1 later. Expected makespan reduction: 3–5 hours (P50 improvement ~5%; P80 likely higher).
+
+**Fixture placement**: `tests/fixtures/test_fixture_contention.yaml`
+
+### Fixture 2: No-Benefit Scenario (Abundant Resources)
+
+Project with plenty of resources should show near-zero delta:
+
+```yaml
+# test_fixture_abundant_resources.yaml
+project:
+  name: abundant-resources
+  task_groups:
+    - id: linear_chain
+      tasks:
+        - task_id: T1
+          duration_hours: 10
+          dependencies: []
+        - task_id: T2
+          duration_hours: 10
+          dependencies: [T1]
+        - task_id: T3
+          duration_hours: 10
+          dependencies: [T2]
+
+resources:
+  - resource_id: dev1
+    max_capacity: 1.0
+  - resource_id: dev2
+    max_capacity: 1.0
+  - resource_id: dev3
+    max_capacity: 1.0
+
+assignments:
+  - task_id: T1
+    resource_id: dev1
+  - task_id: T2
+    resource_id: dev2
+  - task_id: T3
+    resource_id: dev3
+```
+
+**Expected behavior**: Single-pass and two-pass deltas ≈ 0 (no contention means no reordering benefit).
+
+**Fixture placement**: `tests/fixtures/test_fixture_abundant_resources.yaml`
+
+### Acceptance Test Cases
+
+1. **test_two_pass_criticality_ranking_matches_fixture_expectation**
+   - Run contention_benchmark with `pass1_iterations=100` and fixed seed
+   - Assert: CI(A1), CI(A2), CI(A3) all > 0.95 (critical)
+   - Assert: CI(B1) < 0.5 (non-critical in this fixture)
+   - Assert: Ranking order is [A1, A2, A3, ...] after sorting
+
+2. **test_two_pass_no_constraint_violations**
+   - Run contention_benchmark with `assignment_mode: criticality_two_pass`
+   - Assert for each iteration:
+     - All dependencies respected (no task starts before dependencies finish)
+     - No resource capacity exceeded at any time
+     - No task assigned to multiple resources simultaneously
+
+3. **test_two_pass_makespan_improvement_on_contention**
+   - Run contention_benchmark, single-pass vs. two-pass with 1000 iterations
+   - Assert: `two_pass_mean_hours < single_pass_mean_hours` (improvement expected)
+   - Assert: improvement is stable across 5 independent runs (fixed seed)
+
+4. **test_two_pass_zero_delta_on_abundant_resources**
+   - Run abundant_resources fixture
+   - Assert: `delta_mean_hours ≈ 0` (±0.1 hours tolerance for sampling noise)
+   - Assert: `delta_p80_hours ≈ 0`
+
+5. **test_two_pass_determinism_paired_replay**
+   - Run contention_benchmark twice with same seed; cache pass-1 durations
+   - Assert: full critical path frequency arrays identical
+   - Assert: delta values identical (bit-for-bit)
+
 ## Phase 7: Acceptance Tests for FR-042
 
-Success criteria:
+Success criteria (using fixtures defined above):
 - explicit tests prove:
   - mode configurable and default off,
-  - pass-1 ranking computed,
-  - pass-2 uses ranking,
-  - no constraints violated,
-  - pass-delta reported.
+  - pass-1 ranking computation matches expected CI values (test case #1),
+  - pass-2 uses ranking and improves makespan on contention projects (test case #3),
+  - no constraints violated on all fixtures (test case #2),
+  - zero delta on no-benefit scenarios (test case #4),
+  - deterministic paired replay produces bit-identical results (test case #5),
+  - pass-delta reported in all exporters.
 
 Files:
-- `tests/test_simulation.py`
-- `tests/test_cli_output.py`
-- `tests/test_exporters.py`
+- `tests/test_simulation.py` (add: test cases #1–5 using fixtures)
+- `tests/fixtures/test_fixture_contention.yaml`
+- `tests/fixtures/test_fixture_abundant_resources.yaml`
+- `tests/test_cli_output.py` (add: two-pass delta section assertions)
+- `tests/test_exporters.py` (add: JSON/CSV/HTML traceability field presence)
 
 Verify:
 - `poetry run pytest tests/test_simulation.py tests/test_cli_output.py tests/test_exporters.py -n auto --no-cov`
+- Validate: `tests/test_simulation.py::test_two_pass_criticality_ranking_matches_fixture_expectation`
+- Validate: `tests/test_simulation.py::test_two_pass_no_constraint_violations`
+- Validate: `tests/test_simulation.py::test_two_pass_makespan_improvement_on_contention`
 
 Risk controls:
-- acceptance fixtures with known contention topology,
-- deterministic seed and expected ordering assertions.
+- acceptance fixtures with known contention topology (defined above),
+- deterministic seed and expected ordering assertions,
+- manual hand-calculation of fixture CI values included in test docstring for traceability.
 
 ## Phase 8: Documentation and Examples
 
@@ -437,12 +658,16 @@ The requirements below describe the proposed two-pass constrained scheduling beh
 - CLI override SHALL take precedence over config value for that run.
 
 ## FR-MPS-003: Pass-1 Criticality Computation
-- When two-pass mode is enabled, pass 1 SHALL run constrained scheduling and compute task criticality indices from pass-1 critical path membership frequency.
-- Pass-1 ranking SHALL be deterministic for fixed seed and input.
+- When two-pass mode is enabled, pass 1 SHALL run constrained scheduling and compute task criticality indices (CI) from pass-1 critical path membership frequency.
+- CI(t) SHALL be defined as: (iterations where t appears in ANY critical path) / pass1_iterations, with value in range [0.0, 1.0].
+- A task appears in a critical path if it is part of any path whose duration equals the project's critical path length in that iteration.
+- Pass-1 ranking SHALL be deterministic for fixed seed and input, with tie-breaking by lexicographic task ID.
+- Pass-1 computation SHALL include defensive assertion that all CI values are in [0.0, 1.0].
 
 ## FR-MPS-004: Pass-2 Priority Policy
-- Pass 2 SHALL prioritize ready tasks by descending pass-1 criticality index.
-- Equal-criticality ties SHALL be broken deterministically by task ID.
+- Pass 2 SHALL prioritize ready tasks by descending pass-1 criticality index CI(t).
+- Equal-criticality ties SHALL be broken deterministically by lexicographic task ID (e.g., "Task_A" before "Task_B").
+- Pass 2 SHALL use paired-replay cache to reuse sampled task durations from pass-1, ensuring deterministic deltas.
 - Pass 2 SHALL preserve all existing hard constraints (dependencies, resource eligibility, max resources, calendar/sickness availability).
 
 ## FR-MPS-005: Constrained-Only Applicability
@@ -450,8 +675,9 @@ The requirements below describe the proposed two-pass constrained scheduling beh
 - If constrained scheduling is inactive, the system SHALL run dependency-only scheduling and SHALL NOT attempt two-pass prioritization.
 
 ## FR-MPS-006: Deterministic Acceptance Behavior
-- The system SHALL provide acceptance tests demonstrating that two-pass mode does not violate dependency/resource constraints.
-- The system SHALL provide deterministic tests showing stable pass ranking and reproducible output for fixed seed.
+- The system SHALL provide acceptance tests (using contention_benchmark and abundant_resources fixtures) demonstrating that two-pass mode does not violate dependency/resource constraints.
+- The system SHALL provide deterministic tests showing stable pass ranking (test_two_pass_criticality_ranking_matches_fixture_expectation) and reproducible output for fixed seed (test_two_pass_determinism_paired_replay).
+- The system SHALL provide a test (test_two_pass_no_constraint_violations) that asserts for each iteration: dependencies respected, no resource capacity exceeded, no task double-assigned.
 
 ## FR-MPS-007: Traceability Output
 - The system SHALL report pass-1 vs pass-2 outcome deltas for traceability.
@@ -470,10 +696,21 @@ The requirements below describe the proposed two-pass constrained scheduling beh
 - User documentation SHALL describe when two-pass mode is useful and when it is unlikely to help.
 - Documentation SHALL clearly state default-off behavior and runtime tradeoff.
 
+## FR-MPS-011: Paired Replay Cache for Determinism
+- The system SHALL implement a duration cache that stores sampled task durations from pass-1.
+- Pass-2 SHALL reuse cached durations from pass-1 (not re-sample) to ensure deterministic delta reporting.
+- The cache SHALL be keyed by (iteration_index, task_id) and retrieve SHALL raise KeyError if entry missing.
+- The system SHALL assert that two consecutive runs with identical seed and pass1_iterations produce bit-identical critical path frequencies and deltas.
+
+## FR-MPS-012: Pass-1 Iteration Budgeting and Warnings
+- If `pass1_iterations` is greater than total simulation iterations, SHALL default to total iterations.
+- If `pass1_iterations` is less than 100 and total iterations > 100, the system MAY emit a warning that pass-1 sample is too small.
+- The system SHALL validate that `pass1_iterations > 0`; else reject with clear error message.
+
 ## Acceptance Criteria Matrix
 
-- FR-034 addressed by: FR-MPS-001, FR-MPS-002, FR-MPS-003, FR-MPS-004.
-- FR-042 addressed by: FR-MPS-001, FR-MPS-003, FR-MPS-004, FR-MPS-006, FR-MPS-007.
+- FR-034 addressed by: FR-MPS-001, FR-MPS-002, FR-MPS-003, FR-MPS-004, FR-MPS-011.
+- FR-042 addressed by: FR-MPS-001, FR-MPS-003, FR-MPS-004, FR-MPS-006, FR-MPS-007, FR-MPS-011, FR-MPS-012.
 
 ## Conclusion
 
