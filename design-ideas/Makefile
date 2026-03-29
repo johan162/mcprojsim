@@ -1,6 +1,6 @@
-# Makefile for Design Documentation inMCProjSim project
+# Makefile for Design Documentation in MCProjSim project
 
-.PHONY: pdf-design help
+.PHONY: pdf-design help clean
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -85,6 +85,16 @@ MULTIPHASE_SIM_BODY_TEX := $(MULTIPHASE_SIM_DIST_DIR)/multiphase-simulation_body
 MULTIPHASE_SIM_TEX := $(MULTIPHASE_SIM_DIST_DIR)/multiphase-simulation_report.tex
 MULTIPHASE_SIM_PDF_BUILT := $(MULTIPHASE_SIM_DIST_DIR)/multiphase-simulation_report.pdf
 
+# Macto arguments for the DESIGN_DOC_PDF_RULE macro
+SPRINT_PLANNING_PANDOC_OPTS := --lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER)
+SPRINT_PLANNING_EXTRA_DEPS := $(SPRINT_PLANNING_PANDOC_FILTER)
+
+TSHIRT_CATEGORY_PANDOC_OPTS :=
+TSHIRT_CATEGORY_EXTRA_DEPS :=
+
+MULTIPHASE_SIM_PANDOC_OPTS :=
+MULTIPHASE_SIM_EXTRA_DEPS :=
+
 # ============================================================================================
 # Help Target
 # ============================================================================================
@@ -96,6 +106,56 @@ define print_section
 	@echo ""
 	@echo -e "$(BRIGHTCYAN)$1:$(NC)"
 	@grep -E '^($(2)):.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(BLUE)%-22s$(NC) %s\n", $$1, $$2}' | sort
+endef
+
+# ============================================================================================
+# Makefile Macro for PDF generation from markdown design documents
+# This macro defines the rules for generating a PDF from a markdown file using a LaTeX template.
+# It takes care of the following steps:
+# 1. Convert the markdown file to a LaTeX body using pandoc.
+# 2. Inject the generated LaTeX body into the provided LaTeX template at the placeholder.
+# 3. Extract the version number and title from the markdown file and replace the corresponding placeholders in the LaTeX template.
+# 4. Compile the final LaTeX file to generate the PDF.
+# Arguments: 1. A prefix for the variables related to the specific design document (e.g., SPRINT_PLANNING)
+#            2. A human-readable name for the design document (used in output messages)
+# Note: This macro assumes that the markdown file has a specific format where the version number is on the 
+# first line in the format "Version: x.y.z" and the title is the first level 1 heading (e.g., "# Title").
+# The generated PDF will be placed in the specified distribution directory and named according to the provided variables.
+# ============================================================================================
+define DESIGN_DOC_PDF_RULE
+$$($1_PDF): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR)
+	@echo -e "\n$$(DARKYELLOW)- Building $2 PDF via LaTeX report pipeline...$$(NC)"
+	@mkdir -p $$($1_DIST_DIR)
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $$($1_PANDOC_OPTS) $$($1_MD) -o $$($1_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
+	@rm -f $$($1_BODY_TEX).bak
+	@awk -v body="$$($1_BODY_TEX)" '\
+		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$$(DESIGN_LATEX_TEMPLATE) > $$($1_TEX)
+	@VERSION_FROM_MD=$$(head -n 1 $$($1_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
+	sed -i.bak -E "s/\{\{VERSION\}\}/$$$$VERSION_FROM_MD/g" $$($1_TEX); \
+	if grep -q "$$$$VERSION_FROM_MD" $$($1_TEX); then \
+		echo -e "$$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$$(NC)"; \
+	else \
+		echo -e "$$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$$(NC)"; \
+		exit 1; \
+	fi
+	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $$($1_MD) | sed -E 's/#\s*(.+)/\1/'); \
+	sed -i.bak -E "s/\{\{TITLE\}\}/$$$$TITLE_FROM_MD/g" $$($1_TEX); \
+	if grep -q "$$$$TITLE_FROM_MD" $$($1_TEX); then \
+		echo -e "$$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$$(NC)"; \
+	else \
+		echo -e "$$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$$(NC)"; \
+		exit 1; \
+	fi
+	@rm -f $$($1_TEX).bak
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null
+	@cp $$($1_PDF_BUILT) $$($1_PDF)
+	@rm -rf $$($1_DIST_DIR)
+	@echo -e "$$(GREEN)✓ $2 PDF built: $$(DARKYELLOW)$$($1_PDF)$$(NC)"
 endef
 
 help: ## Show this help message
@@ -113,125 +173,8 @@ clean: ## Clean all generated files
 pdf-design: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) ## Build all the PDF versions of the design documents
 	@:
 
-$(SPRINT_PLANNING_PDF): $(SPRINT_PLANNING_MD) $(DESIGN_LATEX_TEMPLATE) $(SPRINT_PLANNING_PANDOC_FILTER) | $(BUILD_DIR)
-	@echo -e "$(DARKYELLOW)- Building sprint-based planning PDF via LaTeX report pipeline...$(NC)"
-	@mkdir -p $(SPRINT_PLANNING_DIST_DIR)
-#	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER) $(SPRINT_PLANNING_MD) -o $(SPRINT_PLANNING_BODY_TEX)
-	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(SPRINT_PLANNING_BODY_TEX)
-	@rm -f $(SPRINT_PLANNING_BODY_TEX).bak
-#	@echo -e "$(DARKYELLOW)  - Injecting body into design-ideas LaTeX template...$(NC)"
-	@awk -v body="$(SPRINT_PLANNING_BODY_TEX)" '\
-		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
-		{ print } \
-		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
-		$(DESIGN_LATEX_TEMPLATE) > $(SPRINT_PLANNING_TEX)
-# Read the version from the first line of the markdown file (assuming it is in the format: "Version: x.y.z") 
-# and replace the version placeholder "{{VERSION}}" in the LaTeX template	
-	@VERSION_FROM_MD=$$(head -n 1 $(SPRINT_PLANNING_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
-	sed -i.bak -E "s/\{\{VERSION\}\}/$$VERSION_FROM_MD/g" $(SPRINT_PLANNING_TEX); \
-	if grep -q "$$VERSION_FROM_MD" $(SPRINT_PLANNING_TEX); then \
-		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$(NC)"; \
-		exit 1; \
-	fi; 
-# Use the first heading in the markdown file as the title and replace the "{{TITLE}}" placeholder in the LaTeX template
-	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $(SPRINT_PLANNING_MD) | sed -E 's/#\s*(.+)/\1/'); \
-	sed -i.bak -E "s/\{\{TITLE\}\}/$$TITLE_FROM_MD/g" $(SPRINT_PLANNING_TEX); \
-	if grep -q "$$TITLE_FROM_MD" $(SPRINT_PLANNING_TEX); then \
-		echo -e "$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$(NC)"; \
-		exit 1; \
-	fi
-	@rm -f $(SPRINT_PLANNING_TEX).bak		
-#	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(SPRINT_PLANNING_DIST_DIR) $(SPRINT_PLANNING_TEX) >/dev/null
-	@cp $(SPRINT_PLANNING_PDF_BUILT) $(SPRINT_PLANNING_PDF)
-	@rm -rf $(SPRINT_PLANNING_DIST_DIR) 
-	@echo -e "$(GREEN)✓ Sprint-based planning PDF built: $(DARKYELLOW)$(SPRINT_PLANNING_PDF)$(NC)"
 
-
-$(TSHIRT_CATEGORY_PDF): $(TSHIRT_CATEGORY_MD) $(DESIGN_LATEX_TEMPLATE) | $(BUILD_DIR)
-	@echo -e "\n$(DARKYELLOW)- Building t-shirt category PDF via LaTeX report pipeline...$(NC)"
-	@mkdir -p $(TSHIRT_CATEGORY_DIST_DIR)
-#	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(TSHIRT_CATEGORY_MD) -o $(TSHIRT_CATEGORY_BODY_TEX)
-	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(TSHIRT_CATEGORY_BODY_TEX)
-	@rm -f $(TSHIRT_CATEGORY_BODY_TEX).bak
-#	@echo -e "$(DARKYELLOW)  - Injecting body into design-ideas LaTeX template...$(NC)"
-	@awk -v body="$(TSHIRT_CATEGORY_BODY_TEX)" '\
-		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
-		{ print } \
-		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
-		$(DESIGN_LATEX_TEMPLATE) > $(TSHIRT_CATEGORY_TEX)
-# Read the version from the first line of the markdown file (assuming it is in the format: "Version: x.y.z") 
-# and replace the version placeholder "{{VERSION}}" in the LaTeX template	
-	@VERSION_FROM_MD=$$(head -n 1 $(TSHIRT_CATEGORY_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
-	sed -i.bak -E "s/\{\{VERSION\}\}/$$VERSION_FROM_MD/g" $(TSHIRT_CATEGORY_TEX); \
-	if grep -q "$$VERSION_FROM_MD" $(TSHIRT_CATEGORY_TEX); then \
-		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$(NC)"; \
-		exit 1; \
-	fi; 
-# Use the first heading in the markdown file as the title and replace the "{{TITLE}}" placeholder in the LaTeX template
-	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $(TSHIRT_CATEGORY_MD) | sed -E 's/#\s*(.+)/\1/'); \
-	sed -i.bak -E "s/\{\{TITLE\}\}/$$TITLE_FROM_MD/g" $(TSHIRT_CATEGORY_TEX); \
-	if grep -q "$$TITLE_FROM_MD" $(TSHIRT_CATEGORY_TEX); then \
-		echo -e "$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$(NC)"; \
-		exit 1; \
-	fi
-	@rm -f $(TSHIRT_CATEGORY_TEX).bak
-#	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(TSHIRT_CATEGORY_DIST_DIR) $(TSHIRT_CATEGORY_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(TSHIRT_CATEGORY_DIST_DIR) $(TSHIRT_CATEGORY_TEX) >/dev/null
-	@cp $(TSHIRT_CATEGORY_PDF_BUILT) $(TSHIRT_CATEGORY_PDF)
-	@rm -rf $(TSHIRT_CATEGORY_DIST_DIR)
-	@echo -e "$(GREEN)✓ T-shirt category PDF built: $(DARKYELLOW)$(TSHIRT_CATEGORY_PDF)$(NC)"
-
-
-$(MULTIPHASE_SIM_PDF): $(MULTIPHASE_SIM_MD) $(DESIGN_LATEX_TEMPLATE) | $(BUILD_DIR)
-	@echo -e "\n$(DARKYELLOW)- Building Multi-phase simulation PDF via LaTeX report pipeline...$(NC)"
-	@mkdir -p $(MULTIPHASE_SIM_DIST_DIR)
-#	@echo -e "$(DARKYELLOW)  - Converting markdown source to LaTeX body...$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(MULTIPHASE_SIM_MD) -o $(MULTIPHASE_SIM_BODY_TEX)
-	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(MULTIPHASE_SIM_BODY_TEX)
-	@rm -f $(MULTIPHASE_SIM_BODY_TEX).bak
-#	@echo -e "$(DARKYELLOW)  - Injecting body into design-ideas LaTeX template...$(NC)"
-	@awk -v body="$(MULTIPHASE_SIM_BODY_TEX)" '\
-		/%%__DESIGN_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
-		{ print } \
-		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
-		$(DESIGN_LATEX_TEMPLATE) > $(MULTIPHASE_SIM_TEX)
-# Read the version from the first line of the markdown file (assuming it is in the format: "Version: x.y.z") 
-# and replace the version placeholder "{{VERSION}}" in the LaTeX template	
-	@VERSION_FROM_MD=$$(head -n 1 $(MULTIPHASE_SIM_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
-	sed -i.bak -E "s/\{\{VERSION\}\}/$$VERSION_FROM_MD/g" $(MULTIPHASE_SIM_TEX); \
-	if grep -q "$$VERSION_FROM_MD" $(MULTIPHASE_SIM_TEX); then \
-		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$(NC)"; \
-		exit 1; \
-	fi; 
-# Use the first heading in the markdown file as the title and replace the "{{TITLE}}" placeholder in the LaTeX template
-	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $(MULTIPHASE_SIM_MD) | sed -E 's/#\s*(.+)/\1/'); \
-	sed -i.bak -E "s/\{\{TITLE\}\}/$$TITLE_FROM_MD/g" $(MULTIPHASE_SIM_TEX); \
-	if grep -q "$$TITLE_FROM_MD" $(MULTIPHASE_SIM_TEX); then \
-		echo -e "$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$(NC)"; \
-		exit 1; \
-	fi
-	@rm -f $(MULTIPHASE_SIM_TEX).bak
-#	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(MULTIPHASE_SIM_DIST_DIR) $(MULTIPHASE_SIM_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(MULTIPHASE_SIM_DIST_DIR) $(MULTIPHASE_SIM_TEX) >/dev/null
-	@cp $(MULTIPHASE_SIM_PDF_BUILT) $(MULTIPHASE_SIM_PDF)
-	@rm -rf $(MULTIPHASE_SIM_DIST_DIR)
-	@echo -e "$(GREEN)✓ Multiphase simulation PDF built: $(DARKYELLOW)$(MULTIPHASE_SIM_PDF)$(NC)"
+$(eval $(call DESIGN_DOC_PDF_RULE,SPRINT_PLANNING,sprint-based planning))
+$(eval $(call DESIGN_DOC_PDF_RULE,TSHIRT_CATEGORY,t-shirt category))
+$(eval $(call DESIGN_DOC_PDF_RULE,MULTIPHASE_SIM,multi-phase simulation))
 
