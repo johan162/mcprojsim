@@ -8,7 +8,7 @@
 .EXTRA_PREREQS := $(firstword $(MAKEFILE_LIST))
 
 # Make behavior
-.DEFAULT_GOAL := pdf-design
+.DEFAULT_GOAL := pdf-design-docs
 
 # Get full path to bash
 SHELL := $(shell which bash)
@@ -168,9 +168,8 @@ clean: ## Clean all generated files
 	@rm -rf $(BUILD_DIR) $(SPRINT_PLANNING_BASENAME)-*.pdf $(TSHIRT_CATEGORY_BASENAME)-*.pdf $(MULTIPHASE_SIM_BASENAME)-*.pdf
 	@echo -e "$(GREEN)✓ Cleaned all generated files$(NC)"
 
-pdf-design: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) ## Build all the PDF versions of the design documents
+pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) ## Build all the PDF versions of the design documents
 	@:
-
 
 $(eval $(call DESIGN_DOC_PDF_RULE,SPRINT_PLANNING,sprint-based planning))
 $(eval $(call DESIGN_DOC_PDF_RULE,TSHIRT_CATEGORY,t-shirt category))
