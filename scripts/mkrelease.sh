@@ -541,7 +541,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [DRY-RUN] Would generate MCP Bundle for release assets"
 else
     echo "  ✓ Generating MCP Bundle for release assets..."
-    mkmcpbundle.sh || {
+    ./scripts/mkmcpbundle.sh || {
         print_warning_colored "MCP Bundle generation failed. Skipping bundle creation."
     }
 fi 
