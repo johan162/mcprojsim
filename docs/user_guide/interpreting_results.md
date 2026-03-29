@@ -331,6 +331,27 @@ In the sample output, `task_004: +0.4322` is the strongest driver, meaning its d
 
 Use sensitivity to prioritise where to invest in better estimates. Spending a day refining the estimate for a +0.45 task reduces overall schedule uncertainty far more than refining a +0.02 task. In the HTML report, the sensitivity analysis appears as a tornado chart for visual comparison.
 
+### Reading the tornado chart
+
+The tornado chart is a ranked horizontal bar chart of task sensitivity values.
+
+How to read it:
+
+1. **Bar length = influence strength**: longer bars mean stronger influence on total project duration.
+2. **Signed value = direction**: bars to the right of zero indicate positive correlation (longer task -> longer project), while bars to the left indicate negative correlation (uncommon inverse relationship).
+3. **Top bars = highest priority**: tasks are sorted by absolute correlation, so the most influential tasks are grouped as the key schedule drivers.
+4. **Colour = direction cue**: positive and negative bars use different colours to make direction easier to scan quickly.
+
+Scope note:
+
+- The chart is a prioritisation view, not a full dump of every task. It shows the most influential tasks (up to 15) to keep the chart readable.
+
+Interpretation rule of thumb:
+
+- Start at the top bar and work downward.
+- Focus first on tasks that are both long bars and operationally important (for example, low slack or high risk impact).
+- Treat small bars near zero as lower-leverage targets, even if their raw estimates look uncertain.
+
 
 
 ## Schedule slack
