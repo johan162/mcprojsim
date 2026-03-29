@@ -21,7 +21,6 @@ from mcprojsim.models.simulation import TwoPassDelta
 from mcprojsim.parsers import YAMLParser
 from mcprojsim.simulation.engine import DurationCache, SimulationEngine
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -35,8 +34,8 @@ def _make_config(
 ) -> Config:
     """Return a config with the requested constrained-scheduling mode."""
     cfg = Config.get_default()
-    cfg.constrained_scheduling.assignment_mode = (
-        ConstrainedSchedulingAssignmentMode(mode)
+    cfg.constrained_scheduling.assignment_mode = ConstrainedSchedulingAssignmentMode(
+        mode
     )
     cfg.constrained_scheduling.pass1_iterations = pass1_iterations
     return cfg
@@ -531,8 +530,10 @@ class TestTwoPassCLI:
                 "simulate",
                 str(fixture),
                 "--two-pass",
-                "--pass1-iterations", "50",
-                "-n", "100",
+                "--pass1-iterations",
+                "50",
+                "-n",
+                "100",
                 "-qq",
             ],
         )
@@ -553,8 +554,10 @@ class TestTwoPassCLI:
                 "simulate",
                 str(fixture),
                 "--two-pass",
-                "--pass1-iterations", "50",
-                "-n", "100",
+                "--pass1-iterations",
+                "50",
+                "-n",
+                "100",
             ],
         )
         assert result.exit_code == 0, result.output
@@ -573,7 +576,8 @@ class TestTwoPassCLI:
             [
                 "simulate",
                 str(fixture),
-                "-n", "50",
+                "-n",
+                "50",
             ],
         )
         assert result.exit_code == 0, result.output
@@ -596,10 +600,14 @@ class TestTwoPassCLI:
                 "simulate",
                 str(fixture),
                 "--two-pass",
-                "--pass1-iterations", "50",
-                "-n", "100",
-                "-f", "json",
-                "-o", str(output_base),
+                "--pass1-iterations",
+                "50",
+                "-n",
+                "100",
+                "-f",
+                "json",
+                "-o",
+                str(output_base),
                 "-qq",
             ],
         )
@@ -627,10 +635,14 @@ class TestTwoPassCLI:
                 "simulate",
                 str(fixture),
                 "--two-pass",
-                "--pass1-iterations", "50",
-                "-n", "100",
-                "-f", "csv",
-                "-o", str(output_base),
+                "--pass1-iterations",
+                "50",
+                "-n",
+                "100",
+                "-f",
+                "csv",
+                "-o",
+                str(output_base),
                 "-qq",
             ],
         )
@@ -655,10 +667,14 @@ class TestTwoPassCLI:
                 "simulate",
                 str(fixture),
                 "--two-pass",
-                "--pass1-iterations", "50",
-                "-n", "100",
-                "-f", "html",
-                "-o", str(output_base),
+                "--pass1-iterations",
+                "50",
+                "-n",
+                "100",
+                "-f",
+                "html",
+                "-o",
+                str(output_base),
                 "-qq",
             ],
         )
@@ -682,8 +698,10 @@ class TestTwoPassCLI:
                 "simulate",
                 str(fixture),
                 "--two-pass",
-                "--pass1-iterations", "75",
-                "-n", "100",
+                "--pass1-iterations",
+                "75",
+                "-n",
+                "100",
                 "-qq",
             ],
         )

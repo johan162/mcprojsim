@@ -230,7 +230,10 @@ class CSVExporter:
                 writer.writerow(["Pass-2 P95 (hours)", f"{tp.pass2_p95_hours:.2f}"])
                 writer.writerow(["Delta P95 (hours)", f"{tp.delta_p95_hours:+.2f}"])
                 writer.writerow(
-                    ["Delta Resource Wait (hours)", f"{tp.delta_resource_wait_hours:+.2f}"]
+                    [
+                        "Delta Resource Wait (hours)",
+                        f"{tp.delta_resource_wait_hours:+.2f}",
+                    ]
                 )
                 writer.writerow([])
                 writer.writerow(["Task Criticality Index (pass-1)", ""])

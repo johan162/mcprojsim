@@ -1204,7 +1204,10 @@ def simulate(
                             ["Pass-1 P95 (hours)", f"{tp.pass1_p95_hours:.2f}"],
                             ["Pass-2 P95 (hours)", f"{tp.pass2_p95_hours:.2f}"],
                             ["Delta P95 (hours)", f"{tp.delta_p95_hours:+.2f}"],
-                            ["Delta Res. Wait (hours)", f"{tp.delta_resource_wait_hours:+.2f}"],
+                            [
+                                "Delta Res. Wait (hours)",
+                                f"{tp.delta_resource_wait_hours:+.2f}",
+                            ],
                         ]
                         click.echo("\nTwo-Pass Scheduling Traceability:")
                         click.echo(

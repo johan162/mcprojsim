@@ -346,7 +346,9 @@ class SimulationResults(BaseModel):
                 "calendar_delay_time_hours": self.calendar_delay_time_hours,
             },
             "two_pass_traceability": (
-                self.two_pass_trace.to_dict() if self.two_pass_trace is not None else None
+                self.two_pass_trace.to_dict()
+                if self.two_pass_trace is not None
+                else None
             ),
         }
 

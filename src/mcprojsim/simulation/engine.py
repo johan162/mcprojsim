@@ -21,7 +21,11 @@ from mcprojsim.models.project import (
     TaskEstimate,
     convert_to_hours,
 )
-from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults, TwoPassDelta
+from mcprojsim.models.simulation import (
+    CriticalPathRecord,
+    SimulationResults,
+    TwoPassDelta,
+)
 from mcprojsim.simulation.distributions import DistributionSampler
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
 from mcprojsim.simulation.scheduler import TaskScheduler
@@ -245,7 +249,9 @@ class SimulationEngine:
         # ------- Pass 1: greedy baseline --------------------------------
         # Use a *copy* of the random state so pass-1 sampling is isolated.
         pass1_rs = np.random.RandomState(self.random_seed)
-        pass1_sampler = DistributionSampler(pass1_rs, self.config.get_lognormal_high_z_value())
+        pass1_sampler = DistributionSampler(
+            pass1_rs, self.config.get_lognormal_high_z_value()
+        )
         pass1_risk_eval = RiskEvaluator(pass1_rs)
         pass1_scheduler = TaskScheduler(project, pass1_rs, self.config)
 
@@ -273,8 +279,11 @@ class SimulationEngine:
                 _max_parallel,
                 constrained_diagnostics,
             ) = self._run_iteration_with_sampler(
-                project, pass1_scheduler, hours_per_day,
-                pass1_sampler, pass1_risk_eval,
+                project,
+                pass1_scheduler,
+                hours_per_day,
+                pass1_sampler,
+                pass1_risk_eval,
                 task_priority=None,
             )
 
@@ -283,7 +292,9 @@ class SimulationEngine:
                 p1_critical_path_freq[task_id] += 1
             p1_resource_wait.append(constrained_diagnostics["resource_wait_time_hours"])
             p1_resource_util.append(constrained_diagnostics["resource_utilization"])
-            p1_calendar_delay.append(constrained_diagnostics["calendar_delay_time_hours"])
+            p1_calendar_delay.append(
+                constrained_diagnostics["calendar_delay_time_hours"]
+            )
 
             # Cache sampled durations for paired replay in pass-2
             for task_id, dur in task_durations.items():
@@ -360,8 +371,11 @@ class SimulationEngine:
                 max_parallel,
                 constrained_diagnostics,
             ) = self._run_iteration_with_sampler(
-                project, pass2_scheduler, hours_per_day,
-                self.sampler, self.risk_evaluator,
+                project,
+                pass2_scheduler,
+                hours_per_day,
+                self.sampler,
+                self.risk_evaluator,
                 task_priority=task_ci,
                 cached_task_durations=cached_durations,
             )
@@ -613,8 +627,11 @@ class SimulationEngine:
     ]:
         """Run a single simulation iteration using the engine's own sampler."""
         return self._run_iteration_with_sampler(
-            project, scheduler, hours_per_day,
-            self.sampler, self.risk_evaluator,
+            project,
+            scheduler,
+            hours_per_day,
+            self.sampler,
+            self.risk_evaluator,
         )
 
     def _run_iteration_with_sampler(
@@ -670,7 +687,9 @@ class SimulationEngine:
                 estimate = self._resolve_estimate(task, project.project.distribution)
                 base_duration = sampler.sample(estimate)
                 unit = estimate.unit or EffortUnit.HOURS
-                base_duration_hours = convert_to_hours(base_duration, unit, hours_per_day)
+                base_duration_hours = convert_to_hours(
+                    base_duration, unit, hours_per_day
+                )
                 adjusted_duration = self._apply_uncertainty_factors(
                     task, base_duration_hours
                 )
