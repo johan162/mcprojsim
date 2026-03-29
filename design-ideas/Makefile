@@ -46,10 +46,8 @@ BOLD := \033[1m
 UNDERLINE := \033[4m
 
 # ============================================================================================
-# Variable configurations
+# Project Wide variable configurations
 # ============================================================================================
-
-# Build dir
 BUILD_DIR := .build
 BUILD_DESIGN_DIR := $(BUILD_DIR)/design-ideas
 SCRIPTS_DIR := ../scripts
@@ -78,16 +76,6 @@ $1_PDF_BUILT := $$($1_DIST_DIR)/$$($1_BASENAME)_report.pdf
 $1_PANDOC_OPTS := $3
 $1_EXTRA_DEPS := $4
 endef
-
-# ============================================================================================
-# Design document specific variable definitions
-# ============================================================================================
-
-SPRINT_PLANNING_PANDOC_FILTER := $(SCRIPTS_DIR)/pandoc_sprint_planning_table_widths.lua
-
-$(eval $(call DEFINE_DESIGN_DOC_VARS,SPRINT_PLANNING,sprint-based-planning,--lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER),$(SPRINT_PLANNING_PANDOC_FILTER)))
-$(eval $(call DEFINE_DESIGN_DOC_VARS,TSHIRT_CATEGORY,tshirt-categories,,))
-$(eval $(call DEFINE_DESIGN_DOC_VARS,MULTIPHASE_SIM,multiphase-simulation,,))
 
 # ============================================================================================
 # Help Target
@@ -155,6 +143,19 @@ $$($1_PDF): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR
 	rm -rf $$($1_DIST_DIR); \
 	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
+
+# ============================================================================================
+# Design document specific variable definitions
+# ============================================================================================
+SPRINT_PLANNING_PANDOC_FILTER := $(SCRIPTS_DIR)/pandoc_sprint_planning_table_widths.lua
+
+$(eval $(call DEFINE_DESIGN_DOC_VARS,SPRINT_PLANNING,sprint-based-planning,--lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER),$(SPRINT_PLANNING_PANDOC_FILTER)))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,TSHIRT_CATEGORY,tshirt-categories,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,MULTIPHASE_SIM,multiphase-simulation,,))
+
+# ============================================================================================
+# Makefile Targets
+# ============================================================================================
 
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
