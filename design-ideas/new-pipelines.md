@@ -13,7 +13,6 @@ Developer workstation                          GitHub
    ├─ smoke-test example projects
    ├─ poetry build + twine check
    ├─ bump version in pyproject.toml
-   ├─ generate CHANGELOG template → user edits
    ├─ git commit on develop
    ├─ git checkout main
    ├─ git merge --squash develop
