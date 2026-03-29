@@ -811,30 +811,30 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 622.35 hours (78 working days)
-Median (P50): 630.16 hours
-Std Dev: 82.72 hours
-Minimum: 387.98 hours
-Maximum: 890.12 hours
-Coefficient of Variation: 0.1329
-Skewness: 0.0753
-Excess Kurtosis: 0.4830
+Mean: 622.15 hours (78 working days)
+Median (P50): 628.65 hours
+Std Dev: 95.53 hours
+Minimum: 389.53 hours
+Maximum: 1153.71 hours
+Coefficient of Variation: 0.1535
+Skewness: 1.0737
+Excess Kurtosis: 4.4867
 
 Project Effort Statistical Summary:
-Mean: 174.90 person-hours (22 person-days)
-Median (P50): 175.84 person-hours
-Std Dev: 20.43 person-hours
-Minimum: 120.72 person-hours
-Maximum: 225.55 person-hours
-Coefficient of Variation: 0.1168
-Skewness: 0.0826
-Excess Kurtosis: -0.2307
+Mean: 173.36 person-hours (22 person-days)
+Median (P50): 172.34 person-hours
+Std Dev: 20.63 person-hours
+Minimum: 124.81 person-hours
+Maximum: 222.92 person-hours
+Coefficient of Variation: 0.1190
+Skewness: 0.1664
+Excess Kurtosis: -0.4446
 
 Calendar Time Confidence Intervals:
-  P50: 630.16 hours (79 working days)  (2026-07-21)
-  P80: 676.83 hours (85 working days)  (2026-07-29)
-  P90: 703.75 hours (88 working days)  (2026-08-03)
-  P95: 726.73 hours (91 working days)  (2026-08-06)
+  P50: 628.65 hours (79 working days)  (2026-07-21)
+  P80: 678.25 hours (85 working days)  (2026-07-29)
+  P90: 701.40 hours (88 working days)  (2026-08-03)
+  P95: 793.66 hours (100 working days)  (2026-08-19)
 ```
 
 Key observations:
@@ -991,30 +991,30 @@ Max Parallel Tasks: 1
 Schedule Mode: resource_constrained
 
 Calendar Time Statistical Summary:
-Mean: 1256.09 hours (158 working days)
-Median (P50): 1264.41 hours
-Std Dev: 132.44 hours
-Minimum: 962.44 hours
-Maximum: 1657.45 hours
-Coefficient of Variation: 0.1054
-Skewness: 0.2059
-Excess Kurtosis: -0.1495
+Mean: 1291.85 hours (162 working days)
+Median (P50): 1279.73 hours
+Std Dev: 142.76 hours
+Minimum: 939.51 hours
+Maximum: 1758.59 hours
+Coefficient of Variation: 0.1105
+Skewness: 0.3584
+Excess Kurtosis: 0.2064
 
 Project Effort Statistical Summary:
-Mean: 411.37 person-hours (52 person-days)
-Median (P50): 410.01 person-hours
-Std Dev: 40.80 person-hours
-Minimum: 321.07 person-hours
-Maximum: 509.50 person-hours
-Coefficient of Variation: 0.0992
-Skewness: 0.0893
-Excess Kurtosis: -0.6046
+Mean: 421.32 person-hours (53 person-days)
+Median (P50): 417.82 person-hours
+Std Dev: 41.05 person-hours
+Minimum: 316.16 person-hours
+Maximum: 539.46 person-hours
+Coefficient of Variation: 0.0974
+Skewness: 0.1775
+Excess Kurtosis: -0.3019
 
 Calendar Time Confidence Intervals:
-  P50: 1264.41 hours (159 working days)  (2026-12-10)
-  P80: 1348.09 hours (169 working days)  (2026-12-24)
-  P90: 1440.65 hours (181 working days)  (2027-01-11)
-  P95: 1466.63 hours (184 working days)  (2027-01-14)
+  P50: 1279.73 hours (160 working days)  (2026-12-11)
+  P80: 1440.25 hours (181 working days)  (2027-01-11)
+  P90: 1466.59 hours (184 working days)  (2027-01-14)
+  P95: 1514.26 hours (190 working days)  (2027-01-22)
 ```
 
 The generated YAML includes full `resources:` and `calendars:` sections. Use `--validate-only` to check your description before generating:
@@ -1760,7 +1760,3 @@ mcprojsim simulate examples/sample_project.yaml \
 | `nl_example.txt` | Natural language input (basic) |
 | `nl_constrained_example.txt` | Natural language input with resources |
 | `sample_config.yaml` | Custom configuration file |
-| `constrained_sickness_defaults_config.yaml` | Config fallback sickness probability for constrained scheduling |
-| `sickness_duration_dual_mode_config.yaml` | Shared sickness-duration config (mu/sigma) for constrained and sprint planning |
-| `constrained_sickness_duration_demo.yaml` | Constrained scheduling demo that consumes config sickness defaults |
-| `sprint_sickness_duration_demo.yaml` | Sprint-planning demo that consumes config sickness defaults |
