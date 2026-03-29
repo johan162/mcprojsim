@@ -1,3 +1,23 @@
+## [v0.9.1] - 2026-03-29
+
+Release Type: patch
+
+### 📋 Summary
+This release focuses on design-documentation workflow quality. maintainability and minor user guide updates
+It improves how design PDFs are built from Makefiles, standardizes templated PDF generation.
+
+### 📚 Documentation
+- Added a short README in design-ideas to explain scope and PDF build flow
+- Updated design proposals for multi-phase simulation and sensitivity analysis
+- Improved User Guide with section on how to interpret Tornado-Graphs
+
+### 🛠 Internal
+- Refactored design-document build logic into reusable Makefile macros for easier maintenance
+- Updated design-doc tooling structure to centralize shared LaTeX templating via design_template.tex
+- Improved top-level build workflow so design-document PDFs can be built directly from the main Makefile
+- Improved design-document PDF generation to use a dedicated design-ideas Makefile with cleaner orchestration
+- Improved generated design PDF artifact naming with versioned filenames in design-ideas/dist
+
 ## [v0.9.0] - 2026-03-28
 
 Release Type: minor
