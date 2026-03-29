@@ -134,19 +134,16 @@ $$($1_PDF): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__DESIGN_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$(DESIGN_LATEX_TEMPLATE) > $$($1_TEX)
-	@VERSION_FROM_MD=$$(head -n 1 $$($1_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
+	@VERSION_FROM_MD=$$$$(head -n 1 $$($1_MD) | sed -E 's/Version:\s*([0-9.]+)/\1/'); \
+	echo -e "$$(GREEN)✓ $$$$VERSION_FROM_MD $$(NC)"; \
 	sed -i.bak -E "s/\{\{VERSION\}\}/$$$$VERSION_FROM_MD/g" $$($1_TEX); \
-	if grep -q "$$$$VERSION_FROM_MD" $$($1_TEX); then \
-		echo -e "$$(GREEN)✓ Version number updated successfully in LaTeX template from markdown source$$(NC)"; \
-	else \
+	if ! grep -q "$$$$VERSION_FROM_MD" $$($1_TEX); then \
 		echo -e "$$(RED)✗ Error: Failed to update version number in LaTeX template from markdown source$$(NC)"; \
 		exit 1; \
 	fi
-	@TITLE_FROM_MD=$$(grep -m 1 '^# ' $$($1_MD) | sed -E 's/#\s*(.+)/\1/'); \
+	@TITLE_FROM_MD=$$$$(grep -m 1 '^# ' $$($1_MD) | sed -E 's/#\s*(.+)/\1/'); \
 	sed -i.bak -E "s/\{\{TITLE\}\}/$$$$TITLE_FROM_MD/g" $$($1_TEX); \
-	if grep -q "$$$$TITLE_FROM_MD" $$($1_TEX); then \
-		echo -e "$$(GREEN)✓ Title updated successfully in LaTeX template from markdown source$$(NC)"; \
-	else \
+	if ! grep -q "$$$$TITLE_FROM_MD" $$($1_TEX); then \
 		echo -e "$$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$$(NC)"; \
 		exit 1; \
 	fi
