@@ -157,14 +157,14 @@ SPRINT_PLANNING_PANDOC_FILTER := $(SCRIPTS_DIR)/pandoc_sprint_planning_table_wid
 $(eval $(call DEFINE_DESIGN_DOC_VARS,SPRINT_PLANNING,sprint-based-planning,--lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER),$(SPRINT_PLANNING_PANDOC_FILTER)))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,TSHIRT_CATEGORY,tshirt-categories,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,MULTIPHASE_SIM,multiphase-simulation,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,SENSITIVITY_ANALYSIS,sensitivity-analysis,,))
 
 # ============================================================================================
 # Makefile Targets
 # ============================================================================================
-
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
-	@$(call print_section,Build & Documentation,build|pdf-design)
+	@$(call print_section,Build & Documentation,build|pdf-design-docs|clean|really-clean)
 	@echo ""
 
 $(BUILD_DIR):
@@ -173,14 +173,19 @@ $(BUILD_DIR):
 $(STAMP_DIR):
 	@mkdir -p $(STAMP_DIR)
 
-clean: ## Clean all generated files
-	@rm -rf $(BUILD_DIR) $(STAMP_DIR) $(SPRINT_PLANNING_BASENAME)-*.pdf $(TSHIRT_CATEGORY_BASENAME)-*.pdf $(MULTIPHASE_SIM_BASENAME)-*.pdf
-	@echo -e "$(GREEN)✓ Cleaned all generated files$(NC)"
+clean: ## Clean all generated intermediate documentation files
+	@rm -rf $(BUILD_DIR) $(STAMP_DIR) 
+	@echo -e "$(GREEN)✓ Cleaned all generated documentation files$(NC)"
 
-pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) ## Build all the PDF versions of the design documents
+really-clean: ## Clean all generated intermediate documentation files and all generated PDFs in the design-ideas directory
+	@rm -rf $(BUILD_DIR) $(STAMP_DIR) $(SPRINT_PLANNING_BASENAME)-*.pdf $(TSHIRT_CATEGORY_BASENAME)-*.pdf $(MULTIPHASE_SIM_BASENAME)-*.pdf $(SENSITIVITY_ANALYSIS_BASENAME)-*.pdf $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF)
+	@echo -e "$(GREEN)✓ Really cleaned all generated documentation files and PDFs$(NC)"
+
+pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF) ## Build all the PDF versions of the design documents
 	@:
 
 $(eval $(call DESIGN_DOC_PDF_RULE,SPRINT_PLANNING,sprint-based planning))
 $(eval $(call DESIGN_DOC_PDF_RULE,TSHIRT_CATEGORY,t-shirt category))
 $(eval $(call DESIGN_DOC_PDF_RULE,MULTIPHASE_SIM,multi-phase simulation))
+$(eval $(call DESIGN_DOC_PDF_RULE,SENSITIVITY_ANALYSIS,sensitivity analysis))
 
