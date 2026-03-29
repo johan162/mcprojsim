@@ -159,7 +159,7 @@ $$($1_PDF): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR
 	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
 	cp $$($1_PDF_BUILT) $$($1_PDF); \
 	rm -rf $$($1_DIST_DIR); \
-	echo -e "$$(GREEN)✓ $2 PDF (Version:  $$$$VERSION_FROM_MD) built: $$(DARKYELLOW)$$($1_PDF)$$(NC)"
+	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$($1_PDF)$$(NC)"
 endef
 
 help: ## Show this help message
