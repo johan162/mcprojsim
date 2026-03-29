@@ -61,39 +61,33 @@ DESIGN_IDEAS_DIR := .
 # for each design document
 DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template.tex
 
-# Sprint planning design document specific variables
-SPRINT_PLANNING_BASENAME := $(DESIGN_IDEAS_DIR)/sprint-based-planning
-SPRINT_PLANNING_MD := $(DESIGN_IDEAS_DIR)/$(SPRINT_PLANNING_BASENAME).md
-SPRINT_PLANNING_PDF := $(DESIGN_IDEAS_DIR)/$(SPRINT_PLANNING_BASENAME).pdf
-SPRINT_PLANNING_DIST_DIR := $(BUILD_DESIGN_DIR)/$(SPRINT_PLANNING_BASENAME)
+# Derived variable generator for one design document.
+# Args:
+# 1: variable prefix, e.g. SPRINT_PLANNING
+# 2: unique basename, e.g. sprint-based-planning
+# 3: pandoc options (optional)
+# 4: extra dependencies (optional)
+define DEFINE_DESIGN_DOC_VARS
+$1_BASENAME := $2
+$1_MD := $(DESIGN_IDEAS_DIR)/$$($1_BASENAME).md
+$1_PDF := $(DESIGN_IDEAS_DIR)/$$($1_BASENAME).pdf
+$1_DIST_DIR := $(BUILD_DESIGN_DIR)/$$($1_BASENAME)
+$1_BODY_TEX := $$($1_DIST_DIR)/$$($1_BASENAME)_body.tex
+$1_TEX := $$($1_DIST_DIR)/$$($1_BASENAME)_report.tex
+$1_PDF_BUILT := $$($1_DIST_DIR)/$$($1_BASENAME)_report.pdf
+$1_PANDOC_OPTS := $3
+$1_EXTRA_DEPS := $4
+endef
+
+# ============================================================================================
+# Design document specific variable definitions
+# ============================================================================================
+
 SPRINT_PLANNING_PANDOC_FILTER := $(SCRIPTS_DIR)/pandoc_sprint_planning_table_widths.lua
-SPRINT_PLANNING_BODY_TEX := $(SPRINT_PLANNING_DIST_DIR)/$(SPRINT_PLANNING_BASENAME)_body.tex
-SPRINT_PLANNING_TEX := $(SPRINT_PLANNING_DIST_DIR)/$(SPRINT_PLANNING_BASENAME)_report.tex
-SPRINT_PLANNING_PDF_BUILT := $(SPRINT_PLANNING_DIST_DIR)/$(SPRINT_PLANNING_BASENAME)_report.pdf
-SPRINT_PLANNING_PANDOC_OPTS := --lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER)
-SPRINT_PLANNING_EXTRA_DEPS := $(SPRINT_PLANNING_PANDOC_FILTER)
 
-# T-shirt category design document specific variables
-TSHIRT_CATEGORY_BASENAME := $(DESIGN_IDEAS_DIR)/tshirt-categories
-TSHIRT_CATEGORY_MD := $(DESIGN_IDEAS_DIR)/$(TSHIRT_CATEGORY_BASENAME).md
-TSHIRT_CATEGORY_PDF := $(DESIGN_IDEAS_DIR)/$(TSHIRT_CATEGORY_BASENAME).pdf
-TSHIRT_CATEGORY_DIST_DIR := $(BUILD_DESIGN_DIR)/$(TSHIRT_CATEGORY_BASENAME)
-TSHIRT_CATEGORY_BODY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/$(TSHIRT_CATEGORY_BASENAME)_body.tex
-TSHIRT_CATEGORY_TEX := $(TSHIRT_CATEGORY_DIST_DIR)/$(TSHIRT_CATEGORY_BASENAME)_report.tex
-TSHIRT_CATEGORY_PDF_BUILT := $(TSHIRT_CATEGORY_DIST_DIR)/$(TSHIRT_CATEGORY_BASENAME)_report.pdf
-TSHIRT_CATEGORY_PANDOC_OPTS :=
-TSHIRT_CATEGORY_EXTRA_DEPS :=
-
-# Multi-phased simulaton design document specific variables
-MULTIPHASE_SIM_BASENAME := $(DESIGN_IDEAS_DIR)/multiphase-simulation
-MULTIPHASE_SIM_MD := $(DESIGN_IDEAS_DIR)/$(MULTIPHASE_SIM_BASENAME).md
-MULTIPHASE_SIM_PDF := $(DESIGN_IDEAS_DIR)/$(MULTIPHASE_SIM_BASENAME).pdf
-MULTIPHASE_SIM_DIST_DIR := $(BUILD_DESIGN_DIR)/$(MULTIPHASE_SIM_BASENAME)
-MULTIPHASE_SIM_BODY_TEX := $(MULTIPHASE_SIM_DIST_DIR)/$(MULTIPHASE_SIM_BASENAME)_body.tex
-MULTIPHASE_SIM_TEX := $(MULTIPHASE_SIM_DIST_DIR)/$(MULTIPHASE_SIM_BASENAME)_report.tex
-MULTIPHASE_SIM_PDF_BUILT := $(MULTIPHASE_SIM_DIST_DIR)/$(MULTIPHASE_SIM_BASENAME)_report.pdf
-MULTIPHASE_SIM_PANDOC_OPTS :=
-MULTIPHASE_SIM_EXTRA_DEPS :=
+$(eval $(call DEFINE_DESIGN_DOC_VARS,SPRINT_PLANNING,sprint-based-planning,--lua-filter=$(SPRINT_PLANNING_PANDOC_FILTER),$(SPRINT_PLANNING_PANDOC_FILTER)))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,TSHIRT_CATEGORY,tshirt-categories,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,MULTIPHASE_SIM,multiphase-simulation,,))
 
 # ============================================================================================
 # Help Target
