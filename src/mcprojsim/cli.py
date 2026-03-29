@@ -744,6 +744,25 @@ def cli() -> None:
         "baseline payload in JSON output when sprint planning history is available."
     ),
 )
+@click.option(
+    "--two-pass",
+    is_flag=True,
+    default=False,
+    help=(
+        "Enable criticality-two-pass scheduling for this run. "
+        "Only has effect when resource-constrained scheduling is active. "
+        "Overrides the config file assignment_mode setting."
+    ),
+)
+@click.option(
+    "--pass1-iterations",
+    type=int,
+    default=None,
+    help=(
+        "Number of pass-1 iterations for criticality ranking when --two-pass is used. "
+        "Defaults to the config value (1000). Capped to --iterations."
+    ),
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -762,6 +781,8 @@ def simulate(
     velocity_model: Optional[str],
     no_sickness: bool,
     include_historic_base: bool,
+    two_pass: bool,
+    pass1_iterations: Optional[int],
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     if quiet < 2:
@@ -842,6 +863,8 @@ def simulate(
             random_seed=seed,
             config=cfg,
             show_progress=quiet == 0,
+            two_pass=two_pass,
+            pass1_iterations=pass1_iterations,
         )
         results, elapsed_seconds, peak_memory_bytes = _run_simulation_with_metrics(
             engine, project
@@ -1165,6 +1188,34 @@ def simulate(
                             )
                         )
 
+                    two_pass_trace = getattr(results, "two_pass_trace", None)
+                    if two_pass_trace is not None and two_pass_trace.enabled:
+                        tp = two_pass_trace
+                        tp_rows = [
+                            ["Pass-1 Iterations", str(tp.pass1_iterations)],
+                            ["Pass-2 Iterations", str(tp.pass2_iterations)],
+                            ["Ranking Method", tp.ranking_method],
+                            ["Pass-1 Mean (hours)", f"{tp.pass1_mean_hours:.2f}"],
+                            ["Pass-2 Mean (hours)", f"{tp.pass2_mean_hours:.2f}"],
+                            ["Delta Mean (hours)", f"{tp.delta_mean_hours:+.2f}"],
+                            ["Pass-1 P80 (hours)", f"{tp.pass1_p80_hours:.2f}"],
+                            ["Pass-2 P80 (hours)", f"{tp.pass2_p80_hours:.2f}"],
+                            ["Delta P80 (hours)", f"{tp.delta_p80_hours:+.2f}"],
+                            ["Pass-1 P95 (hours)", f"{tp.pass1_p95_hours:.2f}"],
+                            ["Pass-2 P95 (hours)", f"{tp.pass2_p95_hours:.2f}"],
+                            ["Delta P95 (hours)", f"{tp.delta_p95_hours:+.2f}"],
+                            ["Delta Res. Wait (hours)", f"{tp.delta_resource_wait_hours:+.2f}"],
+                        ]
+                        click.echo("\nTwo-Pass Scheduling Traceability:")
+                        click.echo(
+                            _tabulate(
+                                tp_rows,
+                                headers=["Metric", "Value"],
+                                tablefmt="simple_outline",
+                                disable_numparse=True,
+                            )
+                        )
+
             else:
                 # Plain text output
                 click.echo("\nCalendar Time Confidence Intervals:")
@@ -1240,6 +1291,33 @@ def simulate(
                         click.echo(
                             "  Calendar Delay Contribution: "
                             f"{calendar_delay_time_hours:.2f} hours"
+                        )
+
+                    two_pass_trace = getattr(results, "two_pass_trace", None)
+                    if two_pass_trace is not None and two_pass_trace.enabled:
+                        tp = two_pass_trace
+                        click.echo("\nTwo-Pass Scheduling Traceability:")
+                        click.echo(
+                            f"  Pass-1 iterations: {tp.pass1_iterations} | "
+                            f"Pass-2 iterations: {tp.pass2_iterations}"
+                        )
+                        click.echo(
+                            f"  Mean: {tp.pass1_mean_hours:.2f}h (pass-1) → "
+                            f"{tp.pass2_mean_hours:.2f}h (pass-2) "
+                            f"[delta {tp.delta_mean_hours:+.2f}h]"
+                        )
+                        click.echo(
+                            f"  P80:  {tp.pass1_p80_hours:.2f}h (pass-1) → "
+                            f"{tp.pass2_p80_hours:.2f}h (pass-2) "
+                            f"[delta {tp.delta_p80_hours:+.2f}h]"
+                        )
+                        click.echo(
+                            f"  P95:  {tp.pass1_p95_hours:.2f}h (pass-1) → "
+                            f"{tp.pass2_p95_hours:.2f}h (pass-2) "
+                            f"[delta {tp.delta_p95_hours:+.2f}h]"
+                        )
+                        click.echo(
+                            f"  Resource wait delta: {tp.delta_resource_wait_hours:+.2f}h"
                         )
 
             # Probability of target date

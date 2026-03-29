@@ -64,6 +64,7 @@ class TaskScheduler:
         return_diagnostics: Literal[False] = False,
         start_date: date | None = None,
         hours_per_day: float = 8.0,
+        task_priority: Dict[str, float] | None = None,
     ) -> Dict[str, Dict[str, float]]: ...
 
     @overload
@@ -75,6 +76,7 @@ class TaskScheduler:
         return_diagnostics: Literal[True],
         start_date: date | None = None,
         hours_per_day: float = 8.0,
+        task_priority: Dict[str, float] | None = None,
     ) -> tuple[Dict[str, Dict[str, float]], Dict[str, float]]: ...
 
     def schedule_tasks(
@@ -85,6 +87,7 @@ class TaskScheduler:
         return_diagnostics: bool = False,
         start_date: date | None = None,
         hours_per_day: float = 8.0,
+        task_priority: Dict[str, float] | None = None,
     ) -> (
         Dict[str, Dict[str, float]]
         | tuple[Dict[str, Dict[str, float]], Dict[str, float]]
@@ -100,6 +103,10 @@ class TaskScheduler:
                 Defaults to project metadata start date when omitted.
             hours_per_day: Working hours per day fallback when calendar does not
                 define explicit daily work hours.
+            task_priority: Optional per-task priority scores (higher = dispatched
+                first). When provided and resource constraints are active, ready
+                tasks are ordered by descending priority then ascending task ID.
+                Has no effect when resource constraints are inactive.
 
         Returns:
             Dictionary mapping task IDs to their schedule info:
@@ -111,6 +118,7 @@ class TaskScheduler:
                 task_durations,
                 start_date=effective_start_date,
                 hours_per_day=hours_per_day,
+                task_priority=task_priority,
             )
             if return_diagnostics:
                 return schedule, diagnostics
@@ -157,6 +165,7 @@ class TaskScheduler:
         *,
         start_date: date,
         hours_per_day: float,
+        task_priority: Dict[str, float] | None = None,
     ) -> tuple[Dict[str, Dict[str, float]], Dict[str, float]]:
         """Schedule tasks with dependency and resource constraints.
 
@@ -166,6 +175,15 @@ class TaskScheduler:
         - per-task ``max_resources``
         - per-task ``min_experience_level``
         - exclusive resource assignment (one task at a time)
+
+        Args:
+            task_durations: Sampled task durations in hours.
+            start_date: Project start date for calendar-aware scheduling.
+            hours_per_day: Working hours per day.
+            task_priority: Optional mapping of task_id -> priority score.
+                When provided, ready tasks are sorted by descending priority
+                score with task_id as tie-break (criticality-two-pass policy).
+                When ``None`` the default greedy ID-order policy is used.
         """
         schedule: Dict[str, Dict[str, float]] = {}
         sorted_tasks = self._topological_sort()
@@ -206,16 +224,26 @@ class TaskScheduler:
                     free_resources.add(resource_name)
             active = [entry for entry in active if entry[0] > current_time + 1e-9]
 
-            # Find tasks ready by dependency constraints
-            ready = [
+            # Find tasks ready by dependency constraints and sort by policy.
+            # Default (greedy_single_pass): ascending task_id.
+            # With task_priority map (criticality_two_pass): descending priority,
+            # then ascending task_id as deterministic tie-break.
+            ready_unsorted = [
                 task_id
-                for task_id in sorted(remaining)
+                for task_id in remaining
                 if all(
                     dep_id in schedule
                     and schedule[dep_id]["end"] <= current_time + 1e-9
                     for dep_id in self.task_map[task_id].dependencies
                 )
             ]
+            if task_priority is not None:
+                ready = sorted(
+                    ready_unsorted,
+                    key=lambda tid: (-task_priority.get(tid, 0.0), tid),
+                )
+            else:
+                ready = sorted(ready_unsorted)
 
             started_any = False
             for task_id in ready:

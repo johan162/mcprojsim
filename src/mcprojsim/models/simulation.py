@@ -26,6 +26,84 @@ class CriticalPathRecord(BaseModel):
         return " -> ".join(self.path)
 
 
+class TwoPassDelta(BaseModel):
+    """Traceability payload for two-pass constrained scheduling results."""
+
+    enabled: bool = False
+    pass1_iterations: int = 0
+    pass2_iterations: int = 0
+    ranking_method: str = "criticality_index"
+    # Pass-1 aggregate statistics
+    pass1_mean_hours: float = 0.0
+    pass1_p50_hours: float = 0.0
+    pass1_p80_hours: float = 0.0
+    pass1_p90_hours: float = 0.0
+    pass1_p95_hours: float = 0.0
+    pass1_resource_wait_hours: float = 0.0
+    pass1_resource_utilization: float = 0.0
+    pass1_calendar_delay_hours: float = 0.0
+    # Pass-2 aggregate statistics (full run)
+    pass2_mean_hours: float = 0.0
+    pass2_p50_hours: float = 0.0
+    pass2_p80_hours: float = 0.0
+    pass2_p90_hours: float = 0.0
+    pass2_p95_hours: float = 0.0
+    pass2_resource_wait_hours: float = 0.0
+    pass2_resource_utilization: float = 0.0
+    pass2_calendar_delay_hours: float = 0.0
+    # Delta = pass-2 minus pass-1 (negative = improvement)
+    delta_mean_hours: float = 0.0
+    delta_p50_hours: float = 0.0
+    delta_p80_hours: float = 0.0
+    delta_p90_hours: float = 0.0
+    delta_p95_hours: float = 0.0
+    delta_resource_wait_hours: float = 0.0
+    delta_resource_utilization: float = 0.0
+    delta_calendar_delay_hours: float = 0.0
+    # Per-task criticality indices from pass-1
+    task_criticality_index: Dict[str, float] = Field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the traceability payload as a plain dictionary."""
+        return {
+            "enabled": self.enabled,
+            "pass1_iterations": self.pass1_iterations,
+            "pass2_iterations": self.pass2_iterations,
+            "ranking_method": self.ranking_method,
+            "pass1": {
+                "mean_hours": self.pass1_mean_hours,
+                "p50_hours": self.pass1_p50_hours,
+                "p80_hours": self.pass1_p80_hours,
+                "p90_hours": self.pass1_p90_hours,
+                "p95_hours": self.pass1_p95_hours,
+                "resource_wait_hours": self.pass1_resource_wait_hours,
+                "resource_utilization": self.pass1_resource_utilization,
+                "calendar_delay_hours": self.pass1_calendar_delay_hours,
+            },
+            "pass2": {
+                "mean_hours": self.pass2_mean_hours,
+                "p50_hours": self.pass2_p50_hours,
+                "p80_hours": self.pass2_p80_hours,
+                "p90_hours": self.pass2_p90_hours,
+                "p95_hours": self.pass2_p95_hours,
+                "resource_wait_hours": self.pass2_resource_wait_hours,
+                "resource_utilization": self.pass2_resource_utilization,
+                "calendar_delay_hours": self.pass2_calendar_delay_hours,
+            },
+            "delta": {
+                "mean_hours": self.delta_mean_hours,
+                "p50_hours": self.delta_p50_hours,
+                "p80_hours": self.delta_p80_hours,
+                "p90_hours": self.delta_p90_hours,
+                "p95_hours": self.delta_p95_hours,
+                "resource_wait_hours": self.delta_resource_wait_hours,
+                "resource_utilization": self.delta_resource_utilization,
+                "calendar_delay_hours": self.delta_calendar_delay_hours,
+            },
+            "task_criticality_index": self.task_criticality_index,
+        }
+
+
 class SimulationResults(BaseModel):
     """Results from Monte Carlo simulation."""
 
@@ -68,6 +146,9 @@ class SimulationResults(BaseModel):
         default_factory=lambda: np.array([]),
         description="Per-iteration total person-effort in hours",
     )
+
+    # Two-pass scheduling traceability (populated only when two-pass mode is active)
+    two_pass_trace: Optional["TwoPassDelta"] = None
 
     mean: float = 0.0
     median: float = 0.0
@@ -264,6 +345,9 @@ class SimulationResults(BaseModel):
                 "resource_utilization": self.resource_utilization,
                 "calendar_delay_time_hours": self.calendar_delay_time_hours,
             },
+            "two_pass_traceability": (
+                self.two_pass_trace.to_dict() if self.two_pass_trace is not None else None
+            ),
         }
 
     def hours_to_working_days(self, hours: float) -> int:

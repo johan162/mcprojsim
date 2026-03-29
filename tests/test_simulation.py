@@ -1715,6 +1715,7 @@ class TestSimulationEngine:
                 return_diagnostics=False,
                 start_date=None,
                 hours_per_day=8.0,
+                task_priority=None,
             ):
                 return {"task_001": {"start": 0.0, "end": 1.0, "duration": 1.0}}, {
                     "resource_wait_time_hours": 0.0,
