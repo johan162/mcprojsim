@@ -1214,6 +1214,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#reading-the-tornado-chart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the tornado chart
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2219,6 +2230,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#reading-the-tornado-chart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the tornado chart
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3027,6 +3049,25 @@ $$</p>
 </ul>
 <h3 id="practical-use_4">Practical use<a class="headerlink" href="#practical-use_4" title="Permanent link">&para;</a></h3>
 <p>Use sensitivity to prioritise where to invest in better estimates. Spending a day refining the estimate for a +0.45 task reduces overall schedule uncertainty far more than refining a +0.02 task. In the HTML report, the sensitivity analysis appears as a tornado chart for visual comparison.</p>
+<h3 id="reading-the-tornado-chart">Reading the tornado chart<a class="headerlink" href="#reading-the-tornado-chart" title="Permanent link">&para;</a></h3>
+<p>The tornado chart is a ranked horizontal bar chart of task sensitivity values.</p>
+<p>How to read it:</p>
+<ol>
+<li><strong>Bar length = influence strength</strong>: longer bars mean stronger influence on total project duration.</li>
+<li><strong>Signed value = direction</strong>: bars to the right of zero indicate positive correlation (longer task -&gt; longer project), while bars to the left indicate negative correlation (uncommon inverse relationship).</li>
+<li><strong>Top bars = highest priority</strong>: tasks are sorted by absolute correlation, so the most influential tasks are grouped as the key schedule drivers.</li>
+<li><strong>Colour = direction cue</strong>: positive and negative bars use different colours to make direction easier to scan quickly.</li>
+</ol>
+<p>Scope note:</p>
+<ul>
+<li>The chart is a prioritisation view, not a full dump of every task. It shows the most influential tasks (up to 15) to keep the chart readable.</li>
+</ul>
+<p>Interpretation rule of thumb:</p>
+<ul>
+<li>Start at the top bar and work downward.</li>
+<li>Focus first on tasks that are both long bars and operationally important (for example, low slack or high risk impact).</li>
+<li>Treat small bars near zero as lower-leverage targets, even if their raw estimates look uncertain.</li>
+</ul>
 <h2 id="schedule-slack">Schedule slack<a class="headerlink" href="#schedule-slack" title="Permanent link">&para;</a></h2>
 <p>Schedule slack (also called total float) shows how much each task can be delayed without delaying the overall project. It is calculated using a backward-pass Critical Path Method (CPM) and then averaged across all Monte Carlo iterations.</p>
 <h3 id="definition_4">Definition<a class="headerlink" href="#definition_4" title="Permanent link">&para;</a></h3>
