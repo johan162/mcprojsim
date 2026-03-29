@@ -50,6 +50,7 @@ UNDERLINE := \033[4m
 # ============================================================================================
 BUILD_DIR := .build
 BUILD_DESIGN_DIR := $(BUILD_DIR)/design-ideas
+STAMP_DIR := .makefile-stamps
 SCRIPTS_DIR := ../scripts
 DESIGN_IDEAS_DIR := .
 
@@ -69,6 +70,7 @@ define DEFINE_DESIGN_DOC_VARS
 $1_BASENAME := $2
 $1_MD := $(DESIGN_IDEAS_DIR)/$$($1_BASENAME).md
 $1_PDF := $(DESIGN_IDEAS_DIR)/$$($1_BASENAME).pdf
+$1_STAMP := $(STAMP_DIR)/$$($1_BASENAME)-pdf.stamp
 $1_DIST_DIR := $(BUILD_DESIGN_DIR)/$$($1_BASENAME)
 $1_BODY_TEX := $$($1_DIST_DIR)/$$($1_BASENAME)_body.tex
 $1_TEX := $$($1_DIST_DIR)/$$($1_BASENAME)_report.tex
@@ -105,7 +107,9 @@ endef
 # The generated PDF will be placed in the specified distribution directory and named according to the provided variables.
 # ============================================================================================
 define DESIGN_DOC_PDF_RULE
-$$($1_PDF): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR)
+$$($1_PDF): $$($1_STAMP)
+
+$$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR) $$(STAMP_DIR)
 	@echo -e "\n$$(DARKYELLOW)- Building $2 PDF via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$($1_DIST_DIR)
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $$($1_PANDOC_OPTS) $$($1_MD) -o $$($1_BODY_TEX)
@@ -140,6 +144,7 @@ $$($1_PDF): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR
 	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
 	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_DIST_DIR) $$($1_TEX) >/dev/null; \
 	cp $$($1_PDF_BUILT) $$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
+	touch $$($1_STAMP); \
 	rm -rf $$($1_DIST_DIR); \
 	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
@@ -165,8 +170,11 @@ help: ## Show this help message
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
+$(STAMP_DIR):
+	@mkdir -p $(STAMP_DIR)
+
 clean: ## Clean all generated files
-	@rm -rf $(BUILD_DIR) $(SPRINT_PLANNING_BASENAME)-*.pdf $(TSHIRT_CATEGORY_BASENAME)-*.pdf $(MULTIPHASE_SIM_BASENAME)-*.pdf
+	@rm -rf $(BUILD_DIR) $(STAMP_DIR) $(SPRINT_PLANNING_BASENAME)-*.pdf $(TSHIRT_CATEGORY_BASENAME)-*.pdf $(MULTIPHASE_SIM_BASENAME)-*.pdf
 	@echo -e "$(GREEN)✓ Cleaned all generated files$(NC)"
 
 pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) ## Build all the PDF versions of the design documents
