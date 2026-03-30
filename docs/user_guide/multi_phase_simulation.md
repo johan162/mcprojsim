@@ -29,15 +29,15 @@ Pass 1 (baseline)          Pass 2 (priority-ordered)
 Greedy dispatch            Criticality-ranked dispatch
 N = pass1_iterations       N = iterations (full run)
 
-┌─────────┐                ┌─────────────────────────┐
-│ Sample  │                │ Replay pass-1 durations  │  ← paired replay
+┌──────────┐               ┌──────────────────────────┐
+│ Sample   │               │ Replay pass-1 durations  │  ← paired replay
 │ durations│               │ (first pass1_iterations) │
-└────┬────┘                │ Sample fresh for the     │
+└────┬─────┘               │ Sample fresh for the     │
      │                     │ remaining iterations     │
-     ▼                     └──────────┬──────────────┘
-┌──────────────┐                      │
-│ Build        │                      ▼
-│ criticality  │          ┌────────────────────────┐
+     ▼                     └───────────┬──────────────┘
+┌──────────────┐                       │
+│ Build        │                       ▼
+│ criticality  │          ┌─────────────────────────┐
 │ index CI(t)  │          │ Sort ready tasks by     │
 │ per task     │─────────▶│ descending CI → earlier │
 └──────────────┘          │ dispatch of critical    │
@@ -45,13 +45,13 @@ N = pass1_iterations       N = iterations (full run)
                           └──────────┬──────────────┘
                                      │
                                      ▼
-                          ┌────────────────────────┐
+                          ┌─────────────────────────┐
                           │ TwoPassDelta:           │
                           │  pass-1 stats           │
                           │  pass-2 stats           │
                           │  Δ = pass-2 − pass-1    │
                           │  CI per task            │
-                          └────────────────────────┘
+                          └─────────────────────────┘
 ```
 
 **Pass 1 — criticality baseline**  
