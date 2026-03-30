@@ -98,7 +98,15 @@ class _FakeResults:
 
 
 class _FakeEngine:
-    def __init__(self, iterations, random_seed, config, show_progress):
+    def __init__(
+        self,
+        iterations,
+        random_seed,
+        config,
+        show_progress,
+        two_pass=False,
+        pass1_iterations=None,
+    ):
         pass
 
     def run(self, project):
@@ -267,7 +275,15 @@ class TestSimulateTargetDate:
                 return None
 
         class NoStartEngine:
-            def __init__(self, iterations, random_seed, config, show_progress):
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ):
                 pass
 
             def run(self, project):

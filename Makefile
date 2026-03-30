@@ -160,6 +160,7 @@ USER_GUIDE_DOCS := \
 	docs/user_guide/project_files.md  \
 	docs/user_guide/sprint_planning.md  \
 	docs/user_guide/constrained.md  \
+	docs/user_guide/multi_phase_simulation.md  \
 	docs/user_guide/running_simulations.md  \
 	docs/user_guide/interpreting_results.md  \
 	docs/user_guide/configuration.md  \

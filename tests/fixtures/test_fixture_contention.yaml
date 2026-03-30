@@ -1,0 +1,54 @@
+project:
+  name: "contention-benchmark"
+  description: "Resource-contention fixture for two-pass acceptance tests. A-chain (A1->A2->A3) is the dominant critical path and competes with B1 for dev-senior."
+  start_date: "2025-01-06"
+  hours_per_day: 8
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "A1"
+    name: "Critical start"
+    estimate: { low: 9, expected: 10, high: 12 }
+    resources: ["dev-senior"]
+
+  - id: "A2"
+    name: "Critical middle"
+    estimate: { low: 13, expected: 15, high: 18 }
+    dependencies: ["A1"]
+    resources: ["dev-senior"]
+
+  - id: "A3"
+    name: "Critical end"
+    estimate: { low: 9, expected: 10, high: 12 }
+    dependencies: ["A2"]
+    resources: ["dev-senior"]
+
+  - id: "B1"
+    name: "Parallel start (competes for dev-senior)"
+    estimate: { low: 18, expected: 20, high: 24 }
+    resources: ["dev-senior"]
+
+  - id: "B2"
+    name: "Parallel continuation"
+    estimate: { low: 9, expected: 10, high: 12 }
+    dependencies: ["B1"]
+    resources: ["dev-junior"]
+
+  - id: "C1"
+    name: "Join both branches"
+    estimate: { low: 4, expected: 5, high: 7 }
+    dependencies: ["A3", "B2"]
+    resources: ["dev-junior"]
+
+  - id: "C2"
+    name: "Final integration"
+    estimate: { low: 7, expected: 8, high: 10 }
+    dependencies: ["C1"]
+    resources: ["dev-junior"]
+
+resources:
+  - name: "dev-senior"
+    experience_level: 3
+
+  - name: "dev-junior"
+    experience_level: 1

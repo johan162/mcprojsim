@@ -166,6 +166,11 @@ class JSONExporter:
                 "resource_utilization": results.resource_utilization,
                 "calendar_delay_time_hours": results.calendar_delay_time_hours,
             },
+            "two_pass_traceability": (
+                results.two_pass_trace.to_dict()
+                if results.two_pass_trace is not None
+                else None
+            ),
             "histogram": {
                 "bin_edges": bin_edges.tolist(),
                 "counts": counts.tolist(),

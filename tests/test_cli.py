@@ -49,6 +49,8 @@ class TestCli:
                 random_seed: int | None,
                 config,
                 show_progress: bool,
+                two_pass: bool = False,
+                pass1_iterations: int | None = None,
             ) -> None:
                 captured["iterations"] = iterations
                 captured["random_seed"] = random_seed
@@ -115,7 +117,15 @@ class TestCli:
         captured: dict[str, Any] = {}
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 captured["engine_config"] = config
 
             def run(self, project):
@@ -218,7 +228,15 @@ class TestCli:
         captured: dict[str, Any] = {}
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 captured["config"] = config
 
             def run(self, project):
@@ -326,7 +344,15 @@ class TestCli:
         captured: dict[str, Any] = {}
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 captured["config"] = config
 
             def run(self, project):
@@ -407,7 +433,15 @@ class TestCli:
         captured: dict[str, Any] = {}
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 captured["config"] = config
 
             def run(self, project):
@@ -484,7 +518,15 @@ class TestCli:
         runner = CliRunner()
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):
@@ -561,7 +603,15 @@ class TestCli:
         runner = CliRunner()
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):
@@ -693,7 +743,15 @@ class TestCli:
         captured: dict[str, Any] = {}
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):
@@ -826,7 +884,15 @@ class TestCli:
         captured: dict[str, Any] = {}
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):
@@ -962,7 +1028,15 @@ class TestCli:
         runner = CliRunner()
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):
@@ -1067,7 +1141,15 @@ class TestCli:
         runner = CliRunner()
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
         class FakeResults:
@@ -1258,6 +1340,8 @@ class TestCli:
                 random_seed: int | None,
                 config,
                 show_progress: bool,
+                two_pass: bool = False,
+                pass1_iterations: int | None = None,
             ) -> None:
                 captured["show_progress"] = show_progress
 
@@ -1497,7 +1581,15 @@ tasks:
         captured_project: list[Any] = []
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):
@@ -1645,7 +1737,15 @@ tasks:
         captured_project: list[Any] = []
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):
@@ -1752,7 +1852,15 @@ tasks:
         captured_project: list[Any] = []
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):
@@ -1869,7 +1977,15 @@ tasks:
         captured_project: list[Any] = []
 
         class FakeEngine:
-            def __init__(self, iterations, random_seed, config, show_progress) -> None:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
                 pass
 
             def run(self, project):

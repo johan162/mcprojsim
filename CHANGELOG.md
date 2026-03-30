@@ -1,3 +1,29 @@
+## [v0.10.0] - 2026-03-30
+
+Release Type: minor
+
+### 📋 Summary
+This release introduces two-pass criticality-aware constrained scheduling to improve outcomes in resource-contention scenarios. It also adds end-to-end examples, traceability outputs, and supporting test and documentation updates.
+
+### ✨ Additions
+- Added two-pass criticality-aware constrained scheduling mode with pass-1 criticality indexing and pass-2 priority-ordered dispatch
+- Added example files used for two-pass and contention-oriented documentation walkthroughs
+
+### 🐛 Bug Fixes
+- Fixed a race condition in parallel test execution
+
+### 📚 Documentation
+- Added a dedicated User Guide section for multi-phase two-pass simulation with usage examples and interpretation guidance
+- Updated development and design documentation related to release workflow and build setup
+
+### 🛠 Internal
+- Added two-pass simulation fixtures, integration tests, and dedicated documentation for multi-phase simulation workflows
+- Refactored and normalized modified files with style and import cleanup from code review follow-ups
+- Expanded automated coverage for two-pass behavior across CLI and exporter paths
+- Made it explicit that we expect `GNU make` v4.3+
+- New design ideas for CI/CD release workflow proposals
+
+
 ## [v0.9.1] - 2026-03-29
 
 Release Type: patch

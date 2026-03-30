@@ -1,6 +1,7 @@
 """Monte Carlo simulation engine."""
 
 from collections import Counter
+import logging
 import sys
 from typing import Dict, Optional, TextIO
 
@@ -8,6 +9,7 @@ import numpy as np
 
 from mcprojsim.config import (
     Config,
+    ConstrainedSchedulingAssignmentMode,
     DEFAULT_SIMULATION_ITERATIONS,
     EffortUnit,
     EstimateRangeConfig,
@@ -19,10 +21,42 @@ from mcprojsim.models.project import (
     TaskEstimate,
     convert_to_hours,
 )
-from mcprojsim.models.simulation import CriticalPathRecord, SimulationResults
+from mcprojsim.models.simulation import (
+    CriticalPathRecord,
+    SimulationResults,
+    TwoPassDelta,
+)
 from mcprojsim.simulation.distributions import DistributionSampler
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
 from mcprojsim.simulation.scheduler import TaskScheduler
+
+logger = logging.getLogger(__name__)
+
+
+class DurationCache:
+    """Cache of sampled task durations from pass-1 for deterministic replay in pass-2.
+
+    Keys are ``(iteration_index, task_id)``; values are sampled durations in hours.
+    """
+
+    def __init__(self) -> None:
+        self._cache: dict[tuple[int, str], float] = {}
+
+    def store(self, iteration_idx: int, task_id: str, duration_hours: float) -> None:
+        """Store a sampled duration for a given iteration and task."""
+        self._cache[(iteration_idx, task_id)] = duration_hours
+
+    def retrieve(self, iteration_idx: int, task_id: str) -> float:
+        """Return the cached duration; raises KeyError if not found."""
+        key = (iteration_idx, task_id)
+        if key not in self._cache:
+            raise KeyError(
+                f"No cached duration for task '{task_id}' in iteration {iteration_idx}"
+            )
+        return self._cache[key]
+
+    def __len__(self) -> int:
+        return len(self._cache)
 
 
 class SimulationEngine:
@@ -34,6 +68,8 @@ class SimulationEngine:
         random_seed: Optional[int] = None,
         config: Optional[Config] = None,
         show_progress: bool = True,
+        two_pass: bool = False,
+        pass1_iterations: Optional[int] = None,
     ):
         """Initialize simulation engine.
 
@@ -42,6 +78,10 @@ class SimulationEngine:
             random_seed: Random seed for reproducibility
             config: Configuration object
             show_progress: Whether to show progress updates
+            two_pass: Enable criticality-two-pass scheduling (overrides config).
+                Only has effect when resource-constrained scheduling is active.
+            pass1_iterations: Number of pass-1 iterations for criticality ranking.
+                Overrides config value when provided.  Capped to ``iterations``.
         """
         self.iterations = iterations
         self.random_seed = random_seed
@@ -49,6 +89,14 @@ class SimulationEngine:
         self.show_progress = show_progress
         self.progress_stream: TextIO = sys.stdout
         self._progress_is_tty = self.progress_stream.isatty()
+
+        # Two-pass CLI override takes precedence over config.
+        if two_pass:
+            self.config.constrained_scheduling.assignment_mode = (
+                ConstrainedSchedulingAssignmentMode.CRITICALITY_TWO_PASS
+            )
+        if pass1_iterations is not None:
+            self.config.constrained_scheduling.pass1_iterations = pass1_iterations
 
         # Initialize random state
         self.random_state = np.random.RandomState(random_seed)
@@ -62,12 +110,41 @@ class SimulationEngine:
     def run(self, project: Project) -> SimulationResults:
         """Run Monte Carlo simulation for project.
 
+        When ``assignment_mode`` is ``criticality_two_pass`` and resource
+        constraints are active, the engine performs two passes:
+
+        - **Pass 1** (pass1_iterations): greedy single-pass to build criticality
+          indices.  Task durations are stored in a :class:`DurationCache` for
+          deterministic replay.
+        - **Pass 2** (self.iterations): criticality-prioritized scheduling.
+          The first pass1_iterations use cached durations; remaining iterations
+          use fresh samples.
+
+        The final ``SimulationResults`` contains pass-2 statistics and an
+        optional :class:`TwoPassDelta` traceability block when two-pass is used.
+
         Args:
             project: Project to simulate
 
         Returns:
             Simulation results
         """
+        use_two_pass = (
+            self.config.constrained_scheduling.assignment_mode
+            == ConstrainedSchedulingAssignmentMode.CRITICALITY_TWO_PASS
+            and len(project.resources) > 0
+        )
+
+        if use_two_pass:
+            return self._run_two_pass(project)
+        return self._run_single_pass(project)
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _run_single_pass(self, project: Project) -> SimulationResults:
+        """Run the standard (single-pass greedy) simulation."""
         scheduler = TaskScheduler(project, self.random_state, self.config)
         hours_per_day = project.project.hours_per_day
 
@@ -91,9 +168,7 @@ class SimulationEngine:
         calendar_delay_time_all: list[float] = []
         last_reported_progress = -1
 
-        # Run iterations
         for iteration in range(self.iterations):
-            # Run single iteration
             (
                 duration,
                 task_durations,
@@ -109,7 +184,6 @@ class SimulationEngine:
             project_durations[iteration] = duration
             max_parallel_overall = max(max_parallel_overall, max_parallel)
 
-            # Store task durations and risk impacts
             for task_id, task_duration in task_durations.items():
                 task_durations_all[task_id].append(task_duration)
             for task_id, impact in task_risk_impacts.items():
@@ -125,45 +199,317 @@ class SimulationEngine:
                 constrained_diagnostics["calendar_delay_time_hours"]
             )
 
-            # Store slack
             for task_id, slack_val in slack.items():
                 task_slack_accum[task_id].append(slack_val)
 
-            # Update critical path frequency
             for task_id in critical_path:
                 critical_path_frequency[task_id] += 1
 
-            # Update full critical path sequence frequency
             critical_path_sequences.update(critical_paths)
 
             if self.show_progress:
-                completed_iterations = iteration + 1
-                current_progress = (completed_iterations * 100) // self.iterations
-                progress_bucket = (current_progress // 10) * 10
-                should_report = (
-                    progress_bucket > last_reported_progress and progress_bucket > 0
-                ) or (
-                    completed_iterations == self.iterations
-                    and last_reported_progress < 100
+                last_reported_progress = self._maybe_report_progress(
+                    iteration, self.iterations, last_reported_progress
                 )
-                if should_report:
-                    reported_progress = (
-                        100
-                        if completed_iterations == self.iterations
-                        else progress_bucket
-                    )
-                    self._report_progress(reported_progress, completed_iterations)
-                    last_reported_progress = reported_progress
 
         if self.show_progress and self._progress_is_tty:
             self.progress_stream.write("\n")
             self.progress_stream.flush()
 
+        return self._build_results(
+            project,
+            project_durations,
+            task_durations_all,
+            task_risk_impacts_all,
+            project_risk_impacts_all,
+            task_slack_accum,
+            critical_path_frequency,
+            critical_path_sequences,
+            max_parallel_overall,
+            resource_wait_time_all,
+            resource_utilization_all,
+            calendar_delay_time_all,
+        )
+
+    def _run_two_pass(self, project: Project) -> SimulationResults:
+        """Run two-pass criticality-aware constrained simulation."""
+        hours_per_day = project.project.hours_per_day
+        effective_p1_iters = min(
+            self.config.constrained_scheduling.pass1_iterations,
+            self.iterations,
+        )
+
+        if effective_p1_iters < 100 and self.iterations >= 100:
+            logger.warning(
+                "two-pass: pass1_iterations=%d is less than 100; "
+                "criticality ranking may be noisy.",
+                effective_p1_iters,
+            )
+
+        # ------- Pass 1: greedy baseline --------------------------------
+        # Use a *copy* of the random state so pass-1 sampling is isolated.
+        pass1_rs = np.random.RandomState(self.random_seed)
+        pass1_sampler = DistributionSampler(
+            pass1_rs, self.config.get_lognormal_high_z_value()
+        )
+        pass1_risk_eval = RiskEvaluator(pass1_rs)
+        pass1_scheduler = TaskScheduler(project, pass1_rs, self.config)
+
+        p1_durations_arr = np.zeros(effective_p1_iters)
+        p1_critical_path_freq: Dict[str, int] = {task.id: 0 for task in project.tasks}
+        p1_resource_wait: list[float] = []
+        p1_resource_util: list[float] = []
+        p1_calendar_delay: list[float] = []
+        duration_cache = DurationCache()
+
+        if self.show_progress:
+            self.progress_stream.write("Pass 1: computing criticality indices\n")
+            self.progress_stream.flush()
+
+        last_reported_p1 = -1
+        for iteration in range(effective_p1_iters):
+            (
+                duration,
+                task_durations,
+                critical_path,
+                _critical_paths,
+                _task_risk_impacts,
+                _proj_risk_impact,
+                _slack,
+                _max_parallel,
+                constrained_diagnostics,
+            ) = self._run_iteration_with_sampler(
+                project,
+                pass1_scheduler,
+                hours_per_day,
+                pass1_sampler,
+                pass1_risk_eval,
+                task_priority=None,
+            )
+
+            p1_durations_arr[iteration] = duration
+            for task_id in critical_path:
+                p1_critical_path_freq[task_id] += 1
+            p1_resource_wait.append(constrained_diagnostics["resource_wait_time_hours"])
+            p1_resource_util.append(constrained_diagnostics["resource_utilization"])
+            p1_calendar_delay.append(
+                constrained_diagnostics["calendar_delay_time_hours"]
+            )
+
+            # Cache sampled durations for paired replay in pass-2
+            for task_id, dur in task_durations.items():
+                duration_cache.store(iteration, task_id, dur)
+
+            if self.show_progress:
+                completed = iteration + 1
+                current_progress = (completed * 100) // effective_p1_iters
+                bucket = (current_progress // 10) * 10
+                if (bucket > last_reported_p1 and bucket > 0) or (
+                    completed == effective_p1_iters and last_reported_p1 < 100
+                ):
+                    rep = 100 if completed == effective_p1_iters else bucket
+                    self._report_progress(rep, completed)
+                    last_reported_p1 = rep
+
+        if self.show_progress and self._progress_is_tty:
+            self.progress_stream.write("\n")
+            self.progress_stream.flush()
+
+        # Compute criticality indices from pass-1
+        task_ci: Dict[str, float] = {}
+        for task_id, count in p1_critical_path_freq.items():
+            ci = count / effective_p1_iters
+            assert 0.0 <= ci <= 1.0, f"CI out of range for {task_id}: {ci}"
+            task_ci[task_id] = ci
+
+        # ------- Pass 2: priority-ordered scheduling --------------------
+        # Use the main random_state (same seed path) for pass-2.
+        pass2_scheduler = TaskScheduler(project, self.random_state, self.config)
+
+        project_durations = np.zeros(self.iterations)
+        task_durations_all: Dict[str, list[float]] = {
+            task.id: [] for task in project.tasks
+        }
+        task_risk_impacts_all: Dict[str, list[float]] = {
+            task.id: [] for task in project.tasks
+        }
+        project_risk_impacts_all: list[float] = []
+        task_slack_accum: Dict[str, list[float]] = {
+            task.id: [] for task in project.tasks
+        }
+        critical_path_frequency: Dict[str, int] = {task.id: 0 for task in project.tasks}
+        critical_path_sequences: Counter[tuple[str, ...]] = Counter()
+        max_parallel_overall = 0
+        resource_wait_time_all: list[float] = []
+        resource_utilization_all: list[float] = []
+        calendar_delay_time_all: list[float] = []
+
+        if self.show_progress:
+            self.progress_stream.write("Pass 2: priority-ordered scheduling\n")
+            self.progress_stream.flush()
+
+        last_reported_p2 = -1
+        for iteration in range(self.iterations):
+            # For pass-1 iterations, replay cached durations (paired replay).
+            # For remaining iterations, sample fresh.
+            if iteration < effective_p1_iters:
+                cached_durations = {
+                    task_id: duration_cache.retrieve(iteration, task_id)
+                    for task_id in task_ci
+                }
+            else:
+                cached_durations = None
+
+            (
+                duration,
+                task_durations,
+                critical_path,
+                critical_paths,
+                task_risk_impacts,
+                project_risk_impact,
+                slack,
+                max_parallel,
+                constrained_diagnostics,
+            ) = self._run_iteration_with_sampler(
+                project,
+                pass2_scheduler,
+                hours_per_day,
+                self.sampler,
+                self.risk_evaluator,
+                task_priority=task_ci,
+                cached_task_durations=cached_durations,
+            )
+
+            project_durations[iteration] = duration
+            max_parallel_overall = max(max_parallel_overall, max_parallel)
+
+            for task_id, task_duration in task_durations.items():
+                task_durations_all[task_id].append(task_duration)
+            for task_id, impact in task_risk_impacts.items():
+                task_risk_impacts_all[task_id].append(impact)
+            project_risk_impacts_all.append(project_risk_impact)
+            resource_wait_time_all.append(
+                constrained_diagnostics["resource_wait_time_hours"]
+            )
+            resource_utilization_all.append(
+                constrained_diagnostics["resource_utilization"]
+            )
+            calendar_delay_time_all.append(
+                constrained_diagnostics["calendar_delay_time_hours"]
+            )
+            for task_id, slack_val in slack.items():
+                task_slack_accum[task_id].append(slack_val)
+            for task_id in critical_path:
+                critical_path_frequency[task_id] += 1
+            critical_path_sequences.update(critical_paths)
+
+            if self.show_progress:
+                completed = iteration + 1
+                current_progress = (completed * 100) // self.iterations
+                bucket = (current_progress // 10) * 10
+                if (bucket > last_reported_p2 and bucket > 0) or (
+                    completed == self.iterations and last_reported_p2 < 100
+                ):
+                    rep = 100 if completed == self.iterations else bucket
+                    self._report_progress(rep, completed)
+                    last_reported_p2 = rep
+
+        if self.show_progress and self._progress_is_tty:
+            self.progress_stream.write("\n")
+            self.progress_stream.flush()
+
+        # Build main results from pass-2
+        results = self._build_results(
+            project,
+            project_durations,
+            task_durations_all,
+            task_risk_impacts_all,
+            project_risk_impacts_all,
+            task_slack_accum,
+            critical_path_frequency,
+            critical_path_sequences,
+            max_parallel_overall,
+            resource_wait_time_all,
+            resource_utilization_all,
+            calendar_delay_time_all,
+        )
+
+        # Compute pass-delta traceability
+        p1_mean = float(np.mean(p1_durations_arr))
+        p1_p50 = float(np.percentile(p1_durations_arr, 50))
+        p1_p80 = float(np.percentile(p1_durations_arr, 80))
+        p1_p90 = float(np.percentile(p1_durations_arr, 90))
+        p1_p95 = float(np.percentile(p1_durations_arr, 95))
+        p1_rw = float(np.mean(p1_resource_wait))
+        p1_ru = float(np.mean(p1_resource_util))
+        p1_cd = float(np.mean(p1_calendar_delay))
+
+        p2_mean = results.mean
+        p2_p50 = results.percentile(50)
+        p2_p80 = results.percentile(80)
+        p2_p90 = results.percentile(90)
+        p2_p95 = results.percentile(95)
+        p2_rw = results.resource_wait_time_hours
+        p2_ru = results.resource_utilization
+        p2_cd = results.calendar_delay_time_hours
+
+        results.two_pass_trace = TwoPassDelta(
+            enabled=True,
+            pass1_iterations=effective_p1_iters,
+            pass2_iterations=self.iterations,
+            ranking_method="criticality_index",
+            pass1_mean_hours=p1_mean,
+            pass1_p50_hours=p1_p50,
+            pass1_p80_hours=p1_p80,
+            pass1_p90_hours=p1_p90,
+            pass1_p95_hours=p1_p95,
+            pass1_resource_wait_hours=p1_rw,
+            pass1_resource_utilization=p1_ru,
+            pass1_calendar_delay_hours=p1_cd,
+            pass2_mean_hours=p2_mean,
+            pass2_p50_hours=p2_p50,
+            pass2_p80_hours=p2_p80,
+            pass2_p90_hours=p2_p90,
+            pass2_p95_hours=p2_p95,
+            pass2_resource_wait_hours=p2_rw,
+            pass2_resource_utilization=p2_ru,
+            pass2_calendar_delay_hours=p2_cd,
+            delta_mean_hours=p2_mean - p1_mean,
+            delta_p50_hours=p2_p50 - p1_p50,
+            delta_p80_hours=p2_p80 - p1_p80,
+            delta_p90_hours=p2_p90 - p1_p90,
+            delta_p95_hours=p2_p95 - p1_p95,
+            delta_resource_wait_hours=p2_rw - p1_rw,
+            delta_resource_utilization=p2_ru - p1_ru,
+            delta_calendar_delay_hours=p2_cd - p1_cd,
+            task_criticality_index=task_ci,
+        )
+
+        return results
+
+    def _build_results(
+        self,
+        project: Project,
+        project_durations: np.ndarray,
+        task_durations_all: Dict[str, list[float]],
+        task_risk_impacts_all: Dict[str, list[float]],
+        project_risk_impacts_all: list[float],
+        task_slack_accum: Dict[str, list[float]],
+        critical_path_frequency: Dict[str, int],
+        critical_path_sequences: "Counter[tuple[str, ...]]",
+        max_parallel_overall: int,
+        resource_wait_time_all: list[float],
+        resource_utilization_all: list[float],
+        calendar_delay_time_all: list[float],
+    ) -> SimulationResults:
+        """Assemble a :class:`SimulationResults` from accumulated per-iteration data."""
+        n_iterations = len(project_durations)
+
         stored_critical_paths = [
             CriticalPathRecord(
                 path=path,
                 count=count,
-                frequency=count / self.iterations,
+                frequency=count / n_iterations,
             )
             for path, count in sorted(
                 critical_path_sequences.items(),
@@ -171,19 +517,16 @@ class SimulationEngine:
             )[: self.config.simulation.max_stored_critical_paths]
         ]
 
-        # Compute mean slack per task
         mean_slack = {
             task_id: float(np.mean(values))
             for task_id, values in task_slack_accum.items()
         }
 
-        # Create results object
         task_durations_arrays = {
             task_id: np.array(durations)
             for task_id, durations in task_durations_all.items()
         }
 
-        # Compute per-iteration total effort (sum of all task durations)
         if task_durations_arrays:
             effort_durations = np.sum(
                 np.stack(list(task_durations_arrays.values())), axis=0
@@ -192,7 +535,7 @@ class SimulationEngine:
             effort_durations = project_durations.copy()
 
         results = SimulationResults(
-            iterations=self.iterations,
+            iterations=n_iterations,
             project_name=project.project.name,
             durations=project_durations,
             task_durations=task_durations_arrays,
@@ -201,7 +544,7 @@ class SimulationEngine:
             random_seed=self.random_seed,
             probability_red_threshold=project.project.probability_red_threshold,
             probability_green_threshold=project.project.probability_green_threshold,
-            hours_per_day=hours_per_day,
+            hours_per_day=project.project.hours_per_day,
             start_date=project.project.start_date,
             task_slack=mean_slack,
             risk_impacts={
@@ -222,20 +565,32 @@ class SimulationEngine:
             calendar_delay_time_hours=float(np.mean(calendar_delay_time_all)),
         )
 
-        # Calculate statistics
         results.calculate_statistics()
 
-        # Calculate percentiles
         for p in project.project.confidence_levels:
             results.percentile(p)
             results.effort_percentile(p)
 
-        # Calculate sensitivity correlations
         from mcprojsim.analysis.sensitivity import SensitivityAnalyzer
 
         results.sensitivity = SensitivityAnalyzer.calculate_correlations(results)
 
         return results
+
+    def _maybe_report_progress(
+        self, iteration: int, total: int, last_reported: int
+    ) -> int:
+        """Update progress display if a 10% bucket boundary has been crossed."""
+        completed = iteration + 1
+        current_progress = (completed * 100) // total
+        bucket = (current_progress // 10) * 10
+        if (bucket > last_reported and bucket > 0) or (
+            completed == total and last_reported < 100
+        ):
+            rep = 100 if completed == total else bucket
+            self._report_progress(rep, completed)
+            return rep
+        return last_reported
 
     def _report_progress(self, progress: int, completed_iterations: int) -> None:
         """Report simulation progress.
@@ -270,6 +625,35 @@ class SimulationEngine:
         int,
         Dict[str, float],
     ]:
+        """Run a single simulation iteration using the engine's own sampler."""
+        return self._run_iteration_with_sampler(
+            project,
+            scheduler,
+            hours_per_day,
+            self.sampler,
+            self.risk_evaluator,
+        )
+
+    def _run_iteration_with_sampler(
+        self,
+        project: Project,
+        scheduler: TaskScheduler,
+        hours_per_day: float,
+        sampler: DistributionSampler,
+        risk_evaluator: RiskEvaluator,
+        task_priority: Dict[str, float] | None = None,
+        cached_task_durations: Dict[str, float] | None = None,
+    ) -> tuple[
+        float,
+        Dict[str, float],
+        set[str],
+        list[tuple[str, ...]],
+        Dict[str, float],
+        float,
+        Dict[str, float],
+        int,
+        Dict[str, float],
+    ]:
         """Run a single simulation iteration.
 
         All durations are computed in hours (the canonical internal unit).
@@ -278,6 +662,11 @@ class SimulationEngine:
             project: Project to simulate
             scheduler: Task scheduler
             hours_per_day: Working hours per day
+            sampler: Distribution sampler to use for this iteration
+            risk_evaluator: Risk evaluator to use for this iteration
+            task_priority: Optional criticality-index map for priority ordering.
+            cached_task_durations: When provided, use these task durations instead
+                of sampling (paired-replay for pass-2).
 
         Returns:
             Tuple of (project_duration, task_durations, critical_path_tasks,
@@ -287,31 +676,29 @@ class SimulationEngine:
         task_durations: Dict[str, float] = {}
         task_risk_impacts: Dict[str, float] = {}
 
-        # Sample and adjust task durations
-        for task in project.tasks:
-            # Resolve T-shirt size / story points to actual estimate if needed
-            estimate = self._resolve_estimate(task, project.project.distribution)
-
-            # Sample base duration (in the estimate's native unit)
-            base_duration = self.sampler.sample(estimate)
-
-            # Convert to hours (the canonical internal unit)
-            unit = estimate.unit or EffortUnit.HOURS
-            base_duration_hours = convert_to_hours(base_duration, unit, hours_per_day)
-
-            # Apply uncertainty factors
-            adjusted_duration = self._apply_uncertainty_factors(
-                task, base_duration_hours
-            )
-
-            # Apply task-level risks (impacts converted to hours)
-            risk_impact = self.risk_evaluator.evaluate_risks(
-                task.risks, adjusted_duration, hours_per_day
-            )
-            final_duration = adjusted_duration + risk_impact
-
-            task_durations[task.id] = final_duration
-            task_risk_impacts[task.id] = risk_impact
+        if cached_task_durations is not None:
+            # Paired replay: reuse pass-1 sampled durations exactly.
+            for task in project.tasks:
+                task_durations[task.id] = cached_task_durations[task.id]
+                task_risk_impacts[task.id] = 0.0
+        else:
+            # Sample and adjust task durations
+            for task in project.tasks:
+                estimate = self._resolve_estimate(task, project.project.distribution)
+                base_duration = sampler.sample(estimate)
+                unit = estimate.unit or EffortUnit.HOURS
+                base_duration_hours = convert_to_hours(
+                    base_duration, unit, hours_per_day
+                )
+                adjusted_duration = self._apply_uncertainty_factors(
+                    task, base_duration_hours
+                )
+                risk_impact = risk_evaluator.evaluate_risks(
+                    task.risks, adjusted_duration, hours_per_day
+                )
+                final_duration = adjusted_duration + risk_impact
+                task_durations[task.id] = final_duration
+                task_risk_impacts[task.id] = risk_impact
 
         # Schedule tasks (all durations in hours)
         use_resource_constraints = len(project.resources) > 0
@@ -321,6 +708,7 @@ class SimulationEngine:
             return_diagnostics=True,
             start_date=project.project.start_date,
             hours_per_day=hours_per_day,
+            task_priority=task_priority,
         )
         schedule, constrained_diagnostics = schedule_with_diagnostics
 
@@ -334,7 +722,7 @@ class SimulationEngine:
         project_duration = max(info["end"] for info in schedule.values())
 
         # Apply project-level risks (impacts converted to hours)
-        project_risk_impact = self.risk_evaluator.evaluate_risks(
+        project_risk_impact = risk_evaluator.evaluate_risks(
             project.project_risks, project_duration, hours_per_day
         )
         project_duration += project_risk_impact

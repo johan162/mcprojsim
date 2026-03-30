@@ -493,6 +493,77 @@ HTML_TEMPLATE = """
     </div>
     {% endif %}
 
+    {% if two_pass_trace and two_pass_trace.enabled %}
+    <div class="section">
+        <h3>Two-Pass Scheduling Traceability</h3>
+        <table>
+            <thead>
+                <tr><th>Metric</th><th class="header-center">Pass 1</th><th class="header-center">Pass 2</th><th class="header-center">Delta</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Iterations</td>
+                    <td class="value-center">{{ two_pass_trace.pass1_iterations }}</td>
+                    <td class="value-center">{{ two_pass_trace.pass2_iterations }}</td>
+                    <td class="value-center">—</td>
+                </tr>
+                <tr>
+                    <td>Mean (hours)</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass1_mean_hours) }}</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass2_mean_hours) }}</td>
+                    <td class="value-center">{{ "%+.2f"|format(two_pass_trace.delta_mean_hours) }}</td>
+                </tr>
+                <tr>
+                    <td>P50 (hours)</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass1_p50_hours) }}</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass2_p50_hours) }}</td>
+                    <td class="value-center">{{ "%+.2f"|format(two_pass_trace.delta_p50_hours) }}</td>
+                </tr>
+                <tr>
+                    <td>P80 (hours)</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass1_p80_hours) }}</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass2_p80_hours) }}</td>
+                    <td class="value-center">{{ "%+.2f"|format(two_pass_trace.delta_p80_hours) }}</td>
+                </tr>
+                <tr>
+                    <td>P90 (hours)</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass1_p90_hours) }}</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass2_p90_hours) }}</td>
+                    <td class="value-center">{{ "%+.2f"|format(two_pass_trace.delta_p90_hours) }}</td>
+                </tr>
+                <tr>
+                    <td>P95 (hours)</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass1_p95_hours) }}</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass2_p95_hours) }}</td>
+                    <td class="value-center">{{ "%+.2f"|format(two_pass_trace.delta_p95_hours) }}</td>
+                </tr>
+                <tr>
+                    <td>Resource Wait (hours)</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass1_resource_wait_hours) }}</td>
+                    <td class="value-center">{{ "%.2f"|format(two_pass_trace.pass2_resource_wait_hours) }}</td>
+                    <td class="value-center">{{ "%+.2f"|format(two_pass_trace.delta_resource_wait_hours) }}</td>
+                </tr>
+            </tbody>
+        </table>
+        {% if two_pass_trace.task_criticality_index %}
+        <h4>Task Criticality Index (Pass 1)</h4>
+        <table>
+            <thead>
+                <tr><th>Task ID</th><th class="header-center">CI (pass-1)</th></tr>
+            </thead>
+            <tbody>
+                {% for task_id, ci in two_pass_trace.task_criticality_index.items()|sort(attribute='1', reverse=True) %}
+                <tr>
+                    <td>{{ task_id }}</td>
+                    <td class="value-center">{{ "%.4f"|format(ci) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="section">
         <h3>Critical Path Analysis</h3>
         <table>
@@ -919,6 +990,7 @@ class HTMLExporter:
             resource_wait_time_hours=results.resource_wait_time_hours,
             resource_utilization=results.resource_utilization,
             calendar_delay_time_hours=results.calendar_delay_time_hours,
+            two_pass_trace=results.two_pass_trace,
             mean=results.mean,
             mean_working_days=math.ceil(results.mean / results.hours_per_day),
             median=results.median,

@@ -147,7 +147,7 @@ $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_D
 	cp $$($1_PDF_BUILT) $$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
 	touch $$($1_STAMP); \
 	rm -rf $$($1_BUILD_DIR); \
-	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DIST_DIR)/$$(DARKGRAY)$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
+	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
 
 # ============================================================================================

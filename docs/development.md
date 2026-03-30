@@ -251,10 +251,31 @@ The default CI test workflow excludes heavy tests with `-m "not heavy"`.
 The Makefile provides a single entry point for common project tasks.
 Some targets are thin wrappers while others contain real workflow logic.
 
+### GNU Make version requirement
+
+The Makefile uses `.EXTRA_PREREQS`, which requires **GNU Make 4.3 or later**.
+
+macOS ships with GNU Make 3.81 due to GPL licensing constraints, so the `.EXTRA_PREREQS` line is silently ignored on stock macOS.
+Install a current version via Homebrew and update your PATH:
+
+```bash
+brew install make
+```
+
+Then add the Homebrew-managed `make` to the front of your PATH (add to `~/.zshrc`, `~/.bashrc`, or equivalent):
+
+```bash
+export PATH="$(brew --prefix make)/libexec/gnubin:$PATH"
+```
+
+After that, `make --version` should report 4.3 or higher.
+Linux development environments are not affected; they typically ship a sufficiently recent GNU Make already.
+
 ### Important general behavior
 
 The Makefile currently:
 
+- requires GNU Make 4.3+ (see note above for macOS)
 - requires Poetry to be installed
 - requires either Podman or Docker to be installed
 - checks whether Podman or Docker is running
@@ -894,6 +915,12 @@ The script expects:
 - maintainer pauses to edit changelog text
 - final smoke test
 
+Before running `mkrelease.sh`, consider using the **`changelog-entry`** Copilot skill to draft the
+`CHANGELOG.md` entry from the commit history.
+Invoke it in a GitHub Copilot chat session with `/changelog-entry`.
+The skill produces a draft in the expected format; review and edit it before `mkrelease.sh` prompts
+you to finalise the changelog.
+
 #### Phase 4: release execution
 - commit release preparation on `develop`
 - checkout `main`
@@ -1306,7 +1333,7 @@ The release automation is intentionally conservative and stops rather than guess
 - use `make container-build` for everyday image builds
 - never commit internal CA certificates
 - always dry-run `mkrelease.sh` before a real release
-- treat `CHANGELOG.md` as release input, not as an afterthought
+- treat `CHANGELOG.md` as release input, not as an afterthought; use the `changelog-entry` Copilot skill (`/changelog-entry`) to draft the entry before running `mkrelease.sh`
 
 ## Appendix: common commands cheat sheet
 

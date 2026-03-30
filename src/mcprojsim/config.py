@@ -18,6 +18,13 @@ class EffortUnit(str, Enum):
     WEEKS = "weeks"
 
 
+class ConstrainedSchedulingAssignmentMode(str, Enum):
+    """Constrained scheduling dispatch policy."""
+
+    GREEDY_SINGLE_PASS = "greedy_single_pass"
+    CRITICALITY_TWO_PASS = "criticality_two_pass"
+
+
 # This file defines the configuration schema and default values for the Monte Carlo Project Simulator.
 # This is where we centralize all configurable parameters, including uncertainty factors, T-shirt size mappings,
 # and simulation settings. The SimulationEngine will use this configuration to adjust task durations and apply
@@ -53,6 +60,8 @@ DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK = 0.058
 DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU = 0.693
 DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA = 0.75
 DEFAULT_CONSTRAINED_SCHEDULING_SICKNESS_PROB = 0.0
+DEFAULT_CONSTRAINED_SCHEDULING_ASSIGNMENT_MODE = "greedy_single_pass"
+DEFAULT_CONSTRAINED_SCHEDULING_PASS1_ITERATIONS = 1000
 DEFAULT_PROBABILITY_RED_THRESHOLD = 0.50
 DEFAULT_PROBABILITY_GREEN_THRESHOLD = 0.90
 DEFAULT_LOGNORMAL_HIGH_PERCENTILE = 95
@@ -437,6 +446,24 @@ class ConstrainedSchedulingConfig(BaseModel):
             "Default per-resource sickness probability used by constrained "
             "scheduling when a resource does not specify sickness_prob in the "
             "project file."
+        ),
+    )
+    assignment_mode: ConstrainedSchedulingAssignmentMode = Field(
+        default=ConstrainedSchedulingAssignmentMode.GREEDY_SINGLE_PASS,
+        description=(
+            "Scheduling dispatch policy for constrained mode. "
+            "'greedy_single_pass' uses deterministic ID-order greedy dispatch (default). "
+            "'criticality_two_pass' runs a pass-1 baseline to rank tasks by criticality "
+            "index and re-schedules in pass-2 with those ranks as priority."
+        ),
+    )
+    pass1_iterations: int = Field(
+        default=DEFAULT_CONSTRAINED_SCHEDULING_PASS1_ITERATIONS,
+        gt=0,
+        description=(
+            "Number of pass-1 iterations used to compute criticality indices when "
+            "assignment_mode is 'criticality_two_pass'. Capped to total simulation "
+            "iterations if larger. Must be > 0."
         ),
     )
 

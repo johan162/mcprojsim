@@ -209,6 +209,40 @@ class CSVExporter:
                     ]
                 )
 
+            two_pass_trace = getattr(results, "two_pass_trace", None)
+            if two_pass_trace is not None and two_pass_trace.enabled:
+                tp = two_pass_trace
+                writer.writerow([])
+                writer.writerow(["Two-Pass Scheduling Traceability", ""])
+                writer.writerow(["Pass-1 Iterations", tp.pass1_iterations])
+                writer.writerow(["Pass-2 Iterations", tp.pass2_iterations])
+                writer.writerow(["Ranking Method", tp.ranking_method])
+                writer.writerow(["Pass-1 Mean (hours)", f"{tp.pass1_mean_hours:.2f}"])
+                writer.writerow(["Pass-2 Mean (hours)", f"{tp.pass2_mean_hours:.2f}"])
+                writer.writerow(["Delta Mean (hours)", f"{tp.delta_mean_hours:+.2f}"])
+                writer.writerow(["Pass-1 P80 (hours)", f"{tp.pass1_p80_hours:.2f}"])
+                writer.writerow(["Pass-2 P80 (hours)", f"{tp.pass2_p80_hours:.2f}"])
+                writer.writerow(["Delta P80 (hours)", f"{tp.delta_p80_hours:+.2f}"])
+                writer.writerow(["Pass-1 P90 (hours)", f"{tp.pass1_p90_hours:.2f}"])
+                writer.writerow(["Pass-2 P90 (hours)", f"{tp.pass2_p90_hours:.2f}"])
+                writer.writerow(["Delta P90 (hours)", f"{tp.delta_p90_hours:+.2f}"])
+                writer.writerow(["Pass-1 P95 (hours)", f"{tp.pass1_p95_hours:.2f}"])
+                writer.writerow(["Pass-2 P95 (hours)", f"{tp.pass2_p95_hours:.2f}"])
+                writer.writerow(["Delta P95 (hours)", f"{tp.delta_p95_hours:+.2f}"])
+                writer.writerow(
+                    [
+                        "Delta Resource Wait (hours)",
+                        f"{tp.delta_resource_wait_hours:+.2f}",
+                    ]
+                )
+                writer.writerow([])
+                writer.writerow(["Task Criticality Index (pass-1)", ""])
+                for task_id, ci in sorted(
+                    tp.task_criticality_index.items(),
+                    key=lambda x: (-x[1], x[0]),
+                ):
+                    writer.writerow([task_id, f"{ci:.4f}"])
+
             # Write staffing analysis
             writer.writerow([])
             recommendations = StaffingAnalyzer.recommend_team_size(
