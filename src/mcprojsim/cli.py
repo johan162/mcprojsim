@@ -1192,31 +1192,41 @@ def simulate(
                     if two_pass_trace is not None and two_pass_trace.enabled:
                         tp = two_pass_trace
                         tp_rows = [
-                            ["Pass-1 Iterations", str(tp.pass1_iterations)],
-                            ["Pass-2 Iterations", str(tp.pass2_iterations)],
-                            ["Ranking Method", tp.ranking_method],
-                            ["Pass-1 Mean (hours)", f"{tp.pass1_mean_hours:.2f}"],
-                            ["Pass-2 Mean (hours)", f"{tp.pass2_mean_hours:.2f}"],
-                            ["Delta Mean (hours)", f"{tp.delta_mean_hours:+.2f}"],
-                            ["Pass-1 P80 (hours)", f"{tp.pass1_p80_hours:.2f}"],
-                            ["Pass-2 P80 (hours)", f"{tp.pass2_p80_hours:.2f}"],
-                            ["Delta P80 (hours)", f"{tp.delta_p80_hours:+.2f}"],
-                            ["Pass-1 P95 (hours)", f"{tp.pass1_p95_hours:.2f}"],
-                            ["Pass-2 P95 (hours)", f"{tp.pass2_p95_hours:.2f}"],
-                            ["Delta P95 (hours)", f"{tp.delta_p95_hours:+.2f}"],
                             [
-                                "Delta Res. Wait (hours)",
-                                f"{tp.delta_resource_wait_hours:+.2f}",
+                                "Mean",
+                                f"{tp.pass1_mean_hours:.1f}h",
+                                f"{tp.pass2_mean_hours:.1f}h",
+                                f"{tp.delta_mean_hours:+.1f}h",
+                            ],
+                            [
+                                "P80",
+                                f"{tp.pass1_p80_hours:.1f}h",
+                                f"{tp.pass2_p80_hours:.1f}h",
+                                f"{tp.delta_p80_hours:+.1f}h",
+                            ],
+                            [
+                                "P95",
+                                f"{tp.pass1_p95_hours:.1f}h",
+                                f"{tp.pass2_p95_hours:.1f}h",
+                                f"{tp.delta_p95_hours:+.1f}h",
                             ],
                         ]
                         click.echo("\nTwo-Pass Scheduling Traceability:")
                         click.echo(
                             _tabulate(
                                 tp_rows,
-                                headers=["Metric", "Value"],
+                                headers=[
+                                    "Metric",
+                                    f"Pass-1 iter: {tp.pass1_iterations}",
+                                    f"Pass-2 iter: {tp.pass2_iterations}",
+                                    "Delta",
+                                ],
                                 tablefmt="simple_outline",
                                 disable_numparse=True,
                             )
+                        )
+                        click.echo(
+                            f"\nResource wait delta: {tp.delta_resource_wait_hours:+.1f}h"
                         )
 
             else:
