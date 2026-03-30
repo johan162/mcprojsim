@@ -29,13 +29,14 @@ It is intended for teams that want answers such as:
 
 - Monte Carlo schedule simulation with configurable iterations and reproducible seeds
 - Range-based estimates using explicit low/expected/high values, T-shirt sizes, story points, and multi-category symbolic sizing
+- Two-pass resource optimization that identifies optimal resource assignments in constrained environments
 - Dependency-only scheduling plus resource- and calendar-constrained scheduling when resources are present
 - Risk and uncertainty modeling for both tasks and the overall project
-- Analysis outputs including percentiles, delivery dates, critical paths, sensitivity, slack, risk impact, staffing guidance, and target-date probability
+- Analysis outputs including percentiles, critical paths, sensitivity analysis, slack, risk impact, staffing recommendations, and delivery-date probability
 - JSON, CSV, and HTML exports, plus optional ASCII table output in the CLI
 - Natural-language project generation from plain text with `mcprojsim generate`
 - MCP server support for assistant-driven generation, validation, and simulation workflows
-- Sprint planning support with empirical or negative binomial velocity models, sickness modelling, spillover, and historical metrics import
+- Sprint planning support with empirical or negative binomial velocity models, sickness modeling, spillover, and historical metrics import
 
 ## Recommended installation
 
