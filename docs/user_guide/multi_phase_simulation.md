@@ -81,7 +81,7 @@ The results include a `two_pass_traceability` block in all output formats
 
 ### Project file
 
-Create a file `contention.yaml` with three tasks sharing one senior developer
+For this example we will use the provided `examples/contention.yaml` file with three tasks sharing one senior developer
 and a separate junior developer:
 
 ```yaml
@@ -143,7 +143,7 @@ resources:
 ### Single-pass run
 
 ```
-mcprojsim simulate contention.yaml -n 1000 -t
+mcprojsim % mcprojsim simulate examples/contention.yaml -n 1000 -t --seed 1234
 ```
 
 Output excerpt:
@@ -152,23 +152,23 @@ Output excerpt:
 === Simulation Results ===
 
 Calendar Time Statistical Summary:
-┌──────────────────────────────┬──────────────────────────────────────┐
-│ Metric                       │ Value                                │
-├──────────────────────────────┼──────────────────────────────────────┤
-│ Mean                         │ 519.8 hours (65 working days)        │
-│ Median (P50)                 │ 519.8 hours                          │
-│ Std Dev                      │ 5.6 hours                            │
-└──────────────────────────────┴──────────────────────────────────────┘
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 567.49 hours (71 working days) │
+│ Median (P50)             │ 559.94 hours                   │
+│ Std Dev                  │ 13.64 hours                    │
+└──────────────────────────┴────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
-┌─────────────┬─────────┬──────────────┬──────────┐
-│ Percentile  │   Hours │ Working Days │ Date     │
-├─────────────┼─────────┼──────────────┼──────────┤
-│ P50         │  519.8  │     65       │          │
-│ P80         │  530.7  │     67       │          │
-│ P90         │  532.7  │     67       │          │
-│ P95         │  533.4  │     67       │          │
-└─────────────┴─────────┴──────────────┴──────────┘
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │  559.94 │             70 │ 2025-06-06 │
+│ P80          │  578.91 │             73 │ 2025-06-11 │
+│ P90          │  580.6  │             73 │ 2025-06-11 │
+│ P95          │  581.68 │             73 │ 2025-06-11 │
+└──────────────┴─────────┴────────────────┴────────────┘
 ```
 
 ### Two-pass run
@@ -176,7 +176,7 @@ Calendar Time Confidence Intervals:
 Add the `--two-pass` flag:
 
 ```
-mcprojsim simulate contention.yaml -n 1000 --two-pass --pass1-iterations 500 -t
+mcprojsim % mcprojsim simulate examples/contention.yaml -n 1000 --two-pass --pass1-iterations 500 -t --seed 1234
 ```
 
 Output excerpt:
@@ -190,30 +190,34 @@ Progress: 100.0% (1000/1000)
 === Simulation Results ===
 
 Calendar Time Statistical Summary:
-┌──────────────────────────────┬──────────────────────────────────────┐
-│ Metric                       │ Value                                │
-├──────────────────────────────┼──────────────────────────────────────┤
-│ Mean                         │ 422.8 hours (53 working days)        │
-│ Median (P50)                 │ 422.3 hours                          │
-│ Std Dev                      │ 5.8 hours                            │
-└──────────────────────────────┴──────────────────────────────────────┘
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 470.91 hours (59 working days) │
+│ Median (P50)             │ 463.49 hours                   │
+│ Std Dev                  │ 13.28 hours                    │
+└──────────────────────────┴────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
-┌─────────────┬─────────┬──────────────┬──────────┐
-│ Percentile  │   Hours │ Working Days │ Date     │
-├─────────────┼─────────┼──────────────┼──────────┤
-│ P50         │  422.3  │     53       │          │
-│ P80         │  434.3  │     55       │          │
-│ P90         │  436.4  │     55       │          │
-│ P95         │  437.1  │     55       │          │
-└─────────────┴─────────┴──────────────┴──────────┘
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │  463.49 │             58 │ 2025-05-21 │
+│ P80          │  482.47 │             61 │ 2025-05-26 │
+│ P90          │  484.08 │             61 │ 2025-05-26 │
+│ P95          │  485.34 │             61 │ 2025-05-26 │
+└──────────────┴─────────┴────────────────┴────────────┘
 
 Two-Pass Scheduling Traceability:
-  Pass-1 iterations: 500 | Pass-2 iterations: 1000
-  Mean: 519.9h (pass-1) → 422.8h (pass-2) [delta -97.0h]
-  P80:  530.6h (pass-1) → 434.3h (pass-2) [delta -96.3h]
-  P95:  533.0h (pass-1) → 437.1h (pass-2) [delta -95.9h]
-  Resource wait delta: -122.0h
+┌──────────┬────────────────────┬─────────────────────┬─────────┐
+│ Metric   │ Pass-1 iter: 500   │ Pass-2 iter: 1000   │ Delta   │
+├──────────┼────────────────────┼─────────────────────┼─────────┤
+│ Mean     │ 567.4h             │ 470.9h              │ -96.5h  │
+│ P80      │ 578.9h             │ 482.5h              │ -96.4h  │
+│ P95      │ 582.0h             │ 485.3h              │ -96.6h  │
+└──────────┴────────────────────┴─────────────────────┴─────────┘
+
+Resource wait delta: -121.1h
 ```
 
 The two-pass run reduces the mean project duration from **~520 h to ~423 h** (~12 working
