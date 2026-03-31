@@ -153,6 +153,8 @@ staffing:
 
 constrained_scheduling:
   sickness_prob: 0.0
+  assignment_mode: greedy_single_pass
+  pass1_iterations: 1000
 
 sprint_defaults:
   planning_confidence_level: 0.8
@@ -320,6 +322,32 @@ Backward compatibility:
 - legacy flat maps under `t_shirt_sizes` are accepted and migrated to `t_shirt_sizes.<default_category>`
 - transitional alias key `t_shirt_size_categories` is accepted as input
 - defining both `t_shirt_sizes` and `t_shirt_size_categories` in one file is rejected
+
+### `t_shirt_size_default_category`
+
+This field controls how bare T-shirt size tokens are resolved when the project file uses values like `M` instead of qualified values like `story.M` or `epic.M`.
+
+Default: `epic`
+
+That means:
+
+- `t_shirt_size: M` resolves to `epic.M` unless you override the default category,
+- legacy flat `t_shirt_sizes` maps are migrated into `t_shirt_sizes.<default_category>` during config loading,
+- changing this value changes both bare-token resolution and the target category used for legacy flat-map normalization.
+
+Example:
+
+```yaml
+t_shirt_sizes:
+  story:
+    M: {low: 40, expected: 60, high: 120}
+  epic:
+    M: {low: 120, expected: 240, high: 400}
+
+t_shirt_size_default_category: story
+```
+
+With that configuration, project-file `t_shirt_size: M` resolves to `story.M`.
 
 ## Shifted log-normal configuration
 
@@ -573,6 +601,49 @@ staffing:
       communication_overhead: 0.05
 ```
 
+## Sprint planning defaults
+
+The `sprint_defaults` section provides company-wide defaults for sprint-planning simulations. These values are used when the project file does not set the corresponding `project.sprint_planning` field and no CLI flag overrides it.
+
+Several of these settings change simulation behavior directly, not just reporting:
+
+- `planning_confidence_level` changes which percentile the sprint plan targets,
+- `velocity_model` changes how sprint capacity is sampled,
+- `removed_work_treatment` changes whether removed work is modeled as churn only or as actual backlog reduction,
+- `volatility_disruption_*` settings control whether disruption multipliers are sampled,
+- `spillover_*` settings control how often work spills over and how much remains,
+- `sprint_defaults.sickness.*` affects sprint sickness modeling and also constrained-scheduling sickness duration.
+
+### Field reference
+
+| Field | Type | Default | Allowed values | Effect |
+|---|---|---|---|---|
+| `planning_confidence_level` | float | `0.8` | `0 < value < 1` | Target confidence used when planning sprint outcomes |
+| `removed_work_treatment` | string | `churn_only` | `churn_only`, `reduce_backlog` | Controls whether removed work is treated as churn only or also reduces backlog |
+| `velocity_model` | string | `empirical` | `empirical`, `neg_binomial` | Controls how historical capacity is sampled |
+| `volatility_disruption_probability` | float | `0.0` | `0 <= value <= 1` | Probability that disruption multipliers apply |
+| `volatility_disruption_multiplier_low` | float | `1.0` | `value >= 0` | Low bound for sampled disruption multiplier |
+| `volatility_disruption_multiplier_expected` | float | `1.0` | `value >= 0` | Expected disruption multiplier |
+| `volatility_disruption_multiplier_high` | float | `1.0` | `value >= 0` | High bound for sampled disruption multiplier |
+| `spillover_model` | string | `table` | `table`, `logistic` | Controls how spillover probability is modeled |
+| `spillover_size_reference_points` | float | `5.0` | `value > 0` | Reference size used by spillover probability models |
+| `spillover_size_brackets` | list | built-in table | bracket list | Size-to-probability table used when `spillover_model: table` |
+| `spillover_consumed_fraction_alpha` | float | `3.25` | `value > 0` | Beta-shape parameter controlling typical consumed fraction |
+| `spillover_consumed_fraction_beta` | float | `1.75` | `value > 0` | Beta-shape parameter controlling typical remaining spillover |
+| `spillover_logistic_slope` | float | `1.9` | `value > 0` | Slope of the logistic spillover probability curve |
+| `spillover_logistic_intercept` | float | `-1.9924301646902063` | any float | Intercept of the logistic spillover probability curve |
+| `sickness.enabled` | boolean | `false` | `true`, `false` | Enables sprint sickness modeling |
+| `sickness.probability_per_person_per_week` | float | `0.058` | `0 < value < 1` | Weekly sickness probability per team member |
+| `sickness.duration_log_mu` | float | `0.693` | any float | Log-normal sickness duration location parameter |
+| `sickness.duration_log_sigma` | float | `0.75` | `value > 0` | Log-normal sickness duration scale parameter |
+
+### Notes on behavioral impact
+
+- `velocity_model: empirical` re-samples directly from historical data; `neg_binomial` fits a negative binomial model to historical throughput.
+- `removed_work_treatment: churn_only` treats removed work as diagnostic churn; `reduce_backlog` allows removed work to reduce remaining backlog.
+- `spillover_model: table` uses the configured size brackets directly; `logistic` uses `spillover_logistic_slope`, `spillover_logistic_intercept`, and `spillover_size_reference_points`.
+- The `volatility_disruption_multiplier_*` values define the sampled disruption range when `volatility_disruption_probability` is non-zero.
+
 ## Viewing current configuration
 
 ```bash
@@ -605,9 +676,25 @@ For sprint-planning field details and examples, see [Sprint planning](sprint_pla
 
 ## Constrained scheduling defaults
 
-`constrained_scheduling.sickness_prob` sets the default sickness probability for
-resources in constrained scheduling when a resource does not specify
-`sickness_prob` in the project file.
+The `constrained_scheduling` section controls defaults for resource-constrained scheduling runs.
+
+These settings affect scheduling behavior directly:
+
+- `sickness_prob` supplies the per-resource sickness fallback when the project file omits `resources[*].sickness_prob`,
+- `assignment_mode` selects single-pass greedy scheduling or two-pass criticality-aware scheduling,
+- `pass1_iterations` controls how much pass-1 sampling is used to rank tasks when two-pass scheduling is active.
+
+### Field reference
+
+| Field | Type | Default | Allowed values | Effect |
+|---|---|---|---|---|
+| `sickness_prob` | float | `0.0` | `0 <= value <= 1` | Fallback per-resource sickness probability |
+| `assignment_mode` | string | `greedy_single_pass` | `greedy_single_pass`, `criticality_two_pass` | Selects constrained scheduling strategy |
+| `pass1_iterations` | integer | `1000` | `value > 0` | Number of pass-1 iterations used to compute criticality ranking in two-pass mode |
+
+### `sickness_prob`
+
+`constrained_scheduling.sickness_prob` sets the default sickness probability for resources in constrained scheduling when a resource does not specify `sickness_prob` in the project file.
 
 Precedence:
 
@@ -622,7 +709,34 @@ constrained_scheduling:
   sickness_prob: 0.03
 ```
 
-if you omit this key, resources without `sickness_prob` still behave as `0.0`.
+If you omit this key, resources without `sickness_prob` still behave as `0.0`.
+
+### `assignment_mode`
+
+This field controls how tasks are prioritized when resource constraints are active.
+
+- `greedy_single_pass`: the default. Tasks are dispatched in deterministic greedy order.
+- `criticality_two_pass`: the simulator first runs a baseline pass to estimate task criticality, then re-runs the schedule using those criticality rankings as priority.
+
+Two-pass mode affects the simulation itself, not just the output. The final results use pass-2 statistics, and the simulator includes a traceability block describing the delta between pass 1 and pass 2.
+
+Example:
+
+```yaml
+constrained_scheduling:
+  assignment_mode: criticality_two_pass
+  pass1_iterations: 1500
+```
+
+### `pass1_iterations`
+
+This field matters only when `assignment_mode: criticality_two_pass`.
+
+- It controls how many iterations are used in pass 1 to estimate criticality indices.
+- If it is larger than total simulation iterations, the simulator caps it to the total iteration count.
+- Very low values can produce noisy criticality rankings.
+
+As a practical rule, use enough pass-1 iterations to get stable rankings before relying on two-pass deltas for decision-making.
 
 ## Sickness duration defaults
 
@@ -634,6 +748,7 @@ The keys under `sprint_defaults.sickness` now serve two related purposes:
 Specifically:
 
 - `probability_per_person_per_week` is used by sprint planning,
+- `enabled` turns sprint sickness simulation on or off,
 - `duration_log_mu` and `duration_log_sigma` define the shared log-normal duration model for sickness episodes,
 - per-resource `sickness_prob` still belongs in the project file because it is resource-specific.
 
@@ -691,16 +806,33 @@ The configuration model validates these constraints directly:
 
 - `t_shirt_size_unit` must be one of `hours`, `days`, or `weeks`,
 - `story_point_unit` must be one of `hours`, `days`, or `weeks`,
+- `t_shirt_sizes` accepts either a nested `<category>: <size>: {low, expected, high}` map or a legacy flat size map,
+- if `t_shirt_size_categories` is used as a transitional alias, it cannot appear together with `t_shirt_sizes`,
+- T-shirt size tokens in config must normalize to one of `XS`, `S`, `M`, `L`, `XL`, or `XXL`,
 - all configured estimate ranges require positive `min`, `expected`, and `max`,
+- `lognormal.high_percentile` must be one of `70`, `75`, `80`, `85`, `90`, `95`, or `99`,
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
+- `output.formats` must be non-empty and may contain only `json`, `csv`, and `html`,
 - `output.histogram_bins` must be greater than 0,
 - `output.critical_path_report_limit` must be greater than 0,
 - `staffing.effort_percentile`, when set, must be between 1 and 99,
 - `staffing.min_individual_productivity` must be greater than 0 and at most 1,
 - `experience_profiles[*].productivity_factor` must be greater than 0,
-- `experience_profiles[*].communication_overhead` must be between 0 and 1.
+- `experience_profiles[*].communication_overhead` must be between 0 and 1,
 - `constrained_scheduling.sickness_prob` must be between 0 and 1.
+- `constrained_scheduling.pass1_iterations` must be greater than 0,
+- `sprint_defaults.planning_confidence_level` must be between 0 and 1,
+- `sprint_defaults.removed_work_treatment` must be either `churn_only` or `reduce_backlog`,
+- `sprint_defaults.velocity_model` must be either `empirical` or `neg_binomial`,
+- `sprint_defaults.volatility_disruption_probability` must be between 0 and 1,
+- `sprint_defaults.volatility_disruption_multiplier_low`, `volatility_disruption_multiplier_expected`, and `volatility_disruption_multiplier_high` must be greater than or equal to 0,
+- `sprint_defaults.spillover_model` must be either `table` or `logistic`,
+- `sprint_defaults.spillover_size_reference_points` must be greater than 0,
+- `sprint_defaults.spillover_consumed_fraction_alpha` and `sprint_defaults.spillover_consumed_fraction_beta` must be greater than 0,
+- `sprint_defaults.spillover_logistic_slope` must be greater than 0,
+- `sprint_defaults.sickness.probability_per_person_per_week` must be greater than 0 and less than 1,
+- `sprint_defaults.sickness.duration_log_sigma` must be greater than 0.
 
 ## Related settings in the project file
 
