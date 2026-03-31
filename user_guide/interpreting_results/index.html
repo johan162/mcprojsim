@@ -882,6 +882,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#output-modes-and-flags-that-change-what-you-see" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output modes and flags that change what you see
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-overview-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project overview fields
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#understanding-percentiles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -978,6 +1000,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#minimum-and-maximum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimum and maximum
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1481,6 +1514,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#constrained-schedule-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constrained schedule diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-pass-scheduling-traceability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two-pass scheduling traceability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-date-probability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target-date probability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#staffing-recommendations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1673,6 +1739,17 @@
     <span class="md-ellipsis">
       
         Quick reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sprint-planning-mode-outputs-when-enabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sprint-planning mode outputs (when enabled)
       
     </span>
   </a>
@@ -1898,6 +1975,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#output-modes-and-flags-that-change-what-you-see" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output modes and flags that change what you see
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-overview-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project overview fields
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#understanding-percentiles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1994,6 +2093,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#minimum-and-maximum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimum and maximum
+      
+    </span>
+  </a>
   
 </li>
       
@@ -2497,6 +2607,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#constrained-schedule-diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constrained schedule diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-pass-scheduling-traceability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two-pass scheduling traceability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#target-date-probability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Target-date probability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#staffing-recommendations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2695,6 +2838,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sprint-planning-mode-outputs-when-enabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sprint-planning mode outputs (when enabled)
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2793,6 +2947,75 @@
 </span></code></pre></div>
 <p>Every number here comes from simulating your project thousands of times with different random samples. The results describe the <em>distribution</em> of outcomes, not a single prediction.</p>
 <p>The sections below explain each part of this output in detail.</p>
+<h2 id="output-modes-and-flags-that-change-what-you-see">Output modes and flags that change what you see<a class="headerlink" href="#output-modes-and-flags-that-change-what-you-see" title="Permanent link">&para;</a></h2>
+<p>Several <code>simulate</code> flags change which sections are printed:</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Effect on output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--minimal</code></td>
+<td>Shows only core overview and confidence intervals; omits detailed analyses (sensitivity, slack, risk impact, etc.)</td>
+</tr>
+<tr>
+<td><code>--table</code></td>
+<td>Renders sections as ASCII tables instead of plain text lines</td>
+</tr>
+<tr>
+<td><code>--quiet</code>, <code>-q</code>, <code>-qq</code></td>
+<td>Reduces or suppresses normal console output</td>
+</tr>
+<tr>
+<td><code>--staffing</code></td>
+<td>Adds full per-profile staffing tables (<code>senior</code>, <code>mixed</code>, <code>junior</code>, plus custom profiles)</td>
+</tr>
+<tr>
+<td><code>--critical-paths N</code></td>
+<td>Changes how many full critical path sequences are listed</td>
+</tr>
+<tr>
+<td><code>--target-date YYYY-MM-DD</code></td>
+<td>Adds probability of finishing by that date</td>
+</tr>
+<tr>
+<td><code>--include-historic-base</code></td>
+<td>Adds Historic Base payload/sections in JSON/HTML exports (requires output format including <code>json</code> or <code>html</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Two additional flags affect output only when resource-constrained scheduling is active:</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Effect on output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--two-pass</code></td>
+<td>Enables criticality two-pass scheduling</td>
+</tr>
+<tr>
+<td><code>--pass1-iterations</code></td>
+<td>Sets pass-1 sample size used for two-pass ranking</td>
+</tr>
+</tbody>
+</table>
+<p>Because of these switches, not every run prints every section shown in this chapter.</p>
+<h2 id="project-overview-fields">Project overview fields<a class="headerlink" href="#project-overview-fields" title="Permanent link">&para;</a></h2>
+<p>At the top of simulation results, <code>mcprojsim</code> prints core context fields before detailed analyses.</p>
+<ul>
+<li><code>Project</code></li>
+<li><code>Hours per Day</code></li>
+<li><code>Max Parallel Tasks</code></li>
+<li><code>Schedule Mode</code></li>
+</ul>
+<p><code>Schedule Mode</code> tells you whether the run used dependency-only scheduling or resource/calendar-constrained scheduling. Read all downstream sections in that context.</p>
 <h2 id="understanding-percentiles">Understanding percentiles<a class="headerlink" href="#understanding-percentiles" title="Permanent link">&para;</a></h2>
 <p>Percentiles are the most actionable part of the output. Each percentile answers the question: <em>"How many hours (or days) would be enough to finish the project X% of the time?"</em></p>
 <table>
@@ -2891,6 +3114,14 @@ $$</p>
 </tr>
 </tbody>
 </table>
+<h2 id="minimum-and-maximum">Minimum and maximum<a class="headerlink" href="#minimum-and-maximum" title="Permanent link">&para;</a></h2>
+<p>In addition to mean/median/std-dev, the CLI also reports observed minimum and maximum simulated durations.</p>
+<ul>
+<li><strong>Minimum</strong> is the fastest sampled project completion across iterations.</li>
+<li><strong>Maximum</strong> is the slowest sampled completion.</li>
+</ul>
+<p>These are useful for sanity checking tails, but they are sample extremes, not commitment targets. Use percentiles (P80/P90/P95) for planning decisions.</p>
+<p>The effort summary has the same fields (minimum/maximum person-hours) for total work.</p>
 <h2 id="the-thermometer-chart">The thermometer chart<a class="headerlink" href="#the-thermometer-chart" title="Permanent link">&para;</a></h2>
 <p>The HTML report includes a thermometer — a vertical colour-coded bar showing effort at probability levels from 50% to 99%. It provides a quick visual: green zones are highly likely to succeed, orange zones are risky.</p>
 <ul>
@@ -3217,12 +3448,39 @@ $$</p>
 </table>
 <p>In the sample output, <code>Max parallel tasks: 3</code> means the scheduler assumed up to three tasks running at the same time in at least one iteration.</p>
 <h3 id="why-this-matters">Why this matters<a class="headerlink" href="#why-this-matters" title="Permanent link">&para;</a></h3>
-<p>The simulation does <strong>not</strong> model resource constraints — it assumes unlimited capacity. If the reported peak parallelism exceeds your actual team size, the real schedule will be longer than the simulation predicts because some parallel tasks will have to wait for a free resource.</p>
+<p>Interpretation depends on schedule mode:</p>
+<ul>
+<li>In <strong>dependency-only mode</strong>, peak parallelism reflects structural parallelism implied by dependencies and assumes unlimited resource capacity.</li>
+<li>In <strong>resource-constrained mode</strong>, scheduling already accounts for resource availability and calendars.</li>
+</ul>
 <p>Use this number as a sanity check:</p>
 <ul>
-<li>If <strong>max parallel tasks &lt;= team size</strong>: the simulation's parallelism assumption is realistic.</li>
-<li>If <strong>max parallel tasks &gt; team size</strong>: the simulation is optimistic. Consider adding explicit dependencies to serialise tasks that share a resource, or mentally adjust the percentiles upward.</li>
+<li>If <strong>dependency-only mode</strong> and <strong>max parallel tasks &lt;= team size</strong>: the unconstrained parallelism assumption is plausible.</li>
+<li>If <strong>dependency-only mode</strong> and <strong>max parallel tasks &gt; team size</strong>: the run is optimistic relative to your real capacity.</li>
+<li>If <strong>resource-constrained mode</strong>: combine this with constrained diagnostics (below) to understand where waiting and calendar effects are occurring.</li>
 </ul>
+<h2 id="constrained-schedule-diagnostics">Constrained schedule diagnostics<a class="headerlink" href="#constrained-schedule-diagnostics" title="Permanent link">&para;</a></h2>
+<p>When resource/calendar constraints are active, the CLI adds:</p>
+<ul>
+<li><strong>Average Resource Wait (hours)</strong></li>
+<li><strong>Effective Resource Utilization</strong></li>
+<li><strong>Calendar Delay Contribution (hours)</strong></li>
+</ul>
+<p>These quantify how much elapsed time comes from waiting for available resources and working-time calendars, not just raw task effort.</p>
+<p>Use these diagnostics to decide whether to add capacity, rebalance assignments, or adjust calendars.</p>
+<h2 id="two-pass-scheduling-traceability">Two-pass scheduling traceability<a class="headerlink" href="#two-pass-scheduling-traceability" title="Permanent link">&para;</a></h2>
+<p>When <code>--two-pass</code> is enabled (or equivalent config mode is active), output may include a traceability block comparing pass-1 and pass-2 results.</p>
+<p>Reported deltas include:</p>
+<ul>
+<li>mean duration (<code>pass-1 -&gt; pass-2</code>)</li>
+<li>P80 duration (<code>pass-1 -&gt; pass-2</code>)</li>
+<li>P95 duration (<code>pass-1 -&gt; pass-2</code>)</li>
+<li>resource wait delta</li>
+</ul>
+<p>This helps explain whether two-pass prioritization materially improved (or worsened) schedule outcomes for your project structure.</p>
+<h2 id="target-date-probability">Target-date probability<a class="headerlink" href="#target-date-probability" title="Permanent link">&para;</a></h2>
+<p>If you pass <code>--target-date YYYY-MM-DD</code>, the CLI prints the estimated probability of finishing by that date.</p>
+<p>This converts an external deadline question into a direct probabilistic statement and is often the clearest communication artifact for stakeholders.</p>
 <h2 id="staffing-recommendations">Staffing recommendations<a class="headerlink" href="#staffing-recommendations" title="Permanent link">&para;</a></h2>
 <p>The staffing advisory appears at the bottom of every simulation run. It answers the question: <em>"Given this project's parallelism and effort, how many people should work on it?"</em></p>
 <h3 id="the-advisory-line">The advisory line<a class="headerlink" href="#the-advisory-line" title="Permanent link">&para;</a></h3>
@@ -3535,7 +3793,7 @@ $$</p>
 <p><strong>It assumes task independence</strong>. Each task's duration is sampled independently. In reality, if one task overruns because the technology is harder than expected, related tasks may also overrun. The simulation does not model these correlations.</p>
 </li>
 <li>
-<p><strong>It ignores resource constraints</strong>. The scheduler respects task dependencies but does not limit parallelism by resource availability. If two independent tasks need the same developer, they run in parallel in the simulation but would be sequential in practice. This means the simulation may underestimate actual duration for resource-constrained projects.</p>
+<p><strong>Dependency-only runs ignore resource constraints</strong>. If you do not model <code>resources</code>/<code>calendars</code>, parallelism is constrained only by dependencies. For resource-constrained planning, use the constrained scheduling inputs and read the constrained diagnostics section.</p>
 </li>
 <li>
 <p><strong>It does not model learning or momentum</strong>. Teams often speed up as they gain context, or slow down from fatigue. The simulation treats each task in isolation.</p>
@@ -3633,6 +3891,16 @@ $$</p>
 </tr>
 </tbody>
 </table>
+<h2 id="sprint-planning-mode-outputs-when-enabled">Sprint-planning mode outputs (when enabled)<a class="headerlink" href="#sprint-planning-mode-outputs-when-enabled" title="Permanent link">&para;</a></h2>
+<p>If a project uses sprint-planning mode, output sections differ from dependency-schedule runs and include sprint-specific summaries such as:</p>
+<ul>
+<li>Sprint planning summary</li>
+<li>Sprint count statistical summary</li>
+<li>Sprint count confidence intervals</li>
+<li>Optional historical diagnostics (series, ratios, correlations)</li>
+<li>Burn-up percentiles</li>
+</ul>
+<p>Treat these as the sprint-forecast analogue of calendar/effort percentiles in dependency-schedule mode.</p>
 <p>\newpage</p>
 
 

@@ -798,15 +798,26 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-team_size-affects-scheduling" class="md-nav__link">
+  <a href="#suggested-reading-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How team_size affects scheduling
+        Suggested reading path
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="How team_size affects scheduling">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-team_size-affects-scheduling-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How team_size affects scheduling (reference)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How team_size affects scheduling (reference)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -925,6 +936,28 @@
     <span class="md-ellipsis">
       
         max_resources semantics (important)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-the-160-and-3-factors-shape-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the 16.0 and 3 factors shape assignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-this-interacts-with-actual-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How this interacts with actual assignment
       
     </span>
   </a>
@@ -1138,10 +1171,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#double-pass-automatic-assignment-status" class="md-nav__link">
+  <a href="#double-pass-criticality-assignment-available" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Double-pass automatic assignment (status)
+        Double-pass criticality assignment (available)
       
     </span>
   </a>
@@ -1517,15 +1550,26 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-team_size-affects-scheduling" class="md-nav__link">
+  <a href="#suggested-reading-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How team_size affects scheduling
+        Suggested reading path
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="How team_size affects scheduling">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-team_size-affects-scheduling-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How team_size affects scheduling (reference)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How team_size affects scheduling (reference)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1644,6 +1688,28 @@
     <span class="md-ellipsis">
       
         max_resources semantics (important)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-the-160-and-3-factors-shape-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the 16.0 and 3 factors shape assignment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-this-interacts-with-actual-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How this interacts with actual assignment
       
     </span>
   </a>
@@ -1857,10 +1923,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#double-pass-automatic-assignment-status" class="md-nav__link">
+  <a href="#double-pass-criticality-assignment-available" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Double-pass automatic assignment (status)
+        Double-pass criticality assignment (available)
       
     </span>
   </a>
@@ -1971,7 +2037,15 @@
 <li><code>Schedule Mode</code> (<code>dependency_only</code> or <code>resource_constrained</code>),</li>
 <li>constrained diagnostics (resource wait time, utilization, calendar delay contribution).</li>
 </ul>
-<h2 id="how-team_size-affects-scheduling">How <code>team_size</code> affects scheduling<a class="headerlink" href="#how-team_size-affects-scheduling" title="Permanent link">&para;</a></h2>
+<h2 id="suggested-reading-path">Suggested reading path<a class="headerlink" href="#suggested-reading-path" title="Permanent link">&para;</a></h2>
+<p>For first-time readers, follow this order:</p>
+<ol>
+<li>Example 1 through Example 6 (progressive walkthrough)</li>
+<li><code>team_size</code> rules (reference section)</li>
+<li>CLI/config tuning knobs (<code>--two-pass</code>, <code>--pass1-iterations</code>, and config defaults)</li>
+</ol>
+<p>If you already know the core flow, jump directly to the <code>team_size</code> and two-pass sections.</p>
+<h2 id="how-team_size-affects-scheduling-reference">How <code>team_size</code> affects scheduling (reference)<a class="headerlink" href="#how-team_size-affects-scheduling-reference" title="Permanent link">&para;</a></h2>
 <p><code>team_size</code> and top-level <code>resources</code> interact during validation before simulation starts.</p>
 <p>Current rules:</p>
 <ul>
@@ -2132,7 +2206,7 @@
 <td><code>sickness_prob</code></td>
 <td>No</td>
 <td><code>0.0</code></td>
-<td>Daily sickness probability for stochastic absence</td>
+<td>Per-working-day sickness probability for stochastic absence</td>
 </tr>
 <tr>
 <td><code>planned_absence</code></td>
@@ -2176,8 +2250,8 @@ scheduler also applies an automatic practical cap.</p>
 </ul>
 <p>Automatic practical cap heuristic:</p>
 <ul>
-<li><code>granularity_cap = max(1, floor(task_effort_hours / 4.0))</code></li>
-<li><code>coordination_cap = 6</code></li>
+<li><code>granularity_cap = max(1, floor(task_effort_hours / 16.0))</code></li>
+<li><code>coordination_cap = 3</code></li>
 <li><code>practical_cap = min(granularity_cap, coordination_cap)</code></li>
 </ul>
 <p>Effective assignment count at start is:</p>
@@ -2192,15 +2266,55 @@ scheduler also applies an automatic practical cap.</p>
 </ul>
 <p>Practical examples:</p>
 <ul>
-<li>Task effort <code>8h</code> → <code>granularity_cap = floor(8/4) = 2</code> → at most 2 assignees.</li>
-<li>Task effort <code>24h</code> → <code>granularity_cap = floor(24/4) = 6</code> → at most 6 assignees.</li>
-<li>Task effort <code>80h</code> → <code>granularity_cap = 20</code>, but coordination cap still limits to 6.</li>
+<li>Task effort <code>8h</code> → <code>granularity_cap = max(1, floor(8/16)) = 1</code> → at most 1 assignee.</li>
+<li>Task effort <code>24h</code> → <code>granularity_cap = max(1, floor(24/16)) = 1</code> → at most 1 assignee.</li>
+<li>Task effort <code>80h</code> → <code>granularity_cap = floor(80/16) = 5</code>, but coordination cap limits to 3.</li>
 </ul>
 <p>Why these constants were selected:</p>
 <ul>
-<li><code>MIN_EFFORT_PER_ASSIGNEE_HOURS = 4.0</code> uses a half-day work chunk as a practical lower bound for productive splitting. It avoids pathological cases where many assignees are allocated to very small tasks.</li>
-<li><code>MAX_ASSIGNEES_PER_TASK = 6</code> is a conservative coordination ceiling. It reflects diminishing returns from communication/synchronization overhead when too many people are placed on one task.</li>
+<li><code>MIN_EFFORT_PER_ASSIGNEE_HOURS = 16.0</code> means each assignee should have about two working days of effort before the heuristic adds another concurrent person.</li>
+<li><code>MAX_ASSIGNEES_PER_TASK = 3</code> is a hard global coordination ceiling, even for very large tasks.</li>
 <li>The pair balances realism and runtime simplicity: the scheduler remains deterministic and fast while avoiding implausible near-linear speedups.</li>
+</ul>
+<h3 id="how-the-160-and-3-factors-shape-assignment">How the <code>16.0</code> and <code>3</code> factors shape assignment<a class="headerlink" href="#how-the-160-and-3-factors-shape-assignment" title="Permanent link">&para;</a></h3>
+<p>The heuristic has two stages:</p>
+<ol>
+<li><strong>Granularity stage (<code>16.0</code>)</strong></li>
+<li>Compute <code>floor(task_effort_hours / 16.0)</code>.</li>
+<li>This is a rough "how many meaningful chunks" estimate for parallel work.</li>
+<li>
+<p><code>max(1, ...)</code> guarantees at least one assignee.</p>
+</li>
+<li>
+<p><strong>Coordination stage (<code>3</code>)</strong></p>
+</li>
+<li>Apply <code>min(granularity_cap, 3)</code>.</li>
+<li>This caps parallelism to avoid unrealistic linear speedup from many assignees.</li>
+</ol>
+<p>Combined effect by effort range:</p>
+<ul>
+<li><code>0 &lt;= effort &lt; 32</code> hours: practical cap is <code>1</code></li>
+<li><code>32 &lt;= effort &lt; 48</code> hours: practical cap is <code>2</code></li>
+<li><code>effort &gt;= 48</code> hours: practical cap is <code>3</code> (ceiling reached)</li>
+</ul>
+<p>So <code>16.0</code> controls when you <em>earn</em> additional assignees, while <code>3</code> controls the <em>maximum</em> you can ever get from the heuristic.</p>
+<h3 id="how-this-interacts-with-actual-assignment">How this interacts with actual assignment<a class="headerlink" href="#how-this-interacts-with-actual-assignment" title="Permanent link">&para;</a></h3>
+<p>The practical cap is only one limiter. Final assigned count is:</p>
+<p><code>min(max_resources, practical_cap, currently_available_eligible_resources)</code></p>
+<p>Implications:</p>
+<ul>
+<li>If <code>max_resources</code> is lower than the practical cap, task-level config wins.</li>
+<li>If fewer eligible resources are free, availability wins.</li>
+<li>If both are high, heuristic limits still apply (<code>3</code> max from practical cap).</li>
+</ul>
+<p>Quick examples:</p>
+<ul>
+<li>Effort <code>40h</code>, <code>max_resources: 5</code>, 4 eligible free resources:
+  <code>granularity_cap = floor(40/16) = 2</code>, <code>practical_cap = 2</code> -&gt; assign up to <code>2</code>.</li>
+<li>Effort <code>80h</code>, <code>max_resources: 2</code>, 5 eligible free resources:
+  <code>granularity_cap = 5</code>, <code>practical_cap = 3</code>, then <code>max_resources</code> lowers final cap to <code>2</code>.</li>
+<li>Effort <code>120h</code>, <code>max_resources: 5</code>, only 1 eligible free resource:
+  heuristic allows <code>3</code>, but availability lowers final assignment to <code>1</code>.</li>
 </ul>
 <p>If you need stricter or looser behavior in your environment, these constants can be adjusted in the scheduler implementation and validated with scenario-specific simulations.</p>
 <h3 id="assignment-timing-model">Assignment timing model<a class="headerlink" href="#assignment-timing-model" title="Permanent link">&para;</a></h3>
@@ -2573,14 +2687,28 @@ It is a heuristic, not globally optimal schedule optimization.</p>
 <h3 id="single-pass-automatic-assignment-available">Single-pass automatic assignment (available)<a class="headerlink" href="#single-pass-automatic-assignment-available" title="Permanent link">&para;</a></h3>
 <p>Current constrained scheduling uses deterministic single-pass assignment while respecting dependencies, resource eligibility, calendars, and absences.</p>
 <p>You use it by defining top-level <code>resources</code> (and optionally <code>calendars</code>). No extra CLI flag is required.</p>
-<h3 id="double-pass-automatic-assignment-status">Double-pass automatic assignment (status)<a class="headerlink" href="#double-pass-automatic-assignment-status" title="Permanent link">&para;</a></h3>
-<p>A dedicated double-pass criticality-prioritized assignment mode is documented in requirements (<code>FR-042</code>) but is <strong>not currently exposed as a CLI/config toggle</strong> in this release.</p>
-<p>Practical workaround today:</p>
+<h3 id="double-pass-criticality-assignment-available">Double-pass criticality assignment (available)<a class="headerlink" href="#double-pass-criticality-assignment-available" title="Permanent link">&para;</a></h3>
+<p>Double-pass criticality-prioritized scheduling is available via CLI and config.</p>
+<p>How it works:</p>
 <ol>
-<li>Run a baseline simulation and inspect critical-path frequency.</li>
-<li>Tighten task-level resource constraints (<code>resources</code>, <code>max_resources</code>, <code>min_experience_level</code>) for the highest-criticality tasks.</li>
-<li>Re-run and compare constrained diagnostics and completion percentiles.</li>
+<li>Pass 1 runs greedy scheduling for a subset of iterations to estimate task criticality.</li>
+<li>Pass 2 re-runs constrained scheduling using criticality ranking as dispatch priority.</li>
+<li>Final summary metrics come from pass 2, with a two-pass traceability delta in CLI and exports.</li>
 </ol>
+<p>CLI usage:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>constrained-full.yaml<span class="w"> </span>--two-pass<span class="w"> </span>--pass1-iterations<span class="w"> </span><span class="m">1500</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>--table
+</span></code></pre></div>
+<p>Config usage:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="nt">constrained_scheduling</span><span class="p">:</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="w">  </span><span class="nt">assignment_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">criticality_two_pass</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="nt">pass1_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1500</span>
+</span></code></pre></div>
+<p>Notes:</p>
+<ul>
+<li><code>--two-pass</code> overrides config and enables <code>criticality_two_pass</code> for that run.</li>
+<li><code>--pass1-iterations</code> is capped to total simulation iterations.</li>
+<li>If <code>pass1_iterations</code> is small, criticality ranking may be noisy.</li>
+</ul>
 <h2 id="cli-options-most-relevant-to-constrained-runs">CLI options most relevant to constrained runs<a class="headerlink" href="#cli-options-most-relevant-to-constrained-runs" title="Permanent link">&para;</a></h2>
 <p>Use these with <code>mcprojsim simulate</code>:</p>
 <table>
@@ -2602,6 +2730,14 @@ It is a heuristic, not globally optimal schedule optimization.</p>
 <tr>
 <td><code>-c</code>, <code>--config</code></td>
 <td>Apply custom uncertainty and output/reporting defaults</td>
+</tr>
+<tr>
+<td><code>--two-pass</code></td>
+<td>Enable criticality two-pass constrained scheduling for this run</td>
+</tr>
+<tr>
+<td><code>--pass1-iterations</code></td>
+<td>Set pass-1 sample budget for criticality ranking in two-pass mode</td>
 </tr>
 <tr>
 <td><code>--critical-paths</code></td>
@@ -2644,24 +2780,32 @@ It is a heuristic, not globally optimal schedule optimization.</p>
 <h3 id="in-the-config-file-config">In the config file (<code>--config</code>)<a class="headerlink" href="#in-the-config-file-config" title="Permanent link">&para;</a></h3>
 <p>Use config files for simulation/reporting defaults and shared stochastic model parameters. They do <strong>not</strong> replace per-resource sickness probabilities in the project file, but they can now define the shared sickness-duration distribution used by constrained scheduling.</p>
 <p>Example:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nt">constrained_scheduling</span><span class="p">:</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nt">sickness_prob</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.03</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="nt">simulation</span><span class="p">:</span>
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="w">  </span><span class="nt">default_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
-</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
-</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="nt">output</span><span class="p">:</span>
-</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="w">  </span><span class="nt">critical_path_report_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="w">  </span><span class="nt">histogram_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
-</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>
-</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="nt">staffing</span><span class="p">:</span>
-</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
-</span><span id="__span-21-13"><a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>
-</span><span id="__span-21-14"><a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a><span class="nt">sprint_defaults</span><span class="p">:</span>
-</span><span id="__span-21-15"><a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a><span class="w">  </span><span class="nt">sickness</span><span class="p">:</span>
-</span><span id="__span-21-16"><a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a><span class="w">    </span><span class="nt">duration_log_mu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.10</span>
-</span><span id="__span-21-17"><a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a><span class="w">    </span><span class="nt">duration_log_sigma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.90</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="nt">constrained_scheduling</span><span class="p">:</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">  </span><span class="nt">sickness_prob</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.03</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">  </span><span class="nt">assignment_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">criticality_two_pass</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span><span class="nt">pass1_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1500</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="nt">simulation</span><span class="p">:</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="w">  </span><span class="nt">default_iterations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a><span class="nt">output</span><span class="p">:</span>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="w">  </span><span class="nt">critical_path_report_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="w">  </span><span class="nt">histogram_bins</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>
+</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a><span class="nt">staffing</span><span class="p">:</span>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
+</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>
+</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="nt">sprint_defaults</span><span class="p">:</span>
+</span><span id="__span-23-17"><a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a><span class="w">  </span><span class="nt">sickness</span><span class="p">:</span>
+</span><span id="__span-23-18"><a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a><span class="w">    </span><span class="nt">duration_log_mu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.10</span>
+</span><span id="__span-23-19"><a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a><span class="w">    </span><span class="nt">duration_log_sigma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.90</span>
 </span></code></pre></div>
+<p><code>constrained_scheduling.assignment_mode</code> supports:</p>
+<ul>
+<li><code>greedy_single_pass</code> (default)</li>
+<li><code>criticality_two_pass</code></li>
+</ul>
+<p><code>constrained_scheduling.pass1_iterations</code> controls pass-1 ranking depth when two-pass mode is active.</p>
 <h2 id="related-chapters">Related chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../project_files/">Project Files</a> for full schema reference</li>

@@ -694,6 +694,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Estimation methods at a glance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accepted-field-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accepted field aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -796,6 +813,17 @@
     <span class="md-ellipsis">
       
         Log-normal distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuring-the-log-normal-high-percentile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuring the log-normal high percentile
       
     </span>
   </a>
@@ -1512,6 +1540,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Estimation methods at a glance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accepted-field-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accepted field aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1614,6 +1659,17 @@
     <span class="md-ellipsis">
       
         Log-normal distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuring-the-log-normal-high-percentile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuring the log-normal high percentile
       
     </span>
   </a>
@@ -1940,7 +1996,7 @@
 <li><strong>Evaluate task-level risks</strong> (additive impact if triggered).</li>
 </ol>
 <p>The result is the task's effective duration for that iteration. Over thousands of iterations, the sampled values form a distribution that captures the inherent uncertainty in the estimate.</p>
-<p>This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in <a href="../risks/">Risks and Uncertainty Factors</a>.</p>
+<p>This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in <a href="../uncertainty_factors/">Uncertainty Factors</a> and <a href="../risks/">Risks</a>.</p>
 <h2 id="estimation-methods-at-a-glance">Estimation methods at a glance<a class="headerlink" href="#estimation-methods-at-a-glance" title="Permanent link">&para;</a></h2>
 <p><code>mcprojsim</code> supports three ways to express task effort. Each method provides the same information to the simulator — a probability distribution to sample from — but is suited to different estimation contexts.</p>
 <table>
@@ -1974,6 +2030,31 @@
 </tbody>
 </table>
 <p>All three methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.</p>
+<h3 id="accepted-field-aliases">Accepted field aliases<a class="headerlink" href="#accepted-field-aliases" title="Permanent link">&para;</a></h3>
+<p>For explicit ranges, the estimate model accepts these equivalent field names:</p>
+<table>
+<thead>
+<tr>
+<th>Canonical field</th>
+<th>Accepted alias</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>low</code></td>
+<td><code>min</code></td>
+</tr>
+<tr>
+<td><code>expected</code></td>
+<td><code>most_likely</code></td>
+</tr>
+<tr>
+<td><code>high</code></td>
+<td><code>max</code></td>
+</tr>
+</tbody>
+</table>
+<p>You can use either form in YAML or TOML. They are interpreted identically.</p>
 <h2 id="explicit-range-estimates">Explicit range estimates<a class="headerlink" href="#explicit-range-estimates" title="Permanent link">&para;</a></h2>
 <p>The most direct way to estimate a task is to provide three values that describe the range of plausible effort:</p>
 <table>
@@ -2118,11 +2199,11 @@
 <p>The distribution used for a task is resolved in this order, from highest to lowest priority:</p>
 <ol>
 <li><strong>Per-task <code>distribution</code> field</strong> — set directly on a task's <code>estimate</code> block. Always takes precedence.</li>
-<li><strong><code>--distribution</code> CLI flag</strong> — overrides the project-level default for any task that does not set its own distribution. Tasks with an explicit <code>distribution</code> are unaffected.</li>
 <li><strong>Project-level <code>distribution</code> field</strong> — set under <code>project:</code> in the project file. Acts as the default for all tasks in that project.</li>
 <li><strong>Built-in default</strong> — <code>triangular</code> when nothing else is specified.</li>
 </ol>
 <p>This means you can set <code>distribution: lognormal</code> once at the project level and get log-normal sampling for every task without touching each individual task, while still overriding specific tasks back to <code>triangular</code> (or another distribution) where needed.</p>
+<p>There is currently no global <code>--distribution</code> CLI override for <code>simulate</code>.</p>
 <p><strong>Example — project-wide lognormal with one triangular override:</strong></p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">project</span><span class="p">:</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Research</span><span class="nv"> </span><span class="s">Project&quot;</span>
@@ -2146,9 +2227,6 @@
 </span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 </span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 </span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
-</span></code></pre></div>
-<p>You can also apply the override from the command line without editing the file:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>research_project.yaml<span class="w"> </span>--distribution<span class="w"> </span>lognormal
 </span></code></pre></div>
 <h3 id="log-normal-distribution">Log-normal distribution<a class="headerlink" href="#log-normal-distribution" title="Permanent link">&para;</a></h3>
 <p>The log-normal distribution is an alternative that produces a right-skewed,
@@ -2222,16 +2300,26 @@ $z_p \approx 1.645$.</p>
 <li>When the team is not comfortable with unbounded estimates</li>
 </ul>
 <p><strong>Specification:</strong></p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">distribution</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;lognormal&quot;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">14</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">  </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">distribution</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;lognormal&quot;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">  </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">14</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span></code></pre></div>
 <p>Here, 2 days is the minimum, 5 days is the most likely outcome, and 14 days is
 interpreted as the configured high percentile (P95 by default). Wider gaps
 between <code>expected</code> and <code>high</code> produce a heavier right tail.</p>
+<h3 id="configuring-the-log-normal-high-percentile">Configuring the log-normal high percentile<a class="headerlink" href="#configuring-the-log-normal-high-percentile" title="Permanent link">&para;</a></h3>
+<p>The <code>high</code> value for log-normal estimates is interpreted using the configuration setting <code>lognormal.high_percentile</code>.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">lognormal</span><span class="p">:</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">high_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">95</span>
+</span></code></pre></div>
+<p>Allowed values are: <code>70</code>, <code>75</code>, <code>80</code>, <code>85</code>, <code>90</code>, <code>95</code>, <code>99</code>.</p>
+<ul>
+<li>Lower values (for example <code>80</code>) treat <code>high</code> as a less extreme percentile and produce a lighter right tail.</li>
+<li>Higher values (for example <code>99</code>) treat <code>high</code> as a more extreme percentile and produce a heavier right tail.</li>
+</ul>
 <p><strong>Example: a research task with high uncertainty</strong></p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">tasks</span><span class="p">:</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;prototype&quot;</span>
@@ -2843,7 +2931,8 @@ This can be explained by noticing that task durations are influenced by many sma
 </span><span id="__span-23-31"><a id="__codelineno-23-31" name="__codelineno-23-31" href="#__codelineno-23-31"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;implementation&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
 <p>All four estimation methods are combined in one project. Each task's estimate is resolved and sampled independently using the same simulation pipeline. The simulator converts all values to hours internally using the appropriate unit for each estimate method.</p>
-<p>The only restriction is that you cannot combine multiple estimation methods on the same task. Each task must use exactly one of: explicit range, T-shirt size, or story points.</p>
+<p>Implementation detail: if a symbolic estimate (<code>t_shirt_size</code> or <code>story_points</code>) is present together with explicit numeric fields (<code>low</code> / <code>expected</code> / <code>high</code>), the symbolic estimate path is used and numeric fields are effectively ignored.</p>
+<p>Recommended authoring style: avoid mixing symbolic and explicit fields on the same task. Use exactly one method per task to keep intent unambiguous.</p>
 <h2 id="the-unit-field">The <code>unit</code> field<a class="headerlink" href="#the-unit-field" title="Permanent link">&para;</a></h2>
 <p>The <code>unit</code> field specifies the time unit for numeric estimate values. The simulator uses this field to convert all values to <strong>hours</strong> internally, which is the canonical unit used throughout the simulation.</p>
 <h3 id="supported-values">Supported values<a class="headerlink" href="#supported-values" title="Permanent link">&para;</a></h3>
@@ -2996,6 +3085,11 @@ This can be explained by noticing that task durations are influenced by many sma
 <td>Yes — cannot use both on one task</td>
 </tr>
 <tr>
+<td>At least one estimate mode provided (<code>expected</code> or symbolic)</td>
+<td>All tasks</td>
+<td>Yes — estimate cannot be empty</td>
+</tr>
+<tr>
 <td>Story point value in allowed set</td>
 <td>Story points</td>
 <td>Yes — must be 1, 2, 3, 5, 8, 13, or 21</td>
@@ -3009,6 +3103,16 @@ This can be explained by noticing that task durations are influenced by many sma
 <td>No <code>unit</code> on symbolic estimates</td>
 <td>T-shirt / story point</td>
 <td>Yes — unit comes from config</td>
+</tr>
+<tr>
+<td><code>t_shirt_size</code> token shape must be <code>&lt;size&gt;</code> or <code>&lt;category&gt;.&lt;size&gt;</code></td>
+<td>T-shirt size</td>
+<td>Yes — invalid token formats fail validation</td>
+</tr>
+<tr>
+<td><code>t_shirt_size</code> category and size must exist in active config</td>
+<td>T-shirt size</td>
+<td>Yes — unknown category/size fails resolution</td>
 </tr>
 </tbody>
 </table>

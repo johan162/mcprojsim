@@ -909,17 +909,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#practical-tips-for-defining-risks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Practical Tips for Defining Risks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -955,6 +944,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-tips-for-defining-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical Tips for Defining Risks
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1551,17 +1551,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#practical-tips-for-defining-risks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Practical Tips for Defining Risks
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1597,6 +1586,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-tips-for-defining-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical Tips for Defining Risks
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1705,6 +1705,10 @@
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
 </span></code></pre></div>
 <p>If this risk triggers, it adds 20% of the current duration. The percentage is calculated against the base duration passed to the risk evaluator — for task-level risks, this is the uncertainty-adjusted task duration; for project-level risks, it is the scheduled project duration.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code>unit</code> field is not applicable to percentage impacts; if provided it is silently ignored. Percentage impacts are always dimensionless fractions of the base duration.</p>
+</div>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">risks</span><span class="p">:</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;risk_002&quot;</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Requirements</span><span class="nv"> </span><span class="s">change&quot;</span>
@@ -1755,6 +1759,7 @@
 </ul>
 <h3 id="cumulative-evaluation">Cumulative Evaluation<a class="headerlink" href="#cumulative-evaluation" title="Permanent link">&para;</a></h3>
 <p>If a task defines multiple risks, each risk is evaluated independently. When more than one risk triggers in the same iteration, their impacts are cumulative — they are simply added together.</p>
+<p>When percentage-based risks are combined, each percentage is calculated against the <strong>same original adjusted duration</strong> — not against a running cumulative total. Two 20% risks on a 100-hour task each contribute 20 hours (total +40 hours), not a compounded 44 hours.</p>
 <p>For example, if a task has two risks:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">risks</span><span class="p">:</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;risk_a&quot;</span>
@@ -1766,7 +1771,7 @@
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.10</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 </span></code></pre></div>
-<p>In a given iteration, neither, one, or both may trigger. If both trigger, the task receives an additional 8 days on top of its adjusted duration.</p>
+<p>In a given iteration, neither, one, or both may trigger. If both trigger, the task receives an additional 8 hours on top of its adjusted duration.</p>
 <h3 id="full-task-example-with-risks">Full Task Example with Risks<a class="headerlink" href="#full-task-example-with-risks" title="Permanent link">&para;</a></h3>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">tasks</span><span class="p">:</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_004&quot;</span>
@@ -1794,7 +1799,7 @@
 <ol>
 <li>Samples a base duration between 4 and 12 days (most likely around 6).</li>
 <li>Multiplies by the combined uncertainty factor (in this case the product of multipliers for medium experience, high requirements maturity, high technical complexity, colocated distribution, and high integration complexity).</li>
-<li>Evaluates the "Security audit findings" risk: with 30% probability, adds 5 days.</li>
+<li>Evaluates the "Security audit findings" risk: with 30% probability, adds 5 hours.</li>
 <li>Uses the resulting value as the task duration for scheduling.</li>
 </ol>
 <h2 id="project-level-risks">Project-Level Risks<a class="headerlink" href="#project-level-risks" title="Permanent link">&para;</a></h2>
@@ -1938,15 +1943,6 @@
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_002&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;task_003&quot;</span><span class="p p-Indicator">]</span>
 </span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="nt">risks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span></code></pre></div>
-<h2 id="practical-tips-for-defining-risks">Practical Tips for Defining Risks<a class="headerlink" href="#practical-tips-for-defining-risks" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>Be specific.</strong> A risk named "something goes wrong" is not actionable. Prefer names like "Security audit findings" or "Vendor API downtime".</li>
-<li><strong>Calibrate probability honestly.</strong> A probability of <code>0.50</code> means you expect the event to happen roughly half the time. If you are unsure, <code>0.20</code> to <code>0.30</code> is a reasonable starting range for events that are plausible but not expected.</li>
-<li><strong>Do not double-count.</strong> If a condition is already captured by an uncertainty factor (e.g., high technical complexity), do not also add a risk for the same effect. Risks are for events; uncertainty factors are for conditions.</li>
-<li><strong>Use percentage impact for scale-dependent events.</strong> If a risk tends to hurt larger tasks more than smaller ones, percentage-based impact is a better fit.</li>
-<li><strong>Use absolute impact for fixed-cost events.</strong> If a risk has a known cost regardless of the task size (e.g., a mandatory 3-day wait for an external review), absolute impact is appropriate.</li>
-<li><strong>Keep risk lists manageable.</strong> Most tasks should have zero to three risks. If a task has many risks, consider whether some of them are better captured as uncertainty factors or whether the task should be broken into smaller pieces.</li>
-</ul>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>The following two examples demonstrate the same small project defined with and without uncertainty factors and risks. Comparing them illustrates the effect these mechanisms have on simulation input.</p>
 <h3 id="example-1-project-without-uncertainty-factors-or-risks">Example 1: Project Without Uncertainty Factors or Risks<a class="headerlink" href="#example-1-project-without-uncertainty-factors-or-risks" title="Permanent link">&para;</a></h3>
@@ -2095,6 +2091,15 @@
 </span><span id="__span-9-96"><a id="__codelineno-9-96" name="__codelineno-9-96" href="#__codelineno-9-96"></a><span class="w">        </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
 </span></code></pre></div>
 <p>Compared to Example 1, this version will produce a wider and generally longer distribution of project durations. The uncertainty factors shift task durations systematically (for instance, the low team experience on <code>dash_003</code> multiplies that task's sampled duration by 1.30), and the risks introduce discrete jumps when they trigger. The two project-level risks add further spread to the overall distribution.</p>
+<h2 id="practical-tips-for-defining-risks">Practical Tips for Defining Risks<a class="headerlink" href="#practical-tips-for-defining-risks" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Be specific.</strong> A risk named "something goes wrong" is not actionable. Prefer names like "Security audit findings" or "Vendor API downtime".</li>
+<li><strong>Calibrate probability honestly.</strong> A probability of <code>0.50</code> means you expect the event to happen roughly half the time. If you are unsure, <code>0.20</code> to <code>0.30</code> is a reasonable starting range for events that are plausible but not expected.</li>
+<li><strong>Do not double-count.</strong> If a condition is already captured by an uncertainty factor (e.g., high technical complexity), do not also add a risk for the same effect. Risks are for events; uncertainty factors are for conditions.</li>
+<li><strong>Use percentage impact for scale-dependent events.</strong> If a risk tends to hurt larger tasks more than smaller ones, percentage-based impact is a better fit.</li>
+<li><strong>Use absolute impact for fixed-cost events.</strong> If a risk has a known cost regardless of the task size (e.g., a mandatory 3-day wait for an external review), absolute impact is appropriate.</li>
+<li><strong>Keep risk lists manageable.</strong> Most tasks should have zero to three risks. If a task has many risks, consider whether some of them are better captured as uncertainty factors or whether the task should be broken into smaller pieces.</li>
+</ul>
 <h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
