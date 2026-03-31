@@ -213,6 +213,14 @@ class JSONExporter:
         )
         sprint_data["ratio_summaries"] = diagnostics.get("ratios", {})
         sprint_data["historical_correlations"] = diagnostics.get("correlations", {})
+        
+        # Planning assumptions: explicitly surface future sprint capacity adjustments
+        sprint_data["planning_assumptions"] = {
+            "future_sprint_overrides": sprint_results.future_sprint_overrides,
+            "notes": "Future sprint overrides reduce effective sprint capacity for the specified sprints. "
+                    "Effective multiplier = holiday_factor * capacity_multiplier."
+        }
+        
         return sprint_data
 
     @staticmethod
