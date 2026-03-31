@@ -7,7 +7,7 @@ from statistics import NormalDist
 from typing import Any, Dict, Literal, Optional, cast
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class EffortUnit(str, Enum):
@@ -387,6 +387,34 @@ class OutputConfig(BaseModel):
         gt=0,
     )
 
+    @field_validator("formats")
+    @classmethod
+    def validate_formats(cls, value: list[str]) -> list[str]:
+        """Require non-empty, known output formats."""
+        if not value:
+            raise ValueError("output.formats must include at least one format")
+
+        allowed = set(DEFAULT_OUTPUT_FORMATS)
+        normalized: list[str] = []
+        unknown: list[str] = []
+        for item in value:
+            fmt = item.strip().lower()
+            if not fmt:
+                raise ValueError("output.formats cannot contain empty values")
+            if fmt not in allowed:
+                unknown.append(fmt)
+            normalized.append(fmt)
+
+        if unknown:
+            allowed_text = ", ".join(DEFAULT_OUTPUT_FORMATS)
+            unknown_text = ", ".join(sorted(set(unknown)))
+            raise ValueError(
+                "output.formats contains unsupported value(s): "
+                f"{unknown_text}. Supported values: {allowed_text}"
+            )
+
+        return normalized
+
 
 class ExperienceProfileConfig(BaseModel):
     """Productivity and overhead parameters for an experience profile."""
@@ -573,6 +601,8 @@ class StoryPointConfig(EstimateRangeConfig):
 class Config(BaseModel):
     """Complete application configuration."""
 
+    model_config = {"extra": "forbid"}
+
     uncertainty_factors: Dict[str, Dict[str, float]] = Field(default_factory=dict)
     t_shirt_sizes: Dict[str, Dict[str, TShirtSizeConfig]] = Field(default_factory=dict)
     t_shirt_size_default_category: str = Field(
@@ -604,8 +634,13 @@ class Config(BaseModel):
         if not config_path.exists():
             raise FileNotFoundError(f"Config file not found: {config_path}")
 
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
+
+        if not isinstance(data, dict):
+            raise ValueError(
+                "Invalid configuration: top-level content must be a mapping/object"
+            )
 
         normalized_data = _normalize_t_shirt_config_input(data)
         merged_data = _merge_nested_dicts(_build_default_config_data(), normalized_data)

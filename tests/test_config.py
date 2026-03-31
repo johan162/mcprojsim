@@ -166,6 +166,44 @@ class TestConfig:
         with pytest.raises(ValueError, match="must be one of"):
             Config.load_from_file(config_file)
 
+    def test_config_load_rejects_non_mapping_root(self, tmp_path):
+        """Top-level config must be a mapping/object, not a list or scalar."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("- not\n- a\n- mapping\n")
+
+        with pytest.raises(ValueError, match="top-level content must be a mapping"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unsupported_output_formats(self, tmp_path):
+        """output.formats should fail fast for unknown format values."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "output": {
+                        "formats": ["json", "xml"],
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="output.formats contains unsupported"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unknown_top_level_field(self, tmp_path):
+        """Unknown top-level config keys should be rejected to catch typos early."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "simluation": {"default_iterations": 5000},
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+            Config.load_from_file(config_file)
+
 
 class TestSimulationConfig:
     """Tests for simulation configuration."""

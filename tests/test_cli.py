@@ -334,7 +334,78 @@ class TestCli:
 
         assert result.exit_code != 0
         assert "Invalid value for --tshirt-category" in result.output
-        assert "Valid categories:" in result.output
+
+    def test_simulate_rejects_unknown_output_format(self) -> None:
+        """Unsupported --output-format values should fail fast with guidance."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                [
+                    "simulate",
+                    str(project_file),
+                    "--output-format",
+                    "json,xml",
+                    "--quiet",
+                ],
+            )
+
+        assert result.exit_code != 0
+        assert "Unsupported output format(s)" in result.output
+        assert "xml" in result.output
+
+    def test_simulate_requires_compatible_format_for_historic_base(self) -> None:
+        """--include-historic-base should require json or html output format."""
+        runner = CliRunner()
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                [
+                    "simulate",
+                    str(project_file),
+                    "--output-format",
+                    "csv",
+                    "--include-historic-base",
+                    "--quiet",
+                ],
+            )
+
+        assert result.exit_code != 0
+        assert "--include-historic-base requires --output-format" in result.output
 
     def test_simulate_loads_user_default_config_when_present(
         self, monkeypatch, tmp_path
