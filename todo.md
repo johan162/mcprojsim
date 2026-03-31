@@ -63,21 +63,8 @@ Ideas on what to focus future development on
 
 ## Not yet fully implemented in current specification
 
-### 1. Two-pass critical-path-aware simulation mode (FR-034, FR-042)
 
-The requirements specify a configurable two-pass scheduling mode where:
-- Pass 1 computes baseline criticality indices under resource/calendar constraints
-- Pass 2 prioritizes assignments for tasks ranked by pass-1 criticality
-- The system reports pass-1 versus pass-2 outcome deltas for traceability
-
-Current state:
-
-- only single-pass greedy assignment is implemented
-- no CLI or config toggle to enable two-pass mode
-- no acceptance tests for pass-delta behavior
-
-
-### 2. Environment-based configuration selection (FR-012)
+### 1. Environment-based configuration selection (FR-012)
 
 Current state:
 
@@ -90,7 +77,7 @@ What is missing:
 - no environment-aware config resolution
 
 
-### 3. Pluggable distribution and risk model architecture (NFR-008)
+### 2. Pluggable distribution and risk model architecture (NFR-008)
 
 The requirements specify that distribution types and risk models should be pluggable/extensible.
 
@@ -117,6 +104,7 @@ What is missing:
 - exporters always generate histograms instead of honoring `config.output.include_histogram`
 - all three exporters hardcode 50 bins instead of using `config.output.histogram_bins`
 
+
 ### 2. Logging is only partially configurable (NFR-010)
 
 Current state:
@@ -131,33 +119,8 @@ What is missing:
 - no config-file-driven log level
 - no environment-driven logging configuration in the main workflow
 
-### 3. Progress reporting interval mismatch (FR-013)
 
-Current state:
-
-- progress can be shown during simulation
-- quiet mode is supported
-- progress reports every 10% of iterations
-
-What is missing:
-
-- requirement says every **5%** of iterations **or** every 1000 iterations (whichever comes first)
-- implementation reports at 10% intervals only
-- for smaller runs (< 10k iterations), progress can be sparser than required
-
-### 4. Default percentile coverage does not include P10 (FR-010)
-
-Current state:
-
-- the engine computes percentiles listed in `project.confidence_levels`
-- default confidence levels are `[25, 50, 75, 80, 85, 90, 95, 99]`
-
-What is missing:
-
-- requirements call out `P10, P25, P50, P75, P80, P90, P95, P99`
-- `P10` is not produced by default (users can add it per-project but it is not in the default list)
-
-### 5. Documentation gaps
+### 3. Documentation gaps
 
 Current state:
 
@@ -169,8 +132,6 @@ What is missing:
 
 - Complete user guide section on how configuration affects simulation
 - More in-depth description of risks and uncertainty factors and how to determine those
-- Migration guidance for adopting explicit team/resource definitions (FR-036)
-
 
 # Roadmap
 
@@ -275,6 +236,13 @@ Notes:
 
 
 # Completed
+
+### Two-pass critical-path-aware simulation mode (FR-034, FR-042)
+
+The requirements specify a configurable two-pass scheduling mode where:
+- Pass 1 computes baseline criticality indices under resource/calendar constraints
+- Pass 2 prioritizes assignments for tasks ranked by pass-1 criticality
+- The system reports pass-1 versus pass-2 outcome deltas for traceability
 
 
 ### Sickness duration configuration in config.yaml (FR-040)
