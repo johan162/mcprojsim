@@ -27,9 +27,9 @@ class TestConfig:
         assert config.constrained_scheduling.sickness_prob == 0.0
         assert config.sprint_defaults.sickness.probability_per_person_per_week == 0.058
 
-    def test_default_confidence_levels_include_p25_and_p99(self):
-        """Test the shared default confidence levels include P25 and P99."""
-        assert DEFAULT_CONFIDENCE_LEVELS == [25, 50, 75, 80, 85, 90, 95, 99]
+    def test_default_confidence_levels_include_p10_p25_and_p99(self):
+        """Test the shared default confidence levels include P10, P25, and P99."""
+        assert DEFAULT_CONFIDENCE_LEVELS == [10, 25, 50, 75, 80, 85, 90, 95, 99]
 
     def test_get_uncertainty_multiplier(self):
         """Test getting uncertainty multiplier."""
