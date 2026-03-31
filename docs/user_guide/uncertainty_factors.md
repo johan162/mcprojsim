@@ -4,9 +4,9 @@
 
 Understanding both **risks** and **uncertainty factors** — and when to use each — is essential for building realistic project models.
 
-Uncertainty factors model persistent conditions that systematically affect how long work takes. Unlike risks, which are chance events that either happen or do not, uncertainty factors represent known characteristics of the working environment.
-
 Every task can specify its own set of uncertainty factors. The simulator reads these labels, looks up the corresponding numeric multipliers from the configuration file, and multiplies them together to produce a single adjustment that scales the sampled base duration.
+
+In the task pipeline, uncertainty factors are applied **after estimate sampling** and **before risk impacts** are added.
 
 ## Supported Uncertainty Factors
 
@@ -97,6 +97,21 @@ If the sampled base duration is 5 days, the adjusted duration becomes $5 \times 
 
 This illustrates why multiple adverse factors compound quickly. Even moderate individual adjustments can produce a significant overall effect when multiplied together.
 
+## Validation and Fallback Behavior
+
+The current implementation distinguishes between project-file schema validation and runtime multiplier lookup:
+
+- The task model defines five named uncertainty fields: `team_experience`, `requirements_maturity`, `technical_complexity`, `team_distribution`, `integration_complexity`.
+- When these labels are looked up at runtime, missing factor names or unknown levels in the active configuration fall back to multiplier `1.0`.
+
+Practical implications:
+
+- If a configured factor name is missing entirely, that factor contributes no scaling (`1.0`).
+- If a level string is not present under a configured factor, that factor also contributes `1.0`.
+- In other words, unknown or unmatched labels do not raise an error in multiplier lookup; they behave like neutral multipliers.
+
+For predictable behavior, keep project-file labels aligned with your configured level names.
+
 ## Default Values
 
 If a task does not specify a particular uncertainty factor, the default level is applied. The defaults are:
@@ -109,7 +124,7 @@ If a task does not specify a particular uncertainty factor, the default level is
 | `team_distribution`     | `colocated`   |
 | `integration_complexity`| `medium`      |
 
-A task that omits the `uncertainty_factors` block entirely still receives these defaults, resulting in a combined multiplier based on the default levels. In the default configuration, `medium` maps to `1.00` for `team_experience` but `1.15` for `requirements_maturity`, `1.20` for `technical_complexity`, and `1.15` for `integration_complexity`, so even the baseline is not simply `1.0` across the board.
+A task that omits the `uncertainty_factors` block entirely still receives these defaults, resulting in a combined multiplier based on the default levels. In the default configuration, `medium` maps to `1.00` for `team_experience` but `1.15` for `requirements_maturity`, `1.20` for `technical_complexity`, and `1.15` for `integration_complexity`, so the default combined multiplier is not simply `1.0`.
 
 ## Defining Uncertainty Factors in the Project File
 
@@ -197,6 +212,17 @@ uncertainty_factors:
 ```
 
 Any values you specify in your configuration file are merged with the defaults. You only need to include the factors or levels you want to override.
+
+If you provide a factor with only some levels (for example only `distributed` under `team_distribution`), unspecified levels continue to use defaults.
+
+If you add additional factor names in configuration that are not referenced by the project task schema, they are effectively unused by the current simulation pipeline.
+
+## Recommended Authoring Pattern
+
+- Keep task files focused on the five supported factor fields.
+- Keep organization-specific multiplier calibration in `config.yaml`.
+- Override only the factor levels that differ from defaults.
+- Recheck combined multiplier magnitude for heavily adverse combinations to avoid unintentionally extreme schedules.
 
 
 
