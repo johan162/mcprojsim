@@ -29,7 +29,7 @@ class SprintPlanningResults(BaseModel):
     burnup_percentiles: list[dict[str, float]] = Field(default_factory=list)
     future_sprint_overrides: list[dict[str, Any]] = Field(
         default_factory=list,
-        description="Applied future sprint capacity adjustments for planning transparency"
+        description="Applied future sprint capacity adjustments for planning transparency",
     )
 
     mean: float = 0.0

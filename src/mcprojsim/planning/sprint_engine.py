@@ -54,12 +54,14 @@ class SprintSimulationEngine:
             burnup_samples.append(burnup_trace)
 
         historical_diagnostics = sampler.get_historical_diagnostics()
-        
+
         # Serialize future sprint overrides for results reporting
         overrides_list = [
             {
                 "sprint_number": override.sprint_number,
-                "start_date": override.start_date.isoformat() if override.start_date else None,
+                "start_date": (
+                    override.start_date.isoformat() if override.start_date else None
+                ),
                 "holiday_factor": override.holiday_factor,
                 "capacity_multiplier": override.capacity_multiplier,
                 "effective_multiplier": override.effective_multiplier(),
@@ -67,7 +69,7 @@ class SprintSimulationEngine:
             }
             for override in sprint_planning.future_sprint_overrides
         ]
-        
+
         results = SprintPlanningResults(
             iterations=self.iterations,
             project_name=project.project.name,
