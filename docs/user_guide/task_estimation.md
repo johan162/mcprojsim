@@ -18,7 +18,7 @@ In each Monte Carlo iteration, the simulator processes every task as follows:
 
 The result is the task's effective duration for that iteration. Over thousands of iterations, the sampled values form a distribution that captures the inherent uncertainty in the estimate.
 
-This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in [Risks and Uncertainty Factors](risks.md).
+This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in [Uncertainty Factors](uncertainty_factors.md) and [Risks](risks.md).
 
 
 
@@ -33,6 +33,18 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 | **Story points** | `story_points` (e.g., `5`) | Looked up in config → `low`, `expected`, `high` | Teams using story point estimation practices |
 
 All three methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
+
+### Accepted field aliases
+
+For explicit ranges, the estimate model accepts these equivalent field names:
+
+| Canonical field | Accepted alias |
+|----------------|----------------|
+| `low` | `min` |
+| `expected` | `most_likely` |
+| `high` | `max` |
+
+You can use either form in YAML or TOML. They are interpreted identically.
 
 
 
@@ -167,11 +179,12 @@ estimate:
 The distribution used for a task is resolved in this order, from highest to lowest priority:
 
 1. **Per-task `distribution` field** — set directly on a task's `estimate` block. Always takes precedence.
-2. **`--distribution` CLI flag** — overrides the project-level default for any task that does not set its own distribution. Tasks with an explicit `distribution` are unaffected.
-3. **Project-level `distribution` field** — set under `project:` in the project file. Acts as the default for all tasks in that project.
-4. **Built-in default** — `triangular` when nothing else is specified.
+2. **Project-level `distribution` field** — set under `project:` in the project file. Acts as the default for all tasks in that project.
+3. **Built-in default** — `triangular` when nothing else is specified.
 
 This means you can set `distribution: lognormal` once at the project level and get log-normal sampling for every task without touching each individual task, while still overriding specific tasks back to `triangular` (or another distribution) where needed.
+
+There is currently no global `--distribution` CLI override for `simulate`.
 
 **Example — project-wide lognormal with one triangular override:**
 
@@ -198,12 +211,6 @@ tasks:
       expected: 1
       high: 2
       unit: "days"
-```
-
-You can also apply the override from the command line without editing the file:
-
-```bash
-mcprojsim simulate research_project.yaml --distribution lognormal
 ```
 
 ### Log-normal distribution
@@ -285,6 +292,20 @@ estimate:
 Here, 2 days is the minimum, 5 days is the most likely outcome, and 14 days is
 interpreted as the configured high percentile (P95 by default). Wider gaps
 between `expected` and `high` produce a heavier right tail.
+
+### Configuring the log-normal high percentile
+
+The `high` value for log-normal estimates is interpreted using the configuration setting `lognormal.high_percentile`.
+
+```yaml
+lognormal:
+  high_percentile: 95
+```
+
+Allowed values are: `70`, `75`, `80`, `85`, `90`, `95`, `99`.
+
+- Lower values (for example `80`) treat `high` as a less extreme percentile and produce a lighter right tail.
+- Higher values (for example `99`) treat `high` as a more extreme percentile and produce a heavier right tail.
 
 **Example: a research task with high uncertainty**
 
@@ -723,7 +744,9 @@ tasks:
 
 All four estimation methods are combined in one project. Each task's estimate is resolved and sampled independently using the same simulation pipeline. The simulator converts all values to hours internally using the appropriate unit for each estimate method.
 
-The only restriction is that you cannot combine multiple estimation methods on the same task. Each task must use exactly one of: explicit range, T-shirt size, or story points.
+Implementation detail: if a symbolic estimate (`t_shirt_size` or `story_points`) is present together with explicit numeric fields (`low` / `expected` / `high`), the symbolic estimate path is used and numeric fields are effectively ignored.
+
+Recommended authoring style: avoid mixing symbolic and explicit fields on the same task. Use exactly one method per task to keep intent unambiguous.
 
 
 
@@ -824,9 +847,12 @@ The resolved values are then converted to hours using the same conversion logic.
 | `low`, `expected`, `high` all provided | Log-normal distribution | Yes — all three required |
 | `low`, `expected`, `high` all provided | Triangular distribution | Yes — all three required |
 | Only one symbolic type | T-shirt / story point | Yes — cannot use both on one task |
+| At least one estimate mode provided (`expected` or symbolic) | All tasks | Yes — estimate cannot be empty |
 | Story point value in allowed set | Story points | Yes — must be 1, 2, 3, 5, 8, 13, or 21 |
 | `unit` must be `"hours"`, `"days"`, or `"weeks"` | Explicit estimates | Yes — free-form strings not accepted |
 | No `unit` on symbolic estimates | T-shirt / story point | Yes — unit comes from config |
+| `t_shirt_size` token shape must be `<size>` or `<category>.<size>` | T-shirt size | Yes — invalid token formats fail validation |
+| `t_shirt_size` category and size must exist in active config | T-shirt size | Yes — unknown category/size fails resolution |
 
 
 
