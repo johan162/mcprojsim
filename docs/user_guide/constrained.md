@@ -21,9 +21,19 @@ The CLI and exporters report this explicitly via:
 - `Schedule Mode` (`dependency_only` or `resource_constrained`),
 - constrained diagnostics (resource wait time, utilization, calendar delay contribution).
 
+## Suggested reading path
+
+For first-time readers, follow this order:
+
+1. Example 1 through Example 6 (progressive walkthrough)
+2. `team_size` rules (reference section)
+3. CLI/config tuning knobs (`--two-pass`, `--pass1-iterations`, and config defaults)
+
+If you already know the core flow, jump directly to the `team_size` and two-pass sections.
 
 
-## How `team_size` affects scheduling
+
+## How `team_size` affects scheduling (reference)
 
 `team_size` and top-level `resources` interact during validation before simulation starts.
 
@@ -188,7 +198,7 @@ Before Example 2, here is a quick reference for the `resources` fields used thro
 | `experience_level` | No | `2` | Skill level (`1`, `2`, or `3`) used with `min_experience_level` |
 | `productivity_level` | No | `1.0` | Relative throughput multiplier (valid range `0.1` to `2.0`) |
 | `calendar` | No | `default` | Which calendar (`calendars[*].id`) the resource follows |
-| `sickness_prob` | No | `0.0` | Daily sickness probability for stochastic absence |
+| `sickness_prob` | No | `0.0` | Per-working-day sickness probability for stochastic absence |
 | `planned_absence` | No | `[]` | Explicit non-working dates for that resource |
 
 
@@ -217,8 +227,8 @@ scheduler also applies an automatic practical cap.
 
 Automatic practical cap heuristic:
 
-- `granularity_cap = max(1, floor(task_effort_hours / 4.0))`
-- `coordination_cap = 6`
+- `granularity_cap = max(1, floor(task_effort_hours / 16.0))`
+- `coordination_cap = 3`
 - `practical_cap = min(granularity_cap, coordination_cap)`
 
 Effective assignment count at start is:
@@ -234,15 +244,57 @@ Why this exists:
 
 Practical examples:
 
-- Task effort `8h` → `granularity_cap = floor(8/4) = 2` → at most 2 assignees.
-- Task effort `24h` → `granularity_cap = floor(24/4) = 6` → at most 6 assignees.
-- Task effort `80h` → `granularity_cap = 20`, but coordination cap still limits to 6.
+- Task effort `8h` → `granularity_cap = max(1, floor(8/16)) = 1` → at most 1 assignee.
+- Task effort `24h` → `granularity_cap = max(1, floor(24/16)) = 1` → at most 1 assignee.
+- Task effort `80h` → `granularity_cap = floor(80/16) = 5`, but coordination cap limits to 3.
 
 Why these constants were selected:
 
-- `MIN_EFFORT_PER_ASSIGNEE_HOURS = 4.0` uses a half-day work chunk as a practical lower bound for productive splitting. It avoids pathological cases where many assignees are allocated to very small tasks.
-- `MAX_ASSIGNEES_PER_TASK = 6` is a conservative coordination ceiling. It reflects diminishing returns from communication/synchronization overhead when too many people are placed on one task.
+- `MIN_EFFORT_PER_ASSIGNEE_HOURS = 16.0` means each assignee should have about two working days of effort before the heuristic adds another concurrent person.
+- `MAX_ASSIGNEES_PER_TASK = 3` is a hard global coordination ceiling, even for very large tasks.
 - The pair balances realism and runtime simplicity: the scheduler remains deterministic and fast while avoiding implausible near-linear speedups.
+
+### How the `16.0` and `3` factors shape assignment
+
+The heuristic has two stages:
+
+1. **Granularity stage (`16.0`)**
+   - Compute `floor(task_effort_hours / 16.0)`.
+   - This is a rough "how many meaningful chunks" estimate for parallel work.
+   - `max(1, ...)` guarantees at least one assignee.
+
+2. **Coordination stage (`3`)**
+   - Apply `min(granularity_cap, 3)`.
+   - This caps parallelism to avoid unrealistic linear speedup from many assignees.
+
+Combined effect by effort range:
+
+- `0 <= effort < 32` hours: practical cap is `1`
+- `32 <= effort < 48` hours: practical cap is `2`
+- `effort >= 48` hours: practical cap is `3` (ceiling reached)
+
+So `16.0` controls when you *earn* additional assignees, while `3` controls the *maximum* you can ever get from the heuristic.
+
+### How this interacts with actual assignment
+
+The practical cap is only one limiter. Final assigned count is:
+
+`min(max_resources, practical_cap, currently_available_eligible_resources)`
+
+Implications:
+
+- If `max_resources` is lower than the practical cap, task-level config wins.
+- If fewer eligible resources are free, availability wins.
+- If both are high, heuristic limits still apply (`3` max from practical cap).
+
+Quick examples:
+
+- Effort `40h`, `max_resources: 5`, 4 eligible free resources:
+  `granularity_cap = floor(40/16) = 2`, `practical_cap = 2` -> assign up to `2`.
+- Effort `80h`, `max_resources: 2`, 5 eligible free resources:
+  `granularity_cap = 5`, `practical_cap = 3`, then `max_resources` lowers final cap to `2`.
+- Effort `120h`, `max_resources: 5`, only 1 eligible free resource:
+  heuristic allows `3`, but availability lowers final assignment to `1`.
 
 If you need stricter or looser behavior in your environment, these constants can be adjusted in the scheduler implementation and validated with scenario-specific simulations.
 
@@ -658,15 +710,35 @@ Current constrained scheduling uses deterministic single-pass assignment while r
 
 You use it by defining top-level `resources` (and optionally `calendars`). No extra CLI flag is required.
 
-### Double-pass automatic assignment (status)
+### Double-pass criticality assignment (available)
 
-A dedicated double-pass criticality-prioritized assignment mode is documented in requirements (`FR-042`) but is **not currently exposed as a CLI/config toggle** in this release.
+Double-pass criticality-prioritized scheduling is available via CLI and config.
 
-Practical workaround today:
+How it works:
 
-1. Run a baseline simulation and inspect critical-path frequency.
-2. Tighten task-level resource constraints (`resources`, `max_resources`, `min_experience_level`) for the highest-criticality tasks.
-3. Re-run and compare constrained diagnostics and completion percentiles.
+1. Pass 1 runs greedy scheduling for a subset of iterations to estimate task criticality.
+2. Pass 2 re-runs constrained scheduling using criticality ranking as dispatch priority.
+3. Final summary metrics come from pass 2, with a two-pass traceability delta in CLI and exports.
+
+CLI usage:
+
+```bash
+mcprojsim simulate constrained-full.yaml --two-pass --pass1-iterations 1500 --seed 42 --table
+```
+
+Config usage:
+
+```yaml
+constrained_scheduling:
+  assignment_mode: criticality_two_pass
+  pass1_iterations: 1500
+```
+
+Notes:
+
+- `--two-pass` overrides config and enables `criticality_two_pass` for that run.
+- `--pass1-iterations` is capped to total simulation iterations.
+- If `pass1_iterations` is small, criticality ranking may be noisy.
 
 
 
@@ -679,6 +751,8 @@ Use these with `mcprojsim simulate`:
 | `-n`, `--iterations` | More iterations stabilize constrained diagnostics and tail percentiles |
 | `-s`, `--seed` | Makes resource/sickness-driven runs reproducible |
 | `-c`, `--config` | Apply custom uncertainty and output/reporting defaults |
+| `--two-pass` | Enable criticality two-pass constrained scheduling for this run |
+| `--pass1-iterations` | Set pass-1 sample budget for criticality ranking in two-pass mode |
 | `--critical-paths` | Show more critical-path sequences for bottleneck analysis |
 | `-t`, `--table` | Easier reading of diagnostics and interval tables |
 | `-f json,csv,html` | Export constrained diagnostics to all report channels |
@@ -713,6 +787,8 @@ Example:
 ```yaml
 constrained_scheduling:
   sickness_prob: 0.03
+  assignment_mode: criticality_two_pass
+  pass1_iterations: 1500
 
 simulation:
   default_iterations: 30000
@@ -729,6 +805,13 @@ sprint_defaults:
     duration_log_mu: 1.10
     duration_log_sigma: 0.90
 ```
+
+`constrained_scheduling.assignment_mode` supports:
+
+- `greedy_single_pass` (default)
+- `criticality_two_pass`
+
+`constrained_scheduling.pass1_iterations` controls pass-1 ranking depth when two-pass mode is active.
 
 
 
