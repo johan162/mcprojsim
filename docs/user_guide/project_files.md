@@ -72,6 +72,7 @@ At the highest level, a project file may contain the following sections:
 - `project_risks` — optional
 - `resources` — optional. When present, constrained scheduling is activated.
 - `calendars` — optional. Used by constrained scheduling when resources reference calendars.
+- `sprint_planning` — optional. Activates sprint-based simulation mode.
 
 If `project.team_size` is greater than zero, default resources are generated up to that size (after validating explicit resources), which also makes scheduling resource-constrained.
 
@@ -139,6 +140,7 @@ The parser does not require a specific order for top-level sections, but this is
 3. `tasks`
 4. `resources`
 5. `calendars`
+6. `sprint_planning`
 
 That is also the order used in most examples and in this reference.
 
@@ -154,7 +156,7 @@ The `project` section is required. It contains project-level metadata and report
 | `description` | No | string | `null` | Optional descriptive text |
 | `start_date` | Yes | ISO date string | — | Must parse as `YYYY-MM-DD` |
 | `currency` | No | string | `"USD"` | Stored as metadata |
-| `confidence_levels` | No | list of integers | `[25, 50, 75, 80, 85, 90, 95, 99]` | Controls reported percentiles |
+| `confidence_levels` | No | list of integers | `[10, 25, 50, 75, 80, 85, 90, 95, 99]` | Controls reported percentiles |
 | `hours_per_day` | No | float | `8.0` | Hours in a working day; used for day/week conversion |
 | `distribution` | No | `"triangular"` or `"lognormal"` | `"triangular"` | Default estimate distribution for tasks that do not specify one |
 | `team_size` | No | integer | `null` | If > `0`, target total resources after validation (may auto-create defaults) |
@@ -182,7 +184,7 @@ project:
   start_date: "2025-11-01"
   currency: "USD"
   distribution: "triangular"
-  confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
+  confidence_levels: [10, 25, 50, 75, 80, 85, 90, 95, 99]
   probability_red_threshold: 0.50
   probability_green_threshold: 0.90
 ```
@@ -196,7 +198,7 @@ description = "Next-generation customer portal with enhanced features"
 start_date = "2025-11-01"
 currency = "USD"
 distribution = "triangular"
-confidence_levels = [25, 50, 75, 80, 85, 90, 95, 99]
+confidence_levels = [10, 25, 50, 75, 80, 85, 90, 95, 99]
 probability_red_threshold = 0.50
 probability_green_threshold = 0.90
 ```
@@ -220,6 +222,9 @@ Each task is validated as a `Task` object with the following fields.
 | `resources` | No | list of strings | `[]` | Task-level resource names |
 | `max_resources` | No | integer | `1` | Max number of resources that may be assigned concurrently |
 | `min_experience_level` | No | integer | `1` | Minimum resource experience allowed (`1`, `2`, `3`) |
+| `planning_story_points` | No | integer > 0 | `null` | Story point size used for sprint planning; overrides `estimate.story_points` when set |
+| `priority` | No | integer | `null` | Scheduling priority hint used in some sprint-planning modes |
+| `spillover_probability_override` | No | float 0.0–1.0 | `null` | Per-task override for the probability that incomplete work spills into the next sprint |
 | `risks` | No | list of risk objects | `[]` | Task-level probabilistic risks |
 
 ### Minimal task example
@@ -259,6 +264,18 @@ The implementation supports four estimate styles:
 4. Story Point estimate.
 
 The `distribution` field defaults to `triangular` when omitted.
+
+### Field name aliases
+
+The model accepts both long-form and short-form names for the three range fields:
+
+| Canonical name | Accepted alias |
+|---|---|
+| `low` | `min` |
+| `expected` | `most_likely` |
+| `high` | `max` |
+
+Both forms are valid in YAML and TOML. Examples in this chapter use both; they are equivalent.
 
 ### 1. Triangular estimate
 
@@ -597,8 +614,8 @@ When `resources` lists multiple names, the scheduler may still assign fewer reso
 
 - assignment at task start is capped by `max_resources` (default `1`),
 - scheduler applies an automatic practical cap:
-  - `granularity_cap = max(1, floor(task_effort_hours / 4.0))`
-  - `coordination_cap = 6`
+  - `granularity_cap = max(1, floor(task_effort_hours / 16.0))`
+  - `coordination_cap = 3`
   - `practical_cap = min(granularity_cap, coordination_cap)`
 - effective start-time assignment is:
   - `min(max_resources, practical_cap, eligible_available_resources_now)`.
@@ -770,6 +787,38 @@ calendars:
 
 This section is validated by the project model; unknown or invalid fields fail validation.
 
+## The `sprint_planning` section
+
+The optional `sprint_planning` section activates sprint-based simulation mode. When present, the engine models work as a sequence of fixed-length sprints rather than a single elapsed duration, including velocity variability, spillover, and sickness.
+
+This section has a rich sub-schema. For a full field reference, examples, and configuration options see [Sprint Planning](sprint_planning.md).
+
+### Minimal shape
+
+```yaml
+sprint_planning:
+  sprint_length_weeks: 2
+  history:
+    - sprint: 1
+      velocity: 34
+    - sprint: 2
+      velocity: 28
+```
+
+### Task fields used by sprint planning
+
+When `sprint_planning` is active, three additional task fields become relevant:
+
+| Field | Type | Notes |
+|---|---|---|
+| `planning_story_points` | integer > 0 | Story point size for sprint planning; overrides `estimate.story_points` |
+| `priority` | integer | Scheduling priority hint |
+| `spillover_probability_override` | float 0.0–1.0 | Per-task spillover probability, overrides the model default |
+
+### Configuration interaction
+
+The `sprint_defaults` section in the configuration file supplies the default values for all sprint-planning parameters (confidence level, velocity model, spillover model, sickness model, etc.). Values set directly in the project file's `sprint_planning` section take precedence over these config defaults.
+
 ## Full YAML example
 
 The following example demonstrates every currently recognized project-file section in one file.
@@ -844,7 +893,7 @@ resources:
 
 calendars:
   - id: "standard"
-    working_days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    work_days: [1, 2, 3, 4, 5]
     holidays:
       - "2026-12-25"
 ```
@@ -936,7 +985,7 @@ name = "Frontend Developer"
 
 [[calendars]]
 id = "standard"
-working_days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+work_days = [1, 2, 3, 4, 5]
 holidays = ["2026-12-25"]
 ```
 
@@ -972,11 +1021,15 @@ The current configuration schema supports these top-level sections:
 - `uncertainty_factors`
 - `t_shirt_sizes`
 - `t_shirt_size_unit`
+- `t_shirt_size_default_category`
 - `story_points`
 - `story_point_unit`
+- `lognormal`
 - `simulation`
 - `output`
 - `staffing`
+- `constrained_scheduling`
+- `sprint_defaults`
 
 ### Minimal configuration example
 
@@ -1013,16 +1066,23 @@ uncertainty_factors:
     high: 1.35
 
 t_shirt_sizes:
-  XS:
-    low: 0.5
-    expected: 1
-    high: 2
-  M:
-    low: 3
-    expected: 5
-    high: 8
+  story:
+    XS:
+      low: 3
+      expected: 5
+      high: 15
+    M:
+      low: 40
+      expected: 60
+      high: 120
+  epic:
+    M:
+      low: 200
+      expected: 480
+      high: 1200
 
 t_shirt_size_unit: "hours"
+t_shirt_size_default_category: "epic"
 
 story_points:
   1:
@@ -1035,6 +1095,9 @@ story_points:
     high: 8
 
 story_point_unit: "days"
+
+lognormal:
+  high_percentile: 95
 
 simulation:
   default_iterations: 10000
@@ -1059,6 +1122,16 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
+
+constrained_scheduling:
+  assignment_mode: "greedy_single_pass"
+  pass1_iterations: 1000
+  sickness_prob: 0.0
+
+sprint_defaults:
+  planning_confidence_level: 85
+  velocity_model: "empirical"
+  removed_work_treatment: "reduce_scope"
 ```
 
 ## The `uncertainty_factors` section
@@ -1269,6 +1342,25 @@ This field controls the unit used for all values in `story_points`.
 
 `"days"`
 
+## The `lognormal` section
+
+This section controls how the simulation interprets log-normal estimates.
+
+### Supported fields
+
+| Field | Required | Type | Default | Constraints | Notes |
+|---|---|---|---|---|---|
+| `high_percentile` | No | integer | `95` | one of `70`, `75`, `80`, `85`, `90`, `95`, `99` | The percentile that `high` is treated as in a log-normal estimate |
+
+### Example
+
+```yaml
+lognormal:
+  high_percentile: 90
+```
+
+When a task uses `distribution: lognormal`, the `high` value is fitted as this percentile of the resulting distribution. A lower value makes the tail shorter; a higher value widens it.
+
 ## The `simulation` section
 
 This section controls default simulation behavior.
@@ -1298,7 +1390,7 @@ This section controls reporting and export defaults.
 
 | Field | Required | Type | Default | Constraints | Notes |
 |---|---|---|---|---|---|
-| `formats` | No | list of strings | `["json", "csv", "html"]` | none in the config model | Default export formats for config-driven workflows |
+| `formats` | No | list of strings | `["json", "csv", "html"]` | each entry must be `json`, `csv`, or `html`; list must not be empty | Default export formats for config-driven workflows |
 | `include_histogram` | No | boolean | `true` | — | Whether histogram data should be included where supported |
 | `histogram_bins` | No | integer | `50` | `> 0` | Number of bins for histogram generation |
 | `critical_path_report_limit` | No | integer | `2` | `> 0` | Number of stored full critical paths shown in reports by default |
@@ -1438,7 +1530,9 @@ The current configuration model validates these rules directly:
 
 - `t_shirt_size_unit` must be one of `hours`, `days`, or `weeks`,
 - `story_point_unit` must be one of `hours`, `days`, or `weeks`,
+- `lognormal.high_percentile` must be one of `70`, `75`, `80`, `85`, `90`, `95`, `99`,
 - all configured estimate ranges require positive `min`, `expected`, and `max`,
+- `output.formats` must be a non-empty list; each entry must be `json`, `csv`, or `html`,
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
 - `output.histogram_bins` must be greater than 0,
