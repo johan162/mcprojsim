@@ -72,7 +72,9 @@ Examples:
 
 - `--velocity-model` overrides both project and config values
 - a value set in project `sprint_planning` overrides `sprint_defaults`
-- `sprint_defaults` provides company-wide defaults when project fields are not explicitly set
+- `sprint_defaults` provides company-wide defaults when project fields remain at built-in values
+
+Practical detail: sprint defaults are applied when a project value still equals the built-in default. In other words, this behavior is value-based rather than strictly "field omitted"-based.
 
 A historical row is usable when all of the following are true:
 
@@ -820,12 +822,6 @@ where:
 
 The clamp on $z$ is important: it prevents invalid $\ln(0)$ or negative-log inputs when very small values appear.
 
-For the logistic model, the probability is:
-
-$$
-p_i = \frac{1}{1 + e^{-\left(s \cdot \ln(x / r) + b\right)}}
-$$
-
 where:
 
 - $x$ is the item's planning story points
@@ -1129,6 +1125,11 @@ Supported formats:
 - `json`
 - `csv`
 
+For JSON, both of these top-level shapes are supported:
+
+- an array of sprint rows
+- an object containing a `sprints` array
+
 The history path may be relative. Relative paths are resolved from the project file location.
 
 ### JSON example
@@ -1200,7 +1201,7 @@ Validating .build/doc-examples/sprint_planning_minimal.yaml...
 Sprint Planning Summary:
 Sprint Length: 2 weeks
 Planning Confidence Level: 80%
-Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Removed Work Treatment: churn_only
 Velocity Model: empirical
 Planned Commitment Guidance: 7.55
 Historical Sampling Mode: matching_cadence
@@ -1223,7 +1224,7 @@ Sprint Count Confidence Intervals:
   P90: 3 sprints  (2026-06-01)
 ```
 
-Note that the current CLI prints the `removed_work_treatment` value using its internal enum representation, for example `RemovedWorkTreatment.CHURN_ONLY`. This corresponds to the configuration value `churn_only` in the project file. Likewise, `RemovedWorkTreatment.REDUCE_BACKLOG` corresponds to `reduce_backlog`.
+`removed_work_treatment` is shown directly as `churn_only` or `reduce_backlog` in current CLI output.
 
 ### Richer table output
 
@@ -1234,7 +1235,7 @@ Sprint Planning Summary:
 ├───────────────────────────────┼─────────────────────────────────────┤
 │ Sprint Length                 │ 2 weeks                             │
 │ Planning Confidence Level     │ 85%                                 │
-│ Removed Work Treatment        │ RemovedWorkTreatment.REDUCE_BACKLOG │
+│ Removed Work Treatment        │ reduce_backlog                      │
 │ Velocity Model                │ empirical                           │
 │ Planned Commitment Guidance   │ 7.13                                │
 │ Historical Sampling Mode      │ matching_cadence                    │
