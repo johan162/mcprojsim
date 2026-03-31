@@ -344,6 +344,8 @@ def _normalize_t_shirt_config_input(data: dict[str, Any]) -> dict[str, Any]:
 class UncertaintyFactorConfig(BaseModel):
     """Configuration for a single uncertainty factor."""
 
+    model_config = {"extra": "forbid"}
+
     high: float = Field(default=1.0)
     medium: float = Field(default=1.0)
     low: float = Field(default=1.0)
@@ -351,6 +353,8 @@ class UncertaintyFactorConfig(BaseModel):
 
 class SimulationConfig(BaseModel):
     """Simulation settings."""
+
+    model_config = {"extra": "forbid"}
 
     default_iterations: int = Field(default=DEFAULT_SIMULATION_ITERATIONS, gt=0)
     random_seed: Optional[int] = None
@@ -362,6 +366,8 @@ class SimulationConfig(BaseModel):
 
 class LogNormalConfig(BaseModel):
     """Shifted log-normal interpretation settings."""
+
+    model_config = {"extra": "forbid"}
 
     high_percentile: int = Field(default=DEFAULT_LOGNORMAL_HIGH_PERCENTILE)
 
@@ -378,6 +384,8 @@ class LogNormalConfig(BaseModel):
 
 class OutputConfig(BaseModel):
     """Output settings."""
+
+    model_config = {"extra": "forbid"}
 
     formats: list[str] = Field(default_factory=lambda: list(DEFAULT_OUTPUT_FORMATS))
     include_histogram: bool = True
@@ -419,12 +427,16 @@ class OutputConfig(BaseModel):
 class ExperienceProfileConfig(BaseModel):
     """Productivity and overhead parameters for an experience profile."""
 
+    model_config = {"extra": "forbid"}
+
     productivity_factor: float = Field(default=1.0, gt=0)
     communication_overhead: float = Field(default=0.06, ge=0, le=1)
 
 
 class StaffingConfig(BaseModel):
     """Staffing analysis settings."""
+
+    model_config = {"extra": "forbid"}
 
     effort_percentile: Optional[int] = Field(
         default=None,
@@ -466,6 +478,8 @@ class StaffingConfig(BaseModel):
 class ConstrainedSchedulingConfig(BaseModel):
     """Defaults for resource-constrained scheduling behavior."""
 
+    model_config = {"extra": "forbid"}
+
     sickness_prob: float = Field(
         default=DEFAULT_CONSTRAINED_SCHEDULING_SICKNESS_PROB,
         ge=0.0,
@@ -499,6 +513,8 @@ class ConstrainedSchedulingConfig(BaseModel):
 class SprintSicknessDefaultsConfig(BaseModel):
     """Company-wide defaults for sprint sickness modeling."""
 
+    model_config = {"extra": "forbid"}
+
     enabled: bool = False
     probability_per_person_per_week: float = Field(
         default=DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
@@ -514,6 +530,8 @@ class SprintSicknessDefaultsConfig(BaseModel):
 
 class SprintDefaultsConfig(BaseModel):
     """Company-wide defaults for sprint-planning behavior."""
+
+    model_config = {"extra": "forbid"}
 
     planning_confidence_level: float = Field(
         default=DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
@@ -584,6 +602,8 @@ class SprintDefaultsConfig(BaseModel):
 
 class EstimateRangeConfig(BaseModel):
     """Range configuration for a symbolic estimate."""
+
+    model_config = {"extra": "forbid"}
 
     low: float = Field(gt=0)
     expected: float = Field(gt=0)

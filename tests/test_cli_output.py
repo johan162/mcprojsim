@@ -400,13 +400,15 @@ class TestSimulateExports:
         assert result.exit_code == 0
         assert captured["path"].endswith(".csv")
 
-    def test_unknown_format_warns(self, monkeypatch):
+    def test_unknown_format_fails_fast(self, monkeypatch):
         monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)
         runner = CliRunner()
         with runner.isolated_filesystem():
             pf = _write_project(None)
             result = runner.invoke(cli, ["simulate", pf, "-f", "xyz"])
-        assert "Unknown format" in result.output
+        assert result.exit_code != 0
+        assert "Unsupported output format(s)" in result.output
+        assert "xyz" in result.output
 
     def test_unsupported_file_extension(self, monkeypatch):
         monkeypatch.setattr("mcprojsim.cli.SimulationEngine", _FakeEngine)

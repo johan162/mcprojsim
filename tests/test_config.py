@@ -204,6 +204,60 @@ class TestConfig:
         with pytest.raises(ValueError, match="Extra inputs are not permitted"):
             Config.load_from_file(config_file)
 
+    def test_config_load_rejects_unknown_nested_simulation_field(self, tmp_path):
+        """Unknown keys inside simulation config should fail validation."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "simulation": {
+                        "default_iterations": 5000,
+                        "unknown_setting": True,
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unknown_nested_output_field(self, tmp_path):
+        """Unknown keys inside output config should fail validation."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "output": {
+                        "formats": ["json"],
+                        "legacy_mode": True,
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unknown_nested_sprint_defaults_field(self, tmp_path):
+        """Unknown keys in sprint_defaults nested sections should fail validation."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "sprint_defaults": {
+                        "planning_confidence_level": 0.8,
+                        "sickness": {
+                            "enabled": True,
+                            "unexpected": 123,
+                        },
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+            Config.load_from_file(config_file)
+
 
 class TestSimulationConfig:
     """Tests for simulation configuration."""
