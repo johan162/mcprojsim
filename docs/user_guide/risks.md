@@ -68,6 +68,9 @@ risks:
 
 If this risk triggers, it adds 20% of the current duration. The percentage is calculated against the base duration passed to the risk evaluator — for task-level risks, this is the uncertainty-adjusted task duration; for project-level risks, it is the scheduled project duration.
 
+!!! note
+    The `unit` field is not applicable to percentage impacts; if provided it is silently ignored. Percentage impacts are always dimensionless fractions of the base duration.
+
 ```yaml
 risks:
   - id: "risk_002"
@@ -110,6 +113,8 @@ Use task-level risks for events that are specific to one task or activity. Typic
 
 If a task defines multiple risks, each risk is evaluated independently. When more than one risk triggers in the same iteration, their impacts are cumulative — they are simply added together.
 
+When percentage-based risks are combined, each percentage is calculated against the **same original adjusted duration** — not against a running cumulative total. Two 20% risks on a 100-hour task each contribute 20 hours (total +40 hours), not a compounded 44 hours.
+
 For example, if a task has two risks:
 
 ```yaml
@@ -124,7 +129,7 @@ risks:
     impact: 5
 ```
 
-In a given iteration, neither, one, or both may trigger. If both trigger, the task receives an additional 8 days on top of its adjusted duration.
+In a given iteration, neither, one, or both may trigger. If both trigger, the task receives an additional 8 hours on top of its adjusted duration.
 
 ### Full Task Example with Risks
 
@@ -156,7 +161,7 @@ In each iteration, the simulator:
 
 1. Samples a base duration between 4 and 12 days (most likely around 6).
 2. Multiplies by the combined uncertainty factor (in this case the product of multipliers for medium experience, high requirements maturity, high technical complexity, colocated distribution, and high integration complexity).
-3. Evaluates the "Security audit findings" risk: with 30% probability, adds 5 days.
+3. Evaluates the "Security audit findings" risk: with 30% probability, adds 5 hours.
 4. Uses the resulting value as the task duration for scheduling.
 
 
@@ -328,17 +333,6 @@ tasks:
 
 
 
-## Practical Tips for Defining Risks
-
-- **Be specific.** A risk named "something goes wrong" is not actionable. Prefer names like "Security audit findings" or "Vendor API downtime".
-- **Calibrate probability honestly.** A probability of `0.50` means you expect the event to happen roughly half the time. If you are unsure, `0.20` to `0.30` is a reasonable starting range for events that are plausible but not expected.
-- **Do not double-count.** If a condition is already captured by an uncertainty factor (e.g., high technical complexity), do not also add a risk for the same effect. Risks are for events; uncertainty factors are for conditions.
-- **Use percentage impact for scale-dependent events.** If a risk tends to hurt larger tasks more than smaller ones, percentage-based impact is a better fit.
-- **Use absolute impact for fixed-cost events.** If a risk has a known cost regardless of the task size (e.g., a mandatory 3-day wait for an external review), absolute impact is appropriate.
-- **Keep risk lists manageable.** Most tasks should have zero to three risks. If a task has many risks, consider whether some of them are better captured as uncertainty factors or whether the task should be broken into smaller pieces.
-
-
-
 ## Examples
 
 The following two examples demonstrate the same small project defined with and without uncertainty factors and risks. Comparing them illustrates the effect these mechanisms have on simulation input.
@@ -498,6 +492,17 @@ tasks:
 ```
 
 Compared to Example 1, this version will produce a wider and generally longer distribution of project durations. The uncertainty factors shift task durations systematically (for instance, the low team experience on `dash_003` multiplies that task's sampled duration by 1.30), and the risks introduce discrete jumps when they trigger. The two project-level risks add further spread to the overall distribution.
+
+
+
+## Practical Tips for Defining Risks
+
+- **Be specific.** A risk named "something goes wrong" is not actionable. Prefer names like "Security audit findings" or "Vendor API downtime".
+- **Calibrate probability honestly.** A probability of `0.50` means you expect the event to happen roughly half the time. If you are unsure, `0.20` to `0.30` is a reasonable starting range for events that are plausible but not expected.
+- **Do not double-count.** If a condition is already captured by an uncertainty factor (e.g., high technical complexity), do not also add a risk for the same effect. Risks are for events; uncertainty factors are for conditions.
+- **Use percentage impact for scale-dependent events.** If a risk tends to hurt larger tasks more than smaller ones, percentage-based impact is a better fit.
+- **Use absolute impact for fixed-cost events.** If a risk has a known cost regardless of the task size (e.g., a mandatory 3-day wait for an external review), absolute impact is appropriate.
+- **Keep risk lists manageable.** Most tasks should have zero to three risks. If a task has many risks, consider whether some of them are better captured as uncertainty factors or whether the task should be broken into smaller pieces.
 
 
 
