@@ -1,3 +1,30 @@
+## [v0.10.1] - 2026-03-31
+
+Release Type: patch
+
+### 📋 Summary
+This release tightens input validation and keeps documentation aligned with current implementation. 
+It focuses on safer config parsing, clearer reporting, and a broad refresh of the user-facing docs and formal grammar.
+
+### 🚀 Improvements
+- Improved input validation so malformed project/config data and invalid CLI option combinations fail earlier with clearer feedback
+- Improved sprint-planning reporting by making future sprint override assumptions more explicit in console and report output
+- Improved formal grammar coverage so project, config, and sprint-planning structures are documented in a cleaner implementation-aligned layout
+
+### 🐛 Bug Fixes
+- Fixed nested config validation so unknown keys in nested config models now fail fast instead of being silently accepted
+- Fixed requirements and user-guide mismatches around sprint planning, output flags, risks, uncertainty factors, project-file fields, and estimation behavior
+
+### 📚 Documentation
+- Rewrote the formal grammar specification for clarity, correctness, and full coverage of current project and config file structures
+- Updated sprint planning, configuration, project-file, risks, task-estimation, uncertainty-factor, interpreting-results, and getting-started documentation to match current behavior and defaults
+- Expanded CLI documentation to cover recently added simulate flags and how they affect console and export output
+
+### 🛠 Internal
+- Applied formatting and cleanup updates to keep modified files consistent after the documentation and validation changes
+- Some additional negative test cases to verify robustness of file parser
+
+
 ## [v0.10.0] - 2026-03-30
 
 Release Type: minor

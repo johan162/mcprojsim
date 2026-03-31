@@ -473,6 +473,14 @@ class TestProject:
                 ),
             )
 
+    def test_future_sprint_override_rejects_non_positive_multipliers(self):
+        """Future overrides should reject zero or negative multipliers."""
+        with pytest.raises(ValueError, match="holiday_factor"):
+            FutureSprintOverrideSpec(sprint_number=1, holiday_factor=0.0)
+
+        with pytest.raises(ValueError, match="capacity_multiplier"):
+            FutureSprintOverrideSpec(sprint_number=1, capacity_multiplier=0.0)
+
     def test_spillover_enabled_requires_planning_story_points(self):
         """Tasks-mode spillover should require explicit planning story points."""
         with pytest.raises(

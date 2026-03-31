@@ -7,7 +7,7 @@ from statistics import NormalDist
 from typing import Any, Dict, Literal, Optional, cast
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class EffortUnit(str, Enum):
@@ -36,7 +36,7 @@ DEFAULT_OUTPUT_FORMATS = ["json", "csv", "html"]
 DEFAULT_HISTOGRAM_BINS = 50
 DEFAULT_MAX_STORED_CRITICAL_PATHS = 20
 DEFAULT_CRITICAL_PATH_REPORT_LIMIT = 2
-DEFAULT_CONFIDENCE_LEVELS = [25, 50, 75, 80, 85, 90, 95, 99]
+DEFAULT_CONFIDENCE_LEVELS = [10, 25, 50, 75, 80, 85, 90, 95, 99]
 DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL = 0.80
 DEFAULT_SPRINT_REMOVED_WORK_TREATMENT = "churn_only"
 DEFAULT_SPRINT_VOLATILITY_DISRUPTION_PROBABILITY = 0.0
@@ -344,6 +344,8 @@ def _normalize_t_shirt_config_input(data: dict[str, Any]) -> dict[str, Any]:
 class UncertaintyFactorConfig(BaseModel):
     """Configuration for a single uncertainty factor."""
 
+    model_config = {"extra": "forbid"}
+
     high: float = Field(default=1.0)
     medium: float = Field(default=1.0)
     low: float = Field(default=1.0)
@@ -351,6 +353,8 @@ class UncertaintyFactorConfig(BaseModel):
 
 class SimulationConfig(BaseModel):
     """Simulation settings."""
+
+    model_config = {"extra": "forbid"}
 
     default_iterations: int = Field(default=DEFAULT_SIMULATION_ITERATIONS, gt=0)
     random_seed: Optional[int] = None
@@ -362,6 +366,8 @@ class SimulationConfig(BaseModel):
 
 class LogNormalConfig(BaseModel):
     """Shifted log-normal interpretation settings."""
+
+    model_config = {"extra": "forbid"}
 
     high_percentile: int = Field(default=DEFAULT_LOGNORMAL_HIGH_PERCENTILE)
 
@@ -379,6 +385,8 @@ class LogNormalConfig(BaseModel):
 class OutputConfig(BaseModel):
     """Output settings."""
 
+    model_config = {"extra": "forbid"}
+
     formats: list[str] = Field(default_factory=lambda: list(DEFAULT_OUTPUT_FORMATS))
     include_histogram: bool = True
     histogram_bins: int = Field(default=DEFAULT_HISTOGRAM_BINS, gt=0)
@@ -387,9 +395,39 @@ class OutputConfig(BaseModel):
         gt=0,
     )
 
+    @field_validator("formats")
+    @classmethod
+    def validate_formats(cls, value: list[str]) -> list[str]:
+        """Require non-empty, known output formats."""
+        if not value:
+            raise ValueError("output.formats must include at least one format")
+
+        allowed = set(DEFAULT_OUTPUT_FORMATS)
+        normalized: list[str] = []
+        unknown: list[str] = []
+        for item in value:
+            fmt = item.strip().lower()
+            if not fmt:
+                raise ValueError("output.formats cannot contain empty values")
+            if fmt not in allowed:
+                unknown.append(fmt)
+            normalized.append(fmt)
+
+        if unknown:
+            allowed_text = ", ".join(DEFAULT_OUTPUT_FORMATS)
+            unknown_text = ", ".join(sorted(set(unknown)))
+            raise ValueError(
+                "output.formats contains unsupported value(s): "
+                f"{unknown_text}. Supported values: {allowed_text}"
+            )
+
+        return normalized
+
 
 class ExperienceProfileConfig(BaseModel):
     """Productivity and overhead parameters for an experience profile."""
+
+    model_config = {"extra": "forbid"}
 
     productivity_factor: float = Field(default=1.0, gt=0)
     communication_overhead: float = Field(default=0.06, ge=0, le=1)
@@ -397,6 +435,8 @@ class ExperienceProfileConfig(BaseModel):
 
 class StaffingConfig(BaseModel):
     """Staffing analysis settings."""
+
+    model_config = {"extra": "forbid"}
 
     effort_percentile: Optional[int] = Field(
         default=None,
@@ -438,6 +478,8 @@ class StaffingConfig(BaseModel):
 class ConstrainedSchedulingConfig(BaseModel):
     """Defaults for resource-constrained scheduling behavior."""
 
+    model_config = {"extra": "forbid"}
+
     sickness_prob: float = Field(
         default=DEFAULT_CONSTRAINED_SCHEDULING_SICKNESS_PROB,
         ge=0.0,
@@ -471,6 +513,8 @@ class ConstrainedSchedulingConfig(BaseModel):
 class SprintSicknessDefaultsConfig(BaseModel):
     """Company-wide defaults for sprint sickness modeling."""
 
+    model_config = {"extra": "forbid"}
+
     enabled: bool = False
     probability_per_person_per_week: float = Field(
         default=DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
@@ -486,6 +530,8 @@ class SprintSicknessDefaultsConfig(BaseModel):
 
 class SprintDefaultsConfig(BaseModel):
     """Company-wide defaults for sprint-planning behavior."""
+
+    model_config = {"extra": "forbid"}
 
     planning_confidence_level: float = Field(
         default=DEFAULT_SPRINT_PLANNING_CONFIDENCE_LEVEL,
@@ -557,6 +603,8 @@ class SprintDefaultsConfig(BaseModel):
 class EstimateRangeConfig(BaseModel):
     """Range configuration for a symbolic estimate."""
 
+    model_config = {"extra": "forbid"}
+
     low: float = Field(gt=0)
     expected: float = Field(gt=0)
     high: float = Field(gt=0)
@@ -572,6 +620,8 @@ class StoryPointConfig(EstimateRangeConfig):
 
 class Config(BaseModel):
     """Complete application configuration."""
+
+    model_config = {"extra": "forbid"}
 
     uncertainty_factors: Dict[str, Dict[str, float]] = Field(default_factory=dict)
     t_shirt_sizes: Dict[str, Dict[str, TShirtSizeConfig]] = Field(default_factory=dict)
@@ -604,8 +654,13 @@ class Config(BaseModel):
         if not config_path.exists():
             raise FileNotFoundError(f"Config file not found: {config_path}")
 
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
+
+        if not isinstance(data, dict):
+            raise ValueError(
+                "Invalid configuration: top-level content must be a mapping/object"
+            )
 
         normalized_data = _normalize_t_shirt_config_input(data)
         merged_data = _merge_nested_dicts(_build_default_config_data(), normalized_data)

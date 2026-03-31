@@ -39,6 +39,22 @@ from mcprojsim.simulation import SimulationEngine
 from mcprojsim.simulation.distributions import fit_shifted_lognormal
 from mcprojsim.utils import Validator, setup_logging
 
+ALLOWED_OUTPUT_FORMATS = {"json", "csv", "html"}
+
+
+def _parse_output_formats(output_format: str) -> list[str]:
+    """Parse and validate comma-separated output formats."""
+    formats = [f.strip().lower() for f in output_format.split(",") if f.strip()]
+    unknown = [fmt for fmt in formats if fmt not in ALLOWED_OUTPUT_FORMATS]
+    if unknown:
+        allowed = ", ".join(sorted(ALLOWED_OUTPUT_FORMATS))
+        unknown_values = ", ".join(sorted(set(unknown)))
+        raise ValueError(
+            "Unsupported output format(s): "
+            f"{unknown_values}. Supported formats: {allowed}"
+        )
+    return formats
+
 
 def _get_user_default_config_path() -> Path:
     """Return the default user-level configuration file path."""
@@ -812,6 +828,18 @@ def simulate(
                 normalized_category,
             )
 
+        formats: list[str] = []
+        if output_format.strip():
+            formats = _parse_output_formats(output_format)
+
+        if include_historic_base and not any(
+            fmt in {"json", "html"} for fmt in formats
+        ):
+            raise ValueError(
+                "--include-historic-base requires --output-format to include "
+                "json or html"
+            )
+
         # Parse project file
         project_path = Path(project_file)
         parser: Union[YAMLParser, TOMLParser]
@@ -1484,7 +1512,6 @@ def simulate(
 
         # Export results (only if formats are explicitly specified)
         if output_format.strip():
-            formats = [f.strip().lower() for f in output_format.split(",") if f.strip()]
             base_output = (
                 Path(output) if output else Path(f"{project.project.name}_results")
             )
@@ -1555,9 +1582,6 @@ def simulate(
                         )
                     if quiet == 0 and not minimal:
                         click.echo(f"Results exported to {output_file}")
-                else:
-                    if quiet == 0 and not minimal:
-                        click.echo(f"Warning: Unknown format '{fmt}' ignored")
         else:
             if quiet == 0 and not minimal:
                 click.echo(

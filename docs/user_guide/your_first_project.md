@@ -41,19 +41,25 @@ This chapter focuses on building the project file step-by-step, but it helps to 
 | `--iterations`, `-n` | Number of Monte Carlo iterations |
 | `--seed`, `-s` | Reproducibility seed |
 | `--config`, `-c` | Custom config file |
+| `--target-date` | Probability of finishing on/before a target date |
 | `--output-format`, `-f` | Export format(s): json, csv, html |
 | `--output`, `-o` | Export output base path |
 | `--critical-paths` | Number of critical path sequences shown/exported |
 | `--table`, `-t` | Render CLI tabular sections as ASCII tables |
 | `--minimal`, `-m` | Minimal console output mode |
+| `--verbose`, `-v` | Show detailed informational messages |
 | `--quiet`, `-q`, `-qq` | Reduce or suppress normal CLI output |
 | `--staffing` | Expanded staffing recommendation tables |
 | `--tshirt-category` | Override default T-shirt category  |
 | `--velocity-model` | Override sprint velocity model for how historic data are used (`empirical`/`neg_binomial`) |
 | `--no-sickness` | Disable sprint sickness modeling |
+| `--two-pass` | Enable criticality two-pass scheduling (resource-constrained mode) |
+| `--pass1-iterations` | Pass-1 iterations used by `--two-pass` |
 | `--include-historic-base` | Add Historic Base section/series in HTML+JSON exports |
 
 For full details, defaults, and examples, see [Running simulations](running_simulations.md).
+
+This chapter intentionally uses only a small subset of these flags in each step.
 
 ## The smallest possible project file
 
@@ -322,6 +328,12 @@ The project file still contains the project-specific facts: tasks, estimates, an
 
 In this example, the overall forecast becomes shorter than in Step 2 because the chosen factors make part of the work more favorable than the neutral baseline.
 
+If you want to inspect the active merged configuration (built-in defaults plus any custom overrides), run:
+
+```bash
+mcprojsim config show --config-file first-project-config.yaml
+```
+
 ## Add explicit risk events
 
 Uncertainty factors model persistent conditions around the work. Risks model events that may or may not happen.
@@ -489,14 +501,16 @@ t_shirt_size_default_category: story
 
 The application ships with built-in mappings for multiple categories (`bug`, `story`, `epic`, `business`, `initiative`) and defaults bare sizes like `M` to the `epic` category. In this example, `t_shirt_size_default_category: story` makes bare sizes use story-scale values instead.
 
-If you do use your own configuration file and want to use T-shirt sizes, make sure that file includes a `t_shirt_sizes` section. The simulation engine resolves the label by looking it up in the active configuration, and it raises an error if the size is unknown.
+If you use your own configuration file, it is merged onto built-in defaults. That means you do **not** need to redefine `t_shirt_sizes` unless you want to override defaults.
+
+The simulation engine resolves each T-shirt label against the active merged configuration and raises an error only when the requested category/size is unknown.
 
 This detail is important: `t_shirt_size` is not just a comment or a reporting label. It is a real input that must be backed by a configuration mapping.
 
-In other words, you have two safe options:
+In other words, you have two common options:
 
-- run without `--config` and use the built-in size mappings, or
-- use `--config` with a file that explicitly defines `t_shirt_sizes`.
+- run without `--config` and use built-in size mappings, or
+- run with `--config` to override only the categories/sizes you want to change.
 
 Run the T-shirt-sized example like this:
 
@@ -599,6 +613,8 @@ story_points:
 ```
 
 These are built-in defaults. If you provide a custom configuration file, you may override only the Story Point values you want to recalibrate for your team; the remaining built-in defaults stay available.
+
+As with T-shirt sizes, a custom config file does not need to redefine `story_points` unless you are changing them.
 
 Run the Story Point example like this:
 

@@ -27,9 +27,9 @@ class TestConfig:
         assert config.constrained_scheduling.sickness_prob == 0.0
         assert config.sprint_defaults.sickness.probability_per_person_per_week == 0.058
 
-    def test_default_confidence_levels_include_p25_and_p99(self):
-        """Test the shared default confidence levels include P25 and P99."""
-        assert DEFAULT_CONFIDENCE_LEVELS == [25, 50, 75, 80, 85, 90, 95, 99]
+    def test_default_confidence_levels_include_p10_p25_and_p99(self):
+        """Test the shared default confidence levels include P10, P25, and P99."""
+        assert DEFAULT_CONFIDENCE_LEVELS == [10, 25, 50, 75, 80, 85, 90, 95, 99]
 
     def test_get_uncertainty_multiplier(self):
         """Test getting uncertainty multiplier."""
@@ -164,6 +164,98 @@ class TestConfig:
         config_file.write_text("lognormal:\n  high_percentile: 92\n")
 
         with pytest.raises(ValueError, match="must be one of"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_non_mapping_root(self, tmp_path):
+        """Top-level config must be a mapping/object, not a list or scalar."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("- not\n- a\n- mapping\n")
+
+        with pytest.raises(ValueError, match="top-level content must be a mapping"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unsupported_output_formats(self, tmp_path):
+        """output.formats should fail fast for unknown format values."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "output": {
+                        "formats": ["json", "xml"],
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="output.formats contains unsupported"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unknown_top_level_field(self, tmp_path):
+        """Unknown top-level config keys should be rejected to catch typos early."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "simluation": {"default_iterations": 5000},
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unknown_nested_simulation_field(self, tmp_path):
+        """Unknown keys inside simulation config should fail validation."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "simulation": {
+                        "default_iterations": 5000,
+                        "unknown_setting": True,
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unknown_nested_output_field(self, tmp_path):
+        """Unknown keys inside output config should fail validation."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "output": {
+                        "formats": ["json"],
+                        "legacy_mode": True,
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
+            Config.load_from_file(config_file)
+
+    def test_config_load_rejects_unknown_nested_sprint_defaults_field(self, tmp_path):
+        """Unknown keys in sprint_defaults nested sections should fail validation."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text(
+            yaml.safe_dump(
+                {
+                    "sprint_defaults": {
+                        "planning_confidence_level": 0.8,
+                        "sickness": {
+                            "enabled": True,
+                            "unexpected": 123,
+                        },
+                    }
+                }
+            )
+        )
+
+        with pytest.raises(ValueError, match="Extra inputs are not permitted"):
             Config.load_from_file(config_file)
 
 

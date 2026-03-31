@@ -693,6 +693,31 @@ HTML_TEMPLATE = """
             </tbody>
         </table>
 
+        {% if sprint_summary.future_sprint_overrides %}
+        <h4>Planning Assumptions: Future Sprint Capacity Adjustments</h4>
+        <table>
+            <thead>
+                <tr><th>Sprint / Date</th><th>Holiday Factor</th><th>Capacity Multiplier</th><th>Effective Multiplier</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                {% for override in sprint_summary.future_sprint_overrides %}
+                <tr>
+                    <td>
+                        {%- if override.sprint_number %}Sprint {{ override.sprint_number }}{% endif -%}
+                        {%- if override.sprint_number and override.start_date %} / {% endif -%}
+                        {%- if override.start_date %}{{ override.start_date }}{% endif -%}
+                    </td>
+                    <td class="value-center">{{ override.holiday_factor }}</td>
+                    <td class="value-center">{{ override.capacity_multiplier }}</td>
+                    <td class="value-center"><strong>{{ override.effective_multiplier }}</strong></td>
+                    <td>{{ override.notes or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p><em>These overrides reduce effective sprint capacity for the specified sprints (e.g., public holidays, planned team absences). Linear multiplier interpretation: a value of 0.8 means 80% of normal sprint capacity is available.</em></p>
+        {% endif %}
+
         {% if sprint_summary.attention_flags %}
         <h4>Attention Flags</h4>
         <table>
@@ -1165,6 +1190,7 @@ class HTMLExporter:
                 (pair_name, f"{value:.4f}")
                 for pair_name, value in sorted(correlations.items())
             ],
+            "future_sprint_overrides": sprint_results.future_sprint_overrides,
             "attention_flags": attention_flags,
             "risk_assessment": risk_assessment,
             "burnup_percentiles": [

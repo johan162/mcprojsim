@@ -509,3 +509,5 @@ A large negative delta on mean/P80 combined with a large negative delta on
 resource wait time is strong evidence that the project suffers from avoidable
 resource contention, and that assigning more resources or restructuring task
 ownership would reduce schedule risk.
+
+\newpage

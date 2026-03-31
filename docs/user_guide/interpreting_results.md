@@ -86,6 +86,40 @@ Every number here comes from simulating your project thousands of times with dif
 
 The sections below explain each part of this output in detail.
 
+## Output modes and flags that change what you see
+
+Several `simulate` flags change which sections are printed:
+
+| Flag | Effect on output |
+|------|------------------|
+| `--minimal` | Shows only core overview and confidence intervals; omits detailed analyses (sensitivity, slack, risk impact, etc.) |
+| `--table` | Renders sections as ASCII tables instead of plain text lines |
+| `--quiet`, `-q`, `-qq` | Reduces or suppresses normal console output |
+| `--staffing` | Adds full per-profile staffing tables (`senior`, `mixed`, `junior`, plus custom profiles) |
+| `--critical-paths N` | Changes how many full critical path sequences are listed |
+| `--target-date YYYY-MM-DD` | Adds probability of finishing by that date |
+| `--include-historic-base` | Adds Historic Base payload/sections in JSON/HTML exports (requires output format including `json` or `html`) |
+
+Two additional flags affect output only when resource-constrained scheduling is active:
+
+| Flag | Effect on output |
+|------|------------------|
+| `--two-pass` | Enables criticality two-pass scheduling |
+| `--pass1-iterations` | Sets pass-1 sample size used for two-pass ranking |
+
+Because of these switches, not every run prints every section shown in this chapter.
+
+## Project overview fields
+
+At the top of simulation results, `mcprojsim` prints core context fields before detailed analyses.
+
+- `Project`
+- `Hours per Day`
+- `Max Parallel Tasks`
+- `Schedule Mode`
+
+`Schedule Mode` tells you whether the run used dependency-only scheduling or resource/calendar-constrained scheduling. Read all downstream sections in that context.
+
 
 
 ## Understanding percentiles
@@ -162,6 +196,17 @@ A ratio of 1.0 means all tasks are serial (effort = elapsed time). A ratio above
 | **Budgeting and cost estimation** | Effort confidence intervals (P80–P90 person-hours) |
 | **Staffing decisions** | Effort percentiles tell you how many person-hours to fund; the staffing table maps that to team sizes |
 | **Comparing estimates to actuals** | Track both: actual elapsed time against calendar P50, and actual time-sheet hours against effort P50 |
+
+## Minimum and maximum
+
+In addition to mean/median/std-dev, the CLI also reports observed minimum and maximum simulated durations.
+
+- **Minimum** is the fastest sampled project completion across iterations.
+- **Maximum** is the slowest sampled completion.
+
+These are useful for sanity checking tails, but they are sample extremes, not commitment targets. Use percentiles (P80/P90/P95) for planning decisions.
+
+The effort summary has the same fields (minimum/maximum person-hours) for total work.
 
 
 
@@ -478,12 +523,47 @@ In the sample output, `Max parallel tasks: 3` means the scheduler assumed up to 
 
 ### Why this matters
 
-The simulation does **not** model resource constraints — it assumes unlimited capacity. If the reported peak parallelism exceeds your actual team size, the real schedule will be longer than the simulation predicts because some parallel tasks will have to wait for a free resource.
+Interpretation depends on schedule mode:
+
+- In **dependency-only mode**, peak parallelism reflects structural parallelism implied by dependencies and assumes unlimited resource capacity.
+- In **resource-constrained mode**, scheduling already accounts for resource availability and calendars.
 
 Use this number as a sanity check:
 
-- If **max parallel tasks <= team size**: the simulation's parallelism assumption is realistic.
-- If **max parallel tasks > team size**: the simulation is optimistic. Consider adding explicit dependencies to serialise tasks that share a resource, or mentally adjust the percentiles upward.
+- If **dependency-only mode** and **max parallel tasks <= team size**: the unconstrained parallelism assumption is plausible.
+- If **dependency-only mode** and **max parallel tasks > team size**: the run is optimistic relative to your real capacity.
+- If **resource-constrained mode**: combine this with constrained diagnostics (below) to understand where waiting and calendar effects are occurring.
+
+## Constrained schedule diagnostics
+
+When resource/calendar constraints are active, the CLI adds:
+
+- **Average Resource Wait (hours)**
+- **Effective Resource Utilization**
+- **Calendar Delay Contribution (hours)**
+
+These quantify how much elapsed time comes from waiting for available resources and working-time calendars, not just raw task effort.
+
+Use these diagnostics to decide whether to add capacity, rebalance assignments, or adjust calendars.
+
+## Two-pass scheduling traceability
+
+When `--two-pass` is enabled (or equivalent config mode is active), output may include a traceability block comparing pass-1 and pass-2 results.
+
+Reported deltas include:
+
+- mean duration (`pass-1 -> pass-2`)
+- P80 duration (`pass-1 -> pass-2`)
+- P95 duration (`pass-1 -> pass-2`)
+- resource wait delta
+
+This helps explain whether two-pass prioritization materially improved (or worsened) schedule outcomes for your project structure.
+
+## Target-date probability
+
+If you pass `--target-date YYYY-MM-DD`, the CLI prints the estimated probability of finishing by that date.
+
+This converts an external deadline question into a direct probabilistic statement and is often the clearest communication artifact for stakeholders.
 
 
 
@@ -703,7 +783,7 @@ Monte Carlo simulation is a powerful tool, but it has boundaries. Understanding 
 
 - **It assumes task independence**. Each task's duration is sampled independently. In reality, if one task overruns because the technology is harder than expected, related tasks may also overrun. The simulation does not model these correlations.
 
-- **It ignores resource constraints**. The scheduler respects task dependencies but does not limit parallelism by resource availability. If two independent tasks need the same developer, they run in parallel in the simulation but would be sequential in practice. This means the simulation may underestimate actual duration for resource-constrained projects.
+- **Dependency-only runs ignore resource constraints**. If you do not model `resources`/`calendars`, parallelism is constrained only by dependencies. For resource-constrained planning, use the constrained scheduling inputs and read the constrained diagnostics section.
 
 - **It does not model learning or momentum**. Teams often speed up as they gain context, or slow down from fatigue. The simulation treats each task in isolation.
 
@@ -734,6 +814,18 @@ The most useful thing you can do over time is *calibrate*: compare the simulatio
 | Staffing advisory | Recommended team size per experience profile | Team sizing, hiring decisions |
 | Thermometer | Visual probability-to-effort mapping | Stakeholder communication |
 | Delivery dates | Calendar dates at each percentile | Scheduling and milestone setting |
+
+## Sprint-planning mode outputs (when enabled)
+
+If a project uses sprint-planning mode, output sections differ from dependency-schedule runs and include sprint-specific summaries such as:
+
+- Sprint planning summary
+- Sprint count statistical summary
+- Sprint count confidence intervals
+- Optional historical diagnostics (series, ratios, correlations)
+- Burn-up percentiles
+
+Treat these as the sprint-forecast analogue of calendar/effort percentiles in dependency-schedule mode.
 
 \newpage
 

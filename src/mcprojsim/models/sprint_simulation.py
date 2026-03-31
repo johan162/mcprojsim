@@ -27,6 +27,10 @@ class SprintPlanningResults(BaseModel):
     spillover_statistics: dict[str, Any] = Field(default_factory=dict)
     disruption_statistics: dict[str, Any] = Field(default_factory=dict)
     burnup_percentiles: list[dict[str, float]] = Field(default_factory=list)
+    future_sprint_overrides: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Applied future sprint capacity adjustments for planning transparency",
+    )
 
     mean: float = 0.0
     median: float = 0.0
@@ -98,4 +102,5 @@ class SprintPlanningResults(BaseModel):
             "spillover_statistics": self.spillover_statistics,
             "disruption_statistics": self.disruption_statistics,
             "burnup_percentiles": self.burnup_percentiles,
+            "future_sprint_overrides": self.future_sprint_overrides,
         }

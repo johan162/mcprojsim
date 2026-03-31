@@ -101,7 +101,7 @@ Provide probabilistic estimates for software project completion through Monte Ca
 
 **FR-013: Progress Tracking**
 - The system SHALL display progress during long-running simulations
-- Progress updates SHALL occur every 5% of iterations or every 1000 iterations
+- Progress updates SHALL occur every 10% of iterations or every 1000 iterations
 - The system SHALL support quiet mode for batch processing
 
 **FR-014: Result Export**

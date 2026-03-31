@@ -72,7 +72,9 @@ Examples:
 
 - `--velocity-model` overrides both project and config values
 - a value set in project `sprint_planning` overrides `sprint_defaults`
-- `sprint_defaults` provides company-wide defaults when project fields are not explicitly set
+- `sprint_defaults` provides company-wide defaults when project fields remain at built-in values
+
+Practical detail: sprint defaults are applied when a project value still equals the built-in default. In other words, this behavior is value-based rather than strictly "field omitted"-based.
 
 A historical row is usable when all of the following are true:
 
@@ -117,6 +119,30 @@ mcprojsim simulate sprint_project.yaml --seed 42 --iterations 10000
 mcprojsim simulate sprint_project.yaml --seed 42 --iterations 10000 --table
 mcprojsim simulate sprint_project.yaml --seed 42 --iterations 10000 --velocity-model neg_binomial
 ```
+
+Sprint-planning flags that matter most in practice:
+
+- `--velocity-model empirical|neg_binomial` overrides the project file velocity model for the current run
+- `--no-sickness` disables sprint sickness modeling without editing the project file
+- `--minimal` keeps the CLI output short and suppresses the detailed diagnostic sections
+- `--table` formats the sprint summary and confidence intervals as ASCII tables
+- `--output-format json,html,csv` writes export files in addition to CLI output
+- `--include-historic-base` adds the historic baseline section to HTML and JSON exports when sprint history is available
+
+Example export workflow:
+
+```bash
+mcprojsim simulate sprint_project.yaml \
+  --seed 42 \
+  --output out/sprint_forecast \
+  --output-format json,html \
+  --include-historic-base
+```
+
+Important export rule:
+
+- `--include-historic-base` only works when `--output-format` includes `json` or `html`
+- unsupported `--output-format` values now fail fast instead of being ignored
 
 See [Running Simulations](running_simulations.md) for the full command reference.
 
@@ -380,6 +406,16 @@ Notes:
 - If both are present, they must point to the same future sprint.
 - `start_date` must align to a sprint boundary derived from `project.start_date` and `sprint_length_weeks`.
 - The effective multiplier for a future sprint is `holiday_factor × capacity_multiplier`. Both are combined multiplicatively.
+
+Validation rules:
+
+- `future_sprint_overrides` must be a list of objects
+- each override must resolve to exactly one simulated future sprint
+- two overrides must not target the same sprint after resolution
+- `sprint_number` must be a positive integer
+- `start_date` must be a valid ISO date in `YYYY-MM-DD` format
+- `holiday_factor` and `capacity_multiplier` must both be greater than `0`
+- use `holiday_factor` for known calendar reduction, `capacity_multiplier` for any additional explicit adjustment, or combine both when needed
 
 ### `volatility_overlay` fields
 
@@ -786,12 +822,6 @@ where:
 
 The clamp on $z$ is important: it prevents invalid $\ln(0)$ or negative-log inputs when very small values appear.
 
-For the logistic model, the probability is:
-
-$$
-p_i = \frac{1}{1 + e^{-\left(s \cdot \ln(x / r) + b\right)}}
-$$
-
 where:
 
 - $x$ is the item's planning story points
@@ -1095,6 +1125,11 @@ Supported formats:
 - `json`
 - `csv`
 
+For JSON, both of these top-level shapes are supported:
+
+- an array of sprint rows
+- an object containing a `sprints` array
+
 The history path may be relative. Relative paths are resolved from the project file location.
 
 ### JSON example
@@ -1151,6 +1186,8 @@ The examples below were produced from real runs against working example files.
 
 The `--minimal` (`-m`) flag controls how much output is displayed. With `--minimal`, only the summary block, sprint count statistics, and confidence intervals are shown. Without it, additional diagnostic sections are included: historical sprint series, ratio summaries, correlations, and burn-up percentiles.
 
+When you also request file exports with `--output-format`, sprint-planning results are written into dedicated sprint sections in JSON and HTML output. The CLI summary focuses on forecast results; the richer planning-assumption details for future sprint overrides are surfaced in the exported reports.
+
 ### Validation output
 
 ```text
@@ -1164,7 +1201,7 @@ Validating .build/doc-examples/sprint_planning_minimal.yaml...
 Sprint Planning Summary:
 Sprint Length: 2 weeks
 Planning Confidence Level: 80%
-Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Removed Work Treatment: churn_only
 Velocity Model: empirical
 Planned Commitment Guidance: 7.55
 Historical Sampling Mode: matching_cadence
@@ -1187,7 +1224,7 @@ Sprint Count Confidence Intervals:
   P90: 3 sprints  (2026-06-01)
 ```
 
-Note that the current CLI prints the `removed_work_treatment` value using its internal enum representation, for example `RemovedWorkTreatment.CHURN_ONLY`. This corresponds to the configuration value `churn_only` in the project file. Likewise, `RemovedWorkTreatment.REDUCE_BACKLOG` corresponds to `reduce_backlog`.
+`removed_work_treatment` is shown directly as `churn_only` or `reduce_backlog` in current CLI output.
 
 ### Richer table output
 
@@ -1198,7 +1235,7 @@ Sprint Planning Summary:
 ├───────────────────────────────┼─────────────────────────────────────┤
 │ Sprint Length                 │ 2 weeks                             │
 │ Planning Confidence Level     │ 85%                                 │
-│ Removed Work Treatment        │ RemovedWorkTreatment.REDUCE_BACKLOG │
+│ Removed Work Treatment        │ reduce_backlog                      │
 │ Velocity Model                │ empirical                           │
 │ Planned Commitment Guidance   │ 7.13                                │
 │ Historical Sampling Mode      │ matching_cadence                    │
@@ -1272,4 +1309,38 @@ Burn-up Percentiles:
 
 Cumulative delivery bands per sprint.  Read these as "by the end of sprint N, how many units are likely to be done".  The P80 and P90 columns reflect slower scenarios, so their cumulative values rise more slowly.
 
+### HTML and JSON report visibility
+
+Future sprint capacity adjustments are recorded explicitly in exported reports.
+
+In HTML output, future overrides appear in a dedicated section named `Planning Assumptions: Future Sprint Capacity Adjustments`. Each row shows:
+
+- the targeted sprint number or boundary date
+- `holiday_factor`
+- `capacity_multiplier`
+- effective multiplier
+- optional notes
+
+In JSON output, the same data appears under:
+
+- `sprint_planning.planning_assumptions.future_sprint_overrides`
+
+The JSON planning-assumptions block also includes a short note explaining that the effective multiplier is:
+
+$$
+	\text{effective multiplier} = \text{holiday factor} \times \text{capacity multiplier}
+$$
+
+The CLI summary does not currently list every override row individually. It shows the resulting forecast and diagnostics, while HTML and JSON exports preserve the detailed future-sprint assumptions for review and audit.
+
+If you want those report sections, use an export command such as:
+
+```bash
+mcprojsim simulate sprint_project.yaml \
+  --output out/sprint_forecast \
+  --output-format json,html
+```
+
 These outputs are best read as ranges, not promises. The goal is to make sprint planning explicit, data-driven, and auditable.
+
+\newpage

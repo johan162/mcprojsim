@@ -670,7 +670,16 @@ def _collect_future_override_issues(
         return
 
     overrides = sprint_planning.get("future_sprint_overrides")
+    if overrides is None:
+        return
+
     if not isinstance(overrides, list):
+        issues.append(
+            ValidationIssue(
+                path=("sprint_planning", "future_sprint_overrides"),
+                message="future_sprint_overrides must be a list of override objects",
+            )
+        )
         return
 
     sprint_length_weeks = sprint_planning.get("sprint_length_weeks")
@@ -686,11 +695,75 @@ def _collect_future_override_issues(
     seen_targets: dict[int, int] = {}
     for index, override in enumerate(overrides):
         if not isinstance(override, dict):
+            issues.append(
+                ValidationIssue(
+                    path=("sprint_planning", "future_sprint_overrides", index),
+                    message=(
+                        "Each future sprint override must be an object containing "
+                        "sprint_number and/or start_date"
+                    ),
+                )
+            )
             continue
 
         sprint_number = override.get("sprint_number")
         start_date_raw = override.get("start_date")
         start_date = _parse_iso_date(start_date_raw)
+
+        if sprint_number is not None and (
+            not isinstance(sprint_number, int)
+            or isinstance(sprint_number, bool)
+            or sprint_number <= 0
+        ):
+            issues.append(
+                ValidationIssue(
+                    path=(
+                        "sprint_planning",
+                        "future_sprint_overrides",
+                        index,
+                        "sprint_number",
+                    ),
+                    message="Future sprint override sprint_number must be a positive integer",
+                )
+            )
+
+        if start_date_raw is not None and start_date is None:
+            issues.append(
+                ValidationIssue(
+                    path=(
+                        "sprint_planning",
+                        "future_sprint_overrides",
+                        index,
+                        "start_date",
+                    ),
+                    message="Future sprint override start_date must be an ISO 8601 date",
+                )
+            )
+
+        for factor_field in ("holiday_factor", "capacity_multiplier"):
+            factor_value = override.get(factor_field)
+            if factor_value is None:
+                continue
+            if (
+                not isinstance(factor_value, (int, float))
+                or isinstance(factor_value, bool)
+                or float(factor_value) <= 0
+            ):
+                issues.append(
+                    ValidationIssue(
+                        path=(
+                            "sprint_planning",
+                            "future_sprint_overrides",
+                            index,
+                            factor_field,
+                        ),
+                        message=(
+                            "Future sprint override "
+                            f"{factor_field} must be a number greater than 0"
+                        ),
+                    )
+                )
+
         if sprint_number is None and start_date is None:
             issues.append(
                 ValidationIssue(

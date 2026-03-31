@@ -54,6 +54,22 @@ class SprintSimulationEngine:
             burnup_samples.append(burnup_trace)
 
         historical_diagnostics = sampler.get_historical_diagnostics()
+
+        # Serialize future sprint overrides for results reporting
+        overrides_list = [
+            {
+                "sprint_number": override.sprint_number,
+                "start_date": (
+                    override.start_date.isoformat() if override.start_date else None
+                ),
+                "holiday_factor": override.holiday_factor,
+                "capacity_multiplier": override.capacity_multiplier,
+                "effective_multiplier": override.effective_multiplier(),
+                "notes": override.notes,
+            }
+            for override in sprint_planning.future_sprint_overrides
+        ]
+
         results = SprintPlanningResults(
             iterations=self.iterations,
             project_name=project.project.name,
@@ -82,6 +98,7 @@ class SprintSimulationEngine:
                 "observed_frequency": float(np.mean(disruption_flags)),
             },
             burnup_percentiles=self._build_burnup_percentiles(burnup_samples),
+            future_sprint_overrides=overrides_list,
         )
         results.calculate_statistics()
         for percentile in (50, 80, 90):
