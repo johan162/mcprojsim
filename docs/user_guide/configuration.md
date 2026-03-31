@@ -742,3 +742,4 @@ Examples:
 - if experienced teams historically finish at about 85% of baseline effort, set `team_experience.high: 0.85`,
 - if distributed teams typically take about 30% longer, set `team_distribution.distributed: 1.30`,
 - if your team uses Story Point 8 for bigger work than the defaults assume, widen the `story_points.8` range.
+

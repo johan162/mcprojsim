@@ -513,8 +513,5 @@ Compared to Example 1, this version will produce a wider and generally longer di
 - Project-level risks are evaluated **after** the schedule is computed, so they do not affect critical path membership.
 
 
-
-
-
 \newpage
 
