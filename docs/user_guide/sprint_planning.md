@@ -1341,3 +1341,4 @@ mcprojsim simulate sprint_project.yaml \
 ```
 
 These outputs are best read as ranges, not promises. The goal is to make sprint planning explicit, data-driven, and auditable.
+
