@@ -1327,7 +1327,7 @@ In JSON output, the same data appears under:
 The JSON planning-assumptions block also includes a short note explaining that the effective multiplier is:
 
 $$
-	ext{effective multiplier} = \text{holiday factor} \times \text{capacity multiplier}
+	\text{effective multiplier} = \text{holiday factor} \times \text{capacity multiplier}
 $$
 
 The CLI summary does not currently list every override row individually. It shows the resulting forecast and diagnostics, while HTML and JSON exports preserve the detailed future-sprint assumptions for review and audit.
