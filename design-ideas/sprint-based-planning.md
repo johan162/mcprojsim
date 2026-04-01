@@ -1,4 +1,4 @@
-Version: 1.1.0
+Version: 1.2.0
 
 # Sprint-Based Planning
 
@@ -2346,4 +2346,362 @@ In a Bayesian framework, we would specify prior distributions for our parameters
 **Example code:**
 
 See: `design-ideas/baysian_example_pred.py` for a full implementation of this approach.
+
+
+# Addendum: Team-Size-Aware Sprint Forecasting
+
+This addendum extends the sprint-planning design to make explicit statistical use of historical team size per sprint and planned staffing for future sprints.
+
+## Why Team Size Should Be Modeled Explicitly
+
+Historical completed work, spillover, added scope, and removed scope are not only a function of planning quality and churn. They are also influenced by staffing level in that sprint.
+
+If the model ignores team size, it can confound two different effects:
+
+- true process volatility;
+- predictable capacity shifts caused by staffing changes.
+
+The practical result is biased forecasts when future staffing differs from historical staffing.
+
+## Statistical Design: Separate Team Capacity From Team Effectiveness
+
+The cleanest model split is:
+
+- **Capacity scale** from team size in a given sprint;
+- **Effectiveness profile** from empirical historical outcomes after size normalization.
+
+Let sprint $i$ have:
+
+- $n_i$: historical team size;
+- $c_i, s_i, a_i, r_i$: completed, spillover, added, removed units;
+- $h_i$: holiday factor;
+- $L_i$: sprint length in weeks.
+
+### Step 1: Normalize to per-person baseline
+
+Convert delivery and churn quantities to per-person units (after holiday normalization for delivery-side terms):
+
+$$
+\tilde{c}_i = \frac{c_i}{\max(n_i, \epsilon) \cdot \max(h_i, \epsilon)}, \quad
+\tilde{s}_i = \frac{s_i}{\max(n_i, \epsilon) \cdot \max(h_i, \epsilon)}
+$$
+
+$$
+\tilde{a}_i = \frac{a_i}{\max(n_i, \epsilon)}, \quad
+\tilde{r}_i = \frac{r_i}{\max(n_i, \epsilon)}
+$$
+
+This creates historical observations that are comparable across sprints with different team sizes.
+
+### Step 2: Empirical joint resampling on normalized vectors
+
+Use the existing joint empirical approach, but on per-person vectors:
+
+$$
+\tilde{X}_i = (\tilde{c}_i, \tilde{s}_i, \tilde{a}_i, \tilde{r}_i)
+$$
+
+Resample these vectors jointly to preserve coupling between delivery and churn.
+
+### Step 3: Scale sampled outcomes by future sprint staffing
+
+For future sprint $t$ with planned team size $n_t^{\text{future}}$ and override multipliers:
+
+$$
+c_t^{\text{sampled}} = \tilde{c}_{J_t} \cdot n_t^{\text{future}} \cdot h_t^{\text{override}} \cdot m_t^{\text{override}}
+$$
+
+$$
+s_t^{\text{sampled}} = \tilde{s}_{J_t} \cdot n_t^{\text{future}} \cdot h_t^{\text{override}} \cdot m_t^{\text{override}}
+$$
+
+$$
+a_t^{\text{sampled}} = \tilde{a}_{J_t} \cdot n_t^{\text{future}}, \quad
+r_t^{\text{sampled}} = \tilde{r}_{J_t} \cdot n_t^{\text{future}}
+$$
+
+where:
+
+- $h_t^{\text{override}}$ is the future sprint holiday factor (defaults to $1.0$);
+- $m_t^{\text{override}}$ is an explicit capacity multiplier (defaults to $1.0$).
+
+This keeps team-size effects explicit and auditable.
+
+## Non-Linear Team-Size Effects (Optional, Recommended)
+
+Linear scaling by headcount is a strong baseline, but real teams often show diminishing returns from coordination overhead.
+
+Add an optional exponent:
+
+$$
+\text{effective\_team\_size}(n) = n^{\beta}, \quad 0.75 \le \beta \le 1.0
+$$
+
+Then replace $n_t^{\text{future}}$ with $\text{effective\_team\_size}(n_t^{\text{future}})$ in scaling formulas.
+
+Recommended default for MVP behavior:
+
+- `team_size_scaling_exponent = 1.0` (strict linear scaling).
+
+Recommended post-MVP default once data supports calibration:
+
+- empirical estimate from historical data, clamped into `[0.75, 1.0]`.
+
+## Schema Additions
+
+Add explicit future staffing controls in `sprint_planning`.
+
+### New default staffing setting
+
+Add a planning-spec default used when a future sprint has no explicit override:
+
+```yaml
+sprint_planning:
+  default_future_team_size: 5
+```
+
+Behavior:
+
+- if present, this is the baseline team size for all forecasted future sprints;
+- if omitted, fallback to last historical `team_size` if available;
+- if no historical `team_size` exists either, validation should fail with a clear error requiring one of:
+  - `default_future_team_size`, or
+  - per-sprint team-size overrides.
+
+### Extend `future_sprint_overrides`
+
+Add optional per-sprint staffing override:
+
+```yaml
+future_sprint_overrides:
+  - sprint_number: 3
+    team_size: 4
+    holiday_factor: 0.8
+    capacity_multiplier: 0.95
+    notes: "Two engineers on leave"
+```
+
+Interpretation order for each simulated future sprint:
+
+1. resolve base team size from `default_future_team_size`;
+2. if matching override has `team_size`, replace base value for that sprint;
+3. apply `holiday_factor` and `capacity_multiplier` as separate multiplicative adjustments.
+
+## Updated Canonical Models
+
+Add fields to existing proposed models.
+
+### `SprintPlanningSpec` additions
+
+- `default_future_team_size: int | float` (strictly positive)
+- `team_size_scaling_exponent: float` in `(0, 1]`, default `1.0`
+
+### `FutureSprintOverrideSpec` additions
+
+- `team_size: int | float | None` (strictly positive when present)
+
+### `SprintHistoryEntry` expectations
+
+- `team_size` remains optional per row for backward compatibility;
+- but team-size-aware mode requires enough historical `team_size` data to calibrate normalization.
+
+## Validation Requirements for Team Size
+
+Add the following validations:
+
+1. All provided historical `team_size` values must be strictly positive.
+2. `default_future_team_size`, when provided, must be strictly positive.
+3. `future_sprint_overrides[].team_size`, when provided, must be strictly positive.
+4. Team-size-aware forecasting requires at least two usable historical rows with positive delivery signal and non-null `team_size`.
+5. If team-size-aware forecasting is enabled and future sprint team size cannot be resolved for a simulated sprint, validation fails.
+6. `team_size_scaling_exponent` must be in `(0, 1]`.
+
+## Simulation Algorithm Changes
+
+Update the sprint recursion to resolve team size per future sprint and use team-size-normalized empirical samples.
+
+Per iteration, per sprint $t$:
+
+1. Resolve `team_size_t`:
+  - from matching override `team_size`, else
+  - from `default_future_team_size`.
+2. Compute effective size:
+  - $n_t^{\text{eff}} = team\_size_t^{\beta}$.
+3. Draw one normalized joint vector $(\tilde{c}, \tilde{s}, \tilde{a}, \tilde{r})$.
+4. Scale sampled quantities by $n_t^{\text{eff}}$ and override multipliers.
+5. Pass scaled delivery quantity into dependency-aware planner.
+6. Apply scaled added/removed quantities as auditable backlog ledger adjustments.
+7. Continue until backlog completion.
+
+This keeps team-size usage explicit in both capacity and churn pathways.
+
+## Reporting and Diagnostics Additions
+
+Include staffing-aware diagnostics in sprint outputs:
+
+- historical per-person completed/spillover/added/removed statistics;
+- forecast staffing profile used for each sprint (`team_size`, effective size, overrides applied);
+- sensitivity view: completion percentile shifts under staffing scenarios;
+- attribution breakdown: how much P80 shift came from staffing vs churn vs holiday factors.
+
+Suggested new summary lines:
+
+- `Historical per-person completed capacity: mean 4.1 SP/person/sprint`
+- `Default future team size: 5`
+- `Sprint 3 override team size: 4 (holiday_factor 0.8)`
+- `P80 completion changed from 7 to 8 sprints due to staffing overrides`
+
+## Design for Future Sprint Staffing Input
+
+Support two ways to specify future staffing:
+
+1. **Global default**
+  - `default_future_team_size` at `sprint_planning` level.
+2. **Per-sprint override**
+  - `future_sprint_overrides[].team_size`.
+
+This exactly matches typical planning workflows:
+
+- expected steady-state team size as default;
+- explicit exceptions for known leave, onboarding, or temporary staffing changes.
+
+## Example: Complete Team-Size-Aware Sprint Planning Block
+
+```yaml
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  planning_confidence_level: 0.80
+  removed_work_treatment: churn_only
+  default_future_team_size: 6
+  team_size_scaling_exponent: 0.92
+  history:
+    - sprint_id: SPR-001
+      sprint_length_weeks: 2
+      team_size: 5
+      completed_story_points: 23
+      spillover_story_points: 4
+      added_story_points: 3
+      removed_story_points: 1
+    - sprint_id: SPR-002
+      sprint_length_weeks: 2
+      team_size: 6
+      completed_story_points: 25
+      spillover_story_points: 6
+      added_story_points: 4
+      removed_story_points: 2
+  future_sprint_overrides:
+    - sprint_number: 2
+      team_size: 4
+      holiday_factor: 0.8
+      notes: "Conference week"
+    - sprint_number: 4
+      team_size: 7
+      capacity_multiplier: 1.05
+      notes: "Temporary staffing uplift"
+```
+
+## Implementation Plan in This Repository
+
+### 1. Schema layer
+
+Update:
+
+- `src/mcprojsim/models/project.py`
+
+Changes:
+
+- add `default_future_team_size` and `team_size_scaling_exponent` to `SprintPlanningSpec`;
+- add `team_size` to `FutureSprintOverrideSpec`;
+- validate positivity and bounds.
+
+### 2. Parser and validation layer
+
+Update:
+
+- `src/mcprojsim/parsers/error_reporting.py`
+- `src/mcprojsim/parsers/yaml_parser.py`
+- `src/mcprojsim/parsers/toml_parser.py`
+
+Changes:
+
+- add source-aware errors for invalid team-size fields;
+- ensure future sprint team size is resolvable for simulation horizon.
+
+### 3. Sprint sampler and engine layer
+
+Update:
+
+- `src/mcprojsim/planning/sprint_capacity.py`
+- `src/mcprojsim/planning/sprint_engine.py`
+- `src/mcprojsim/planning/sprint_planner.py`
+
+Changes:
+
+- normalize historical data to per-person vectors;
+- sample joint normalized vectors;
+- scale by future effective team size and overrides;
+- preserve auditable backlog ledger.
+
+### 4. Results and exporter layer
+
+Update:
+
+- `src/mcprojsim/models/sprint_simulation.py`
+- `src/mcprojsim/exporters/json_exporter.py`
+- `src/mcprojsim/exporters/csv_exporter.py`
+- `src/mcprojsim/exporters/html_exporter.py`
+
+Changes:
+
+- add staffing profile and per-person historical diagnostics;
+- export override attribution and scenario deltas.
+
+### 5. CLI and MCP layer
+
+Update:
+
+- `src/mcprojsim/cli.py`
+- `src/mcprojsim/mcp_server.py`
+- `src/mcprojsim/nl_parser.py`
+
+Changes:
+
+- allow setting default future team size from CLI/MCP/NL flows;
+- allow setting per-sprint override team size in structured YAML and NL parser aliases.
+
+## Backward Compatibility and Migration
+
+To avoid breaking existing sprint-planning project files:
+
+1. Keep `team_size` optional in historical rows.
+2. Keep team-size-aware scaling disabled unless sufficient team-size data exists.
+3. If team-size-aware mode is disabled, keep current empirical behavior unchanged.
+4. Provide a clear warning when team-size data is partial and the model falls back.
+
+Recommended explicit mode flag:
+
+```yaml
+sprint_planning:
+  team_size_mode: auto   # auto | enabled | disabled
+```
+
+Behavior:
+
+- `disabled`: ignore team size completely.
+- `enabled`: require complete necessary inputs and fail if missing.
+- `auto` (default): use team-size-aware model when inputs are sufficient, otherwise fallback with warning.
+
+## Best-Use Recommendation
+
+For the best statistical use of this new data in production forecasting:
+
+1. Use joint empirical resampling on per-person normalized vectors.
+2. Scale by explicit future staffing (`default_future_team_size` + override `team_size`).
+3. Keep holiday and capacity multipliers separate from staffing.
+4. Add optional non-linear scaling via `team_size_scaling_exponent`.
+5. Report staffing attribution so users can see when forecast shifts are staffing-driven versus churn-driven.
+
+This design preserves the existing Monte Carlo philosophy, materially improves forecast realism under staffing changes, and keeps implementation aligned with current `mcprojsim` architecture.
 
