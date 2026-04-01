@@ -676,6 +676,7 @@ Skewness: 0.1250
 Excess Kurtosis: -0.5403
 
 Calendar Time Confidence Intervals:
+  P10: 459.03 hours (58 working days)  (2026-06-22)
   P25: 485.56 hours (61 working days)  (2026-06-25)
   P50: 530.25 hours (67 working days)  (2026-07-03)
   P75: 624.72 hours (79 working days)  (2026-07-21)
@@ -722,6 +723,7 @@ Skewness: 0.1120
 Excess Kurtosis: -0.5163
 
 Calendar Time Confidence Intervals:
+  P10: 106.30 hours (14 working days)  (2026-04-21)
   P25: 117.83 hours (15 working days)  (2026-04-22)
   P50: 130.38 hours (17 working days)  (2026-04-24)
   P75: 144.63 hours (19 working days)  (2026-04-28)
