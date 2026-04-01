@@ -679,10 +679,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-useful-next-commands" class="md-nav__link">
+  <a href="#useful-next-commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7. Useful next commands
+        Useful next commands
       
     </span>
   </a>
@@ -705,17 +705,6 @@
     <span class="md-ellipsis">
       
         Try these example projects
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#next-steps-recommended-learning-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps (recommended learning path)
       
     </span>
   </a>
@@ -1354,10 +1343,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-useful-next-commands" class="md-nav__link">
+  <a href="#useful-next-commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7. Useful next commands
+        Useful next commands
       
     </span>
   </a>
@@ -1386,17 +1375,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#next-steps-recommended-learning-path" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Next steps (recommended learning path)
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1419,11 +1397,11 @@
 
 <h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <p>Welcome to the Monte Carlo Project Simulator User Guide.</p>
-<p>This short, hands-on chapter shows you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with context.</p>
+<p>This short, hands-on chapter is meant to quickly show you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with a bit of context where more advanced concepts are introduced.</p>
 <p>What you'll learn</p>
 <ul>
 <li>Quick generation of a valid project file from a plain-text description.</li>
-<li>Running a reproducible Monte Carlo simulation and exporting interactive reports.</li>
+<li>Running a reproducible Monte Carlo simulation and exporting report files.</li>
 <li>Using sensitivity and critical-path outputs to find the tasks that drive schedule risk.</li>
 </ul>
 <h2 id="before-you-start">Before you start<a class="headerlink" href="#before-you-start" title="Permanent link">&para;</a></h2>
@@ -1525,7 +1503,7 @@
 </ul>
 <p>Tip: increase precision with <code>--iterations</code> (tradeoff: runtime vs accuracy) and use <code>--seed</code> for reproducible runs; see <a href="../running_simulations/">Running Simulations</a> for full CLI options.</p>
 <p>You should see output like:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>mcprojsim, version 0.4.4
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>mcprojsim, version 0.10.1
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>Progress: 100.0% (10000/10000)
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>=== Simulation Results ===
@@ -1560,16 +1538,24 @@
 <p>To generate report files, add <code>-f</code> with the desired formats:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>-f<span class="w"> </span>json,csv,html
 </span></code></pre></div>
+<p>If you want to control where the files are written and what base name they use, add <code>-o</code> as well:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>-o<span class="w"> </span>results/website_refresh<span class="w"> </span>-f<span class="w"> </span>json,csv,html
+</span></code></pre></div>
 <p>This creates files like:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Website Refresh_results.json
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>Website Refresh_results.csv
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>Website Refresh_results.html
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Website Refresh_results.json
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>Website Refresh_results.csv
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Website Refresh_results.html
+</span></code></pre></div>
+<p>With <code>-o results/website_refresh</code>, the exported files would instead use that path prefix:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>results/website_refresh.json
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>results/website_refresh.csv
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>results/website_refresh.html
 </span></code></pre></div>
 <p>The HTML report is the best starting point — open it in your browser:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>open<span class="w"> </span><span class="s2">&quot;Website Refresh_results.html&quot;</span><span class="w">     </span><span class="c1"># macOS</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>xdg-open<span class="w"> </span><span class="s2">&quot;Website Refresh_results.html&quot;</span><span class="w"> </span><span class="c1"># Linux</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>open<span class="w"> </span><span class="s2">&quot;Website Refresh_results.html&quot;</span><span class="w">     </span><span class="c1"># macOS</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>xdg-open<span class="w"> </span><span class="s2">&quot;Website Refresh_results.html&quot;</span><span class="w"> </span><span class="c1"># Linux</span>
 </span></code></pre></div>
-<p>Tip: export HTML first (<code>-f html</code>) to interactively inspect sensitivity, critical paths and charts — it is the easiest way to explore results visually.</p>
+<p>Tip: export HTML first (<code>-f html</code>) to inspect sensitivity, critical paths, and charts in the rendered report — it is the easiest way to explore results visually.</p>
 <h2 id="what-the-main-results-mean">What the main results mean<a class="headerlink" href="#what-the-main-results-mean" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1598,15 +1584,27 @@
 </tbody>
 </table>
 <p>All durations are reported in <strong>hours</strong> (the canonical internal unit), with <strong>working days</strong> and <strong>projected delivery dates</strong> (weekends excluded) shown alongside.</p>
-<h2 id="7-useful-next-commands">7. Useful next commands<a class="headerlink" href="#7-useful-next-commands" title="Permanent link">&para;</a></h2>
+<p>The other sections in the sample output are worth a quick first-pass explanation too:</p>
+<ul>
+<li><strong>Sensitivity Analysis</strong> shows which tasks are most strongly associated with the overall finish date moving later. Higher positive values usually mean those tasks are stronger schedule drivers.</li>
+<li><strong>Schedule Slack</strong> shows how much a task can slip before it starts delaying the overall project. A task marked <strong>Critical</strong> has essentially no slack.</li>
+<li><strong>Most Frequent Critical Paths</strong> show the dependency chains that most often determine the final finish date across the Monte Carlo runs.</li>
+</ul>
+<p>At this level, treat these as decision aids:</p>
+<ul>
+<li>percentiles help you choose a date target</li>
+<li>sensitivity helps you see where uncertainty matters most</li>
+<li>critical paths and slack help you see where sequencing risk is concentrated</li>
+</ul>
+<h2 id="useful-next-commands">Useful next commands<a class="headerlink" href="#useful-next-commands" title="Permanent link">&para;</a></h2>
 <p>Run with more iterations for higher precision:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--iterations<span class="w"> </span><span class="m">50000</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--iterations<span class="w"> </span><span class="m">50000</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
 <p>Use a custom configuration file:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--config<span class="w"> </span>my_config.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--config<span class="w"> </span>my_config.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
 </span></code></pre></div>
 <p>Suppress progress output (useful in CI/CD):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--quiet
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--quiet
 </span></code></pre></div>
 <h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1616,18 +1614,14 @@
 <li><a href="../project_files/">Project Files</a> — complete project file reference</li>
 <li><a href="../configuration/">Configuration</a> — customize uncertainty factors and mappings</li>
 <li><a href="../../examples/">Examples</a> — working example projects</li>
+<li><a href="../constrained/">Constrained Scheduling</a>, for modeling resource limits and their impact on schedules</li>
+<li><a href="../mcp-server/">MCP Server</a>, for AI-assisted project file generation and integration</li>
 </ul>
 <h2 id="try-these-example-projects">Try these example projects<a class="headerlink" href="#try-these-example-projects" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>examples/sample_project.yaml</code> — full sample with risks and resources</li>
 <li><code>examples/quickstart_project.yaml</code> — minimal quickstart example used in this chapter</li>
 <li><code>examples/resource_cap_small_task.yaml</code> — a small resource-constrained example to try constrained scheduling</li>
-</ul>
-<h2 id="next-steps-recommended-learning-path">Next steps (recommended learning path)<a class="headerlink" href="#next-steps-recommended-learning-path" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Beginner: follow this chapter and open the HTML report to inspect results.</li>
-<li>Intermediate: read <a href="../your_first_project/">Your First Project</a> and <a href="../task_estimation/">Task Estimation</a> to improve input quality.</li>
-<li>Advanced: explore <a href="../configuration/">Configuration</a>, <a href="../constrained/">Constrained Scheduling</a>, and <a href="../mcp-server/">MCP Server</a> for automation and integrations.</li>
 </ul>
 <p>\newpage</p>
 
