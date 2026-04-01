@@ -1,3 +1,27 @@
+## [v0.11.0] - 2026-04-01
+
+Release Type: minor
+
+### 📋 Summary
+This release adds a configurable histogram bin count for distribution charts, extends MCP server capabilities to cover two-pass scheduling and sprint override inputs, and refreshes documentation across sprint planning, examples, and the getting-started guide.
+
+### ✨ Additions
+- Added `histogram_bins` config field and `--number-bins` CLI flag to control the number of bins in simulation output distribution charts (default 50)
+
+### 🚀 Improvements
+- Updated MCP server bundle to reflect latest NL processing capabilities and new MCP command coverage
+- Updated MCP server and NL processor to correctly handle two-phase simulation and `future_sprint_overrides` project inputs
+
+### 📚 Documentation
+- Updated examples to include the P10 confidence percentile added in the previous release
+- Synced the getting-started guide with current simulate flags and output behavior
+
+### 🛠 Internal
+- Aded rendered PDF artifacts for all design documents for user with a full LaTeX setup
+- Added addendum for a suggestion how to make use of team size into sprint-based-planning design document
+- Improved design-doc build tooling to report an explicit error when xelatex is failing
+
+
 ## [v0.10.1] - 2026-03-31
 
 Release Type: patch
