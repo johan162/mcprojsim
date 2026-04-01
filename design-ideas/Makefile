@@ -50,7 +50,7 @@ UNDERLINE := \033[4m
 # ============================================================================================
 BUILD_DIR := .build
 DIST_DIR := dist
-BUILD_DESIGN_DIR := $(BUILD_DIR)/design-ideas
+BUILD_DESIGN_DIR := $(BUILD_DIR)
 STAMP_DIR := .makefile-stamps
 SCRIPTS_DIR := ../scripts
 DESIGN_IDEAS_DIR := .
@@ -142,11 +142,19 @@ $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_D
 		exit 1; \
 	fi; \
 	rm -f $$($1_TEX).bak; \
-	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; \
-	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; \
+	if ! xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; then \
+		echo -e "$$(RED)✗ Error: xelatex pass 1 failed for $$($1_TEX)$$(NC)"; \
+		echo -e "$$(YELLOW)  See log: $$($1_BUILD_DIR)/$$($1_BASENAME)_report.log$$(NC)"; \
+		exit 1; \
+	fi; \
+	if ! xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; then \
+		echo -e "$$(RED)✗ Error: xelatex pass 2 failed for $$($1_TEX)$$(NC)"; \
+		echo -e "$$(YELLOW)  See log: $$($1_BUILD_DIR)/$$($1_BASENAME)_report.log$$(NC)"; \
+		exit 1; \
+	fi; \
 	cp $$($1_PDF_BUILT) $$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
 	touch $$($1_STAMP); \
-	rm -rf $$($1_BUILD_DIR); \
+#	rm -rf $$($1_BUILD_DIR); \
 	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
 
