@@ -1,7 +1,7 @@
 # Monte Carlo Project Simulator (mcprojsim)
 
 
-**Stop guessing deadlines. Start simulating them !**
+**Stop guessing deadlines. Start simulating them.**
 
 | Category | Link |
 |----------|--------|
@@ -15,35 +15,34 @@
 
 ## Overview
 
-`mcprojsim` is a Monte Carlo simulation tool for projects with emphasis on agile software project estimation.
-Instead of producing a single deadline, it models uncertainty in task duration, dependencies, risks, and other schedule drivers to produce confidence-based forecast ranges.
+`mcprojsim` is a Monte Carlo simulation tool for agile software project estimation. Rather than producing a single deadline, it models uncertainty across task durations, dependencies, risks, and resource constraints to generate confidence-weighted schedule forecasts.
 
-It is intended for teams that want answers such as:
+Use it when you need answers like:
 
-- What is the likely completion range for this project?
-- What is the $P50$, $P80$, or $P90$ delivery date?
-- Which tasks most often drive schedule risk?
-- How do risks and uncertainty factors change the forecast?
+- What is the realistic completion range — P10 through P99 — for this project?
+- When is there a 50%, 80%, or 90% probability of delivery?
+- Which tasks most frequently land on the critical path?
+- How do specific risks or uncertainty factors shift the final forecast?
 
 ## Key features
 
-- Monte Carlo schedule simulation with configurable iterations and reproducible seeds
-- Range-based estimates using explicit low/expected/high values, T-shirt sizes, story points, and multi-category symbolic sizing
-- Two-pass resource optimization that identifies optimal resource assignments in constrained environments
-- Dependency-only scheduling plus resource- and calendar-constrained scheduling when resources are present
-- Risk and uncertainty modeling for both tasks and the overall project
-- Analysis outputs including percentiles, critical paths, sensitivity analysis, slack, risk impact, staffing recommendations, and delivery-date probability
-- JSON, CSV, and HTML exports, plus optional ASCII table output in the CLI
-- Natural-language project generation from plain text with `mcprojsim generate`
-- MCP server support for assistant-driven generation, validation, and simulation workflows
-- Sprint planning support with empirical or negative binomial velocity models, sickness modeling, spillover, and historical metrics import
+- Monte Carlo schedule simulation with configurable iterations, P10–P99 confidence percentiles, and reproducible seeds
+- Flexible task estimates: explicit low/expected/high ranges, T-shirt sizes, story points, and multi-category symbolic sizing
+- Two-pass criticality-aware resource scheduling for optimised assignment under resource contention
+- Dependency-only scheduling alongside resource- and calendar-constrained scheduling
+- Risk and uncertainty factor modelling at task and project level
+- Rich analysis: percentile forecasts, critical-path sequences, sensitivity (Tornado) charts, slack, risk impact, staffing recommendations, and delivery-date probability
+- JSON, CSV, and HTML export with configurable distribution chart histogram bins; optional ASCII table output in the CLI
+- Natural-language project generation from plain text via `mcprojsim generate`
+- MCP server for AI-assistant-driven generation, validation, and simulation workflows
+- Sprint planning with empirical or negative-binomial velocity models, sickness modelling, spillover, and historical sprint data import
 
 ## Recommended installation
 
 Most users fall into one of two paths:
 
 - **Terminal-first CLI usage**: install with `pipx`.
-- **MCP-assisted usage**: use the released MCP bundle or the optional MCP package install described in [docs/user_guide/mcp-server.md](docs/user_guide/mcp-server.md).
+- **MCP-assisted usage**: use the released MCP bundle or the optional MCP package install described in [MCP Server Seetup](https://johan162.github.io/mcprojsim/user_guide/mcp-server/).
 
 For direct terminal-only CLI usage, `pipx` remains the simplest manual install path:
 
@@ -62,9 +61,8 @@ mcprojsim --version
 
 For the fastest first run, start with [Quickstart Guide](https://johan162.github.io/mcprojsim/quickstart/). For the fuller documentation path after that, use the published [User Guide](https://johan162.github.io/mcprojsim/).
 
-> [!TIP] 
-> There is also a prepared Docker image if you prefer to use an isolated environment to run in. 
-> There is also a accompaning script in `bin/mcprojsim.sh` to run the program in the container in the same way as the Python executable installed via `pipx`
+> [!TIP]
+> A Docker image is available for isolated environments. The accompanying script `bin/mcprojsim.sh` wraps the container with the same interface as the `pipx`-installed CLI.
 
 
 ## Minimal example
@@ -147,18 +145,15 @@ mcprojsim simulate examples/sample_project.yaml --target-date 2026-06-01
 mcprojsim simulate examples/sample_project.yaml --table --seed 42
 ```
 
-For full CLI coverage, including constrained scheduling, sprint planning, quiet/minimal modes, staffing, and export options, see [docs/user_guide/running_simulations.md](docs/user_guide/running_simulations.md).
+For full CLI coverage, including constrained scheduling, sprint planning, quiet/minimal modes, staffing, and export options, see [Running Simulations](https://johan162.github.io/mcprojsim/user_guide/running_simulations/).
 
 ## MCP server integration
 
 `mcprojsim` can run as a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server, letting AI assistants such as GitHub Copilot, Claude Desktop, or any MCP-compatible client generate project files, validate descriptions, and run simulations conversationally.
 
-Preferred path: install the released MCP bundle artifact from GitHub Releases with your assistant, or follow the manual setup in [docs/user_guide/mcp-server.md](docs/user_guide/mcp-server.md).
+Install the released MCP bundle from GitHub Releases, or follow the manual setup in [MCP Server Setup](https://johan162.github.io/mcprojsim/user_guide/mcp-server/) for installation tradeoffs and natural-language input examples.
 
-For end-to-end setup, installation tradeoffs, and natural-language input examples, see [docs/user_guide/mcp-server.md](docs/user_guide/mcp-server.md).
-
-
-### Example prompt to get your assistant to install `mcprojsim`:
+### Example prompt to install `mcprojsim` as an MCP server:
 
 ```txt
 Download and install the latest mcprojsim MCP server from GitHub Releases. Follow the README.md for installation instructions.
@@ -177,7 +172,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.11.0}
+  version = {0.11.1}
 }
 ```
 
@@ -192,3 +187,4 @@ Inspired by the work of:
 - Steve McConnell - *Software Estimation: Demystifying the Black Art*
 - Frederick Brooks - *The Mythical Man-Month*
 - Douglas Hubbard - *How to Measure Anything in Cybersecurity Risk*
+- Kahneman, Sibony, Sunstein - *Noise: A Flaw in Human Judgment*
