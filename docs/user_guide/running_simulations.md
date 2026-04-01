@@ -131,6 +131,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-o`, `--output PATH` | Output file base path (without extension) | project name |
 | `-f`, `--output-format FORMATS` | Comma-separated export formats: `json`, `csv`, `html` | none |
 | `--critical-paths N` | Number of critical paths to display | 2 |
+| `--number-bins N` | Number of histogram bins for distribution charts in JSON, CSV, and HTML exports. Overrides the config file setting if specified. | 50 |
 | `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
 | `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
@@ -160,6 +161,9 @@ mcprojsim simulate project.yaml --config my_config.yaml
 
 # Export to all formats
 mcprojsim simulate project.yaml -f json,csv,html -o results/my_project
+
+# Custom histogram bins for more granular distribution charts
+mcprojsim simulate project.yaml -f json,csv,html --number-bins 100 -o results/my_project
 
 # Quiet mode (suppress progress bars)
 mcprojsim simulate project.yaml --quiet

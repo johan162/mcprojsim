@@ -1,4 +1,4 @@
-Version: 1.1.0
+Version: 1.2.0
 
 # Sprint-Based Planning
 
@@ -471,22 +471,28 @@ This makes the historical data cleaner in three ways:
 
 For historical rows, the cleanest use is to normalize **delivery-side capacity signals** back to a nominal full-capacity basis before comparing or resampling them:
 
-```text
-normalized_completed_i = completed_units_i / max(holiday_factor_i, epsilon)
-normalized_spillover_i = spillover_units_i / max(holiday_factor_i, epsilon)
-normalized_added_i = added_units_i
-normalized_removed_i = removed_units_i
-```
+$$
+\text{normalized\_completed}_i = \frac{\text{completed\_units}_i}{\max(\text{holiday\_factor}_i, \epsilon)}
+$$
+
+$$
+\text{normalized\_spillover}_i = \frac{\text{spillover\_units}_i}{\max(\text{holiday\_factor}_i, \epsilon)}
+$$
+
+$$
+\text{normalized\_added}_i = \text{added\_units}_i, \quad
+\text{normalized\_removed}_i = \text{removed\_units}_i
+$$
 
 This keeps a holiday-shortened sprint from being interpreted as evidence that the team normally completes less work. Added and removed scope should remain raw churn signals, because they describe priority change and replanning rather than available working time.
 
 For future sprints, the same factor should be applied in the forward direction when a known future sprint has reduced availability:
 
-```text
-effective_future_capacity_t = sampled_nominal_capacity_t * override_holiday_factor_t
-```
+$$
+\text{effective\_future\_capacity}_t = \text{sampled\_nominal\_capacity}_t \cdot \text{override\_holiday\_factor}_t
+$$
 
-where `override_holiday_factor_t` comes from a matching `future_sprint_overrides` entry when one is present, and otherwise defaults to `1.0`.
+where override holiday factor $t$ comes from a matching future sprint overrides entry when one is present, and otherwise defaults to $1.0$.
 
 This affects planning and prediction in three specific places:
 
@@ -555,16 +561,22 @@ For mixed historical cadences or requested sprint lengths that do not appear in 
 
 Recommended normalization:
 
-```text
-weekly_completed_i = completed_units_i / sprint_length_weeks_i
-weekly_spillover_i = spillover_units_i / sprint_length_weeks_i
-weekly_added_i = added_units_i / sprint_length_weeks_i
-weekly_removed_i = removed_units_i / sprint_length_weeks_i
-simulated_sprint_outcome(L weeks) = sum(sampled weekly_completed_1..L,
-                                        sampled weekly_spillover_1..L,
-                                        sampled weekly_added_1..L,
-                                        sampled weekly_removed_1..L)
-```
+$$
+\text{weekly\_completed}_i = \frac{\text{completed\_units}_i}{\text{sprint\_length\_weeks}_i}
+$$
+
+$$
+\text{weekly\_spillover}_i = \frac{\text{spillover\_units}_i}{\text{sprint\_length\_weeks}_i}
+$$
+
+$$
+\text{weekly\_added}_i = \frac{\text{added\_units}_i}{\text{sprint\_length\_weeks}_i}, \quad
+\text{weekly\_removed}_i = \frac{\text{removed\_units}_i}{\text{sprint\_length\_weeks}_i}
+$$
+
+$$
+\text{simulated\_sprint\_outcome}(L \text{ weeks}) = \sum_{j=1}^{L} (\text{weekly\_completed}_{j} + \text{weekly\_spillover}_{j} + \text{weekly\_added}_{j} + \text{weekly\_removed}_{j})
+$$
 
 This fallback is better than pretending that historical 2-week sprint capacity can be reused unchanged for a future 3-week sprint, but it should not be mistaken for a fully faithful representation of sprint behavior.
 
@@ -572,32 +584,32 @@ This fallback is better than pretending that historical 2-week sprint capacity c
 
 Historical sprint learning should not be limited to what was completed. Each historical row should be treated as a **joint outcome vector**:
 
-```text
-historical_sprint_i = (completed_units_i, spillover_units_i, added_units_i, removed_units_i)
-```
+$$
+X_i = (c_i^{\text{complete}}, s_i, a_i, r_i)
+$$
 
 where:
 
-- `completed_units_i` is the work fully finished inside sprint `i`;
-- `spillover_units_i` is the work still carried out of sprint `i` at sprint end because it did not land;
-- `added_units_i` is the work added after sprint start because higher-priority demand interrupted the original plan;
-- `removed_units_i` is the work explicitly de-scoped from sprint `i` after sprint start, either because priorities changed or because the plan proved unrealistic.
+- $c_i^{\text{complete}}$ is the work fully finished inside sprint $i$;
+- $s_i$ is the work still carried out of sprint $i$ at sprint end because it did not land;
+- $a_i$ is the work added after sprint start because higher-priority demand interrupted the original plan;
+- $r_i$ is the work explicitly de-scoped from sprint $i$ after sprint start, either because priorities changed or because the plan proved unrealistic.
 
 The most statistically sound default is to resample these vectors **jointly**, not as four independent series. Joint bootstrap preserves the observed correlation structure between healthy sprints, high-churn sprints, and unstable sprints. If the team historically sees that urgent scope additions and de-scoping tend to coincide with more spillover and lower completion, the simulator should preserve that relationship rather than averaging it away.
 
 Two derived measures should then be computed from the same history:
 
-```text
-spillover_ratio_i = spillover_units_i / max(completed_units_i + spillover_units_i, epsilon)
-scope_addition_ratio_i = added_units_i / max(completed_units_i + added_units_i, epsilon)
-scope_removal_ratio_i = removed_units_i / max(completed_units_i + spillover_units_i + removed_units_i, epsilon)
-```
+$$
+\text{spillover\_ratio}_i = \frac{s_i}{\max(c_i + s_i, \epsilon)}, \quad
+\text{scope\_addition\_ratio}_i = \frac{a_i}{\max(c_i + a_i, \epsilon)}, \quad
+\text{scope\_removal\_ratio}_i = \frac{r_i}{\max(c_i + s_i + r_i, \epsilon)}
+$$
 
 These are the most useful normalized measures of planning instability:
 
-- `spillover_ratio` measures how much of the attempted sprint scope failed to land;
-- `scope_addition_ratio` measures how much of the sprint demand arrived after planning was supposedly complete;
-- `scope_removal_ratio` measures how much planned sprint scope had to be taken back out after sprint start.
+- spillover ratio measures how much of the attempted sprint scope failed to land;
+- scope addition ratio measures how much of the sprint demand arrived after planning was supposedly complete;
+- scope removal ratio measures how much planned sprint scope had to be taken back out after sprint start.
 
 Those historical signals should be used in two different ways:
 
@@ -618,26 +630,21 @@ The cleanest design is to add an optional interpretation flag at the planning-sp
 
 The simplest commitment rule that makes good use of the available data is:
 
-```text
-recommended_planned_commitment(q)
-  = max(0,
-        Q50(completed_units)
-        * (1 - Qq(spillover_ratio))
-        * (1 - Qq(scope_removal_ratio))
-        - Qq(added_units))
-```
+$$
+\text{recommended\_planned\_commitment}(q) = \max\left(0, Q_{50}(\text{completed\_units}) \cdot (1 - Q_q(\text{spillover\_ratio})) \cdot (1 - Q_q(\text{scope\_removal\_ratio})) - Q_q(\text{added\_units})\right)
+$$
 
-for a chosen planning confidence level `q` such as 0.80. This rule is deliberately conservative: it starts with typical delivered capacity, discounts it by a high-percentile spillover rate, discounts again for the historical tendency to remove planned work after sprint start, and then reserves explicit room for likely mid-sprint scope additions.
+for a chosen planning confidence level $q$ such as 0.80. This rule is deliberately conservative: it starts with typical delivered capacity, discounts it by a high-percentile spillover rate, discounts again for the historical tendency to remove planned work after sprint start, and then reserves explicit room for likely mid-sprint scope additions.
 
 This commitment rule does not contradict the earlier recommendation against average-velocity forecasting. It is a planning heuristic derived from historical percentiles, not the primary forecasting engine. Completion-date forecasts should still come from full empirical resampling rather than from a single collapsed point estimate.
 
 For completion-date forecasting, the simulator should instead use the richer sprint recursion:
 
-```text
-remaining_backlog_(t+1) = remaining_backlog_t - delivered_units_t + added_units_t - removed_units_t_effective
-```
+$$
+B_{t+1} = B_t - D_t + A_t - R_t^{\text{effective}}
+$$
 
-where `delivered_units_t` is produced by the dependency-aware planner after applying sampled capacity and sampled spillover behavior, and `removed_units_t_effective` is either `0` in `churn_only` mode or the sampled removed work in `reduce_backlog` mode. This is the better place to use the new data for forecast dates, because it models backlog growth, backlog shrinkage, and sprint instability directly instead of collapsing them into one average burn rate.
+where $D_t$ is delivered units, produced by the dependency-aware planner after applying sampled capacity and sampled spillover behavior, and $R_t^{\text{effective}}$ is either $0$ in churn only mode or the sampled removed work in reduce backlog mode. This is the better place to use the new data for forecast dates, because it models backlog growth, backlog shrinkage, and sprint instability directly instead of collapsing them into one average burn rate.
 
 ###  Add an explicit volatility layer, but keep it optional
 
@@ -648,11 +655,11 @@ Historical resampling already captures ordinary variation, but the user also ask
 
 The current engine already uses multiplicative uncertainty factors on task duration. A sprint mode can use the same design pattern, but it should apply it specifically to the **deliverable-capacity component** of the sampled sprint outcome rather than to every historical variable indiscriminately:
 
-```text
-effective_deliverable_capacity = sampled_completed_capacity * sampled_volatility_multiplier
-```
+$$
+	ext{effective\_deliverable\_capacity} = \text{sampled\_completed\_capacity} \cdot \text{sampled\_volatility\_multiplier}
+$$
 
-where the multiplier defaults to `1.0` when no extra volatility model is enabled.
+where the multiplier defaults to $1.0$ when no extra volatility model is enabled.
 
 In the MVP design, the volatility overlay should affect the forecast as follows:
 
@@ -683,11 +690,11 @@ Empirically, smaller tasks are more predictable: their actual effort stays close
 
 A practical model is a logistic function of planned size:
 
-```text
-P(spillover | planned_points = s) = 1 / (1 + exp(-(a * log(s / ref_size) + b)))
-```
+$$
+P(\text{spillover} \mid s) = \frac{1}{1 + \exp(-(a \log(s / \text{ref\_size}) + b))}
+$$
 
-where `ref_size` is a reference task size (e.g. 5 SP), `a` controls the steepness of the increase with size, and `b` shifts the overall base rate. A simpler piecewise-linear approximation is also acceptable if user-facing calibration is preferred over a continuous curve:
+where ref size is a reference task size (e.g. 5 SP), $a$ controls the steepness of the increase with size, and $b$ shifts the overall base rate. A simpler piecewise-linear approximation is also acceptable if user-facing calibration is preferred over a continuous curve:
 
 | Planned size (SP) | Default spillover probability |
 |---|---|
@@ -704,12 +711,12 @@ This execution-spillover model depends on a task-size signal expressed in planni
 
 When a spillover event is triggered for a task, the sprint consumes only a sampled fraction of the task's planned effort during the current sprint. The remaining effort carries forward as a reduced-size "remainder task" that re-enters the ready queue for the next sprint (retaining all original dependencies, now satisfied):
 
-```text
-fraction_consumed ~ Beta(alpha_consumed, beta_consumed)  # default: mean ≈ 0.65
-remaining_effort  = planned_effort * (1 - fraction_consumed)
-```
+$$
+F \sim \text{Beta}(\alpha_{\text{consumed}}, \beta_{\text{consumed}}), \quad
+\text{remaining\_effort} = \text{planned\_effort} \cdot (1 - F)
+$$
 
-The default Beta distribution should have `alpha_consumed = 3.25`, `beta_consumed = 1.75`, giving a mean consumed fraction of roughly 0.65 (most of the work is done, but the task still does not land). These values should be treated as pragmatic starter defaults rather than universal constants. Teams should tune them against their own historical carryover patterns if such data is available. This parameterisation also captures the occasional case where a task was barely started before it was recognized as too large to finish, by assigning some probability to low consumed fractions.
+The default Beta distribution should have $\alpha_{\text{consumed}} = 3.25$, $\beta_{\text{consumed}} = 1.75$, giving a mean consumed fraction of roughly $0.65$ (most of the work is done, but the task still does not land). These values should be treated as pragmatic starter defaults rather than universalconstants. Teams should tune them against their own historical carryover patterns if such data is available. This parameterisation also captures the occasional case where a task was barely started before it was recognized as too large to finish, by assigning some probability to low consumed fractions.
 
 **Meaning of `consumed_fraction_alpha` and `consumed_fraction_beta`**
 
@@ -1030,11 +1037,11 @@ To make the proposal implementable without further design gaps, the following de
 
 2. **Sampler behavior**
 
-- `SprintCapacitySampler` should normalize historical rows into a canonical internal tuple:
+ `SprintCapacitySampler` should normalize historical rows into a canonical internal tuple:
 
-```text
-(completed_units, spillover_units, added_units, removed_units)
-```
+$$
+(c, s, a, r)
+$$
 
 - The sampler should apply per-row default filling before any resampling or fallback normalization.
 - The sampler should only holiday-normalize delivery-side quantities (`completed`, and optionally `spillover` if that interpretation is retained), while leaving `added` and `removed` as raw churn signals.
@@ -1125,33 +1132,38 @@ This section consolidates the statistical model used throughout the proposal so 
 
 After schema validation and default filling, each historical sprint row should be transformed into a canonical observation:
 
-```text
+$$
 X_i = (c_i, s_i, a_i, r_i, h_i, L_i)
-```
+$$
 
 where:
 
-- `c_i` = completed units in sprint `i`
-- `s_i` = historical spillover units in sprint `i`
-- `a_i` = added units in sprint `i`
-- `r_i` = removed units in sprint `i`
-- `h_i` = `holiday_factor` in sprint `i`
-- `L_i` = sprint length in weeks for sprint `i`
+- $c_i$ = completed units in sprint $i$
+- $s_i$ = historical spillover units in sprint $i$
+- $a_i$ = added units in sprint $i$
+- $r_i$ = removed units in sprint $i$
+- $h_i$ = holiday factor in sprint $i$
+- $L_i$ = sprint length in weeks for sprint $i$
 
 The unit family is either story points or tasks, determined by the row's completed-unit field and the active `capacity_mode`. All missing churn fields are first normalized to `0`, and missing `holiday_factor` is normalized to `1.0`.
 
 ## Delivery-Side Normalization
 
-The model treats `holiday_factor` as a delivery-capacity normalizer rather than as a churn signal. Historical sprints affected by reduced working availability should therefore be mapped back to a nominal full-capacity basis before they are compared or resampled.
+The model treats holiday factor as a delivery-capacity normalizer rather than as a churn signal. Historical sprints affected by reduced working availability should therefore be mapped back to a nominal full-capacity basis before they are compared or resampled.
 
-Let `epsilon` be a small strictly positive constant used only to avoid divide-by-zero in formulas. Then the normalized historical quantities are:
+Let $\epsilon$ be a small strictly positive constant used only to avoid divide-by-zero in formulas. Then the normalized historical quantities are:
 
-```text
-ĉ_i = c_i / max(h_i, epsilon)
-ŝ_i = s_i / max(h_i, epsilon)
-â_i = a_i
-r̂_i = r_i
-```
+$$
+\hat{c}_i = \frac{c_i}{\max(h_i, \epsilon)}
+$$
+
+$$
+\hat{s}_i = \frac{s_i}{\max(h_i, \epsilon)}
+$$
+
+$$
+\hat{a}_i = a_i, \quad \hat{r}_i = r_i
+$$
 
 Only delivery-side quantities are holiday-normalized. Added work and removed work remain raw churn signals because they represent planning change rather than available working time.
 
@@ -1163,12 +1175,12 @@ When the configured sprint length matches a historical cadence that already exis
 
 For mixed historical cadences, or when the configured sprint length does not appear in the available data, the MVP may still fall back to a weekly normalization approximation:
 
-```text
-w^c_i = ĉ_i / L_i
-w^s_i = ŝ_i / L_i
-w^a_i = â_i / L_i
-w^r_i = r̂_i / L_i
-```
+$$
+w^c_i = \frac{\hat{c}_i}{L_i}, \quad
+w^s_i = \frac{\hat{s}_i}{L_i}, \quad
+w^a_i = \frac{\hat{a}_i}{L_i}, \quad
+w^r_i = \frac{\hat{r}_i}{L_i}
+$$
 
 For a simulated sprint length of `L` weeks, that fallback builds a simulated sprint outcome by summing `L` sampled weekly observations. This is acceptable as an MVP baseline for cross-cadence extrapolation, but it should be documented as an approximation rather than as the preferred long-term model.
 
@@ -1183,31 +1195,31 @@ That approach better preserves ceremony effects, batching, within-sprint couplin
 
 The default stochastic engine should use **joint bootstrap resampling**. In practical terms, that means drawing historical outcome vectors with replacement from the normalized historical data, not sampling each component independently.
 
-If the normalized historical dataset has `n` usable rows, define:
+If the normalized historical dataset has $n$ usable rows, define:
 
-```text
+$$
 Y_i = (w^c_i, w^s_i, w^a_i, w^r_i)
-```
+$$
 
 for the MVP fallback path, or equivalently:
 
-```text
-Z_i = (ĉ_i, ŝ_i, â_i, r̂_i, L_i)
-```
+$$
+Z_i = (\hat{c}_i, \hat{s}_i, \hat{a}_i, \hat{r}_i, L_i)
+$$
 
 for the preferred sprint-entity resampling path.
 
-For the MVP weekly fallback, for each simulated future week `t`, draw an index:
+For the MVP weekly fallback, for each simulated future week $t$, draw an index:
 
-```text
-J_t ~ Uniform({1, 2, ..., n})
-```
+$$
+J_t \sim \text{Uniform}(\{1, 2, \ldots, n\})
+$$
 
 and use:
 
-```text
+$$
 (W^c_t, W^s_t, W^a_t, W^r_t) = Y_{J_t}
-```
+$$
 
 For the preferred sprint-entity path, draw a historical sprint row or block of rows that already matches the configured cadence and use that as the sampled future sprint outcome.
 
@@ -1217,17 +1229,17 @@ This is the core statistical choice in the proposal. It preserves the observed d
 
 The model should compute three derived ratios from the same historical rows for diagnostics and planned-load guidance:
 
-```text
-spillover_ratio_i      = s_i / max(c_i + s_i, epsilon)
-scope_addition_ratio_i = a_i / max(c_i + a_i, epsilon)
-scope_removal_ratio_i  = r_i / max(c_i + s_i + r_i, epsilon)
-```
+$$
+	\text{spillover\_ratio}_i = \frac{s_i}{\max(c_i + s_i, \epsilon)}, \quad
+	\text{scope\_addition\_ratio}_i = \frac{a_i}{\max(c_i + a_i, \epsilon)}, \quad
+	\text{scope\_removal\_ratio}_i = \frac{r_i}{\max(c_i + s_i + r_i, \epsilon)}
+$$
 
 These ratios summarize different aspects of instability:
 
-- `spillover_ratio` measures the share of attempted sprint scope that did not land.
-- `scope_addition_ratio` measures how much demand arrived after planning.
-- `scope_removal_ratio` measures how much planned scope had to be taken back out.
+- spillover ratio measures the share of attempted sprint scope that did not land.
+- scope addition ratio measures how much demand arrived after planning.
+- scope removal ratio measures how much planned scope had to be taken back out.
 
 The proposal uses these ratios in two places: for reporting historical planning stability, and for computing conservative planned-load guidance.
 
@@ -1238,16 +1250,11 @@ The proposal deliberately separates the **forecasting engine** from the **commit
 - The completion forecast comes from full Monte Carlo simulation over backlog state.
 - The planned-load recommendation is a simpler percentile-based heuristic for near-term sprint planning.
 
-Let `Qp(X)` denote the empirical percentile or empirical quantile of series `X` at probability level `p`. Then for planning confidence level `q`, the recommended commitment is:
+Let $Q_p(X)$ denote the empirical percentile or empirical quantile of series $X$ at probability level $p$. Then for planning confidence level $q$, the recommended commitment is:
 
-```text
-recommended_planned_commitment(q)
-  = max(0,
-        Q50(completed_units)
-        * (1 - Qq(spillover_ratio))
-        * (1 - Qq(scope_removal_ratio))
-        - Qq(added_units))
-```
+$$
+\text{recommended\_planned\_commitment}(q) = \max\left(0, Q_{50}(\text{completed\_units}) \cdot (1 - Q_q(\text{spillover\_ratio})) \cdot (1 - Q_q(\text{scope\_removal\_ratio})) - Q_q(\text{added\_units})\right)
+$$
 
 This formula is intentionally conservative. It starts from typical delivered capacity, discounts it by high-percentile spillover and removal behavior, and reserves room for likely urgent additions. It is a planning aid, not the main forecast generator.
 
@@ -1255,21 +1262,21 @@ This formula is intentionally conservative. It starts from typical delivered cap
 
 Completion-date forecasting should be based on explicit backlog evolution rather than on dividing remaining work by a point estimate. The per-sprint backlog recursion is:
 
-```text
-B_{t+1} = B_t - D_t + A_t - R_t^{effective}
-```
+$$
+B_{t+1} = B_t - D_t + A_t - R_t^{\text{effective}}
+$$
 
 where:
 
-- `B_t` = remaining backlog at the start of sprint `t`
-- `D_t` = actually delivered units in sprint `t`
-- `A_t` = sampled added work in sprint `t`
-- `R_t^{effective}` = sampled removed work that counts as genuine backlog reduction
+- $B_t$ = remaining backlog at the start of sprint $t$
+- $D_t$ = actually delivered units in sprint $t$
+- $A_t$ = sampled added work in sprint $t$
+- $R_t^{\text{effective}}$ = sampled removed work that counts as genuine backlog reduction
 
-The `removed_work_treatment` flag determines `R_t^{effective}`:
+The removed work treatment flag determines $R_t^{\text{effective}}$:
 
-- in `churn_only` mode, `R_t^{effective} = 0`
-- in `reduce_backlog` mode, `R_t^{effective} = R_t`
+- in churn only mode, $R_t^{\text{effective}} = 0$
+- in reduce backlog mode, $R_t^{\text{effective}} = R_t$
 
 This recursion is the main mechanism that turns historical churn into a date forecast.
 
@@ -1277,11 +1284,11 @@ This recursion is the main mechanism that turns historical churn into a date for
 
 The optional volatility overlay should be modeled as a multiplicative factor on deliverable capacity, not as a rewrite of the historical churn series:
 
-```text
-C_t^{effective} = C_t^{sampled} * V_t
-```
+$$
+C_t^{\text{effective}} = C_t^{\text{sampled}} \cdot V_t
+$$
 
-where `V_t = 1.0` when volatility is disabled and otherwise comes from a configured disruption model. This preserves a clear statistical separation:
+where $V_t = 1.0$ when volatility is disabled and otherwise comes from a configured disruption model. This preserves a clear statistical separation:
 
 - empirical history captures normal observed variation
 - volatility overlay captures extra exogenous disruption
@@ -1289,36 +1296,35 @@ where `V_t = 1.0` when volatility is disabled and otherwise comes from a configu
 
 Future sprint overrides such as public-holiday sprints are then applied as explicit forward-looking capacity multipliers:
 
-```text
-C_t^{final} = C_t^{effective} * O_t
-```
+$$
+C_t^{\text{final}} = C_t^{\text{effective}} \cdot O_t
+$$
 
-where `O_t` defaults to `1.0` and is derived from `future_sprint_overrides` when present.
+where $O_t$ defaults to $1.0$ and is derived from future sprint overrides when present.
 
 ## Task-Level Execution Spillover
 
 Task-level execution spillover is a second stochastic layer that applies after sprint capacity is sampled and tasks are pulled into the sprint. It is intentionally distinct from historical sprint-row spillover.
 
-For a task with planning size `s`, the default spillover probability is either:
+For a task with planning size $s$, the default spillover probability is either:
 
-```text
-P(spillover | s) = 1 / (1 + exp(-(a * log(s / ref_size) + b)))
-```
+$$
+P(\text{spillover} \mid s) = \frac{1}{1 + \exp(-(a \log(s / \text{ref\_size}) + b))}
+$$
 
 for the logistic model, or a piecewise table over configured size brackets for the default explainable model.
 
 If a spillover event occurs, the consumed fraction is sampled from a Beta distribution:
 
-```text
-F ~ Beta(alpha, beta)
-remaining_effort = planned_effort * (1 - F)
-```
+$$
+F \sim \text{Beta}(\alpha, \beta), \quad \text{remaining\_effort} = \text{planned\_effort} \cdot (1 - F)
+$$
 
-with starter defaults `alpha = 3.25` and `beta = 1.75`, giving an expected consumed fraction of:
+with starter defaults $\alpha = 3.25$ and $\beta = 1.75$, giving an expected consumed fraction of:
 
-```text
-E[F] = alpha / (alpha + beta) = 3.25 / 5.0 = 0.65
-```
+$$
+E[F] = \frac{\alpha}{\alpha + \beta} = \frac{3.25}{5.0} = 0.65
+$$
 
 This means most of the task effort is usually consumed before the task spills over, but the task still contributes zero delivered throughput in that sprint.
 
@@ -2346,4 +2352,362 @@ In a Bayesian framework, we would specify prior distributions for our parameters
 **Example code:**
 
 See: `design-ideas/baysian_example_pred.py` for a full implementation of this approach.
+
+
+# Addendum: Team-Size-Aware Sprint Forecasting
+
+This addendum extends the sprint-planning design to make explicit statistical use of historical team size per sprint and planned staffing for future sprints.
+
+## Why Team Size Should Be Modeled Explicitly
+
+Historical completed work, spillover, added scope, and removed scope are not only a function of planning quality and churn. They are also influenced by staffing level in that sprint.
+
+If the model ignores team size, it can confound two different effects:
+
+- true process volatility;
+- predictable capacity shifts caused by staffing changes.
+
+The practical result is biased forecasts when future staffing differs from historical staffing.
+
+## Statistical Design: Separate Team Capacity From Team Effectiveness
+
+The cleanest model split is:
+
+- **Capacity scale** from team size in a given sprint;
+- **Effectiveness profile** from empirical historical outcomes after size normalization.
+
+Let sprint $i$ have:
+
+- $n_i$: historical team size;
+- $c_i, s_i, a_i, r_i$: completed, spillover, added, removed units;
+- $h_i$: holiday factor;
+- $L_i$: sprint length in weeks.
+
+### Step 1: Normalize to per-person baseline
+
+Convert delivery and churn quantities to per-person units (after holiday normalization for delivery-side terms):
+
+$$
+\tilde{c}_i = \frac{c_i}{\max(n_i, \epsilon) \cdot \max(h_i, \epsilon)}, \quad
+\tilde{s}_i = \frac{s_i}{\max(n_i, \epsilon) \cdot \max(h_i, \epsilon)}
+$$
+
+$$
+\tilde{a}_i = \frac{a_i}{\max(n_i, \epsilon)}, \quad
+\tilde{r}_i = \frac{r_i}{\max(n_i, \epsilon)}
+$$
+
+This creates historical observations that are comparable across sprints with different team sizes.
+
+### Step 2: Empirical joint resampling on normalized vectors
+
+Use the existing joint empirical approach, but on per-person vectors:
+
+$$
+\tilde{X}_i = (\tilde{c}_i, \tilde{s}_i, \tilde{a}_i, \tilde{r}_i)
+$$
+
+Resample these vectors jointly to preserve coupling between delivery and churn.
+
+### Step 3: Scale sampled outcomes by future sprint staffing
+
+For future sprint $t$ with planned team size $n_t^{\text{future}}$ and override multipliers:
+
+$$
+c_t^{\text{sampled}} = \tilde{c}_{J_t} \cdot n_t^{\text{future}} \cdot h_t^{\text{override}} \cdot m_t^{\text{override}}
+$$
+
+$$
+s_t^{\text{sampled}} = \tilde{s}_{J_t} \cdot n_t^{\text{future}} \cdot h_t^{\text{override}} \cdot m_t^{\text{override}}
+$$
+
+$$
+a_t^{\text{sampled}} = \tilde{a}_{J_t} \cdot n_t^{\text{future}}, \quad
+r_t^{\text{sampled}} = \tilde{r}_{J_t} \cdot n_t^{\text{future}}
+$$
+
+where:
+
+- $h_t^{\text{override}}$ is the future sprint holiday factor (defaults to $1.0$);
+- $m_t^{\text{override}}$ is an explicit capacity multiplier (defaults to $1.0$).
+
+This keeps team-size effects explicit and auditable.
+
+## Non-Linear Team-Size Effects (Optional, Recommended)
+
+Linear scaling by headcount is a strong baseline, but real teams often show diminishing returns from coordination overhead.
+
+Add an optional exponent:
+
+$$
+\text{effective\_team\_size}(n) = n^{\beta}, \quad 0.75 \le \beta \le 1.0
+$$
+
+Then replace $n_t^{\text{future}}$ with $\text{effective\_team\_size}(n_t^{\text{future}})$ in scaling formulas.
+
+Recommended default for MVP behavior:
+
+- `team_size_scaling_exponent = 1.0` (strict linear scaling).
+
+Recommended post-MVP default once data supports calibration:
+
+- empirical estimate from historical data, clamped into `[0.75, 1.0]`.
+
+## Schema Additions
+
+Add explicit future staffing controls in `sprint_planning`.
+
+### New default staffing setting
+
+Add a planning-spec default used when a future sprint has no explicit override:
+
+```yaml
+sprint_planning:
+  default_future_team_size: 5
+```
+
+Behavior:
+
+- if present, this is the baseline team size for all forecasted future sprints;
+- if omitted, fallback to last historical `team_size` if available;
+- if no historical `team_size` exists either, validation should fail with a clear error requiring one of:
+  - `default_future_team_size`, or
+  - per-sprint team-size overrides.
+
+### Extend `future_sprint_overrides`
+
+Add optional per-sprint staffing override:
+
+```yaml
+future_sprint_overrides:
+  - sprint_number: 3
+    team_size: 4
+    holiday_factor: 0.8
+    capacity_multiplier: 0.95
+    notes: "Two engineers on leave"
+```
+
+Interpretation order for each simulated future sprint:
+
+1. resolve base team size from `default_future_team_size`;
+2. if matching override has `team_size`, replace base value for that sprint;
+3. apply `holiday_factor` and `capacity_multiplier` as separate multiplicative adjustments.
+
+## Updated Canonical Models
+
+Add fields to existing proposed models.
+
+### `SprintPlanningSpec` additions
+
+- `default_future_team_size: int | float` (strictly positive)
+- `team_size_scaling_exponent: float` in `(0, 1]`, default `1.0`
+
+### `FutureSprintOverrideSpec` additions
+
+- `team_size: int | float | None` (strictly positive when present)
+
+### `SprintHistoryEntry` expectations
+
+- `team_size` remains optional per row for backward compatibility;
+- but team-size-aware mode requires enough historical `team_size` data to calibrate normalization.
+
+## Validation Requirements for Team Size
+
+Add the following validations:
+
+1. All provided historical `team_size` values must be strictly positive.
+2. `default_future_team_size`, when provided, must be strictly positive.
+3. `future_sprint_overrides[].team_size`, when provided, must be strictly positive.
+4. Team-size-aware forecasting requires at least two usable historical rows with positive delivery signal and non-null `team_size`.
+5. If team-size-aware forecasting is enabled and future sprint team size cannot be resolved for a simulated sprint, validation fails.
+6. `team_size_scaling_exponent` must be in `(0, 1]`.
+
+## Simulation Algorithm Changes
+
+Update the sprint recursion to resolve team size per future sprint and use team-size-normalized empirical samples.
+
+Per iteration, per sprint $t$:
+
+1. Resolve `team_size_t`:
+  - from matching override `team_size`, else
+  - from `default_future_team_size`.
+2. Compute effective size:
+  - $n_t^{\text{eff}} = team\_size_t^{\beta}$.
+3. Draw one normalized joint vector $(\tilde{c}, \tilde{s}, \tilde{a}, \tilde{r})$.
+4. Scale sampled quantities by $n_t^{\text{eff}}$ and override multipliers.
+5. Pass scaled delivery quantity into dependency-aware planner.
+6. Apply scaled added/removed quantities as auditable backlog ledger adjustments.
+7. Continue until backlog completion.
+
+This keeps team-size usage explicit in both capacity and churn pathways.
+
+## Reporting and Diagnostics Additions
+
+Include staffing-aware diagnostics in sprint outputs:
+
+- historical per-person completed/spillover/added/removed statistics;
+- forecast staffing profile used for each sprint (`team_size`, effective size, overrides applied);
+- sensitivity view: completion percentile shifts under staffing scenarios;
+- attribution breakdown: how much P80 shift came from staffing vs churn vs holiday factors.
+
+Suggested new summary lines:
+
+- `Historical per-person completed capacity: mean 4.1 SP/person/sprint`
+- `Default future team size: 5`
+- `Sprint 3 override team size: 4 (holiday_factor 0.8)`
+- `P80 completion changed from 7 to 8 sprints due to staffing overrides`
+
+## Design for Future Sprint Staffing Input
+
+Support two ways to specify future staffing:
+
+1. **Global default**
+  - `default_future_team_size` at `sprint_planning` level.
+2. **Per-sprint override**
+  - `future_sprint_overrides[].team_size`.
+
+This exactly matches typical planning workflows:
+
+- expected steady-state team size as default;
+- explicit exceptions for known leave, onboarding, or temporary staffing changes.
+
+## Example: Complete Team-Size-Aware Sprint Planning Block
+
+```yaml
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  planning_confidence_level: 0.80
+  removed_work_treatment: churn_only
+  default_future_team_size: 6
+  team_size_scaling_exponent: 0.92
+  history:
+    - sprint_id: SPR-001
+      sprint_length_weeks: 2
+      team_size: 5
+      completed_story_points: 23
+      spillover_story_points: 4
+      added_story_points: 3
+      removed_story_points: 1
+    - sprint_id: SPR-002
+      sprint_length_weeks: 2
+      team_size: 6
+      completed_story_points: 25
+      spillover_story_points: 6
+      added_story_points: 4
+      removed_story_points: 2
+  future_sprint_overrides:
+    - sprint_number: 2
+      team_size: 4
+      holiday_factor: 0.8
+      notes: "Conference week"
+    - sprint_number: 4
+      team_size: 7
+      capacity_multiplier: 1.05
+      notes: "Temporary staffing uplift"
+```
+
+## Implementation Plan in This Repository
+
+### 1. Schema layer
+
+Update:
+
+- `src/mcprojsim/models/project.py`
+
+Changes:
+
+- add `default_future_team_size` and `team_size_scaling_exponent` to `SprintPlanningSpec`;
+- add `team_size` to `FutureSprintOverrideSpec`;
+- validate positivity and bounds.
+
+### 2. Parser and validation layer
+
+Update:
+
+- `src/mcprojsim/parsers/error_reporting.py`
+- `src/mcprojsim/parsers/yaml_parser.py`
+- `src/mcprojsim/parsers/toml_parser.py`
+
+Changes:
+
+- add source-aware errors for invalid team-size fields;
+- ensure future sprint team size is resolvable for simulation horizon.
+
+### 3. Sprint sampler and engine layer
+
+Update:
+
+- `src/mcprojsim/planning/sprint_capacity.py`
+- `src/mcprojsim/planning/sprint_engine.py`
+- `src/mcprojsim/planning/sprint_planner.py`
+
+Changes:
+
+- normalize historical data to per-person vectors;
+- sample joint normalized vectors;
+- scale by future effective team size and overrides;
+- preserve auditable backlog ledger.
+
+### 4. Results and exporter layer
+
+Update:
+
+- `src/mcprojsim/models/sprint_simulation.py`
+- `src/mcprojsim/exporters/json_exporter.py`
+- `src/mcprojsim/exporters/csv_exporter.py`
+- `src/mcprojsim/exporters/html_exporter.py`
+
+Changes:
+
+- add staffing profile and per-person historical diagnostics;
+- export override attribution and scenario deltas.
+
+### 5. CLI and MCP layer
+
+Update:
+
+- `src/mcprojsim/cli.py`
+- `src/mcprojsim/mcp_server.py`
+- `src/mcprojsim/nl_parser.py`
+
+Changes:
+
+- allow setting default future team size from CLI/MCP/NL flows;
+- allow setting per-sprint override team size in structured YAML and NL parser aliases.
+
+## Backward Compatibility and Migration
+
+To avoid breaking existing sprint-planning project files:
+
+1. Keep `team_size` optional in historical rows.
+2. Keep team-size-aware scaling disabled unless sufficient team-size data exists.
+3. If team-size-aware mode is disabled, keep current empirical behavior unchanged.
+4. Provide a clear warning when team-size data is partial and the model falls back.
+
+Recommended explicit mode flag:
+
+```yaml
+sprint_planning:
+  team_size_mode: auto   # auto | enabled | disabled
+```
+
+Behavior:
+
+- `disabled`: ignore team size completely.
+- `enabled`: require complete necessary inputs and fail if missing.
+- `auto` (default): use team-size-aware model when inputs are sufficient, otherwise fallback with warning.
+
+## Best-Use Recommendation
+
+For the best statistical use of this new data in production forecasting:
+
+1. Use joint empirical resampling on per-person normalized vectors.
+2. Scale by explicit future staffing (`default_future_team_size` + override `team_size`).
+3. Keep holiday and capacity multipliers separate from staffing.
+4. Add optional non-linear scaling via `team_size_scaling_exponent`.
+5. Report staffing attribution so users can see when forecast shifts are staffing-driven versus churn-driven.
+
+This design preserves the existing Monte Carlo philosophy, materially improves forecast realism under staffing changes, and keeps implementation aligned with current `mcprojsim` architecture.
 

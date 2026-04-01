@@ -8,15 +8,22 @@ This chapter explains what the MCP server is, how to install and configure it, h
 
 ## What is the MCP server?
 
-The **Model Context Protocol (MCP)** is an open standard that lets AI assistants call external tools in a structured way. The mcprojsim MCP server exposes three tools:
+The **Model Context Protocol (MCP)** is an open standard that lets AI assistants call external tools in a structured way. The mcprojsim MCP server now exposes a broader set of tools grouped into three command classes:
 
-| Tool | Purpose |
-|------|--------|
-| `generate_project_file` | Takes a natural language project description and returns a valid mcprojsim YAML project file |
-| `validate_project_description` | Checks a description for problems (missing estimates, broken dependencies) without generating output |
-| `simulate_project` | Generates the YAML **and** runs a Monte Carlo simulation in a single step, returning both the project file and results |
+| Command class | Tool | Purpose |
+|------|------|--------|
+| NL -> YAML generation | `generate_project_file` | Convert natural language project description into a valid mcprojsim YAML file |
+| NL validation | `validate_project_description` | Lightweight parser-level checks on the description |
+| NL strict validation | `validate_generated_project_yaml` | Full parser/model validation of generated YAML using runtime defaults and overrides |
+| NL simulation | `simulate_project` | Generate YAML from description and run simulation in one step |
+| YAML strict validation | `validate_project_yaml` | Validate existing YAML directly (no NL regeneration) |
+| YAML simulation | `simulate_project_yaml` | Simulate directly from existing YAML with runtime options |
+| YAML update/transform | `update_project_yaml` | Apply NL update instructions to existing YAML (optionally replace tasks) |
 
-When an MCP client connects to the server, the AI assistant can invoke these tools on your behalf. You describe a project in plain language, the assistant calls `generate_project_file` or `simulate_project`, and you get back a ready-to-use result.
+When an MCP client connects to the server, the AI assistant can invoke these tools on your behalf. You can now work in either direction:
+
+- describe in natural language and generate/simulate immediately,
+- or keep an existing YAML project as the source of truth and validate/simulate/update it directly.
 
 
 
@@ -170,7 +177,7 @@ which could result in something simlar to this table:
 
 ## Workflow overview
 
-There are two workflows depending on whether you want to review the YAML before simulating or go directly to results.
+There are now four practical workflows depending on whether you start from natural language or existing YAML.
 
 ### Two-step workflow: generate then simulate
 
@@ -205,6 +212,21 @@ If you want results immediately without reviewing the YAML first, ask the assist
 
 The assistant calls `simulate_project`, which generates the YAML internally and runs the simulation in a single step. The response includes both the generated YAML and the full simulation results (statistics, confidence intervals, delivery dates, critical paths).
 
+### YAML-first workflow: validate/simulate existing project files
+
+If your team already stores project YAML in version control, you can use YAML-native MCP tools directly:
+
+- `validate_project_yaml` for strict validation
+- `simulate_project_yaml` to run simulation with runtime options
+
+This avoids re-generating the project from natural language when you only need execution or checks.
+
+### YAML update workflow: apply natural-language change requests
+
+Use `update_project_yaml` when you already have a project file and want the assistant to apply changes from natural-language instructions (for example, update sprint settings, change project metadata, or replace tasks).
+
+This is useful for iterative planning sessions where the YAML evolves over time.
+
 #### `simulate_project` parameters
 
 | Parameter | Type | Default | Description |
@@ -213,8 +235,106 @@ The assistant calls `simulate_project`, which generates the YAML internally and 
 | `iterations` | integer | 10000 | Number of Monte Carlo iterations |
 | `seed` | integer | none | Random seed for reproducible results |
 | `config_yaml` | string | none | Custom configuration YAML content (as a string) |
+| `velocity_model` | string | none | Sprint velocity override: `empirical` or `neg_binomial` |
+| `no_sickness` | boolean | `false` | Disable sprint sickness modeling for this run |
+| `two_pass` | boolean | `false` | Enable criticality two-pass constrained scheduling |
+| `pass1_iterations` | integer | none | Pass-1 iteration override when `two_pass` is enabled |
+| `critical_paths_limit` | integer | none | Override number of full critical paths shown in output |
 
-The `config_yaml` parameter lets you pass custom T-shirt size mappings, uncertainty factor values, or simulation settings inline without needing a separate file.
+The `config_yaml` parameter lets you pass custom T-shirt size mappings, uncertainty factor values, or simulation settings inline without needing a separate file. Runtime options such as `velocity_model`, `no_sickness`, and `two_pass` mirror the corresponding CLI behavior.
+
+#### `simulate_project_yaml` parameters
+
+`simulate_project_yaml` accepts the same runtime simulation options as `simulate_project`, but takes `project_yaml` instead of `description`.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `project_yaml` | string | required | Existing mcprojsim YAML project content |
+| `iterations` | integer | 10000 | Number of Monte Carlo iterations |
+| `seed` | integer | none | Random seed for reproducible results |
+| `config_yaml` | string | none | Custom configuration YAML content (as a string) |
+| `velocity_model` | string | none | Sprint velocity override: `empirical` or `neg_binomial` |
+| `no_sickness` | boolean | `false` | Disable sprint sickness modeling for this run |
+| `two_pass` | boolean | `false` | Enable criticality two-pass constrained scheduling |
+| `pass1_iterations` | integer | none | Pass-1 iteration override when `two_pass` is enabled |
+| `critical_paths_limit` | integer | none | Override number of full critical paths shown in output |
+
+#### Validation tools: when to use which
+
+| Tool | Input | Validation depth |
+|------|-------|------------------|
+| `validate_project_description` | NL description | Parser-level warnings and obvious issues |
+| `validate_generated_project_yaml` | NL description | Full parser/model validation on generated YAML |
+| `validate_project_yaml` | Existing YAML | Full parser/model validation on provided YAML |
+
+`validate_project_description` is fast and useful during drafting. Use `validate_generated_project_yaml` or `validate_project_yaml` when you want strict behavior equivalent to normal YAML parsing and simulation setup.
+
+## Translating NL intent to simulation options
+
+One of the biggest benefits of MCP is that assistants can map user intent to runtime options.
+
+### Example 1: Sprint velocity override
+
+User intent:
+
+```txt
+Simulate this backlog using negative binomial velocity modeling.
+```
+
+Assistant maps to MCP call:
+
+- `simulate_project(..., velocity_model="neg_binomial")`
+
+### Example 2: Disable sickness for a scenario
+
+User intent:
+
+```txt
+Run the same sprint simulation but ignore sickness effects.
+```
+
+Assistant maps to MCP call:
+
+- `simulate_project(..., no_sickness=true)`
+
+### Example 3: Constrained scheduling with two-pass
+
+User intent:
+
+```txt
+Use two-pass constrained scheduling with 2000 pass-1 iterations.
+```
+
+Assistant maps to MCP call:
+
+- `simulate_project(..., two_pass=true, pass1_iterations=2000)`
+
+### Example 4: Existing YAML, no NL regeneration
+
+User intent:
+
+```txt
+Validate and simulate this existing project YAML with seed 42.
+```
+
+Assistant maps to MCP calls:
+
+- `validate_project_yaml(project_yaml=...)`
+- `simulate_project_yaml(project_yaml=..., seed=42)`
+
+### Example 5: Apply update instructions to an existing YAML
+
+User intent:
+
+```txt
+Update this project: change start date, add sprint planning history, keep existing tasks.
+```
+
+Assistant maps to MCP call:
+
+- `update_project_yaml(existing_yaml=..., update_description=..., replace_tasks=false)`
+
+If the user says to replace tasks entirely, the assistant can set `replace_tasks=true`.
 
 You can also ask the assistant to validate first:
 
@@ -227,6 +347,8 @@ The assistant will call `validate_project_description` and report any warnings (
 ## Natural language input format
 
 The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes.
+
+The parser also supports sprint-planning phrasing, including sprint history and future sprint capacity override sections.
 
 ### Project-level fields
 
@@ -254,6 +376,31 @@ Each bullet can contain one of the following:
 | **Explicit estimate** | `Estimate: min/likely/max [unit]` | `- Estimate: 3/5/10 days` |
 | **Dependencies** | `Depends on Task N`, `Depends on Task 1, Task 3` | `- Depends on Task 2` |
 | **Description** | Second unrecognized bullet | `- Involves database migration` |
+
+### Sprint-planning definitions (NL)
+
+The NL parser can extract sprint planning information from sections such as:
+
+- `Sprint planning:`
+- `Sprint history SPR-001:`
+- `Future sprint override 4:`
+
+Supported sprint-planning bullets include:
+
+| Attribute | Patterns recognized | Example |
+|-----------|---------------------|---------|
+| Sprint length | `Sprint length: 2`, `2-week sprints` | `- Sprint length: 2` |
+| Capacity mode | `Capacity mode: story points`, `Capacity mode: tasks` | `- Capacity mode: story points` |
+| Planning confidence | `Planning confidence level: 80%` | `- Planning confidence level: 80%` |
+| Removed work treatment | `Removed work treatment: churn only` / `reduce backlog` | `- Removed work treatment: churn only` |
+| Velocity model | `Velocity model: empirical` / `negative binomial` | `- Velocity model: negative binomial` |
+| Sprint history completed | `Done: 20 points`, `Delivered: 9 tasks` | `- Done: 20 points` |
+| Sprint history spillover | `Carryover: 3 points`, `Rolled over: 2 tasks` | `- Carryover: 3 points` |
+| Sprint history added/removed | `Scope added: 2 points`, `Scope removed: 1 points` | `- Scope added: 2 points` |
+| Holiday factor | `Holiday factor: 90%` | `- Holiday factor: 90%` |
+| Future override locator | `Future sprint override 4`, `start date: 2026-07-01` | `Future sprint override 4:` |
+| Future override multiplier | `Holiday factor: 80%`, `Capacity multiplier: 0.9` | `- Capacity multiplier: 0.9` |
+| Sprint sickness toggles | `Sickness: enabled`, `No sickness` | `- Sickness: enabled` |
 
 ### T-shirt size aliases
 
@@ -714,9 +861,10 @@ echo '<paste YAML here>' > project.yaml && mcprojsim simulate project.yaml
 The natural language parser is a pattern-based parser, not a full natural language understanding system. Keep these points in mind:
 
 - **Task-level risks** and **uncertainty factors** cannot be specified in the natural language input. Add them to the YAML file after generation.
-- **Resource definitions** and **calendar constraints** are not supported in the NL input.
+- **Resource definitions** and **calendar constraints** are supported, but only through recognized semi-structured patterns (not arbitrary prose).
 - **Project-level risks** are not extracted from the description. Add them manually.
 - The parser expects **numbered task headers** (`Task 1:`, `Task 2:`). Free-form task lists without numbers are not recognized.
 - **Circular dependencies** are not detected by the parser — they will be caught when you load the file with `mcprojsim validate`.
+- Advanced structures such as full volatility-overlay and spillover calibration blocks are still best edited directly in YAML after generation.
 
 \newpage

@@ -50,7 +50,7 @@ UNDERLINE := \033[4m
 # ============================================================================================
 BUILD_DIR := .build
 DIST_DIR := dist
-BUILD_DESIGN_DIR := $(BUILD_DIR)/design-ideas
+BUILD_DESIGN_DIR := $(BUILD_DIR)
 STAMP_DIR := .makefile-stamps
 SCRIPTS_DIR := ../scripts
 DESIGN_IDEAS_DIR := .
@@ -142,11 +142,19 @@ $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_D
 		exit 1; \
 	fi; \
 	rm -f $$($1_TEX).bak; \
-	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; \
-	xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; \
+	if ! xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; then \
+		echo -e "$$(RED)✗ Error: xelatex pass 1 failed for $$($1_TEX)$$(NC)"; \
+		echo -e "$$(YELLOW)  See log: $$($1_BUILD_DIR)/$$($1_BASENAME)_report.log$$(NC)"; \
+		exit 1; \
+	fi; \
+	if ! xelatex -interaction=nonstopmode -halt-on-error -output-directory $$($1_BUILD_DIR) $$($1_TEX) >/dev/null; then \
+		echo -e "$$(RED)✗ Error: xelatex pass 2 failed for $$($1_TEX)$$(NC)"; \
+		echo -e "$$(YELLOW)  See log: $$($1_BUILD_DIR)/$$($1_BASENAME)_report.log$$(NC)"; \
+		exit 1; \
+	fi; \
 	cp $$($1_PDF_BUILT) $$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
 	touch $$($1_STAMP); \
-	rm -rf $$($1_BUILD_DIR); \
+#	rm -rf $$($1_BUILD_DIR); \
 	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
 
@@ -159,6 +167,7 @@ $(eval $(call DEFINE_DESIGN_DOC_VARS,SPRINT_PLANNING,sprint-based-planning,--lua
 $(eval $(call DEFINE_DESIGN_DOC_VARS,TSHIRT_CATEGORY,tshirt-categories,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,MULTIPHASE_SIM,multiphase-simulation,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,SENSITIVITY_ANALYSIS,sensitivity-analysis,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,PLUGGABLE_DISTRIBUTIONS,pluggable-distributions,,))
 
 # ============================================================================================
 # Makefile Targets
@@ -185,11 +194,11 @@ really-clean: ## Clean all generated intermediate documentation files and all ge
 	@rm -rf $(BUILD_DIR) $(STAMP_DIR) $(DIST_DIR)
 	@echo -e "$(GREEN)✓ Really cleaned all generated documentation files and PDFs$(NC)"
 
-pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF) ## Build all the PDF versions of the design documents
+pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) ## Build all the PDF versions of the design documents
 	@:
 
 $(eval $(call DESIGN_DOC_PDF_RULE,SPRINT_PLANNING,sprint-based planning))
 $(eval $(call DESIGN_DOC_PDF_RULE,TSHIRT_CATEGORY,t-shirt category))
 $(eval $(call DESIGN_DOC_PDF_RULE,MULTIPHASE_SIM,multi-phase simulation))
 $(eval $(call DESIGN_DOC_PDF_RULE,SENSITIVITY_ANALYSIS,sensitivity analysis))
-
+$(eval $(call DESIGN_DOC_PDF_RULE,PLUGGABLE_DISTRIBUTIONS,pluggable distributions))	

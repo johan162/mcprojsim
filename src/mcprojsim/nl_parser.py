@@ -114,7 +114,27 @@ class ParsedSprintPlanning:
     capacity_mode: str = "story_points"
     planning_confidence_level: float | None = None
     removed_work_treatment: str | None = None
+    velocity_model: str | None = None
+    sickness_enabled: bool | None = None
+    sickness_team_size: int | None = None
+    sickness_probability_per_person_per_week: float | None = None
+    sickness_duration_log_mu: float | None = None
+    sickness_duration_log_sigma: float | None = None
+    future_sprint_overrides: list[ParsedFutureSprintOverride] = field(
+        default_factory=list
+    )
     history: list[ParsedSprintHistoryEntry] = field(default_factory=list)
+
+
+@dataclass
+class ParsedFutureSprintOverride:
+    """A future sprint capacity override extracted from natural language."""
+
+    sprint_number: int | None = None
+    start_date: str | None = None
+    holiday_factor: float | None = None
+    capacity_multiplier: float | None = None
+    notes: str | None = None
 
 
 @dataclass
@@ -167,6 +187,10 @@ class NLProjectParser:
     )
     _SPRINT_HISTORY_HEADER_RE = re.compile(
         r"sprint\s*history(?:\s+([^:]+))?\s*[:.=]?\s*(.*)",
+        re.IGNORECASE,
+    )
+    _FUTURE_OVERRIDE_HEADER_RE = re.compile(
+        r"future\s*sprint\s*override(?:\s+([^:]+))?\s*[:.=]?\s*(.*)",
         re.IGNORECASE,
     )
 
@@ -229,8 +253,16 @@ class NLProjectParser:
         r"sprint\s*length\s*(?:weeks?)?\s*[:.=]?\s*(\d+)",
         re.IGNORECASE,
     )
+    _SPRINT_LENGTH_CADENCE_RE = re.compile(
+        r"(\d+)\s*(?:-|\s*)weeks?\s*sprints?",
+        re.IGNORECASE,
+    )
     _CAPACITY_MODE_RE = re.compile(
         r"capacity\s*mode\s*[:.=]?\s*(story\s*points?|tasks?)",
+        re.IGNORECASE,
+    )
+    _VELOCITY_MODEL_RE = re.compile(
+        r"velocity\s*model\s*[:.=]?\s*(empirical|neg(?:ative)?[_\s-]*binomial)",
         re.IGNORECASE,
     )
     _PLANNING_CONFIDENCE_RE = re.compile(
@@ -238,9 +270,50 @@ class NLProjectParser:
         re.IGNORECASE,
     )
     _REMOVED_WORK_RE = re.compile(
-        r"removed\s*work\s*treatment\s*[:.=]?\s*(churn_only|reduce_backlog)",
+        r"removed\s*work\s*treatment\s*[:.=]?\s*(.+)",
         re.IGNORECASE,
     )
+    _SPRINT_SICKNESS_ENABLED_RE = re.compile(
+        r"sickness\s*(?:model)?\s*[:.=]?\s*(enabled|disabled|on|off|true|false|yes|no)",
+        re.IGNORECASE,
+    )
+    _SPRINT_NO_SICKNESS_RE = re.compile(
+        r"no\s*sickness",
+        re.IGNORECASE,
+    )
+    _SPRINT_SICKNESS_TEAM_SIZE_RE = re.compile(
+        r"sickness\s*team\s*size\s*[:.=]?\s*(\d+)",
+        re.IGNORECASE,
+    )
+    _SPRINT_SICKNESS_PROB_RE = re.compile(
+        r"sickness\s*prob(?:ability)?(?:\s*per\s*person\s*per\s*week)?\s*[:.=]?\s*([\d.]+%?)",
+        re.IGNORECASE,
+    )
+    _SPRINT_SICKNESS_MU_RE = re.compile(
+        r"sickness\s*duration\s*log\s*mu\s*[:.=]?\s*([\d.]+)",
+        re.IGNORECASE,
+    )
+    _SPRINT_SICKNESS_SIGMA_RE = re.compile(
+        r"sickness\s*duration\s*log\s*sigma\s*[:.=]?\s*([\d.]+)",
+        re.IGNORECASE,
+    )
+    _OVERRIDE_SPRINT_NUMBER_RE = re.compile(
+        r"sprint\s*(?:number)?\s*[:.=]?\s*(\d+)",
+        re.IGNORECASE,
+    )
+    _OVERRIDE_START_DATE_RE = re.compile(
+        r"start\s*date\s*[:.=]?\s*(\d{4}-\d{2}-\d{2})",
+        re.IGNORECASE,
+    )
+    _OVERRIDE_HOLIDAY_FACTOR_RE = re.compile(
+        r"holiday\s*factor\s*[:.=]?\s*([\d.]+%?)",
+        re.IGNORECASE,
+    )
+    _OVERRIDE_CAPACITY_MULTIPLIER_RE = re.compile(
+        r"capacity\s*multiplier\s*[:.=]?\s*([\d.]+)",
+        re.IGNORECASE,
+    )
+    _OVERRIDE_NOTES_RE = re.compile(r"notes?\s*[:.=]?\s*(.+)", re.IGNORECASE)
     _HISTORY_COMPLETED_RE = re.compile(
         r"(?:completed|done|finished|delivered)\s*[:.=]?\s*([\d.]+)(?:\s+(points?|story\s*points?|tasks?))?",
         re.IGNORECASE,
@@ -287,10 +360,12 @@ class NLProjectParser:
         current_resource: ParsedResource | None = None
         current_calendar: ParsedCalendar | None = None
         current_sprint_history: ParsedSprintHistoryEntry | None = None
+        current_future_override: ParsedFutureSprintOverride | None = None
         in_sprint_planning = False
 
         def _flush_section() -> None:
-            nonlocal current_task, current_resource, current_calendar, current_sprint_history
+            nonlocal current_task, current_resource, current_calendar
+            nonlocal current_sprint_history, current_future_override
             if current_task is not None:
                 project.tasks.append(current_task)
                 current_task = None
@@ -305,6 +380,22 @@ class NLProjectParser:
                     project.sprint_planning = ParsedSprintPlanning()
                 project.sprint_planning.history.append(current_sprint_history)
                 current_sprint_history = None
+            if current_future_override is not None:
+                if project.sprint_planning is None:
+                    project.sprint_planning = ParsedSprintPlanning()
+                if any(
+                    (
+                        current_future_override.sprint_number is not None,
+                        current_future_override.start_date is not None,
+                        current_future_override.holiday_factor is not None,
+                        current_future_override.capacity_multiplier is not None,
+                        current_future_override.notes is not None,
+                    )
+                ):
+                    project.sprint_planning.future_sprint_overrides.append(
+                        current_future_override
+                    )
+                current_future_override = None
 
         for raw_line in lines:
             line = raw_line.strip()
@@ -368,6 +459,28 @@ class NLProjectParser:
                 )
                 continue
 
+            future_override_match = self._FUTURE_OVERRIDE_HEADER_RE.match(line)
+            if future_override_match:
+                _flush_section()
+                if project.sprint_planning is None:
+                    project.sprint_planning = ParsedSprintPlanning()
+                in_sprint_planning = False
+                locator = (
+                    (
+                        future_override_match.group(1)
+                        or future_override_match.group(2)
+                        or ""
+                    )
+                    .strip()
+                    .rstrip(";:.")
+                )
+                current_future_override = ParsedFutureSprintOverride()
+                if locator.isdigit():
+                    current_future_override.sprint_number = int(locator)
+                elif self._ISO_DATE_RE.fullmatch(locator):
+                    current_future_override.start_date = locator
+                continue
+
             # Inside a task: process bullet points
             if current_task is not None:
                 bullet_text = re.sub(r"^[-*•]\s*", "", line).strip()
@@ -422,6 +535,16 @@ class NLProjectParser:
                     bullet_text,
                     current_sprint_history,
                     project.sprint_planning,
+                )
+                continue
+
+            if current_future_override is not None:
+                bullet_text = re.sub(r"^[-*•]\s*", "", line).strip()
+                if not bullet_text:
+                    continue
+                self._try_parse_future_override_bullet(
+                    bullet_text,
+                    current_future_override,
                 )
                 continue
 
@@ -572,7 +695,19 @@ class NLProjectParser:
                     holidays_str = ", ".join(f'"{h}"' for h in calendar.holidays)
                     lines.append(f"    holidays: [{holidays_str}]")
 
-        if project.sprint_planning is not None and project.sprint_planning.history:
+        if project.sprint_planning is not None and (
+            project.sprint_planning.history
+            or project.sprint_planning.future_sprint_overrides
+            or project.sprint_planning.velocity_model is not None
+            or project.sprint_planning.removed_work_treatment is not None
+            or project.sprint_planning.planning_confidence_level is not None
+            or project.sprint_planning.sickness_enabled is not None
+            or project.sprint_planning.sickness_team_size is not None
+            or project.sprint_planning.sickness_probability_per_person_per_week
+            is not None
+            or project.sprint_planning.sickness_duration_log_mu is not None
+            or project.sprint_planning.sickness_duration_log_sigma is not None
+        ):
             lines.append("")
             lines.append("sprint_planning:")
             lines.append("  enabled: true")
@@ -590,6 +725,68 @@ class NLProjectParser:
                     "  removed_work_treatment: "
                     f'"{project.sprint_planning.removed_work_treatment}"'
                 )
+            if project.sprint_planning.velocity_model is not None:
+                lines.append(
+                    f'  velocity_model: "{project.sprint_planning.velocity_model}"'
+                )
+            sickness_fields = [
+                project.sprint_planning.sickness_enabled is not None,
+                project.sprint_planning.sickness_team_size is not None,
+                project.sprint_planning.sickness_probability_per_person_per_week
+                is not None,
+                project.sprint_planning.sickness_duration_log_mu is not None,
+                project.sprint_planning.sickness_duration_log_sigma is not None,
+            ]
+            if any(sickness_fields):
+                lines.append("  sickness:")
+                if project.sprint_planning.sickness_enabled is not None:
+                    lines.append(
+                        "    enabled: "
+                        f"{str(project.sprint_planning.sickness_enabled).lower()}"
+                    )
+                if project.sprint_planning.sickness_team_size is not None:
+                    lines.append(
+                        "    team_size: "
+                        f"{project.sprint_planning.sickness_team_size}"
+                    )
+                if (
+                    project.sprint_planning.sickness_probability_per_person_per_week
+                    is not None
+                ):
+                    lines.append(
+                        "    probability_per_person_per_week: "
+                        f"{self._fmt_num(project.sprint_planning.sickness_probability_per_person_per_week)}"
+                    )
+                if project.sprint_planning.sickness_duration_log_mu is not None:
+                    lines.append(
+                        "    duration_log_mu: "
+                        f"{self._fmt_num(project.sprint_planning.sickness_duration_log_mu)}"
+                    )
+                if project.sprint_planning.sickness_duration_log_sigma is not None:
+                    lines.append(
+                        "    duration_log_sigma: "
+                        f"{self._fmt_num(project.sprint_planning.sickness_duration_log_sigma)}"
+                    )
+            if project.sprint_planning.future_sprint_overrides:
+                lines.append("  future_sprint_overrides:")
+                for override in project.sprint_planning.future_sprint_overrides:
+                    lines.append("    -")
+                    if override.sprint_number is not None:
+                        lines.append(f"      sprint_number: {override.sprint_number}")
+                    if override.start_date is not None:
+                        lines.append(f'      start_date: "{override.start_date}"')
+                    if override.holiday_factor is not None:
+                        lines.append(
+                            "      holiday_factor: "
+                            f"{self._fmt_num(override.holiday_factor)}"
+                        )
+                    if override.capacity_multiplier is not None:
+                        lines.append(
+                            "      capacity_multiplier: "
+                            f"{self._fmt_num(override.capacity_multiplier)}"
+                        )
+                    if override.notes:
+                        lines.append(f"      notes: {self._yaml_str(override.notes)}")
             lines.append("  history:")
             for entry in project.sprint_planning.history:
                 lines.append(f'    - sprint_id: "{entry.sprint_id}"')
@@ -835,6 +1032,11 @@ class NLProjectParser:
             sprint_planning.sprint_length_weeks = int(m.group(1))
             return True
 
+        m = self._SPRINT_LENGTH_CADENCE_RE.search(text)
+        if m:
+            sprint_planning.sprint_length_weeks = int(m.group(1))
+            return True
+
         m = self._CAPACITY_MODE_RE.match(text)
         if m:
             normalized = m.group(1).lower().replace(" ", "_")
@@ -850,12 +1052,108 @@ class NLProjectParser:
             )
             return True
 
+        m = self._VELOCITY_MODEL_RE.match(text)
+        if m:
+            token = m.group(1).lower().replace(" ", "_").replace("-", "_")
+            if "binomial" in token:
+                sprint_planning.velocity_model = "neg_binomial"
+            else:
+                sprint_planning.velocity_model = "empirical"
+            return True
+
         m = self._REMOVED_WORK_RE.match(text)
         if m:
-            sprint_planning.removed_work_treatment = m.group(1).strip()
+            normalized = self._normalize_removed_work_treatment(m.group(1).strip())
+            if normalized is not None:
+                sprint_planning.removed_work_treatment = normalized
+                return True
+
+        m = self._SPRINT_SICKNESS_ENABLED_RE.match(text)
+        if m:
+            token = m.group(1).strip().lower()
+            sprint_planning.sickness_enabled = token in {
+                "enabled",
+                "on",
+                "true",
+                "yes",
+            }
+            return True
+
+        if self._SPRINT_NO_SICKNESS_RE.search(text):
+            sprint_planning.sickness_enabled = False
+            return True
+
+        m = self._SPRINT_SICKNESS_TEAM_SIZE_RE.match(text)
+        if m:
+            sprint_planning.sickness_team_size = int(m.group(1))
+            return True
+
+        m = self._SPRINT_SICKNESS_PROB_RE.match(text)
+        if m:
+            sprint_planning.sickness_probability_per_person_per_week = (
+                self._parse_probability_token(m.group(1))
+            )
+            return True
+
+        m = self._SPRINT_SICKNESS_MU_RE.match(text)
+        if m:
+            sprint_planning.sickness_duration_log_mu = float(m.group(1))
+            return True
+
+        m = self._SPRINT_SICKNESS_SIGMA_RE.match(text)
+        if m:
+            sprint_planning.sickness_duration_log_sigma = float(m.group(1))
             return True
 
         return False
+
+    def _try_parse_future_override_bullet(
+        self,
+        text: str,
+        override: ParsedFutureSprintOverride,
+    ) -> bool:
+        """Parse one future sprint override bullet."""
+        m = self._OVERRIDE_SPRINT_NUMBER_RE.match(text)
+        if m:
+            override.sprint_number = int(m.group(1))
+            return True
+
+        m = self._OVERRIDE_START_DATE_RE.match(text)
+        if m:
+            override.start_date = m.group(1)
+            return True
+
+        m = self._OVERRIDE_HOLIDAY_FACTOR_RE.match(text)
+        if m:
+            override.holiday_factor = self._parse_probability_token(m.group(1))
+            return True
+
+        m = self._OVERRIDE_CAPACITY_MULTIPLIER_RE.match(text)
+        if m:
+            override.capacity_multiplier = float(m.group(1))
+            return True
+
+        m = self._OVERRIDE_NOTES_RE.match(text)
+        if m:
+            override.notes = m.group(1).strip()
+            return True
+
+        return False
+
+    @staticmethod
+    def _normalize_removed_work_treatment(value: str) -> str | None:
+        """Normalize human-friendly removed-work treatment aliases."""
+        token = value.strip().lower().replace("-", "_").replace(" ", "_")
+        aliases = {
+            "churn_only": "churn_only",
+            "churn": "churn_only",
+            "churnonly": "churn_only",
+            "reduce_backlog": "reduce_backlog",
+            "reduce": "reduce_backlog",
+            "backlog": "reduce_backlog",
+            "reducebacklog": "reduce_backlog",
+        }
+        return aliases.get(token)
 
     def _try_parse_sprint_history_bullet(
         self,

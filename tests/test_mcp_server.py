@@ -7,6 +7,10 @@ bypassing MCP transport.
 from mcprojsim.mcp_server import (
     generate_project_file,
     simulate_project,
+    simulate_project_yaml,
+    update_project_yaml,
+    validate_generated_project_yaml,
+    validate_project_yaml,
     validate_project_description,
 )
 
@@ -33,6 +37,25 @@ Task 1:
 - Do something
 - Size: S
 """
+
+_SIMPLE_YAML = "\n".join(
+    [
+        "project:",
+        '  name: "MCP YAML Test"',
+        '  start_date: "2026-06-01"',
+        "",
+        "tasks:",
+        '  - id: "task_001"',
+        '    name: "Design module"',
+        "    estimate:",
+        '      t_shirt_size: "M"',
+        '  - id: "task_002"',
+        '    name: "Implement module"',
+        "    estimate:",
+        '      t_shirt_size: "L"',
+        '    dependencies: ["task_001"]',
+    ]
+)
 
 
 class TestGenerateProjectFile:
@@ -95,6 +118,39 @@ class TestValidateProjectDescription:
         assert "ERROR" in result
 
 
+class TestValidateGeneratedProjectYaml:
+    """validate_generated_project_yaml tool."""
+
+    def test_valid_description(self):
+        result = validate_generated_project_yaml(_SIMPLE_DESC)
+        assert "Valid generated project YAML." in result
+        assert "=== Generated Project YAML ===" in result
+
+    def test_invalid_velocity_model_reports_error(self):
+        result = validate_generated_project_yaml(
+            _SIMPLE_DESC,
+            velocity_model="invalid",
+        )
+        assert result.startswith("ERROR:")
+
+    def test_no_sickness_flag_is_supported(self):
+        result = validate_generated_project_yaml(_SIMPLE_DESC, no_sickness=True)
+        assert "Valid generated project YAML." in result
+
+
+class TestValidateProjectYaml:
+    """validate_project_yaml tool."""
+
+    def test_valid_yaml(self):
+        result = validate_project_yaml(_SIMPLE_YAML)
+        assert "Valid project YAML." in result
+        assert "MCP YAML Test" in result
+
+    def test_invalid_velocity_model_reports_error(self):
+        result = validate_project_yaml(_SIMPLE_YAML, velocity_model="invalid")
+        assert result.startswith("ERROR:")
+
+
 class TestSimulateProject:
     """simulate_project tool."""
 
@@ -134,6 +190,95 @@ class TestSimulateProject:
         )
         assert "Simulation Results" in result
 
+    def test_velocity_model_override_supported(self):
+        result = simulate_project(
+            _SIMPLE_DESC,
+            iterations=100,
+            seed=42,
+            velocity_model="empirical",
+        )
+        assert "Simulation Results" in result
+
+    def test_invalid_velocity_model_raises(self):
+        with pytest.raises(ValueError):
+            simulate_project(
+                _SIMPLE_DESC,
+                iterations=100,
+                seed=42,
+                velocity_model="invalid",
+            )
+
+    def test_critical_path_limit_override_supported(self):
+        result = simulate_project(
+            _SIMPLE_DESC,
+            iterations=100,
+            seed=42,
+            critical_paths_limit=1,
+        )
+        assert "Most Frequent Critical Paths" in result
+
     def test_includes_sensitivity(self):
         result = simulate_project(_SIMPLE_DESC, iterations=200, seed=42)
         assert "Sensitivity Analysis" in result or "Schedule Slack" in result
+
+
+class TestSimulateProjectYaml:
+    """simulate_project_yaml tool."""
+
+    def test_returns_simulation_results(self):
+        result = simulate_project_yaml(_SIMPLE_YAML, iterations=100, seed=42)
+        assert "Simulation Results" in result
+        assert "MCP YAML Test" in result
+
+    def test_invalid_velocity_model_raises(self):
+        with pytest.raises(ValueError):
+            simulate_project_yaml(
+                _SIMPLE_YAML,
+                iterations=100,
+                seed=42,
+                velocity_model="invalid",
+            )
+
+
+class TestUpdateProjectYaml:
+    """update_project_yaml tool."""
+
+    def test_updates_project_metadata_without_replacing_tasks(self):
+        updates = """\
+Project name: MCP Updated
+Start date: 2026-07-01
+Task 1:
+- Temp task
+- Size: S
+"""
+        updated = update_project_yaml(_SIMPLE_YAML, updates)
+        assert "MCP Updated" in updated
+        assert "2026-07-01" in updated
+        # Existing task name should remain since replace_tasks defaults to False.
+        assert "Design module" in updated
+
+    def test_replaces_tasks_when_requested(self):
+        updates = """\
+Project name: MCP Updated
+Task 1:
+- New task
+- Size: M
+"""
+        updated = update_project_yaml(_SIMPLE_YAML, updates, replace_tasks=True)
+        assert "New task" in updated
+        assert "Design module" not in updated
+
+    def test_applies_sprint_planning_updates(self):
+        updates = """\
+Project name: MCP Updated
+Task 1:
+- New task
+- Story points: 3
+Sprint planning:
+- Velocity model: empirical
+Sprint history S1:
+- Done: 10 points
+"""
+        updated = update_project_yaml(_SIMPLE_YAML, updates)
+        assert "sprint_planning" in updated
+        assert "velocity_model" in updated

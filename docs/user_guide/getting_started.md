@@ -2,12 +2,12 @@
 
 Welcome to the Monte Carlo Project Simulator User Guide.
 
-This short, hands-on chapter shows you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with context.
+This short, hands-on chapter is meant to quickly show you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with a bit of context where more advanced concepts are introduced.
 
 What you'll learn
 
 - Quick generation of a valid project file from a plain-text description.
-- Running a reproducible Monte Carlo simulation and exporting interactive reports.
+- Running a reproducible Monte Carlo simulation and exporting report files.
 - Using sensitivity and critical-path outputs to find the tasks that drive schedule risk.
 
 
@@ -161,7 +161,7 @@ Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and 
 You should see output like:
 
 ```text
-mcprojsim, version 0.4.4
+mcprojsim, version 0.10.1
 Progress: 100.0% (10000/10000)
 
 === Simulation Results ===
@@ -203,12 +203,26 @@ To generate report files, add `-f` with the desired formats:
 mcprojsim simulate project.yaml --seed 42 -f json,csv,html
 ```
 
+If you want to control where the files are written and what base name they use, add `-o` as well:
+
+```bash
+mcprojsim simulate project.yaml --seed 42 -o results/website_refresh -f json,csv,html
+```
+
 This creates files like:
 
 ```text
 Website Refresh_results.json
 Website Refresh_results.csv
 Website Refresh_results.html
+```
+
+With `-o results/website_refresh`, the exported files would instead use that path prefix:
+
+```text
+results/website_refresh.json
+results/website_refresh.csv
+results/website_refresh.html
 ```
 
 The HTML report is the best starting point — open it in your browser:
@@ -218,7 +232,7 @@ open "Website Refresh_results.html"     # macOS
 xdg-open "Website Refresh_results.html" # Linux
 ```
 
-Tip: export HTML first (`-f html`) to interactively inspect sensitivity, critical paths and charts — it is the easiest way to explore results visually.
+Tip: export HTML first (`-f html`) to inspect sensitivity, critical paths, and charts in the rendered report — it is the easiest way to explore results visually.
 
 
 
@@ -232,9 +246,21 @@ Tip: export HTML first (`-f html`) to interactively inspect sensitivity, critica
 
 All durations are reported in **hours** (the canonical internal unit), with **working days** and **projected delivery dates** (weekends excluded) shown alongside.
 
+The other sections in the sample output are worth a quick first-pass explanation too:
+
+- **Sensitivity Analysis** shows which tasks are most strongly associated with the overall finish date moving later. Higher positive values usually mean those tasks are stronger schedule drivers.
+- **Schedule Slack** shows how much a task can slip before it starts delaying the overall project. A task marked **Critical** has essentially no slack.
+- **Most Frequent Critical Paths** show the dependency chains that most often determine the final finish date across the Monte Carlo runs.
+
+At this level, treat these as decision aids:
+
+- percentiles help you choose a date target
+- sensitivity helps you see where uncertainty matters most
+- critical paths and slack help you see where sequencing risk is concentrated
 
 
-## 7. Useful next commands
+
+## Useful next commands
 
 Run with more iterations for higher precision:
 
@@ -263,17 +289,13 @@ mcprojsim simulate project.yaml --quiet
 - [Project Files](project_files.md) — complete project file reference
 - [Configuration](configuration.md) — customize uncertainty factors and mappings
 - [Examples](../examples.md) — working example projects
+- [Constrained Scheduling](constrained.md), for modeling resource limits and their impact on schedules
+- [MCP Server](mcp-server.md), for AI-assisted project file generation and integration
 
 ## Try these example projects
 
 - `examples/sample_project.yaml` — full sample with risks and resources
 - `examples/quickstart_project.yaml` — minimal quickstart example used in this chapter
 - `examples/resource_cap_small_task.yaml` — a small resource-constrained example to try constrained scheduling
-
-## Next steps (recommended learning path)
-
-- Beginner: follow this chapter and open the HTML report to inspect results.
-- Intermediate: read [Your First Project](your_first_project.md) and [Task Estimation](task_estimation.md) to improve input quality.
-- Advanced: explore [Configuration](configuration.md), [Constrained Scheduling](constrained.md), and [MCP Server](mcp-server.md) for automation and integrations.
 
 \newpage

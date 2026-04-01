@@ -1,0 +1,231 @@
+# mcprojsim MCP Server Bundle - v__VERSION__
+
+This bundle installs the **mcprojsim** MCP server for any MCP-compatible client.
+Installation is user-scoped by default and does not depend on any editor.
+
+## Bundle Contents
+
+```text
+mcprojsim-mcp-bundle-__VERSION__/
+|- README.md
+|- manifest.json
+|- bootstrap.sh
+|- launcher.sh
+`- wheels/
+   `- mcprojsim-__VERSION__-py3-none-any.whl
+```
+
+## Prerequisites
+
+| Requirement | Version |
+|---|---|
+| Python | >= 3.13 |
+| Internet access | Required on first run to download runtime dependencies from PyPI |
+| bash | Any modern version |
+
+## How launcher.sh works
+
+`launcher.sh` serves two roles in one script:
+
+1. **Installer** - on first run it creates a Python venv and installs `mcprojsim` into it.
+2. **Server launcher** - on every run it `exec`s the installed `mcprojsim-mcp` binary.
+
+Because of this dual role, your MCP client's `command` must always point to `launcher.sh`
+instead of the binary. The client calls `command` each time it starts the server.
+
+### --install-only flag
+
+Pass `--install-only` to install the server and exit cleanly without starting it:
+
+```bash
+bash launcher.sh --install-only
+```
+
+Use this flag when:
+- Pre-installing before first client start
+- Verifying installation from terminal
+- Automating installation from scripts or agents
+
+Without this flag, `launcher.sh` starts the MCP server process and runs until the client
+disconnects.
+
+## How bootstrap.sh works
+
+`bootstrap.sh` is the recommended one-step installer. It:
+
+1. Detects your MCP client profile.
+2. Installs the server by calling `launcher.sh --install-only`.
+3. Writes or updates MCP client config with a `mcprojsim` server entry.
+
+Config targets:
+- Copilot CLI: `~/.copilot/mcp-config.json`
+- Claude Desktop (macOS): `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Claude Desktop (Linux): `~/.config/claude/claude_desktop_config.json`
+- Generic profile: prints a config snippet to paste manually
+
+## Installation
+
+### Quick Install (Recommended)
+
+```bash
+unzip mcprojsim-mcp-bundle-__VERSION__.zip
+mkdir -p ~/.copilot/mcp/bundle
+mv mcprojsim-mcp-bundle-__VERSION__ ~/.copilot/mcp/bundle/
+cd ~/.copilot/mcp/bundle/mcprojsim-mcp-bundle-__VERSION__
+bash bootstrap.sh
+```
+
+If both `~/.copilot` and `~/.claude` exist, set profile explicitly:
+
+```bash
+MCP_CLIENT=copilot bash bootstrap.sh
+MCP_CLIENT=claude  bash bootstrap.sh
+MCP_CLIENT=generic bash bootstrap.sh
+```
+
+### Manual Installation
+
+```bash
+unzip mcprojsim-mcp-bundle-__VERSION__.zip
+mv mcprojsim-mcp-bundle-__VERSION__ ~/.local/share/mcprojsim-mcp-bundle-__VERSION__
+cd ~/.local/share/mcprojsim-mcp-bundle-__VERSION__
+bash launcher.sh --install-only
+```
+
+Then point your MCP client `command` to the absolute path of `launcher.sh`.
+
+## Available MCP Tools
+
+Once connected, the MCP server exposes these tools.
+
+### generate_project_file
+
+Converts semi-structured text into mcprojsim YAML.
+
+Input:
+- `description` (string)
+
+Output:
+- Generated project YAML text
+
+### validate_project_description
+
+Checks the plain-text description for parse or model issues without running simulation.
+
+Input:
+- `description` (string)
+
+Output:
+- Validation status and details
+
+### validate_generated_project_yaml
+
+Generates YAML from a plain-text description, then performs strict YAML/model validation.
+
+Input:
+- `description` (string)
+- `config_yaml` (string, optional)
+
+Output:
+- Strict validation report for the generated YAML
+
+### validate_project_yaml
+
+Validates a provided YAML project directly.
+
+Input:
+- `project_yaml` (string)
+- `config_yaml` (string, optional)
+
+Output:
+- Validation status for the provided YAML
+
+### simulate_project
+
+Generates a project from plain text and runs Monte Carlo simulation directly.
+
+Input:
+- `description` (string, required)
+- `iterations` (int, default: 10000)
+- `seed` (int or null, default: null)
+- `config_yaml` (string or null, default: null)
+- `velocity_model` (string or null, default: null)
+- `no_sickness` (bool, default: false)
+- `two_pass` (bool, default: false)
+- `pass1_iterations` (int, default: 1000)
+- `critical_paths_limit` (int, default: 5)
+
+Output:
+- Multi-section simulation report (including generated YAML and analysis)
+
+### simulate_project_yaml
+
+Runs simulation directly from provided YAML.
+
+Input:
+- `project_yaml` (string, required)
+- `iterations` (int, default: 10000)
+- `seed` (int or null, default: null)
+- `config_yaml` (string or null, default: null)
+- `velocity_model` (string or null, default: null)
+- `no_sickness` (bool, default: false)
+- `two_pass` (bool, default: false)
+- `pass1_iterations` (int, default: 1000)
+- `critical_paths_limit` (int, default: 5)
+
+Output:
+- Multi-section simulation report for the provided YAML project
+
+### update_project_yaml
+
+Applies natural-language update instructions to an existing YAML project and returns updated YAML.
+
+Input:
+- `existing_yaml` (string, required)
+- `update_description` (string, required)
+- `replace_tasks` (bool, default: false)
+
+Output:
+- Updated YAML plus applied update summary
+
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `MCP_CLIENT` | auto-detected | Client profile: `claude`, `copilot`, or `generic` |
+| `MCPROJSIM_MCP_HOME` | profile-specific | Override install root directly |
+| `MCPROJSIM_MCP_VENV` | `<MCPROJSIM_MCP_HOME>/.venv` | Override venv location |
+| `CLAUDE_HOME` | `~/.claude` | Base Claude home directory |
+| `COPILOT_HOME` | `~/.copilot` | Base Copilot home directory |
+| `MCP_CLIENT_HOME` | unset | Base home for generic MCP profile |
+| `XDG_CONFIG_HOME` | platform default | Fallback base for profile directories |
+| `PYTHON_CMD` | `python3` | Python executable used to create the venv |
+
+## Updating the Server
+
+1. Download and extract the new bundle zip.
+2. Move it to a permanent location and run `bash bootstrap.sh` in the new bundle directory.
+3. Restart the MCP client.
+
+## Troubleshooting
+
+### No wheel found in bundle
+
+If you see `no mcprojsim wheel found in bundle wheels/ directory`:
+- Re-extract the bundle zip completely
+- Verify `wheels/mcprojsim-__VERSION__-py3-none-any.whl` exists
+
+### Python not found
+
+If `python3` is not available:
+
+```bash
+PYTHON_CMD=/usr/local/bin/python3.13 bash launcher.sh --install-only
+```
+
+### MCP client cannot start server
+
+- Verify your config uses an absolute path to `launcher.sh`
+- Ensure the script is executable: `chmod +x /path/to/launcher.sh`
+- Re-run install-only: `bash /path/to/launcher.sh --install-only`
+- Restart the MCP client

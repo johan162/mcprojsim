@@ -513,10 +513,23 @@ The `output` section controls reporting and export defaults.
 |---|---|---|---|
 | `formats` | list of strings | `["json", "csv", "html"]` | Default export formats |
 | `include_histogram` | boolean | `true` | Include histogram data where supported |
-| `histogram_bins` | integer | `50` | Number of bins used for histograms |
+| `histogram_bins` | integer | `50` | Number of bins used for histograms in JSON, CSV, and HTML exports |
 | `critical_path_report_limit` | integer | `2` | Number of stored full critical paths shown by default |
 
-Example:
+### Histogram bins
+
+The `histogram_bins` setting controls the granularity of duration distribution charts in exported reports. Higher bin counts produce finer-grained histograms with narrower bars, while lower counts produce coarser histograms with wider bars.
+
+- **Typical range**: 20–100 bins
+- **Default**: 50 bins
+- **CLI override**: Use `--number-bins N` to override the config file setting for a single run
+
+The histogram data is included in:
+- HTML reports (visual distribution chart)
+- JSON exports (histogram array)
+- CSV exports (histogram table)
+
+**Configuration example:**
 
 ```yaml
 output:
@@ -525,6 +538,15 @@ output:
   histogram_bins: 80
   critical_path_report_limit: 5
 ```
+
+**CLI override example:**
+
+```bash
+# Use 100 bins for this run, regardless of the config file
+mcprojsim simulate project.yaml --number-bins 100 -f json,html
+```
+
+When `--number-bins` is specified on the command line, it overrides the value in the config file for that simulation run only.
 
 ## Staffing settings
 

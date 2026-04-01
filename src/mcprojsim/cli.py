@@ -539,7 +539,7 @@ def _get_tasks_mode_heterogeneity_warning(project: Project) -> str | None:
     return None
 
 
-def _apply_sprint_defaults(project: Project, cfg: Config) -> None:
+def apply_sprint_defaults(project: Project, cfg: Config) -> None:
     """Apply company-wide sprint defaults when project values use built-in defaults."""
     sprint_planning = project.sprint_planning
     if sprint_planning is None or not sprint_planning.enabled:
@@ -779,6 +779,15 @@ def cli() -> None:
         "Defaults to the config value (1000). Capped to --iterations."
     ),
 )
+@click.option(
+    "--number-bins",
+    type=int,
+    default=None,
+    help=(
+        "Number of histogram bins for distribution charts. "
+        "Overrides the config file setting if specified."
+    ),
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -799,6 +808,7 @@ def simulate(
     include_historic_base: bool,
     two_pass: bool,
     pass1_iterations: Optional[int],
+    number_bins: Optional[int],
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     if quiet < 2:
@@ -828,6 +838,12 @@ def simulate(
                 normalized_category,
             )
 
+        if number_bins is not None:
+            if number_bins <= 0:
+                raise ValueError("--number-bins must be greater than 0")
+            cfg.output.histogram_bins = number_bins
+            logger.info("Overriding histogram bins to %d", number_bins)
+
         formats: list[str] = []
         if output_format.strip():
             formats = _parse_output_formats(output_format)
@@ -855,7 +871,7 @@ def simulate(
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
-        _apply_sprint_defaults(project, cfg)
+        apply_sprint_defaults(project, cfg)
 
         tasks_mode_warning = _get_tasks_mode_heterogeneity_warning(project)
         if tasks_mode_warning is not None and quiet < 2:
