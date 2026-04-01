@@ -25,7 +25,12 @@ from __future__ import annotations
 import math
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from mcprojsim.config import Config
+    from mcprojsim.models.project import Project
+    from mcprojsim.models.simulation import SimulationResults
 
 try:
     from mcp.server.fastmcp import FastMCP
@@ -38,7 +43,7 @@ except ImportError as e:
 from mcprojsim.nl_parser import NLProjectParser
 
 
-def _load_config_from_yaml(config_yaml: str | None):
+def _load_config_from_yaml(config_yaml: str | None) -> "Config":
     """Load Config from inline YAML or return defaults."""
     from mcprojsim.config import Config
 
@@ -56,15 +61,13 @@ def _load_config_from_yaml(config_yaml: str | None):
 
 def _prepare_project_from_description(
     description: str,
-    cfg,
+    cfg: "Config",
     velocity_model: str | None = None,
     no_sickness: bool = False,
-):
+) -> tuple["Project", str]:
     """Parse NL description into Project and apply CLI-equivalent sprint defaults."""
     import yaml
 
-    from mcprojsim.cli import _apply_sprint_defaults
-    from mcprojsim.models.project import SprintVelocityModel
     from mcprojsim.parsers.yaml_parser import YAMLParser
 
     nl_parser = NLProjectParser()
@@ -87,10 +90,10 @@ def _prepare_project_from_description(
 
 def _prepare_project_from_yaml(
     project_yaml: str,
-    cfg,
+    cfg: "Config",
     velocity_model: str | None = None,
     no_sickness: bool = False,
-):
+) -> "Project":
     """Parse YAML content into Project and apply CLI-equivalent runtime defaults."""
     import yaml
 
@@ -111,16 +114,16 @@ def _prepare_project_from_yaml(
 
 
 def _apply_runtime_sprint_overrides(
-    project,
-    cfg,
+    project: "Project",
+    cfg: "Config",
     velocity_model: str | None = None,
     no_sickness: bool = False,
 ) -> None:
     """Apply sprint defaults and runtime overrides to keep MCP aligned with CLI."""
-    from mcprojsim.cli import _apply_sprint_defaults
+    from mcprojsim.cli import apply_sprint_defaults
     from mcprojsim.models.project import SprintVelocityModel
 
-    _apply_sprint_defaults(project, cfg)
+    apply_sprint_defaults(project, cfg)
 
     if velocity_model is not None and project.sprint_planning is not None:
         project.sprint_planning.velocity_model = SprintVelocityModel(velocity_model)
@@ -144,7 +147,7 @@ def _apply_runtime_sprint_overrides(
 
 def _format_simulation_output(
     yaml_str: str,
-    results,
+    results: "SimulationResults",
     critical_path_limit: int,
 ) -> str:
     """Render simulation output in the same MCP-friendly text layout."""

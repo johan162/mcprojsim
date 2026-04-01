@@ -539,7 +539,7 @@ def _get_tasks_mode_heterogeneity_warning(project: Project) -> str | None:
     return None
 
 
-def _apply_sprint_defaults(project: Project, cfg: Config) -> None:
+def apply_sprint_defaults(project: Project, cfg: Config) -> None:
     """Apply company-wide sprint defaults when project values use built-in defaults."""
     sprint_planning = project.sprint_planning
     if sprint_planning is None or not sprint_planning.enabled:
@@ -855,7 +855,7 @@ def simulate(
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
-        _apply_sprint_defaults(project, cfg)
+        apply_sprint_defaults(project, cfg)
 
         tasks_mode_warning = _get_tasks_mode_heterogeneity_warning(project)
         if tasks_mode_warning is not None and quiet < 2:
