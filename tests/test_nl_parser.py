@@ -451,3 +451,68 @@ Task 3:
         assert data["sprint_planning"]["capacity_mode"] == "story_points"
         assert data["sprint_planning"]["history"][0]["sprint_id"] == "S1"
         assert data["sprint_planning"]["history"][0]["spillover_story_points"] == 1
+
+    def test_parse_sprint_removed_work_aliases(self) -> None:
+        text = (
+            "Project: Alias Test\n"
+            "Task 1:\n- Story\n- Story points: 3\n"
+            "Sprint planning:\n"
+            "- Removed work treatment: churn only\n"
+            "Sprint history S1:\n- Done: 10 points\n"
+        )
+        project = self.parser.parse(text)
+        assert project.sprint_planning is not None
+        assert project.sprint_planning.removed_work_treatment == "churn_only"
+
+    def test_parse_sprint_velocity_model_alias(self) -> None:
+        text = (
+            "Project: Velocity Test\n"
+            "Task 1:\n- Story\n- Story points: 3\n"
+            "Sprint planning:\n"
+            "- Velocity model: negative binomial\n"
+            "Sprint history S1:\n- Done: 10 points\n"
+        )
+        project = self.parser.parse(text)
+        assert project.sprint_planning is not None
+        assert project.sprint_planning.velocity_model == "neg_binomial"
+
+    def test_parse_future_sprint_override(self) -> None:
+        text = (
+            "Project: Override Test\n"
+            "Task 1:\n- Story\n- Story points: 3\n"
+            "Sprint planning:\n"
+            "- Sprint length: 2\n"
+            "Sprint history S1:\n- Done: 10 points\n"
+            "Future sprint override 4:\n"
+            "- Holiday factor: 80%\n"
+            "- Capacity multiplier: 0.9\n"
+            "- Notes: Public holiday sprint\n"
+        )
+        project = self.parser.parse(text)
+        assert project.sprint_planning is not None
+        assert len(project.sprint_planning.future_sprint_overrides) == 1
+        override = project.sprint_planning.future_sprint_overrides[0]
+        assert override.sprint_number == 4
+        assert override.holiday_factor == pytest.approx(0.8)
+        assert override.capacity_multiplier == pytest.approx(0.9)
+
+    def test_yaml_includes_future_overrides_and_sickness(self) -> None:
+        text = (
+            "Project: Sprint YAML+\n"
+            "Task 1:\n- Story\n- Story points: 3\n"
+            "Sprint planning:\n"
+            "- Velocity model: empirical\n"
+            "- Sickness: enabled\n"
+            "- Sickness team size: 5\n"
+            "Sprint history S1:\n- Done: 10 points\n"
+            "Future sprint override 3:\n"
+            "- Holiday factor: 0.8\n"
+        )
+
+        data = yaml.safe_load(self.parser.parse_and_generate(text))
+        sprint = data["sprint_planning"]
+        assert sprint["velocity_model"] == "empirical"
+        assert sprint["sickness"]["enabled"] is True
+        assert sprint["sickness"]["team_size"] == 5
+        assert sprint["future_sprint_overrides"][0]["sprint_number"] == 3
+        assert sprint["future_sprint_overrides"][0]["holiday_factor"] == 0.8
