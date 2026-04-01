@@ -87,41 +87,38 @@ mcprojsim generate description.txt -o project.yaml
 
 That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
 
-??? tip "Alternative: write the YAML by hand"
+### Alternative: write the YAML by hand
 
-    If you prefer full control, create `project.yaml` manually:
+If you prefer full control, create `project.yaml` manually:
 
-    ```yaml
-    project:
-      name: "Website Refresh"
-      description: "Small example project"
-      start_date: "2026-04-01"
-      confidence_levels: [50, 80, 90]
+```yaml
+project:
+  name: "Website Refresh"
+  description: "Small example project"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90] 
+tasks:
+  - id: "task_001"
+    name: "Design updates"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days 
+  - id: "task_002"
+    name: "Frontend changes"
+    estimate:
+      low: 4
+      expected: 6
+      high: 10
+      unit: "days"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"
+```
 
-    tasks:
-      - id: "task_001"
-        name: "Design updates"
-        estimate:
-          low: 2
-          expected: 3
-          high: 5
-          unit: "days"
-
-      - id: "task_002"
-        name: "Frontend changes"
-        estimate:
-          low: 4
-          expected: 6
-          high: 10
-          unit: "days"
-        dependencies: ["task_001"]
-        uncertainty_factors:
-          team_experience: "medium"
-          technical_complexity: "medium"
-    ```
-
-    See the [Project Files](project_files.md) reference for all available fields.
-
+See the [Project Files](project_files.md) reference for all available fields.
 
 
 ## Validate the file

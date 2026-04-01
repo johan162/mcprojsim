@@ -139,15 +139,27 @@ VERSION := $(shell grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
 # Container related settings
 CONTAINER_NAME := $(PROJECT)
 
-# User guide PDF output path
-USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-v$(VERSION).pdf
-USER_GUIDE_PANDOC_PDF := $(DIST_DIR)/$(PROJECT)_user_guide_pandoc-v$(VERSION).pdf
+# Temporary build directory for user guide PDF generation
 USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
+
+# User guide PDF output paths and templates
 USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
+USER_GUIDE_DARK_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark.tex
+
+USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-v$(VERSION).pdf
+USER_GUIDE_DARK_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-v$(VERSION).pdf
+
 USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
+USER_GUIDE_DARK_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-dark.md
+
 USER_GUIDE_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body.tex
+USER_GUIDE_DARK_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body-dark.tex
+
 USER_GUIDE_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report.tex
+USER_GUIDE_DARK_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark.tex
+
 USER_GUIDE_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report.pdf
+USER_GUIDE_DARK_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark.pdf
 
 # Doc files for User Guide PDF generation
 USER_GUIDE_DOCS := \
@@ -486,7 +498,7 @@ update-version: ## Update the version number in the LaTeX template for the user 
 	fi
 	@rm -f $(USER_GUIDE_TEMPLATE).bak
 	
-pdf: $(USER_GUIDE_PDF)  ## Build the user guide PDF
+pdf: $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) ## Build the user guide light & dark version PDF
 	@:
 
 $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  ## Build user guide via custom LaTeX report template + pdflatex
@@ -510,14 +522,26 @@ $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  #
 	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
 	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
 
-pdf-pandoc: $(USER_GUIDE_PANDOC_PDF) ## Build fallback user guide PDF directly with Pandoc
-	@:
-
-$(USER_GUIDE_PANDOC_PDF): $(USER_GUIDE_DOCS)
-	@echo -e "$(DARKYELLOW)- Building fallback user guide PDF directly with Pandoc...$(NC)"
-	@pandoc --pdf-engine=xelatex -V mainfont="Arial Unicode MS" -V monofont="DejaVu Sans Mono" \
-		-V geometry:top=2cm,left=2.5cm,right=1.8cm,bottom=1.5cm \
-		$(USER_GUIDE_DOCS) -o $(USER_GUIDE_PANDOC_PDF)
+$(USER_GUIDE_DARK_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_DARK_TEMPLATE) | update-version  ## Build dark version user guide via custom LaTeX report template + xelatex
+	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
+	@mkdir -p $(USER_GUIDE_BUILD_DIR)
+	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
+	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_DARK_CONCAT_MD)
+	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(USER_GUIDE_DARK_CONCAT_MD) -o $(USER_GUIDE_DARK_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(USER_GUIDE_DARK_BODY_TEX)
+	@rm -f $(USER_GUIDE_DARK_BODY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$(NC)"
+	@awk -v body="$(USER_GUIDE_DARK_BODY_TEX)" '\
+		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$(USER_GUIDE_DARK_TEMPLATE) > $(USER_GUIDE_DARK_TEX)
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_DARK_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_DARK_TEX) >/dev/null
+	@cp $(USER_GUIDE_DARK_PDF_BUILT) $(USER_GUIDE_DARK_PDF)
+	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_DARK_PDF)$(NC)"
 
 docs-serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
