@@ -42,7 +42,7 @@ Use it when you need answers like:
 Most users fall into one of two paths:
 
 - **Terminal-first CLI usage**: install with `pipx`.
-- **MCP-assisted usage**: use the released MCP bundle or the optional MCP package install described in [docs/user_guide/mcp-server.md](docs/user_guide/mcp-server.md).
+- **MCP-assisted usage**: use the released MCP bundle or the optional MCP package install described in [MCP Server Seetup](https://johan162.github.io/mcprojsim/user_guide/mcp-server/).
 
 For direct terminal-only CLI usage, `pipx` remains the simplest manual install path:
 
@@ -145,13 +145,13 @@ mcprojsim simulate examples/sample_project.yaml --target-date 2026-06-01
 mcprojsim simulate examples/sample_project.yaml --table --seed 42
 ```
 
-For full CLI coverage, including constrained scheduling, sprint planning, quiet/minimal modes, staffing, and export options, see [docs/user_guide/running_simulations.md](docs/user_guide/running_simulations.md).
+For full CLI coverage, including constrained scheduling, sprint planning, quiet/minimal modes, staffing, and export options, see [Running Simulations](https://johan162.github.io/mcprojsim/user_guide/running_simulations/).
 
 ## MCP server integration
 
 `mcprojsim` can run as a [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server, letting AI assistants such as GitHub Copilot, Claude Desktop, or any MCP-compatible client generate project files, validate descriptions, and run simulations conversationally.
 
-Install the released MCP bundle from GitHub Releases, or follow the manual setup in [docs/user_guide/mcp-server.md](docs/user_guide/mcp-server.md) for installation tradeoffs and natural-language input examples.
+Install the released MCP bundle from GitHub Releases, or follow the manual setup in [MCP Server Setup](https://johan162.github.io/mcprojsim/user_guide/mcp-server/) for installation tradeoffs and natural-language input examples.
 
 ### Example prompt to install `mcprojsim` as an MCP server:
 
@@ -187,3 +187,4 @@ Inspired by the work of:
 - Steve McConnell - *Software Estimation: Demystifying the Black Art*
 - Frederick Brooks - *The Mythical Man-Month*
 - Douglas Hubbard - *How to Measure Anything in Cybersecurity Risk*
+- Kahneman, Sibony, Sunstein - *Noise: A Flaw in Human Judgment*
