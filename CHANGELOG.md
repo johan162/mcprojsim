@@ -1,3 +1,16 @@
+## [v0.11.1] - 2026-04-01
+
+Release Type: patch
+
+### 📋 Summary
+This release adds a dark version of the User Guide PDF and some README cleanups.
+
+### 📚 Documentation
+- Updated documentation links to point to the published documentation site
+- Fixed README typos and tightened wording for clearer onboarding and usage guidance
+- Add a build of a Dark Version of the User Guide PDF
+
+
 ## [v0.11.0] - 2026-04-01
 
 Release Type: minor
