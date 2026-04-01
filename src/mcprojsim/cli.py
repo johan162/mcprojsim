@@ -779,6 +779,15 @@ def cli() -> None:
         "Defaults to the config value (1000). Capped to --iterations."
     ),
 )
+@click.option(
+    "--number-bins",
+    type=int,
+    default=None,
+    help=(
+        "Number of histogram bins for distribution charts. "
+        "Overrides the config file setting if specified."
+    ),
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -799,6 +808,7 @@ def simulate(
     include_historic_base: bool,
     two_pass: bool,
     pass1_iterations: Optional[int],
+    number_bins: Optional[int],
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     if quiet < 2:
@@ -827,6 +837,12 @@ def simulate(
                 "Overriding T-shirt default category to %s",
                 normalized_category,
             )
+
+        if number_bins is not None:
+            if number_bins <= 0:
+                raise ValueError("--number-bins must be greater than 0")
+            cfg.output.histogram_bins = number_bins
+            logger.info("Overriding histogram bins to %d", number_bins)
 
         formats: list[str] = []
         if output_format.strip():

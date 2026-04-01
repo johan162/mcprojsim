@@ -127,7 +127,10 @@ class CSVExporter:
 
             # Write histogram
             writer.writerow(["Histogram Data", ""])
-            bin_edges, counts = results.get_histogram_data(bins=50)
+            effective_config = config or Config.get_default()
+            bin_edges, counts = results.get_histogram_data(
+                bins=effective_config.output.histogram_bins
+            )
             writer.writerow(["Bin Edge (hours)", "Count", "Cumulative %"])
 
             cumulative_count = 0

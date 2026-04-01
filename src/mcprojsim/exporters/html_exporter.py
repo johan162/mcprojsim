@@ -970,8 +970,12 @@ class HTMLExporter:
         thermometer_segments = HTMLExporter._calculate_thermometer(results)
 
         # Generate histogram images
-        histogram_image = HTMLExporter._generate_histogram_image(results)
-        effort_histogram_image = HTMLExporter._generate_effort_histogram_image(results)
+        histogram_image = HTMLExporter._generate_histogram_image(
+            results, effective_config
+        )
+        effort_histogram_image = HTMLExporter._generate_effort_histogram_image(
+            results, effective_config
+        )
 
         # Generate sensitivity tornado chart
         sensitivity_image = HTMLExporter._generate_sensitivity_image(results)
@@ -1846,7 +1850,7 @@ class HTMLExporter:
             return "N/A"
 
     @staticmethod
-    def _generate_histogram_image(results: SimulationResults) -> str:
+    def _generate_histogram_image(results: SimulationResults, config: Config) -> str:
         """Generate a base64-encoded histogram image.
 
         Args:
@@ -1861,7 +1865,9 @@ class HTMLExporter:
         try:
             # matplotlib.pyplot is already imported at module level as plt
             # Get histogram data
-            bin_edges, counts = results.get_histogram_data(bins=50)
+            bin_edges, counts = results.get_histogram_data(
+                bins=config.output.histogram_bins
+            )
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
             # Create figure with nice styling
@@ -1938,11 +1944,14 @@ class HTMLExporter:
             return ""
 
     @staticmethod
-    def _generate_effort_histogram_image(results: SimulationResults) -> str:
+    def _generate_effort_histogram_image(
+        results: SimulationResults, config: Config
+    ) -> str:
         """Generate a base64-encoded histogram of per-iteration total effort.
 
         Args:
             results: Simulation results
+            config: Configuration (used for histogram bin count)
 
         Returns:
             Base64-encoded PNG image string, or empty string if unavailable
@@ -1952,7 +1961,7 @@ class HTMLExporter:
 
         try:
             effort = results.effort_durations
-            counts, bin_edges = np.histogram(effort, bins=50)
+            counts, bin_edges = np.histogram(effort, bins=config.output.histogram_bins)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
             fig, ax = plt.subplots(figsize=(10, 6))
