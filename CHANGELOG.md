@@ -1,3 +1,24 @@
+## [v0.11.2] - 2026-04-02
+
+Release Type: patch
+
+### 📋 Summary
+This release focuses on documentation quality and docs build workflow updates. 
+It improves API-reference clarity and adds a dedicated dark-theme PDF build for design documents.
+
+### ✨ Additions
+- Added `make dark` target to build dark-theme PDF variants
+
+### 📚 Documentation
+- Rewrote API reference documentation to cover newly added functionality and provide more relevant examples
+- Improved API documentation concept descriptions and synchronized sprint-planning model details with implementation
+- Updated documentation site landing page with clearer deep links into user-guide content
+- Updated README instructions to describe building both light-theme and dark-theme PDFs
+
+### 🛠 Internal
+- Improved design-document PDF workflow by using dark mode as the default for design docs
+
+
 ## [v0.11.1] - 2026-04-01
 
 Release Type: patch
