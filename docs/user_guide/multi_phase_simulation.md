@@ -220,7 +220,7 @@ Two-Pass Scheduling Traceability:
 Resource wait delta: -121.1h
 ```
 
-The two-pass run reduces the mean project duration from **~520 h to ~423 h** (~12 working
+The two-pass run reduces the mean project duration from **~567 h to ~471 h** (~12 working
 days) purely by prioritising the tasks that pass-1 identified as critical
 bottlenecks.
 
@@ -509,5 +509,11 @@ A large negative delta on mean/P80 combined with a large negative delta on
 resource wait time is strong evidence that the project suffers from avoidable
 resource contention, and that assigning more resources or restructuring task
 ownership would reduce schedule risk.
+
+## Related chapters
+
+- [Resource and Calendar Constrained Scheduling](constrained.md) for resource setup, calendar configuration, and the full constrained scheduling walkthrough
+- [Running Simulations](running_simulations.md) for the complete CLI reference
+- [Interpreting Results](interpreting_results.md) for understanding constrained diagnostics
 
 \newpage

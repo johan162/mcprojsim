@@ -214,7 +214,9 @@ In Example 2, Alice (`3`, `1.0`) is modeled as more senior baseline-capacity, wh
 
 | Field | Required | Default | What it controls |
 |---|---|---|---|
+| `resources` | No | (all pool resources) | Explicit list of resource names eligible for this task; omit to allow any available resource |
 | `max_resources` | No | 1 | Maximum number of resources assigned to a task |
+| `min_experience_level` | No | 1 | Minimum `experience_level` a resource must have to be eligible for this task |
 
 
 ### `max_resources` semantics (important)
@@ -820,5 +822,6 @@ sprint_defaults:
 - [Project Files](project_files.md) for full schema reference
 - [Running Simulations](running_simulations.md) for command reference
 - [Interpreting Results](interpreting_results.md) for diagnostics interpretation
+- [Multi-Phase (Two-Pass) Simulation](multi_phase_simulation.md) for criticality-prioritized scheduling
 
 \newpage

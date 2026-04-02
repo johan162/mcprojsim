@@ -669,9 +669,20 @@ Several of these settings change simulation behavior directly, not just reportin
 ## Viewing current configuration
 
 ```bash
+# Show effective configuration (built-in defaults, or auto-loaded user config)
 mcprojsim config
+
+# Show configuration from a specific file
 mcprojsim config --config-file config.yaml
+
+# Generate a default configuration file at ~/.mcprojsim/config.yaml
+mcprojsim config --generate
 ```
+
+When no `--config-file` is given, `mcprojsim` automatically loads
+`~/.mcprojsim/configuration.yaml` if it exists. Use `--generate` to produce a
+starter config file at `~/.mcprojsim/config.yaml` that you can then customise
+and rename to `configuration.yaml`.
 
 The `config` output includes the most relevant effective settings, including:
 

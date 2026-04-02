@@ -4,7 +4,7 @@ Welcome to the Monte Carlo Project Simulator User Guide.
 
 This short, hands-on chapter is meant to quickly show you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with a bit of context where more advanced concepts are introduced.
 
-What you'll learn
+## What you'll learn
 
 - Quick generation of a valid project file from a plain-text description.
 - Running a reproducible Monte Carlo simulation and exporting report files.
@@ -127,7 +127,7 @@ tasks:
       low: 2
       expected: 3
       high: 5
-      unit: "days 
+      unit: "days"
   - id: "task_002"
     name: "Frontend changes"
     estimate:

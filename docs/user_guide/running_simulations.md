@@ -143,6 +143,8 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `--velocity-model MODEL` | Override the sprint planning velocity model for how to use historic data (`empirical` or `neg_binomial`). Applies only when sprint planning is enabled in the project file. | project file setting |
 | `--no-sickness` | Disable sickness modelling regardless of the project file setting. Applies only when sprint planning is enabled. | off |
 | `--include-historic-base` | Add a `Historic Base` section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under `sprint_planning.historic_base`. | off |
+| `--two-pass` | Enable criticality two-pass scheduling. Only has effect when resource-constrained scheduling is active. Overrides the config file `assignment_mode` setting. | off |
+| `--pass1-iterations N` | Number of pass-1 iterations for criticality ranking when `--two-pass` is used. Capped to `--iterations`. | 1000 (from config) |
 
 ### Examples
 
@@ -304,8 +306,15 @@ Displays the active configuration (uncertainty factor multipliers, T-shirt size 
 ### Usage
 
 ```bash
-mcprojsim config show [--config-file FILE]
+mcprojsim config show [-c CONFIG_FILE] [--generate]
 ```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-c`, `--config-file FILE` | Show configuration merged with a custom YAML file |
+| `--generate` | Write the built-in default configuration to `~/.mcprojsim/config.yaml` |
 
 ### Examples
 
@@ -315,6 +324,9 @@ mcprojsim config show
 
 # Show a custom configuration merged with defaults
 mcprojsim config show --config-file my_config.yaml
+
+# Generate a default configuration file at ~/.mcprojsim/config.yaml
+mcprojsim config show --generate
 ```
 
 

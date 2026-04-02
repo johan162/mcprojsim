@@ -1083,7 +1083,9 @@ sprint_planning:
     - sprint_id: "SPR-003"
       completed_story_points: 11
       spillover_story_points: 1
-      removed_story_points: 1```
+      removed_story_points: 1
+
+```
 
 ```bash
 mcprojsim simulate examples/sprint_planning_minimal.yaml --minimal --seed 42
@@ -1232,7 +1234,9 @@ sprint_planning:
     - sprint_id: "SPR-004"
       completed_story_points: 13
       spillover_story_points: 1
-      removed_story_points: 1```
+      removed_story_points: 1
+
+```
 
 ```bash
 mcprojsim simulate examples/sprint_planning_advanced.yaml --minimal --table --seed 42 --iterations 200
@@ -1396,7 +1400,9 @@ sprint_planning:
     - sprint_id: "SPR-003"
       completed_tasks: 4
       spillover_tasks: 1
-      removed_tasks: 1```
+      removed_tasks: 1
+
+```
 
 ```bash
 mcprojsim simulate examples/sprint_planning_tasks.yaml --minimal --seed 42
@@ -1494,7 +1500,9 @@ sprint_planning:
   capacity_mode: story_points
   history:
     format: json
-    path: sprint_planning_history.json```
+    path: sprint_planning_history.json
+
+```
 
 ```json
 {
@@ -1601,7 +1609,9 @@ planning_story_points = 3
 [tasks.estimate]
 low = 4
 expected = 6
-high = 8```
+high = 8
+
+```
 
 ```
 sprintUniqueID,committed_StoryPoints,completed_StoryPoints,addedIntraSprint_StoryPoints,removedInSprint_StoryPoints,spilledOver_StoryPoints,startDate,endDate
@@ -1633,7 +1643,9 @@ Sprint history SPR-001:
 Sprint history SPR-002:
 - Done: 9 points
 - Carryover: 2 points
-- Scope added: 1 points```
+- Scope added: 1 points
+
+```
 
 ```bash
 mcprojsim generate examples/sprint_planning_nl.txt -o .build/gen-examples/sprint_planning_nl.yaml
