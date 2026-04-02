@@ -55,11 +55,19 @@ STAMP_DIR := .makefile-stamps
 SCRIPTS_DIR := ../scripts
 DESIGN_IDEAS_DIR := .
 
-# Generic Latex template to use for all design documents - 
-# it will have a placeholder for content injection and some basic styling, 
-# but the content will be generated from the respective markdown files 
-# for each design document
+# Theme selection: light (default) or dark.
+# Usage:
+#   make                 # light mode (default)
+#   make dark            # dark mode — PDFs get a -dark suffix
+THEME ?= light
+
+ifeq ($(THEME),dark)
 DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template_dark.tex
+THEME_SUFFIX := -dark
+else
+DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template.tex
+THEME_SUFFIX :=
+endif
 
 # Derived variable generator for one design document.
 # Args:
@@ -71,7 +79,7 @@ define DEFINE_DESIGN_DOC_VARS
 $1_BASENAME := $2
 $1_MD := $(DESIGN_IDEAS_DIR)/$$($1_BASENAME).md
 $1_PDF := $(DESIGN_IDEAS_DIR)/$$($1_BASENAME).pdf
-$1_STAMP := $(STAMP_DIR)/$$($1_BASENAME)-pdf.stamp
+$1_STAMP := $(STAMP_DIR)/$$($1_BASENAME)-pdf$(THEME_SUFFIX).stamp
 $1_BUILD_DIR := $(BUILD_DESIGN_DIR)/$$($1_BASENAME)
 $1_BODY_TEX := $$($1_BUILD_DIR)/$$($1_BASENAME)_body.tex
 $1_TEX := $$($1_BUILD_DIR)/$$($1_BASENAME)_report.tex
@@ -152,10 +160,10 @@ $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_D
 		echo -e "$$(YELLOW)  See log: $$($1_BUILD_DIR)/$$($1_BASENAME)_report.log$$(NC)"; \
 		exit 1; \
 	fi; \
-	cp $$($1_PDF_BUILT) $$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
+	cp $$($1_PDF_BUILT) $$(DIST_DIR)/$$($1_BASENAME)$$(THEME_SUFFIX)-$$$$VERSION_FROM_MD.pdf; \
 	touch $$($1_STAMP); \
 #	rm -rf $$($1_BUILD_DIR);
-	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
+	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$(DIST_DIR)/$$($1_BASENAME)$$(THEME_SUFFIX)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
 
 # ============================================================================================
@@ -174,7 +182,7 @@ $(eval $(call DEFINE_DESIGN_DOC_VARS,PLUGGABLE_DISTRIBUTIONS,pluggable-distribut
 # ============================================================================================
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
-	@$(call print_section,Build & Documentation,build|pdf-design-docs|clean|really-clean)
+	@$(call print_section,Build & Documentation,build|pdf-design-docs|dark|clean|really-clean)
 	@echo ""
 
 $(BUILD_DIR):
@@ -194,8 +202,11 @@ really-clean: ## Clean all generated intermediate documentation files and all ge
 	@rm -rf $(BUILD_DIR) $(STAMP_DIR) $(DIST_DIR)
 	@echo -e "$(GREEN)✓ Really cleaned all generated documentation files and PDFs$(NC)"
 
-pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) ## Build all the PDF versions of the design documents
+pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) ## Build all the PDF versions of the design documents (light theme)
 	@:
+
+dark: ## Build all PDFs in dark theme (adds -dark suffix to filenames)
+	@$(MAKE) pdf-design-docs THEME=dark
 
 $(eval $(call DESIGN_DOC_PDF_RULE,SPRINT_PLANNING,sprint-based planning))
 $(eval $(call DESIGN_DOC_PDF_RULE,TSHIRT_CATEGORY,t-shirt category))
