@@ -32,11 +32,32 @@ python3 -m pipx ensurepath
 
 ### With pipx (recommended)
 
+`pipx` installs command-line tools in their own isolated virtual environments while still making the command globally available on your `PATH`. This is important for a tool like `mcprojsim` for several reasons:
+
+**Dependency isolation**
+`pip install` drops packages directly into your system or user Python environment. If any dependency conflicts with something already installed — another tool, a framework, or a library your own code depends on — one of them will break silently or produce subtle wrong-version behaviour. `pipx` eliminates this entirely: every tool lives in its own throwaway environment that no other tool can disrupt.
+
+**No accidental breakage of system Python**
+On macOS and most Linux distributions, the system Python interpreter manages OS-level utilities. Polluting its site-packages with `pip install` can degrade or break unrelated system tools. `pipx` never touches the system interpreter.
+
+**Easy upgrades and rollbacks**
+```bash
+pipx upgrade mcprojsim       # upgrade to latest
+pipx install mcprojsim==0.10 # pin an exact version
+pipx uninstall mcprojsim     # clean uninstall, no residue
+```
+Plain `pip` leaves orphaned package files behind on uninstall; `pipx` removes the entire environment atomically.
+
+**Safe alongside virtual environments**
+If you are already working inside a project `venv` or a Conda environment, `pipx` still installs into a separate location. Your project dependencies and the `mcprojsim` CLI remain fully decoupled.
+
+**In summary**: use `pipx` when you want a CLI tool that just works, stays out of your way, and does not drift your Python environment over time.
+
 ```bash
 pipx install mcprojsim
 ```
 
-### With pip
+### With pip (if you know what you are doing!)
 
 ```bash
 pip install mcprojsim
@@ -44,13 +65,15 @@ pip install mcprojsim
 
 ### From source
 
+For developers
+
 ```bash
 git clone https://github.com/johan162/mcprojsim.git
 cd mcprojsim
 pip install -e .
 ```
 
-Verify the installation:
+## Verify the installation:
 
 ```bash
 mcprojsim --version
@@ -60,7 +83,7 @@ mcprojsim --help
 
 ## Create your first project file
 
-The quickest way is to describe your project in plain text and let `mcprojsim generate` produce the YAML for you.
+The quickest way is to describe your project in plain text and let `mcprojsim generate` produce the full YAML project specification from a less strict textual description of a project.
 
 Create a file named `description.txt`:
 
@@ -89,7 +112,7 @@ That is it — the generated `project.yaml` is ready for validation and simulati
 
 ### Alternative: write the YAML by hand
 
-If you prefer full control, create `project.yaml` manually:
+If you prefer full control, create the YAML based full project file `project.yaml` manually:
 
 ```yaml
 project:
