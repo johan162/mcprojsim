@@ -1,6 +1,6 @@
 # API Reference
 
-This page documents the main Python API intended for library consumers.
+This page documents the main Python API intended for library consumers. For installation and first steps, see the [Quickstart](quickstart.md).
 
 The most stable entry points are:
 
@@ -14,7 +14,20 @@ The most stable entry points are:
 - **Sprint-planning APIs** from `mcprojsim.planning` and `mcprojsim.models.sprint_simulation` — Forecast sprint-based delivery
 - **Natural language parser** from `mcprojsim.nl_parser` — Convert text descriptions to project files
 
-Internal modules under `mcprojsim.simulation` and `mcprojsim.utils` are accessible but less stable and subject to change without deprecation.
+!!! note "Internal modules"
+    Modules under `mcprojsim.simulation` (distributions, scheduler, risk_evaluator) and `mcprojsim.utils` are accessible but considered internal. They may change without deprecation notice.
+
+## Key Concepts
+
+Before diving into the API, it helps to understand four concepts that mcprojsim distinguishes:
+
+**Elapsed duration vs total effort.** *Elapsed duration* is the calendar time from project start to finish — what a Gantt chart shows. *Total effort* is the sum of all person-hours across every task, regardless of parallelism. A 100-hour project done by two people in parallel has ~50 hours elapsed duration but 100 hours of effort. `SimulationResults.mean` and `.percentile()` report elapsed duration; `.total_effort_hours()`, `.effort_percentile()`, and `.effort_durations` report effort.
+
+**Dependency-only vs resource-constrained scheduling.** When a project defines no resources, the scheduler runs in *dependency-only* mode: tasks start as soon as their predecessors finish, with unlimited parallelism. When resources are defined, *constrained scheduling* activates: tasks compete for finite resource slots, potentially queuing behind other work. Check `results.schedule_mode` and `results.resource_constraints_active` to see which mode was used.
+
+**Two-pass scheduling.** An optional extension of constrained scheduling. Pass 1 runs a smaller batch of iterations with simple greedy dispatch to rank tasks by criticality index. Pass 2 re-runs the full simulation using those ranks as scheduling priorities. Enable via `SimulationEngine(two_pass=True)` or `config.constrained_scheduling.assignment_mode = "criticality_two_pass"`. Results include a `two_pass_trace` with pass-1 vs pass-2 comparison data.
+
+**Coordination overhead / team size.** When `project.project.team_size` is set, mcprojsim applies Brooks's Law–inspired communication overhead: larger teams lose a fraction of capacity to coordination. The staffing analyzer models this via `communication_overhead` and `min_individual_productivity` parameters per experience profile.
 
 ## Root Package
 
@@ -63,7 +76,7 @@ print(results.mean)
 print(results.percentile(90))
 print(results.get_critical_path())
 
-JSONExporter.export(results, "results.json")
+JSONExporter.export(results, "results.json", config=config, project=project)
 HTMLExporter.export(results, "results.html", project=project, config=config)
 ```
 
@@ -105,12 +118,14 @@ engine = SimulationEngine(
 results = engine.run(project)
 ```
 
-Key constructor parameters:
+Constructor parameters:
 
-- `iterations`: Number of Monte Carlo iterations
+- `iterations`: Number of Monte Carlo iterations (default: 10000)
 - `random_seed`: Seed for reproducible sampling
-- `config`: `Config` object used for uncertainty multipliers, T-shirt mappings, and Story Point mappings
-- `show_progress`: Whether to print progress updates during long runs
+- `config`: `Config` object used for uncertainty multipliers, T-shirt mappings, and story-point mappings
+- `show_progress`: Whether to print progress updates during long runs (default: `True`)
+- `two_pass`: Enable criticality-two-pass scheduling (default: `False`). Only has effect when resource-constrained scheduling is active. Overrides `config.constrained_scheduling.assignment_mode`.
+- `pass1_iterations`: Number of pass-1 iterations for criticality ranking. Overrides `config.constrained_scheduling.pass1_iterations` when provided. Capped to `iterations`.
 
 Key method:
 
@@ -124,14 +139,30 @@ Useful attributes:
 
 - `project_name`
 - `iterations`
+- `random_seed`
+- `hours_per_day`
+- `start_date`
 - `durations`
 - `task_durations`
+- `effort_durations` — per-iteration total person-effort array
 - `mean`
 - `median`
 - `std_dev`
 - `min_duration`
 - `max_duration`
+- `skewness`
+- `kurtosis`
 - `percentiles`
+- `effort_percentiles`
+- `sensitivity` — per-task Spearman rank correlations with total duration
+- `task_slack` — mean schedule slack per task (hours)
+- `max_parallel_tasks` — peak parallel task count
+- `schedule_mode` — `"dependency_only"` or `"constrained"`
+- `resource_constraints_active`
+- `resource_wait_time_hours`
+- `resource_utilization` — average utilization (0.0–1.0)
+- `calendar_delay_time_hours`
+- `two_pass_trace` — `TwoPassDelta | None`
 
 Useful methods:
 
@@ -141,9 +172,11 @@ Useful methods:
 - `get_critical_path() -> dict[str, float]`
 - `get_critical_path_sequences(top_n: int | None = None) -> list[CriticalPathRecord]`
 - `get_most_frequent_critical_path() -> CriticalPathRecord | None`
-- `get_histogram_data(bins: int = 50)`
+- `get_histogram_data(bins: int = 50) -> tuple[np.ndarray, np.ndarray]`
 - `probability_of_completion(target_hours: float) -> float`
 - `total_effort_hours() -> float`
+- `hours_to_working_days(hours: float) -> int`
+- `delivery_date(effort_hours: float) -> date | None`
 - `get_risk_impact_summary() -> dict[str, dict[str, float]]`
 - `to_dict() -> dict[str, Any]`
 
@@ -157,6 +190,20 @@ for task_id, value in criticality.items():
     print(task_id, value)
 ```
 
+### `CriticalPathRecord`
+
+Aggregated full critical path sequence information.
+
+**Fields:**
+
+- `path`: `tuple[str, ...]` — ordered task IDs forming the path
+- `count`: `int` — number of iterations this exact path appeared
+- `frequency`: `float` — fraction of total iterations (0.0–1.0)
+
+**Methods:**
+
+- `format_path() -> str` — returns `"task_a -> task_b -> task_c"`
+
 ### `SprintSimulationEngine`
 
 Entry point for sprint-planning Monte Carlo simulation.
@@ -169,7 +216,7 @@ from mcprojsim.planning.sprint_engine import SprintSimulationEngine
 
 Constructor parameters:
 
-- `iterations`
+- `iterations` (default: 10000)
 - `random_seed`
 
 Key method:
@@ -186,17 +233,59 @@ Import path:
 from mcprojsim.models.sprint_simulation import SprintPlanningResults
 ```
 
+Useful properties:
+
+- `project_name`: str
+- `iterations`: int
+- `mean`: float — mean total sprint count to completion
+- `median`: float
+- `std_dev`: float
+- `percentiles`: dict[int, float] — sprint count per percentile
+- `date_percentiles`: dict[int, date | None] — calendar dates per percentile
+- `sprint_length_weeks`: float
+- `planned_commitment_guidance`: float — recommended capacity units per sprint
+- `historical_diagnostics`: dict — statistics from historical data (when available)
+- `disruption_statistics`: dict — disruption event statistics
+- `carryover_statistics`: dict — carryover (incomplete work) statistics
+- `spillover_statistics`: dict — task spillover statistics
+- `burnup_percentiles`: list[dict] — per-sprint cumulative work (percentiles)
+
 Useful methods:
 
-- `calculate_statistics()`
-- `percentile(p: int) -> float`
-- `date_percentile(p: int) -> date | None`
-- `delivery_date_for_sprints(sprint_count: float) -> date | None`
-- `to_dict() -> dict[str, Any]`
+- **`percentile(p: int) -> float`** — total sprint count for a percentile
+- **`date_percentile(p: int) -> date | None`** — calendar date for a percentile
+- **`delivery_date_for_sprints(sprint_count: float) -> date | None`** — convert sprint count to calendar date
+- **`to_dict() -> dict[str, Any]`** — serialize to dictionary
+
+**Example: Sprint Planning Results**
+
+```python
+from mcprojsim.planning.sprint_engine import SprintSimulationEngine
+
+# Setup
+project = YAMLParser().parse_file("sprint_project.yaml")
+engine = SprintSimulationEngine(iterations=5000, random_seed=42)
+results = engine.run(project)
+
+# Sprint count distribution
+print(f"Mean duration: {results.mean:.1f} sprints")
+print(f"P50 duration: {results.percentile(50):.1f} sprints")
+print(f"P80 duration: {results.percentile(80):.1f} sprints")
+
+# Calendar predictions
+print(f"P80 completion date: {results.date_percentile(80)}")
+
+# Commitment guidance
+print(f"Recommended sprint capacity: {results.planned_commitment_guidance:.1f} units/sprint")
+
+# Historical diagnostics (if history was provided)
+if results.historical_diagnostics:
+    hist = results.historical_diagnostics
+    print(f"Historical velocity: mean {hist.get('velocity_mean', 0):.1f}")
+    print(f"Historical observations: {hist.get('observation_count', 0)}")
+```
 
 ## Project Models
-
-The data model layer is richer than the previous version of this page suggested.
 
 ### `Project`
 
@@ -236,11 +325,55 @@ if task:
 
 # Access all risks
 for risk in project.project_risks:
-    print(f"Risk: {risk.description}, Probability: {risk.probability}")
+    print(f"Risk: {risk.name}, Probability: {risk.probability}")
 
 # Check if sprint planning is configured
 if project.sprint_planning and project.sprint_planning.enabled:
     print(f"Sprint length: {project.sprint_planning.sprint_length_weeks} weeks")
+```
+
+**Example: Building a Project Programmatically**
+
+```python
+from datetime import date
+from mcprojsim.models.project import (
+    Project, ProjectMetadata, Task, TaskEstimate, Risk,
+)
+
+project = Project(
+    project=ProjectMetadata(
+        name="My API Project",
+        start_date=date(2026, 6, 1),
+        hours_per_day=8.0,
+    ),
+    tasks=[
+        Task(
+            id="design",
+            name="API Design",
+            estimate=TaskEstimate(low=8, expected=16, high=32),
+        ),
+        Task(
+            id="implement",
+            name="Implementation",
+            estimate=TaskEstimate(low=40, expected=80, high=160),
+            dependencies=["design"],
+        ),
+        Task(
+            id="test",
+            name="Testing",
+            estimate=TaskEstimate(t_shirt_size="M"),
+            dependencies=["implement"],
+        ),
+    ],
+    project_risks=[
+        Risk(
+            id="scope_creep",
+            name="Scope Creep",
+            probability=0.3,
+            impact=40.0,
+        ),
+    ],
+)
 ```
 
 ### `ProjectMetadata`
@@ -252,13 +385,13 @@ Stores top-level project settings and characteristics.
 - `name`: str — Project name
 - `description`: str | None — Optional project description
 - `start_date`: date — Project start date
-- `currency`: str | None — Currency for cost tracking
+- `currency`: str | None — Currency for cost tracking (default: `"USD"`)
 - `confidence_levels`: list[int] — Percentiles to include in reports (default: [10, 25, 50, 75, 80, 85, 90, 95, 99])
-- `probability_red_threshold`: float | None — Probability threshold marking risk level (default: 0.5)
-- `probability_green_threshold`: float | None — Probability threshold marking success (default: 0.9)
-- `hours_per_day`: float | None — Working hours per day (default from config)
-- `distribution`: DistributionType | None — Default task duration distribution (default: triangular)
-- `team_size`: int | None — Total team size (used for coordination overhead calculations)
+- `probability_red_threshold`: float — Probability threshold marking risk level (default: 0.5)
+- `probability_green_threshold`: float — Probability threshold marking success (default: 0.9)
+- `hours_per_day`: float — Working hours per day (default: 8.0)
+- `distribution`: `DistributionType` — Default task duration distribution (default: `"triangular"`)
+- `team_size`: int | None — Total team size (used for coordination overhead calculations and auto-generating resources)
 
 **Example:**
 
@@ -268,7 +401,6 @@ meta = project.project
 
 print(f"Project: {meta.name}")
 print(f"Start: {meta.start_date}")
-print(f"Duration: {meta.duration_days} days" if hasattr(meta, 'duration_days') else "")
 print(f"Tracked thresholds: {meta.confidence_levels}")
 print(f"Hours/day: {meta.hours_per_day}")
 if meta.team_size:
@@ -285,17 +417,20 @@ Represents a single work item in the project network.
 - `name`: str — Human-readable task name
 - `description`: str | None — Optional task description
 - `estimate`: `TaskEstimate` — Duration estimate
-- `dependencies`: `list[str]` — List of task IDs this task depends on
+- `dependencies`: list[str] — List of task IDs this task depends on
 - `uncertainty_factors`: `UncertaintyFactors | None` — Optional uncertainty adjustments
-- `resources`: `list[str]` — Required resource names
-- `max_resources`: int | None — Maximum number of resources that can be assigned
-- `min_experience_level`: str | None — Minimum experience level required
+- `resources`: list[str] — Required resource names
+- `max_resources`: int — Maximum number of resources that can be assigned (default: 1)
+- `min_experience_level`: int — Minimum experience level required (1, 2, or 3; default: 1)
 - `planning_story_points`: int | None — Story points override for sprint planning
-- `risks`: `list[Risk]` — Task-specific risks
+- `priority`: int | None — Scheduling priority hint
+- `spillover_probability_override`: float | None — Override for sprint spillover probability (0.0–1.0)
+- `risks`: list[Risk] — Task-specific risks
 
 **Key methods:**
 
 - `has_dependency(task_id: str) -> bool` — Check if this task depends on another task
+- `get_planning_story_points() -> int | None` — Return sprint-planning story points (falls back to `estimate.story_points`)
 
 **Example:**
 
@@ -332,13 +467,13 @@ Supports four estimation styles:
 
 **Key fields:**
 
-- `distribution`: DistributionType | None — Override the default distribution for this task
+- `distribution`: `DistributionType | None` — Override the default distribution for this task
 - `low`: float | None — Minimum hours (optimistic)
 - `expected`: float | None — Best estimate in hours
 - `high`: float | None — Maximum hours (pessimistic)
-- `t_shirt_size`: str | None — Size token (XS, S, M, L, XL, XXL)
+- `t_shirt_size`: str | None — Size token (e.g. `"XS"`, `"S"`, `"M"`, `"L"`, `"XL"`, `"XXL"`, or `"category.size"`)
 - `story_points`: int | None — Story point value
-- `unit`: EffortUnit | None — Effort unit (hours, days, weeks)
+- `unit`: `EffortUnit | None` — Effort unit (`"hours"`, `"days"`, `"weeks"`). Must not be set when using symbolic estimates (T-shirt or story points) — the unit comes from configuration.
 
 **Example:**
 
@@ -364,20 +499,21 @@ Represents task-level or project-level risk.
 
 **Risk fields:**
 
-- `description`: str — Risk description
+- `id`: str — Unique risk identifier
+- `name`: str — Human-readable risk name
 - `probability`: float — Probability this risk occurs (0.0 to 1.0)
-- `impact`: float | RiskImpact — Impact when risk happens
-- `contingency`: float | None — Optional time contingency for specific risks
+- `impact`: float | `RiskImpact` — Impact when risk happens (float is treated as hours)
+- `description`: str | None — Optional description
 
 **RiskImpact fields:**
 
-- `type`: ImpactType — "percentage" or "absolute"
+- `type`: `ImpactType` — `"percentage"` or `"absolute"`
 - `value`: float — Percentage (0–100) or absolute hours
-- `unit`: EffortUnit | None — Unit only relevant for absolute impacts
+- `unit`: `EffortUnit | None` — Unit only relevant for absolute impacts
 
 **Risk methods:**
 
-- `get_impact_value(base_duration: float = 0.0) -> float` — Calculate numeric impact in hours
+- `get_impact_value(base_duration: float = 0.0, hours_per_day: float = 8.0) -> float` — Calculate numeric impact in hours
 
 **Example:**
 
@@ -385,7 +521,7 @@ Represents task-level or project-level risk.
 # Access project-level risks
 for risk in project.project_risks:
     impact = risk.get_impact_value()
-    print(f"Project risk: {risk.description}")
+    print(f"Project risk: {risk.name}")
     print(f"  Probability: {risk.probability * 100:.0f}%")
     print(f"  Impact: {impact:.1f} hours")
 
@@ -393,45 +529,58 @@ for risk in project.project_risks:
 for task in project.tasks:
     for risk in task.risks:
         impact = risk.get_impact_value(base_duration=task.estimate.expected)
-        print(f"Task {task.id} risk: {risk.description}")
+        print(f"Task {task.id} risk: {risk.name}")
         print(f"  Probability: {risk.probability * 100:.0f}%")
         print(f"  Impact: {impact:.1f} hours")
 ```
 
 ### `ResourceSpec`
 
-Defines a named resource pool that can be assigned to tasks.
+Defines an individual resource (team member) that can be assigned to tasks.
 
 **Key fields:**
 
-- `name`: str — Resource name (e.g., "Backend Developer", "QA")
-- `capacity`: int | float — Total availability (persons or person-hours)
-- `costs_per_hour`: float | None — Cost per hour (optional)
+- `name`: str | None — Resource name (e.g. `"Alice"`, `"Backend Developer"`). Auto-generated if omitted.
+- `id`: str | None — Legacy identifier (used as fallback for `name`)
+- `availability`: float — Fraction of time available (0.0–1.0, default: 1.0)
+- `calendar`: str — Calendar identifier to use (default: `"default"`)
+- `experience_level`: int — Skill level: 1 (junior), 2 (mid), or 3 (senior). Default: 2
+- `productivity_level`: float — Productivity multiplier (0.1–2.0, default: 1.0)
+- `sickness_prob`: float — Probability of absence per scheduling unit (0.0–1.0, default: 0.0)
+- `planned_absence`: list[date] — Specific dates this resource is unavailable
 
 **Example:**
 
 ```python
 for resource in project.resources:
     print(f"Resource: {resource.name}")
-    print(f"  Capacity: {resource.capacity}")
-    if resource.costs_per_hour:
-        print(f"  Cost/hour: ${resource.costs_per_hour}")
+    print(f"  Availability: {resource.availability * 100:.0f}%")
+    print(f"  Experience level: {resource.experience_level}")
+    print(f"  Calendar: {resource.calendar}")
+    if resource.planned_absence:
+        print(f"  Planned absence: {len(resource.planned_absence)} days")
 ```
 
 ### `CalendarSpec`
 
-Defines a calendar for holidays, vacation, or maintenance windows.
+Defines a working calendar for scheduling.
 
 **Key fields:**
 
-- `name`: str — Calendar identifier
-- `periods`: list of exclusion periods (vacation, holidays, etc.)
+- `id`: str — Calendar identifier (default: `"default"`)
+- `work_hours_per_day`: float — Working hours per day (default: 8.0)
+- `work_days`: list[int] — Working days of the week, where 1=Monday through 7=Sunday (default: `[1, 2, 3, 4, 5]`)
+- `holidays`: list[date] — Specific non-working dates
 
 **Example:**
 
 ```python
 for calendar in project.calendars:
-    print(f"Calendar: {calendar.name}")
+    print(f"Calendar: {calendar.id}")
+    print(f"  Work hours/day: {calendar.work_hours_per_day}")
+    print(f"  Work days: {calendar.work_days}")
+    if calendar.holidays:
+        print(f"  Holidays: {len(calendar.holidays)} days")
 ```
 
 ### `UncertaintyFactors`
@@ -440,13 +589,13 @@ Applies multipliers to adjust base task duration based on project characteristic
 
 **Supported fields:**
 
-- `team_experience`: "high" | "medium" | "low"
-- `requirements_maturity`: "high" | "medium" | "low"
-- `technical_complexity`: "low" | "medium" | "high"
-- `team_distribution`: "colocated" | "distributed"
-- `integration_complexity`: "low" | "medium" | "high"
+- `team_experience`: `"high"` | `"medium"` | `"low"`
+- `requirements_maturity`: `"high"` | `"medium"` | `"low"`
+- `technical_complexity`: `"low"` | `"medium"` | `"high"`
+- `team_distribution`: `"colocated"` | `"distributed"`
+- `integration_complexity`: `"low"` | `"medium"` | `"high"`
 
-Each is optional; only specified factors affect the task estimate.
+Each is optional; only specified factors affect the task estimate. The actual multiplier values are defined in `Config.uncertainty_factors`.
 
 **Example:**
 
@@ -461,16 +610,93 @@ for task in project.tasks:
             print(f"  Technical complexity: {factors.technical_complexity}")
 ```
 
+### Sprint Planning Models
+
+These models define the sprint-planning input configuration. They are populated from the `sprint_planning:` block in a project YAML file.
+
+#### `SprintPlanningSpec`
+
+Top-level sprint planning configuration.
+
+**Key fields:**
+
+- `enabled`: bool — Whether sprint planning is active (default: `False`)
+- `sprint_length_weeks`: int — Length of each sprint in weeks
+- `capacity_mode`: `SprintCapacityMode` — `"story_points"` or `"tasks"`
+- `history`: list[`SprintHistoryEntry`] — Historical sprint outcomes (minimum 2 usable rows required)
+- `planning_confidence_level`: float — Confidence level for commitment guidance (0–1)
+- `removed_work_treatment`: `RemovedWorkTreatment` — `"churn_only"` or `"reduce_backlog"`
+- `future_sprint_overrides`: list[`FutureSprintOverrideSpec`] — Per-sprint capacity adjustments
+- `volatility_overlay`: `SprintVolatilitySpec` — Sprint disruption model
+- `spillover`: `SprintSpilloverSpec` — Task spillover model
+- `velocity_model`: `SprintVelocityModel` — `"empirical"` or `"neg_binomial"`
+- `sickness`: `SprintSicknessSpec` — Per-person sickness model
+
+#### `SprintHistoryEntry`
+
+One historical sprint outcome row.
+
+**Key fields:**
+
+- `sprint_id`: str — Unique identifier for this sprint
+- `sprint_length_weeks`: int | None — Override sprint length (defaults to parent)
+- `completed_story_points`: float | None — Story points completed (mutually exclusive with `completed_tasks`)
+- `completed_tasks`: int | None — Tasks completed (mutually exclusive with `completed_story_points`)
+- `spillover_story_points`: float — Unfinished story points carried over (default: 0)
+- `spillover_tasks`: int — Unfinished tasks carried over (default: 0)
+- `added_story_points` / `added_tasks`: float / int — Work added mid-sprint (default: 0)
+- `removed_story_points` / `removed_tasks`: float / int — Work removed mid-sprint (default: 0)
+- `holiday_factor`: float — Capacity adjustment for holidays (default: 1.0)
+- `end_date`: date | None — Sprint end date
+- `team_size`: int | None — Team size during this sprint
+- `notes`: str | None — Free-text notes
+
+#### `SprintVolatilitySpec`
+
+Sprint-level disruption overlay (unexpected events reducing capacity).
+
+**Key fields:**
+
+- `enabled`: bool (default: `False`)
+- `disruption_probability`: float — Probability of disruption per sprint
+- `disruption_multiplier_low` / `disruption_multiplier_expected` / `disruption_multiplier_high`: float — Triangular distribution for capacity reduction
+
+#### `SprintSpilloverSpec`
+
+Task-level execution spillover model.
+
+**Key fields:**
+
+- `enabled`: bool (default: `False`)
+- `model`: `SprintSpilloverModel` — `"table"` or `"logistic"`
+- `size_reference_points`: float — Reference point size for scaling
+- `size_brackets`: list[`SprintSpilloverBracketSpec`] — Table-model probability brackets
+- `consumed_fraction_alpha` / `consumed_fraction_beta`: float — Beta distribution parameters for consumed fraction
+- `logistic_slope` / `logistic_intercept`: float — Logistic model parameters
+
+#### `SprintSicknessSpec`
+
+Per-person sickness model for sprint capacity.
+
+**Key fields:**
+
+- `enabled`: bool (default: `False`)
+- `team_size`: int | None — Override team size for sickness calculations
+- `probability_per_person_per_week`: float — Sickness probability
+- `duration_log_mu` / `duration_log_sigma`: float — Log-normal parameters for sickness duration
+
 ### Enums
 
-The following enums are also part of the model API:
+The following enums are part of the model API:
 
-- `DistributionType` — "triangular" or "lognormal"
-- `ImpactType` — "percentage" or "absolute"
-- `EffortUnit` — "hours", "days", or "weeks"
-- `SprintCapacityMode` — "story_points" or "tasks"
-- `SprintVelocityModel` — "empirical" or "neg_binomial"
-- `RemovedWorkTreatment` — "churn_only" or "reduce_backlog"
+- `DistributionType` — `"triangular"` or `"lognormal"`
+- `ImpactType` — `"percentage"` or `"absolute"`
+- `EffortUnit` — `"hours"`, `"days"`, or `"weeks"`
+- `SprintCapacityMode` — `"story_points"` or `"tasks"`
+- `SprintVelocityModel` — `"empirical"` or `"neg_binomial"`
+- `SprintSpilloverModel` — `"table"` or `"logistic"`
+- `RemovedWorkTreatment` — `"churn_only"` or `"reduce_backlog"`
+- `ConstrainedSchedulingAssignmentMode` — `"greedy_single_pass"` or `"criticality_two_pass"`
 
 ## Simulation Results Models
 
@@ -484,7 +710,8 @@ Holds the complete output of a Monte Carlo simulation run, including all percent
 - `iterations`: int — Number of iterations run
 - `random_seed`: int | None — Seed used for reproducibility
 - `hours_per_day`: float — Hours per calendar day
-- `schedule_mode`: str — "dependency_only" or "constrained"
+- `start_date`: date | None — Project start date (for delivery date calculations)
+- `schedule_mode`: str — `"dependency_only"` or `"constrained"`
 - `resource_constraints_active`: bool — Whether resource-constrained scheduling was used
 - `mean`: float — Mean project duration (hours)
 - `median`: float — Median project duration (hours)
@@ -493,10 +720,11 @@ Holds the complete output of a Monte Carlo simulation run, including all percent
 - `max_duration`: float — Maximum observed duration
 - `skewness`: float — Skewness of the distribution
 - `kurtosis`: float — Excess kurtosis of the distribution
-- `percentiles`: Dict[int, float] — Per-percentile duration (hours)
-- `effort_percentiles`: Dict[int, float] — Per-percentile total effort (person-hours)
+- `percentiles`: dict[int, float] — Per-percentile duration (hours)
+- `effort_percentiles`: dict[int, float] — Per-percentile total effort (person-hours)
 - `effort_durations`: np.ndarray — Per-iteration total effort (project-wide)
-- `task_slack`: Dict[str, float] — Mean schedule slack per task (hours)
+- `sensitivity`: dict[str, float] — Per-task Spearman rank correlation with total duration
+- `task_slack`: dict[str, float] — Mean schedule slack per task (hours)
 - `max_parallel_tasks`: int — Peak parallel task count
 - `resource_wait_time_hours`: float — Total wait time caused by resource unavailability
 - `resource_utilization`: float — Average resource utilization (0.0–1.0)
@@ -506,13 +734,15 @@ Holds the complete output of a Monte Carlo simulation run, including all percent
 **Key methods:**
 
 - **`percentile(p: int) -> float`** — Get calendar duration for a specific percentile
+- **`effort_percentile(p: int) -> float`** — Get total effort for a specific percentile
 - **`probability_of_completion(target_hours: float) -> float`** — Calculate probability of finishing within a target duration
-- **`delivery_date(effort_hours: float) -> date | None`** — Convert project duration to a calendar date
-- **`get_critical_path() -> Dict[str, float]`** — Per-task criticality index (0.0–1.0, frequency on critical path)
-- **`get_critical_path_sequences(limit: int) -> list[CriticalPathRecord]`** — Most frequent full paths (up to `limit`)
+- **`hours_to_working_days(hours: float) -> int`** — Convert hours to working days (ceiling rounding)
+- **`delivery_date(effort_hours: float) -> date | None`** — Convert project duration to a calendar date (skips weekends)
+- **`get_critical_path() -> dict[str, float]`** — Per-task criticality index (0.0–1.0, frequency on critical path)
+- **`get_critical_path_sequences(top_n: int | None = None) -> list[CriticalPathRecord]`** — Most frequent full paths (up to `top_n`)
 - **`get_most_frequent_critical_path() -> CriticalPathRecord | None`** — Single most common critical path
-- **`get_histogram_data(bins: int = 50) -> Tuple[np.ndarray, np.ndarray]`** — Bin edges and counts for distribution visualization
-- **`get_risk_impact_summary() -> Dict[str, Dict[str, float]]`** — Per-task risk triggering and impact statistics
+- **`get_histogram_data(bins: int = 50) -> tuple[np.ndarray, np.ndarray]`** — Bin edges and counts for distribution visualization
+- **`get_risk_impact_summary() -> dict[str, dict[str, float]]`** — Per-task risk triggering and impact statistics
 - **`total_effort_hours() -> float`** — Sum of all task base estimates
 - **`to_dict() -> dict[str, Any]`** — Serialize results to a dictionary
 
@@ -581,68 +811,6 @@ if results.two_pass_trace and results.two_pass_trace.enabled:
     print(f"  P50 delta: {results.two_pass_trace.delta_p50_hours:+.1f} hours")
 ```
 
-### `SprintPlanningResults`
-
-Result model for sprint-planning simulations, bridging between project-level simulation and sprint-by-sprint forecasting.
-
-Import path:
-
-```python
-from mcprojsim.models.sprint_simulation import SprintPlanningResults
-```
-
-**Key properties:**
-
-- `project_name`: str — Name of the project
-- `iterations`: int — Number of Monte Carlo iterations
-- `mean`: float — Mean total sprint count to completion
-- `median`: float — Median total sprint count
-- `std_dev`: float — Standard deviation of sprint count
-- `percentiles`: Dict[int, float] — Sprint count per percentile
-- `date_percentiles`: Dict[int, date | None] — Calendar dates corresponding to percentiles
-- `sprint_length_weeks`: float — Length of each sprint
-- `planned_commitment_guidance`: float — Recommended capacity units per sprint
-- `historical_diagnostics`: dict — Statistics from historical data (when available)
-- `disruption_statistics`: dict — Disruption event statistics
-- `carryover_statistics`: dict — Carryover (incomplete work) statistics
-- `spillover_statistics`: dict — Task spillover statistics
-- `burnup_percentiles`: list[dict] — Per-sprint cumulative work (percentiles)
-
-**Key methods:**
-
-- **`percentile(p: int) -> float`** — Total sprint count for a percentile
-- **`date_percentile(p: int) -> date | None`** — Calendar date for a percentile
-- **`delivery_date_for_sprints(sprint_count: float) -> date | None`** — Convert sprint count to calendar date
-- **`to_dict() -> dict[str, Any]`** — Serialize to dictionary
-
-**Example: Sprint Planning Results**
-
-```python
-from mcprojsim.planning.sprint_engine import SprintSimulationEngine
-
-# Setup
-project = YAMLParser().parse_file("sprint_project.yaml")
-engine = SprintSimulationEngine(iterations=5000, random_seed=42)
-results = engine.run(project)
-
-# Sprint count distribution
-print(f"Mean duration: {results.mean:.1f} sprints")
-print(f"P50 duration: {results.percentile(50):.1f} sprints")
-print(f"P80 duration: {results.percentile(80):.1f} sprints")
-
-# Calendar predictions
-print(f"P80 completion date: {results.date_percentile(80)}")
-
-# Commitment guidance
-print(f"Recommended sprint capacity: {results.planned_commitment_guidance:.1f} units/sprint")
-
-# Historical diagnostics (if history was provided)
-if results.historical_diagnostics:
-    hist = results.historical_diagnostics
-    print(f"Historical velocity: mean {hist.get('velocity_mean', 0):.1f}")
-    print(f"Historical observations: {hist.get('observation_count', 0)}")
-```
-
 ## Parsers
 
 ### `YAMLParser`
@@ -682,27 +850,27 @@ Application-wide configuration for simulation settings, output formatting, uncer
 
 **Top-level fields:**
 
-- `uncertainty_factors`: Dict[str, Dict[str, float]] — Multipliers for uncertainty factors
-- `t_shirt_sizes`: Dict[str, Dict[str, TShirtSizeConfig]] — T-shirt size mappings by category
+- `uncertainty_factors`: dict[str, dict[str, float]] — Multipliers for uncertainty factors
+- `t_shirt_sizes`: dict[str, dict[str, TShirtSizeConfig]] — T-shirt size mappings by category
 - `t_shirt_size_default_category`: str — Default category for bare T-shirt sizes
-- `t_shirt_size_unit`: EffortUnit — Unit for T-shirt sizes
-- `story_points`: Dict[int, StoryPointConfig] — Story point mappings
-- `story_point_unit`: EffortUnit — Unit for story points
+- `t_shirt_size_unit`: `EffortUnit` — Unit for T-shirt sizes
+- `story_points`: dict[int, StoryPointConfig] — Story point mappings
+- `story_point_unit`: `EffortUnit` — Unit for story points
 - `simulation`: `SimulationConfig` — Simulation defaults
-- `lognormal`: `LognormalConfig` — Log-normal distribution settings
+- `lognormal`: `LogNormalConfig` — Log-normal distribution settings
 - `output`: `OutputConfig` — Output and export settings
 - `staffing`: `StaffingConfig` — Staffing analysis configuration
 - `constrained_scheduling`: `ConstrainedSchedulingConfig` — Resource-constrained settings
-- `sprint_defaults`: `SprintDef aultsConfig` — Sprint planning defaults
+- `sprint_defaults`: `SprintDefaultsConfig` — Sprint planning defaults
 
 **Key methods:**
 
 - **`Config.load_from_file(config_path: Path | str) -> Config`** — Load from YAML config file
 - **`Config.get_default() -> Config`** — Get built-in defaults
 - **`get_uncertainty_multiplier(factor_name: str, level: str) -> float`** — Look up factor multiplier
-- **`get_t_shirt_size(size: str) -> TShirtSizeConfig | None`** — Resolve a T-shirt size
+- **`get_t_shirt_size(size: str) -> TShirtSizeConfig | None`** — Resolve a T-shirt size (returns `None` on invalid input)
+- **`resolve_t_shirt_size(size: str) -> TShirtSizeConfig`** — Resolve a T-shirt size (raises `ValueError` on invalid input)
 - **`get_t_shirt_categories() -> list[str]`** — List all T-shirt categories
-- **`resolve_t_shirt_size(size: str) -> TShirtSizeConfig`** — Resolve with error handling
 - **`get_story_point(points: int) -> StoryPointConfig | None`** — Resolve story points
 - **`get_lognormal_high_z_value() -> float`** — Get Z-score for log-normal estimation
 
@@ -740,20 +908,41 @@ print(f"Default histogram bins: {config.output.histogram_bins}")
 print(f"Critical path limit: {config.output.critical_path_report_limit}")
 ```
 
-### `OutputConfig`
+### Config Sub-Models
+
+#### `TShirtSizeConfig` / `StoryPointConfig`
+
+Both inherit from `EstimateRangeConfig` and contain:
+
+- `low`: float — Optimistic estimate
+- `expected`: float — Best estimate
+- `high`: float — Pessimistic estimate
+
+Returned by `config.get_t_shirt_size()` and `config.get_story_point()`.
+
+#### `ExperienceProfileConfig`
+
+Productivity and overhead parameters for an experience profile.
+
+- `productivity_factor`: float — Effective output multiplier (default: 1.0)
+- `communication_overhead`: float — Fraction of capacity lost to coordination (0.0–1.0, default: 0.06)
+
+Used inside `StaffingConfig.experience_profiles`.
+
+#### `OutputConfig`
 
 Settings for simulation output and export behavior.
 
 **Fields:**
 
-- `formats`: list[str] — Default export formats ("json", "csv", "html")
+- `formats`: list[str] — Default export formats (`"json"`, `"csv"`, `"html"`)
 - `include_histogram`: bool — Include histogram data in exports
 - `histogram_bins`: int — Number of bins for histogram charts (default: 50)
 - `critical_path_report_limit`: int — Max critical path sequences to show (default: 2)
 
 **Histogram binning note:** The `histogram_bins` setting is used by all exporters when generating distribution charts in JSON, CSV, and HTML reports. You can also override this per-run via the `--number-bins` CLI flag.
 
-### `SimulationConfig`
+#### `SimulationConfig`
 
 Defaults for simulation runs.
 
@@ -763,17 +952,23 @@ Defaults for simulation runs.
 - `random_seed`: int | None — Default seed
 - `max_stored_critical_paths`: int — Maximum distinct paths to track (default: 20)
 
-### `StaffingConfig`
+#### `LogNormalConfig`
+
+Shifted log-normal interpretation settings.
+
+**Fields:**
+
+- `high_percentile`: int — The percentile the "high" estimate maps to (allowed: specific Z-score-mapped values)
+
+#### `StaffingConfig`
 
 Configuration for staffing recommendations.
 
 **Fields:**
 
-- `effort_percentile`: int | None — Percentile to base staffing on (e.g., 80 for P80)
-- `min_individual_productivity`: float — Minimum productivity per person
-- `experience_profiles`: Dict[str, ExperienceProfileConfig] — Named team profiles
-
-When `effort_percentile` is omitted, staffing uses mean effort. When set, it uses that percentile for both total effort and elapsed time, providing more conservative recommendations.
+- `effort_percentile`: int | None — Percentile to base staffing on (e.g., 80 for P80). When `None` (default), mean effort is used.
+- `min_individual_productivity`: float — Floor for individual productivity after communication overhead (default: 0.25)
+- `experience_profiles`: dict[str, ExperienceProfileConfig] — Named team profiles. Default profiles: `"senior"`, `"mixed"`, `"junior"`.
 
 **Example:**
 
@@ -786,15 +981,31 @@ engine = SimulationEngine(iterations=10000, config=config)
 results = engine.run(project)
 ```
 
-### `ConstrainedSchedulingConfig`
+#### `ConstrainedSchedulingConfig`
 
 Settings for resource-constrained scheduling.
 
 **Fields:**
 
-- `sickness_prob`: float — Probability of resource illness
-- `assignment_mode`: str — "greedy_single_pass" or "criticality_two_pass"
-- `pass1_iterations`: int — Iterations for criticality ranking (two-pass only)
+- `sickness_prob`: float — Default per-resource sickness probability (default: 0.0)
+- `assignment_mode`: `ConstrainedSchedulingAssignmentMode` — `"greedy_single_pass"` (default) or `"criticality_two_pass"`
+- `pass1_iterations`: int — Iterations for criticality ranking in two-pass mode
+
+#### `SprintDefaultsConfig`
+
+Company-wide defaults for sprint-planning behavior.
+
+**Fields:**
+
+- `planning_confidence_level`: float — Default confidence for commitment guidance
+- `removed_work_treatment`: `"churn_only"` | `"reduce_backlog"`
+- `velocity_model`: `"empirical"` | `"neg_binomial"`
+- `volatility_disruption_probability`: float — Default disruption probability
+- `volatility_disruption_multiplier_low` / `_expected` / `_high`: float — Default disruption multipliers
+- `spillover_model` / `spillover_size_reference_points` / `spillover_size_brackets`: various — Default spillover settings
+- `spillover_consumed_fraction_alpha` / `_beta`: float — Beta distribution defaults
+- `spillover_logistic_slope` / `_intercept`: float — Logistic model defaults
+- `sickness`: `SprintSicknessDefaultsConfig` — Company-wide sickness defaults
 
 ## Exporters
 
@@ -806,7 +1017,7 @@ Exports comprehensive results including all percentiles, statistics, histogram d
 
 **Method:**
 
-- `export(results: SimulationResults, output_path: Path | str, config: Config | None = None, critical_path_limit: int | None = None, sprint_results: SprintPlanningResults | None = None, include_historic_base: bool = False) -> None`
+- `export(results: SimulationResults, output_path: Path | str, config: Config | None = None, critical_path_limit: int | None = None, sprint_results: SprintPlanningResults | None = None, project: Project | None = None, include_historic_base: bool = False) -> None`
 
 **Parameters:**
 
@@ -815,6 +1026,7 @@ Exports comprehensive results including all percentiles, statistics, histogram d
 - `config` — Active configuration (used for histogram bin count and other settings)
 - `critical_path_limit` — Override number of critical paths to include (default from config)
 - `sprint_results` — Sprint planning results (optional)
+- `project` — Original project definition (optional; enables richer output)
 - `include_historic_base` — Include historic baseline data if available
 
 **Example:**
@@ -826,8 +1038,9 @@ JSONExporter.export(
     results,
     "results.json",
     config=config,
+    project=project,
     critical_path_limit=5,
-    sprint_results=sprint_results
+    sprint_results=sprint_results,
 )
 ```
 
@@ -839,7 +1052,13 @@ Exports results as a CSV table format: metrics, percentiles, critical paths, his
 
 - `export(results: SimulationResults, output_path: Path | str, config: Config | None = None, critical_path_limit: int | None = None, sprint_results: SprintPlanningResults | None = None) -> None`
 
-All parameters same as JSONExporter.
+**Example:**
+
+```python
+from mcprojsim.exporters import CSVExporter
+
+CSVExporter.export(results, "results.csv", config=config)
+```
 
 ### `HTMLExporter`
 
@@ -848,11 +1067,6 @@ Exports a formatted, interactive HTML report with thermometers, percentile table
 **Method:**
 
 - `export(results: SimulationResults, output_path: Path | str, project: Project | None = None, config: Config | None = None, critical_path_limit: int | None = None, sprint_results: SprintPlanningResults | None = None, include_historic_base: bool = False) -> None`
-
-**Additional parameters:**
-
-- `project` — Original project definition (enables richer task-effort display and T-shirt/story-point annotations)
-- Other parameters same as above
 
 **Key features when `project` and `config` are provided:**
 
@@ -879,7 +1093,7 @@ HTMLExporter.export(
 
 ## Analysis Helpers
 
-These specialized analysis modules were previously underdocumented. They provide focused statistical, sensitivity, and staffing analysis capabilities beyond what `SimulationResults` provides directly.
+These specialized analysis modules provide focused statistical, sensitivity, and staffing analysis capabilities beyond what `SimulationResults` provides directly.
 
 ### `StatisticalAnalyzer`
 
@@ -893,9 +1107,9 @@ from mcprojsim.analysis.statistics import StatisticalAnalyzer
 
 **Methods:**
 
-- **`calculate_statistics(durations: np.ndarray) -> Dict[str, float]`** — Returns mean, median, std_dev, min, max, coefficient of variation, skewness, excess kurtosis
-- **`calculate_percentiles(durations: np.ndarray, percentiles: list[int]) -> Dict[int, float]`** — Compute specific percentiles
-- **`confidence_interval(durations: np.ndarray, confidence: float = 0.95) -> Tuple[float, float]`** — Return lower/upper bounds for a confidence interval
+- **`calculate_statistics(durations: np.ndarray) -> dict[str, float]`** — Returns mean, median, std_dev, min, max, coefficient of variation, skewness, excess kurtosis
+- **`calculate_percentiles(durations: np.ndarray, percentiles: list[int]) -> dict[int, float]`** — Compute specific percentiles
+- **`confidence_interval(durations: np.ndarray, confidence: float = 0.95) -> tuple[float, float]`** — Return lower/upper bounds for a confidence interval
 
 ### `SensitivityAnalyzer`
 
@@ -909,8 +1123,8 @@ from mcprojsim.analysis.sensitivity import SensitivityAnalyzer
 
 **Methods:**
 
-- **`calculate_correlations(results: SimulationResults) -> Dict[str, float]`** — Per-task correlation with total duration
-- **`get_top_contributors(results: SimulationResults, n: int = 10) -> list[Tuple[str, float]]`** — Top N tasks by sensitivity
+- **`calculate_correlations(results: SimulationResults) -> dict[str, float]`** — Per-task correlation with total duration
+- **`get_top_contributors(results: SimulationResults, n: int = 10) -> list[tuple[str, float]]`** — Top N tasks by sensitivity
 
 **Example:**
 
@@ -936,7 +1150,7 @@ from mcprojsim.analysis.critical_path import CriticalPathAnalyzer
 
 **Methods:**
 
-- **`get_criticality_index(results: SimulationResults) -> Dict[str, float]`** — Same as `results.get_critical_path()`
+- **`get_criticality_index(results: SimulationResults) -> dict[str, float]`** — Same as `results.get_critical_path()`
 - **`get_most_critical_tasks(results: SimulationResults, threshold: float = 0.5) -> list[str]`** — Tasks appearing on critical path in >threshold of iterations
 - **`get_most_frequent_paths(results: SimulationResults, top_n: int | None = None) -> list[CriticalPathRecord]`** — Most common paths (wraps `results.get_critical_path_sequences()`)
 
@@ -970,9 +1184,16 @@ from mcprojsim.analysis.staffing import StaffingAnalyzer
 - **`calculate_staffing_table(results: SimulationResults, config: Config) -> list[StaffingRow]`** — Per-profile team-size recommendations
 - **`recommend_team_size(results: SimulationResults, config: Config) -> list[StaffingRecommendation]`** — Primary recommendations for each profile
 
-**Fields in `StaffingRecommendation`:**
+**`StaffingRow` fields:**
 
-- `profile`: str — Experience level name (e.g., "senior", "mixed", "junior")
+- `profile`: str — Experience level name
+- `team_size`: int — Candidate team size
+- `calendar_working_days`: int — Calendar days needed
+- `efficiency`: float — Effective capacity vs nominal team size
+
+**`StaffingRecommendation` fields:**
+
+- `profile`: str — Experience level name (e.g., `"senior"`, `"mixed"`, `"junior"`)
 - `recommended_team_size`: int — Primary recommendation
 - `total_effort_hours`: float — Total effort basis
 - `critical_path_hours`: float — Critical path duration
@@ -1013,7 +1234,7 @@ from mcprojsim.utils import Validator
 
 **Method:**
 
-- **`validate_file(file_path: str | Path) -> Tuple[bool, str]`** — Returns (is_valid, error_message). Auto-selects parser based on file extension.
+- **`validate_file(file_path: str | Path) -> tuple[bool, str]`** — Returns (is_valid, error_message). Auto-selects parser based on file extension.
 
 **Example:**
 
@@ -1037,7 +1258,7 @@ from mcprojsim.utils import setup_logging
 
 **Method:**
 
-- **`setup_logging(level: str = "WARNING") -> logging.Logger`** — Returns configured logger with specified level ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+- **`setup_logging(level: str = "INFO") -> logging.Logger`** — Returns configured logger with specified level (`"DEBUG"`, `"INFO"`, `"WARNING"`, `"ERROR"`, `"CRITICAL"`)
 
 **Example:**
 
@@ -1045,16 +1266,6 @@ from mcprojsim.utils import setup_logging
 logger = setup_logging(level="INFO")
 # Library logging now routes to this logger
 ```
-
-## Not a Stable User-Facing API?
-
-The following modules are currently imported in `mcprojsim.simulation` and `mcprojsim.utils`, but they are more internal and subject to change without deprecation. They are not intended for direct use by library consumers, but they are technically accessible if you want to experiment or build on top of them.
-
-- `mcprojsim.simulation.distributions`
-- `mcprojsim.simulation.scheduler`
-- `mcprojsim.simulation.risk_evaluator`
-- `mcprojsim.utils.logging`
-
 
 ## Natural Language Parser
 
@@ -1172,7 +1383,82 @@ results = run_comprehensive_analysis("project.yaml", "reports/")
 print(f"\nSimulation complete. Mean duration: {results.mean:.0f} hours")
 ```
 
-### Example 2: Dashboard Integration
+### Example 2: Resource-Constrained and Two-Pass Scheduling
+
+This example shows how to enable resource-constrained scheduling and two-pass mode:
+
+```python
+from datetime import date
+from mcprojsim import SimulationEngine
+from mcprojsim.config import Config
+from mcprojsim.models.project import (
+    Project, ProjectMetadata, Task, TaskEstimate,
+    ResourceSpec, CalendarSpec,
+)
+
+# Define resources and calendars
+project = Project(
+    project=ProjectMetadata(
+        name="Constrained Project",
+        start_date=date(2026, 6, 1),
+    ),
+    tasks=[
+        Task(
+            id="task_a",
+            name="Backend work",
+            estimate=TaskEstimate(low=20, expected=40, high=80),
+            resources=["dev_team"],
+        ),
+        Task(
+            id="task_b",
+            name="Frontend work",
+            estimate=TaskEstimate(low=16, expected=32, high=64),
+            resources=["dev_team"],
+        ),
+        Task(
+            id="task_c",
+            name="Integration",
+            estimate=TaskEstimate(low=8, expected=16, high=32),
+            dependencies=["task_a", "task_b"],
+            resources=["dev_team"],
+        ),
+    ],
+    resources=[
+        ResourceSpec(name="dev_team", availability=1.0, experience_level=3),
+        ResourceSpec(name="dev_team", availability=0.8, experience_level=2),
+    ],
+    calendars=[
+        CalendarSpec(
+            id="default",
+            work_hours_per_day=8.0,
+            work_days=[1, 2, 3, 4, 5],
+            holidays=[date(2026, 7, 4)],
+        ),
+    ],
+)
+
+config = Config.get_default()
+
+# Run with two-pass scheduling for better resource prioritization
+engine = SimulationEngine(
+    iterations=10000,
+    random_seed=42,
+    config=config,
+    two_pass=True,
+    pass1_iterations=2000,
+)
+results = engine.run(project)
+
+print(f"Schedule mode: {results.schedule_mode}")
+print(f"Resource utilization: {results.resource_utilization*100:.1f}%")
+print(f"Resource wait time: {results.resource_wait_time_hours:.1f} hours")
+
+if results.two_pass_trace and results.two_pass_trace.enabled:
+    delta = results.two_pass_trace
+    print(f"Two-pass P50 improvement: {delta.delta_p50_hours:+.1f} hours")
+```
+
+### Example 3: Dashboard Integration
 
 This example demonstrates integrating mcprojsim into a web dashboard:
 
@@ -1235,7 +1521,7 @@ def get_config():
     })
 ```
 
-### Example 3: Sprint Planning with Forecast
+### Example 4: Sprint Planning with Forecast
 
 This example shows sprint-planning integration:
 
@@ -1282,7 +1568,7 @@ forecast = forecast_project_completion("sprint_project.yaml")
 print(f"P80 completion: {forecast['forecasts']['p80_date']}")
 ```
 
-### Example 4: Batch Processing Multiple Projects
+### Example 5: Batch Processing Multiple Projects
 
 This example processes multiple projects and generates a portfolio view:
 
@@ -1334,7 +1620,7 @@ def analyze_portfolio(project_dir: str) -> pd.DataFrame:
 portfolio = analyze_portfolio("projects/")
 ```
 
-### Example 5: Configuration-Driven Customization
+### Example 6: Configuration-Driven Customization
 
 This example shows how to customize the simulation via configuration:
 
