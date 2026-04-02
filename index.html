@@ -1365,35 +1365,59 @@ Monte Carlo simulation replaces that number with a <strong>probability distribut
 </ul>
 <h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <h3 id="1-install">1. Install<a class="headerlink" href="#1-install" title="Permanent link">&para;</a></h3>
-<p>Install as a CLI tool with <code>pipx</code>:</p>
+<div class="admonition info">
+<p class="admonition-title">Requires Python 3.13 or newer</p>
+</div>
+<p>Install as a CLI tool with <code>pipx</code> (recommended) or <code>pip</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># If `pipx` is not installed:</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>pipx
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python3<span class="w"> </span>-m<span class="w"> </span>pipx<span class="w"> </span>ensurepath
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Install MCProjSim as a CLI tool:</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>pipx<span class="w"> </span>install<span class="w"> </span>mcprojsim<span class="w">         </span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>pipx<span class="w"> </span>install<span class="w"> </span>mcprojsim
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Or with pip:</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>pip<span class="w"> </span>install<span class="w"> </span>mcprojsim
 </span></code></pre></div>
 <p>Then verify the installation:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>mcprojsim<span class="w"> </span>--help
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>mcprojsim<span class="w"> </span>--version
 </span></code></pre></div>
 <h3 id="2-describe-your-project">2. Describe your project<a class="headerlink" href="#2-describe-your-project" title="Permanent link">&para;</a></h3>
-<p>Create a file <code>project.yaml</code> (or let MCProjSim <a href="user_guide/running_simulations/">generate one from plain text</a>):</p>
+<p>Create a file <code>project.yaml</code> (or let MCProjSim <a href="user_guide/getting_started/">generate one from plain text</a>):</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">project</span><span class="p">:</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;My</span><span class="nv"> </span><span class="s">Project&quot;</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">start_date</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2025-11-01&quot;</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nt">tasks</span><span class="p">:</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_001&quot;</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Backend</span><span class="nv"> </span><span class="s">API&quot;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;design&quot;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;System</span><span class="nv"> </span><span class="s">Design&quot;</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="nt">uncertainty_factors</span><span class="p">:</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="nt">team_experience</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">      </span><span class="nt">technical_complexity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;backend&quot;</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Backend</span><span class="nv"> </span><span class="s">API&quot;</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;design&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="nt">uncertainty_factors</span><span class="p">:</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">      </span><span class="nt">team_experience</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;medium&quot;</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">      </span><span class="nt">technical_complexity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;frontend&quot;</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Frontend</span><span class="nv"> </span><span class="s">UI&quot;</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;design&quot;</span><span class="p p-Indicator">]</span>
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7</span>
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span></code></pre></div>
 <h3 id="3-run-read-the-results">3. Run &amp; read the results<a class="headerlink" href="#3-run-read-the-results" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--table
@@ -1441,6 +1465,14 @@ See <a href="user_guide/interpreting_results/">Interpreting Results</a> for a de
 <td>Automatic critical path detection, schedule slack calculation</td>
 </tr>
 <tr>
+<td><strong>Resource-constrained scheduling</strong></td>
+<td>Finite team capacity, sickness &amp; absence modeling, working calendars with holidays</td>
+</tr>
+<tr>
+<td><strong>Sprint planning</strong></td>
+<td>Sprint-based Monte Carlo forecasting with historical velocity, disruption overlays, and spillover modeling</td>
+</tr>
+<tr>
 <td><strong>Risk modeling</strong></td>
 <td>Task-level and project-level risks with probability and impact</td>
 </tr>
@@ -1450,19 +1482,19 @@ See <a href="user_guide/interpreting_results/">Interpreting Results</a> for a de
 </tr>
 <tr>
 <td><strong>Analysis</strong></td>
-<td>Sensitivity (Spearman ρ), skewness, kurtosis, CV, probability-of-date</td>
+<td>Sensitivity (Spearman ρ), staffing recommendations, skewness, kurtosis, CV, probability-of-date</td>
 </tr>
 <tr>
 <td><strong>Output</strong></td>
 <td>CLI (plain or <code>--table</code>), JSON, CSV, HTML reports</td>
 </tr>
 <tr>
-<td><strong>AI integration</strong></td>
-<td>Built-in <a href="user_guide/mcp-server/">MCP server</a> for use with GitHub Copilot, Claude Desktop, and other MCP clients</td>
+<td><strong>Input formats</strong></td>
+<td>YAML and TOML project files, or generate from natural-language descriptions with <code>mcprojsim generate</code></td>
 </tr>
 <tr>
-<td><strong>NL input</strong></td>
-<td>Generate project files from natural-language descriptions with <code>mcprojsim generate</code></td>
+<td><strong>AI integration</strong></td>
+<td>Built-in <a href="user_guide/mcp-server/">MCP server</a> for use with GitHub Copilot, Claude Desktop, and other MCP clients</td>
 </tr>
 </tbody>
 </table>
@@ -1501,8 +1533,28 @@ See <a href="user_guide/interpreting_results/">Interpreting Results</a> for a de
 </thead>
 <tbody>
 <tr>
+<td><a href="user_guide/project_files/">Project Files</a></td>
+<td>YAML and TOML project file format reference</td>
+</tr>
+<tr>
+<td><a href="user_guide/task_estimation/">Task Estimation</a></td>
+<td>Three-point, T-shirt, and story-point estimation styles</td>
+</tr>
+<tr>
+<td><a href="user_guide/risks/">Risk Modeling</a></td>
+<td>Defining task-level and project-level risks</td>
+</tr>
+<tr>
 <td><a href="user_guide/running_simulations/">Running Simulations</a></td>
 <td>CLI options: <code>--table</code>, <code>--verbose</code>, <code>--target-date</code>, export formats</td>
+</tr>
+<tr>
+<td><a href="user_guide/constrained/">Constrained Scheduling</a></td>
+<td>Resource limits, calendars, sickness, and two-pass scheduling</td>
+</tr>
+<tr>
+<td><a href="user_guide/sprint_planning/">Sprint Planning</a></td>
+<td>Sprint-based forecasting with historical velocity data</td>
 </tr>
 <tr>
 <td><a href="user_guide/interpreting_results/">Interpreting Results</a></td>
