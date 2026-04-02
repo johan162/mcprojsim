@@ -26,7 +26,9 @@ Beyond schedule ranges, MCProjSim also tells you **why** a schedule might slip:
 
 ### 1. Install
 
-Install as a CLI tool with `pipx`:
+!!! info "Requires Python 3.13 or newer"
+
+Install as a CLI tool with `pipx` (recommended) or `pip`:
 
 ```bash
 # If `pipx` is not installed:
@@ -34,7 +36,10 @@ python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 
 # Install MCProjSim as a CLI tool:
-pipx install mcprojsim         
+pipx install mcprojsim
+
+# Or with pip:
+pip install mcprojsim
 ```
 
 Then verify the installation:
@@ -46,7 +51,7 @@ mcprojsim --version
 
 ### 2. Describe your project
 
-Create a file `project.yaml` (or let MCProjSim [generate one from plain text](user_guide/running_simulations.md)):
+Create a file `project.yaml` (or let MCProjSim [generate one from plain text](user_guide/getting_started.md)):
 
 ```yaml
 project:
@@ -54,8 +59,17 @@ project:
   start_date: "2025-11-01"
 
 tasks:
-  - id: "task_001"
+  - id: "design"
+    name: "System Design"
+    estimate:
+      low: 3
+      expected: 5
+      high: 10
+      unit: "days"
+
+  - id: "backend"
     name: "Backend API"
+    dependencies: ["design"]
     estimate:
       low: 5
       expected: 8
@@ -64,6 +78,15 @@ tasks:
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "high"
+
+  - id: "frontend"
+    name: "Frontend UI"
+    dependencies: ["design"]
+    estimate:
+      low: 4
+      expected: 7
+      high: 12
+      unit: "days"
 ```
 
 ### 3. Run & read the results
@@ -103,12 +126,14 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 | **Estimation** | Three-point estimates (min / most likely / max), T-shirt sizes, story points — in hours, days, or weeks |
 | **Simulation** | Triangular & log-normal distributions, configurable iteration count, reproducible seeds |
 | **Dependencies & scheduling** | Automatic critical path detection, schedule slack calculation |
+| **Resource-constrained scheduling** | Finite team capacity, sickness & absence modeling, working calendars with holidays |
+| **Sprint planning** | Sprint-based Monte Carlo forecasting with historical velocity, disruption overlays, and spillover modeling |
 | **Risk modeling** | Task-level and project-level risks with probability and impact |
 | **Uncertainty factors** | Team experience, requirements maturity, technical complexity, and more |
-| **Analysis** | Sensitivity (Spearman ρ), skewness, kurtosis, CV, probability-of-date |
+| **Analysis** | Sensitivity (Spearman ρ), staffing recommendations, skewness, kurtosis, CV, probability-of-date |
 | **Output** | CLI (plain or `--table`), JSON, CSV, HTML reports |
+| **Input formats** | YAML and TOML project files, or generate from natural-language descriptions with `mcprojsim generate` |
 | **AI integration** | Built-in [MCP server](user_guide/mcp-server.md) for use with GitHub Copilot, Claude Desktop, and other MCP clients |
-| **NL input** | Generate project files from natural-language descriptions with `mcprojsim generate` |
 
 ## Where to go next
 
@@ -144,7 +169,12 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 
 | Resource | Description |
 |---|---|
+| [Project Files](user_guide/project_files.md) | YAML and TOML project file format reference |
+| [Task Estimation](user_guide/task_estimation.md) | Three-point, T-shirt, and story-point estimation styles |
+| [Risk Modeling](user_guide/risks.md) | Defining task-level and project-level risks |
 | [Running Simulations](user_guide/running_simulations.md) | CLI options: `--table`, `--verbose`, `--target-date`, export formats |
+| [Constrained Scheduling](user_guide/constrained.md) | Resource limits, calendars, sickness, and two-pass scheduling |
+| [Sprint Planning](user_guide/sprint_planning.md) | Sprint-based forecasting with historical velocity data |
 | [Interpreting Results](user_guide/interpreting_results.md) | How to read confidence intervals, sensitivity, slack, and risk impact |
 | [MCP Server](user_guide/mcp-server.md) | Use MCProjSim as an AI-powered simulation tool from your editor |
 | [API Reference](api_reference.md) | Integrate MCProjSim into your own Python scripts |
