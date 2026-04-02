@@ -59,7 +59,7 @@ DESIGN_IDEAS_DIR := .
 # it will have a placeholder for content injection and some basic styling, 
 # but the content will be generated from the respective markdown files 
 # for each design document
-DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template.tex
+DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template_dark.tex
 
 # Derived variable generator for one design document.
 # Args:
@@ -154,7 +154,7 @@ $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_D
 	fi; \
 	cp $$($1_PDF_BUILT) $$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf; \
 	touch $$($1_STAMP); \
-#	rm -rf $$($1_BUILD_DIR); \
+#	rm -rf $$($1_BUILD_DIR);
 	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$(DIST_DIR)/$$($1_BASENAME)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
 
