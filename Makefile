@@ -148,6 +148,7 @@ USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
 USER_GUIDE_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_b5.tex
 USER_GUIDE_DARK_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark.tex
 USER_GUIDE_DARK_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark_b5.tex
+USER_GUIDE_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
 
 USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-$(VERSION).pdf
 USER_GUIDE_B5_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-b5-$(VERSION).pdf
@@ -517,12 +518,13 @@ pdf:  ## Build the user guide in all PDF variants (A4 light/dark, B5 light/dark)
 # ============================================================================================
 # Macro: BUILD_USER_GUIDE_PDF
 # Shared recipe for every User Guide PDF variant. Call via $(eval $(call BUILD_USER_GUIDE_PDF,...)).
-# $(1) = LaTeX template base name
+# $(1) = variable name prefix (e.g. USER_GUIDE, USER_GUIDE_B5)
+# $(2) = paper format: a4 or b5  (passed to the pandoc Lua filter)
 # Note: Make variables used inside recipe lines are escaped as $$(VAR) so they survive
 # $(call) expansion and are resolved at recipe-execution time.
 # ============================================================================================
 define BUILD_USER_GUIDE_PDF
-$$($1_PDF): $$(USER_GUIDE_DOCS) $$($1_TEMPLATE)
+$$($1_PDF): $$(USER_GUIDE_DOCS) $$($1_TEMPLATE) $$(USER_GUIDE_LUA_FILTER)
 	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
 	@rm -f $$($1_TEMPLATE).bak
@@ -531,7 +533,7 @@ $$($1_PDF): $$(USER_GUIDE_DOCS) $$($1_TEMPLATE)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
 	@cat $$(USER_GUIDE_DOCS) > $$($1_CONCAT_MD)
 	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
 	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$$(NC)"
@@ -550,10 +552,10 @@ endef
 # ============================================================================================
 # User Guide PDF targets — A4 light, A4 dark, B5 light, B5 dark
 # ============================================================================================
-$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE))
-$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_B5))
-$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK))
-$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK_B5))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE,a4))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_B5,b5))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK,a4))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK_B5,b5))
 
 
 docs-serve: docs ## Serve the project documentation locally with MkDocs
