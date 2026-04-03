@@ -146,8 +146,13 @@ USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
 USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
 USER_GUIDE_DARK_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark.tex
 
-USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-v$(VERSION).pdf
-USER_GUIDE_DARK_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-v$(VERSION).pdf
+USER_GUIDE_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_b5.tex
+USER_GUIDE_DARK_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark_b5.tex
+
+USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-$(VERSION).pdf
+USER_GUIDE_DARK_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-$(VERSION).pdf
+USER_GUIDE_B5_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-b5-$(VERSION).pdf
+USER_GUIDE_DARK_B5_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
 
 USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
 USER_GUIDE_DARK_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-dark.md
@@ -498,9 +503,12 @@ update-version: ## Update the version number in the LaTeX template for the user 
 	fi
 	@rm -f $(USER_GUIDE_TEMPLATE).bak
 	
-pdf: $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) ## Build the user guide light & dark version PDF
+pdf: $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF) ## Build the user guide light & dark version PDF
 	@:
 
+# ============================================================================================
+# A4 versions of User Guide PDFs
+# ============================================================================================
 $(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  ## Build user guide via custom LaTeX report template + pdflatex
 	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
 	@mkdir -p $(USER_GUIDE_BUILD_DIR)
@@ -542,6 +550,52 @@ $(USER_GUIDE_DARK_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_DARK_TEMPLATE) | update-
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_DARK_TEX) >/dev/null
 	@cp $(USER_GUIDE_DARK_PDF_BUILT) $(USER_GUIDE_DARK_PDF)
 	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_DARK_PDF)$(NC)"
+
+# ============================================================================================
+# B5 versions of User Guide PDFs
+# ============================================================================================
+$(USER_GUIDE_B5_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_B5_TEMPLATE) | update-version  ## Build user guide via custom LaTeX report template + pdflatex
+	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
+	@mkdir -p $(USER_GUIDE_BUILD_DIR)
+	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
+	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_CONCAT_MD)
+	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(USER_GUIDE_CONCAT_MD) -o $(USER_GUIDE_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(USER_GUIDE_BODY_TEX)
+	@rm -f $(USER_GUIDE_BODY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$(NC)"
+	@awk -v body="$(USER_GUIDE_BODY_TEX)" '\
+		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$(USER_GUIDE_B5_TEMPLATE) > $(USER_GUIDE_TEX)
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
+	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_B5_PDF)
+	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_B5_PDF)$(NC)"
+
+$(USER_GUIDE_DARK_B5_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_DARK_B5_TEMPLATE) | update-version  ## Build dark version user guide via custom LaTeX report template + xelatex
+	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
+	@mkdir -p $(USER_GUIDE_BUILD_DIR)
+	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
+	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_DARK_CONCAT_MD)
+	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(USER_GUIDE_DARK_CONCAT_MD) -o $(USER_GUIDE_DARK_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(USER_GUIDE_DARK_BODY_TEX)
+	@rm -f $(USER_GUIDE_DARK_BODY_TEX).bak
+	@echo -e "$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$(NC)"
+	@awk -v body="$(USER_GUIDE_DARK_BODY_TEX)" '\
+		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$(USER_GUIDE_DARK_B5_TEMPLATE) > $(USER_GUIDE_DARK_TEX)
+	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_DARK_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_DARK_TEX) >/dev/null
+	@cp $(USER_GUIDE_DARK_PDF_BUILT) $(USER_GUIDE_DARK_B5_PDF)
+	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_DARK_B5_PDF)$(NC)"
+
 
 docs-serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
