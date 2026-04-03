@@ -143,6 +143,7 @@ CONTAINER_NAME := $(PROJECT)
 USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
 
 # User guide PDF output paths and templates
+# We use unique names for each file to avoid race conditions when building multiple PDFs in parallel.
 USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
 USER_GUIDE_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_b5.tex
 USER_GUIDE_DARK_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark.tex
@@ -510,8 +511,8 @@ update-version: ## Update the version number in the LaTeX template for the user 
 	fi
 	@rm -f $(USER_GUIDE_TEMPLATE).bak
 	
-pdf: $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF) ## Build the user guide light & dark version PDF
-	@:
+pdf:  ## Build the user guide in all PDF variants (A4 light/dark, B5 light/dark) in parallel
+	+@$(MAKE) -j4 $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
 
 # ============================================================================================
 # Macro: BUILD_USER_GUIDE_PDF
