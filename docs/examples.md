@@ -1084,7 +1084,6 @@ sprint_planning:
       completed_story_points: 11
       spillover_story_points: 1
       removed_story_points: 1
-
 ```
 
 ```bash
@@ -1235,7 +1234,6 @@ sprint_planning:
       completed_story_points: 13
       spillover_story_points: 1
       removed_story_points: 1
-
 ```
 
 ```bash
@@ -1401,7 +1399,6 @@ sprint_planning:
       completed_tasks: 4
       spillover_tasks: 1
       removed_tasks: 1
-
 ```
 
 ```bash
@@ -1501,7 +1498,6 @@ sprint_planning:
   history:
     format: json
     path: sprint_planning_history.json
-
 ```
 
 ```json
@@ -1610,7 +1606,6 @@ planning_story_points = 3
 low = 4
 expected = 6
 high = 8
-
 ```
 
 ```
@@ -1644,7 +1639,6 @@ Sprint history SPR-002:
 - Done: 9 points
 - Carryover: 2 points
 - Scope added: 1 points
-
 ```
 
 ```bash

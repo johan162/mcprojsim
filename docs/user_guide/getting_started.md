@@ -120,6 +120,9 @@ project:
   description: "Small example project"
   start_date: "2026-04-01"
   confidence_levels: [50, 80, 90] 
+```
+
+```yaml
 tasks:
   - id: "task_001"
     name: "Design updates"
@@ -193,7 +196,9 @@ Std Dev: 17.68 hours
 Coefficient of Variation: 0.1393
 Skewness: 0.2267
 Excess Kurtosis: -0.4206
+```
 
+```text
 Confidence Intervals:
   P50: 125.74 hours (16 working days)  (2026-04-23)
   P80: 142.59 hours (18 working days)  (2026-04-27)
@@ -212,8 +217,6 @@ Most Frequent Critical Paths:
 
 No export formats specified. Use -f to export results to files.
 ```
-
-
 
 ## Export results
 

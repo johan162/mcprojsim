@@ -357,7 +357,9 @@ project_risks:
       type: "absolute"
       value: 2
       unit: "days"
+```
 
+```yaml
 tasks:
   - id: "task_001"
     name: "Create landing page"
@@ -445,7 +447,9 @@ project:
   description: "T-shirt sizing example"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
+```
 
+```yaml
 tasks:
   - id: "task_001"
     name: "Design page"
@@ -491,6 +495,9 @@ t_shirt_sizes:
       low: 5
       expected: 16
       high: 40
+```
+
+```yaml
     M:
       low: 40
       expected: 60
