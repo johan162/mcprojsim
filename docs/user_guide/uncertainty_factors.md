@@ -97,6 +97,8 @@ If the sampled base duration is 5 days, the adjusted duration becomes $5 \times 
 
 This illustrates why multiple adverse factors compound quickly. Even moderate individual adjustments can produce a significant overall effect when multiplied together.
 
+\newpage
+
 ## Validation and Fallback Behavior
 
 The current implementation distinguishes between project-file schema validation and runtime multiplier lookup:
@@ -125,6 +127,8 @@ If a task does not specify a particular uncertainty factor, the default level is
 | `integration_complexity`| `medium`      |
 
 A task that omits the `uncertainty_factors` block entirely still receives these defaults, resulting in a combined multiplier based on the default levels. In the default configuration, `medium` maps to `1.00` for `team_experience` but `1.15` for `requirements_maturity`, `1.20` for `technical_complexity`, and `1.15` for `integration_complexity`, so the default combined multiplier is not simply `1.0`.
+
+\newpage
 
 ## Defining Uncertainty Factors in the Project File
 
@@ -165,9 +169,9 @@ tasks:
 
 Here, `requirements_maturity`, `team_distribution`, and `integration_complexity` all take their default values.
 
+\newpage
 
-
-# Configuring Uncertainty Factor Multipliers
+## Configuring Uncertainty Factor Multipliers
 
 The numeric multipliers for each factor and level are defined in the configuration file (`config.yaml`), not in the project file. This separation means the project file describes the project conditions, while the configuration file defines how the organization interprets those conditions.
 
@@ -179,17 +183,14 @@ uncertainty_factors:
     high: 0.90      # Experienced team is 10% faster
     medium: 1.0     # Baseline
     low: 1.30       # Inexperienced team is 30% slower
-
   requirements_maturity:
     high: 1.0       # Well-defined requirements
     medium: 1.15    # Some ambiguity
     low: 1.40       # High ambiguity
-
   technical_complexity:
     low: 1.0        # Simple, well-understood technology
     medium: 1.20    # Moderate complexity
     high: 1.50      # High complexity, cutting-edge tech
-
   team_distribution:
     colocated: 1.0  # Team in same location
     distributed: 1.25  # Distributed team with communication overhead

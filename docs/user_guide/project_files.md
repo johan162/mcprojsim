@@ -537,13 +537,7 @@ Dependencies drive the critical-path analysis and scheduling. When the dependenc
 
 ```yaml
 dependencies: []
-```
-
-```yaml
 dependencies: ["task_001"]
-```
-
-```yaml
 dependencies: ["task_001", "task_002", "task_003"]
 ```
 
@@ -704,9 +698,6 @@ risks:
       type: "absolute"
       value: 5
       unit: "days"
-```
-
-```yaml
 risks:
   - id: "risk_002"
     name: "Approval delay"
@@ -1020,6 +1011,8 @@ When `sprint_planning` is active, three additional task fields become relevant:
 
 The `sprint_defaults` section in the configuration file supplies default values for every `sprint_planning` parameter. Any value set directly in the project file's `sprint_planning` section overrides the corresponding config default. This means you can tune velocity models, sickness parameters, and spillover behaviour once in a shared config file and override only sprint-specific values in each project file.
 
+\newpage 
+
 ## Full YAML example
 
 The following example demonstrates every currently recognized project-file section in one file.
@@ -1062,7 +1055,9 @@ tasks:
         name: "Clarification delay"
         probability: 0.15
         impact: 1.5
+```
 
+```yaml
   - id: "task_002"
     name: "Implementation"
     estimate:
@@ -1095,6 +1090,7 @@ calendars:
     holidays:
       - "2026-12-25"
 ```
+\newpage
 
 ## Full TOML example
 
@@ -1160,7 +1156,9 @@ unit = "days"
 team_experience = "medium"
 technical_complexity = "high"
 team_distribution = "distributed"
+```
 
+```toml
 [[tasks]]
 id = "task_003"
 name = "Deployment"
@@ -1259,7 +1257,6 @@ uncertainty_factors:
     low: 1.0
     medium: 1.15
     high: 1.35
-
 t_shirt_sizes:
   story:
     XS:
@@ -1275,10 +1272,8 @@ t_shirt_sizes:
       low: 200
       expected: 480
       high: 1200
-
 t_shirt_size_unit: "hours"
 t_shirt_size_default_category: "epic"
-
 story_points:
   1:
     low: 0.5
@@ -1288,7 +1283,9 @@ story_points:
     low: 3
     expected: 5
     high: 8
+```
 
+```yaml
 story_point_unit: "days"
 
 lognormal:
@@ -1317,7 +1314,6 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
-
 constrained_scheduling:
   assignment_mode: "greedy_single_pass"
   pass1_iterations: 1000

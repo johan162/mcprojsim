@@ -8,7 +8,7 @@ After running a simulation, `mcprojsim` produces a set of statistics, percentile
 
 A typical CLI run (using `examples/sample_project.yaml`) produces output like this:
 
-```
+```text
 mcprojsim, version 0.3.0
 Progress: 100.0% (10000/10000)
 Simulation time: 3.42 seconds
@@ -30,6 +30,9 @@ Confidence Intervals:
   P50: 571.84 hours (72 working days)  (2026-02-10)
   P75: 627.77 hours (79 working days)  (2026-02-19)
   P80: 642.81 hours (81 working days)  (2026-02-23)
+```
+
+```text
   P85: 660.11 hours (83 working days)  (2026-02-25)
   P90: 682.94 hours (86 working days)  (2026-03-02)
   P95: 715.57 hours (90 working days)  (2026-03-06)
@@ -71,7 +74,9 @@ Risk Impact Analysis:
   task_004: mean=11.74h, triggers=29.3%, mean_when_triggered=40.00h
   task_006: mean=11.13h, triggers=34.8%, mean_when_triggered=32.00h
   task_008: mean=4.89h, triggers=20.4%, mean_when_triggered=24.00h
+```
 
+```text
 Most Frequent Critical Paths:
   1. task_001 -> task_002 -> task_004 -> task_005 -> task_006 -> task_008
      (10000/10000, 100.0%)

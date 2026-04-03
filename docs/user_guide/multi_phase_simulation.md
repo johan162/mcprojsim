@@ -19,7 +19,6 @@ Two-pass simulation solves this problem with two consecutive simulation runs.
     If no resources are defined the engine falls back to the standard single-pass mode
     automatically.
 
----
 
 ## How It Works
 
@@ -75,7 +74,6 @@ caused solely by the change in dispatch policy, not by different duration sample
 The results include a `two_pass_traceability` block in all output formats
 (console, JSON, CSV, HTML) with per-pass statistics and Δ values.
 
----
 
 ## Basic Example
 
@@ -113,19 +111,19 @@ tasks:
     name: "Documentation"
     estimate: { low: 18, expected: 20, high: 24 }
     resources: ["dev-senior"]          # competes for dev-senior!
-
   - id: "B2"
     name: "User testing"
     estimate: { low: 9, expected: 10, high: 12 }
     dependencies: ["B1"]
     resources: ["dev-junior"]
+```
 
+```yaml
   - id: "C1"
     name: "Integration"
     estimate: { low: 4, expected: 5, high: 7 }
     dependencies: ["A3", "B2"]
     resources: ["dev-junior"]
-
   - id: "C2"
     name: "Release"
     estimate: { low: 7, expected: 8, high: 10 }
@@ -170,6 +168,7 @@ Calendar Time Confidence Intervals:
 │ P95          │  581.68 │             73 │ 2025-06-11 │
 └──────────────┴─────────┴────────────────┴────────────┘
 ```
+\newpage
 
 ### Two-pass run
 
@@ -224,8 +223,6 @@ The two-pass run reduces the mean project duration from **~567 h to ~471 h** (~1
 days) purely by prioritising the tasks that pass-1 identified as critical
 bottlenecks.
 
----
-
 ## When Is Two-Pass Useful?
 
 Two-pass simulation is most valuable when **all of the following** are true:
@@ -264,8 +261,6 @@ Two-Pass Scheduling Traceability:
 The near-zero delta confirms that two-pass adds no distortion when resources are
 not a bottleneck.
 
----
-
 ## Configuration Reference
 
 ### CLI flags
@@ -303,7 +298,7 @@ constrained_scheduling:
 With this config, every `simulate` invocation uses two-pass mode automatically for
 projects that have resources, with no need for the `--two-pass` flag.
 
----
+\newpage
 
 ## More Complex Example: Developer Allocation
 
@@ -342,7 +337,7 @@ tasks:
     dependencies: ["frontend-dev"]
     resources: ["devops"]              # shared bottleneck
 
-  # --- Stream C: Mobile ---
+# --- Stream C: Mobile ---
   - id: "mobile-dev"
     name: "Mobile development"
     estimate: { low: 80, expected: 100, high: 140 }
@@ -353,7 +348,9 @@ tasks:
     estimate: { low: 8, expected: 10, high: 14 }
     dependencies: ["mobile-dev"]
     resources: ["devops"]              # shared bottleneck
+```
 
+```yaml
   # --- Integration ---
   - id: "smoke-test"
     name: "Smoke test all streams"
@@ -395,7 +392,7 @@ The TwoPassDelta block in the JSON output will show which stream's deploy task
 had the highest criticality index in pass-1, and how much the end-to-end schedule
 improved once pass-2 gave that stream's DevOps slot priority.
 
----
+\newpage
 
 ## Output Formats
 
@@ -437,6 +434,9 @@ runs and an object for two-pass runs:
       "resource_utilization": 0.91,
       "calendar_delay_hours": 0.0
     },
+```
+
+```json
     "delta": {
       "mean_hours": -97.0,
       "p50_hours": -97.5,

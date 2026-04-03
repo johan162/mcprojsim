@@ -80,12 +80,57 @@ mcprojsim --version
 mcprojsim --help
 ```
 
+## Creating the project specification file
 
-## Create your first project file
+Project files describe the project to be simulated and is written in a (fairly) easy to
+read YAML format. Here we will only touch on the essentials needed to simulate a basic 
+project.
 
-The quickest way is to describe your project in plain text and let `mcprojsim generate` produce the full YAML project specification from a less strict textual description of a project.
+See the [Project Files](project_files.md) reference for all available fields.
 
-Create a file named `description.txt`:
+The project file below defines a basic project `"Website Refresh"` with two tasks were the 
+second task depends on the first one finishing. Most fields should be easy to understand
+but the `confidence_levels` deserves a closer explaation. 
+
+The project simulation is a simulation using statistics. This means the result is not single
+number when the project is done. Instead the result is a range of numbers with an associated
+confidence of success. With the numbers given in the project file the result will be the
+`50%`, `80%`, and `90%` confidence levels. 
+
+```yaml
+project:
+  name: "Website Refresh"
+  description: "Small example project"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90] 
+tasks:
+  - id: "task_001"
+    name: "Design updates"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days"
+  - id: "task_002"
+    name: "Frontend changes"
+    estimate:
+      low: 4
+      expected: 6
+      high: 10
+      unit: "days"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"
+```
+
+
+
+## Generating a project file
+
+An alternative way than get all project files details right is to describe your project in plain text and let `mcprojsim generate` command produce the detailed YAML project specification from a less strict textual description of a project.
+
+Create a file named `description.txt` and write the following (indentation and blank rows has no meaning)
 
 ```text
 Project name: Website Refresh
@@ -110,42 +155,6 @@ mcprojsim generate description.txt -o project.yaml
 
 That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
 
-### Alternative: write the YAML by hand
-
-If you prefer full control, create the YAML based full project file `project.yaml` manually:
-
-```yaml
-project:
-  name: "Website Refresh"
-  description: "Small example project"
-  start_date: "2026-04-01"
-  confidence_levels: [50, 80, 90] 
-```
-
-```yaml
-tasks:
-  - id: "task_001"
-    name: "Design updates"
-    estimate:
-      low: 2
-      expected: 3
-      high: 5
-      unit: "days"
-  - id: "task_002"
-    name: "Frontend changes"
-    estimate:
-      low: 4
-      expected: 6
-      high: 10
-      unit: "days"
-    dependencies: ["task_001"]
-    uncertainty_factors:
-      team_experience: "medium"
-      technical_complexity: "medium"
-```
-
-See the [Project Files](project_files.md) reference for all available fields.
-
 
 ## Validate the file
 
@@ -166,8 +175,12 @@ If validation fails, read the reported field name and fix the YAML file before c
 Tip: common validation issues are missing `id` fields on tasks, invalid date formats, or incorrect field names — see [Project Files](project_files.md) for the full field reference and examples.
 
 
-
 ## Run your first simulation
+
+Simulation is done with the `simulate` command as shown below. The optional flag `--seed` is used to
+specify a seed for the simulation. This is usefull to be able to get repeatable results or to see how
+specific changes in the project (such as adding risks) alters the result of the simulation 
+while keeping everything else the same. If no seed is specified an automatic random seed is used.
 
 ```bash
 mcprojsim simulate project.yaml --seed 42
@@ -181,7 +194,7 @@ What this does:
 
 Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and use `--seed` for reproducible runs; see [Running Simulations](running_simulations.md) for full CLI options.
 
-You should see output like:
+Depending on what version of `mcprojsim` used the output should be something like below:
 
 ```text
 mcprojsim, version 0.10.1
@@ -196,9 +209,6 @@ Std Dev: 17.68 hours
 Coefficient of Variation: 0.1393
 Skewness: 0.2267
 Excess Kurtosis: -0.4206
-```
-
-```text
 Confidence Intervals:
   P50: 125.74 hours (16 working days)  (2026-04-23)
   P80: 142.59 hours (18 working days)  (2026-04-27)

@@ -348,7 +348,6 @@ project:
   description: "Adding risk events"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
-
 project_risks:
   - id: "risk_001"
     name: "Late stakeholder changes"
@@ -357,9 +356,6 @@ project_risks:
       type: "absolute"
       value: 2
       unit: "days"
-```
-
-```yaml
 tasks:
   - id: "task_001"
     name: "Create landing page"
@@ -371,7 +367,9 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "medium"
+```
 
+```yaml
   - id: "task_002"
     name: "Deploy site"
     estimate:
@@ -447,9 +445,6 @@ project:
   description: "T-shirt sizing example"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
-```
-
-```yaml
 tasks:
   - id: "task_001"
     name: "Design page"
@@ -459,7 +454,6 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "high"
-
   - id: "task_002"
     name: "Build page"
     estimate:
@@ -468,7 +462,9 @@ tasks:
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "medium"
+```
 
+```yaml
   - id: "task_003"
     name: "Deploy page"
     estimate:
@@ -495,9 +491,6 @@ t_shirt_sizes:
       low: 5
       expected: 16
       high: 40
-```
-
-```yaml
     M:
       low: 40
       expected: 60
@@ -566,7 +559,9 @@ project:
   description: "Story Point sizing example"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
+```
 
+```yaml
 tasks:
   - id: "task_001"
     name: "Design page"
@@ -613,6 +608,9 @@ story_points:
     low: 3
     expected: 5
     high: 8
+```
+
+```yaml    
   8:
     low: 5
     expected: 8

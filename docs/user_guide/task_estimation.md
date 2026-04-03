@@ -351,6 +351,7 @@ $$\ln(X) = \ln(X_0) + \ln(F_1) + \ln(F_2) + ... + \ln(F_n)$$
 
 If we assume the $\ln(F_i)$ are independent and identically distributed, then by the Central Limit Theorem, $\ln(X)$ will tend to be normally distributed, which means that $X$ is log-normally distributed.
 
+\newpage
 
 ## T-shirt size estimates
 
@@ -487,6 +488,8 @@ tasks:
 
 Note that no `unit` field appears on any task — the unit is taken from the configuration.
 
+\newpage
+
 ### Customizing T-shirt sizes in the configuration file
 
 The default mappings can be overridden in the configuration file. This allows organizations to calibrate the sizes to match their own team velocity and task granularity. For example, a team that works in shorter cycles might define smaller ranges:
@@ -621,7 +624,6 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "high"
-
   - id: "task_002"
     name: "Build page"
     estimate:
@@ -630,7 +632,9 @@ tasks:
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "medium"
+```
 
+```yaml
   - id: "task_003"
     name: "Deploy page"
     estimate:
@@ -662,6 +666,8 @@ story_points:
 ```
 
 You only need to include the story point values you want to override. Any values not specified in your configuration will use the built-in defaults. Note that you can only use values from the allowed set (1, 2, 3, 5, 8, 13, 21) — the allowed values are defined in the code, not in configuration.
+
+\newpage
 
 ### Choosing the unit for story points
 

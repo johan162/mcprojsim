@@ -233,7 +233,6 @@ project_risks:
       value: 15
       unit: "days"
     description: "Payment provider delays final API specification delivery"
-
   - id: "proj_risk_002"
     name: "Compliance review extends timeline"
     probability: 0.25
@@ -241,7 +240,9 @@ project_risks:
       type: "percentage"
       value: 15
     description: "PCI-DSS compliance review reveals additional work"
+```
 
+```yaml
 tasks:
   - id: "pay_001"
     name: "API client library"
@@ -276,7 +277,9 @@ tasks:
         name: "Retry logic complexity"
         probability: 0.15
         impact: 2
+```
 
+```yaml
   - id: "pay_003"
     name: "Integration testing with sandbox"
     description: "End-to-end testing against vendor sandbox environment"
@@ -291,7 +294,6 @@ tasks:
         name: "Sandbox environment instability"
         probability: 0.40
         impact: 3
-
   - id: "pay_004"
     name: "Security hardening"
     description: "Encryption, tokenization, and audit logging"
@@ -312,7 +314,7 @@ tasks:
 
 In this project, each iteration might unfold differently. In one run the vendor documentation risk triggers on `pay_001`, adding 4 days. In another, the compliance review project risk fires, stretching the total duration by 15%. The Monte Carlo process captures all these possibilities and summarizes them statistically.
 
-
+\newpage
 
 ## Tasks Without Risks
 
@@ -357,7 +359,9 @@ tasks:
       high: 7
       unit: "days"
     dependencies: []
+```
 
+```yaml
   - id: "dash_002"
     name: "Backend API"
     estimate:
@@ -366,7 +370,6 @@ tasks:
       high: 14
       unit: "days"
     dependencies: ["dash_001"]
-
   - id: "dash_003"
     name: "Frontend charts"
     estimate:
@@ -407,7 +410,9 @@ project_risks:
       type: "percentage"
       value: 15
     description: "New metrics requested after development starts"
+```
 
+```yaml
   - id: "proj_risk_002"
     name: "Data warehouse migration overlap"
     probability: 0.10
@@ -454,7 +459,9 @@ tasks:
         name: "Unexpected data volume"
         probability: 0.20
         impact: 4
+```
 
+```yaml
   - id: "dash_003"
     name: "Frontend charts"
     estimate:

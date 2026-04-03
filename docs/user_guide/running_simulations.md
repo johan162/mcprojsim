@@ -193,7 +193,9 @@ mcprojsim simulate project.yaml --staffing --table
 
 # Override default distribution to lognormal (tasks with an explicit distribution are unaffected)
 mcprojsim simulate project.yaml --distribution lognormal
+```
 
+```bash
 # Sprint planning: switch velocity model to negative binomial
 mcprojsim simulate sprint_project.yaml --velocity-model neg_binomial
 
