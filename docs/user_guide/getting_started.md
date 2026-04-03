@@ -26,8 +26,6 @@ python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 ```
 
-
-
 ## Install mcprojsim
 
 ### With pipx (recommended)
@@ -92,7 +90,7 @@ The project file below defines a basic project `"Website Refresh"` with two task
 second task depends on the first one finishing. Most fields should be easy to understand
 but the `confidence_levels` deserves a closer explaation. 
 
-The project simulation is a simulation using statistics. This means the result is not single
+The project simulation results are statistical analysis. This means the result is not single
 number when the project is done. Instead the result is a range of numbers with an associated
 confidence of success. With the numbers given in the project file the result will be the
 `50%`, `80%`, and `90%` confidence levels. 
@@ -123,7 +121,6 @@ tasks:
       team_experience: "medium"
       technical_complexity: "medium"
 ```
-
 
 
 ## Generating a project file
@@ -213,11 +210,9 @@ Confidence Intervals:
   P50: 125.74 hours (16 working days)  (2026-04-23)
   P80: 142.59 hours (18 working days)  (2026-04-27)
   P90: 151.18 hours (19 working days)  (2026-04-28)
-
 Sensitivity Analysis (top contributors):
   task_002: +0.8911
   task_001: +0.4236
-
 Schedule Slack:
   task_001: 0.00 hours (Critical)
   task_002: 0.00 hours (Critical)
@@ -266,9 +261,7 @@ xdg-open "Website Refresh_results.html" # Linux
 ```
 
 Tip: export HTML first (`-f html`) to inspect sensitivity, critical paths, and charts in the rendered report — it is the easiest way to explore results visually.
-
-
-
+ 
 ## What the main results mean
 
 | Percentile | Meaning | Typical use |
