@@ -524,6 +524,7 @@ define BUILD_USER_GUIDE_PDF
 $$($1_PDF): $$(USER_GUIDE_DOCS) $$($1_TEMPLATE)
 	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
+	@rm -f $$($1_TEMPLATE).bak
 	@echo -e "$$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$(USER_GUIDE_BUILD_DIR)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
