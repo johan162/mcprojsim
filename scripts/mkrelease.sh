@@ -363,8 +363,12 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [DRY-RUN] Would run: pandoc docs/user_guide.md -o docs/user_guide.pdf"
 else
     echo "  ✓ Generating PDF version of User Guide for release assets..."
-    make pdf || {
-        print_warning_colored "Makefile target 'pdf' failed. Skipping PDF generation."
+    $(MAKE) -C docs pdf-docs || {
+        print_warning_colored "Makefile target 'pdf-docs' failed. Skipping PDF generation."
+    }
+    echo "  ✓ Generating HTML version of User Guide for release assets..."
+    $(MAKE) -C docs docs || {
+        print_warning_colored "Makefile target 'docs' failed. Skipping HTML generation."
     }
 fi
 
