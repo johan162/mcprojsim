@@ -19,7 +19,6 @@ Two-pass simulation solves this problem with two consecutive simulation runs.
     If no resources are defined the engine falls back to the standard single-pass mode
     automatically.
 
----
 
 ## How It Works
 
@@ -75,7 +74,6 @@ caused solely by the change in dispatch policy, not by different duration sample
 The results include a `two_pass_traceability` block in all output formats
 (console, JSON, CSV, HTML) with per-pass statistics and Δ values.
 
----
 
 ## Basic Example
 
@@ -113,19 +111,19 @@ tasks:
     name: "Documentation"
     estimate: { low: 18, expected: 20, high: 24 }
     resources: ["dev-senior"]          # competes for dev-senior!
-
   - id: "B2"
     name: "User testing"
     estimate: { low: 9, expected: 10, high: 12 }
     dependencies: ["B1"]
     resources: ["dev-junior"]
+```
 
+```yaml
   - id: "C1"
     name: "Integration"
     estimate: { low: 4, expected: 5, high: 7 }
     dependencies: ["A3", "B2"]
     resources: ["dev-junior"]
-
   - id: "C2"
     name: "Release"
     estimate: { low: 7, expected: 8, high: 10 }
@@ -170,6 +168,7 @@ Calendar Time Confidence Intervals:
 │ P95          │  581.68 │             73 │ 2025-06-11 │
 └──────────────┴─────────┴────────────────┴────────────┘
 ```
+\newpage
 
 ### Two-pass run
 
@@ -220,11 +219,9 @@ Two-Pass Scheduling Traceability:
 Resource wait delta: -121.1h
 ```
 
-The two-pass run reduces the mean project duration from **~520 h to ~423 h** (~12 working
+The two-pass run reduces the mean project duration from **~567 h to ~471 h** (~12 working
 days) purely by prioritising the tasks that pass-1 identified as critical
 bottlenecks.
-
----
 
 ## When Is Two-Pass Useful?
 
@@ -264,8 +261,6 @@ Two-Pass Scheduling Traceability:
 The near-zero delta confirms that two-pass adds no distortion when resources are
 not a bottleneck.
 
----
-
 ## Configuration Reference
 
 ### CLI flags
@@ -303,7 +298,7 @@ constrained_scheduling:
 With this config, every `simulate` invocation uses two-pass mode automatically for
 projects that have resources, with no need for the `--two-pass` flag.
 
----
+\newpage
 
 ## More Complex Example: Developer Allocation
 
@@ -342,7 +337,7 @@ tasks:
     dependencies: ["frontend-dev"]
     resources: ["devops"]              # shared bottleneck
 
-  # --- Stream C: Mobile ---
+# --- Stream C: Mobile ---
   - id: "mobile-dev"
     name: "Mobile development"
     estimate: { low: 80, expected: 100, high: 140 }
@@ -353,7 +348,9 @@ tasks:
     estimate: { low: 8, expected: 10, high: 14 }
     dependencies: ["mobile-dev"]
     resources: ["devops"]              # shared bottleneck
+```
 
+```yaml
   # --- Integration ---
   - id: "smoke-test"
     name: "Smoke test all streams"
@@ -395,7 +392,7 @@ The TwoPassDelta block in the JSON output will show which stream's deploy task
 had the highest criticality index in pass-1, and how much the end-to-end schedule
 improved once pass-2 gave that stream's DevOps slot priority.
 
----
+\newpage
 
 ## Output Formats
 
@@ -403,7 +400,8 @@ improved once pass-2 gave that stream's DevOps slot priority.
 
 A **Two-Pass Scheduling Traceability** table is printed after the constrained
 diagnostics when `--two-pass` is active.  The table shows pass-1, pass-2, and
-Δ values for Mean, P80, P95, and resource wait time.
+Δ values for Mean, P80, and P95.  The resource wait delta is printed on a
+separate line below the table.
 
 ### JSON export (`-f json`)
 
@@ -437,6 +435,9 @@ runs and an object for two-pass runs:
       "resource_utilization": 0.91,
       "calendar_delay_hours": 0.0
     },
+```
+
+```json
     "delta": {
       "mean_hours": -97.0,
       "p50_hours": -97.5,
@@ -469,8 +470,8 @@ lists each task's CI value.
 ### HTML export (`-f html`)
 
 The HTML report gains a **Two-Pass Scheduling Traceability** table with pass-1,
-pass-2, and Δ columns for each key metric, followed by a collapsible **Task
-Criticality Index (Pass 1)** table.
+pass-2, and Δ columns for each key metric, followed by a **Task Criticality
+Index (Pass 1)** table.
 
 ---
 
@@ -509,5 +510,11 @@ A large negative delta on mean/P80 combined with a large negative delta on
 resource wait time is strong evidence that the project suffers from avoidable
 resource contention, and that assigning more resources or restructuring task
 ownership would reduce schedule risk.
+
+## Related chapters
+
+- [Resource and Calendar Constrained Scheduling](constrained.md) for resource setup, calendar configuration, and the full constrained scheduling walkthrough
+- [Running Simulations](running_simulations.md) for the complete CLI reference
+- [Interpreting Results](interpreting_results.md) for understanding constrained diagnostics
 
 \newpage

@@ -822,13 +822,6 @@ where:
 
 The clamp on $z$ is important: it prevents invalid $\ln(0)$ or negative-log inputs when very small values appear.
 
-where:
-
-- $x$ is the item's planning story points
-- $r$ is `size_reference_points`
-- $s$ is `logistic_slope`
-- $b$ is `logistic_intercept`
-
 Interpretation of slope and intercept:
 
 - `logistic_slope` controls sensitivity to item size in log-space. Larger values make probability rise faster as $x$ increases.

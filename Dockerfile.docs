@@ -1,80 +1,81 @@
 # =============================================================================
 # Multi-stage Dockerfile for mcprojsim Documentation
-# 
-# Builds and serves the MkDocs documentation
 #
-# Build: podman build -f Dockerfile.docs -t mcprojsim-docs .
-# Run:   podman run -d --rm -p 9090:80 --name mcprojsim-docs mcprojsim-docs
+# Builds and serves the MkDocs documentation.
+# Layer order is optimised so that the slow poetry install step is only
+# invalidated when pyproject.toml or poetry.lock changes, not on every
+# docs source edit.
+#
+# Build:       podman build -f Dockerfile.docs -t mcprojsim-docs .
+# Proxy build: podman build --build-arg USE_PROXY_CA=true \
+#                --secret id=proxy_ca,src=CA_proxy_fw_all.pem \
+#                -f Dockerfile.docs -t mcprojsim-docs .
+# Run:         podman run -d --rm -p 9090:80 --name mcprojsim-docs mcprojsim-docs
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Stage 1: Builder - Build the documentation with MkDocs
+# Stage 1: Builder — install dependencies then build the static site
 # -----------------------------------------------------------------------------
 FROM python:3.13-slim AS builder
 
-# Build argument to enable proxy/CA certificate handling
-# Usage: podman build --build-arg USE_PROXY_CA=true ...
 ARG USE_PROXY_CA=false
 ARG CA_CERT_FILE=CA_proxy_fw_all.pem
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install build dependencies
 WORKDIR /build
 
-# Copy project files needed for documentation
-COPY pyproject.toml mkdocs.yml ./
-COPY docs/ ./docs/
-COPY src/ ./src/
-COPY README.md ./
+# ── Layer 1: install Poetry (invalidated only when the base image changes) ──
+RUN pip install --no-cache-dir poetry \
+ && poetry config virtualenvs.in-project true
 
-# Copy and configure proxy CA certificate if USE_PROXY_CA=true
-# This must happen BEFORE pip install
-COPY ${CA_CERT_FILE}* /tmp/certs/
-RUN if [ "$USE_PROXY_CA" = "true" ]; then \
-        if [ -f /tmp/certs/${CA_CERT_FILE} ]; then \
+# ── Layer 2: install CA cert if required (rarely changes) ───────────────────
+# The certificate is supplied as a BuildKit secret so it never enters the
+# build context or any image layer.
+RUN --mount=type=secret,id=proxy_ca,target=/run/secrets/proxy_ca,required=false \
+    if [ "$USE_PROXY_CA" = "true" ]; then \
+        if [ -s /run/secrets/proxy_ca ]; then \
             echo "✓ Configuring proxy CA certificate..."; \
-            cat /tmp/certs/${CA_CERT_FILE} >> /etc/ssl/certs/ca-certificates.crt; \
-            echo "✓ CA certificate appended to system bundle"; \
+            cat /run/secrets/proxy_ca >> /etc/ssl/certs/ca-certificates.crt; \
         else \
-            echo "⚠ Warning: USE_PROXY_CA=true but ${CA_CERT_FILE} not found!"; \
-            echo "   Build may fail when accessing HTTPS resources."; \
+            echo "⚠ USE_PROXY_CA=true but no proxy_ca secret provided."; \
+            echo "  Rebuild with: --secret id=proxy_ca,src=${CA_CERT_FILE}"; \
             exit 1; \
         fi; \
-    else \
-        echo "→ Using standard SSL certificates (no proxy)"; \
     fi
 
-# Set environment variables for SSL/TLS (ensures pip and requests use system CA bundle)
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     PIP_CERT=/etc/ssl/certs/ca-certificates.crt
 
-# Install mkdocs and documentation dependencies
-RUN pip install --upgrade pip && \
-    pip install \
-        "mkdocs>=1.5.0" \
-        "mkdocs-material>=9.0.0" \
-        "mkdocstrings[python]>=0.22.0" && \
-    pip install -e .
+# ── Layer 3: install Python dependencies (invalidated only on lock-file change)
+# Copy only the dependency manifests first so this expensive layer is cached
+# independently of any docs or source edits.
+# Only lock files copied — installs all 96 deps WITHOUT the package itself.
+# This layer is cached until pyproject.toml or poetry.lock changes.
+COPY pyproject.toml poetry.lock ./
+RUN poetry install --with docs --no-interaction --no-ansi --no-root
 
-# Build the static documentation site
-RUN mkdocs build --strict --site-dir /build/site
+# ── Layer 4: copy source and docs, then install the package itself ───────────
+COPY src/ src/
+COPY README.md CHANGELOG.md ./
+COPY docs/ docs/
+COPY mkdocs.yml ./
+RUN poetry install --with docs --no-interaction --no-ansi
+
+# ── Layer 5: build the static site ──────────────────────────────────────────
+RUN poetry run mkdocs build --strict --site-dir /build/site
 
 # -----------------------------------------------------------------------------
-# Stage 2: Server - Serve the documentation with nginx
+# Stage 2: Server — nginx:alpine serves only the pre-built static files
 # -----------------------------------------------------------------------------
 FROM nginx:alpine AS server
 
-# Create non-root user for security (nginx already runs as nginx user)
-# Copy the built documentation from builder
 COPY --from=builder /build/site /usr/share/nginx/html
 
-# Custom nginx configuration for better defaults
 RUN cat > /etc/nginx/conf.d/default.conf <<'EOF'
 server {
     listen 80;
@@ -84,11 +85,9 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # Enable gzip compression
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
 
-    # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
@@ -97,13 +96,11 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Cache static assets
     location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1d;
         add_header Cache-Control "public, immutable";
     }
 
-    # Health check endpoint
     location /health {
         access_log off;
         return 200 "healthy\n";
@@ -112,8 +109,5 @@ server {
 }
 EOF
 
-# Expose default port (can be mapped to different host port)
 EXPOSE 80
-
-# Run nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]

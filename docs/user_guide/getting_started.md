@@ -4,7 +4,7 @@ Welcome to the Monte Carlo Project Simulator User Guide.
 
 This short, hands-on chapter is meant to quickly show you mcprojsim in action. If you want a quick, practical tour, follow along: you'll create a sample project file, run a Monte Carlo simulation, and learn how to read the key results and reports. We keep theory to a minimum here — the goal is to spark your curiosity and get you producing real outputs quickly so you can explore the deeper chapters with a bit of context where more advanced concepts are introduced.
 
-What you'll learn
+## What you'll learn
 
 - Quick generation of a valid project file from a plain-text description.
 - Running a reproducible Monte Carlo simulation and exporting report files.
@@ -26,17 +26,36 @@ python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 ```
 
-
-
 ## Install mcprojsim
 
 ### With pipx (recommended)
+
+`pipx` installs command-line tools in their own isolated virtual environments while still making the command globally available on your `PATH`. This is important for a tool like `mcprojsim` for several reasons:
+
+**Dependency isolation**
+`pip install` drops packages directly into your system or user Python environment. If any dependency conflicts with something already installed — another tool, a framework, or a library your own code depends on — one of them will break silently or produce subtle wrong-version behaviour. `pipx` eliminates this entirely: every tool lives in its own throwaway environment that no other tool can disrupt.
+
+**No accidental breakage of system Python**
+On macOS and most Linux distributions, the system Python interpreter manages OS-level utilities. Polluting its site-packages with `pip install` can degrade or break unrelated system tools. `pipx` never touches the system interpreter.
+
+**Easy upgrades and rollbacks**
+```bash
+pipx upgrade mcprojsim       # upgrade to latest
+pipx install mcprojsim==0.10 # pin an exact version
+pipx uninstall mcprojsim     # clean uninstall, no residue
+```
+Plain `pip` leaves orphaned package files behind on uninstall; `pipx` removes the entire environment atomically.
+
+**Safe alongside virtual environments**
+If you are already working inside a project `venv` or a Conda environment, `pipx` still installs into a separate location. Your project dependencies and the `mcprojsim` CLI remain fully decoupled.
+
+**In summary**: use `pipx` when you want a CLI tool that just works, stays out of your way, and does not drift your Python environment over time.
 
 ```bash
 pipx install mcprojsim
 ```
 
-### With pip
+### With pip (if you know what you are doing!)
 
 ```bash
 pip install mcprojsim
@@ -44,25 +63,71 @@ pip install mcprojsim
 
 ### From source
 
+For developers
+
 ```bash
 git clone https://github.com/johan162/mcprojsim.git
 cd mcprojsim
 pip install -e .
 ```
 
-Verify the installation:
+## Verify the installation:
 
 ```bash
 mcprojsim --version
 mcprojsim --help
 ```
 
+## Creating the project specification file
 
-## Create your first project file
+Project files describe the project to be simulated and is written in a (fairly) easy to
+read YAML format. Here we will only touch on the essentials needed to simulate a basic 
+project.
 
-The quickest way is to describe your project in plain text and let `mcprojsim generate` produce the YAML for you.
+See the [Project Files](project_files.md) reference for all available fields.
 
-Create a file named `description.txt`:
+The project file below defines a basic project `"Website Refresh"` with two tasks were the 
+second task depends on the first one finishing. Most fields should be easy to understand
+but the `confidence_levels` deserves a closer explaation. 
+
+The project simulation results are statistical analysis. This means the result is not single
+number when the project is done. Instead the result is a range of numbers with an associated
+confidence of success. With the numbers given in the project file the result will be the
+`50%`, `80%`, and `90%` confidence levels. 
+
+```yaml
+project:
+  name: "Website Refresh"
+  description: "Small example project"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90] 
+tasks:
+  - id: "task_001"
+    name: "Design updates"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days"
+  - id: "task_002"
+    name: "Frontend changes"
+    estimate:
+      low: 4
+      expected: 6
+      high: 10
+      unit: "days"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"
+```
+
+
+## Generating a project file
+
+An alternative way than get all project files details right is to describe your project in plain text and let `mcprojsim generate` command produce the detailed YAML project specification from a less strict textual description of a project.
+
+Create a file named `description.txt` and write the following (indentation and blank rows has no meaning)
 
 ```text
 Project name: Website Refresh
@@ -87,39 +152,6 @@ mcprojsim generate description.txt -o project.yaml
 
 That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
 
-### Alternative: write the YAML by hand
-
-If you prefer full control, create `project.yaml` manually:
-
-```yaml
-project:
-  name: "Website Refresh"
-  description: "Small example project"
-  start_date: "2026-04-01"
-  confidence_levels: [50, 80, 90] 
-tasks:
-  - id: "task_001"
-    name: "Design updates"
-    estimate:
-      low: 2
-      expected: 3
-      high: 5
-      unit: "days 
-  - id: "task_002"
-    name: "Frontend changes"
-    estimate:
-      low: 4
-      expected: 6
-      high: 10
-      unit: "days"
-    dependencies: ["task_001"]
-    uncertainty_factors:
-      team_experience: "medium"
-      technical_complexity: "medium"
-```
-
-See the [Project Files](project_files.md) reference for all available fields.
-
 
 ## Validate the file
 
@@ -140,8 +172,12 @@ If validation fails, read the reported field name and fix the YAML file before c
 Tip: common validation issues are missing `id` fields on tasks, invalid date formats, or incorrect field names — see [Project Files](project_files.md) for the full field reference and examples.
 
 
-
 ## Run your first simulation
+
+Simulation is done with the `simulate` command as shown below. The optional flag `--seed` is used to
+specify a seed for the simulation. This is usefull to be able to get repeatable results or to see how
+specific changes in the project (such as adding risks) alters the result of the simulation 
+while keeping everything else the same. If no seed is specified an automatic random seed is used.
 
 ```bash
 mcprojsim simulate project.yaml --seed 42
@@ -155,7 +191,7 @@ What this does:
 
 Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and use `--seed` for reproducible runs; see [Running Simulations](running_simulations.md) for full CLI options.
 
-You should see output like:
+Depending on what version of `mcprojsim` used the output should be something like below:
 
 ```text
 mcprojsim, version 0.10.1
@@ -170,16 +206,13 @@ Std Dev: 17.68 hours
 Coefficient of Variation: 0.1393
 Skewness: 0.2267
 Excess Kurtosis: -0.4206
-
 Confidence Intervals:
   P50: 125.74 hours (16 working days)  (2026-04-23)
   P80: 142.59 hours (18 working days)  (2026-04-27)
   P90: 151.18 hours (19 working days)  (2026-04-28)
-
 Sensitivity Analysis (top contributors):
   task_002: +0.8911
   task_001: +0.4236
-
 Schedule Slack:
   task_001: 0.00 hours (Critical)
   task_002: 0.00 hours (Critical)
@@ -189,8 +222,6 @@ Most Frequent Critical Paths:
 
 No export formats specified. Use -f to export results to files.
 ```
-
-
 
 ## Export results
 
@@ -230,9 +261,7 @@ xdg-open "Website Refresh_results.html" # Linux
 ```
 
 Tip: export HTML first (`-f html`) to inspect sensitivity, critical paths, and charts in the rendered report — it is the easiest way to explore results visually.
-
-
-
+ 
 ## What the main results mean
 
 | Percentile | Meaning | Typical use |

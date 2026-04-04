@@ -1,4 +1,4 @@
-# Introduction to Monte Carlo Simulation
+# Introduction
 
 This chapter introduces the ideas behind probabilistic project estimation in a gradual way. The goal is not to jump directly into commands or file syntax, but to build a clear mental model of what Monte Carlo simulation is, why it is useful for project planning, and how the main concepts appear in `mcprojsim`.
 

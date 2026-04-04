@@ -97,16 +97,28 @@ mcprojsim simulate project.yaml --table
 
 ```text
 === Simulation Results ===
+
+Project Overview:
+┌────────────────────┬────────────────┐
+│ Field              │ Value          │
+├────────────────────┼────────────────┤
+│ Project            │ My Project     │
+│ Hours per Day      │ 8.0            │
+│ Max Parallel Tasks │ 2              │
+│ Schedule Mode      │ dependency_only│
+└────────────────────┴────────────────┘
+
+Calendar Time Statistical Summary:
 ┌──────────────────────────┬────────────────────────────────┐
-│ Parameter                │ Value                          │
+│ Metric                   │ Value                          │
 ├──────────────────────────┼────────────────────────────────┤
-│ Project                  │ My Project                     │
 │ Mean                     │ 579.93 hours (73 working days) │
+│ Median (P50)             │ 572.84 hours                   │
 │ Std Dev                  │ 78.50 hours                    │
 │ Coefficient of Variation │ 0.1354                         │
 └──────────────────────────┴────────────────────────────────┘
 
-Confidence Intervals:
+Calendar Time Confidence Intervals:
 ┌────────────┬─────────┬────────────────┬────────────┐
 │ Percentile │   Hours │   Working Days │ Date       │
 ├────────────┼─────────┼────────────────┼────────────┤

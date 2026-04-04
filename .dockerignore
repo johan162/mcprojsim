@@ -6,9 +6,14 @@
 !.dockerignore
 !Dockerfile
 !pyproject.toml
+!mkdocs.yml
 !poetry.lock
 !README.md
+!CHANGELOG.md
 
 # Application source
 !src/
 !src/**
+!docs/
+!docs/**
+

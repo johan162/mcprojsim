@@ -1,6 +1,8 @@
 # Project files
 
-This chapter is a reference for the project definition file format used by `mcprojsim`.
+This chapter is the authoritative reference for the project definition file format used by `mcprojsim`. It documents every supported field, explains the motivation for each feature, and includes examples for every accepted syntax form.
+
+For the formal EBNF grammar that precisely defines what is syntactically valid, see the [Formal Grammar Specification](../grammar.md). This reference uses human-readable prose and worked examples; the grammar is the machine-precise complement.
 
 The parser layer is intentionally simple:
 
@@ -148,6 +150,8 @@ That is also the order used in most examples and in this reference.
 
 The `project` section is required. It contains project-level metadata and reporting settings.
 
+Every simulation starts here: the `name` and `start_date` are the two fields the engine cannot work without. Everything else in this section controls how results are interpreted and displayed — which confidence percentiles appear in the output, what colour thresholds mark a date as red or green, and what distribution model is used by default across all tasks. You set these once at project level and every task inherits them automatically, which keeps individual task definitions short.
+
 ### Supported fields
 
 | Field | Required | Type | Default | Notes |
@@ -207,6 +211,8 @@ probability_green_threshold = 0.90
 
 The `tasks` section is required and must contain at least one task.
 
+A **task** is any unit of schedulable work. You give each task an estimate of its duration, list its dependencies (other tasks that must complete before it can start), and optionally add uncertainty factors, resource requirements, and task-level risks. The simulation samples every task's duration in every iteration and sequences them according to the dependency graph — or, when resources are present, according to resource availability too. The more accurately each task is described, the more representative the resulting uncertainty distribution will be.
+
 Each task is validated as a `Task` object with the following fields.
 
 ### Supported task fields
@@ -254,7 +260,14 @@ max = 8
 
 ## The `estimate` section
 
-Every task must define an `estimate` object.
+Every task must define an `estimate` object. The estimate is the engine's primary input: it describes the uncertain duration of a task (or, in sprint planning mode, its size in story points or tasks) so the simulator can draw a different sample in each Monte Carlo iteration.
+
+Choosing the right estimate style matters for accuracy:
+
+- **Triangular** is the simplest and most common choice. It matches the way team members typically think — "at best X, most likely Y, at worst Z" — and is well suited to tasks with a finite worst case.
+- **Log-normal** is appropriate for tasks where extreme over-runs are more likely than a symmetric range suggests — for example, research-heavy work, integration tasks with unknown third-party behaviour, or anything where "two to three times longer than expected" is a realistic tail scenario.
+- **T-shirt sizes** are useful when teams do not have enough information to produce numeric estimates, or when they want to use a consistent sizing vocabulary across many tasks without converting each size into hours by hand.
+- **Story points** are the standard agile unit and are mapped to numeric ranges through the configuration file, with a default mapping included out of the box.
 
 The implementation supports four estimate styles:
 
@@ -263,7 +276,9 @@ The implementation supports four estimate styles:
 3. T-shirt-size estimate,
 4. Story Point estimate.
 
-The `distribution` field defaults to `triangular` when omitted.
+The `distribution` field defaults to `triangular` when omitted. Setting it at task level overrides the project-level default for that task only — useful when most tasks warrant a triangular estimate but a few specific tasks benefit from a log-normal tail model.
+
+For the formal grammar of all estimate forms see [Formal Grammar — `<estimate_spec>`](../grammar.md#project-file-grammar).
 
 ### Field name aliases
 
@@ -285,7 +300,7 @@ This is the default and most common form.
 
 | Field | Required | Type | Default |
 |---|---|---|---|
-| `distribution` | No | `"triangular"` or `"lognormal"` | `"triangular"` |
+| `distribution` | No | `"triangular"` or `"lognormal"` | `null` (inherits project default) |
 | `min` | Yes for triangular | number ≥ 0 | `null` |
 | `expected` | Yes | number > 0 | `null` |
 | `max` | Yes for triangular | number ≥ 0 | `null` |
@@ -382,7 +397,10 @@ Supported token forms:
 
 - bare size: `M`
 - qualified category/size: `epic.M`
-- long-form size aliases: `Medium`, `Epic.Large`
+- long-form size alias: `Medium`, `Epic.Large`
+- full long-form aliases: `EXTRA_SMALL`, `SMALL`, `MEDIUM`, `LARGE`, `EXTRA_LARGE`, `EXTRA_EXTRA_LARGE`
+
+For the complete token grammar see [Formal Grammar — `<tshirt_size>`](../grammar.md#project-file-grammar).
 
 #### Supported fields
 
@@ -513,17 +531,13 @@ If a custom configuration overrides only some T-shirt sizes or Story Point value
 
 `dependencies` is a list of task IDs that must complete before the current task can start.
 
+Dependencies drive the critical-path analysis and scheduling. When the dependency graph is shallow (few dependencies), many tasks can run in parallel, and the project duration is limited mainly by the longest single task. When the graph is deep (long chains of dependent tasks), the critical path grows and the overall schedule becomes more sensitive to individual task delays. Expressing dependencies accurately is therefore important: underspecifying them produces over-optimistic forecasts; overspecifying them produces unnecessarily conservative ones.
+
 ### Supported syntax
 
 ```yaml
 dependencies: []
-```
-
-```yaml
 dependencies: ["task_001"]
-```
-
-```yaml
 dependencies: ["task_001", "task_002", "task_003"]
 ```
 
@@ -559,6 +573,10 @@ tasks:
 ## The `uncertainty_factors` field
 
 At task level, `uncertainty_factors` is modeled as a structured object with a fixed set of recognized fields.
+
+Uncertainty factors apply a multiplier to a task's sampled duration before it enters the schedule. They let you express qualitative risk signals — "the team is junior", "the requirements are immature", "this task integrates with multiple external systems" — without converting those signals into numeric estimates by hand. The multipliers for each factor level are defined in the configuration file; the project file simply assigns a level to each factor.
+
+All five factors are **optional** and each defaults to its medium level, so you only need to specify factors where a task deviates from a typical baseline. Omitting `uncertainty_factors` entirely applies the full set of medium-level defaults.
 
 ### Recognized fields
 
@@ -635,6 +653,12 @@ Also, if you explicitly list resource names and set `min_experience_level`, each
 
 Each task may have zero or more task-level risks.
 
+A **risk** models a discrete event that may or may not occur during the task. In each Monte Carlo iteration, the engine draws a Bernoulli sample for each risk using its `probability`. When the risk fires, the `impact` is added to the task's sampled duration. This cleanly separates planned estimation uncertainty (captured by the estimate range) from identified discrete risks (captured here). It lets you quantify the schedule impact of a risk without baking it unconditionally into the estimate.
+
+Task-level risks are appropriate for events that affect only one task — for example, "the third-party API may introduce a breaking change during this task" at probability 0.15. For events that could affect the whole project — for example, "key stakeholder may request a scope change" — use `project_risks` instead.
+
+For the complete risk grammar see [Formal Grammar — `<risk_properties>`](../grammar.md#project-file-grammar).
+
 ### Task-level risk object fields
 
 | Field | Required | Type | Notes |
@@ -674,9 +698,6 @@ risks:
       type: "absolute"
       value: 5
       unit: "days"
-```
-
-```yaml
 risks:
   - id: "risk_002"
     name: "Approval delay"
@@ -699,6 +720,8 @@ The model enforces:
 
 `project_risks` has exactly the same syntax as task-level `risks`, but it appears at top level and applies to the project as a whole.
 
+When a project-level risk fires in a Monte Carlo iteration, its impact is added to the total elapsed project duration (on top of the scheduled task chain). Use `project_risks` for cross-cutting uncertainties — late design freezes, vendor delays, or regulatory response times — that cannot be cleanly attributed to a single task.
+
 ### Example
 
 ```yaml
@@ -715,28 +738,29 @@ project_risks:
 
 ## The top-level `resources` section
 
-The top-level project model accepts a `resources` section.
+Adding a `resources` section switches the scheduler from **dependency-only** mode to **resource-constrained** mode. In dependency-only mode the scheduler assumes unlimited workforce and sequences tasks purely by dependencies. In resource-constrained mode each task can only start when both its dependencies are satisfied *and* a suitable resource is available. This produces longer but more realistic schedules whenever the team is genuinely the bottleneck.
 
-### Current implementation shape
+If you prefer not to enumerate individual resources, you can instead set `project.team_size` to a number of default resources to generate automatically.
 
-At parse time, each `resources` entry is validated as a resource object with defaults.
+Each `resources` entry supports the following fields:
 
-Supported fields:
+### Supported fields
 
-- `name` (optional string)
-- `experience_level` (optional integer: 1, 2, or 3; default: `2`)
-- `productivity_level` (optional float: 0.1 to 2.0; default: `1.0`)
-- `sickness_prob` (optional float: 0.0 to 1.0; default: `0.0`)
-- `planned_absence` (optional list of ISO dates)
-- `calendar` (optional string; default: `"default"`)
-- `availability` (optional float in (0, 1]; default: `1.0`)
+| Field | Required | Type | Default | Constraints |
+|---|---|---|---|---|
+| `name` | No | string | auto-generated | Unique across all resolved resource names |
+| `id` | No | string | `null` | Legacy fallback for `name`; still accepted |
+| `experience_level` | No | integer | `2` | Must be `1`, `2`, or `3` |
+| `productivity_level` | No | float | `1.0` | 0.1 to 2.0 |
+| `sickness_prob` | No | float | `0.0` | 0.0 to 1.0 |
+| `planned_absence` | No | list of dates | `[]` | ISO `YYYY-MM-DD` format |
+| `calendar` | No | string | `"default"` | Must match a calendar `id` if calendars are defined |
+| `availability` | No | float | `1.0` | Must be in (0, 1] |
 
-Backward-compatibility note:
+!!! note
+    If `name` is omitted, the engine auto-generates a unique name (`resource_001`, `resource_002`, …). The legacy `id` field is still accepted and used as a fallback for `name`.
 
-- Legacy field `id` is still accepted and used as fallback for `name`.
-- If `name` is omitted, the system auto-generates a unique name using `resource_nnn` (e.g., `resource_001`).
-
-### Example shape accepted by the current model
+### YAML example
 
 ```yaml
 resources:
@@ -752,26 +776,20 @@ resources:
     sickness_prob: 0.08
 ```
 
-### Important note
-
-The parser and project model validate this schema, including defaults and uniqueness of resolved resource names.
-
 ## The top-level `calendars` section
 
-The top-level project model also accepts a `calendars` section.
+Calendars control when resources are available. Without a calendar definition, the scheduler uses an 8-hour / 5-day working week. Defining a calendar lets you model public holidays, reduced-hour days, or non-standard working weeks. Each resource can reference a specific calendar by name; resources that do not specify one fall back to the `default` calendar.
 
-### Current implementation shape
+Each `calendars` entry supports the following fields:
 
-At parse time, each calendar entry is validated with this shape:
+| Field | Required | Type | Default | Notes |
+|---|---|---|---|---|
+| `id` | No | string | `"default"` | Must be unique across all calendars |
+| `work_hours_per_day` | No | float > 0 | `8.0` | Number of working hours in a day |
+| `work_days` | No | list of integers | `[1, 2, 3, 4, 5]` | Days of the week; 1 = Monday, 7 = Sunday |
+| `holidays` | No | list of ISO dates | `[]` | Dates in `YYYY-MM-DD` format |
 
-- `id` (string; default: `"default"`)
-- `work_hours_per_day` (positive float; default: `8.0`)
-- `work_days` (list of integers in range `1..7`; default: `[1,2,3,4,5]`)
-- `holidays` (list of ISO dates)
-
-Calendar IDs must be unique.
-
-### Example shape accepted by the current model
+### YAML example
 
 ```yaml
 calendars:
@@ -783,41 +801,217 @@ calendars:
       - "2026-12-26"
 ```
 
-### Important note
-
-This section is validated by the project model; unknown or invalid fields fail validation.
-
 ## The `sprint_planning` section
 
-The optional `sprint_planning` section activates sprint-based simulation mode. When present, the engine models work as a sequence of fixed-length sprints rather than a single elapsed duration, including velocity variability, spillover, and sickness.
+The optional `sprint_planning` section activates sprint-based simulation mode. When present and `enabled: true`, the engine models work as a sequence of fixed-length sprints rather than a single elapsed duration. Each sprint draws a velocity from the historical distribution, places as many backlog items as will fit, and carries the rest forward to the next sprint. The output is a distribution over the number of sprints (and hence calendar weeks) needed to complete the backlog, rather than a raw elapsed-hours distribution.
 
-This section has a rich sub-schema. For a full field reference, examples, and configuration options see [Sprint Planning](sprint_planning.md).
+Use sprint planning when the team works in fixed-length iterations and tracks velocity \u2014 whether measured in story points or tasks completed per sprint. The historical sprint data you provide is the primary input: the simulator fits a velocity distribution to it and samples from that distribution in each Monte Carlo iteration.
 
-### Minimal shape
+!!! note
+    Sprint planning requires at least two usable historical sprint entries (entries with a positive delivery signal). The `capacity_mode` field controls whether the unit of delivery is story points or task counts, and **must be consistent** across all history entries and task backlogs.
+
+For a comprehensive walkthrough of sprint planning features, configuration options, and interpretation of results, see [Sprint Planning](sprint_planning.md).
+
+### Top-level sprint planning fields
+
+| Field | Required | Type | Default | Notes |
+|---|---|---|---|---|
+| `enabled` | No | boolean | `false` | When `false`, the section is parsed but not simulated |
+| `sprint_length_weeks` | Yes | integer > 0 | \u2014 | Duration of each sprint in calendar weeks |
+| `capacity_mode` | Yes | `story_points` \| `tasks` | \u2014 | Unit family for all velocity and backlog measurements |
+| `planning_confidence_level` | No | float (0, 1) | `0.80` | Percentile of the sprint count distribution reported |
+| `velocity_model` | No | `empirical` \| `neg_binomial` | `empirical` | Distribution fitted to historical velocity observations |
+| `removed_work_treatment` | No | `churn_only` \| `reduce_backlog` | `churn_only` | How removed sprint items affect the net backlog |
+| `history` | No | list or external descriptor | `[]` | Historical sprint data; see below |
+| `future_sprint_overrides` | No | list | `[]` | Forward-looking capacity adjustments |
+| `volatility_overlay` | No | object | disabled | Sprint-level disruption model |
+| `spillover` | No | object | disabled | Task-level spillover model |
+| `sickness` | No | object | disabled | Per-person sickness model |
+
+#### `velocity_model` values
+
+| Value | Meaning |
+|---|---|
+| `empirical` | Resample directly from observed historical velocities |
+| `neg_binomial` | Fit a negative-binomial distribution to history and sample from that |
+
+#### `removed_work_treatment` values
+
+| Value | Meaning |
+|---|---|
+| `churn_only` | Removed items are treated as pure churn with no net effect on remaining backlog |
+| `reduce_backlog` | Removed items reduce the total backlog to be completed |
+
+### Minimal example
 
 ```yaml
 sprint_planning:
+  enabled: true
   sprint_length_weeks: 2
+  capacity_mode: story_points
   history:
-    - sprint: 1
-      velocity: 34
-    - sprint: 2
-      velocity: 28
+    - sprint_id: "SPR-001"
+      completed_story_points: 10
+      spillover_story_points: 1
+    - sprint_id: "SPR-002"
+      completed_story_points: 9
+      spillover_story_points: 2
+    - sprint_id: "SPR-003"
+      completed_story_points: 11
+```
+
+For a `tasks`-based project, replace `completed_story_points` with `completed_tasks` and set `capacity_mode: tasks`.
+
+### Sprint history
+
+Historical sprint data is the empirical foundation of the sprint planning simulation. Rather than asking you to specify a single velocity, `mcprojsim` fits a probability distribution to your team's observed sprint outcomes and samples from that distribution in each Monte Carlo iteration. The result is a forecast of "how many sprints will this backlog require?" expressed as a confidence interval, not a single number.
+
+#### Why history matters
+
+Two sprints of history give the simulator just enough to estimate the spread of the velocity distribution. More history reduces sampling uncertainty and produces tighter, more reliable confidence intervals. A minimum of two usable entries — entries where the delivery signal (completed points or tasks) is greater than zero — is required when `enabled: true`.
+
+The velocity the simulator works with is not simply `completed_story_points`. For each historical sprint it computes the **effective velocity** as:
+
+```
+effective_velocity = completed + spillover - added + removed  (treatment-dependent)
+```
+
+This means `spillover_story_points`, `added_story_points`, and `removed_story_points` all influence the distribution the simulator samples from. The more accurately you record them, the more representative the velocity distribution will be.
+
+#### Unit-family consistency
+
+All history entries in a project file must belong to the same unit family as `capacity_mode`. You cannot mix `completed_story_points` entries with `completed_tasks` entries in a single `history` list.
+
+#### Inline history format
+
+Each `history` list entry represents one completed sprint. Fields marked *Conditional* are required only for the chosen `capacity_mode`.
+
+| Field | Required | Type | Default | Notes |
+|---|---|---|---|---|
+| `sprint_id` | Yes | string | — | Unique string identifier for the sprint; must be non-empty |
+| `sprint_length_weeks` | No | integer > 0 | inherits top-level `sprint_length_weeks` | Override sprint length for this individual entry |
+| `completed_story_points` | Conditional | float ≥ 0 | — | Completed capacity; required when `capacity_mode: story_points` |
+| `completed_tasks` | Conditional | integer ≥ 0 | — | Completed capacity; required when `capacity_mode: tasks` |
+| `spillover_story_points` | No | float ≥ 0 | `0` | Story points that carried over from the previous sprint into this one |
+| `spillover_tasks` | No | integer ≥ 0 | `0` | Tasks that carried over from the previous sprint into this one |
+| `added_story_points` | No | float ≥ 0 | `0` | Story points added to the sprint backlog mid-sprint |
+| `added_tasks` | No | integer ≥ 0 | `0` | Tasks added to the sprint backlog mid-sprint |
+| `removed_story_points` | No | float ≥ 0 | `0` | Story points removed from the sprint backlog mid-sprint |
+| `removed_tasks` | No | integer ≥ 0 | `0` | Tasks removed from the sprint backlog mid-sprint |
+| `holiday_factor` | No | float > 0 | `1.0` | Capacity reduction from public holidays; `0.8` means 20% reduction |
+| `end_date` | No | ISO date string | `null` | Date the sprint ended; used for timeline charts and calendar alignment |
+| `team_size` | No | integer ≥ 0 | `null` | Actual team headcount during this sprint |
+| `notes` | No | string | `null` | Free-text annotation; not used by the simulator |
+
+!!! note
+    Story-point and task-count fields are mutually exclusive within a single entry. Do not mix `completed_story_points` with `spillover_tasks`, `added_tasks`, or `removed_tasks` in the same entry, or vice versa. The validator will reject it.
+
+#### Story-point mode example
+
+```yaml
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  history:
+    - sprint_id: "SPR-001"
+      completed_story_points: 34
+      spillover_story_points: 2
+    - sprint_id: "SPR-002"
+      completed_story_points: 28
+      spillover_story_points: 4
+      added_story_points: 3
+    - sprint_id: "SPR-003"
+      completed_story_points: 31
+      removed_story_points: 2
+      holiday_factor: 0.9
+      end_date: "2026-03-14"
+      notes: "Public holiday reduced capacity"
+```
+
+#### Task-count mode example
+
+```yaml
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 1
+  capacity_mode: tasks
+  history:
+    - sprint_id: "WK-01"
+      completed_tasks: 7
+      spillover_tasks: 1
+    - sprint_id: "WK-02"
+      completed_tasks: 6
+      spillover_tasks: 2
+      added_tasks: 1
+    - sprint_id: "WK-03"
+      completed_tasks: 8
+```
+
+#### External history format
+
+For teams that maintain sprint data in a separate file, `mcprojsim` can load history from an external JSON or CSV source instead of an inline list:
+
+```yaml
+sprint_planning:
+  enabled: true
+  sprint_length_weeks: 2
+  capacity_mode: story_points
+  history:
+    format: json
+    path: "sprint_planning_history.json"
+```
+
+Supported formats:
+
+| Value | Description |
+|---|---|
+| `json` | A JSON file containing either a top-level array of sprint objects, or an object with a `sprints` key whose value is that array |
+| `csv` | A CSV file with a header row; column names must match the field names in the table above |
+
+The external file must use the same field names as the inline entries. See [Sprint Planning](sprint_planning.md) for complete JSON and CSV shape examples.
+
+### `future_sprint_overrides`
+
+Forward-looking sprint overrides let you express known capacity variations in upcoming sprints \u2014 for example, a holiday week that will reduce capacity by 20%, or a sprint where the team is larger.
+
+Each override must identify its target sprint via at least one of `sprint_number` or `start_date`.
+
+| Field | Required | Type | Default | Notes |
+|---|---|---|---|---|
+| `sprint_number` | Conditional | integer > 0 | `null` | 1-based sprint number relative to the start of simulation |
+| `start_date` | Conditional | date string | `null` | ISO date of the sprint start |
+| `holiday_factor` | No | float > 0 | `1.0` | Capacity scaling due to holidays |
+| `capacity_multiplier` | No | float > 0 | `1.0` | Additional scaling factor (e.g. `0.5` for a half-team sprint) |
+| `notes` | No | string | `null` | Annotation |
+
+The effective capacity for an overridden sprint is `holiday_factor \u00d7 capacity_multiplier` of the baseline.
+
+```yaml
+future_sprint_overrides:
+  - sprint_number: 3
+    holiday_factor: 0.8
+    notes: "Easter week"
+  - start_date: "2026-06-15"
+    capacity_multiplier: 0.5
+    notes: "Half the team at off-site"
 ```
 
 ### Task fields used by sprint planning
 
 When `sprint_planning` is active, three additional task fields become relevant:
 
-| Field | Type | Notes |
-|---|---|---|
-| `planning_story_points` | integer > 0 | Story point size for sprint planning; overrides `estimate.story_points` |
-| `priority` | integer | Scheduling priority hint |
-| `spillover_probability_override` | float 0.0–1.0 | Per-task spillover probability, overrides the model default |
+| Field | Type | `capacity_mode` | Notes |
+|---|---|---|---|
+| `planning_story_points` | integer > 0 | `story_points` | Story point size for sprint planning; overrides `estimate.story_points` when set |
+| `priority` | integer | both | Scheduling priority hint; lower values are allocated to sprints first |
+| `spillover_probability_override` | float 0.0\u20131.0 | both | Per-task spillover probability, overrides the model default |
 
 ### Configuration interaction
 
-The `sprint_defaults` section in the configuration file supplies the default values for all sprint-planning parameters (confidence level, velocity model, spillover model, sickness model, etc.). Values set directly in the project file's `sprint_planning` section take precedence over these config defaults.
+The `sprint_defaults` section in the configuration file supplies default values for every `sprint_planning` parameter. Any value set directly in the project file's `sprint_planning` section overrides the corresponding config default. This means you can tune velocity models, sickness parameters, and spillover behaviour once in a shared config file and override only sprint-specific values in each project file.
+
+\newpage 
 
 ## Full YAML example
 
@@ -861,7 +1055,9 @@ tasks:
         name: "Clarification delay"
         probability: 0.15
         impact: 1.5
+```
 
+```yaml
   - id: "task_002"
     name: "Implementation"
     estimate:
@@ -884,12 +1080,9 @@ tasks:
     dependencies: ["task_002"]
 
 resources:
-  - id: "designer"
-    name: "Product Designer"
-  - id: "backend_dev"
-    name: "Backend Developer"
-  - id: "frontend_dev"
-    name: "Frontend Developer"
+  - name: "designer"
+  - name: "backend_dev"
+  - name: "frontend_dev"
 
 calendars:
   - id: "standard"
@@ -897,6 +1090,7 @@ calendars:
     holidays:
       - "2026-12-25"
 ```
+\newpage
 
 ## Full TOML example
 
@@ -962,7 +1156,9 @@ unit = "days"
 team_experience = "medium"
 technical_complexity = "high"
 team_distribution = "distributed"
+```
 
+```toml
 [[tasks]]
 id = "task_003"
 name = "Deployment"
@@ -972,16 +1168,13 @@ dependencies = ["task_002"]
 t_shirt_size = "S"
 
 [[resources]]
-id = "designer"
-name = "Product Designer"
+name = "designer"
 
 [[resources]]
-id = "backend_dev"
-name = "Backend Developer"
+name = "backend_dev"
 
 [[resources]]
-id = "frontend_dev"
-name = "Frontend Developer"
+name = "frontend_dev"
 
 [[calendars]]
 id = "standard"
@@ -1064,7 +1257,6 @@ uncertainty_factors:
     low: 1.0
     medium: 1.15
     high: 1.35
-
 t_shirt_sizes:
   story:
     XS:
@@ -1080,10 +1272,8 @@ t_shirt_sizes:
       low: 200
       expected: 480
       high: 1200
-
 t_shirt_size_unit: "hours"
 t_shirt_size_default_category: "epic"
-
 story_points:
   1:
     low: 0.5
@@ -1093,7 +1283,9 @@ story_points:
     low: 3
     expected: 5
     high: 8
+```
 
+```yaml
 story_point_unit: "days"
 
 lognormal:
@@ -1122,23 +1314,22 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
-
 constrained_scheduling:
   assignment_mode: "greedy_single_pass"
   pass1_iterations: 1000
   sickness_prob: 0.0
 
 sprint_defaults:
-  planning_confidence_level: 85
+  planning_confidence_level: 0.80
   velocity_model: "empirical"
-  removed_work_treatment: "reduce_scope"
+  removed_work_treatment: "churn_only"
 ```
 
 ## The `uncertainty_factors` section
 
 This section maps uncertainty factor names to per-level multipliers.
 
-### Supported shape
+### YAML structure
 
 ```yaml
 uncertainty_factors:
@@ -1191,9 +1382,7 @@ These are also the names used by the current project-file model under `tasks[].u
 
 ## The `t_shirt_sizes` section
 
-This section maps symbolic T-shirt sizes to numeric effort ranges by category.
-
-Canonical shape:
+This section maps symbolic T-shirt sizes to numeric effort ranges by category. The typical structure looks like this:
 
 ```yaml
 t_shirt_sizes:
@@ -1215,9 +1404,9 @@ t_shirt_size_default_category: epic
 
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
-| `min` | Yes when that size is defined | float | — | `> 0` |
+| `low` | Yes when that size is defined | float | — | `> 0` |
 | `expected` | Yes | float | — | `> 0` |
-| `max` | Yes | float | — | `> 0` |
+| `high` | Yes | float | — | `> 0` |
 
 ### Built-in category keys
 
@@ -1238,7 +1427,7 @@ t_shirt_size_default_category: epic
 
 ### Built-in `story` defaults
 
-| Size | `min` | `expected` | `max` |
+| Size | `low` | `expected` | `high` |
 |---|---:|---:|---:|
 | `XS` | 3 | 5 | 15 |
 | `S` | 5 | 16 | 40 |
@@ -1292,9 +1481,9 @@ This section maps Story Point values to numeric effort ranges.
 
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
-| `min` | Yes when that point value is defined | float | — | `> 0` |
+| `low` | Yes when that point value is defined | float | — | `> 0` |
 | `expected` | Yes | float | — | `> 0` |
-| `max` | Yes | float | — | `> 0` |
+| `high` | Yes | float | — | `> 0` |
 
 ### Built-in point values
 
@@ -1308,7 +1497,7 @@ This section maps Story Point values to numeric effort ranges.
 
 ### Built-in defaults
 
-| Points | `min` | `expected` | `max` |
+| Points | `low` | `expected` | `high` |
 |---|---:|---:|---:|
 | `1` | 0.5 | 1 | 3 |
 | `2` | 1 | 2 | 4 |

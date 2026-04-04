@@ -1188,7 +1188,11 @@ from mcprojsim.analysis.staffing import StaffingAnalyzer
 
 - `profile`: str — Experience level name
 - `team_size`: int — Candidate team size
+- `individual_productivity`: float — Per-person productivity after overhead
+- `effective_capacity`: float — Total effective team capacity
+- `calendar_hours`: float — Total hours of calendar time needed
 - `calendar_working_days`: int — Calendar days needed
+- `delivery_date`: date | None — Projected delivery date
 - `efficiency`: float — Effective capacity vs nominal team size
 
 **`StaffingRecommendation` fields:**
@@ -1200,7 +1204,8 @@ from mcprojsim.analysis.staffing import StaffingAnalyzer
 - `calendar_working_days`: int — Calendar days needed
 - `delivery_date`: date | None — Scheduled completion
 - `efficiency`: float — Effective capacity vs nominal team size
-- `effort_percentile`: int | None — Which percentile was used
+- `parallelism_ratio`: float — Ratio of total effort to critical-path duration
+- `effort_basis`: str — Effort basis label (`"mean"` or a percentile label such as `"p80"`)
 
 **Example:**
 
@@ -1313,7 +1318,7 @@ yaml_output = parser.parse_and_generate(description)
 
 ### Data classes
 
-- `ParsedProject` — extracted project-level data (`name`, `start_date`, `hours_per_day`, `tasks`, `confidence_levels`)
+- `ParsedProject` — extracted project-level data (`name`, `start_date`, `description`, `hours_per_day`, `tasks`, `confidence_levels`, `resources`, `calendars`, `sprint_planning`)
 - `ParsedTask` — extracted task data (`name`, `t_shirt_size`, `story_points`, `low_estimate`/`expected_estimate`/`high_estimate`, `dependency_refs`)
 - `ParsedResource` — extracted resource data (`name`, `availability`, `experience_level`, `productivity_level`, `calendar`, `sickness_prob`, `planned_absence`)
 - `ParsedCalendar` — extracted calendar data (`id`, `work_hours_per_day`, `work_days`, `holidays`)

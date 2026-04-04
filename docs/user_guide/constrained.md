@@ -1,4 +1,4 @@
-# Resource and Calendar Constrained Scheduling
+# Constrained Scheduling
 
 This chapter shows how to model and run **resource- and calendar-constrained** simulations in `mcprojsim`, starting from a simple project and building up to a full-featured example.
 
@@ -214,7 +214,9 @@ In Example 2, Alice (`3`, `1.0`) is modeled as more senior baseline-capacity, wh
 
 | Field | Required | Default | What it controls |
 |---|---|---|---|
+| `resources` | No | (all pool resources) | Explicit list of resource names eligible for this task; omit to allow any available resource |
 | `max_resources` | No | 1 | Maximum number of resources assigned to a task |
+| `min_experience_level` | No | 1 | Minimum `experience_level` a resource must have to be eligible for this task |
 
 
 ### `max_resources` semantics (important)
@@ -391,6 +393,8 @@ Because `max_resources` defaults to `1`, each task in Example 2 is effectively a
 - `experience_level` on each resource is matched against task `min_experience_level` (default task minimum is `1`).
 - `productivity_level` affects effective capacity, so two resources with different productivity can produce different calendar durations even for the same effort.
 
+\newpage 
+
 ### Making assignment explicit (optional)
 
 If you want explicit control instead of automatic pooling, set `tasks[*].resources`:
@@ -420,7 +424,7 @@ Look for:
   - Effective Resource Utilization
   - Calendar Delay Contribution (hours)
 
-
+\newpage
 
 ## Example 3: Add working calendars
 
@@ -464,6 +468,8 @@ calendars:
 ```
 
 This introduces calendar-driven delays automatically (weekends, holidays, shorter days).
+
+\newpage
 
 Sample output excerpt (seed `42`, `200` iterations):
 
@@ -592,6 +598,7 @@ tasks:
 This is the first point in the walkthrough where `max_resources` is actively overridden above the default (`1`) to allow multi-resource task execution.
 
 
+\newpage
 
 ## Example 6: Full constrained project (final build-up)
 
@@ -635,7 +642,9 @@ tasks:
         probability: 0.25
         impact: 24
         impact_unit: "hours"
+```
 
+```yaml
   - id: "task_003"
     name: "Migration"
     estimate: { low: 40, expected: 64, high: 96 }
@@ -659,14 +668,12 @@ resources:
     productivity_level: 1.1
     sickness_prob: 0.02
     planned_absence: ["2026-05-15"]
-
   - name: "bob"
     calendar: "default"
     availability: 0.8
     experience_level: 2
     productivity_level: 1.0
     sickness_prob: 0.03
-
   - name: "carol"
     calendar: "part_time"
     availability: 0.75
@@ -740,7 +747,7 @@ Notes:
 - `--pass1-iterations` is capped to total simulation iterations.
 - If `pass1_iterations` is small, criticality ranking may be noisy.
 
-
+\newpage
 
 ## CLI options most relevant to constrained runs
 
@@ -820,5 +827,6 @@ sprint_defaults:
 - [Project Files](project_files.md) for full schema reference
 - [Running Simulations](running_simulations.md) for command reference
 - [Interpreting Results](interpreting_results.md) for diagnostics interpretation
+- [Multi-Phase (Two-Pass) Simulation](multi_phase_simulation.md) for criticality-prioritized scheduling
 
 \newpage

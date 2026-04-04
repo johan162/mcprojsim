@@ -8,7 +8,7 @@ After running a simulation, `mcprojsim` produces a set of statistics, percentile
 
 A typical CLI run (using `examples/sample_project.yaml`) produces output like this:
 
-```
+```text
 mcprojsim, version 0.3.0
 Progress: 100.0% (10000/10000)
 Simulation time: 3.42 seconds
@@ -30,6 +30,9 @@ Confidence Intervals:
   P50: 571.84 hours (72 working days)  (2026-02-10)
   P75: 627.77 hours (79 working days)  (2026-02-19)
   P80: 642.81 hours (81 working days)  (2026-02-23)
+```
+
+```text
   P85: 660.11 hours (83 working days)  (2026-02-25)
   P90: 682.94 hours (86 working days)  (2026-03-02)
   P95: 715.57 hours (90 working days)  (2026-03-06)
@@ -71,7 +74,9 @@ Risk Impact Analysis:
   task_004: mean=11.74h, triggers=29.3%, mean_when_triggered=40.00h
   task_006: mean=11.13h, triggers=34.8%, mean_when_triggered=32.00h
   task_008: mean=4.89h, triggers=20.4%, mean_when_triggered=24.00h
+```
 
+```text
 Most Frequent Critical Paths:
   1. task_001 -> task_002 -> task_004 -> task_005 -> task_006 -> task_008
      (10000/10000, 100.0%)
@@ -212,10 +217,12 @@ The effort summary has the same fields (minimum/maximum person-hours) for total 
 
 ## The thermometer chart
 
-The HTML report includes a thermometer — a vertical colour-coded bar showing effort at probability levels from 50% to 99%. It provides a quick visual: green zones are highly likely to succeed, orange zones are risky.
+The HTML report includes two thermometers — vertical colour-coded bars showing elapsed time and effort (person-hours) at probability levels from 50% to 99%. They provide a quick visual: green zones are highly likely to succeed, orange zones are risky.
 
-- **Dark orange → yellow** (50%–70%): aggressive targets. You are more likely than not to miss these.
-- **Yellow → light green** (75%–85%): moderate confidence. Reasonable for internal targets.
+The colour transitions as a continuous gradient from dark orange (50%) to dark green (99%):
+
+- **Dark orange** (50%–70%): aggressive targets. You are more likely than not to miss these.
+- **Olive/amber tones** (75%–85%): moderate confidence. Reasonable for internal targets.
 - **Green → dark green** (90%–99%): high confidence. Suitable for external commitments.
 
 The colour thresholds are configurable via `probability_red_threshold` and `probability_green_threshold` in the project file.

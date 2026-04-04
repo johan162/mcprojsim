@@ -125,11 +125,6 @@ DOCS_DIR := docs
 DIST_DIR := dist
 BUILD_DIR := .build
 
-# Documentation Container Server configuration
-SERVER_HOST := 0.0.0.0
-DOCS_PORT := 8100
-DOCS_CONTAINER_SCRIPT := ./scripts/docs-contctl.sh
-
 # Project settings
 PROJECT := mcprojsim
 APP_NAME := MCProjSim
@@ -138,46 +133,6 @@ VERSION := $(shell grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
 
 # Container related settings
 CONTAINER_NAME := $(PROJECT)
-
-# Temporary build directory for user guide PDF generation
-USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
-
-# User guide PDF output paths and templates
-USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
-USER_GUIDE_DARK_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark.tex
-
-USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-v$(VERSION).pdf
-USER_GUIDE_DARK_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-v$(VERSION).pdf
-
-USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
-USER_GUIDE_DARK_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-dark.md
-
-USER_GUIDE_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body.tex
-USER_GUIDE_DARK_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body-dark.tex
-
-USER_GUIDE_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report.tex
-USER_GUIDE_DARK_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark.tex
-
-USER_GUIDE_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report.pdf
-USER_GUIDE_DARK_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark.pdf
-
-# Doc files for User Guide PDF generation
-USER_GUIDE_DOCS := \
-	docs/user_guide/getting_started.md \
-	docs/user_guide/introduction.md \
-	docs/user_guide/your_first_project.md  \
-	docs/user_guide/uncertainty_factors.md  \
-	docs/user_guide/task_estimation.md  \
-	docs/user_guide/risks.md  \
-	docs/user_guide/project_files.md  \
-	docs/user_guide/sprint_planning.md  \
-	docs/user_guide/constrained.md  \
-	docs/user_guide/multi_phase_simulation.md  \
-	docs/user_guide/running_simulations.md  \
-	docs/user_guide/interpreting_results.md  \
-	docs/user_guide/configuration.md  \
-	docs/user_guide/mcp-server.md \
-	docs/examples.md
 
 # Example generation
 EXAMPLES_TEMPLATE := docs/examples_template.md
@@ -191,7 +146,6 @@ COVERAGE := 80
 # Source and Test Files
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.py')
 TEST_FILES := $(shell find $(TEST_DIR) -name 'test_*.py')
-DOC_FILES := mkdocs.yml $(shell find $(DOCS_DIR) -name '*.md' -o -name '*.yml' -o -name '*.yaml')
 MISC_FILES := pyproject.toml README.md mypy.ini .flake8
 LOCK_FILE := poetry.lock
 DOCKER_SRC_FILES := Dockerfile docker-compose.yml
@@ -201,7 +155,6 @@ STAMP_DIR := .makefile-stamps
 $(shell mkdir -p $(STAMP_DIR))
 
 CONTAINER_STAMP := $(STAMP_DIR)/container-stamp
-DOC_STAMP := $(STAMP_DIR)/docs-stamp
 FORMAT_STAMP := $(STAMP_DIR)/format-stamp
 LINT_STAMP := $(STAMP_DIR)/lint-stamp
 TYPECHECK_STAMP := $(STAMP_DIR)/typecheck-stamp
@@ -250,16 +203,6 @@ $(CONTAINER_STAMP): $(SRC_FILES) $(TEST_FILES) $(DOCKER_SRC_FILES) $(MISC_FILES)
 	@$(CONTAINER_CMD) tag oneselect-backend:latest oneselect-backend:$(VERSION)
 	@touch $(CONTAINER_STAMP)
 	@echo -e "$(GREEN)✓ Container image built and tagged as oneselect-backend:$(VERSION)$(NC)"
-
-$(DOC_STAMP): $(DOC_FILES)
-	@echo -e "$(DARKYELLOW)- Building documentation...$(NC)"
-	@if poetry run mkdocs build -q; then \
-		touch $(DOC_STAMP); \
-		echo -e "$(GREEN)✓ Documentation built successfully$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Documentation build failed$(NC)"; \
-		exit 1; \
-	fi
 
 $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running linter...$(NC)"
@@ -368,7 +311,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build|docs|pdf|pdf-design|pdf-pandoc|gen-examples|docs-serve|docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-deploy)
+	@$(call print_section,Build & Documentation,build)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
@@ -473,112 +416,12 @@ maintainer-clean: ## Perform a thorough cleanup including virtual environment, c
 	@rm -rf .env
 	@echo -e "$(GREEN)✓ Deep clean completed$(NC)"
 
-# ============================================================================================
-# Documentation Targets
-# ============================================================================================
-docs: $(DOC_STAMP) ## Build the HTML project documentation with MkDocs
-	@:
-
-gen-examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
-	@:
-
-$(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) 
-	@echo -e "$(DARKYELLOW)- Generating examples documentation from template...$(NC)"
-	@bash $(EXAMPLES_GENERATOR)
-
-## Target that updates the version number in the LaTeX template for the user guide PDF generation
-update-version: ## Update the version number in the LaTeX template for the user guide PDF generation
-	@echo -e "$(DARKYELLOW)- Updating version number in LaTeX template...$(NC)"
-	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $(USER_GUIDE_TEMPLATE)
-	@if grep -q "\\\texttt{$(PROJECT)}, v$(VERSION)" $(USER_GUIDE_TEMPLATE); then \
-		echo -e "$(GREEN)✓ Version number updated successfully in LaTeX template$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Failed to update version number in LaTeX template$(NC)"; \
-		exit 1; \
-	fi
-	@rm -f $(USER_GUIDE_TEMPLATE).bak
-	
-pdf: $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) ## Build the user guide light & dark version PDF
-	@:
-
-$(USER_GUIDE_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_TEMPLATE) | update-version  ## Build user guide via custom LaTeX report template + pdflatex
-	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
-	@mkdir -p $(USER_GUIDE_BUILD_DIR)
-	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
-	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_CONCAT_MD)
-	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(USER_GUIDE_CONCAT_MD) -o $(USER_GUIDE_BODY_TEX)
-	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(USER_GUIDE_BODY_TEX)
-	@rm -f $(USER_GUIDE_BODY_TEX).bak
-	@echo -e "$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$(NC)"
-	@awk -v body="$(USER_GUIDE_BODY_TEX)" '\
-		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
-		{ print } \
-		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
-		$(USER_GUIDE_TEMPLATE) > $(USER_GUIDE_TEX)
-	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_TEX) >/dev/null
-	@cp $(USER_GUIDE_PDF_BUILT) $(USER_GUIDE_PDF)
-	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_PDF)$(NC)"
-
-$(USER_GUIDE_DARK_PDF): $(USER_GUIDE_DOCS) $(USER_GUIDE_DARK_TEMPLATE) | update-version  ## Build dark version user guide via custom LaTeX report template + xelatex
-	@echo -e "$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$(NC)"
-	@mkdir -p $(USER_GUIDE_BUILD_DIR)
-	@echo -e "$(DARKYELLOW)  - Concatenating markdown sources...$(NC)"
-	@cat $(USER_GUIDE_DOCS) > $(USER_GUIDE_DARK_CONCAT_MD)
-	@echo -e "$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $(USER_GUIDE_DARK_CONCAT_MD) -o $(USER_GUIDE_DARK_BODY_TEX)
-	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $(USER_GUIDE_DARK_BODY_TEX)
-	@rm -f $(USER_GUIDE_DARK_BODY_TEX).bak
-	@echo -e "$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$(NC)"
-	@awk -v body="$(USER_GUIDE_DARK_BODY_TEX)" '\
-		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
-		{ print } \
-		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
-		$(USER_GUIDE_DARK_TEMPLATE) > $(USER_GUIDE_DARK_TEX)
-	@echo -e "$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_DARK_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $(USER_GUIDE_BUILD_DIR) $(USER_GUIDE_DARK_TEX) >/dev/null
-	@cp $(USER_GUIDE_DARK_PDF_BUILT) $(USER_GUIDE_DARK_PDF)
-	@echo -e "$(GREEN)✓ User guide PDF built: $(USER_GUIDE_DARK_PDF)$(NC)"
-
-docs-serve: docs ## Serve the project documentation locally with MkDocs
-	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
-	@poetry run mkdocs serve -a localhost:$(DOCS_PORT)
 
 container-engine-check:
 	@if [ "$(NO_CONTAINER_ENGINE)" = "yes" ]; then \
         echo -e "$(YELLOW)⚠️  Warning: No container engine detected. Skipping container operation. Please start Podman or Docker.$(NC)"; \
         exit 1; \
     fi
-
-docs-container-build: | container-engine-check ## Build the containerized documentation image
-	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) build
-
-docs-container-start: | container-engine-check ## Start the containerized documentation server
-	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) start
-
-docs-container-stop: | container-engine-check ## Stop the containerized documentation server
-	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) stop
-
-docs-container-restart: | container-engine-check ## Restart the containerized documentation server
-	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) restart
-
-docs-container-status: | container-engine-check ## Show status for the containerized documentation server
-	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) status
-
-docs-container-logs: | container-engine-check ## Show logs for the containerized documentation server
-	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) logs --follow
-
-docs-deploy: ## Build and deploy documentation to GitHub Pages
-	@echo -e "$(DARKYELLOW)- Deploying documentation to GitHub Pages...$(NC)"
-	@if poetry run mkdocs gh-deploy --force; then \
-		echo -e "$(GREEN)✓ Documentation deployed successfully$(NC)"; \
-	else \
-		echo -e "$(RED)✗ Error: Documentation deployment failed$(NC)"; \
-		exit 1; \
-	fi
 
 # ============================================================================================
 # Container Management with Podman/Docker Targets

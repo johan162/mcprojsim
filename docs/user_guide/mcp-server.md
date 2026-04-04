@@ -1,6 +1,6 @@
-# MCP Server & Natural Language Project Input
+# MCP Server & NL Input
 
-Writing a full YAML project file by hand is straightforward once you know the format, but it takes time — especially when you are in an early planning session and just want to sketch out tasks quickly. The mcprojsim **MCP server** bridges that gap. It lets an AI assistant (such as Claude, GitHub Copilot, or any MCP-compatible client) convert a rough, natural-language project description into a syntactically correct project specification file that `mcprojsim` can simulate immediately.
+Writing a full YAML project file by hand is straightforward once you know the format, but it takes time — especially when you are in an early planning session and just want to sketch out tasks quickly. The `mcprojsim` **MCP server** bridges that gap. It lets an AI assistant (such as Claude, GitHub Copilot, or any MCP-compatible client) convert a rough, natural-language project description into a syntactically correct project specification file that `mcprojsim` can simulate immediately.
 
 This chapter explains what the MCP server is, how to install and configure it, how the natural language parser works, and how to get the best results from it.
 
@@ -8,7 +8,7 @@ This chapter explains what the MCP server is, how to install and configure it, h
 
 ## What is the MCP server?
 
-The **Model Context Protocol (MCP)** is an open standard that lets AI assistants call external tools in a structured way. The mcprojsim MCP server now exposes a broader set of tools grouped into three command classes:
+The **Model Context Protocol (MCP)** is an open standard that lets AI assistants call external tools in a structured way. The mcprojsim MCP server exposes the following tools grouped by input type and action:
 
 | Command class | Tool | Purpose |
 |------|------|--------|
@@ -35,11 +35,11 @@ The MCP server has one additional dependency beyond the core `mcprojsim` package
 
 There are two main ways to install the server
 
-1. [Recommended] Ask your assitant to download and install the server from GitHub
+1. [Recommended] Ask your assistant to download and install the server from GitHub
 
 2. Download the project, setup the development environment and build the server locally your self.
 
-## Ask your assistane
+## Ask your assistant
 
 Use the following example prompt to get your assistant to install `mcprojsim`:
 
@@ -136,10 +136,11 @@ An example output would be
   │ P95        │ 298.7 │ 38           │ 2025-06-24    │
   └────────────┴───────┴──────────────┴───────────────┘
 
-  Key stats: Mean ~233h (30 days) · Std dev ~38h · Both tasks are on the critical path 100% of the time.
+  Key stats: Mean ~233h (30 days) · Std dev ~38h · 
+  Both tasks are on the critical path 100% of the time.
 ```
 
-You can then continue to explore more of the statistics with aanother prompt
+You can then continue to explore more of the statistics with another prompt
 
 ```txt
 Show the summary statistics for this simulation in a table.
@@ -170,9 +171,6 @@ which could result in something simlar to this table:
   │ Hours per Day            │ 8.0                            │
   └──────────────────────────┴────────────────────────────────┘
 ```
-
-
-
 
 
 ## Workflow overview
@@ -481,6 +479,8 @@ tasks:
     dependencies: ["task_003"]
 ```
 
+\newpage
+
 ### Example 2: Story points with multiple dependencies
 
 Using story points and tasks with fan-in dependencies:
@@ -538,6 +538,8 @@ tasks:
       story_points: 8
     dependencies: ["task_002", "task_003"]
 ```
+
+\newpage
 
 ### Example 3: Explicit estimates with different units
 
@@ -610,6 +612,8 @@ tasks:
       unit: "days"
     dependencies: ["task_003"]
 ```
+
+\newpage
 
 ### Example 4: Sloppy formatting (typos, inconsistent punctuation)
 

@@ -235,7 +235,7 @@ Calendar Time Confidence Intervals:
   P99: 12716.79 hours (1590 working days)  (2031-12-05)
 ```
 
-Key observations: two independent starting tasks yield `Max Parallel Tasks: 2`. The wide P10–P99 spread (349–632 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.
+Key observations: two independent starting tasks yield `Max Parallel Tasks: 2`. The wide P10–P99 spread (938–1590 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.
 
 Note: T-shirt size and story point estimates must **not** include a `unit` field in the project file. The unit is controlled by the configuration.
 
@@ -847,7 +847,7 @@ Key observations:
 - `sickness_prob` introduces stochastic sick days that vary across iterations.
 - `planned_absence` blocks specific dates deterministically.
 - Bob's `part_time` calendar (6 hours/day, Mon–Thu) reduces his available capacity.
-- Calendar time (77 working days) is much larger than effort (22 person-days) due to calendar constraints, weekends, holidays, and sickness.
+- Calendar time (78 working days) is much larger than effort (22 person-days) due to calendar constraints, weekends, holidays, and sickness.
 
 For a full constrained walkthrough with incremental complexity, see the [Constrained Scheduling Guide](user_guide/constrained.md).
 
@@ -1083,7 +1083,8 @@ sprint_planning:
     - sprint_id: "SPR-003"
       completed_story_points: 11
       spillover_story_points: 1
-      removed_story_points: 1```
+      removed_story_points: 1
+```
 
 ```bash
 mcprojsim simulate examples/sprint_planning_minimal.yaml --minimal --seed 42
@@ -1232,7 +1233,8 @@ sprint_planning:
     - sprint_id: "SPR-004"
       completed_story_points: 13
       spillover_story_points: 1
-      removed_story_points: 1```
+      removed_story_points: 1
+```
 
 ```bash
 mcprojsim simulate examples/sprint_planning_advanced.yaml --minimal --table --seed 42 --iterations 200
@@ -1396,7 +1398,8 @@ sprint_planning:
     - sprint_id: "SPR-003"
       completed_tasks: 4
       spillover_tasks: 1
-      removed_tasks: 1```
+      removed_tasks: 1
+```
 
 ```bash
 mcprojsim simulate examples/sprint_planning_tasks.yaml --minimal --seed 42
@@ -1494,7 +1497,8 @@ sprint_planning:
   capacity_mode: story_points
   history:
     format: json
-    path: sprint_planning_history.json```
+    path: sprint_planning_history.json
+```
 
 ```json
 {
@@ -1601,7 +1605,8 @@ planning_story_points = 3
 [tasks.estimate]
 low = 4
 expected = 6
-high = 8```
+high = 8
+```
 
 ```
 sprintUniqueID,committed_StoryPoints,completed_StoryPoints,addedIntraSprint_StoryPoints,removedInSprint_StoryPoints,spilledOver_StoryPoints,startDate,endDate
@@ -1633,7 +1638,8 @@ Sprint history SPR-001:
 Sprint history SPR-002:
 - Done: 9 points
 - Carryover: 2 points
-- Scope added: 1 points```
+- Scope added: 1 points
+```
 
 ```bash
 mcprojsim generate examples/sprint_planning_nl.txt -o .build/gen-examples/sprint_planning_nl.yaml

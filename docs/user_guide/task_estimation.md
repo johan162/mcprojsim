@@ -24,15 +24,16 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 
 ## Estimation methods at a glance
 
-`mcprojsim` supports three ways to express task effort. Each method provides the same information to the simulator — a probability distribution to sample from — but is suited to different estimation contexts.
+`mcprojsim` supports four ways to express task effort. Each method provides the same information to the simulator — a probability distribution to sample from — but is suited to different estimation contexts.
 
 | Method | Input | Resolved to | Best for |
 |--------|-------|-------------|----------|
-| **Explicit range** | `low`, `expected`, `high` | Used directly | Teams comfortable giving numeric day estimates |
+| **Explicit range (triangular)** | `low`, `expected`, `high` | Used directly | Teams comfortable giving numeric estimates with bounded outcomes |
+| **Explicit range (log-normal)** | `low`, `expected`, `high`, `distribution: "lognormal"` | Used directly | Tasks with significant right-tail risk or open-ended uncertainty |
 | **T-shirt size** | `t_shirt_size` (e.g., `"M"` or `"epic.M"`) | Looked up in config → `low`, `expected`, `high` | Early-stage or relative estimation |
 | **Story points** | `story_points` (e.g., `5`) | Looked up in config → `low`, `expected`, `high` | Teams using story point estimation practices |
 
-All three methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
+All four methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
 
 ### Accepted field aliases
 
@@ -350,10 +351,11 @@ $$\ln(X) = \ln(X_0) + \ln(F_1) + \ln(F_2) + ... + \ln(F_n)$$
 
 If we assume the $\ln(F_i)$ are independent and identically distributed, then by the Central Limit Theorem, $\ln(X)$ will tend to be normally distributed, which means that $X$ is log-normally distributed.
 
+\newpage
 
 ## T-shirt size estimates
 
-T-shirt sizing is a relative estimation technique where tasks are classified into sizes such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`, now scoped by named categories (`bug`, `story`, `epic`, `business`, `initiative`). This is useful when teams need different calibration levels across planning horizons.
+T-shirt sizing is a relative estimation technique where tasks are classified into sizes such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`, scoped by named categories (`bug`, `story`, `epic`, `business`, `initiative`). This is useful when teams need different calibration levels across planning horizons.
 
 In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) inside a category in the configuration file. During simulation, a bare value like `M` resolves through `t_shirt_size_default_category` (default: `epic`), while a qualified value like `epic.M` resolves directly.
 
@@ -486,6 +488,8 @@ tasks:
 
 Note that no `unit` field appears on any task — the unit is taken from the configuration.
 
+\newpage
+
 ### Customizing T-shirt sizes in the configuration file
 
 The default mappings can be overridden in the configuration file. This allows organizations to calibrate the sizes to match their own team velocity and task granularity. For example, a team that works in shorter cycles might define smaller ranges:
@@ -567,7 +571,7 @@ Story points are a common estimation unit in agile teams. In `mcprojsim`, story 
 
 The default unit for story points is **days** (configurable via `story_point_unit` in the configuration file).
 
-| Story points | min (days) | expected (days) | max (days) |
+| Story points | low (days) | expected (days) | high (days) |
 |--------------|------------|-------------------|------------|
 | 1            | 0.5        | 1                  | 3          |
 | 2            | 1          | 2                  | 4          |
@@ -620,7 +624,6 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "high"
-
   - id: "task_002"
     name: "Build page"
     estimate:
@@ -629,7 +632,9 @@ tasks:
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "medium"
+```
 
+```yaml
   - id: "task_003"
     name: "Deploy page"
     estimate:
@@ -661,6 +666,8 @@ story_points:
 ```
 
 You only need to include the story point values you want to override. Any values not specified in your configuration will use the built-in defaults. Note that you can only use values from the allowed set (1, 2, 3, 5, 8, 13, 21) — the allowed values are defined in the code, not in configuration.
+
+\newpage
 
 ### Choosing the unit for story points
 

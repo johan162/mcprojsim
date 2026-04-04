@@ -107,7 +107,9 @@ t_shirt_sizes:
 t_shirt_size_default_category: "story"
 
 t_shirt_size_unit: "hours"
+```
 
+```yaml
 story_points:
   1:
     low: 0.5
@@ -150,7 +152,9 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
+```
 
+```yaml
 constrained_scheduling:
   sickness_prob: 0.0
   assignment_mode: greedy_single_pass
@@ -669,9 +673,20 @@ Several of these settings change simulation behavior directly, not just reportin
 ## Viewing current configuration
 
 ```bash
+# Show effective configuration (built-in defaults, or auto-loaded user config)
 mcprojsim config
+
+# Show configuration from a specific file
 mcprojsim config --config-file config.yaml
+
+# Generate a default configuration file at ~/.mcprojsim/config.yaml
+mcprojsim config --generate
 ```
+
+When no `--config-file` is given, `mcprojsim` automatically loads
+`~/.mcprojsim/configuration.yaml` if it exists. Use `--generate` to produce a
+starter config file at `~/.mcprojsim/config.yaml` that you can then customise
+and rename to `configuration.yaml`.
 
 The `config` output includes the most relevant effective settings, including:
 
