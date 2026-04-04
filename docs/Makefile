@@ -1,6 +1,8 @@
 # Makefile for building Documentation for the MCProjSim project
 
-.PHONY: docs gen-examples update-version pdf docs-serve
+.PHONY: docs gen-examples update-version pdf docs-serve \
+ container-engine-check docs-container-build docs-container-start docs-container-stop \
+ docs-container-restart docs-container-status docs-container-logs docs-deploy help
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -118,14 +120,11 @@ $(DOC_STAMP): $(DOC_FILES)
 		exit 1; \
 	fi
 
-
 # ============================================================================================
 # Variable configurations
 # ============================================================================================
 
 # Directories
-SRC_DIR := ../src
-TEST_DIR := ../tests
 DOCS_DIR := .
 DIST_DIR := ../dist
 BUILD_DIR := ../.build
@@ -134,11 +133,10 @@ SCRIPTS_DIR := ../scripts
 # Documentation Container Server configuration
 SERVER_HOST := 0.0.0.0
 DOCS_PORT := 8100
-DOCS_CONTAINER_SCRIPT := ./scripts/docs-contctl.sh
+DOCS_CONTAINER_SCRIPT := ../scripts/docs-contctl.sh
 
 # Project settings
 PROJECT := mcprojsim
-APP_NAME := MCProjSim
 VERSION := $(shell grep '^version' ../pyproject.toml | head -1 | cut -d'"' -f2)
 
 # Container related settings
@@ -148,37 +146,32 @@ CONTAINER_NAME := $(PROJECT)
 USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
 
 # User guide PDF output paths and templates
-# We use unique names for each file to avoid race conditions when building multiple PDFs in parallel.
-USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
-USER_GUIDE_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_b5.tex
-USER_GUIDE_DARK_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark.tex
-USER_GUIDE_DARK_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark_b5.tex
+# Variant-specific paths are derived by DEFINE_USER_GUIDE_VARS below.
+# USER_GUIDE_LUA_FILTER is shared across all variants.
 USER_GUIDE_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
 
-USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-$(VERSION).pdf
-USER_GUIDE_B5_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-b5-$(VERSION).pdf
-USER_GUIDE_DARK_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-$(VERSION).pdf
-USER_GUIDE_DARK_B5_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
+# ============================================================================================
+# Macro: DEFINE_USER_GUIDE_VARS
+# Derives all variant-specific file-path variables from the base name alone.
+# $(1) = USER_GUIDE | USER_GUIDE_B5 | USER_GUIDE_DARK | USER_GUIDE_DARK_B5
+#
+# The suffix is extracted by stripping the USER_GUIDE prefix from $(1):
+#   tex_sfx  — lowercase with underscores (_b5, _dark, _dark_b5)  for LaTeX template names
+#   file_sfx — lowercase with hyphens    (-b5, -dark, -dark-b5)   for all other file names
+# ============================================================================================
+define DEFINE_USER_GUIDE_VARS
+$(1)_TEMPLATE  := $$(DOCS_DIR)/user_guide/report_template$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
+$(1)_PDF       := $$(DIST_DIR)/$$(PROJECT)_user_guide$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
+$(1)_CONCAT_MD := $$(USER_GUIDE_BUILD_DIR)/user_guide_concat$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').md
+$(1)_BODY_TEX  := $$(USER_GUIDE_BUILD_DIR)/user_guide_body$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
+$(1)_TEX       := $$(USER_GUIDE_BUILD_DIR)/user_guide_report$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
+$(1)_PDF_BUILT := $$(USER_GUIDE_BUILD_DIR)/user_guide_report$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').pdf
+endef
 
-USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
-USER_GUIDE_B5_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-b5.md
-USER_GUIDE_DARK_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-dark.md
-USER_GUIDE_DARK_B5_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-dark-b5.md
-
-USER_GUIDE_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body.tex
-USER_GUIDE_B5_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body-b5.tex
-USER_GUIDE_DARK_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body-dark.tex
-USER_GUIDE_DARK_B5_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body-dark-b5.tex
-
-USER_GUIDE_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report.tex
-USER_GUIDE_B5_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report-b5.tex
-USER_GUIDE_DARK_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark.tex
-USER_GUIDE_DARK_B5_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark-b5.tex
-
-USER_GUIDE_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report.pdf
-USER_GUIDE_B5_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report-b5.pdf
-USER_GUIDE_DARK_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark.pdf
-USER_GUIDE_DARK_B5_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark-b5.pdf
+$(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE))
+$(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_B5))
+$(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK))
+$(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK_B5))
 
 # Doc files for User Guide PDF generation
 USER_GUIDE_DOCS := \
@@ -206,9 +199,6 @@ EXAMPLE_FILES := $(wildcard ../examples/*.yaml) $(wildcard ../examples/*.txt)
 
 # Source and Test Files
 DOC_FILES := ../mkdocs.yml $(shell find $(DOCS_DIR) -name '*.md' -o -name '*.yml' -o -name '*.yaml')
-MISC_FILES := pyproject.toml README.md mypy.ini .flake8
-LOCK_FILE := poetry.lock
-DOCKER_SRC_FILES := Dockerfile.docs docker-compose.yml
 
 # Timestamp files
 STAMP_DIR := .makefile-stamps
@@ -241,7 +231,8 @@ endef
 
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
-	@$(call print_section,Documentation,build|docs|pdf-docs)
+	@$(call print_section,Documentation,docs|pdf-docs)
+	@$(call print_section,Container,docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs)
 	@echo ""
 
 
@@ -314,7 +305,7 @@ container-engine-check:
     fi
 
 docs-container-build: | container-engine-check ## Build the containerized documentation image
-	@cd .. && MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) build && cd docs
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) build 
 
 docs-container-start: | container-engine-check ## Start the containerized documentation server
 	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) start
