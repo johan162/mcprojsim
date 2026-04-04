@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A probabilistic project estimation tool using Monte Carlo simulation">
+        <meta name="description" content="A project estimation tool using Monte Carlo simulation">
       
       
         <meta name="author" content="Johan Persson">
@@ -4905,7 +4905,9 @@ It brings together the operational detail that does not belong in the end-user q
 <li>runtime dependencies live under <code>[tool.poetry.dependencies]</code></li>
 <li>developer tools live under <code>[tool.poetry.group.dev.dependencies]</code></li>
 <li>docs tooling lives under <code>[tool.poetry.group.docs.dependencies]</code></li>
-<li>the CLI entry point is <code>mcprojsim = "mcprojsim.cli:cli"</code></li>
+<li>MCP server tooling lives under <code>[tool.poetry.group.mcp.dependencies]</code> (optional)</li>
+<li>the main CLI entry point is <code>mcprojsim = "mcprojsim.cli:cli"</code></li>
+<li>the MCP server entry point is <code>mcprojsim-mcp = "mcprojsim.mcp_server:main"</code> (only installed with <code>--with mcp</code>)</li>
 </ul>
 <h3 id="recommended-local-setup">Recommended local setup<a class="headerlink" href="#recommended-local-setup" title="Permanent link">&para;</a></h3>
 <p>From the project root:</p>

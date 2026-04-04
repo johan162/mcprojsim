@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A probabilistic project estimation tool using Monte Carlo simulation">
+        <meta name="description" content="A project estimation tool using Monte Carlo simulation">
       
       
         <meta name="author" content="Johan Persson">
@@ -3480,13 +3480,6 @@ $$</p>
 <li>$b$ is <code>logistic_intercept</code></li>
 </ul>
 <p>The clamp on $z$ is important: it prevents invalid $\ln(0)$ or negative-log inputs when very small values appear.</p>
-<p>where:</p>
-<ul>
-<li>$x$ is the item's planning story points</li>
-<li>$r$ is <code>size_reference_points</code></li>
-<li>$s$ is <code>logistic_slope</code></li>
-<li>$b$ is <code>logistic_intercept</code></li>
-</ul>
 <p>Interpretation of slope and intercept:</p>
 <ul>
 <li><code>logistic_slope</code> controls sensitivity to item size in log-space. Larger values make probability rise faster as $x$ increases.</li>

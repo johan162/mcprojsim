@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A probabilistic project estimation tool using Monte Carlo simulation">
+        <meta name="description" content="A project estimation tool using Monte Carlo simulation">
       
       
         <meta name="author" content="Johan Persson">
@@ -1285,7 +1285,7 @@
 <p>For quick estimation using relative sizes (<code>XS</code>, <code>S</code>, <code>M</code>, <code>L</code>, <code>XL</code>, <code>XXL</code>). T-shirt sizes map to default effort ranges that are configurable via the <a href="../user_guide/task_estimation/#t-shirt-size-estimates">configuration file</a>.</p>
 <p>{{file:examples/tshirt_sizing_project.yaml}}</p>
 <p>{{run:poetry run mcprojsim simulate examples/tshirt_sizing_project.yaml --minimal --seed 42}}</p>
-<p>Key observations: two independent starting tasks yield <code>Max Parallel Tasks: 2</code>. The wide P10–P99 spread (349–632 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.</p>
+<p>Key observations: two independent starting tasks yield <code>Max Parallel Tasks: 2</code>. The wide P10–P99 spread (938–1590 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.</p>
 <p>Note: T-shirt size and story point estimates must <strong>not</strong> include a <code>unit</code> field in the project file. The unit is controlled by the configuration.</p>
 <p>See <code>examples/tshirt_sizing_project.yaml</code> in the repository.</p>
 <h2 id="story-points">Story Points<a class="headerlink" href="#story-points" title="Permanent link">&para;</a></h2>
@@ -1345,7 +1345,7 @@ bounds.</p>
 <li><code>sickness_prob</code> introduces stochastic sick days that vary across iterations.</li>
 <li><code>planned_absence</code> blocks specific dates deterministically.</li>
 <li>Bob's <code>part_time</code> calendar (6 hours/day, Mon–Thu) reduces his available capacity.</li>
-<li>Calendar time (77 working days) is much larger than effort (22 person-days) due to calendar constraints, weekends, holidays, and sickness.</li>
+<li>Calendar time (78 working days) is much larger than effort (22 person-days) due to calendar constraints, weekends, holidays, and sickness.</li>
 </ul>
 <p>For a full constrained walkthrough with incremental complexity, see the <a href="../user_guide/constrained/">Constrained Scheduling Guide</a>.</p>
 <h2 id="natural-language-project-generation">Natural Language Project Generation<a class="headerlink" href="#natural-language-project-generation" title="Permanent link">&para;</a></h2>

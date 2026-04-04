@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A probabilistic project estimation tool using Monte Carlo simulation">
+        <meta name="description" content="A project estimation tool using Monte Carlo simulation">
       
       
         <meta name="author" content="Johan Persson">
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#mcp-server-natural-language-project-input" class="md-skip">
+        <a href="#mcp-server-nl-input" class="md-skip">
           Skip to content
         </a>
       
@@ -960,10 +960,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ask-your-assistane" class="md-nav__link">
+  <a href="#ask-your-assistant" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ask your assistane
+        Ask your assistant
       
     </span>
   </a>
@@ -1659,10 +1659,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ask-your-assistane" class="md-nav__link">
+  <a href="#ask-your-assistant" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ask your assistane
+        Ask your assistant
       
     </span>
   </a>
@@ -2193,11 +2193,11 @@
   
 
 
-<h1 id="mcp-server-natural-language-project-input">MCP Server &amp; Natural Language Project Input<a class="headerlink" href="#mcp-server-natural-language-project-input" title="Permanent link">&para;</a></h1>
-<p>Writing a full YAML project file by hand is straightforward once you know the format, but it takes time — especially when you are in an early planning session and just want to sketch out tasks quickly. The mcprojsim <strong>MCP server</strong> bridges that gap. It lets an AI assistant (such as Claude, GitHub Copilot, or any MCP-compatible client) convert a rough, natural-language project description into a syntactically correct project specification file that <code>mcprojsim</code> can simulate immediately.</p>
+<h1 id="mcp-server-nl-input">MCP Server &amp; NL Input<a class="headerlink" href="#mcp-server-nl-input" title="Permanent link">&para;</a></h1>
+<p>Writing a full YAML project file by hand is straightforward once you know the format, but it takes time — especially when you are in an early planning session and just want to sketch out tasks quickly. The <code>mcprojsim</code> <strong>MCP server</strong> bridges that gap. It lets an AI assistant (such as Claude, GitHub Copilot, or any MCP-compatible client) convert a rough, natural-language project description into a syntactically correct project specification file that <code>mcprojsim</code> can simulate immediately.</p>
 <p>This chapter explains what the MCP server is, how to install and configure it, how the natural language parser works, and how to get the best results from it.</p>
 <h2 id="what-is-the-mcp-server">What is the MCP server?<a class="headerlink" href="#what-is-the-mcp-server" title="Permanent link">&para;</a></h2>
-<p>The <strong>Model Context Protocol (MCP)</strong> is an open standard that lets AI assistants call external tools in a structured way. The mcprojsim MCP server now exposes a broader set of tools grouped into three command classes:</p>
+<p>The <strong>Model Context Protocol (MCP)</strong> is an open standard that lets AI assistants call external tools in a structured way. The mcprojsim MCP server exposes the following tools grouped by input type and action:</p>
 <table>
 <thead>
 <tr>
@@ -2255,13 +2255,13 @@
 <p>There are two main ways to install the server</p>
 <ol>
 <li>
-<p>[Recommended] Ask your assitant to download and install the server from GitHub</p>
+<p>[Recommended] Ask your assistant to download and install the server from GitHub</p>
 </li>
 <li>
 <p>Download the project, setup the development environment and build the server locally your self.</p>
 </li>
 </ol>
-<h2 id="ask-your-assistane">Ask your assistane<a class="headerlink" href="#ask-your-assistane" title="Permanent link">&para;</a></h2>
+<h2 id="ask-your-assistant">Ask your assistant<a class="headerlink" href="#ask-your-assistant" title="Permanent link">&para;</a></h2>
 <p>Use the following example prompt to get your assistant to install <code>mcprojsim</code>:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Download and install the latest mcprojsim MCP server from GitHub Releases. Follow the README.md for installation instructions.
 </span></code></pre></div>
@@ -2324,9 +2324,10 @@ setup the server.</p>
 </span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>  │ P95        │ 298.7 │ 38           │ 2025-06-24    │
 </span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>  └────────────┴───────┴──────────────┴───────────────┘
 </span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>  Key stats: Mean ~233h (30 days) · Std dev ~38h · Both tasks are on the critical path 100% of the time.
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>  Key stats: Mean ~233h (30 days) · Std dev ~38h · 
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>  Both tasks are on the critical path 100% of the time.
 </span></code></pre></div>
-<p>You can then continue to explore more of the statistics with aanother prompt</p>
+<p>You can then continue to explore more of the statistics with another prompt</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Show the summary statistics for this simulation in a table.
 </span></code></pre></div>
 <p>which could result in something simlar to this table:</p>
@@ -2863,6 +2864,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a><span class="w">      </span><span class="nt">t_shirt_size</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;M&quot;</span>
 </span><span id="__span-18-29"><a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_003&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
+<p>\newpage</p>
 <h3 id="example-2-story-points-with-multiple-dependencies">Example 2: Story points with multiple dependencies<a class="headerlink" href="#example-2-story-points-with-multiple-dependencies" title="Permanent link">&para;</a></h3>
 <p>Using story points and tasks with fan-in dependencies:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>Project: Mobile App v2
@@ -2914,6 +2916,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </span><span id="__span-20-28"><a id="__codelineno-20-28" name="__codelineno-20-28" href="#__codelineno-20-28"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
 </span><span id="__span-20-29"><a id="__codelineno-20-29" name="__codelineno-20-29" href="#__codelineno-20-29"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_002&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;task_003&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
+<p>\newpage</p>
 <h3 id="example-3-explicit-estimates-with-different-units">Example 3: Explicit estimates with different units<a class="headerlink" href="#example-3-explicit-estimates-with-different-units" title="Permanent link">&para;</a></h3>
 <p>When your team prefers numeric ranges over symbolic sizes:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>Project name: Database Migration
@@ -2979,6 +2982,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </span><span id="__span-22-41"><a id="__codelineno-22-41" name="__codelineno-22-41" href="#__codelineno-22-41"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span><span id="__span-22-42"><a id="__codelineno-22-42" name="__codelineno-22-42" href="#__codelineno-22-42"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_003&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
+<p>\newpage</p>
 <h3 id="example-4-sloppy-formatting-typos-inconsistent-punctuation">Example 4: Sloppy formatting (typos, inconsistent punctuation)<a class="headerlink" href="#example-4-sloppy-formatting-typos-inconsistent-punctuation" title="Permanent link">&para;</a></h3>
 <p>The parser is designed to handle real-world input with minor typos and formatting inconsistencies. All of the following variations parse correctly:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>Project name: Rework Web Interface

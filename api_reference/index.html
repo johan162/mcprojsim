@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A probabilistic project estimation tool using Monte Carlo simulation">
+        <meta name="description" content="A project estimation tool using Monte Carlo simulation">
       
       
         <meta name="author" content="Johan Persson">
@@ -3630,7 +3630,11 @@
 <ul>
 <li><code>profile</code>: str — Experience level name</li>
 <li><code>team_size</code>: int — Candidate team size</li>
+<li><code>individual_productivity</code>: float — Per-person productivity after overhead</li>
+<li><code>effective_capacity</code>: float — Total effective team capacity</li>
+<li><code>calendar_hours</code>: float — Total hours of calendar time needed</li>
 <li><code>calendar_working_days</code>: int — Calendar days needed</li>
+<li><code>delivery_date</code>: date | None — Projected delivery date</li>
 <li><code>efficiency</code>: float — Effective capacity vs nominal team size</li>
 </ul>
 <p><strong><code>StaffingRecommendation</code> fields:</strong></p>
@@ -3642,7 +3646,8 @@
 <li><code>calendar_working_days</code>: int — Calendar days needed</li>
 <li><code>delivery_date</code>: date | None — Scheduled completion</li>
 <li><code>efficiency</code>: float — Effective capacity vs nominal team size</li>
-<li><code>effort_percentile</code>: int | None — Which percentile was used</li>
+<li><code>parallelism_ratio</code>: float — Ratio of total effort to critical-path duration</li>
+<li><code>effort_basis</code>: str — Effort basis label (<code>"mean"</code> or a percentile label such as <code>"p80"</code>)</li>
 </ul>
 <p><strong>Example:</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="n">analyzer</span> <span class="o">=</span> <span class="n">StaffingAnalyzer</span><span class="p">()</span>
@@ -3728,7 +3733,7 @@
 </span></code></pre></div>
 <h3 id="data-classes">Data classes<a class="headerlink" href="#data-classes" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>ParsedProject</code> — extracted project-level data (<code>name</code>, <code>start_date</code>, <code>hours_per_day</code>, <code>tasks</code>, <code>confidence_levels</code>)</li>
+<li><code>ParsedProject</code> — extracted project-level data (<code>name</code>, <code>start_date</code>, <code>description</code>, <code>hours_per_day</code>, <code>tasks</code>, <code>confidence_levels</code>, <code>resources</code>, <code>calendars</code>, <code>sprint_planning</code>)</li>
 <li><code>ParsedTask</code> — extracted task data (<code>name</code>, <code>t_shirt_size</code>, <code>story_points</code>, <code>low_estimate</code>/<code>expected_estimate</code>/<code>high_estimate</code>, <code>dependency_refs</code>)</li>
 <li><code>ParsedResource</code> — extracted resource data (<code>name</code>, <code>availability</code>, <code>experience_level</code>, <code>productivity_level</code>, <code>calendar</code>, <code>sickness_prob</code>, <code>planned_absence</code>)</li>
 <li><code>ParsedCalendar</code> — extracted calendar data (<code>id</code>, <code>work_hours_per_day</code>, <code>work_days</code>, <code>holidays</code>)</li>

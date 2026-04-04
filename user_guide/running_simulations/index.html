@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A probabilistic project estimation tool using Monte Carlo simulation">
+        <meta name="description" content="A project estimation tool using Monte Carlo simulation">
       
       
         <meta name="author" content="Johan Persson">
@@ -1043,15 +1043,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mcprojsim-config-show" class="md-nav__link">
+  <a href="#mcprojsim-config" class="md-nav__link">
     <span class="md-ellipsis">
       
-        mcprojsim config show
+        mcprojsim config
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="mcprojsim config show">
+    <nav class="md-nav" aria-label="mcprojsim config">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1059,6 +1059,17 @@
     <span class="md-ellipsis">
       
         Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
       
     </span>
   </a>
@@ -1517,15 +1528,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mcprojsim-config-show" class="md-nav__link">
+  <a href="#mcprojsim-config" class="md-nav__link">
     <span class="md-ellipsis">
       
-        mcprojsim config show
+        mcprojsim config
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="mcprojsim config show">
+    <nav class="md-nav" aria-label="mcprojsim config">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1533,6 +1544,17 @@
     <span class="md-ellipsis">
       
         Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#options_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
       
     </span>
   </a>
@@ -1576,7 +1598,7 @@
 
 
 <h1 id="running-simulations">Running simulations<a class="headerlink" href="#running-simulations" title="Permanent link">&para;</a></h1>
-<p>This chapter is a reference for the <code>mcprojsim</code> command-line interface. It covers all four commands: <code>generate</code>, <code>validate</code>, <code>simulate</code>, and <code>config show</code>.</p>
+<p>This chapter is a reference for the <code>mcprojsim</code> command-line interface. It covers all four commands: <code>generate</code>, <code>validate</code>, <code>simulate</code>, and <code>config</code>.</p>
 <h2 id="command-overview">Command overview<a class="headerlink" href="#command-overview" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1599,7 +1621,7 @@
 <td>Run a Monte Carlo simulation and produce results</td>
 </tr>
 <tr>
-<td><code>mcprojsim config show</code></td>
+<td><code>mcprojsim config</code></td>
 <td>Display the active configuration</td>
 </tr>
 </tbody>
@@ -1780,11 +1802,6 @@
 <td>none</td>
 </tr>
 <tr>
-<td><code>--distribution MODEL</code></td>
-<td>Override the default task duration distribution (<code>triangular</code> or <code>lognormal</code>). Takes precedence over the project-level <code>distribution</code> setting but <strong>not</strong> over a <code>distribution</code> set on an individual task.</td>
-<td>project file setting</td>
-</tr>
-<tr>
 <td><code>--velocity-model MODEL</code></td>
 <td>Override the sprint planning velocity model for how to use historic data (<code>empirical</code> or <code>neg_binomial</code>). Applies only when sprint planning is enabled in the project file.</td>
 <td>project file setting</td>
@@ -1798,6 +1815,16 @@
 <td><code>--include-historic-base</code></td>
 <td>Add a <code>Historic Base</code> section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under <code>sprint_planning.historic_base</code>.</td>
 <td>off</td>
+</tr>
+<tr>
+<td><code>--two-pass</code></td>
+<td>Enable criticality two-pass scheduling. Only has effect when resource-constrained scheduling is active. Overrides the config file <code>assignment_mode</code> setting.</td>
+<td>off</td>
+</tr>
+<tr>
+<td><code>--pass1-iterations N</code></td>
+<td>Number of pass-1 iterations for criticality ranking when <code>--two-pass</code> is used. Capped to <code>--iterations</code>.</td>
+<td>1000 (from config)</td>
 </tr>
 </tbody>
 </table>
@@ -1843,77 +1870,74 @@
 </span><span id="__span-8-39"><a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a>
 </span><span id="__span-8-40"><a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="c1"># Staffing with table formatting</span>
 </span><span id="__span-8-41"><a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing<span class="w"> </span>--table
-</span><span id="__span-8-42"><a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a>
-</span><span id="__span-8-43"><a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a><span class="c1"># Override default distribution to lognormal (tasks with an explicit distribution are unaffected)</span>
-</span><span id="__span-8-44"><a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--distribution<span class="w"> </span>lognormal
-</span><span id="__span-8-45"><a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a>
-</span><span id="__span-8-46"><a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a><span class="c1"># Sprint planning: switch velocity model to negative binomial</span>
-</span><span id="__span-8-47"><a id="__codelineno-8-47" name="__codelineno-8-47" href="#__codelineno-8-47"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>--velocity-model<span class="w"> </span>neg_binomial
-</span><span id="__span-8-48"><a id="__codelineno-8-48" name="__codelineno-8-48" href="#__codelineno-8-48"></a>
-</span><span id="__span-8-49"><a id="__codelineno-8-49" name="__codelineno-8-49" href="#__codelineno-8-49"></a><span class="c1"># Sprint planning: disable sickness modelling</span>
-</span><span id="__span-8-50"><a id="__codelineno-8-50" name="__codelineno-8-50" href="#__codelineno-8-50"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>--no-sickness
-</span><span id="__span-8-51"><a id="__codelineno-8-51" name="__codelineno-8-51" href="#__codelineno-8-51"></a>
-</span><span id="__span-8-52"><a id="__codelineno-8-52" name="__codelineno-8-52" href="#__codelineno-8-52"></a><span class="c1"># Include Historic Base in HTML/JSON exports</span>
-</span><span id="__span-8-53"><a id="__codelineno-8-53" name="__codelineno-8-53" href="#__codelineno-8-53"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>-f<span class="w"> </span>json,html<span class="w"> </span>--include-historic-base
+</span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Sprint planning: switch velocity model to negative binomial</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>--velocity-model<span class="w"> </span>neg_binomial
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Sprint planning: disable sickness modelling</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>--no-sickness
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># Include Historic Base in HTML/JSON exports</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>-f<span class="w"> </span>json,html<span class="w"> </span>--include-historic-base
 </span></code></pre></div>
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>By default, the simulation prints a plain-text summary. With <code>--table</code> (<code>-t</code>), the confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are formatted as ASCII tables with column headers and box-drawing borders:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Confidence Intervals:
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>┌──────────────┬─────────┬────────────────┬────────────┐
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>│ Percentile   │   Hours │   Working Days │ Date       │
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>├──────────────┼─────────┼────────────────┼────────────┤
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>│ P25          │  522.75 │             66 │ 2026-02-02 │
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>│ P50          │  571.84 │             72 │ 2026-02-10 │
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>│ P90          │  682.94 │             86 │ 2026-03-02 │
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>│ P99          │  790.61 │             99 │ 2026-03-19 │
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>└──────────────┴─────────┴────────────────┴────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Confidence Intervals:
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>┌──────────────┬─────────┬────────────────┬────────────┐
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>│ Percentile   │   Hours │   Working Days │ Date       │
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>├──────────────┼─────────┼────────────────┼────────────┤
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>│ P25          │  522.75 │             66 │ 2026-02-02 │
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>│ P50          │  571.84 │             72 │ 2026-02-10 │
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>│ P90          │  682.94 │             86 │ 2026-03-02 │
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>│ P99          │  790.61 │             99 │ 2026-03-19 │
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>└──────────────┴─────────┴────────────────┴────────────┘
 </span></code></pre></div>
 <h4 id="staffing-output">Staffing output<a class="headerlink" href="#staffing-output" title="Permanent link">&para;</a></h4>
 <p>A short staffing advisory is always included at the end of the output (unless <code>--quiet</code> is active):</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
 </span></code></pre></div>
 <p>By default the staffing analysis uses <strong>mean</strong> effort and elapsed time. To base it on a specific confidence level, set <code>staffing.effort_percentile</code> in your configuration file:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">staffing</span><span class="p">:</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w">  </span><span class="c1"># use P80 effort and elapsed time</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">staffing</span><span class="p">:</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w">  </span><span class="c1"># use P80 effort and elapsed time</span>
 </span></code></pre></div>
 <p>If <code>staffing.effort_percentile</code> is omitted, mean effort and mean elapsed time are used. The mean effort is calculated as the average total effort across all iterations, and the mean elapsed time is the average project duration. If the distribution is symmetric, the mean and median (P50) will be close, but for skewed distributions they can differ significantly. </p>
 <p>If the percentile is set to a higher value like 80 or 90, the staffing recommendation will be based on a more conservative estimate of effort and elapsed time, which can lead to recommending more staff to mitigate the risk of overruns. A staffing percentile of 90, for example, would recommend a team size that has a 90% chance of completing the project within the estimated effort and time, providing a buffer against uncertainty.</p>
 <p>The reason we say both effort and elapsed time is that the staffing model considers both how much total work there is (effort) and how long the project takes (elapsed time) to determine how many people are needed. A higher effort percentile means the model assumes a higher total workload, while a higher elapsed time percentile means it assumes a longer project duration. Both factors influence the recommended team size to ensure the project can be completed within the desired confidence level.</p>
 <p>The reason they are not separated into <code>staffing.effort_percentile</code> and <code>staffing.elapsed_time_percentile</code> is that they are inherently linked in the staffing model. The number of staff needed depends on both the total effort and the project duration, so it makes sense to use the same confidence level for both to maintain consistency in the risk tolerance. If they were set separately, it could lead to conflicting recommendations (e.g., a high effort percentile but a low elapsed time percentile might recommend more staff than necessary, or vice versa). By using a single <code>effort_percentile</code>, we ensure that the staffing recommendation is based on a coherent risk profile.</p>
 <p>With this setting the output changes to:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Staffing (based on P80 effort percentile): 3 people recommended (mixed team), 42 working days
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>  Total effort: 1,024 person-hours (128 person-days) | Parallelism ratio: 1.6
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Staffing (based on P80 effort percentile): 3 people recommended (mixed team), 42 working days
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>  Total effort: 1,024 person-hours (128 person-days) | Parallelism ratio: 1.6
 </span></code></pre></div>
 <p>Using a higher percentile produces more conservative staffing (since we want to be more confident in our recommendations because it accounts for higher-effort scenarios).</p>
 <p>Pass <code>--staffing</code> to expand this into a full table for each experience profile (senior, mixed, junior). With <code>--table</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>=== Staffing Analysis ===
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>--- senior ---
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>│   Team Size │   Eff. Capacity │   Working Days │ Delivery Date   │ Efficiency   │
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>│           1 │            1.00 │            114 │ 2026-06-15      │ 100.0%       │
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>│           2 │            1.92 │             60 │ 2026-03-27      │ 96.0%        │
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>│          *3 │            2.76 │             42 │ 2026-03-02      │ 92.2%        │
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>=== Staffing Analysis ===
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>--- senior ---
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>│   Team Size │   Eff. Capacity │   Working Days │ Delivery Date   │ Efficiency   │
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>│           1 │            1.00 │            114 │ 2026-06-15      │ 100.0%       │
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>│           2 │            1.92 │             60 │ 2026-03-27      │ 96.0%        │
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>│          *3 │            2.76 │             42 │ 2026-03-02      │ 92.2%        │
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
 </span></code></pre></div>
 <p>The row marked with <code>*</code> is the recommended team size for that profile. Without <code>--table</code>, the same information appears in plain indented text with <code>&lt;-- recommended</code> annotations. See <a href="../interpreting_results/#staffing-recommendations">Interpreting Results — Staffing recommendations</a> for a detailed explanation of the model and columns.</p>
 <p>Without <code>--table</code>, the same data is printed as indented text:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>=== Simulation Results ===
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>Project: Website Refresh
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>Hours per Day: 8.0
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>Mean: 126.78 hours (16 working days)
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>Median (P50): 125.36 hours
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>Std Dev: 18.01 hours
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>Confidence Intervals:
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>  P50: 125.36 hours (16 working days)  (2026-04-22)
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>  P80: 143.08 hours (18 working days)  (2026-04-24)
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>  P90: 151.74 hours (19 working days)  (2026-04-27)
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>
-</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>Most Frequent Critical Paths:
-</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>  1. task_001 -&gt; task_002 (10000/10000, 100.0%)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>=== Simulation Results ===
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>Project: Website Refresh
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>Hours per Day: 8.0
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>Mean: 126.78 hours (16 working days)
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>Median (P50): 125.36 hours
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>Std Dev: 18.01 hours
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>Confidence Intervals:
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>  P50: 125.36 hours (16 working days)  (2026-04-22)
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>  P80: 143.08 hours (18 working days)  (2026-04-24)
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>  P90: 151.74 hours (19 working days)  (2026-04-27)
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>Most Frequent Critical Paths:
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>  1. task_001 -&gt; task_002 (10000/10000, 100.0%)
 </span></code></pre></div>
 <p>When export formats are specified with <code>-f</code>, the following files are created:</p>
 <table>
@@ -1938,17 +1962,39 @@
 </tr>
 </tbody>
 </table>
-<h2 id="mcprojsim-config-show"><code>mcprojsim config show</code><a class="headerlink" href="#mcprojsim-config-show" title="Permanent link">&para;</a></h2>
+<h2 id="mcprojsim-config"><code>mcprojsim config</code><a class="headerlink" href="#mcprojsim-config" title="Permanent link">&para;</a></h2>
 <p>Displays the active configuration (uncertainty factor multipliers, T-shirt size mappings, story point mappings, simulation defaults).</p>
 <h3 id="usage_3">Usage<a class="headerlink" href="#usage_3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span><span class="o">[</span>--config-file<span class="w"> </span>FILE<span class="o">]</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>CONFIG_FILE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--generate<span class="o">]</span>
 </span></code></pre></div>
+<h3 id="options_3">Options<a class="headerlink" href="#options_3" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-c</code>, <code>--config-file FILE</code></td>
+<td>Show configuration merged with a custom YAML file</td>
+</tr>
+<tr>
+<td><code>--generate</code></td>
+<td>Write the built-in default configuration to <code>~/.mcprojsim/config.yaml</code></td>
+</tr>
+</tbody>
+</table>
 <h3 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Show built-in defaults</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Show a custom configuration merged with defaults</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>show<span class="w"> </span>--config-file<span class="w"> </span>my_config.yaml
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Show built-in defaults</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>mcprojsim<span class="w"> </span>config
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># Show a custom configuration merged with defaults</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--config-file<span class="w"> </span>my_config.yaml
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># Generate a default configuration file at ~/.mcprojsim/config.yaml</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--generate
 </span></code></pre></div>
 <p>\newpage</p>
 
