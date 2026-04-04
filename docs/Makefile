@@ -1,0 +1,341 @@
+# Makefile for building Documentation for the MCProjSim project
+
+.PHONY: docs gen-examples update-version pdf docs-serve
+
+# Makefile itself as a dependency to ensure it is re-evaluated when changed
+# NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
+# and then this line will be silently ignored.´unless you have upgrade make via brew or similar.	
+.EXTRA_PREREQS := $(firstword $(MAKEFILE_LIST))
+
+# Make behavior
+.DEFAULT_GOAL := help
+
+# Get full path to bash
+SHELL := $(shell which bash)
+
+# Delete target files on error to prevent stale timestamps
+.DELETE_ON_ERROR:
+
+# Use a single shell for each target to allow multi-line commands and better error handling
+.ONESHELL:
+
+# Colors for output
+BLACK := \033[0;30m
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+BLUE := \033[0;34m
+MAGENTA := \033[0;35m
+CYAN := \033[0;36m
+WHITE := \033[1;37m
+
+# Variations
+DARKGRAY := \033[1;30m
+BRIGHTRED := \033[1;31m
+BRIGHTGREEN := \033[1;32m
+DARKYELLOW := \033[0;33m
+BRIGHTBLUE := \033[1;34m
+BRIGHTMAGENTA := \033[1;35m
+BRIGHTCYAN := \033[1;36m
+LIGHTGRAY := \033[0;37m
+NC := \033[0m # No Color
+
+# Formatting
+BOLD := \033[1m
+UNDERLINE := \033[4m
+
+# ============================================================================================
+# Tool availability checks
+# ============================================================================================
+
+POETRY := $(shell command -v poetry 2>/dev/null)
+PODMAN := $(shell command -v podman 2>/dev/null)
+PODMAN_COMPOSE := $(shell command -v podman-compose 2>/dev/null)
+DOCKER := $(shell command -v docker 2>/dev/null)
+DOCKER_COMPOSE := $(shell command -v docker-compose 2>/dev/null)
+
+ifeq ($(POETRY),)
+    $(error poetry not found. MacOS Install with: pip install poetry)
+endif
+
+# If both podman and docker are missing, raise an error
+ifeq ($(PODMAN),)
+    ifeq ($(DOCKER),)
+        $(error Neither podman nor docker found. Please install one of them.)
+    endif
+endif
+
+ifeq ($(PODMAN_COMPOSE),)
+    ifeq ($(DOCKER_COMPOSE),)
+        $(error Neither podman-compose nor docker-compose found. Please install one of them.)
+    endif
+endif
+
+# Check which container engine is running and set the appropriate tool
+PODMAN_RUNNING := $(shell podman info >/dev/null 2>&1 && echo "yes" || echo "no")
+DOCKER_RUNNING := $(shell docker info >/dev/null 2>&1 && echo "yes" || echo "no")
+NO_CONTAINER_ENGINE := $(shell if [ "$(PODMAN_RUNNING)" = "no" ] && [ "$(DOCKER_RUNNING)" = "no" ]; then echo "yes"; else echo "no"; fi)
+
+ifeq ($(PODMAN_RUNNING),yes)
+    CONTAINER_CMD := ${PODMAN}
+    CONTAINER_COMPOSE_CMD := ${PODMAN_COMPOSE}
+    $(info Using Podman as the container engine)
+else ifeq ($(DOCKER_RUNNING),yes)
+    CONTAINER_CMD := ${DOCKER}
+    CONTAINER_COMPOSE_CMD := ${DOCKER_COMPOSE}
+    $(info Using Docker as the container engine)
+else
+    $(info **WARNING** Neither Podman nor Docker engine is running. Please start one of them to use container-related targets.)
+endif
+
+# Check if we're behind a proxy (detect proxy environment variables and CA cert)
+PROXY_DETECTED := no
+ifneq ($(HTTP_PROXY)$(HTTPS_PROXY)$(http_proxy)$(https_proxy),)
+    PROXY_DETECTED := yes
+endif
+ifeq ($(shell [ -f ${PROXY_CA_FILE} ] && [ -s ${PROXY_CA_FILE} ] && echo "yes"),yes)
+    PROXY_DETECTED := yes
+endif
+
+ifeq ($(PROXY_DETECTED),yes)
+    $(info Proxy environment detected - will use proxy CA certificate for container builds)
+    DEFAULT_CONTAINER_BUILD := container-build-proxy
+else
+    $(info No proxy detected - will use standard container build)
+    DEFAULT_CONTAINER_BUILD := container-build-standard
+endif
+
+# ============================================================================================
+# Timestamp file targets
+# ============================================================================================
+$(DOC_STAMP): $(DOC_FILES)
+	@echo -e "$(DARKYELLOW)- Building documentation...$(NC)"
+	@if poetry run mkdocs build -q; then \
+		touch $(DOC_STAMP); \
+		echo -e "$(GREEN)✓ Documentation built successfully$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Documentation build failed$(NC)"; \
+		exit 1; \
+	fi
+
+
+# ============================================================================================
+# Variable configurations
+# ============================================================================================
+
+# Directories
+SRC_DIR := ../src
+TEST_DIR := ../tests
+DOCS_DIR := .
+DIST_DIR := ../dist
+BUILD_DIR := ../.build
+SCRIPTS_DIR := ../scripts
+
+# Documentation Container Server configuration
+SERVER_HOST := 0.0.0.0
+DOCS_PORT := 8100
+DOCS_CONTAINER_SCRIPT := ./scripts/docs-contctl.sh
+
+# Project settings
+PROJECT := mcprojsim
+APP_NAME := MCProjSim
+VERSION := $(shell grep '^version' ../pyproject.toml | head -1 | cut -d'"' -f2)
+
+# Container related settings
+CONTAINER_NAME := $(PROJECT)
+
+# Temporary build directory for user guide PDF generation
+USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
+
+# User guide PDF output paths and templates
+# We use unique names for each file to avoid race conditions when building multiple PDFs in parallel.
+USER_GUIDE_TEMPLATE := $(DOCS_DIR)/user_guide/report_template.tex
+USER_GUIDE_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_b5.tex
+USER_GUIDE_DARK_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark.tex
+USER_GUIDE_DARK_B5_TEMPLATE := $(DOCS_DIR)/user_guide/report_template_dark_b5.tex
+USER_GUIDE_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
+
+USER_GUIDE_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-$(VERSION).pdf
+USER_GUIDE_B5_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-b5-$(VERSION).pdf
+USER_GUIDE_DARK_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-$(VERSION).pdf
+USER_GUIDE_DARK_B5_PDF := $(DIST_DIR)/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
+
+USER_GUIDE_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat.md
+USER_GUIDE_B5_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-b5.md
+USER_GUIDE_DARK_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-dark.md
+USER_GUIDE_DARK_B5_CONCAT_MD := $(USER_GUIDE_BUILD_DIR)/user_guide_concat-dark-b5.md
+
+USER_GUIDE_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body.tex
+USER_GUIDE_B5_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body-b5.tex
+USER_GUIDE_DARK_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body-dark.tex
+USER_GUIDE_DARK_B5_BODY_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_body-dark-b5.tex
+
+USER_GUIDE_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report.tex
+USER_GUIDE_B5_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report-b5.tex
+USER_GUIDE_DARK_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark.tex
+USER_GUIDE_DARK_B5_TEX := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark-b5.tex
+
+USER_GUIDE_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report.pdf
+USER_GUIDE_B5_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report-b5.pdf
+USER_GUIDE_DARK_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark.pdf
+USER_GUIDE_DARK_B5_PDF_BUILT := $(USER_GUIDE_BUILD_DIR)/user_guide_report-dark-b5.pdf
+
+# Doc files for User Guide PDF generation
+USER_GUIDE_DOCS := \
+	$(DOCS_DIR)/user_guide/getting_started.md \
+	$(DOCS_DIR)/user_guide/introduction.md \
+	$(DOCS_DIR)/user_guide/your_first_project.md  \
+	$(DOCS_DIR)/user_guide/uncertainty_factors.md  \
+	$(DOCS_DIR)/user_guide/task_estimation.md  \
+	$(DOCS_DIR)/user_guide/risks.md  \
+	$(DOCS_DIR)/user_guide/project_files.md  \
+	$(DOCS_DIR)/user_guide/sprint_planning.md  \
+	$(DOCS_DIR)/user_guide/constrained.md  \
+	$(DOCS_DIR)/user_guide/multi_phase_simulation.md  \
+	$(DOCS_DIR)/user_guide/running_simulations.md  \
+	$(DOCS_DIR)/user_guide/interpreting_results.md  \
+	$(DOCS_DIR)/user_guide/configuration.md  \
+	$(DOCS_DIR)/user_guide/mcp-server.md \
+	$(DOCS_DIR)/examples.md
+
+# Example generation
+EXAMPLES_TEMPLATE := $(DOCS_DIR)/examples_template.md
+EXAMPLES_GENERATOR := $(SCRIPTS_DIR)/gen-examples.sh
+EXAMPLES_OUTPUT := $(DOCS_DIR)/examples.md
+EXAMPLE_FILES := $(wildcard ../examples/*.yaml) $(wildcard ../examples/*.txt)
+
+# Source and Test Files
+DOC_FILES := ../mkdocs.yml $(shell find $(DOCS_DIR) -name '*.md' -o -name '*.yml' -o -name '*.yaml')
+MISC_FILES := pyproject.toml README.md mypy.ini .flake8
+LOCK_FILE := poetry.lock
+DOCKER_SRC_FILES := Dockerfile.docs docker-compose.yml
+
+# Timestamp files
+STAMP_DIR := .makefile-stamps
+$(shell mkdir -p $(STAMP_DIR))
+
+DOC_STAMP := $(STAMP_DIR)/docs-stamp
+
+$(DOC_STAMP): $(DOC_FILES)
+	@echo -e "$(DARKYELLOW)- Building documentation...$(NC)"
+	@if poetry run mkdocs build -f ../mkdocs.yml -q; then \
+		touch $(DOC_STAMP); \
+		echo -e "$(GREEN)✓ Documentation built successfully$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Documentation build failed$(NC)"; \
+		exit 1; \
+	fi
+
+# ============================================================================================
+# Help Target
+# ============================================================================================
+
+# Defines a function to print a section of the help message.
+# Arg 1: Section title
+# Arg 2: A pipe-separated list of targets for the section
+define print_section
+	@echo ""
+	@echo -e "$(BRIGHTCYAN)$1:$(NC)"
+	@grep -E '^($(2)):.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(BLUE)%-22s$(NC) %s\n", $$1, $$2}' | sort
+endef
+
+help: ## Show this help message
+	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
+	@$(call print_section,Documentation,build|docs|pdf-docs)
+	@echo ""
+
+
+# ============================================================================================
+# Documentation Targets
+# ============================================================================================
+docs: $(DOC_STAMP) ## Build the HTML project documentation with MkDocs
+	@:
+
+pdf-docs:  ## Build the user guide in all PDF variants (A4 light/dark, B5 light/dark) in parallel
+	+@$(MAKE) -j4 $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
+
+gen-examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
+	@:
+
+$(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) 
+	@echo -e "$(DARKYELLOW)- Generating examples documentation from template...$(NC)"
+	@bash $(EXAMPLES_GENERATOR)
+
+# ============================================================================================
+# Macro: BUILD_USER_GUIDE_PDF
+# Shared recipe for every User Guide PDF variant. Call via $(eval $(call BUILD_USER_GUIDE_PDF,...)).
+# $(1) = variable name prefix (e.g. USER_GUIDE, USER_GUIDE_B5)
+# $(2) = paper format: a4 or b5  (passed to the pandoc Lua filter)
+# Note: Make variables used inside recipe lines are escaped as $$(VAR) so they survive
+# $(call) expansion and are resolved at recipe-execution time.
+# ============================================================================================
+define BUILD_USER_GUIDE_PDF
+$$($1_PDF): $$(USER_GUIDE_DOCS) $$($1_TEMPLATE) $$(USER_GUIDE_LUA_FILTER)
+	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
+	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
+	@rm -f $$($1_TEMPLATE).bak
+	@echo -e "$$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$$(NC)"
+	@mkdir -p $$(USER_GUIDE_BUILD_DIR)
+	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
+	@cat $$(USER_GUIDE_DOCS) > $$($1_CONCAT_MD)
+	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
+	@rm -f $$($1_BODY_TEX).bak
+	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$$(NC)"
+	@awk -v body="$$($1_BODY_TEX)" '\
+		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$$($1_TEMPLATE) > $$($1_TEX)
+	@echo -e "$$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) >/dev/null
+	@cp $$($1_PDF_BUILT) $$($1_PDF)
+	@echo -e "$$(GREEN)✓ User guide PDF built: $$($1_PDF)$$(NC)"
+endef
+
+# ============================================================================================
+# User Guide PDF targets — A4 light, A4 dark, B5 light, B5 dark
+# ============================================================================================
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE,a4))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_B5,b5))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK,a4))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK_B5,b5))
+
+docs-serve: docs ## Serve the project documentation locally with MkDocs
+	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
+	@poetry run mkdocs serve -f ../mkdocs.yml -a localhost:$(DOCS_PORT)
+
+container-engine-check:
+	@if [ "$(NO_CONTAINER_ENGINE)" = "yes" ]; then \
+        echo -e "$(YELLOW)⚠️  Warning: No container engine detected. Skipping container operation. Please start Podman or Docker.$(NC)"; \
+        exit 1; \
+    fi
+
+docs-container-build: | container-engine-check ## Build the containerized documentation image
+	@cd .. && MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) build && cd docs
+
+docs-container-start: | container-engine-check ## Start the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) start
+
+docs-container-stop: | container-engine-check ## Stop the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) stop
+
+docs-container-restart: | container-engine-check ## Restart the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) restart
+
+docs-container-status: | container-engine-check ## Show status for the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) status
+
+docs-container-logs: | container-engine-check ## Show logs for the containerized documentation server
+	@MCPROJSIM_DOCS_PORT=$(DOCS_PORT) $(DOCS_CONTAINER_SCRIPT) logs --follow
+
+docs-deploy: ## Build and deploy documentation to GitHub Pages
+	@echo -e "$(DARKYELLOW)- Deploying documentation to GitHub Pages...$(NC)"
+	@if poetry run mkdocs gh-deploy --force; then \
+		echo -e "$(GREEN)✓ Documentation deployed successfully$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Documentation deployment failed$(NC)"; \
+		exit 1; \
+	fi
