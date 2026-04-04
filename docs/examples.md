@@ -235,7 +235,7 @@ Calendar Time Confidence Intervals:
   P99: 12716.79 hours (1590 working days)  (2031-12-05)
 ```
 
-Key observations: two independent starting tasks yield `Max Parallel Tasks: 2`. The wide P10–P99 spread (349–632 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.
+Key observations: two independent starting tasks yield `Max Parallel Tasks: 2`. The wide P10–P99 spread (938–1590 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.
 
 Note: T-shirt size and story point estimates must **not** include a `unit` field in the project file. The unit is controlled by the configuration.
 
@@ -847,7 +847,7 @@ Key observations:
 - `sickness_prob` introduces stochastic sick days that vary across iterations.
 - `planned_absence` blocks specific dates deterministically.
 - Bob's `part_time` calendar (6 hours/day, Mon–Thu) reduces his available capacity.
-- Calendar time (77 working days) is much larger than effort (22 person-days) due to calendar constraints, weekends, holidays, and sickness.
+- Calendar time (78 working days) is much larger than effort (22 person-days) due to calendar constraints, weekends, holidays, and sickness.
 
 For a full constrained walkthrough with incremental complexity, see the [Constrained Scheduling Guide](user_guide/constrained.md).
 

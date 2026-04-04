@@ -400,7 +400,8 @@ improved once pass-2 gave that stream's DevOps slot priority.
 
 A **Two-Pass Scheduling Traceability** table is printed after the constrained
 diagnostics when `--two-pass` is active.  The table shows pass-1, pass-2, and
-Δ values for Mean, P80, P95, and resource wait time.
+Δ values for Mean, P80, and P95.  The resource wait delta is printed on a
+separate line below the table.
 
 ### JSON export (`-f json`)
 
@@ -469,8 +470,8 @@ lists each task's CI value.
 ### HTML export (`-f html`)
 
 The HTML report gains a **Two-Pass Scheduling Traceability** table with pass-1,
-pass-2, and Δ columns for each key metric, followed by a collapsible **Task
-Criticality Index (Pass 1)** table.
+pass-2, and Δ columns for each key metric, followed by a **Task Criticality
+Index (Pass 1)** table.
 
 ---
 

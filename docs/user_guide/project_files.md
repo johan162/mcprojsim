@@ -300,7 +300,7 @@ This is the default and most common form.
 
 | Field | Required | Type | Default |
 |---|---|---|---|
-| `distribution` | No | `"triangular"` or `"lognormal"` | `"triangular"` |
+| `distribution` | No | `"triangular"` or `"lognormal"` | `null` (inherits project default) |
 | `min` | Yes for triangular | number ≥ 0 | `null` |
 | `expected` | Yes | number > 0 | `null` |
 | `max` | Yes for triangular | number ≥ 0 | `null` |
@@ -819,7 +819,7 @@ For a comprehensive walkthrough of sprint planning features, configuration optio
 | `enabled` | No | boolean | `false` | When `false`, the section is parsed but not simulated |
 | `sprint_length_weeks` | Yes | integer > 0 | \u2014 | Duration of each sprint in calendar weeks |
 | `capacity_mode` | Yes | `story_points` \| `tasks` | \u2014 | Unit family for all velocity and backlog measurements |
-| `planning_confidence_level` | No | float (0, 1) | `0.85` | Percentile of the sprint count distribution reported |
+| `planning_confidence_level` | No | float (0, 1) | `0.80` | Percentile of the sprint count distribution reported |
 | `velocity_model` | No | `empirical` \| `neg_binomial` | `empirical` | Distribution fitted to historical velocity observations |
 | `removed_work_treatment` | No | `churn_only` \| `reduce_backlog` | `churn_only` | How removed sprint items affect the net backlog |
 | `history` | No | list or external descriptor | `[]` | Historical sprint data; see below |
@@ -1320,7 +1320,7 @@ constrained_scheduling:
   sickness_prob: 0.0
 
 sprint_defaults:
-  planning_confidence_level: 85
+  planning_confidence_level: 0.80
   velocity_model: "empirical"
   removed_work_treatment: "churn_only"
 ```
@@ -1404,9 +1404,9 @@ t_shirt_size_default_category: epic
 
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
-| `min` | Yes when that size is defined | float | — | `> 0` |
+| `low` | Yes when that size is defined | float | — | `> 0` |
 | `expected` | Yes | float | — | `> 0` |
-| `max` | Yes | float | — | `> 0` |
+| `high` | Yes | float | — | `> 0` |
 
 ### Built-in category keys
 
@@ -1427,7 +1427,7 @@ t_shirt_size_default_category: epic
 
 ### Built-in `story` defaults
 
-| Size | `min` | `expected` | `max` |
+| Size | `low` | `expected` | `high` |
 |---|---:|---:|---:|
 | `XS` | 3 | 5 | 15 |
 | `S` | 5 | 16 | 40 |
@@ -1481,9 +1481,9 @@ This section maps Story Point values to numeric effort ranges.
 
 | Field | Required | Type | Default | Constraints |
 |---|---|---|---|---|
-| `min` | Yes when that point value is defined | float | — | `> 0` |
+| `low` | Yes when that point value is defined | float | — | `> 0` |
 | `expected` | Yes | float | — | `> 0` |
-| `max` | Yes | float | — | `> 0` |
+| `high` | Yes | float | — | `> 0` |
 
 ### Built-in point values
 
@@ -1497,7 +1497,7 @@ This section maps Story Point values to numeric effort ranges.
 
 ### Built-in defaults
 
-| Points | `min` | `expected` | `max` |
+| Points | `low` | `expected` | `high` |
 |---|---:|---:|---:|
 | `1` | 0.5 | 1 | 3 |
 | `2` | 1 | 2 | 4 |

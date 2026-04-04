@@ -1,6 +1,6 @@
 # Running simulations
 
-This chapter is a reference for the `mcprojsim` command-line interface. It covers all four commands: `generate`, `validate`, `simulate`, and `config show`.
+This chapter is a reference for the `mcprojsim` command-line interface. It covers all four commands: `generate`, `validate`, `simulate`, and `config`.
 
 
 
@@ -11,7 +11,7 @@ This chapter is a reference for the `mcprojsim` command-line interface. It cover
 | `mcprojsim generate` | Create a project YAML file from a natural language description |
 | `mcprojsim validate` | Check a project file for errors without running a simulation |
 | `mcprojsim simulate` | Run a Monte Carlo simulation and produce results |
-| `mcprojsim config show` | Display the active configuration |
+| `mcprojsim config` | Display the active configuration |
 
 A typical workflow runs these commands in sequence: generate (or write by hand) → validate → simulate.
 
@@ -139,7 +139,6 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
 | `--tshirt-category CATEGORY` | Override default T-shirt category for bare values like `M` during this run | config setting |
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
-| `--distribution MODEL` | Override the default task duration distribution (`triangular` or `lognormal`). Takes precedence over the project-level `distribution` setting but **not** over a `distribution` set on an individual task. | project file setting |
 | `--velocity-model MODEL` | Override the sprint planning velocity model for how to use historic data (`empirical` or `neg_binomial`). Applies only when sprint planning is enabled in the project file. | project file setting |
 | `--no-sickness` | Disable sickness modelling regardless of the project file setting. Applies only when sprint planning is enabled. | off |
 | `--include-historic-base` | Add a `Historic Base` section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under `sprint_planning.historic_base`. | off |
@@ -190,9 +189,6 @@ mcprojsim simulate project.yaml --tshirt-category epic
 
 # Staffing with table formatting
 mcprojsim simulate project.yaml --staffing --table
-
-# Override default distribution to lognormal (tasks with an explicit distribution are unaffected)
-mcprojsim simulate project.yaml --distribution lognormal
 ```
 
 ```bash
@@ -301,14 +297,14 @@ When export formats are specified with `-f`, the following files are created:
 
 
 
-## `mcprojsim config show`
+## `mcprojsim config`
 
 Displays the active configuration (uncertainty factor multipliers, T-shirt size mappings, story point mappings, simulation defaults).
 
 ### Usage
 
 ```bash
-mcprojsim config show [-c CONFIG_FILE] [--generate]
+mcprojsim config [-c CONFIG_FILE] [--generate]
 ```
 
 ### Options
@@ -322,13 +318,13 @@ mcprojsim config show [-c CONFIG_FILE] [--generate]
 
 ```bash
 # Show built-in defaults
-mcprojsim config show
+mcprojsim config
 
 # Show a custom configuration merged with defaults
-mcprojsim config show --config-file my_config.yaml
+mcprojsim config --config-file my_config.yaml
 
 # Generate a default configuration file at ~/.mcprojsim/config.yaml
-mcprojsim config show --generate
+mcprojsim config --generate
 ```
 
 

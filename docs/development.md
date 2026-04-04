@@ -56,7 +56,9 @@ Key points from the current setup:
 - runtime dependencies live under `[tool.poetry.dependencies]`
 - developer tools live under `[tool.poetry.group.dev.dependencies]`
 - docs tooling lives under `[tool.poetry.group.docs.dependencies]`
-- the CLI entry point is `mcprojsim = "mcprojsim.cli:cli"`
+- MCP server tooling lives under `[tool.poetry.group.mcp.dependencies]` (optional)
+- the main CLI entry point is `mcprojsim = "mcprojsim.cli:cli"`
+- the MCP server entry point is `mcprojsim-mcp = "mcprojsim.mcp_server:main"` (only installed with `--with mcp`)
 
 ### Recommended local setup
 

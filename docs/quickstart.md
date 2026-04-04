@@ -144,24 +144,52 @@ The output will now be the following:
 
 ```bash
 % mcprojsim simulate quickstart_project.yaml --seed 42 --table
-mcprojsim, version 0.8.0
+mcprojsim, version 0.11.2
 Progress: 100.0% (10000/10000)
+Simulation time: 0.62 seconds
+Peak simulation memory: 852.00 KiB
 
 === Simulation Results ===
+
+Project Overview:
+┌────────────────────┬─────────────────┐
+│ Field              │ Value           │
+├────────────────────┼─────────────────┤
+│ Project            │ Website Refresh │
+│ Hours per Day      │ 8.0             │
+│ Max Parallel Tasks │ 1               │
+│ Schedule Mode      │ dependency_only │
+└────────────────────┴─────────────────┘
+
+Calendar Time Statistical Summary:
 ┌──────────────────────────┬────────────────────────────────┐
-│ Parameter                │ Value                          │
+│ Metric                   │ Value                          │
 ├──────────────────────────┼────────────────────────────────┤
-│ Project                  │ Website Refresh                │
-│ Hours per Day            │ 8.0                            │
 │ Mean                     │ 126.93 hours (16 working days) │
 │ Median (P50)             │ 125.74 hours                   │
 │ Std Dev                  │ 17.68 hours                    │
+│ Minimum                  │ 78.43 hours                    │
+│ Maximum                  │ 184.27 hours                   │
 │ Coefficient of Variation │ 0.1393                         │
 │ Skewness                 │ 0.2267                         │
 │ Excess Kurtosis          │ -0.4206                        │
 └──────────────────────────┴────────────────────────────────┘
 
-Confidence Intervals:
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 126.93 person-hours (16 person-days) │
+│ Median (P50)             │ 125.74 person-hours                  │
+│ Std Dev                  │ 17.68 person-hours                   │
+│ Minimum                  │ 78.43 person-hours                   │
+│ Maximum                  │ 184.27 person-hours                  │
+│ Coefficient of Variation │ 0.1393                               │
+│ Skewness                 │ 0.2267                               │
+│ Excess Kurtosis          │ -0.4206                              │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
 ┌──────────────┬─────────┬────────────────┬────────────┐
 │ Percentile   │   Hours │   Working Days │ Date       │
 ├──────────────┼─────────┼────────────────┼────────────┤
@@ -169,6 +197,15 @@ Confidence Intervals:
 │ P80          │  142.59 │             18 │ 2026-04-27 │
 │ P90          │  151.18 │             19 │ 2026-04-28 │
 └──────────────┴─────────┴────────────────┴────────────┘
+
+Effort Confidence Intervals:
+┌──────────────┬────────────────┬───────────────┐
+│ Percentile   │   Person-Hours │   Person-Days │
+├──────────────┼────────────────┼───────────────┤
+│ P50          │         125.74 │            16 │
+│ P80          │         142.59 │            18 │
+│ P90          │         151.18 │            19 │
+└──────────────┴────────────────┴───────────────┘
 
 Sensitivity Analysis (top contributors):
 ┌──────────┬───────────────┐
@@ -180,14 +217,17 @@ Sensitivity Analysis (top contributors):
 
 Schedule Slack:
 ┌──────────┬─────────────────┬──────────┐
-│ Task     │   Slack (hours) │ Status   │
+│ Task     │ Slack (hours)   │ Status   │
 ├──────────┼─────────────────┼──────────┤
-│ task_001 │               0 │ Critical │
-│ task_002 │               0 │ Critical │
+│ task_001 │ 0.00            │ Critical │
+│ task_002 │ 0.00            │ Critical │
 └──────────┴─────────────────┴──────────┘
 
 Most Frequent Critical Paths:
   1. task_001 -> task_002 (10000/10000, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 19 working days
+  Total effort: 127 person-hours (16 person-days) | Parallelism ratio: 1.0
 
 No export formats specified. Use -f to export results to files.
 ```
@@ -249,7 +289,7 @@ mcprojsim simulate quickstart_project.yaml --quiet
 
 ## What the main results mean
 
-- `P50`: about a 50% chance of finishing within this many hours of effort
+- `P50`: about a 50% chance of finishing within this many elapsed hours
 - `P80`: a more conservative planning target
 - `P90`: a high-confidence planning target
 

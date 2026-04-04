@@ -217,10 +217,12 @@ The effort summary has the same fields (minimum/maximum person-hours) for total 
 
 ## The thermometer chart
 
-The HTML report includes a thermometer — a vertical colour-coded bar showing effort at probability levels from 50% to 99%. It provides a quick visual: green zones are highly likely to succeed, orange zones are risky.
+The HTML report includes two thermometers — vertical colour-coded bars showing elapsed time and effort (person-hours) at probability levels from 50% to 99%. They provide a quick visual: green zones are highly likely to succeed, orange zones are risky.
 
-- **Dark orange → yellow** (50%–70%): aggressive targets. You are more likely than not to miss these.
-- **Yellow → light green** (75%–85%): moderate confidence. Reasonable for internal targets.
+The colour transitions as a continuous gradient from dark orange (50%) to dark green (99%):
+
+- **Dark orange** (50%–70%): aggressive targets. You are more likely than not to miss these.
+- **Olive/amber tones** (75%–85%): moderate confidence. Reasonable for internal targets.
 - **Green → dark green** (90%–99%): high confidence. Suitable for external commitments.
 
 The colour thresholds are configurable via `probability_red_threshold` and `probability_green_threshold` in the project file.
