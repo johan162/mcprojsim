@@ -5,6 +5,11 @@
 #
 # Build: podman build -f Dockerfile.docs -t mcprojsim-docs .
 # Run:   podman run -d --rm -p 9090:80 --name mcprojsim-docs mcprojsim-docs
+#
+# Proxy build: podman build --build-arg USE_PROXY_CA=true --secret id=proxy_ca,src=CA_proxy_fw_all.pem -f Dockerfile.docs -t mcprojsim-docs .
+# Run:   podman run -d --rm -p 9090:80 --name mcprojsim-docs mcprojsim-docs
+# =============================================================================
+
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -23,47 +28,51 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+# Install build dependencies and Poetry
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir poetry \
+    && poetry config virtualenvs.in-project true
+
 # Install build dependencies
 WORKDIR /build
 
 # Copy project files needed for documentation
 COPY pyproject.toml mkdocs.yml ./
-COPY docs/ ./docs/
-COPY src/ ./src/
+COPY docs/ docs/
+COPY src/ src/
 COPY README.md ./
+COPY CHANGELOG.md docs/
 
-# Copy and configure proxy CA certificate if USE_PROXY_CA=true
-# This must happen BEFORE pip install
-COPY ${CA_CERT_FILE}* /tmp/certs/
-RUN if [ "$USE_PROXY_CA" = "true" ]; then \
-        if [ -f /tmp/certs/${CA_CERT_FILE} ]; then \
+# Optionally configure a proxy CA certificate for corporate/proxied environments.
+# The certificate is provided as a build secret named "proxy_ca", so standard builds
+# do not require any placeholder file in the build context.
+RUN --mount=type=secret,id=proxy_ca,target=/run/secrets/proxy_ca,required=false \
+    if [ "$USE_PROXY_CA" = "true" ]; then \
+        if [ -s /run/secrets/proxy_ca ]; then \
             echo "✓ Configuring proxy CA certificate..."; \
-            cat /tmp/certs/${CA_CERT_FILE} >> /etc/ssl/certs/ca-certificates.crt; \
+            cat /run/secrets/proxy_ca >> /etc/ssl/certs/ca-certificates.crt; \
             echo "✓ CA certificate appended to system bundle"; \
         else \
-            echo "⚠ Warning: USE_PROXY_CA=true but ${CA_CERT_FILE} not found!"; \
-            echo "   Build may fail when accessing HTTPS resources."; \
+            echo "⚠ Warning: USE_PROXY_CA=true but no proxy_ca build secret was provided!"; \
+            echo "   Rebuild with: --secret id=proxy_ca,src=${CA_CERT_FILE}"; \
             exit 1; \
         fi; \
     else \
         echo "→ Using standard SSL certificates (no proxy)"; \
     fi
 
+
 # Set environment variables for SSL/TLS (ensures pip and requests use system CA bundle)
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     PIP_CERT=/etc/ssl/certs/ca-certificates.crt
 
-# Install mkdocs and documentation dependencies
-RUN pip install --upgrade pip && \
-    pip install \
-        "mkdocs>=1.5.0" \
-        "mkdocs-material>=9.0.0" \
-        "mkdocstrings[python]>=0.22.0" && \
-    pip install -e .
+# Install the package and its dependencies via Poetry
+RUN poetry install --with docs --no-interaction --no-ansi
 
 # Build the static documentation site
-RUN mkdocs build --strict --site-dir /build/site
+RUN poetry run mkdocs build --strict --site-dir /build/site
 
 # -----------------------------------------------------------------------------
 # Stage 2: Server - Serve the documentation with nginx
