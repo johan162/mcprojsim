@@ -617,5 +617,4 @@ Core implementation components:
 - PyYAML parsing
 - `tomllib` (Python built-in, 3.11+) for TOML reading; `tomli-w` for TOML writing
 
-See [src/mcprojsim/models/project.py](../src/mcprojsim/models/project.py) and [src/mcprojsim/config.py](../src/mcprojsim/config.py).
 
