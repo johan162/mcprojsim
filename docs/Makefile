@@ -1,6 +1,6 @@
 # Makefile for building Documentation for the MCProjSim project
 
-.PHONY: docs gen-examples update-version pdf docs-serve \
+.PHONY: docs gen-examples update-version pdf-docs docs-serve \
  container-engine-check docs-container-build docs-container-start docs-container-stop \
  docs-container-restart docs-container-status docs-container-logs docs-deploy help
 
@@ -10,7 +10,7 @@
 .EXTRA_PREREQS := $(firstword $(MAKEFILE_LIST))
 
 # Make behavior
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := docs
 
 # Get full path to bash
 SHELL := $(shell which bash)
