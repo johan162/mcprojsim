@@ -1,3 +1,33 @@
+## [v0.11.3] - 2026-04-05
+
+Release Type: patch
+
+### 📋 Summary
+This release focuses exclusively on documentation tooling and the docs build pipeline. It also introduces a B5 paper variant of the User Guide PDF optimised for tablet reading, and a containerised documentation server.
+
+
+### 📚 Documentation
+- Added `docs/README.md` with full documentation structure reference, PDF variant rationale, and Lua filter usage guide
+- Added B5 paper variants of the User Guide PDF (light and dark) alongside the existing A4 variants, giving a better fit for 10–11 inch tablet screens
+- Added `docs/user_guide/pagebreaks.lua`, a pandoc Lua filter that injects conditional `\newpage` commands based on a `paper_format` metadata variable (`a4` or `b5`), allowing a single Markdown source to produce well-paginated PDFs in both formats
+- Added fenced-div syntax (`::: pagebreak`, `::: pagebreak-a4`, `::: pagebreak-b5`) for between-block page breaks in Markdown source
+- Added inline marker syntax (`!!! <lang>-cbreak-<format>`) for splitting verbatim code blocks across pages in format-specific builds
+- Added containerised documentation server: multi-stage `Dockerfile.docs` (builder + nginx:alpine) with `make docs-container-build/start/stop/restart/status/logs` targets
+- Added `docs/README.md` describing the documentation structure, build pipeline, PDF variant rationale, and Lua filter usage
+
+
+### 🛠 Internal
+- Added `Dockerfile.docs.dockerignore` to provide a lean, docs-specific build context without altering the main `.dockerignore` rules
+- Fixed `COPY docs/ ./` and `COPY src/ ./` in `Dockerfile.docs` to preserve directory structure (`COPY src/ src/`) so Poetry can locate the package at the expected path
+- Improved PDF build Makefile macro to pass `--lua-filter` and `--metadata paper_format=<a4|b5>` to pandoc automatically for each variant
+- Improved `pdf` target to build all four PDF variants in parallel (`make -j4`) via a recursive make call with the jobserver flag
+- Improved `BUILD_USER_GUIDE_PDF` Makefile macro: variant-specific file-path variables are now derived from a single base name by `DEFINE_USER_GUIDE_VARS`, eliminating 32 lines of repetitive variable declarations
+- Improved `Dockerfile.docs` layer ordering so the 96-package Poetry install is cached independently of doc and source file changes, significantly reducing incremental rebuild times
+- Improved `Dockerfile.docs` to use a BuildKit secret mount for the proxy CA certificate instead of an unconditional `COPY`, making standard builds work without a placeholder cert file
+- Added `docs/Makefile` as a standalone build entry point for documentation targets when working from the `docs/` directory
+
+
+
 ## [v0.11.2] - 2026-04-02
 
 Release Type: patch
