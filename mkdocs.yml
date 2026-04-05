@@ -6,6 +6,11 @@ site_url: https://johan162.github.io/mcprojsim
 repo_name: johan162/mcprojsim
 repo_url: https://github.com/johan162/mcprojsim
 
+# README.md is developer-facing only (documents the docs/ structure).
+# Exclude it so it does not conflict with index.md in the rendered site.
+exclude_docs: |
+  README.md
+
 theme:
   name: material
   palette:
