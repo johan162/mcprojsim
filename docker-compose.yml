@@ -19,3 +19,13 @@ services:
       - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
       - SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
+  docs:
+    image: mcprojsim-docs:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.docs
+    container_name: mcprojsim-docs
+    ports:
+      - "${MCPROJSIM_DOCS_PORT:-9090}:80"
+    restart: unless-stopped
+
