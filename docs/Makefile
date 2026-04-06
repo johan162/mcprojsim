@@ -193,7 +193,7 @@ USER_GUIDE_DOCS := \
 	$(DOCS_DIR)/user_guide/report_template.tex \
 	$(DOCS_DIR)/user_guide/report_template_dark.tex \
 	$(DOCS_DIR)/user_guide/report_template_b5.tex \
-	$(DOCS_DIR)/user_guide/report_template_b5_dark.tex \
+	$(DOCS_DIR)/user_guide/report_template_dark_b5.tex \
 	$(DOCS_DIR)/examples.md \
 	$(DOCS_DIR)/examples_template.md
 
