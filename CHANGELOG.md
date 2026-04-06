@@ -1,3 +1,29 @@
+## [v0.12.0] - 2026-04-06
+
+Release Type: minor
+
+### 📋 Summary
+This release overhauls the API reference documentation by refactor and expand it into multiple sections.
+The B5 sized dark theme version of the User Guide PDF is now optimized for reading on a tablet with minimal left/right margins. 
+
+### 🐛 Bug Fixes
+- Fixed `PROXY_CA_FILE` references in `docs-contctl.sh` using Make-syntax `$(PROXY_CA_FILE)` instead of bash `"${PROXY_CA_FILE}"`, causing the proxy CA check and `--secret` flag to silently expand to nothing
+- Fixed `mkdocs.yml` missing `exclude_docs: README.md`, causing MkDocs to treat `docs/README.md` as an alias for `index.md` and emit a build warning or page conflict
+
+### 📚 Documentation
+- Refactored API reference into multiple focused files (one per module) for easier navigation and maintenance
+- Added missing API descriptions and examples for several modules not previously present in the reference
+
+### 🛠 Internal
+- Significantly optimises the runtime for `Dockerfile` by switching to a wheel-based install pipeline that removes unnecessary build tooling from the final image. The previous docker-compose based workflow has been removed as it was not needed as we only have one real server container (the doc-server)
+- Removed obsolete container setup scripts superseded by the `docs-contctl.sh` workflow
+- Included B5 PDF variants of the User Guide in the GitHub release artefact set alongside the existing A4 variants
+- Improved `Dockerfile` builder stage: removed the unnecessary `gcc` dependency (all runtime packages ship binary wheels for Python 3.13) and switched from copying the entire Poetry virtualenv to building and installing a proper wheel, eliminating ~40 lines of fragile post-install cleanup
+- Improved `Dockerfile` layer ordering so the heavy dep-install step is cached independently of source changes — changing `src/` no longer re-downloads all packages
+- Improved `Dockerfile` stage 2 to install directly into the system Python via `pip install --no-index --find-links`, removing the need for a `.venv` and a `PATH` override in the runtime image
+
+
+
 ## [v0.11.3] - 2026-04-05
 
 Release Type: patch

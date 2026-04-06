@@ -29,6 +29,8 @@
 #   ./scripts/docs-contctl.sh stop                # Stop the container
 #   ./scripts/docs-contctl.sh restart -p 9000     # Restart on different port
 #   ./scripts/docs-contctl.sh logs -f             # Follow container logs
+#   MCPROJSIM_USE_PROXY_CA=true ./scripts/docs-contctl.sh build # Build image with proxy CA support
+#   ./scripts/docs-contctl.sh build		   		  # Build image without proxy CA support
 #
 # Environment Variables:
 #   MCPROJSIM_DOCS_IMAGE      - Container image name (default: mcprojsim-docs:latest)
@@ -42,6 +44,8 @@ set -euo pipefail
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly SCRIPT_PATH="${PROJECT_ROOT}/scripts/docs-contctl.sh"
+# Proxy file for build (if needed)
+PROXY_CA_FILE="${PROJECT_ROOT}/CA_proxy_fw_all.pem"
 
 # Configuration
 readonly DEFAULT_PORT="${MCPROJSIM_DOCS_PORT:-9090}"
@@ -118,11 +122,20 @@ build_image() {
 	local build_cmd=(podman build -f "${dockerfile}" -t "${IMAGE_NAME}")
 
 	if [[ "${USE_PROXY_CA}" == "true" ]]; then
+		if [ ! -s "${PROXY_CA_FILE}" ]; then 
+			echo -e "${RED}✗ Error: ${PROXY_CA_FILE} not found or empty${NC}"; 
+			echo -e "${YELLOW}  Copy your proxy CA certificate to the project root as ${PROXY_CA_FILE}${NC}"; 
+			exit 1; 
+		fi
 		info "Building with proxy CA certificate support..."
-		build_cmd+=(--build-arg USE_PROXY_CA=true)
+		build_cmd+=(--build-arg USE_PROXY_CA=true --secret id=proxy_ca,src="${PROXY_CA_FILE}")
 	fi
 
 	build_cmd+=("${PROJECT_ROOT}")
+
+	# echo "USE_PROXY_CA=${USE_PROXY_CA}"
+	# echo "PROXY_CA_FILE=${PROXY_CA_FILE}"
+	# echo "Building image with command: ${build_cmd[*]}"
 
 	"${build_cmd[@]}" || error "Failed to build documentation image"
 	info "Documentation image built successfully."

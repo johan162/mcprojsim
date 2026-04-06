@@ -197,13 +197,6 @@ $(FORMAT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@touch $(FORMAT_STAMP)
 	@echo -e "$(GREEN)✓ Format target runs successfully$(NC)"
 
-$(CONTAINER_STAMP): $(SRC_FILES) $(TEST_FILES) $(DOCKER_SRC_FILES) $(MISC_FILES) $(INSTALL_STAMP) | container-engine-check
-	@echo -e "$(DARKYELLOW)- Building container image...$(NC)"
-	@$(CONTAINER_COMPOSE_CMD) build
-	@$(CONTAINER_CMD) tag oneselect-backend:latest oneselect-backend:$(VERSION)
-	@touch $(CONTAINER_STAMP)
-	@echo -e "$(GREEN)✓ Container image built and tagged as oneselect-backend:$(VERSION)$(NC)"
-
 $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running linter...$(NC)"
 	@if poetry run flake8 $(SRC_DIR) $(TEST_DIR); then \
@@ -417,64 +410,17 @@ maintainer-clean: ## Perform a thorough cleanup including virtual environment, c
 	@echo -e "$(GREEN)✓ Deep clean completed$(NC)"
 
 
+# ============================================================================================
+# Container Management Targets
+# IS only responsible for building and managing the mcprojsim command line tool container image 
+# and not the documentation container
+# ============================================================================================
+
 container-engine-check:
 	@if [ "$(NO_CONTAINER_ENGINE)" = "yes" ]; then \
         echo -e "$(YELLOW)⚠️  Warning: No container engine detected. Skipping container operation. Please start Podman or Docker.$(NC)"; \
         exit 1; \
     fi
-
-# ============================================================================================
-# Container Management with Podman/Docker Targets
-# ============================================================================================
-# container-build: $(CONTAINER_STAMP) container-build-public ## Build the container image for the application and tag it with the current version
-# 	@:
-
-container-up: $(CONTAINER_STAMP)  | container-engine-check ## Start the container in detached mode
-	@echo -e "$(DARKYELLOW)- Starting containers...$(NC)"
-	@$(CONTAINER_COMPOSE_CMD) up -d
-	@echo -e "$(GREEN)✓ Containers started$(NC)"
-
-container-down: | container-engine-check ## Stop and remove the running container
-	@echo -e "$(DARKYELLOW)- Stopping containers...$(NC)"
-	@$(CONTAINER_COMPOSE_CMD) down
-	@echo -e "$(GREEN)✓ Containers stopped$(NC)"
-
-container-logs: | container-engine-check ## Follow the logs of the running container
-	@$(CONTAINER_COMPOSE_CMD) logs -f
-
-container-restart: $(CONTAINER_STAMP) | container-engine-check ## Restart the running container
-	@echo -e "$(DARKYELLOW)- Restarting containers...$(NC)"
-	@$(CONTAINER_COMPOSE_CMD) restart
-	@echo -e "$(GREEN)✓ Containers restarted$(NC)"
-
-container-shell: $(CONTAINER_STAMP) | container-engine-check ## Open an interactive shell inside the running container
-	@$(CONTAINER_COMPOSE_CMD) exec $(SERVICE_NAME) /bin/shz
-
-container-clean: container-clean-container-volumes container-clean-images ## Clean up all containers and images
-
-container-clean-container-volumes: | container-engine-check ## Remove all containers, volumes and prune the system
-	@echo -e "$(DARKYELLOW)- Cleaning up containers and volumes...$(NC)"
-	@$(CONTAINER_COMPOSE_CMD) down -v
-	@$(CONTAINER_CMD) system prune -f
-	@echo -e "$(GREEN)✓ Containers and volumes removed$(NC)"
-
-container-clean-images: container-down | container-engine-check ## Remove all oneselect container images
-	@echo -e "$(DARKYELLOW)- Removing all oneselect images...$(NC)"
-	@$(CONTAINER_CMD) rmi -f $$($(CONTAINER_CMD) images --filter "reference=oneselect*" -q) 2>/dev/null || true
-	@rm -f $(CONTAINER_STAMP)
-	@echo -e "$(GREEN)✓ Images removed$(NC)"
-
-container-volume-info: | container-engine-check ## Inspect the container volume used for persistent data storage
-	@echo -e "$(DARKYELLOW)- Listing container volumes...$(NC)"
-	@$(CONTAINER_CMD) volume ls
-	@$(CONTAINER_CMD) volume inspect $(PROJECT)_oneselect-data
-
-container-rebuild: | container-engine-check ## Rebuild container from scratch with auto-detection
-	@echo -e "$(DARKYELLOW)- Rebuilding container from scratch...$(NC)"
-	@$(MAKE) container-down || true
-	@rm -f $(CONTAINER_STAMP)
-	@$(MAKE) container-build-auto
-	@echo -e "$(GREEN)✓ Container rebuilt$(NC)"
 
 # Alias for backwards compatibility and convenience
 container-build: container-build-auto  | container-engine-check ## Build container (auto-detects proxy environment)
@@ -576,6 +522,12 @@ pdf-design: ## Create a PDF of the design documentation for distribution
 	@$(MAKE) -C design-ideas >/dev/null 
 	@echo -e "$(GREEN)✓ Design documentation PDFs created in design-docs/dist/$(NC)"
 	
+docs: ## Build the documentation site with MkDoc
+	@$(MAKE) -C $(DOCS_DIR)
+
+docs-serve: ## Serve the documentation site locally with live reload
+	@$(MAKE) -C $(DOCS_DIR) serve
+
 
 ### End of Makefile
 

@@ -181,18 +181,13 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 
 | Resource | Description |
 |---|---|
-| [Project Files](user_guide/project_files.md) | YAML and TOML project file format reference |
-| [Task Estimation](user_guide/task_estimation.md) | Three-point, T-shirt, and story-point estimation styles |
-| [Risk Modeling](user_guide/risks.md) | Defining task-level and project-level risks |
-| [Running Simulations](user_guide/running_simulations.md) | CLI options: `--table`, `--verbose`, `--target-date`, export formats |
-| [Constrained Scheduling](user_guide/constrained.md) | Resource limits, calendars, sickness, and two-pass scheduling |
-| [Sprint Planning](user_guide/sprint_planning.md) | Sprint-based forecasting with historical velocity data |
-| [Interpreting Results](user_guide/interpreting_results.md) | How to read confidence intervals, sensitivity, slack, and risk impact |
-| [MCP Server](user_guide/mcp-server.md) | Use MCProjSim as an AI-powered simulation tool from your editor |
-| [API Reference](api_reference.md) | Integrate MCProjSim into your own Python scripts |
-| [Formal Grammar](grammar.md) | Full EBNF specification for project files |
+| [Quick Start](https://johan162.github.io/mcprojsim/quickstart/) | Your first 10 min with MCProjSim |
+| [On Line Documentation](https://johan162.github.io/mcprojsim/) | Full documentation landing page |
+| [MCP Server](user_guide/mcp-server.md) | Use MCProjSim as a tool from your AI assistant |
 | [Development](development.md) | Set up a dev environment, run tests, build docs, and use containers |
 | [Changelog](CHANGELOG.md) | Release history and migration notes |
+
+
 
 ## License
 
