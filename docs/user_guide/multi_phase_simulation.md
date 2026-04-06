@@ -182,7 +182,7 @@ Output excerpt:
 
 ```
 Pass 1: computing criticality indices
-Progress: 100.0% (500/500)
+Progress: 100.0% (500/1000)
 Pass 2: priority-ordered scheduling
 Progress: 100.0% (1000/1000)
 

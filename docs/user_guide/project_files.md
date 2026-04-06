@@ -12,6 +12,42 @@ The parser layer is intentionally simple:
 
 Because of that design, the logical schema is the same regardless of whether you write the file in YAML or TOML.
 
+## Quick reference for new users
+
+The table below summarises every top-level section. The two mandatory sections — `project` and `tasks` — are enough to run your first simulation. Everything else is optional and can be added incrementally.
+
+| Section | Required | Activates |
+|---|---|---|
+| `project` | **Yes** | Project name, start date, and reporting settings |
+| `tasks` | **Yes** | The work items to simulate |
+| `project_risks` | No | Cross-cutting risks applied to the whole project |
+| `resources` | No | Resource-constrained scheduling (replaces unlimited-workforce mode) |
+| `calendars` | No | Custom working hours, holidays, non-standard weeks |
+| `sprint_planning` | No | Sprint-based forecasting from historical velocity data |
+
+Inside each task, the only truly required field beyond `id` and `name` is `estimate`. The minimal estimate is a numeric range:
+
+```yaml
+estimate:
+  low: 1
+  expected: 3
+  high: 8
+```
+
+T-shirt sizes and story points are shorthand alternatives — they map to numeric ranges via the configuration file:
+
+```yaml
+estimate:
+  t_shirt_size: "M"          # resolved from config, no unit needed
+```
+
+```yaml
+estimate:
+  story_points: 5            # resolved from config, no unit needed
+```
+
+For a complete worked example see the [Full YAML example](#full-yaml-example) at the end of this chapter.
+
 ## Creating project files
 
 There are three ways to create a project file:
@@ -576,17 +612,17 @@ At task level, `uncertainty_factors` is modeled as a structured object with a fi
 
 Uncertainty factors apply a multiplier to a task's sampled duration before it enters the schedule. They let you express qualitative risk signals — "the team is junior", "the requirements are immature", "this task integrates with multiple external systems" — without converting those signals into numeric estimates by hand. The multipliers for each factor level are defined in the configuration file; the project file simply assigns a level to each factor.
 
-All five factors are **optional** and each defaults to its medium level, so you only need to specify factors where a task deviates from a typical baseline. Omitting `uncertainty_factors` entirely applies the full set of medium-level defaults.
+All five factors are **optional** and each defaults to its baseline level, so you only need to specify factors where a task deviates from a typical baseline. Omitting `uncertainty_factors` entirely applies the full set of baseline defaults.
 
 ### Recognized fields
 
-| Field | Default |
-|---|---|
-| `team_experience` | `"medium"` |
-| `requirements_maturity` | `"medium"` |
-| `technical_complexity` | `"medium"` |
-| `team_distribution` | `"colocated"` |
-| `integration_complexity` | `"medium"` |
+| Field | Default | Valid values |
+|---|---|---|
+| `team_experience` | `"medium"` | `"high"`, `"medium"`, `"low"` |
+| `requirements_maturity` | `"medium"` | `"high"`, `"medium"`, `"low"` |
+| `technical_complexity` | `"medium"` | `"low"`, `"medium"`, `"high"` |
+| `team_distribution` | `"colocated"` | `"colocated"`, `"distributed"` |
+| `integration_complexity` | `"medium"` | `"low"`, `"medium"`, `"high"` |
 
 ### YAML example
 
@@ -615,6 +651,8 @@ integration_complexity = "medium"
 Only the five fields above are represented by the current project model and used by the simulation engine.
 
 If you add other names under `uncertainty_factors`, they are not part of the supported project-file reference and should not be relied on as active inputs.
+
+The numeric multiplier that each level applies (e.g. `"high"` for `team_experience` → `0.90×`) is defined in the configuration file. See [The `uncertainty_factors` section](#the-uncertainty_factors-section) later in this chapter for the built-in defaults and how to override them.
 
 ## The `resources` field inside a task
 

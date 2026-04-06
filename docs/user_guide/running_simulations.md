@@ -130,7 +130,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-s`, `--seed INT` | Random seed for reproducibility | random |
 | `-o`, `--output PATH` | Output file base path (without extension) | project name |
 | `-f`, `--output-format FORMATS` | Comma-separated export formats: `json`, `csv`, `html` | none |
-| `--critical-paths N` | Number of critical paths to display | 2 |
+| `--critical-paths N` | Number of critical paths to display | config default: 2 |
 | `--number-bins N` | Number of histogram bins for distribution charts in JSON, CSV, and HTML exports. Overrides the config file setting if specified. | 50 |
 | `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
 | `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
@@ -141,7 +141,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `--target-date DATE` | Target completion date (`YYYY-MM-DD`) to calculate probability of meeting | none |
 | `--velocity-model MODEL` | Override the sprint planning velocity model for how to use historic data (`empirical` or `neg_binomial`). Applies only when sprint planning is enabled in the project file. | project file setting |
 | `--no-sickness` | Disable sickness modelling regardless of the project file setting. Applies only when sprint planning is enabled. | off |
-| `--include-historic-base` | Add a `Historic Base` section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under `sprint_planning.historic_base`. | off |
+| `--include-historic-base` | Add a `Historic Base` section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under `sprint_planning.historic_base`. **Requires `-f` to include `json` or `html`.** | off |
 | `--two-pass` | Enable criticality two-pass scheduling. Only has effect when resource-constrained scheduling is active. Overrides the config file `assignment_mode` setting. | off |
 | `--pass1-iterations N` | Number of pass-1 iterations for criticality ranking when `--two-pass` is used. Capped to `--iterations`. | 1000 (from config) |
 
@@ -204,10 +204,10 @@ mcprojsim simulate sprint_project.yaml -f json,html --include-historic-base
 
 ### Output
 
-By default, the simulation prints a plain-text summary. With `--table` (`-t`), the confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are formatted as ASCII tables with column headers and box-drawing borders:
+By default, the simulation prints a plain-text summary. With `--table` (`-t`), the project overview, statistical summaries, confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are all formatted as ASCII tables with column headers and box-drawing borders:
 
 ```text
-Confidence Intervals:
+Calendar Time Confidence Intervals:
 ┌──────────────┬─────────┬────────────────┬────────────┐
 │ Percentile   │   Hours │   Working Days │ Date       │
 ├──────────────┼─────────┼────────────────┼────────────┤
@@ -254,37 +254,56 @@ Using a higher percentile produces more conservative staffing (since we want to 
 Pass `--staffing` to expand this into a full table for each experience profile (senior, mixed, junior). With `--table`:
 
 ```text
-=== Staffing Analysis ===
-
---- senior ---
+Staffing Analysis (senior team, overhead=4%/person, productivity=100%):
+  Effort basis: mean (910 person-hours, 571 critical-path hours)
 ┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
-│   Team Size │   Eff. Capacity │   Working Days │ Delivery Date   │ Efficiency   │
+│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
 ├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
-│           1 │            1.00 │            114 │ 2026-06-15      │ 100.0%       │
-│           2 │            1.92 │             60 │ 2026-03-27      │ 96.0%        │
-│          *3 │            2.76 │             42 │ 2026-03-02      │ 92.2%        │
+│ 1           │ 1.00            │ 114            │ 2026-06-15      │ 100.0%       │
+│ 2           │ 1.92            │ 60             │ 2026-03-27      │ 96.0%        │
+│ 3 *         │ 2.76            │ 42             │ 2026-03-02      │ 92.2%        │
 └─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
 ```
 
-The row marked with `*` is the recommended team size for that profile. Without `--table`, the same information appears in plain indented text with `<-- recommended` annotations. See [Interpreting Results — Staffing recommendations](interpreting_results.md#staffing-recommendations) for a detailed explanation of the model and columns.
+The `*` suffix in the "Team Size" column marks the recommended team size for that profile. Without `--table`, the same information appears in plain indented text with `<-- recommended` annotations. See [Interpreting Results — Staffing recommendations](interpreting_results.md#staffing-recommendations) for a detailed explanation of the model and columns.
 
 Without `--table`, the same data is printed as indented text:
 
 ```text
 === Simulation Results ===
+
+Project Overview:
 Project: Website Refresh
 Hours per Day: 8.0
+Max Parallel Tasks: 2
+Schedule Mode: dependency_only
+
+Calendar Time Statistical Summary:
 Mean: 126.78 hours (16 working days)
 Median (P50): 125.36 hours
 Std Dev: 18.01 hours
+Minimum: 98.40 hours
+Maximum: 192.30 hours
+Coefficient of Variation: 0.1421
+Skewness: 0.4123
+Excess Kurtosis: -0.2341
 
-Confidence Intervals:
+Project Effort Statistical Summary:
+Mean: 232.45 person-hours (30 person-days)
+Median (P50): 229.80 person-hours
+Std Dev: 34.22 person-hours
+...
+
+Calendar Time Confidence Intervals:
   P50: 125.36 hours (16 working days)  (2026-04-22)
   P80: 143.08 hours (18 working days)  (2026-04-24)
   P90: 151.74 hours (19 working days)  (2026-04-27)
 
 Most Frequent Critical Paths:
   1. task_001 -> task_002 (10000/10000, 100.0%)
+
+Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
 ```
 
 When export formats are specified with `-f`, the following files are created:
@@ -313,6 +332,9 @@ mcprojsim config [-c CONFIG_FILE] [--generate]
 |--------|-------------|
 | `-c`, `--config-file FILE` | Show configuration merged with a custom YAML file |
 | `--generate` | Write the built-in default configuration to `~/.mcprojsim/config.yaml` |
+
+!!! note
+    The auto-loaded user default configuration file (applied automatically when no `-c` flag is given to any command) lives at `~/.mcprojsim/configuration.yaml` — note the full name `configuration.yaml`, not `config.yaml`. The `--generate` flag writes to `config.yaml` as a starting template; rename it to `configuration.yaml` if you want it to be picked up automatically.
 
 ### Examples
 

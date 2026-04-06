@@ -252,7 +252,7 @@ If you override only part of either mapping table, the remaining built-in defaul
 
 ### T-shirt sizes
 
-Tasks may use `t_shirt_size` instead of explicit `min` / `expected` / `max` values.
+Tasks may use `t_shirt_size` instead of explicit `low` / `expected` / `high` values.
 
 Canonical configuration shape:
 
@@ -294,7 +294,7 @@ Built-in size keys (per category):
 
 Built-in `story` defaults:
 
-| Size | `min` | `expected` | `max` |
+| Size | `low` | `expected` | `high` |
 |---|---:|---:|---:|
 | `XS` | 3 | 5 | 15 |
 | `S` | 5 | 16 | 40 |
@@ -416,7 +416,7 @@ Built-in point values:
 
 Built-in defaults:
 
-| Points | `min` | `expected` | `max` |
+| Points | `low` | `expected` | `high` |
 |---|---:|---:|---:|
 | `1` | 0.5 | 1 | 3 |
 | `2` | 1 | 2 | 4 |
@@ -846,7 +846,7 @@ The configuration model validates these constraints directly:
 - `t_shirt_sizes` accepts either a nested `<category>: <size>: {low, expected, high}` map or a legacy flat size map,
 - if `t_shirt_size_categories` is used as a transitional alias, it cannot appear together with `t_shirt_sizes`,
 - T-shirt size tokens in config must normalize to one of `XS`, `S`, `M`, `L`, `XL`, or `XXL`,
-- all configured estimate ranges require positive `min`, `expected`, and `max`,
+- all configured estimate ranges require positive `low`, `expected`, and `high`,
 - `lognormal.high_percentile` must be one of `70`, `75`, `80`, `85`, `90`, `95`, or `99`,
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
@@ -873,9 +873,9 @@ The configuration model validates these constraints directly:
 
 ## Related settings in the project file
 
-Some important reporting and visualization settings are **not** part of `config.yaml`. They belong in the project file instead.
+Some important settings are **not** part of `config.yaml`. They belong in the project file instead.
 
-For example, the HTML thermometer visualization uses these project-level settings:
+For example, `probability_red_threshold` and `probability_green_threshold` are project-level fields stored in the simulation results and available for programmatic use:
 
 ```yaml
 project:
@@ -890,11 +890,8 @@ Default values:
 - `probability_red_threshold`: `0.50`
 - `probability_green_threshold`: `0.90`
 
-These thresholds control how probabilities are colored in the HTML report:
-
-- below the red threshold: high risk,
-- above the green threshold: low risk,
-- between them: intermediate risk.
+!!! note
+    These thresholds are stored in simulation results and exported in JSON output, but they do **not** control the colour of the HTML thermometer chart. The thermometer uses a fixed gradient from dark orange at 50 % to dark green at 99 %, computed solely from the probability value of each segment.
 
 ## Calibrating configuration values
 

@@ -35,6 +35,8 @@ The model works with one of two capacity units:
 - `story_points`: forecast completion based on historical delivered story points
 - `tasks`: forecast completion based on historical completed task counts
 
+**Which capacity mode to choose:** Use `story_points` when your backlog items have explicit story-point estimates and your team tracks points. It produces a more stable forecast when tasks vary in size. Use `tasks` when your backlog items are roughly comparable in scope (e.g., a bug-fix queue) and you want a simple throughput count. If tasks vary widely in size, `story_points` will generally produce a more reliable forecast than `tasks`.
+
 From your sprint history it models these signals:
 
 - completed work: how many story points or tasks were actually delivered
@@ -655,7 +657,7 @@ The table below lists the actual modeling family used by each entity.
 | Whether a sprint disruption occurs | `volatility_overlay.disruption_probability` | Bernoulli trial with probability $p$ |
 | Disruption multiplier given a disruption | `volatility_overlay` multipliers | Triangular distribution |
 | Number of people falling sick per week | `sickness.probability_per_person_per_week`, `sickness.team_size` | Binomial($n$, $p$) per sprint week where $n$ = team size, $p$ = weekly probability |
-| Days lost per sickness event | `sickness.duration_log_mu`, `sickness.duration_log_sigma` | LogNormal($\mu$, $\sigma$) capped at remaining sprint working days |
+| Days lost per sickness event | `sickness.duration_log_mu`, `sickness.duration_log_sigma` | LogNormal($\mu$, $\sigma$) capped at total sprint working days (`sprint_length_weeks × 5`) |
 | Spillover probability in `table` mode | `spillover.size_brackets` | Deterministic step function by story-point size |
 | Spillover probability in `logistic` mode | `spillover` logistic fields | Logistic probability curve over story-point size |
 | Whether a pulled item spills over | spillover probability | Bernoulli trial with item-specific probability $p_i$ |
@@ -716,7 +718,7 @@ The sickness model is a two-stage per-person simulation that runs once per simul
     d_i \sim \text{LogNormal}(\mu, \, \sigma)
     $$
 
-    Each draw is capped at the number of working days remaining in the sprint.
+    Each draw is capped at the total sprint working days (`sprint_length_weeks × 5`). The aggregate lost-days total is further capped at `team_size × sprint_length_weeks × 5` to ensure the result stays in a valid range.
 
 3. **Capacity multiplier.** Total lost days are summed and converted to a fractional multiplier:
 
@@ -956,6 +958,10 @@ This produces a conservative "what should we plan for" number in the current cap
 
 It is important to read this as a heuristic derived from historical percentiles, not as the mean of a fitted probability distribution.
 
+**How to use the commitment guidance in practice:**
+
+The output line `Planned Commitment Guidance: 7.55` (in story-point mode) means: based on your history at the configured confidence level, loading the sprint with about 7.55 story points gives a reasonable chance of completing them without carry-over. Use it as the starting point for your sprint backlog cap, not as a hard limit. Teams usually round to the nearest whole item, then apply judgment about priority. A higher `planning_confidence_level` (e.g., `0.90`) makes the guidance more conservative; a lower value (e.g., `0.65`) makes it more optimistic.
+
 ## Natural-language generation
 
 You do not have to hand-write the YAML from scratch. The local `generate` command can create a sprint-planning project file from semi-structured text.
@@ -1020,6 +1026,12 @@ tasks:
       story_points: 5
     dependencies: []
 
+  - id: "task_003"
+    name: "Frontend integration"
+    estimate:
+      story_points: 8
+    dependencies: []
+
 sprint_planning:
   enabled: true
   sprint_length_weeks: 2
@@ -1029,6 +1041,10 @@ sprint_planning:
     - sprint_id: "SPR-001"
       completed_story_points: 10
       spillover_story_points: 1
+    - sprint_id: "SPR-002"
+      completed_story_points: 9
+      spillover_story_points: 2
+      added_story_points: 1
 ```
 
 ### Example 2: task-count throughput mode

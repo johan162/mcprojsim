@@ -86,9 +86,9 @@ project.
 
 See the [Project Files](project_files.md) reference for all available fields.
 
-The project file below defines a basic project `"Website Refresh"` with two tasks were the 
+The project file below defines a basic project `"Website Refresh"` with two tasks where the 
 second task depends on the first one finishing. Most fields should be easy to understand
-but the `confidence_levels` deserves a closer explaation. 
+but the `confidence_levels` deserves a closer explanation. 
 
 The project simulation results are statistical analysis. This means the result is not single
 number when the project is done. Instead the result is a range of numbers with an associated
@@ -164,6 +164,7 @@ mcprojsim validate project.yaml
 Expected result:
 
 ```text
+Validating project.yaml...
 ✓ Project file is valid!
 ```
 
@@ -175,7 +176,7 @@ Tip: common validation issues are missing `id` fields on tasks, invalid date for
 ## Run your first simulation
 
 Simulation is done with the `simulate` command as shown below. The optional flag `--seed` is used to
-specify a seed for the simulation. This is usefull to be able to get repeatable results or to see how
+specify a seed for the simulation. This is useful to be able to get repeatable results or to see how
 specific changes in the project (such as adding risks) alters the result of the simulation 
 while keeping everything else the same. If no seed is specified an automatic random seed is used.
 
@@ -191,34 +192,65 @@ What this does:
 
 Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and use `--seed` for reproducible runs; see [Running Simulations](running_simulations.md) for full CLI options.
 
-Depending on what version of `mcprojsim` used the output should be something like below:
+Depending on the version of `mcprojsim` used the output will look something like the following (numbers will vary by version and platform):
 
 ```text
-mcprojsim, version 0.10.1
+mcprojsim, version 0.12.0
 Progress: 100.0% (10000/10000)
+Simulation time: 0.62 seconds
+Peak simulation memory: 1.48 MiB
 
 === Simulation Results ===
+
+Project Overview:
 Project: Website Refresh
 Hours per Day: 8.0
+Max Parallel Tasks: 1
+Schedule Mode: dependency_only
+
+Calendar Time Statistical Summary:
 Mean: 126.93 hours (16 working days)
 Median (P50): 125.74 hours
 Std Dev: 17.68 hours
+Minimum: 78.43 hours
+Maximum: 184.27 hours
 Coefficient of Variation: 0.1393
 Skewness: 0.2267
 Excess Kurtosis: -0.4206
-Confidence Intervals:
+
+Project Effort Statistical Summary:
+Mean: 126.93 person-hours (16 person-days)
+Median (P50): 125.74 person-hours
+Std Dev: 17.68 person-hours
+Minimum: 78.43 person-hours
+Maximum: 184.27 person-hours
+Coefficient of Variation: 0.1393
+Skewness: 0.2267
+Excess Kurtosis: -0.4206
+
+Calendar Time Confidence Intervals:
   P50: 125.74 hours (16 working days)  (2026-04-23)
   P80: 142.59 hours (18 working days)  (2026-04-27)
   P90: 151.18 hours (19 working days)  (2026-04-28)
+
+Effort Confidence Intervals:
+  P50: 125.74 person-hours (16 person-days)
+  P80: 142.59 person-hours (18 person-days)
+  P90: 151.18 person-hours (19 person-days)
+
 Sensitivity Analysis (top contributors):
   task_002: +0.8911
   task_001: +0.4236
+
 Schedule Slack:
   task_001: 0.00 hours (Critical)
   task_002: 0.00 hours (Critical)
 
 Most Frequent Critical Paths:
   1. task_001 -> task_002 (10000/10000, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 19 working days
+  Total effort: 127 person-hours (16 person-days) | Parallelism ratio: 1.0
 
 No export formats specified. Use -f to export results to files.
 ```
@@ -264,19 +296,30 @@ Tip: export HTML first (`-f html`) to inspect sensitivity, critical paths, and c
  
 ## What the main results mean
 
+The output is organised into sections. Here is what each section means:
+
+**Project Overview** shows that this is a dependency-only simulation (no resource constraints). `Max Parallel Tasks` is the peak number of tasks that ran in parallel across all iterations.
+
+**Calendar Time Statistical Summary** describes the *elapsed project duration* distribution. This is how long the project takes from start to finish on the calendar, based on the 10,000 simulated runs.
+
+**Project Effort Statistical Summary** describes total *person-hours* across all tasks. For a single-developer project with sequential tasks the two summaries are identical; they diverge once tasks run in parallel or resources are constrained.
+
+The confidence interval table, like this:
+
 | Percentile | Meaning | Typical use |
 |------------|---------|-------------|
 | **P50** | Half of simulated runs finish earlier | Internal discussion target |
 | **P80** | 80% of runs finish earlier | Common management target |
 | **P90** | 90% of runs finish earlier | Conservative commitment |
 
-All durations are reported in **hours** (the canonical internal unit), with **working days** and **projected delivery dates** (weekends excluded) shown alongside.
+is shown twice — once for calendar time and once for effort — with projected delivery dates (weekends excluded) shown alongside each calendar row.
 
 The other sections in the sample output are worth a quick first-pass explanation too:
 
 - **Sensitivity Analysis** shows which tasks are most strongly associated with the overall finish date moving later. Higher positive values usually mean those tasks are stronger schedule drivers.
 - **Schedule Slack** shows how much a task can slip before it starts delaying the overall project. A task marked **Critical** has essentially no slack.
-- **Most Frequent Critical Paths** show the dependency chains that most often determine the final finish date across the Monte Carlo runs.
+- **Most Frequent Critical Paths** shows the dependency chains that most often determine the final finish date across the Monte Carlo runs.
+- **Staffing** is an advisory recommendation for team size derived from the simulated effort and parallelism.
 
 At this level, treat these as decision aids:
 
