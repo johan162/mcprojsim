@@ -359,13 +359,27 @@ fi
 
 # Generate PDF version of User Guide for release assets
 if [[ "$DRY_RUN" == "true" ]]; then
-    echo "  [DRY-RUN] Would generate PDF version of User Guide for release assets"
-    echo "  [DRY-RUN] Would run: pandoc docs/user_guide.md -o docs/user_guide.pdf"
+    echo "  [DRY-RUN] Would generate PDF versions of User Guide for release assets"
 else
-    echo "  ✓ Generating PDF version of User Guide for release assets..."
+    echo "  ✓ Generating all PDF version of User Guide for release assets..."
     $(MAKE) -C docs pdf-docs || {
         print_warning_colored "Makefile target 'pdf-docs' failed. Skipping PDF generation."
+        exit 1;
     }
+    # Make sure the PDFs :
+    # mcprojsim_user_guide-<version>.pdf) 
+    # mcprojsim_user_guide-dark-<version>.pdf 
+    # mcprojsim_user_guide-b5-<version>.pdf
+    # mcprojsim_user_guide-dark-b5-<version>.pdf) 
+    # are generated in the ../dist directory 
+    if [[ ! -f "../dist/mcprojsim_user_guide-${VERSION}.pdf" 
+          -o ! -f "../dist/mcprojsim_user_guide-dark-${VERSION}.pdf" 
+          -o ! -f "../dist/mcprojsim_user_guide-b5-${VERSION}.pdf" 
+          -o ! -f "../dist/mcprojsim_user_guide-dark-b5-${VERSION}.pdf" ]]; then        
+        print_error_colored "Expected PDF not found at ../dist directory"
+        exit 1;
+    fi    
+
     echo "  ✓ Generating HTML version of User Guide for release assets..."
     $(MAKE) -C docs docs || {
         print_warning_colored "Makefile target 'docs' failed. Skipping HTML generation."
@@ -381,7 +395,7 @@ print_step_colored "🎯 PHASE 4: RELEASE EXECUTION"
 print_step_colored ""
 
 # 4.1: Commit version updates
-run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md docs/user_guide/report_template.tex docs/examples.md" "Staging release files..."
+run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md docs/user_guide/report_template*.tex docs/examples.md" "Staging release files..."
 run_command "git commit -m \"chore(release): prepare $VERSION
 
 - Update version to $VERSION
