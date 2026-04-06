@@ -12,25 +12,31 @@
         <meta name="author" content="Johan Persson">
       
       
+        <link rel="canonical" href="https://johan162.github.io/mcprojsim/api_reference/09_validation_utilities/">
       
+      
+        <link rel="prev" href="../08_analysis_helpers/">
+      
+      
+        <link rel="next" href="../10_nl_parser/">
       
       
         
       
       
-      <link rel="icon" href="/mcprojsim/assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>Monte Carlo Project Simulator</title>
+        <title>Validation utilities - Monte Carlo Project Simulator</title>
       
     
     
-      <link rel="stylesheet" href="/mcprojsim/assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="/mcprojsim/assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -49,9 +55,9 @@
       
     
     
-      <link rel="stylesheet" href="/mcprojsim/assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("/mcprojsim/",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -75,6 +81,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#validation-utilities" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -85,7 +96,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/mcprojsim/." title="Monte Carlo Project Simulator" class="md-header__button md-logo" aria-label="Monte Carlo Project Simulator" data-md-component="logo">
+    <a href="../.." title="Monte Carlo Project Simulator" class="md-header__button md-logo" aria-label="Monte Carlo Project Simulator" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -105,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Validation utilities
             
           </span>
         </div>
@@ -218,7 +229,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/mcprojsim/." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link">
         
   
   
@@ -237,7 +248,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/mcprojsim/quickstart/" class="md-tabs__link">
+      <a href="../../quickstart/" class="md-tabs__link">
         
   
   
@@ -258,7 +269,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="/mcprojsim/user_guide/getting_started/" class="md-tabs__link">
+        <a href="../../user_guide/getting_started/" class="md-tabs__link">
           
   
   
@@ -274,11 +285,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="/mcprojsim/api_reference/01_intro/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../01_intro/" class="md-tabs__link">
           
   
   
@@ -296,7 +309,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/mcprojsim/development/" class="md-tabs__link">
+      <a href="../../development/" class="md-tabs__link">
         
   
   
@@ -315,7 +328,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="/mcprojsim/grammar/" class="md-tabs__link">
+      <a href="../../grammar/" class="md-tabs__link">
         
   
   
@@ -350,7 +363,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/mcprojsim/." title="Monte Carlo Project Simulator" class="md-nav__button md-logo" aria-label="Monte Carlo Project Simulator" data-md-component="logo">
+    <a href="../.." title="Monte Carlo Project Simulator" class="md-nav__button md-logo" aria-label="Monte Carlo Project Simulator" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -380,7 +393,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -407,7 +420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/quickstart/" class="md-nav__link">
+      <a href="../../quickstart/" class="md-nav__link">
         
   
   
@@ -488,7 +501,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/getting_started/" class="md-nav__link">
+      <a href="../../user_guide/getting_started/" class="md-nav__link">
         
   
   
@@ -516,7 +529,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/introduction/" class="md-nav__link">
+      <a href="../../user_guide/introduction/" class="md-nav__link">
         
   
   
@@ -544,7 +557,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/your_first_project/" class="md-nav__link">
+      <a href="../../user_guide/your_first_project/" class="md-nav__link">
         
   
   
@@ -572,7 +585,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/uncertainty_factors/" class="md-nav__link">
+      <a href="../../user_guide/uncertainty_factors/" class="md-nav__link">
         
   
   
@@ -600,7 +613,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/task_estimation/" class="md-nav__link">
+      <a href="../../user_guide/task_estimation/" class="md-nav__link">
         
   
   
@@ -628,7 +641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/risks/" class="md-nav__link">
+      <a href="../../user_guide/risks/" class="md-nav__link">
         
   
   
@@ -656,7 +669,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/project_files/" class="md-nav__link">
+      <a href="../../user_guide/project_files/" class="md-nav__link">
         
   
   
@@ -684,7 +697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/sprint_planning/" class="md-nav__link">
+      <a href="../../user_guide/sprint_planning/" class="md-nav__link">
         
   
   
@@ -712,7 +725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/constrained/" class="md-nav__link">
+      <a href="../../user_guide/constrained/" class="md-nav__link">
         
   
   
@@ -740,7 +753,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/multi_phase_simulation/" class="md-nav__link">
+      <a href="../../user_guide/multi_phase_simulation/" class="md-nav__link">
         
   
   
@@ -768,7 +781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/running_simulations/" class="md-nav__link">
+      <a href="../../user_guide/running_simulations/" class="md-nav__link">
         
   
   
@@ -796,7 +809,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/interpreting_results/" class="md-nav__link">
+      <a href="../../user_guide/interpreting_results/" class="md-nav__link">
         
   
   
@@ -824,7 +837,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/configuration/" class="md-nav__link">
+      <a href="../../user_guide/configuration/" class="md-nav__link">
         
   
   
@@ -852,7 +865,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/user_guide/mcp-server/" class="md-nav__link">
+      <a href="../../user_guide/mcp-server/" class="md-nav__link">
         
   
   
@@ -880,7 +893,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/examples/" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -912,28 +925,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -951,7 +967,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -969,7 +985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/01_intro/" class="md-nav__link">
+      <a href="../01_intro/" class="md-nav__link">
         
   
   
@@ -997,7 +1013,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/02_core/" class="md-nav__link">
+      <a href="../02_core/" class="md-nav__link">
         
   
   
@@ -1025,7 +1041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/03_project_model/" class="md-nav__link">
+      <a href="../03_project_model/" class="md-nav__link">
         
   
   
@@ -1053,7 +1069,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/04_simulation_results/" class="md-nav__link">
+      <a href="../04_simulation_results/" class="md-nav__link">
         
   
   
@@ -1081,7 +1097,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/05_parsers/" class="md-nav__link">
+      <a href="../05_parsers/" class="md-nav__link">
         
   
   
@@ -1109,7 +1125,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/06_configuration/" class="md-nav__link">
+      <a href="../06_configuration/" class="md-nav__link">
         
   
   
@@ -1137,7 +1153,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/07_exporters/" class="md-nav__link">
+      <a href="../07_exporters/" class="md-nav__link">
         
   
   
@@ -1165,7 +1181,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/08_analysis_helpers/" class="md-nav__link">
+      <a href="../08_analysis_helpers/" class="md-nav__link">
         
   
   
@@ -1190,10 +1206,35 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/09_validation_utilities/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Validation utilities
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1209,6 +1250,63 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#validation-utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Utilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Validation Utilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setup_logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        setup_logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1221,7 +1319,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/10_nl_parser/" class="md-nav__link">
+      <a href="../10_nl_parser/" class="md-nav__link">
         
   
   
@@ -1249,7 +1347,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/api_reference/11_api_examples/" class="md-nav__link">
+      <a href="../11_api_examples/" class="md-nav__link">
         
   
   
@@ -1284,7 +1382,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/development/" class="md-nav__link">
+      <a href="../../development/" class="md-nav__link">
         
   
   
@@ -1311,7 +1409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/mcprojsim/grammar/" class="md-nav__link">
+      <a href="../../grammar/" class="md-nav__link">
         
   
   
@@ -1349,6 +1447,53 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#validation-utilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Utilities
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Validation Utilities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setup_logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        setup_logging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1360,8 +1505,58 @@
               
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
 
+
+  
+  
+
+
+  <h1>Validation utilities</h1>
+
+<h2 id="validation-utilities">Validation Utilities<a class="headerlink" href="#validation-utilities" title="Permanent link">&para;</a></h2>
+<h3 id="validator"><code>Validator</code><a class="headerlink" href="#validator" title="Permanent link">&para;</a></h3>
+<p>Convenience utility for validating project files by extension.</p>
+<p>Import:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Validator</span>
+</span></code></pre></div>
+<p><strong>Method:</strong></p>
+<ul>
+<li><strong><code>validate_file(file_path: Path | str) -&gt; tuple[bool, str]</code></strong> — Returns <code>(True, "")</code> on success or <code>(False, error_message)</code> on failure. Selects the parser automatically based on file extension (<code>.yaml</code>/<code>.yml</code> or <code>.toml</code>). Returns an error for unsupported extensions or missing files.</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">is_valid</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">Validator</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation failed: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">else</span><span class="p">:</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Project is valid!&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="setup_logging"><code>setup_logging</code><a class="headerlink" href="#setup_logging" title="Permanent link">&para;</a></h3>
+<p>Configure logging verbosity and output for library usage.</p>
+<p>Import:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_logging</span>
+</span></code></pre></div>
+<p><strong>Method:</strong></p>
+<ul>
+<li><strong><code>setup_logging(level: str = "INFO") -&gt; logging.Logger</code></strong> — Configure and return the <code>mcprojsim</code> named logger at the specified level. Accepted levels: <code>"DEBUG"</code>, <code>"INFO"</code>, <code>"WARNING"</code>, <code>"ERROR"</code>, <code>"CRITICAL"</code>.</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logging</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Simulation started&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -1431,10 +1626,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "/mcprojsim/", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "/mcprojsim/assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="/mcprojsim/assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

@@ -2,94 +2,134 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://johan162.github.io/mcprojsim/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/CHANGELOG/</loc>
-         <lastmod>2026-04-04</lastmod>
-    </url>
-    <url>
-         <loc>https://johan162.github.io/mcprojsim/api_reference/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/development/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/examples/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/examples_template/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/grammar/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/mcprojsim_reqs/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/quickstart/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/01_intro/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/02_core/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/03_project_model/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/04_simulation_results/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/05_parsers/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/06_configuration/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/07_exporters/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/08_analysis_helpers/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/09_validation_utilities/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/10_nl_parser/</loc>
+         <lastmod>2026-04-06</lastmod>
+    </url>
+    <url>
+         <loc>https://johan162.github.io/mcprojsim/api_reference/11_api_examples/</loc>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/configuration/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/constrained/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/getting_started/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/interpreting_results/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/introduction/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/mcp-server/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/multi_phase_simulation/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/project_files/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/risks/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/running_simulations/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/sprint_planning/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/task_estimation/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/uncertainty_factors/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
     <url>
          <loc>https://johan162.github.io/mcprojsim/user_guide/your_first_project/</loc>
-         <lastmod>2026-04-04</lastmod>
+         <lastmod>2026-04-06</lastmod>
     </url>
 </urlset>
