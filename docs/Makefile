@@ -189,7 +189,26 @@ USER_GUIDE_DOCS := \
 	$(DOCS_DIR)/user_guide/interpreting_results.md  \
 	$(DOCS_DIR)/user_guide/configuration.md  \
 	$(DOCS_DIR)/user_guide/mcp-server.md \
-	$(DOCS_DIR)/examples.md
+	$(DOCS_DIR)/user_guide/pagebreaks.lua \
+	$(DOCS_DIR)/user_guide/report_template.tex \
+	$(DOCS_DIR)/user_guide/report_template_dark.tex \
+	$(DOCS_DIR)/user_guide/report_template_b5.tex \
+	$(DOCS_DIR)/user_guide/report_template_b5_dark.tex \
+	$(DOCS_DIR)/examples.md \
+	$(DOCS_DIR)/examples_template.md
+
+API_REF_DOCS := \
+	$(DOCS_DIR)/api_reference/01_intro.md \
+	$(DOCS_DIR)/api_reference/02_core.md \
+	$(DOCS_DIR)/api_reference/03_project_model.md \
+	$(DOCS_DIR)/api_reference/04_simulation_results.md \
+	$(DOCS_DIR)/api_reference/05_parsers.md \
+	$(DOCS_DIR)/api_reference/06_configuration.md \
+	$(DOCS_DIR)/api_reference/07_exporters.md \
+	$(DOCS_DIR)/api_reference/08_analysis_helpers.md \
+	$(DOCS_DIR)/api_reference/09_validation_utilities.md \
+	$(DOCS_DIR)/api_reference/10_nlp_parser.md \
+	$(DOCS_DIR)/api_reference/11_api_examples.md
 
 # Example generation
 EXAMPLES_TEMPLATE := $(DOCS_DIR)/examples_template.md
@@ -198,7 +217,7 @@ EXAMPLES_OUTPUT := $(DOCS_DIR)/examples.md
 EXAMPLE_FILES := $(wildcard ../examples/*.yaml) $(wildcard ../examples/*.txt)
 
 # Source and Test Files
-DOC_FILES := ../mkdocs.yml $(shell find $(DOCS_DIR) -name '*.md' -o -name '*.yml' -o -name '*.yaml')
+DOC_FILES := ../mkdocs.yml $(shell find $(DOCS_DIR) -name '*.md' -o -name '*.yml' -o -name '*.yaml' -o -name '*.lua' -o -name '*.tex') 
 
 # Timestamp files
 STAMP_DIR := .makefile-stamps
@@ -294,7 +313,7 @@ $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_B5,b5))
 $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK,a4))
 $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK_B5,b5))
 
-docs-serve: docs ## Serve the project documentation locally with MkDocs
+serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
 	@poetry run mkdocs serve -f ../mkdocs.yml -a localhost:$(DOCS_PORT)
 

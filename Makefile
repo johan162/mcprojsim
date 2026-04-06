@@ -522,6 +522,12 @@ pdf-design: ## Create a PDF of the design documentation for distribution
 	@$(MAKE) -C design-ideas >/dev/null 
 	@echo -e "$(GREEN)✓ Design documentation PDFs created in design-docs/dist/$(NC)"
 	
+docs: ## Build the documentation site with MkDoc
+	@$(MAKE) -C $(DOCS_DIR)
+
+docs-serve: ## Serve the documentation site locally with live reload
+	@$(MAKE) -C $(DOCS_DIR) serve
+
 
 ### End of Makefile
 
