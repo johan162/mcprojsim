@@ -220,7 +220,7 @@ A team member or resource extracted from the description.
 | `number` | `int` | required | Resource number as written in the input (e.g., `1` for `Resource 1:`). |
 | `name` | `str` | `""` | Resource name. |
 | `availability` | `float` | `1.0` | Fraction of working time available (0.0–1.0). |
-| `experience_level` | `int` | `2` | Experience level (1 = junior … 5 = senior). |
+| `experience_level` | `int` | `2` | Experience level (1–3; 1 = junior, 2 = mid-level, 3 = senior). |
 | `productivity_level` | `float` | `1.0` | Productivity multiplier. |
 | `calendar` | `str` | `"default"` | Calendar ID used by this resource. |
 | `sickness_prob` | `float` | `0.0` | Per-day sickness probability. |

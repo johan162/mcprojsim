@@ -61,7 +61,7 @@ Holds the output of a simulation run, including durations, summary statistics, p
 | `sensitivity` | `dict[str, float]` | Per-task Spearman rank correlations with total elapsed duration. |
 | `task_slack` | `dict[str, float]` | Mean schedule slack per task in hours. |
 | `max_parallel_tasks` | `int` | Peak parallel task count observed across all iterations. |
-| `schedule_mode` | `str` | `"dependency_only"` or `"constrained"`. |
+| `schedule_mode` | `str` | `"dependency_only"` or `"resource_constrained"`. |
 | `resource_constraints_active` | `bool` | Whether resource-constrained scheduling was used. |
 | `resource_wait_time_hours` | `float` | Mean hours tasks waited for a resource slot. |
 | `resource_utilization` | `float` | Average resource utilization (0.0–1.0). |
@@ -226,6 +226,6 @@ print(f"Recommended sprint capacity: {results.planned_commitment_guidance:.1f} u
 # Historical diagnostics (if history was provided)
 if results.historical_diagnostics:
     hist = results.historical_diagnostics
-    print(f"Historical velocity: mean {hist.get('velocity_mean', 0):.1f}")
+    print(f"Historical velocity: mean {hist.get('series_statistics', {}).get('completed_units', {}).get('mean', 0):.1f}")
     print(f"Historical observations: {hist.get('observation_count', 0)}")
 ```

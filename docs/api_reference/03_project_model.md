@@ -159,7 +159,7 @@ for task in project.tasks:
     print(f"  Description: {task.description or 'N/A'}")
     print(f"  Resources: {task.resources}")
     print(f"  Depends on: {task.dependencies}")
-    if task.estimate:
+    if task.estimate.high is not None:
         print(f"  Estimate: {task.estimate.low}-{task.estimate.expected}-{task.estimate.high} hours")
     if task.risks:
         print(f"  Risks: {len(task.risks)} identified")
@@ -169,8 +169,8 @@ for task in project.tasks:
 root_tasks = [t for t in project.tasks if not t.dependencies]
 print(f"Root tasks (no dependencies): {[t.id for t in root_tasks]}")
 
-# Find the longest task
-longest_task = max(project.tasks, key=lambda t: t.estimate.high if t.estimate else 0)
+# Find the longest task (only among tasks with explicit high estimates)
+longest_task = max(project.tasks, key=lambda t: t.estimate.high if t.estimate.high is not None else 0)
 print(f"Longest task: {longest_task.id}, up to {longest_task.estimate.high} hours")
 ```
 
