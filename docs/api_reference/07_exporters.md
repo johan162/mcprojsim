@@ -7,19 +7,17 @@ All exporters support histogram data, critical-path output, sprint-planning resu
 
 Exports comprehensive results including all percentiles, statistics, histogram data, critical paths, risk summaries, and sprint-planning data to JSON.
 
-**Method:**
+**Method:** `export(results, output_path, config=None, critical_path_limit=None, sprint_results=None, project=None, include_historic_base=False) -> None`
 
-- `export(results: SimulationResults, output_path: Path | str, config: Config | None = None, critical_path_limit: int | None = None, sprint_results: SprintPlanningResults | None = None, project: Project | None = None, include_historic_base: bool = False) -> None`
-
-**Parameters:**
-
-- `results` — Simulation results object
-- `output_path` — File path for JSON output
-- `config` — Active configuration (used for histogram bin count and other settings)
-- `critical_path_limit` — Override number of critical paths to include (default from config)
-- `sprint_results` — Sprint planning results (optional)
-- `project` — Original project definition (optional; enables richer output)
-- `include_historic_base` — Include historic baseline data if available
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `results` | `SimulationResults` | required | Simulation results object. |
+| `output_path` | `Path \| str` | required | File path for JSON output. |
+| `config` | `Config \| None` | `None` | Active configuration; controls histogram bin count and other settings. |
+| `critical_path_limit` | `int \| None` | `None` | Override number of critical paths to include (defaults to `config.output.critical_path_report_limit`). |
+| `sprint_results` | `SprintPlanningResults \| None` | `None` | Sprint planning results to embed (optional). |
+| `project` | `Project \| None` | `None` | Original project definition; enables richer output (optional). |
+| `include_historic_base` | `bool` | `False` | Include historic baseline data when available. |
 
 **Example:**
 
@@ -40,9 +38,15 @@ JSONExporter.export(
 
 Exports results as a CSV table format: metrics, percentiles, critical paths, histogram data, risk impact, resource diagnostics, and sprint data.
 
-**Method:**
+**Method:** `export(results, output_path, config=None, critical_path_limit=None, sprint_results=None) -> None`
 
-- `export(results: SimulationResults, output_path: Path | str, config: Config | None = None, critical_path_limit: int | None = None, sprint_results: SprintPlanningResults | None = None) -> None`
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `results` | `SimulationResults` | required | Simulation results object. |
+| `output_path` | `Path \| str` | required | File path for CSV output. |
+| `config` | `Config \| None` | `None` | Active configuration; controls histogram bins and report limits. |
+| `critical_path_limit` | `int \| None` | `None` | Override number of critical paths to include. |
+| `sprint_results` | `SprintPlanningResults \| None` | `None` | Sprint planning results to embed (optional). |
 
 **Example:**
 
@@ -56,16 +60,24 @@ CSVExporter.export(results, "results.csv", config=config)
 
 Exports a formatted, interactive HTML report with thermometers, percentile tables, charts (using matplotlib), critical-path analysis, staffing recommendations, and sprint-planning traceability.
 
-**Method:**
+**Method:** `export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, include_historic_base=False) -> None`
 
-- `export(results: SimulationResults, output_path: Path | str, project: Project | None = None, config: Config | None = None, critical_path_limit: int | None = None, sprint_results: SprintPlanningResults | None = None, include_historic_base: bool = False) -> None`
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `results` | `SimulationResults` | required | Simulation results object. |
+| `output_path` | `Path \| str` | required | File path for HTML output. |
+| `project` | `Project \| None` | `None` | Original project definition; unlocks richer task and effort display (optional). |
+| `config` | `Config \| None` | `None` | Active configuration; used for T-shirt size labels and histogram bins (optional). |
+| `critical_path_limit` | `int \| None` | `None` | Override number of critical paths to include. |
+| `sprint_results` | `SprintPlanningResults \| None` | `None` | Sprint planning results to embed (optional). |
+| `include_historic_base` | `bool` | `False` | Include historic baseline data when available. |
 
-**Key features when `project` and `config` are provided:**
+**When `project` and `config` are provided:**
 
-- T-shirt-sized tasks are rendered with the active configuration labels
-- Story-point tasks show the configured hour ranges
-- Task descriptions and dependencies are included
-- Effort data is shown per task
+- T-shirt-sized tasks are rendered with the active configuration labels.
+- Story-point tasks show the configured hour ranges.
+- Task descriptions and dependencies are included.
+- Effort data is shown per task.
 
 **Example:**
 

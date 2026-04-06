@@ -206,8 +206,6 @@ This example shows sprint-planning integration:
 ```python
 from mcprojsim.parsers import YAMLParser
 from mcprojsim.planning.sprint_engine import SprintSimulationEngine
-from typing import List
-from datetime import datetime, timedelta
 
 def forecast_project_completion(project_file: str) -> dict:
     """Forecast sprint-by-sprint delivery timeline."""

@@ -4,19 +4,20 @@
 
 Represents the complete project definition with metadata, tasks, risks, resources, and calendars.
 
-**Key fields:**
+**Fields:**
 
-- `project`: `ProjectMetadata` — project name, start date, hours/day, etc.
-- `tasks`: `list[Task]` — work items and their dependencies
-- `project_risks`: `list[Risk]` — top-level project-level risks
-- `resources`: `list[ResourceSpec]` — named resource pools
-- `calendars`: `list[CalendarSpec]` — named calendars for holidays/exclusions
-- `sprint_planning`: `SprintPlanningSpec | None` — sprint planning configuration if enabled
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `project` | `ProjectMetadata` | required | Project name, start date, hours/day, and thresholds |
+| `tasks` | `list[Task]` | required | Work items and their dependencies |
+| `project_risks` | `list[Risk]` | `[]` | Top-level project-level risks |
+| `resources` | `list[ResourceSpec]` | `[]` | Named resource pools |
+| `calendars` | `list[CalendarSpec]` | `[]` | Named calendars for holidays/exclusions |
+| `sprint_planning` | `SprintPlanningSpec \| None` | `None` | Sprint planning configuration if enabled |
 
 **Key methods:**
 
 - `get_task_by_id(task_id: str) -> Task | None` — Retrieve a task by its ID
-- `to_dict() -> dict[str, Any]` — Convert to a dictionary representation
 
 **Example:**
 
@@ -93,18 +94,20 @@ project = Project(
 
 Stores top-level project settings and characteristics.
 
-**Key fields:**
+**Fields:**
 
-- `name`: str — Project name
-- `description`: str | None — Optional project description
-- `start_date`: date — Project start date
-- `currency`: str | None — Currency for cost tracking (default: `"USD"`)
-- `confidence_levels`: list[int] — Percentiles to include in reports (default: [10, 25, 50, 75, 80, 85, 90, 95, 99])
-- `probability_red_threshold`: float — Probability threshold marking risk level (default: 0.5)
-- `probability_green_threshold`: float — Probability threshold marking success (default: 0.9)
-- `hours_per_day`: float — Working hours per day (default: 8.0)
-- `distribution`: `DistributionType` — Default task duration distribution (default: `"triangular"`)
-- `team_size`: int | None — Total team size (used for coordination overhead calculations and auto-generating resources)
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `str` | required | Project name |
+| `description` | `str \| None` | `None` | Optional project description |
+| `start_date` | `date` | required | Project start date |
+| `hours_per_day` | `float` | `8.0` | Working hours per day |
+| `currency` | `str \| None` | `"USD"` | Currency for cost tracking |
+| `confidence_levels` | `list[int]` | `[10, 25, 50, 75, 80, 85, 90, 95, 99]` | Percentiles to include in reports |
+| `probability_red_threshold` | `float` | `0.5` | Probability below which delivery is shown as red |
+| `probability_green_threshold` | `float` | `0.9` | Probability above which delivery is shown as green |
+| `distribution` | `DistributionType` | `"triangular"` | Default task duration distribution |
+| `team_size` | `int \| None` | `None` | Total team size; used for coordination overhead and auto-generating resources |
 
 **Example:**
 
@@ -124,21 +127,23 @@ if meta.team_size:
 
 Represents a single work item in the project network.
 
-**Key fields:**
+**Fields:**
 
-- `id`: str — Unique task identifier
-- `name`: str — Human-readable task name
-- `description`: str | None — Optional task description
-- `estimate`: `TaskEstimate` — Duration estimate
-- `dependencies`: list[str] — List of task IDs this task depends on
-- `uncertainty_factors`: `UncertaintyFactors | None` — Optional uncertainty adjustments
-- `resources`: list[str] — Required resource names
-- `max_resources`: int — Maximum number of resources that can be assigned (default: 1)
-- `min_experience_level`: int — Minimum experience level required (1, 2, or 3; default: 1)
-- `planning_story_points`: int | None — Story points override for sprint planning
-- `priority`: int | None — Scheduling priority hint
-- `spillover_probability_override`: float | None — Override for sprint spillover probability (0.0–1.0)
-- `risks`: list[Risk] — Task-specific risks
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `str` | required | Unique task identifier |
+| `name` | `str` | required | Human-readable task name |
+| `description` | `str \| None` | `None` | Optional task description |
+| `estimate` | `TaskEstimate` | required | Duration estimate |
+| `dependencies` | `list[str]` | `[]` | Task IDs this task depends on |
+| `uncertainty_factors` | `UncertaintyFactors \| None` | `UncertaintyFactors()` | Uncertainty adjustments; defaults to a new instance with all-medium/colocated levels |
+| `resources` | `list[str]` | `[]` | Required resource names |
+| `max_resources` | `int` | `1` | Maximum number of resources that can be assigned |
+| `min_experience_level` | `int` | `1` | Minimum experience level required (1, 2, or 3) |
+| `planning_story_points` | `int \| None` | `None` | Story points override for sprint planning |
+| `priority` | `int \| None` | `None` | Scheduling priority hint |
+| `spillover_probability_override` | `float \| None` | `None` | Override for sprint spillover probability (0.0–1.0) |
+| `risks` | `list[Risk]` | `[]` | Task-specific risks |
 
 **Key methods:**
 
@@ -178,15 +183,17 @@ Supports four estimation styles:
 - T-shirt-sized estimates via `t_shirt_size`
 - Story Point estimates via `story_points`
 
-**Key fields:**
+**Fields:**
 
-- `distribution`: `DistributionType | None` — Override the default distribution for this task
-- `low`: float | None — Minimum hours (optimistic)
-- `expected`: float | None — Best estimate in hours
-- `high`: float | None — Maximum hours (pessimistic)
-- `t_shirt_size`: str | None — Size token (e.g. `"XS"`, `"S"`, `"M"`, `"L"`, `"XL"`, `"XXL"`, or `"category.size"`)
-- `story_points`: int | None — Story point value
-- `unit`: `EffortUnit | None` — Effort unit (`"hours"`, `"days"`, `"weeks"`). Must not be set when using symbolic estimates (T-shirt or story points) — the unit comes from configuration.
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `distribution` | `DistributionType \| None` | `None` | Override the project-level distribution for this task |
+| `low` | `float \| None` | `None` | Minimum duration (optimistic). Also accepted as `min`. |
+| `expected` | `float \| None` | `None` | Best-guess duration. Also accepted as `most_likely`. |
+| `high` | `float \| None` | `None` | Maximum duration (pessimistic). Also accepted as `max`. |
+| `t_shirt_size` | `str \| None` | `None` | Size token, e.g. `"M"`, `"XL"`, or `"epic.L"` |
+| `story_points` | `int \| None` | `None` | Story point value (allowed: 1, 2, 3, 5, 8, 13, 21) |
+| `unit` | `EffortUnit \| None` | `None` (hours for explicit estimates) | Effort unit (`"hours"`, `"days"`, `"weeks"`). Must not be set for symbolic estimates — the unit comes from configuration. |
 
 **Example:**
 
@@ -210,19 +217,23 @@ for task in project.tasks:
 
 Represents task-level or project-level risk.
 
-**Risk fields:**
+**`Risk` fields:**
 
-- `id`: str — Unique risk identifier
-- `name`: str — Human-readable risk name
-- `probability`: float — Probability this risk occurs (0.0 to 1.0)
-- `impact`: float | `RiskImpact` — Impact when risk happens (float is treated as hours)
-- `description`: str | None — Optional description
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `str` | required | Unique risk identifier |
+| `name` | `str` | required | Human-readable risk name |
+| `probability` | `float` | required | Probability this risk occurs (0.0–1.0) |
+| `impact` | `float \| RiskImpact` | required | Time penalty in hours (float), or a `RiskImpact` object |
+| `description` | `str \| None` | `None` | Optional description |
 
-**RiskImpact fields:**
+**`RiskImpact` fields:**
 
-- `type`: `ImpactType` — `"percentage"` or `"absolute"`
-- `value`: float — Percentage (0–100) or absolute hours
-- `unit`: `EffortUnit | None` — Unit only relevant for absolute impacts
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `type` | `ImpactType` | required | `"percentage"` or `"absolute"` |
+| `value` | `float` | required | Percentage (0–100) or absolute duration |
+| `unit` | `EffortUnit \| None` | `None` | Unit for absolute impacts (`"hours"`, `"days"`, `"weeks"`) |
 
 **Risk methods:**
 
@@ -251,16 +262,18 @@ for task in project.tasks:
 
 Defines an individual resource (team member) that can be assigned to tasks.
 
-**Key fields:**
+**Fields:**
 
-- `name`: str | None — Resource name (e.g. `"Alice"`, `"Backend Developer"`). Auto-generated if omitted.
-- `id`: str | None — Legacy identifier (used as fallback for `name`)
-- `availability`: float — Fraction of time available (0.0–1.0, default: 1.0)
-- `calendar`: str — Calendar identifier to use (default: `"default"`)
-- `experience_level`: int — Skill level: 1 (junior), 2 (mid), or 3 (senior). Default: 2
-- `productivity_level`: float — Productivity multiplier (0.1–2.0, default: 1.0)
-- `sickness_prob`: float — Probability of absence per scheduling unit (0.0–1.0, default: 0.0)
-- `planned_absence`: list[date] — Specific dates this resource is unavailable
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `str \| None` | `None` | Resource name (e.g. `"Alice"`). Auto-generated as `resource_001` etc. if omitted. |
+| `id` | `str \| None` | `None` | Legacy identifier used as fallback when `name` is not set |
+| `availability` | `float` | `1.0` | Fraction of time available (must be > 0.0, ≤ 1.0) |
+| `calendar` | `str` | `"default"` | Calendar identifier to use |
+| `experience_level` | `int` | `2` | Skill level: 1 (junior), 2 (mid), or 3 (senior) |
+| `productivity_level` | `float` | `1.0` | Productivity multiplier (0.1–2.0) |
+| `sickness_prob` | `float` | `0.0` | Probability of absence per scheduling unit (0.0–1.0) |
+| `planned_absence` | `list[date]` | `[]` | Specific dates this resource is unavailable |
 
 **Example:**
 
@@ -278,12 +291,14 @@ for resource in project.resources:
 
 Defines a working calendar for scheduling.
 
-**Key fields:**
+**Fields:**
 
-- `id`: str — Calendar identifier (default: `"default"`)
-- `work_hours_per_day`: float — Working hours per day (default: 8.0)
-- `work_days`: list[int] — Working days of the week, where 1=Monday through 7=Sunday (default: `[1, 2, 3, 4, 5]`)
-- `holidays`: list[date] — Specific non-working dates
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `id` | `str` | `"default"` | Calendar identifier |
+| `work_hours_per_day` | `float` | `8.0` | Working hours per day |
+| `work_days` | `list[int]` | `[1, 2, 3, 4, 5]` | Working days of the week (1=Monday … 7=Sunday) |
+| `holidays` | `list[date]` | `[]` | Specific non-working dates |
 
 **Example:**
 
@@ -300,15 +315,17 @@ for calendar in project.calendars:
 
 Applies multipliers to adjust base task duration based on project characteristics.
 
-**Supported fields:**
+**Fields:**
 
-- `team_experience`: `"high"` | `"medium"` | `"low"`
-- `requirements_maturity`: `"high"` | `"medium"` | `"low"`
-- `technical_complexity`: `"low"` | `"medium"` | `"high"`
-- `team_distribution`: `"colocated"` | `"distributed"`
-- `integration_complexity`: `"low"` | `"medium"` | `"high"`
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `team_experience` | `str \| None` | `"medium"` | Team experience: `"high"`, `"medium"`, or `"low"` |
+| `requirements_maturity` | `str \| None` | `"medium"` | Requirements maturity: `"high"`, `"medium"`, or `"low"` |
+| `technical_complexity` | `str \| None` | `"medium"` | Technical complexity: `"low"`, `"medium"`, or `"high"` |
+| `team_distribution` | `str \| None` | `"colocated"` | Team distribution: `"colocated"` or `"distributed"` |
+| `integration_complexity` | `str \| None` | `"medium"` | Integration complexity: `"low"`, `"medium"`, or `"high"` |
 
-Each is optional; only specified factors affect the task estimate. The actual multiplier values are defined in `Config.uncertainty_factors`.
+All fields default to their neutral level (`"medium"` or `"colocated"`), which maps to a 1.0 multiplier and has no effect on the estimate. Only changing a field away from its default affects the task duration. The actual multiplier values are defined in `Config.uncertainty_factors`.
 
 **Example:**
 
@@ -331,72 +348,114 @@ These models define the sprint-planning input configuration. They are populated 
 
 Top-level sprint planning configuration.
 
-**Key fields:**
+**Fields:**
 
-- `enabled`: bool — Whether sprint planning is active (default: `False`)
-- `sprint_length_weeks`: int — Length of each sprint in weeks
-- `capacity_mode`: `SprintCapacityMode` — `"story_points"` or `"tasks"`
-- `history`: list[`SprintHistoryEntry`] — Historical sprint outcomes (minimum 2 usable rows required)
-- `planning_confidence_level`: float — Confidence level for commitment guidance (0–1)
-- `removed_work_treatment`: `RemovedWorkTreatment` — `"churn_only"` or `"reduce_backlog"`
-- `future_sprint_overrides`: list[`FutureSprintOverrideSpec`] — Per-sprint capacity adjustments
-- `volatility_overlay`: `SprintVolatilitySpec` — Sprint disruption model
-- `spillover`: `SprintSpilloverSpec` — Task spillover model
-- `velocity_model`: `SprintVelocityModel` — `"empirical"` or `"neg_binomial"`
-- `sickness`: `SprintSicknessSpec` — Per-person sickness model
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `False` | Whether sprint planning is active |
+| `sprint_length_weeks` | `int` | required | Length of each sprint in weeks |
+| `capacity_mode` | `SprintCapacityMode` | required | `"story_points"` or `"tasks"` |
+| `history` | `list[SprintHistoryEntry]` | `[]` | Historical sprint outcomes (minimum 2 usable rows required when `enabled`) |
+| `planning_confidence_level` | `float` | `0.80` | Confidence level for commitment guidance (0–1) |
+| `removed_work_treatment` | `RemovedWorkTreatment` | `"churn_only"` | How removed scope affects forecasts: `"churn_only"` or `"reduce_backlog"` |
+| `future_sprint_overrides` | `list[FutureSprintOverrideSpec]` | `[]` | Per-sprint capacity adjustments |
+| `volatility_overlay` | `SprintVolatilitySpec` | `SprintVolatilitySpec()` | Sprint disruption model |
+| `spillover` | `SprintSpilloverSpec` | `SprintSpilloverSpec()` | Task spillover model |
+| `velocity_model` | `SprintVelocityModel` | `"empirical"` | `"empirical"` or `"neg_binomial"` |
+| `sickness` | `SprintSicknessSpec` | `SprintSicknessSpec()` | Per-person sickness model |
 
 #### `SprintHistoryEntry`
 
 One historical sprint outcome row.
 
-**Key fields:**
+**Fields:**
 
-- `sprint_id`: str — Unique identifier for this sprint
-- `sprint_length_weeks`: int | None — Override sprint length (defaults to parent)
-- `completed_story_points`: float | None — Story points completed (mutually exclusive with `completed_tasks`)
-- `completed_tasks`: int | None — Tasks completed (mutually exclusive with `completed_story_points`)
-- `spillover_story_points`: float — Unfinished story points carried over (default: 0)
-- `spillover_tasks`: int — Unfinished tasks carried over (default: 0)
-- `added_story_points` / `added_tasks`: float / int — Work added mid-sprint (default: 0)
-- `removed_story_points` / `removed_tasks`: float / int — Work removed mid-sprint (default: 0)
-- `holiday_factor`: float — Capacity adjustment for holidays (default: 1.0)
-- `end_date`: date | None — Sprint end date
-- `team_size`: int | None — Team size during this sprint
-- `notes`: str | None — Free-text notes
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `sprint_id` | `str` | required | Unique identifier for this sprint |
+| `sprint_length_weeks` | `int \| None` | `None` | Override sprint length (defaults to parent `SprintPlanningSpec.sprint_length_weeks`) |
+| `completed_story_points` | `float \| None` | `None` | Story points completed (mutually exclusive with `completed_tasks`) |
+| `completed_tasks` | `int \| None` | `None` | Tasks completed (mutually exclusive with `completed_story_points`) |
+| `spillover_story_points` | `float` | `0` | Unfinished story points carried over |
+| `spillover_tasks` | `int` | `0` | Unfinished tasks carried over |
+| `added_story_points` | `float` | `0` | Story points added mid-sprint |
+| `added_tasks` | `int` | `0` | Tasks added mid-sprint |
+| `removed_story_points` | `float` | `0` | Story points removed mid-sprint |
+| `removed_tasks` | `int` | `0` | Tasks removed mid-sprint |
+| `holiday_factor` | `float` | `1.0` | Capacity adjustment for holidays |
+| `end_date` | `date \| None` | `None` | Sprint end date |
+| `team_size` | `int \| None` | `None` | Team size during this sprint |
+| `notes` | `str \| None` | `None` | Free-text notes |
+
+#### `FutureSprintOverrideSpec`
+
+Forward-looking capacity adjustment for a specific future sprint. At least one of `sprint_number` or `start_date` must be provided.
+
+**Fields:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `sprint_number` | `int \| None` | `None` | Target sprint by 1-based number |
+| `start_date` | `date \| None` | `None` | Target sprint by start date (must align to a sprint boundary) |
+| `holiday_factor` | `float` | `1.0` | Capacity adjustment for holidays |
+| `capacity_multiplier` | `float` | `1.0` | Overall capacity multiplier for this sprint |
+| `notes` | `str \| None` | `None` | Free-text notes |
 
 #### `SprintVolatilitySpec`
 
 Sprint-level disruption overlay (unexpected events reducing capacity).
 
-**Key fields:**
+**Fields:**
 
-- `enabled`: bool (default: `False`)
-- `disruption_probability`: float — Probability of disruption per sprint
-- `disruption_multiplier_low` / `disruption_multiplier_expected` / `disruption_multiplier_high`: float — Triangular distribution for capacity reduction
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `False` | Whether the volatility overlay is active |
+| `disruption_probability` | `float` | `0.0` | Probability of disruption per sprint (0.0–1.0) |
+| `disruption_multiplier_low` | `float` | `1.0` | Low end of triangular capacity-reduction distribution |
+| `disruption_multiplier_expected` | `float` | `1.0` | Expected value of capacity-reduction distribution |
+| `disruption_multiplier_high` | `float` | `1.0` | High end of triangular capacity-reduction distribution |
 
 #### `SprintSpilloverSpec`
 
 Task-level execution spillover model.
 
-**Key fields:**
+**Fields:**
 
-- `enabled`: bool (default: `False`)
-- `model`: `SprintSpilloverModel` — `"table"` or `"logistic"`
-- `size_reference_points`: float — Reference point size for scaling
-- `size_brackets`: list[`SprintSpilloverBracketSpec`] — Table-model probability brackets
-- `consumed_fraction_alpha` / `consumed_fraction_beta`: float — Beta distribution parameters for consumed fraction
-- `logistic_slope` / `logistic_intercept`: float — Logistic model parameters
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `False` | Whether spillover modeling is active |
+| `model` | `SprintSpilloverModel` | `"table"` | `"table"` or `"logistic"` |
+| `size_reference_points` | `float` | `5.0` | Reference size for normalizing story-point brackets |
+| `size_brackets` | `list[SprintSpilloverBracketSpec]` | (default table) | Table-model probability brackets (ascending `max_points`, last entry must be unbounded) |
+| `consumed_fraction_alpha` | `float` | `3.25` | Beta distribution α for spilled fraction consumed |
+| `consumed_fraction_beta` | `float` | `1.75` | Beta distribution β for spilled fraction consumed |
+| `logistic_slope` | `float` | `1.9` | Logistic model slope parameter |
+| `logistic_intercept` | `float` | `≈ -1.992` | Logistic model intercept parameter |
+
+#### `SprintSpilloverBracketSpec`
+
+One bracket in the table-based spillover model, mapping a story-point range to a spillover probability.
+
+**Fields:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `max_points` | `float \| None` | `None` | Upper bound of this bracket in story points. `None` creates an unbounded catch-all bracket (must be last). |
+| `probability` | `float` | required | Spillover probability for tasks in this bracket (0.0–1.0) |
 
 #### `SprintSicknessSpec`
 
 Per-person sickness model for sprint capacity.
 
-**Key fields:**
+**Fields:**
 
-- `enabled`: bool (default: `False`)
-- `team_size`: int | None — Override team size for sickness calculations
-- `probability_per_person_per_week`: float — Sickness probability
-- `duration_log_mu` / `duration_log_sigma`: float — Log-normal parameters for sickness duration
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `False` | Whether sickness modeling is active |
+| `team_size` | `int \| None` | `None` | Override team size for sickness calculations |
+| `probability_per_person_per_week` | `float` | `0.058` | Sickness probability per person per week |
+| `duration_log_mu` | `float` | `0.693` | Log-normal μ for sickness duration |
+| `duration_log_sigma` | `float` | `0.75` | Log-normal σ for sickness duration |
 
 ### Enums
 

@@ -1,50 +1,114 @@
 
 ## Simulation Results Models
 
+### `CriticalPathRecord`
+
+Represents one aggregated critical-path sequence across all simulation iterations.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `path` | `tuple[str, ...]` | Ordered sequence of task IDs forming the critical path |
+| `count` | `int` | Number of iterations this exact path was observed |
+| `frequency` | `float` | Fraction of all iterations (0.0–1.0) this path appeared |
+
+**Method:** `format_path() -> str` — Returns the path as a human-readable arrow-separated string (e.g. `"task_a -> task_b -> task_c"`).
+
+---
+
+### `TwoPassDelta`
+
+Traceability payload produced when the `criticality_two_pass` scheduling mode is active. Stores pass-1 baseline statistics, pass-2 full-run statistics, and the deltas between them.
+
+**Pass metadata:**
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `False` | Whether two-pass scheduling was active |
+| `pass1_iterations` | `int` | `0` | Number of pass-1 (baseline) iterations run |
+| `pass2_iterations` | `int` | `0` | Number of pass-2 (priority-ranked) iterations run |
+| `ranking_method` | `str` | `"criticality_index"` | Method used to rank tasks between passes |
+| `task_criticality_index` | `dict[str, float]` | `{}` | Per-task criticality index computed in pass-1 |
+
+**Pass-1 aggregate statistics:**
+
+| Field | Type | Default |
+|-------|------|---------|
+| `pass1_mean_hours` | `float` | `0.0` |
+| `pass1_p50_hours` | `float` | `0.0` |
+| `pass1_p80_hours` | `float` | `0.0` |
+| `pass1_p90_hours` | `float` | `0.0` |
+| `pass1_p95_hours` | `float` | `0.0` |
+| `pass1_resource_wait_hours` | `float` | `0.0` |
+| `pass1_resource_utilization` | `float` | `0.0` |
+| `pass1_calendar_delay_hours` | `float` | `0.0` |
+
+**Pass-2 aggregate statistics** (same shape; prefix `pass2_`):
+`pass2_mean_hours`, `pass2_p50_hours`, `pass2_p80_hours`, `pass2_p90_hours`, `pass2_p95_hours`, `pass2_resource_wait_hours`, `pass2_resource_utilization`, `pass2_calendar_delay_hours`
+
+**Deltas (pass-2 minus pass-1; negative = improvement)**:
+`delta_mean_hours`, `delta_p50_hours`, `delta_p80_hours`, `delta_p90_hours`, `delta_p95_hours`, `delta_resource_wait_hours`, `delta_resource_utilization`, `delta_calendar_delay_hours`
+
+**Method:** `to_dict() -> dict[str, Any]` — Serialize the traceability payload to a nested dictionary.
+
+---
+
 ### `SimulationResults`
 
 Holds the complete output of a Monte Carlo simulation run, including all percentiles, critical path analysis, risk summaries, resource diagnostics, and per-task metrics.
 
-**Key properties:**
+**Fields:**
 
-- `project_name`: str — Name of the project that was simulated
-- `iterations`: int — Number of iterations run
-- `random_seed`: int | None — Seed used for reproducibility
-- `hours_per_day`: float — Hours per calendar day
-- `start_date`: date | None — Project start date (for delivery date calculations)
-- `schedule_mode`: str — `"dependency_only"` or `"constrained"`
-- `resource_constraints_active`: bool — Whether resource-constrained scheduling was used
-- `mean`: float — Mean project duration (hours)
-- `median`: float — Median project duration (hours)
-- `std_dev`: float — Standard deviation of duration
-- `min_duration`: float — Minimum observed duration
-- `max_duration`: float — Maximum observed duration
-- `skewness`: float — Skewness of the distribution
-- `kurtosis`: float — Excess kurtosis of the distribution
-- `percentiles`: dict[int, float] — Per-percentile duration (hours)
-- `effort_percentiles`: dict[int, float] — Per-percentile total effort (person-hours)
-- `effort_durations`: np.ndarray — Per-iteration total effort (project-wide)
-- `sensitivity`: dict[str, float] — Per-task Spearman rank correlation with total duration
-- `task_slack`: dict[str, float] — Mean schedule slack per task (hours)
-- `max_parallel_tasks`: int — Peak parallel task count
-- `resource_wait_time_hours`: float — Total wait time caused by resource unavailability
-- `resource_utilization`: float — Average resource utilization (0.0–1.0)
-- `calendar_delay_time_hours`: float — Hours lost to calendar constraints (weekends, holidays)
-- `two_pass_trace`: `TwoPassDelta | None` — Traceability data when two-pass scheduling was enabled
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `project_name` | `str` | required | Name of the project that was simulated |
+| `iterations` | `int` | required | Number of iterations run |
+| `durations` | `np.ndarray` | required | Per-iteration elapsed project duration in hours (the main simulation output array) |
+| `task_durations` | `dict[str, np.ndarray]` | `{}` | Per-task duration arrays (task ID → per-iteration values) |
+| `critical_path_frequency` | `dict[str, int]` | `{}` | Raw count of iterations each task appeared on the critical path |
+| `critical_path_sequences` | `list[CriticalPathRecord]` | `[]` | Full ordered critical-path sequences in descending frequency order |
+| `random_seed` | `int \| None` | `None` | Seed used for reproducibility |
+| `probability_red_threshold` | `float` | `0.5` | Probability below which delivery is shown as red |
+| `probability_green_threshold` | `float` | `0.9` | Probability above which delivery is shown as green |
+| `hours_per_day` | `float` | `8.0` | Working hours per calendar day |
+| `start_date` | `date \| None` | `None` | Project start date (for delivery date calculations) |
+| `sensitivity` | `dict[str, float]` | `{}` | Per-task Spearman rank correlation with total duration |
+| `task_slack` | `dict[str, float]` | `{}` | Mean schedule slack per task (hours) across all iterations |
+| `max_parallel_tasks` | `int` | `0` | Peak parallel task count observed across all iterations |
+| `schedule_mode` | `str` | `"dependency_only"` | `"dependency_only"` or `"constrained"` |
+| `resource_constraints_active` | `bool` | `False` | Whether resource-constrained scheduling was used |
+| `resource_wait_time_hours` | `float` | `0.0` | Total wait time caused by resource unavailability |
+| `resource_utilization` | `float` | `0.0` | Average resource utilization (0.0–1.0) |
+| `calendar_delay_time_hours` | `float` | `0.0` | Hours lost to calendar constraints (weekends, holidays) |
+| `risk_impacts` | `dict[str, np.ndarray]` | `{}` | Per-task risk impact arrays (task ID → per-iteration impact in hours) |
+| `project_risk_impacts` | `np.ndarray` | `[]` | Per-iteration project-level risk impacts in hours |
+| `effort_durations` | `np.ndarray` | `[]` | Per-iteration total person-effort (sum of all task durations); differs from `durations` which is elapsed time |
+| `two_pass_trace` | `TwoPassDelta \| None` | `None` | Traceability data when two-pass scheduling was used |
+| `mean` | `float` | `0.0` | Mean elapsed project duration (hours) |
+| `median` | `float` | `0.0` | Median elapsed project duration (hours) |
+| `std_dev` | `float` | `0.0` | Standard deviation of elapsed duration |
+| `min_duration` | `float` | `0.0` | Minimum observed elapsed duration |
+| `max_duration` | `float` | `0.0` | Maximum observed elapsed duration |
+| `skewness` | `float` | `0.0` | Skewness of the duration distribution |
+| `kurtosis` | `float` | `0.0` | Excess kurtosis of the duration distribution |
+| `percentiles` | `dict[int, float]` | `{}` | Pre-computed elapsed duration percentiles (hours) |
+| `effort_percentiles` | `dict[int, float]` | `{}` | Pre-computed total effort percentiles (person-hours) |
+
+> **Elapsed duration vs. total effort:** `durations` and `mean`/`percentiles` represent the *elapsed* project timeline (critical-path time, accounting for parallelism). `effort_durations` and `effort_percentiles` represent the total *person-hours* of work across all tasks — this will always be ≥ the elapsed duration when tasks run in parallel.
 
 **Key methods:**
 
-- **`percentile(p: int) -> float`** — Get calendar duration for a specific percentile
-- **`effort_percentile(p: int) -> float`** — Get total effort for a specific percentile
+- **`calculate_statistics() -> None`** — Populate `mean`, `median`, `std_dev`, `min_duration`, `max_duration`, `skewness`, and `kurtosis` from `durations`. Called automatically by `SimulationEngine` after the run.
+- **`percentile(p: int) -> float`** — Get elapsed duration for a specific percentile
+- **`effort_percentile(p: int) -> float`** — Get total effort for a specific percentile (falls back to `total_effort_hours()` when per-iteration effort data is unavailable)
 - **`probability_of_completion(target_hours: float) -> float`** — Calculate probability of finishing within a target duration
 - **`hours_to_working_days(hours: float) -> int`** — Convert hours to working days (ceiling rounding)
-- **`delivery_date(effort_hours: float) -> date | None`** — Convert project duration to a calendar date (skips weekends)
-- **`get_critical_path() -> dict[str, float]`** — Per-task criticality index (0.0–1.0, frequency on critical path)
+- **`delivery_date(effort_hours: float) -> date | None`** — Convert elapsed duration to a calendar date (skips weekends; returns `None` if `start_date` is unset)
+- **`get_critical_path() -> dict[str, float]`** — Per-task criticality index (0.0–1.0, frequency on critical path), derived from `critical_path_frequency`
 - **`get_critical_path_sequences(top_n: int | None = None) -> list[CriticalPathRecord]`** — Most frequent full paths (up to `top_n`)
 - **`get_most_frequent_critical_path() -> CriticalPathRecord | None`** — Single most common critical path
 - **`get_histogram_data(bins: int = 50) -> tuple[np.ndarray, np.ndarray]`** — Bin edges and counts for distribution visualization
-- **`get_risk_impact_summary() -> dict[str, dict[str, float]]`** — Per-task risk triggering and impact statistics
-- **`total_effort_hours() -> float`** — Sum of all task base estimates
+- **`get_risk_impact_summary() -> dict[str, dict[str, float]]`** — Per-task risk triggering and impact statistics (`mean_impact`, `trigger_rate`, `mean_when_triggered`)
+- **`total_effort_hours() -> float`** — Sum of per-task mean durations (total person-hours)
 - **`to_dict() -> dict[str, Any]`** — Serialize results to a dictionary
 
 **Example: Complete Results Query**

@@ -7,7 +7,7 @@ The most stable entry points are:
 - **Root package imports** from `mcprojsim` — Quick-start for common workflows
 - **Data models** from `mcprojsim.models` — Project structure, tasks, risks, estimates
 - **File parsers** from `mcprojsim.parsers` — Load YAML/TOML project files
-- **Simulation engines** from `mcprojsim` and `mcprojsim.planning` — Run Monte Carlo simulations
+- **Simulation engine** from `mcprojsim` — Run Monte Carlo schedule simulations
 - **Exporters** from `mcprojsim.exporters` — Generate JSON, CSV, and HTML reports
 - **Configuration** from `mcprojsim.config` — Simulation settings, uncertainty factors, estimate mappings
 - **Analysis helpers** from `mcprojsim.analysis` — Statistical, sensitivity, critical-path, and staffing analysis

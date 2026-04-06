@@ -15,7 +15,7 @@ from mcprojsim.analysis.statistics import StatisticalAnalyzer
 
 **Methods:**
 
-- **`calculate_statistics(durations: np.ndarray) -> dict[str, float]`** — Returns mean, median, std_dev, min, max, coefficient of variation, skewness, excess kurtosis
+- **`calculate_statistics(durations: np.ndarray) -> dict[str, float]`** — Returns `mean`, `median`, `std_dev`, `variance`, `min`, `max`, `range`, `coefficient_of_variation`
 - **`calculate_percentiles(durations: np.ndarray, percentiles: list[int]) -> dict[int, float]`** — Compute specific percentiles
 - **`confidence_interval(durations: np.ndarray, confidence: float = 0.95) -> tuple[float, float]`** — Return lower/upper bounds for a confidence interval
 
@@ -89,31 +89,38 @@ from mcprojsim.analysis.staffing import StaffingAnalyzer
 
 **Methods:**
 
-- **`calculate_staffing_table(results: SimulationResults, config: Config) -> list[StaffingRow]`** — Per-profile team-size recommendations
-- **`recommend_team_size(results: SimulationResults, config: Config) -> list[StaffingRecommendation]`** — Primary recommendations for each profile
+- **`individual_productivity(team_size: int, communication_overhead: float, min_productivity: float) -> float`** — Per-person productivity for a given team size. Returns a value in `[min_productivity, 1.0]`.
+- **`effective_capacity(team_size: int, communication_overhead: float, productivity_factor: float, min_productivity: float) -> float`** — Effective person-equivalents for a sized team, accounting for communication overhead and experience-level multiplier.
+- **`calendar_hours(total_effort: float, critical_path_hours: float, team_size: int, communication_overhead: float, productivity_factor: float, min_productivity: float, hours_per_day: float) -> float`** — Elapsed calendar hours for a team. Bounded below by `critical_path_hours` regardless of team size.
+- **`calculate_staffing_table(results: SimulationResults, config: Config) -> list[StaffingRow]`** — Full table of `StaffingRow` objects for every team size from 1 up to the observed peak parallelism, for each experience profile.
+- **`recommend_team_size(results: SimulationResults, config: Config) -> list[StaffingRecommendation]`** — One optimal `StaffingRecommendation` per experience profile (the team size with the shortest calendar duration).
 
 **`StaffingRow` fields:**
 
-- `profile`: str — Experience level name
-- `team_size`: int — Candidate team size
-- `individual_productivity`: float — Per-person productivity after overhead
-- `effective_capacity`: float — Total effective team capacity
-- `calendar_hours`: float — Total hours of calendar time needed
-- `calendar_working_days`: int — Calendar days needed
-- `delivery_date`: date | None — Projected delivery date
-- `efficiency`: float — Effective capacity vs nominal team size
+| Field | Type | Description |
+|---|---|---|
+| `profile` | `str` | Experience level name |
+| `team_size` | `int` | Candidate team size |
+| `individual_productivity` | `float` | Per-person productivity after communication overhead |
+| `effective_capacity` | `float` | Total effective team capacity in person-equivalents |
+| `calendar_hours` | `float` | Elapsed calendar hours needed |
+| `calendar_working_days` | `int` | Calendar working days needed |
+| `delivery_date` | `date \| None` | Projected delivery date |
+| `efficiency` | `float` | Calendar-time optimality: 1.0 means this team size achieves the minimum calendar duration for its profile |
 
 **`StaffingRecommendation` fields:**
 
-- `profile`: str — Experience level name (e.g., `"senior"`, `"mixed"`, `"junior"`)
-- `recommended_team_size`: int — Primary recommendation
-- `total_effort_hours`: float — Total effort basis
-- `critical_path_hours`: float — Critical path duration
-- `calendar_working_days`: int — Calendar days needed
-- `delivery_date`: date | None — Scheduled completion
-- `efficiency`: float — Effective capacity vs nominal team size
-- `parallelism_ratio`: float — Ratio of total effort to critical-path duration
-- `effort_basis`: str — Effort basis label (`"mean"` or a percentile label such as `"p80"`)
+| Field | Type | Description |
+|---|---|---|
+| `profile` | `str` | Experience level name (e.g. `"senior"`, `"mixed"`, `"junior"`) |
+| `recommended_team_size` | `int` | Optimal team size (minimum calendar duration) |
+| `total_effort_hours` | `float` | Total effort basis in person-hours |
+| `critical_path_hours` | `float` | Critical-path elapsed hours (lower bound on calendar time) |
+| `calendar_working_days` | `int` | Calendar working days needed |
+| `delivery_date` | `date \| None` | Projected delivery date |
+| `efficiency` | `float` | Always `1.0` — the recommended size is by definition the calendar-optimal team for its profile |
+| `parallelism_ratio` | `float` | Ratio of total effort to critical-path duration (degree of parallelism) |
+| `effort_basis` | `str` | Effort basis label (`"mean"` or a percentile label such as `"P80"`) |
 
 **Example:**
 

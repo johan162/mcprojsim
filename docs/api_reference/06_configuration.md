@@ -7,29 +7,33 @@ Application-wide configuration for simulation settings, output formatting, uncer
 
 **Top-level fields:**
 
-- `uncertainty_factors`: dict[str, dict[str, float]] — Multipliers for uncertainty factors
-- `t_shirt_sizes`: dict[str, dict[str, TShirtSizeConfig]] — T-shirt size mappings by category
-- `t_shirt_size_default_category`: str — Default category for bare T-shirt sizes
-- `t_shirt_size_unit`: `EffortUnit` — Unit for T-shirt sizes
-- `story_points`: dict[int, StoryPointConfig] — Story point mappings
-- `story_point_unit`: `EffortUnit` — Unit for story points
-- `simulation`: `SimulationConfig` — Simulation defaults
-- `lognormal`: `LogNormalConfig` — Log-normal distribution settings
-- `output`: `OutputConfig` — Output and export settings
-- `staffing`: `StaffingConfig` — Staffing analysis configuration
-- `constrained_scheduling`: `ConstrainedSchedulingConfig` — Resource-constrained settings
-- `sprint_defaults`: `SprintDefaultsConfig` — Sprint planning defaults
+| Field | Type | Description |
+|-------|------|-------------|
+| `uncertainty_factors` | `dict[str, dict[str, float]]` | Multipliers for uncertainty factors |
+| `t_shirt_sizes` | `dict[str, dict[str, TShirtSizeConfig]]` | T-shirt size mappings by category |
+| `t_shirt_size_default_category` | `str` | Default category for bare T-shirt sizes (default: `"epic"`) |
+| `t_shirt_size_unit` | `EffortUnit` | Unit for T-shirt size estimates (default: `HOURS`) |
+| `story_points` | `dict[int, StoryPointConfig]` | Story point mappings |
+| `story_point_unit` | `EffortUnit` | Unit for story point estimates (default: `DAYS`) |
+| `simulation` | `SimulationConfig` | Simulation defaults |
+| `lognormal` | `LogNormalConfig` | Log-normal distribution settings |
+| `output` | `OutputConfig` | Output and export settings |
+| `staffing` | `StaffingConfig` | Staffing analysis configuration |
+| `constrained_scheduling` | `ConstrainedSchedulingConfig` | Resource-constrained scheduling settings |
+| `sprint_defaults` | `SprintDefaultsConfig` | Sprint planning defaults |
 
 **Key methods:**
 
-- **`Config.load_from_file(config_path: Path | str) -> Config`** — Load from YAML config file
-- **`Config.get_default() -> Config`** — Get built-in defaults
-- **`get_uncertainty_multiplier(factor_name: str, level: str) -> float`** — Look up factor multiplier
-- **`get_t_shirt_size(size: str) -> TShirtSizeConfig | None`** — Resolve a T-shirt size (returns `None` on invalid input)
-- **`resolve_t_shirt_size(size: str) -> TShirtSizeConfig`** — Resolve a T-shirt size (raises `ValueError` on invalid input)
-- **`get_t_shirt_categories() -> list[str]`** — List all T-shirt categories
-- **`get_story_point(points: int) -> StoryPointConfig | None`** — Resolve story points
-- **`get_lognormal_high_z_value() -> float`** — Get Z-score for log-normal estimation
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `Config.load_from_file` | `(config_path: Path \| str) -> Config` | Load configuration from a YAML file, merging overrides onto built-in defaults. |
+| `Config.get_default` | `() -> Config` | Return a `Config` instance populated with built-in defaults. |
+| `get_uncertainty_multiplier` | `(factor_name: str, level: str) -> float` | Look up a multiplier for a named uncertainty factor and level. |
+| `get_t_shirt_size` | `(size: str) -> TShirtSizeConfig \| None` | Resolve a T-shirt size label. Returns `None` on unrecognised input. |
+| `resolve_t_shirt_size` | `(size: str) -> TShirtSizeConfig` | Resolve a T-shirt size label. Raises `ValueError` on unrecognised input. |
+| `get_t_shirt_categories` | `() -> list[str]` | List all configured T-shirt size categories. |
+| `get_story_point` | `(points: int) -> StoryPointConfig \| None` | Resolve a story point value. Returns `None` if not configured. |
+| `get_lognormal_high_z_value` | `() -> float` | Return the Z-score corresponding to `lognormal.high_percentile`. |
 
 **Example: Working with Configuration**
 
@@ -71,9 +75,11 @@ print(f"Critical path limit: {config.output.critical_path_report_limit}")
 
 Both inherit from `EstimateRangeConfig` and contain:
 
-- `low`: float — Optimistic estimate
-- `expected`: float — Best estimate
-- `high`: float — Pessimistic estimate
+| Field | Type | Description |
+|-------|------|-------------|
+| `low` | `float` | Optimistic estimate |
+| `expected` | `float` | Best estimate |
+| `high` | `float` | Pessimistic estimate |
 
 Returned by `config.get_t_shirt_size()` and `config.get_story_point()`.
 
@@ -81,8 +87,10 @@ Returned by `config.get_t_shirt_size()` and `config.get_story_point()`.
 
 Productivity and overhead parameters for an experience profile.
 
-- `productivity_factor`: float — Effective output multiplier (default: 1.0)
-- `communication_overhead`: float — Fraction of capacity lost to coordination (0.0–1.0, default: 0.06)
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `productivity_factor` | `float` | `1.0` | Effective output multiplier |
+| `communication_overhead` | `float` | `0.06` | Fraction of capacity lost to coordination (0.0–1.0) |
 
 Used inside `StaffingConfig.experience_profiles`.
 
@@ -90,12 +98,12 @@ Used inside `StaffingConfig.experience_profiles`.
 
 Settings for simulation output and export behavior.
 
-**Fields:**
-
-- `formats`: list[str] — Default export formats (`"json"`, `"csv"`, `"html"`)
-- `include_histogram`: bool — Include histogram data in exports
-- `histogram_bins`: int — Number of bins for histogram charts (default: 50)
-- `critical_path_report_limit`: int — Max critical path sequences to show (default: 2)
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `formats` | `list[str]` | `["json", "csv", "html"]` | Default export formats |
+| `include_histogram` | `bool` | `True` | Include histogram data in exports |
+| `histogram_bins` | `int` | `50` | Number of bins for histogram charts |
+| `critical_path_report_limit` | `int` | `2` | Max critical path sequences to show |
 
 **Histogram binning note:** The `histogram_bins` setting is used by all exporters when generating distribution charts in JSON, CSV, and HTML reports. You can also override this per-run via the `--number-bins` CLI flag.
 
@@ -103,29 +111,29 @@ Settings for simulation output and export behavior.
 
 Defaults for simulation runs.
 
-**Fields:**
-
-- `default_iterations`: int — Default Monte Carlo iterations (default: 10000)
-- `random_seed`: int | None — Default seed
-- `max_stored_critical_paths`: int — Maximum distinct paths to track (default: 20)
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `default_iterations` | `int` | `10000` | Default Monte Carlo iteration count |
+| `random_seed` | `int \| None` | `None` | Default random seed |
+| `max_stored_critical_paths` | `int` | `20` | Maximum distinct critical paths to track |
 
 #### `LogNormalConfig`
 
 Shifted log-normal interpretation settings.
 
-**Fields:**
-
-- `high_percentile`: int — The percentile the "high" estimate maps to (allowed: specific Z-score-mapped values)
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `high_percentile` | `int` | `95` | The percentile the "high" estimate maps to. Allowed values: `70`, `75`, `80`, `85`, `90`, `95`, `99`. |
 
 #### `StaffingConfig`
 
 Configuration for staffing recommendations.
 
-**Fields:**
-
-- `effort_percentile`: int | None — Percentile to base staffing on (e.g., 80 for P80). When `None` (default), mean effort is used.
-- `min_individual_productivity`: float — Floor for individual productivity after communication overhead (default: 0.25)
-- `experience_profiles`: dict[str, ExperienceProfileConfig] — Named team profiles. Default profiles: `"senior"`, `"mixed"`, `"junior"`.
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `effort_percentile` | `int \| None` | `None` | Percentile to base staffing on (e.g., `80` for P80). When `None`, mean effort is used. |
+| `min_individual_productivity` | `float` | `0.25` | Floor for individual productivity after communication overhead. |
+| `experience_profiles` | `dict[str, ExperienceProfileConfig]` | `"senior"`, `"mixed"`, `"junior"` | Named team experience profiles. |
 
 **Example:**
 
@@ -142,25 +150,41 @@ results = engine.run(project)
 
 Settings for resource-constrained scheduling.
 
-**Fields:**
-
-- `sickness_prob`: float — Default per-resource sickness probability (default: 0.0)
-- `assignment_mode`: `ConstrainedSchedulingAssignmentMode` — `"greedy_single_pass"` (default) or `"criticality_two_pass"`
-- `pass1_iterations`: int — Iterations for criticality ranking in two-pass mode
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `sickness_prob` | `float` | `0.0` | Default per-resource sickness probability when not specified on the resource. |
+| `assignment_mode` | `ConstrainedSchedulingAssignmentMode` | `"greedy_single_pass"` | Scheduling dispatch policy. `"greedy_single_pass"` uses deterministic ID-order greedy dispatch; `"criticality_two_pass"` runs a criticality-ranking pass first. |
+| `pass1_iterations` | `int` | `1000` | Iteration count for the criticality-ranking pass when using `"criticality_two_pass"`. |
 
 #### `SprintDefaultsConfig`
 
 Company-wide defaults for sprint-planning behavior.
 
-**Fields:**
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `planning_confidence_level` | `float` | `0.80` | Default confidence for commitment guidance. |
+| `removed_work_treatment` | `"churn_only" \| "reduce_backlog"` | `"churn_only"` | How removed work is accounted for in velocity. |
+| `velocity_model` | `"empirical" \| "neg_binomial"` | `"empirical"` | Velocity sampling model. |
+| `volatility_disruption_probability` | `float` | `0.0` | Default disruption probability per sprint. |
+| `volatility_disruption_multiplier_low` | `float` | `1.0` | Low-end disruption multiplier. |
+| `volatility_disruption_multiplier_expected` | `float` | `1.0` | Expected disruption multiplier. |
+| `volatility_disruption_multiplier_high` | `float` | `1.0` | High-end disruption multiplier. |
+| `spillover_model` | `"table" \| "logistic"` | `"table"` | Spillover estimation model. |
+| `spillover_size_reference_points` | `float` | `5.0` | Reference sprint size for the spillover table. |
+| `spillover_size_brackets` | `list[dict[str, float \| None]]` | See defaults | Bracket definitions for the table-based spillover model. |
+| `spillover_consumed_fraction_alpha` | `float` | `3.25` | Beta distribution alpha for consumed-fraction sampling. |
+| `spillover_consumed_fraction_beta` | `float` | `1.75` | Beta distribution beta for consumed-fraction sampling. |
+| `spillover_logistic_slope` | `float` | `1.9` | Slope for the logistic spillover model. |
+| `spillover_logistic_intercept` | `float` | `~-1.99` | Intercept for the logistic spillover model. |
+| `sickness` | `SprintSicknessDefaultsConfig` | See below | Company-wide sprint sickness defaults. |
 
-- `planning_confidence_level`: float — Default confidence for commitment guidance
-- `removed_work_treatment`: `"churn_only"` | `"reduce_backlog"`
-- `velocity_model`: `"empirical"` | `"neg_binomial"`
-- `volatility_disruption_probability`: float — Default disruption probability
-- `volatility_disruption_multiplier_low` / `_expected` / `_high`: float — Default disruption multipliers
-- `spillover_model` / `spillover_size_reference_points` / `spillover_size_brackets`: various — Default spillover settings
-- `spillover_consumed_fraction_alpha` / `_beta`: float — Beta distribution defaults
-- `spillover_logistic_slope` / `_intercept`: float — Logistic model defaults
-- `sickness`: `SprintSicknessDefaultsConfig` — Company-wide sickness defaults
+#### `SprintSicknessDefaultsConfig`
 
+Company-wide defaults for sprint sickness modelling. Nested inside `SprintDefaultsConfig.sickness`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `False` | Whether sickness is modelled by default in sprint simulations. |
+| `probability_per_person_per_week` | `float` | `0.058` | Probability that a team member falls sick in any given week. |
+| `duration_log_mu` | `float` | `0.693` | Log-mean of the log-normal sickness duration distribution. |
+| `duration_log_sigma` | `float` | `0.75` | Log-standard-deviation of the sickness duration distribution. |
