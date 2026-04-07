@@ -393,10 +393,12 @@ else
     echo "  ✓ Creating ZIP bundles of generated PDFs for release assets..."
     (cd ./dist && zip -9 "${PROGRAMNAME}_user_guide_bundle-${VERSION}.zip" "${PROGRAMNAME}_user_guide-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf")
     (cd ./dist && zip -9 "${PROGRAMNAME}_api_ref_bundle-${VERSION}.zip" "${PROGRAMNAME}_api_ref-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf")
-
+    (cd ./dist && rm *.pdf)
+    
     echo "  ✓ Generating HTML version of User Guide for release assets..."
-    $(MAKE) -C docs docs || {
+    make -C docs docs || {
         print_warning_colored "Makefile target 'docs' failed. Skipping HTML generation."
+        exit 1;
     }
 fi
 
