@@ -32,7 +32,7 @@ This chapter focuses on building the project file step-by-step, but it helps to 
 | `mcprojsim generate INPUT_FILE` | Generate a project YAML file from plain-text input |
 | `mcprojsim validate PROJECT_FILE` | Validate a project file without simulating |
 | `mcprojsim simulate PROJECT_FILE` | Run Monte Carlo simulation and optionally export reports |
-| `mcprojsim config show` | Show active configuration |
+| `mcprojsim config` | Show active configuration |
 
 ### Common `simulate` flags
 
@@ -116,16 +116,33 @@ Example result summary:
 
 ```text
 === Simulation Results ===
+
+Project Overview:
 Project: Tiny Landing Page
 Hours per Day: 8.0
-Mean: 42.26 hours (6 working days)
-Median (P50): 41.52 hours
-Std Dev: 7.93 hours
+Max Parallel Tasks: 1
+Schedule Mode: dependency_only
 
-Confidence Intervals:
-  P50: 41.52 hours (6 working days)
-  P80: 49.60 hours (7 working days)
-  P90: 53.44 hours (7 working days)
+Calendar Time Statistical Summary:
+Mean: 42.23 hours (6 working days)
+Median (P50): 41.49 hours
+Std Dev: 7.93 hours
+Minimum: 25.47 hours
+Maximum: 62.96 hours
+Coefficient of Variation: 0.1877
+Skewness: 0.3055
+Excess Kurtosis: -0.6103
+
+Project Effort Statistical Summary:
+Mean: 42.23 person-hours (6 person-days)
+Median (P50): 41.49 person-hours
+Std Dev: 7.93 person-hours
+...
+
+Calendar Time Confidence Intervals:
+  P50: 41.49 hours (6 working days)  (2026-03-09)
+  P80: 49.57 hours (7 working days)  (2026-03-10)
+  P90: 53.46 hours (7 working days)  (2026-03-10)
 ```
 
 The important thing here is not the exact numbers. The important thing is that even a one-task project produces a range of likely outcomes rather than one fixed answer. Results are reported in hours (the canonical internal unit) with working days shown alongside.
@@ -174,16 +191,31 @@ Example result summary:
 
 ```text
 === Simulation Results ===
+
+Project Overview:
 Project: Tiny Landing Page
 Hours per Day: 8.0
-Mean: 71.58 hours (9 working days)
-Median (P50): 71.20 hours
-Std Dev: 10.96 hours
+Max Parallel Tasks: 1
+Schedule Mode: dependency_only
 
-Confidence Intervals:
-  P50: 71.20 hours (9 working days)
-  P80: 80.96 hours (11 working days)
-  P90: 86.00 hours (11 working days)
+Calendar Time Statistical Summary:
+Mean: 71.62 hours (9 working days)
+Median (P50): 71.22 hours
+Std Dev: 10.97 hours
+...
+
+Calendar Time Confidence Intervals:
+  P50: 71.22 hours (9 working days)  (2026-03-12)
+  P80: 80.99 hours (11 working days)  (2026-03-16)
+  P90: 85.99 hours (11 working days)  (2026-03-16)
+
+Sensitivity Analysis (top contributors):
+  task_002: +0.6901
+  task_001: +0.6775
+
+Schedule Slack:
+  task_001: 0.00 hours (Critical)
+  task_002: 0.00 hours (Critical)
 
 Most Frequent Critical Paths:
   1. task_001 -> task_002 (5000/5000, 100.0%)
@@ -310,28 +342,35 @@ Example result summary:
 
 ```text
 === Simulation Results ===
+
+Project Overview:
 Project: Tiny Landing Page
 Hours per Day: 8.0
-Mean: 53.76 hours (7 working days)
-Median (P50): 53.44 hours
-Std Dev: 8.32 hours
+Max Parallel Tasks: 1
+Schedule Mode: dependency_only
 
-Confidence Intervals:
-  P50: 53.44 hours (7 working days)
-  P80: 60.88 hours (8 working days)
-  P90: 64.64 hours (9 working days)
+Calendar Time Statistical Summary:
+Mean: 61.79 hours (8 working days)
+Median (P50): 61.43 hours
+Std Dev: 9.57 hours
+...
+
+Calendar Time Confidence Intervals:
+  P50: 61.43 hours (8 working days)  (2026-03-11)
+  P80: 70.04 hours (9 working days)  (2026-03-12)
+  P90: 74.32 hours (10 working days)  (2026-03-13)
 ```
 
 This is an important modeling step.
 
-The project file still contains the project-specific facts: tasks, estimates, and dependencies. The configuration file now contains the organization’s shared interpretation of labels such as `high team_experience` or `medium technical_complexity`.
+The project file still contains the project-specific facts: tasks, estimates, and dependencies. The configuration file now contains the organization's shared interpretation of labels such as `high team_experience` or `medium technical_complexity`.
 
-In this example, the overall forecast becomes shorter than in Step 2 because the chosen factors make part of the work more favorable than the neutral baseline.
+In this example, the overall forecast becomes shorter than in Step 2 because setting `team_experience` to `"high"` applies a 0.90 multiplier to task_001, which more than offsets the modest increases from the other factors.
 
 If you want to inspect the active merged configuration (built-in defaults plus any custom overrides), run:
 
 ```bash
-mcprojsim config show --config-file first-project-config.yaml
+mcprojsim config --config-file first-project-config.yaml
 ```
 
 ## Add explicit risk events
@@ -348,6 +387,7 @@ project:
   description: "Adding risk events"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
+
 project_risks:
   - id: "risk_001"
     name: "Late stakeholder changes"
@@ -356,6 +396,7 @@ project_risks:
       type: "absolute"
       value: 2
       unit: "days"
+
 tasks:
   - id: "task_001"
     name: "Create landing page"
@@ -367,9 +408,7 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "medium"
-```
 
-```yaml
   - id: "task_002"
     name: "Deploy site"
     estimate:
@@ -385,7 +424,7 @@ tasks:
       - id: "risk_002"
         name: "Hosting problem"
         probability: 0.15
-        impact: 1.5
+        impact: 1.5     # bare float = hours; use impact.type/value/unit for other units
 ```
 
 Run it:
@@ -401,23 +440,35 @@ Example result summary:
 
 ```text
 === Simulation Results ===
+
+Project Overview:
 Project: Tiny Landing Page
 Hours per Day: 8.0
-Mean: 58.88 hours (8 working days)
-Median (P50): 58.00 hours
-Std Dev: 11.36 hours
+Max Parallel Tasks: 1
+Schedule Mode: dependency_only
 
-Confidence Intervals:
-  P50: 58.00 hours (8 working days)
-  P80: 68.56 hours (9 working days)
-  P90: 74.32 hours (10 working days)
+Calendar Time Statistical Summary:
+Mean: 65.36 hours (9 working days)
+Median (P50): 64.57 hours
+Std Dev: 11.60 hours
+...
+
+Calendar Time Confidence Intervals:
+  P50: 64.57 hours (9 working days)  (2026-03-12)
+  P80: 75.34 hours (10 working days)  (2026-03-13)
+  P90: 81.04 hours (11 working days)  (2026-03-16)
+
+Risk Impact Analysis:
+  task_002: mean=0.23h, triggers=15.4%, mean_when_triggered=1.50h
 ```
 
 Notice what happened relative to Step 3:
 
-- the mean increased,
+- the mean increased (from 61.79h to 65.36h),
 - the upper percentiles increased,
 - the spread increased.
+
+A new section, **Risk Impact Analysis**, also appears. It shows how often each risk triggered and how much it added on average. In this example, `risk_002` ("Hosting problem") triggered in about 15% of iterations, adding 1.5 hours when it did — matching the 0.15 probability and 1.5-hour impact we specified.
 
 That is exactly what we expect when we add plausible delay events to the model. The file is not just more detailed. It is representing more of the actual uncertainty that the team believes exists.
 
@@ -445,6 +496,7 @@ project:
   description: "T-shirt sizing example"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
+
 tasks:
   - id: "task_001"
     name: "Design page"
@@ -462,9 +514,6 @@ tasks:
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "medium"
-```
-
-```yaml
   - id: "task_003"
     name: "Deploy page"
     estimate:
@@ -525,16 +574,23 @@ Example result summary:
 
 ```text
 === Simulation Results ===
+
+Project Overview:
 Project: Tiny Landing Page
 Hours per Day: 8.0
-Mean: 11.46 hours (2 working days)
-Median (P50): 11.37 hours
-Std Dev: 1.63 hours
+Max Parallel Tasks: 1
+Schedule Mode: dependency_only
 
-Confidence Intervals:
-  P50: 11.37 hours (2 working days)
-  P80: 12.87 hours (2 working days)
-  P90: 13.67 hours (2 working days)
+Calendar Time Statistical Summary:
+Mean: 13.18 hours (2 working days)
+Median (P50): 13.08 hours
+Std Dev: 1.87 hours
+...
+
+Calendar Time Confidence Intervals:
+  P50: 13.08 hours (2 working days)  (2026-03-03)
+  P80: 14.80 hours (2 working days)  (2026-03-03)
+  P90: 15.72 hours (2 working days)  (2026-03-03)
 ```
 
 The interpretation is exactly the same as for explicit ranges. The only difference is how the task effort was expressed in the input file.
@@ -559,9 +615,7 @@ project:
   description: "Story Point sizing example"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
-```
 
-```yaml
 tasks:
   - id: "task_001"
     name: "Design page"
@@ -588,7 +642,7 @@ The same example is also available as `examples/story_points_walkthrough_project
 
 ### How Story Points are configured
 
-If you want to customize Story Point mappings, add a `story_points` section to the configuration file:
+The built-in story point values cover the Fibonacci sequence 1, 2, 3, 5, 8, 13, 21. If you want to customize any of those mappings, add a `story_points` section to the configuration file:
 
 ```yaml
 story_points:
@@ -608,9 +662,6 @@ story_points:
     low: 3
     expected: 5
     high: 8
-```
-
-```yaml    
   8:
     low: 5
     expected: 8
@@ -630,7 +681,30 @@ mcprojsim simulate examples/story_points_walkthrough_project.yaml \
   --seed 42
 ```
 
-Story Points are useful when the team has a stable internal understanding of what `1`, `2`, `3`, `5`, or `8` mean, but that understanding does not translate directly to raw hours or days. The config file is where that team-specific calibration belongs.
+Example result summary:
+
+```text
+=== Simulation Results ===
+
+Project Overview:
+Project: Tiny Landing Page
+Hours per Day: 8.0
+Max Parallel Tasks: 1
+Schedule Mode: dependency_only
+
+Calendar Time Statistical Summary:
+Mean: 105.69 hours (14 working days)
+Median (P50): 104.59 hours
+Std Dev: 14.93 hours
+...
+
+Calendar Time Confidence Intervals:
+  P50: 104.59 hours (14 working days)  (2026-03-19)
+  P80: 118.84 hours (15 working days)  (2026-03-20)
+  P90: 126.22 hours (16 working days)  (2026-03-23)
+```
+
+Story Points are useful when the team has a stable internal understanding of what `1`, `2`, `3`, `5`, `8`, `13`, or `21` mean, but that understanding does not translate directly to raw hours or days. The config file is where that team-specific calibration belongs.
 
 ## What each stage added
 

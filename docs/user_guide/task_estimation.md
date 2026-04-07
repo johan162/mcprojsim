@@ -849,7 +849,7 @@ The resolved values are then converted to hours using the same conversion logic.
 | `low` ≤ `expected` ≤ `high` | Triangular distribution | Yes — values must be in order |
 | `low` < `high` | Triangular distribution | Yes — NumPy requires strict inequality |
 | `expected` > 0 | All explicit estimates | Yes — zero or negative not allowed |
-| `low` ≥ 0 | Triangular distribution | Yes — negative values not allowed |
+| `low` ≥ 0 | All explicit estimates | Yes — negative values not allowed |
 | `low` < `expected` < `high` | Log-normal distribution | Yes — shifted fit requires a strict range |
 | `low`, `expected`, `high` all provided | Log-normal distribution | Yes — all three required |
 | `low`, `expected`, `high` all provided | Triangular distribution | Yes — all three required |

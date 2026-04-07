@@ -194,20 +194,25 @@ Before Example 2, here is a quick reference for the `resources` fields used thro
 | Field | Required | Default | What it controls |
 |---|---|---|---|
 | `name` | No | auto-generated (`resource_001`, ...) | Stable resource identifier used by tasks |
-| `availability` | No | `1.0` | Fractional availability (for example `0.8` for 80%) |
-| `experience_level` | No | `2` | Skill level (`1`, `2`, or `3`) used with `min_experience_level` |
-| `productivity_level` | No | `1.0` | Relative throughput multiplier (valid range `0.1` to `2.0`) |
-| `calendar` | No | `default` | Which calendar (`calendars[*].id`) the resource follows |
-| `sickness_prob` | No | `0.0` | Per-working-day sickness probability for stochastic absence |
-| `planned_absence` | No | `[]` | Explicit non-working dates for that resource |
+| `availability` | No | `1.0` | Fractional availability `(0.0, 1.0]` (for example `0.8` for 80%); values > 1.0 are not allowed |
+| `experience_level` | No | `2` | Skill tier `1`, `2`, or `3`; matched against task `min_experience_level` |
+| `productivity_level` | No | `1.0` | Relative throughput multiplier (valid range `0.1–2.0`); `1.5` means 50% more productive than baseline |
+| `calendar` | No | `"default"` | Which calendar (`calendars[*].id`) the resource follows |
+| `sickness_prob` | No | `0.0` | Probability of a sickness event starting on any given working day (see note below) |
+| `planned_absence` | No | `[]` | Explicit non-working dates (`"YYYY-MM-DD"`) for that resource |
+
+!!! note "Choosing `sickness_prob`"
+    `sickness_prob` is checked independently on **every working day**, so even small values have a cumulative effect.
+    A value of `0.01` (1%) implies roughly a 5% chance of sickness in any given work week.
+    Typical starting values: `0.005`–`0.02`.  Leave at `0.0` (the default) to disable stochastic sickness entirely.
 
 
 ### First two fields introduced in Example 2
 
 - `experience_level`: the resource's capability tier (`1`, `2`, `3`).
-- `productivity_level`: how quickly the resource converts effort into progress relative to baseline `1.0`.
+- `productivity_level`: how quickly the resource converts effort into progress relative to baseline `1.0`.  A value of `0.9` means 10% slower than baseline; `1.2` means 20% faster.
 
-In Example 2, Alice (`3`, `1.0`) is modeled as more senior baseline-capacity, while Bob (`2`, `0.9`) is slightly less productive.
+In Example 2, Alice (`experience_level: 3`, `productivity_level: 1.0`) is modeled as the most senior resource at baseline capacity, while Bob (`experience_level: 2`, `productivity_level: 0.9`) works at 90% of baseline speed.
 
 
 ## Task fields related to resources introduced in this chapter
@@ -420,15 +425,27 @@ Look for:
 
 - `Schedule Mode: resource_constrained`
 - `Constrained Schedule Diagnostics`
-  - Average Resource Wait (hours)
-  - Effective Resource Utilization
-  - Calendar Delay Contribution (hours)
+  - **Average Resource Wait** — average hours tasks spent waiting for an eligible resource to become free after their dependencies finished. A high value indicates resource contention.
+  - **Effective Resource Utilization** — ratio of total task effort to total available resource capacity over the project duration, capped at 1.0 (100%).  Near 1.0 means the resource pool is fully loaded; near 0 means resources were idle most of the time.
+  - **Calendar Delay Contribution** — total hours lost to non-working periods (weekends, holidays, planned absences, sickness) while resources were carrying work.
 
 \newpage
 
 ## Example 3: Add working calendars
 
 Attach resources to calendars and define working patterns.
+
+**Calendar fields quick reference:**
+
+| Field | Default | What it controls |
+|---|---|---|
+| `id` | `"default"` | Calendar identifier referenced by `resources[*].calendar` |
+| `work_hours_per_day` | `8.0` | Number of productive hours in a working day |
+| `work_days` | `[1, 2, 3, 4, 5]` | Working weekdays as integers: **1 = Monday … 7 = Sunday** |
+| `holidays` | `[]` | Dates (ISO 8601 `"YYYY-MM-DD"`) that are non-working regardless of `work_days` |
+
+`work_days: [1, 2, 3, 4, 5]` is the standard Mon–Fri schedule.
+`work_days: [1, 2, 3, 4]` is Mon–Thu (for a four-day working week).
 
 ```yaml
 project:
@@ -709,7 +726,7 @@ mcprojsim simulate constrained-full.yaml \
 
 
 
-## Single-pass vs double-pass assignment
+## Single-pass vs two-pass assignment
 
 ### Single-pass automatic assignment (available)
 
@@ -717,9 +734,9 @@ Current constrained scheduling uses deterministic single-pass assignment while r
 
 You use it by defining top-level `resources` (and optionally `calendars`). No extra CLI flag is required.
 
-### Double-pass criticality assignment (available)
+### Two-pass criticality assignment (available)
 
-Double-pass criticality-prioritized scheduling is available via CLI and config.
+Two-pass criticality-prioritized scheduling is available via CLI and config.
 
 How it works:
 

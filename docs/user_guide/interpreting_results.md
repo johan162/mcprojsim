@@ -13,19 +13,36 @@ mcprojsim, version 0.3.0
 Progress: 100.0% (10000/10000)
 Simulation time: 3.42 seconds
 Peak simulation memory: 18.72 MiB
-Max parallel tasks: 3
 
 === Simulation Results ===
+
+Project Overview:
 Project: Customer Portal Redesign
 Hours per Day: 8.0
+Max Parallel Tasks: 3
+Schedule Mode: dependency_only
+
+Calendar Time Statistical Summary:
 Mean: 578.47 hours (73 working days)
 Median (P50): 571.84 hours
 Std Dev: 78.27 hours
+Minimum: 391.20 hours
+Maximum: 934.15 hours
 Coefficient of Variation: 0.1353
 Skewness: 0.4865
 Excess Kurtosis: 0.2469
 
-Confidence Intervals:
+Project Effort Statistical Summary:
+Mean: 910.15 person-hours (114 person-days)
+Median (P50): 902.33 person-hours
+Std Dev: 125.41 person-hours
+Minimum: 576.44 person-hours
+Maximum: 1452.30 person-hours
+Coefficient of Variation: 0.1378
+Skewness: 0.5117
+Excess Kurtosis: 0.3201
+
+Calendar Time Confidence Intervals:
   P25: 522.75 hours (66 working days)  (2026-02-02)
   P50: 571.84 hours (72 working days)  (2026-02-10)
   P75: 627.77 hours (79 working days)  (2026-02-19)
@@ -204,14 +221,14 @@ A ratio of 1.0 means all tasks are serial (effort = elapsed time). A ratio above
 
 ## Minimum and maximum
 
-In addition to mean/median/std-dev, the CLI also reports observed minimum and maximum simulated durations.
+The CLI reports observed minimum and maximum simulated durations as part of the **Calendar Time Statistical Summary** block, alongside mean, median, and std dev.
 
 - **Minimum** is the fastest sampled project completion across iterations.
 - **Maximum** is the slowest sampled completion.
 
 These are useful for sanity checking tails, but they are sample extremes, not commitment targets. Use percentiles (P80/P90/P95) for planning decisions.
 
-The effort summary has the same fields (minimum/maximum person-hours) for total work.
+The **Project Effort Statistical Summary** block includes the same fields (minimum/maximum person-hours) for total work.
 
 
 
@@ -225,7 +242,7 @@ The colour transitions as a continuous gradient from dark orange (50%) to dark g
 - **Olive/amber tones** (75%–85%): moderate confidence. Reasonable for internal targets.
 - **Green → dark green** (90%–99%): high confidence. Suitable for external commitments.
 
-The colour thresholds are configurable via `probability_red_threshold` and `probability_green_threshold` in the project file.
+The thermometer has 11 fixed segments at probability levels 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, and 99. The colour of each segment is determined solely by the probability value — it is a fixed gradient, not configurable thresholds.
 
 
 
@@ -526,7 +543,7 @@ After each iteration schedules tasks, a sweep-line algorithm scans through the s
 | 2–3 | Limited parallelism. A small team can handle the concurrent work. |
 | 4+ | Significant parallelism. Verify that you actually have enough people or capacity to run this many tasks simultaneously. |
 
-In the sample output, `Max parallel tasks: 3` means the scheduler assumed up to three tasks running at the same time in at least one iteration.
+In the sample output, `Max Parallel Tasks: 3` means the scheduler assumed up to three tasks running at the same time in at least one iteration.
 
 ### Why this matters
 

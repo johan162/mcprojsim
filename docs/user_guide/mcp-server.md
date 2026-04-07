@@ -267,6 +267,32 @@ The `config_yaml` parameter lets you pass custom T-shirt size mappings, uncertai
 
 `validate_project_description` is fast and useful during drafting. Use `validate_generated_project_yaml` or `validate_project_yaml` when you want strict behavior equivalent to normal YAML parsing and simulation setup.
 
+#### `validate_generated_project_yaml` parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `description` | string | required | Natural language project description |
+| `config_yaml` | string | none | Custom configuration YAML content (as a string) |
+| `velocity_model` | string | none | Sprint velocity override: `empirical` or `neg_binomial` |
+| `no_sickness` | boolean | `false` | Disable sprint sickness modeling for this validation |
+
+#### `validate_project_yaml` parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `project_yaml` | string | required | Existing mcprojsim YAML project content |
+| `config_yaml` | string | none | Custom configuration YAML content (as a string) |
+| `velocity_model` | string | none | Sprint velocity override: `empirical` or `neg_binomial` |
+| `no_sickness` | boolean | `false` | Disable sprint sickness modeling for this validation |
+
+#### `update_project_yaml` parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `existing_yaml` | string | required | Existing mcprojsim project YAML content to update |
+| `update_description` | string | required | Semi-structured NL instructions describing the changes to apply |
+| `replace_tasks` | boolean | `false` | When `true`, replaces all existing tasks with tasks parsed from the update description. When `false` (default), existing tasks are preserved and only project metadata, sprint planning, resources, and calendars are updated |
+
 ## Translating NL intent to simulation options
 
 One of the biggest benefits of MCP is that assistants can map user intent to runtime options.

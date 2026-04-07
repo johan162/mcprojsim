@@ -82,7 +82,7 @@ risks:
       unit: "days"
 ```
 
-The structured form with `type: "absolute"` behaves the same as the simple numeric form but is more explicit. When a `unit` is specified (e.g., `"days"`), the value is converted to hours using the project's `hours_per_day` setting.
+The structured form with `type: "absolute"` behaves the same as the simple numeric form but is more explicit. When `unit` is omitted, it defaults to `"hours"` — the same as the simple numeric form. When a `unit` is specified (e.g., `"days"`), the value is converted to hours using the project's `hours_per_day` setting.
 
 ### Summary of Impact Types
 

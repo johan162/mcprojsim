@@ -496,10 +496,8 @@ VERSION_NUMBER=${LATEST_TAG#v}
 # Strip the '-' from the version for pre-releases
 FILE_VERSION_NUMBER=${VERSION_NUMBER//-rc/rc}
 EXPECTED_BUNDLE_FILE="${DIST_DIR}/${PROGRAMNAME}-mcp-bundle-${FILE_VERSION_NUMBER}.zip"
-EXPECTED_USER_GUIDE_FILE="${DIST_DIR}/mcprojsim_user_guide-${VERSION_NUMBER}.pdf"
-EXPECTED_USER_GUIDE_DARK_FILE="${DIST_DIR}/mcprojsim_user_guide-dark-${VERSION_NUMBER}.pdf"
-EXPECTED_USER_GUIDE_B5_FILE="${DIST_DIR}/mcprojsim_user_guide-b5-${VERSION_NUMBER}.pdf"
-EXPECTED_USER_GUIDE_DARK_B5_FILE="${DIST_DIR}/mcprojsim_user_guide-dark-b5-${VERSION_NUMBER}.pdf"
+EXPECTED_USER_GUIDE_BUNDLE_ZIP="${DIST_DIR}/${PROGRAMNAME}_user_guide_bundle-${FILE_VERSION_NUMBER}.zip"
+EXPECTED_API_REF_BUNDLE_ZIP="${DIST_DIR}/${PROGRAMNAME}_api_ref_bundle-${FILE_VERSION_NUMBER}.zip"
 
 # 4.4: Fail fast if required release artifacts are missing
 print_sub_step "Checking required release artifacts..."
@@ -507,33 +505,23 @@ if [[ ! -f "$EXPECTED_BUNDLE_FILE" ]]; then
     print_error "Required MCP bundle is missing: $EXPECTED_BUNDLE_FILE"
     exit 1
 fi
-if [[ ! -f "$EXPECTED_USER_GUIDE_FILE" ]]; then
-    print_error "Required user guide PDF is missing: $EXPECTED_USER_GUIDE_FILE"
+if [[ ! -f "$EXPECTED_USER_GUIDE_BUNDLE_ZIP" ]]; then
+    print_error "Required user guide bundle is missing: $EXPECTED_USER_GUIDE_BUNDLE_ZIP"
     exit 1
 fi
-if [[ ! -f "$EXPECTED_USER_GUIDE_DARK_FILE" ]]; then
-    print_error "Required dark user guide PDF is missing: $EXPECTED_USER_GUIDE_DARK_FILE"
+if [[ ! -f "$EXPECTED_API_REF_BUNDLE_ZIP" ]]; then
+    print_error "Required API reference bundle is missing: $EXPECTED_API_REF_BUNDLE_ZIP"
     exit 1
 fi
-if [[ ! -f "$EXPECTED_USER_GUIDE_B5_FILE" ]]; then
-    print_error "Required B5 user guide PDF is missing: $EXPECTED_USER_GUIDE_B5_FILE"
-    exit 1
-fi
-if [[ ! -f "$EXPECTED_USER_GUIDE_DARK_B5_FILE" ]]; then
-    print_error "Required dark B5 user guide PDF is missing: $EXPECTED_USER_GUIDE_DARK_B5_FILE"
-    exit 1
-fi
-print_success "Required artifacts found: $(basename "$EXPECTED_BUNDLE_FILE"), $(basename "$EXPECTED_USER_GUIDE_FILE"), $(basename "$EXPECTED_USER_GUIDE_DARK_FILE"), $(basename "$EXPECTED_USER_GUIDE_B5_FILE"), $(basename "$EXPECTED_USER_GUIDE_DARK_B5_FILE")"
+print_success "Required artifacts found: $(basename "$EXPECTED_BUNDLE_FILE"), $(basename "$EXPECTED_USER_GUIDE_BUNDLE_ZIP"), $(basename "$EXPECTED_API_REF_BUNDLE_ZIP")"
 
 # 4.5: Find expected artifacts
 print_sub_step "Locating artifacts with version $FILE_VERSION_NUMBER..."
 WHEEL_FILE=$(find "$DIST_DIR" -name "${PROGRAMNAME}-${FILE_VERSION_NUMBER}-*.whl" | head -1)
 SDIST_FILE=$(find "$DIST_DIR" -name "${PROGRAMNAME}-${FILE_VERSION_NUMBER}.tar.gz" | head -1)
-BUNDLE_FILE="$EXPECTED_BUNDLE_FILE"
-USER_GUIDE_FILE="$EXPECTED_USER_GUIDE_FILE"
-USER_GUIDE_DARK_FILE="$EXPECTED_USER_GUIDE_DARK_FILE"
-USER_GUIDE_B5_FILE="$EXPECTED_USER_GUIDE_B5_FILE"
-USER_GUIDE_DARK_B5_FILE="$EXPECTED_USER_GUIDE_DARK_B5_FILE"
+MCP_BUNDLE_ZIP="$EXPECTED_BUNDLE_FILE"
+USER_GUIDE_BUNDLE_ZIP="$EXPECTED_USER_GUIDE_BUNDLE_ZIP"
+API_REF_BUNDLE_ZIP="$EXPECTED_API_REF_BUNDLE_ZIP"
 
 if [[ -z "$WHEEL_FILE" ]]; then
     print_error "Wheel file not found for version $VERSION_NUMBER"
@@ -554,20 +542,17 @@ if [[ -z "$SDIST_FILE" ]]; then
     exit 1
 fi
 print_success "Found sdist: $(basename "$SDIST_FILE")"
-print_success "Found MCP bundle: $(basename "$BUNDLE_FILE")"
-print_success "Found user guide PDF: $(basename "$USER_GUIDE_FILE")"
-print_success "Found dark user guide PDF: $(basename "$USER_GUIDE_DARK_FILE")"
-print_success "Found B5 user guide PDF: $(basename "$USER_GUIDE_B5_FILE")"
-print_success "Found dark B5 user guide PDF: $(basename "$USER_GUIDE_DARK_B5_FILE")"
+print_success "Found MCP bundle: $(basename "$MCP_BUNDLE_ZIP")"
+print_success "Found user guide bundle: $(basename "$USER_GUIDE_BUNDLE_ZIP")"
+print_success "Found API reference bundle: $(basename "$API_REF_BUNDLE_ZIP")"
+
 # 4.6: Validate artifact sizes
 print_sub_step "Validating artifact sizes..."
 WHEEL_SIZE=$(stat -f%z "$WHEEL_FILE" 2>/dev/null || stat -c%s "$WHEEL_FILE" 2>/dev/null)
 SDIST_SIZE=$(stat -f%z "$SDIST_FILE" 2>/dev/null || stat -c%s "$SDIST_FILE" 2>/dev/null)
-BUNDLE_SIZE=$(stat -f%z "$BUNDLE_FILE" 2>/dev/null || stat -c%s "$BUNDLE_FILE" 2>/dev/null || echo 0)
-USER_GUIDE_SIZE=$(stat -f%z "$USER_GUIDE_FILE" 2>/dev/null || stat -c%s "$USER_GUIDE_FILE" 2>/dev/null || echo 0)
-USER_GUIDE_DARK_SIZE=$(stat -f%z "$USER_GUIDE_DARK_FILE" 2>/dev/null || stat -c%s "$USER_GUIDE_DARK_FILE" 2>/dev/null || echo 0)
-USER_GUIDE_B5_SIZE=$(stat -f%z "$USER_GUIDE_B5_FILE" 2>/dev/null || stat -c%s "$USER_GUIDE_B5_FILE" 2>/dev/null || echo 0)
-USER_GUIDE_DARK_B5_SIZE=$(stat -f%z "$USER_GUIDE_DARK_B5_FILE" 2>/dev/null || stat -c%s "$USER_GUIDE_DARK_B5_FILE" 2>/dev/null || echo 0)
+BUNDLE_SIZE=$(stat -f%z "$MCP_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$MCP_BUNDLE_ZIP" 2>/dev/null || echo 0)
+USER_GUIDE_BUNDLE_SIZE=$(stat -f%z "$USER_GUIDE_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$USER_GUIDE_BUNDLE_ZIP" 2>/dev/null || echo 0)
+API_REF_BUNDLE_SIZE=$(stat -f%z "$API_REF_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$API_REF_BUNDLE_ZIP" 2>/dev/null || echo 0)
 
 if [[ "$WHEEL_SIZE" -lt 1000 ]]; then
     print_error "Wheel file suspiciously small: $WHEEL_SIZE bytes"
@@ -584,33 +569,24 @@ if [[ "$DRY_RUN" == "false" && "$BUNDLE_SIZE" -lt 1000 ]]; then
     exit 1
 fi
 
-if [[ "$USER_GUIDE_SIZE" -lt 1000 ]]; then
-    print_error "User guide PDF suspiciously small: $USER_GUIDE_SIZE bytes"
+if [[ "$USER_GUIDE_BUNDLE_SIZE" -lt 1000 ]]; then
+    print_error "User guide bundle suspiciously small: $USER_GUIDE_BUNDLE_SIZE bytes"
     exit 1
 fi
 
-if [[ "$USER_GUIDE_DARK_SIZE" -lt 1000 ]]; then
-    print_error "Dark user guide PDF suspiciously small: $USER_GUIDE_DARK_SIZE bytes"
+if [[ "$API_REF_BUNDLE_SIZE" -lt 1000 ]]; then
+    print_error "API reference bundle suspiciously small: $API_REF_BUNDLE_SIZE bytes"
     exit 1
 fi
 
-if [[ "$USER_GUIDE_B5_SIZE" -lt 1000 ]]; then
-    print_error "B5 user guide PDF suspiciously small: $USER_GUIDE_B5_SIZE bytes"
-    exit 1
-fi
-
-if [[ "$USER_GUIDE_DARK_B5_SIZE" -lt 1000 ]]; then
-    print_error "Dark B5 user guide PDF suspiciously small: $USER_GUIDE_DARK_B5_SIZE bytes"
     exit 1
 fi
 
 print_success "Wheel size:  $(numfmt --to=iec-i --suffix=B "$WHEEL_SIZE" 2>/dev/null || echo "$WHEEL_SIZE bytes")"
 print_success "Sdist size:  $(numfmt --to=iec-i --suffix=B "$SDIST_SIZE" 2>/dev/null || echo "$SDIST_SIZE bytes")"
 print_success "Bundle size: $(numfmt --to=iec-i --suffix=B "$BUNDLE_SIZE" 2>/dev/null || echo "$BUNDLE_SIZE bytes")"
-print_success "Guide size:  $(numfmt --to=iec-i --suffix=B "$USER_GUIDE_SIZE" 2>/dev/null || echo "$USER_GUIDE_SIZE bytes")"
-print_success "Dark guide size:  $(numfmt --to=iec-i --suffix=B "$USER_GUIDE_DARK_SIZE" 2>/dev/null || echo "$USER_GUIDE_DARK_SIZE bytes")"
-print_success "B5 guide size:  $(numfmt --to=iec-i --suffix=B "$USER_GUIDE_B5_SIZE" 2>/dev/null || echo "$USER_GUIDE_B5_SIZE bytes")"
-print_success "Dark B5 guide size:  $(numfmt --to=iec-i --suffix=B "$USER_GUIDE_DARK_B5_SIZE" 2>/dev/null || echo "$USER_GUIDE_DARK_B5_SIZE bytes")"
+print_success "User Guide size:  $(numfmt --to=iec-i --suffix=B "$USER_GUIDE_BUNDLE_SIZE" 2>/dev/null || echo "$USER_GUIDE_BUNDLE_SIZE bytes")"
+print_success "API reference size:  $(numfmt --to=iec-i --suffix=B "$API_REF_BUNDLE_SIZE" 2>/dev/null || echo "$API_REF_BUNDLE_SIZE bytes")"
 
 # =====================================
 # PHASE 5: RELEASE NOTES PREPARATION
@@ -655,11 +631,9 @@ GH_RELEASE_CMD="gh release create \"$LATEST_TAG\" \
     --notes-file \"$RELEASE_NOTES_FILE\" \
     \"$WHEEL_FILE\" \
     \"$SDIST_FILE\" \\
-    \"$BUNDLE_FILE\" \
-    \"$USER_GUIDE_FILE\" \
-    \"$USER_GUIDE_DARK_FILE\" \
-    \"$USER_GUIDE_B5_FILE\" \
-    \"$USER_GUIDE_DARK_B5_FILE\""
+    \"$MCP_BUNDLE_ZIP\" \
+    \"$USER_GUIDE_BUNDLE_ZIP\" \
+    \"$API_REF_BUNDLE_ZIP\""
 
 if [[ "$IS_PRE_RELEASE" == "true" ]]; then
     GH_RELEASE_CMD="$GH_RELEASE_CMD --prerelease"
@@ -727,11 +701,9 @@ else
     echo "Artifacts uploaded:"
     echo "  - $(basename "$WHEEL_FILE")"
     echo "  - $(basename "$SDIST_FILE")"
-    echo "  - $(basename "$BUNDLE_FILE")"
-    echo "  - $(basename "$USER_GUIDE_FILE")"
-    echo "  - $(basename "$USER_GUIDE_DARK_FILE")"
-    echo "  - $(basename "$USER_GUIDE_B5_FILE")"
-    echo "  - $(basename "$USER_GUIDE_DARK_B5_FILE")"
+    echo "  - $(basename "$MCP_BUNDLE_ZIP")"
+    echo "  - $(basename "$USER_GUIDE_BUNDLE_ZIP")"
+    echo "  - $(basename "$API_REF_BUNDLE_ZIP")"
     echo ""
     echo "Next steps:"
     echo "  1. Verify release on GitHub:"

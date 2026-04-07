@@ -232,7 +232,7 @@ def forecast_project_completion(project_file: str) -> dict:
         },
         'guidance': {
             'recommended_capacity': results.planned_commitment_guidance,
-            'historical_velocity': results.historical_diagnostics.get('velocity_mean', 0),
+            'historical_velocity': results.historical_diagnostics.get('series_statistics', {}).get('completed_units', {}).get('mean', 0),
             'risk_level': 'low' if results.std_dev < results.mean * 0.2 else 'high',
         }
     }
