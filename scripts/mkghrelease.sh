@@ -479,11 +479,11 @@ print_step_colored ""
 # 4.1: Check dist directory exists
 print_sub_step "Checking dist directory..."
 if [[ ! -d "$DIST_DIR" ]]; then
-    print_error "dist/ directory not found"
+    print_error "$DIST_DIR directory not found"
     echo "Run mkrelease.sh first to build the package"
     exit 1
 fi
-print_success "dist/ directory exists"
+print_success "$DIST_DIR directory exists"
 
 # 4.2: Extract version from tag (without 'v' prefix)
 VERSION_NUMBER=${LATEST_TAG#v}
