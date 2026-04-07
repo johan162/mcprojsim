@@ -372,17 +372,22 @@ else
     # mcprojsim_user_guide-b5-<version>.pdf
     # mcprojsim_user_guide-dark-b5-<version>.pdf) 
     # are generated in the ../dist directory 
-    if [[ ! -f "../dist/mcprojsim_user_guide-${VERSION}.pdf" 
-          -o ! -f "../dist/mcprojsim_user_guide-dark-${VERSION}.pdf" 
-          -o ! -f "../dist/mcprojsim_user_guide-b5-${VERSION}.pdf" 
-          -o ! -f "../dist/mcprojsim_user_guide-dark-b5-${VERSION}.pdf" 
-          -o ! -f "../dist/mcprojsim_api_ref-${VERSION}.pdf" 
-          -o ! -f "../dist/mcprojsim_api_ref-dark-${VERSION}.pdf" 
-          -o ! -f "../dist/mcprojsim_api_ref-b5-${VERSION}.pdf" 
-          -o ! -f "../dist/mcprojsim_api_ref-dark-b5-${VERSION}.pdf" ]]; then        
+    if [[ ! -f "../dist/${PROGRAMNAME}_user_guide-${VERSION}.pdf" 
+          -o ! -f "../dist/${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" 
+          -o ! -f "../dist/${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" 
+          -o ! -f "../dist/${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf" 
+          -o ! -f "../dist/${PROGRAMNAME}_api_ref-${VERSION}.pdf" 
+          -o ! -f "../dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" 
+          -o ! -f "../dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" 
+          -o ! -f "../dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf" ]]; then        
         print_error_colored "Expected PDF not found at ../dist directory"
         exit 1;
     fi    
+
+    # Zip-the PDFs into one API-bundle and one User-guide-budle for easier distribution and upload to GitHub releases
+    echo "  ✓ Creating ZIP bundles of generated PDFs for release assets..."
+    (cd ../dist && zip -9 "${PROGRAMNAME}_user_guide_bundle-${VERSION}.zip" "${PROGRAMNAME}_user_guide-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf")
+    (cd ../dist && zip -9 "${PROGRAMNAME}_api_ref_bundle-${VERSION}.zip" "${PROGRAMNAME}_api_ref-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf")
 
     echo "  ✓ Generating HTML version of User Guide for release assets..."
     $(MAKE) -C docs docs || {
@@ -393,7 +398,6 @@ fi
 # =====================================
 # PHASE 4: RELEASE EXECUTION
 # =====================================
-
 print_step_colored ""
 print_step_colored "🎯 PHASE 4: RELEASE EXECUTION"
 print_step_colored ""
@@ -553,7 +557,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [DRY-RUN] Would generate PDF version of User Guide for release assets"
 else
     echo "  ✓ Generating PDF version of User Guide for release assets..."
-    make pdf || {
+    $(MAKE) -C docs -j 4 pdf-docs pdf-api-ref  || {
         print_warning_colored "Makefile target 'pdf' failed. Skipping PDF generation."
     }
 fi
