@@ -549,10 +549,15 @@ print_success "Found API reference bundle: $(basename "$API_REF_BUNDLE_ZIP")"
 # 4.6: Validate artifact sizes
 print_sub_step "Validating artifact sizes..."
 WHEEL_SIZE=$(stat -f%z "$WHEEL_FILE" 2>/dev/null || stat -c%s "$WHEEL_FILE" 2>/dev/null)
+echo "WHEEL_SIZE=$WHEEL_SIZE"
 SDIST_SIZE=$(stat -f%z "$SDIST_FILE" 2>/dev/null || stat -c%s "$SDIST_FILE" 2>/dev/null)
-BUNDLE_SIZE=$(stat -f%z "$MCP_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$MCP_BUNDLE_ZIP" 2>/dev/null || echo 0)
-USER_GUIDE_BUNDLE_SIZE=$(stat -f%z "$USER_GUIDE_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$USER_GUIDE_BUNDLE_ZIP" 2>/dev/null || echo 0)
-API_REF_BUNDLE_SIZE=$(stat -f%z "$API_REF_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$API_REF_BUNDLE_ZIP" 2>/dev/null || echo 0)
+echo "SDIST_SIZE=$SDIST_SIZE"
+BUNDLE_SIZE=$(stat -f%z "$MCP_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$MCP_BUNDLE_ZIP" 2>/dev/null || echo 1)
+echo "BUNDLE_SIZE=$BUNDLE_SIZE"
+USER_GUIDE_BUNDLE_SIZE=$(stat -f%z "$USER_GUIDE_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$USER_GUIDE_BUNDLE_ZIP" 2>/dev/null || echo 1)
+echo "USER_GUIDE_BUNDLE_SIZE=$USER_GUIDE_BUNDLE_SIZE"
+API_REF_BUNDLE_SIZE=$(stat -f%z "$API_REF_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$API_REF_BUNDLE_ZIP" 2>/dev/null || echo 1)
+echo "API_REF_BUNDLE_SIZE=$API_REF_BUNDLE_SIZE"
 
 if [[ "$WHEEL_SIZE" -lt 1000 ]]; then
     print_error "Wheel file suspiciously small: $WHEEL_SIZE bytes"
@@ -587,6 +592,8 @@ print_success "Sdist size:  $(numfmt --to=iec-i --suffix=B "$SDIST_SIZE" 2>/dev/
 print_success "Bundle size: $(numfmt --to=iec-i --suffix=B "$BUNDLE_SIZE" 2>/dev/null || echo "$BUNDLE_SIZE bytes")"
 print_success "User Guide size:  $(numfmt --to=iec-i --suffix=B "$USER_GUIDE_BUNDLE_SIZE" 2>/dev/null || echo "$USER_GUIDE_BUNDLE_SIZE bytes")"
 print_success "API reference size:  $(numfmt --to=iec-i --suffix=B "$API_REF_BUNDLE_SIZE" 2>/dev/null || echo "$API_REF_BUNDLE_SIZE bytes")"
+
+exit 1
 
 # =====================================
 # PHASE 5: RELEASE NOTES PREPARATION
