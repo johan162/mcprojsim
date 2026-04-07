@@ -1,4 +1,4 @@
-## [v0.12.1] - 2026-04-07
+## [v0.12.2] - 2026-04-07
 
 Release Type: patch
 
@@ -21,6 +21,11 @@ This release fixes several PDF build pipeline issues introduced in v0.12.0 and i
 - Improved CI to verify that all expected PDFs are generated before the release step proceeds
 - Bumped version strings in all LaTeX template files to match the release version
 - Switched lint and type-check jobs to run in parallel, reducing total CI time
+
+
+## [v0.12.1] - 2026-04-07
+
+- Retracted
 
 
 ## [v0.12.0] - 2026-04-06
