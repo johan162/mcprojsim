@@ -1149,15 +1149,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#single-pass-vs-double-pass-assignment" class="md-nav__link">
+  <a href="#single-pass-vs-two-pass-assignment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Single-pass vs double-pass assignment
+        Single-pass vs two-pass assignment
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Single-pass vs double-pass assignment">
+    <nav class="md-nav" aria-label="Single-pass vs two-pass assignment">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1172,10 +1172,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#double-pass-criticality-assignment-available" class="md-nav__link">
+  <a href="#two-pass-criticality-assignment-available" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Double-pass criticality assignment (available)
+        Two-pass criticality assignment (available)
       
     </span>
   </a>
@@ -2243,15 +2243,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#single-pass-vs-double-pass-assignment" class="md-nav__link">
+  <a href="#single-pass-vs-two-pass-assignment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Single-pass vs double-pass assignment
+        Single-pass vs two-pass assignment
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Single-pass vs double-pass assignment">
+    <nav class="md-nav" aria-label="Single-pass vs two-pass assignment">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2266,10 +2266,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#double-pass-criticality-assignment-available" class="md-nav__link">
+  <a href="#two-pass-criticality-assignment-available" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Double-pass criticality assignment (available)
+        Two-pass criticality assignment (available)
       
     </span>
   </a>
@@ -2525,46 +2525,52 @@
 <td><code>availability</code></td>
 <td>No</td>
 <td><code>1.0</code></td>
-<td>Fractional availability (for example <code>0.8</code> for 80%)</td>
+<td>Fractional availability <code>(0.0, 1.0]</code> (for example <code>0.8</code> for 80%); values &gt; 1.0 are not allowed</td>
 </tr>
 <tr>
 <td><code>experience_level</code></td>
 <td>No</td>
 <td><code>2</code></td>
-<td>Skill level (<code>1</code>, <code>2</code>, or <code>3</code>) used with <code>min_experience_level</code></td>
+<td>Skill tier <code>1</code>, <code>2</code>, or <code>3</code>; matched against task <code>min_experience_level</code></td>
 </tr>
 <tr>
 <td><code>productivity_level</code></td>
 <td>No</td>
 <td><code>1.0</code></td>
-<td>Relative throughput multiplier (valid range <code>0.1</code> to <code>2.0</code>)</td>
+<td>Relative throughput multiplier (valid range <code>0.1–2.0</code>); <code>1.5</code> means 50% more productive than baseline</td>
 </tr>
 <tr>
 <td><code>calendar</code></td>
 <td>No</td>
-<td><code>default</code></td>
+<td><code>"default"</code></td>
 <td>Which calendar (<code>calendars[*].id</code>) the resource follows</td>
 </tr>
 <tr>
 <td><code>sickness_prob</code></td>
 <td>No</td>
 <td><code>0.0</code></td>
-<td>Per-working-day sickness probability for stochastic absence</td>
+<td>Probability of a sickness event starting on any given working day (see note below)</td>
 </tr>
 <tr>
 <td><code>planned_absence</code></td>
 <td>No</td>
 <td><code>[]</code></td>
-<td>Explicit non-working dates for that resource</td>
+<td>Explicit non-working dates (<code>"YYYY-MM-DD"</code>) for that resource</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Choosing <code>sickness_prob</code></p>
+<p><code>sickness_prob</code> is checked independently on <strong>every working day</strong>, so even small values have a cumulative effect.
+A value of <code>0.01</code> (1%) implies roughly a 5% chance of sickness in any given work week.
+Typical starting values: <code>0.005</code>–<code>0.02</code>.  Leave at <code>0.0</code> (the default) to disable stochastic sickness entirely.</p>
+</div>
 <h3 id="first-two-fields-introduced-in-example-2">First two fields introduced in Example 2<a class="headerlink" href="#first-two-fields-introduced-in-example-2" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>experience_level</code>: the resource's capability tier (<code>1</code>, <code>2</code>, <code>3</code>).</li>
-<li><code>productivity_level</code>: how quickly the resource converts effort into progress relative to baseline <code>1.0</code>.</li>
+<li><code>productivity_level</code>: how quickly the resource converts effort into progress relative to baseline <code>1.0</code>.  A value of <code>0.9</code> means 10% slower than baseline; <code>1.2</code> means 20% faster.</li>
 </ul>
-<p>In Example 2, Alice (<code>3</code>, <code>1.0</code>) is modeled as more senior baseline-capacity, while Bob (<code>2</code>, <code>0.9</code>) is slightly less productive.</p>
+<p>In Example 2, Alice (<code>experience_level: 3</code>, <code>productivity_level: 1.0</code>) is modeled as the most senior resource at baseline capacity, while Bob (<code>experience_level: 2</code>, <code>productivity_level: 0.9</code>) works at 90% of baseline speed.</p>
 <h2 id="task-fields-related-to-resources-introduced-in-this-chapter">Task fields related to resources introduced in this chapter<a class="headerlink" href="#task-fields-related-to-resources-introduced-in-this-chapter" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -2768,13 +2774,47 @@ It is a heuristic, not globally optimal schedule optimization.</p>
 <ul>
 <li><code>Schedule Mode: resource_constrained</code></li>
 <li><code>Constrained Schedule Diagnostics</code></li>
-<li>Average Resource Wait (hours)</li>
-<li>Effective Resource Utilization</li>
-<li>Calendar Delay Contribution (hours)</li>
+<li><strong>Average Resource Wait</strong> — average hours tasks spent waiting for an eligible resource to become free after their dependencies finished. A high value indicates resource contention.</li>
+<li><strong>Effective Resource Utilization</strong> — ratio of total task effort to total available resource capacity over the project duration, capped at 1.0 (100%).  Near 1.0 means the resource pool is fully loaded; near 0 means resources were idle most of the time.</li>
+<li><strong>Calendar Delay Contribution</strong> — total hours lost to non-working periods (weekends, holidays, planned absences, sickness) while resources were carrying work.</li>
 </ul>
 <p>\newpage</p>
 <h2 id="example-3-add-working-calendars">Example 3: Add working calendars<a class="headerlink" href="#example-3-add-working-calendars" title="Permanent link">&para;</a></h2>
 <p>Attach resources to calendars and define working patterns.</p>
+<p><strong>Calendar fields quick reference:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>What it controls</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>"default"</code></td>
+<td>Calendar identifier referenced by <code>resources[*].calendar</code></td>
+</tr>
+<tr>
+<td><code>work_hours_per_day</code></td>
+<td><code>8.0</code></td>
+<td>Number of productive hours in a working day</td>
+</tr>
+<tr>
+<td><code>work_days</code></td>
+<td><code>[1, 2, 3, 4, 5]</code></td>
+<td>Working weekdays as integers: <strong>1 = Monday … 7 = Sunday</strong></td>
+</tr>
+<tr>
+<td><code>holidays</code></td>
+<td><code>[]</code></td>
+<td>Dates (ISO 8601 <code>"YYYY-MM-DD"</code>) that are non-working regardless of <code>work_days</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>work_days: [1, 2, 3, 4, 5]</code> is the standard Mon–Fri schedule.
+<code>work_days: [1, 2, 3, 4]</code> is Mon–Thu (for a four-day working week).</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">project</span><span class="p">:</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Onboarding</span><span class="nv"> </span><span class="s">Portal&quot;</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="nt">start_date</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2026-04-01&quot;</span>
@@ -3040,12 +3080,12 @@ It is a heuristic, not globally optimal schedule optimization.</p>
 </span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">  </span>-f<span class="w"> </span>json,csv,html<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="w">  </span>-o<span class="w"> </span>results/constrained-full
 </span></code></pre></div>
-<h2 id="single-pass-vs-double-pass-assignment">Single-pass vs double-pass assignment<a class="headerlink" href="#single-pass-vs-double-pass-assignment" title="Permanent link">&para;</a></h2>
+<h2 id="single-pass-vs-two-pass-assignment">Single-pass vs two-pass assignment<a class="headerlink" href="#single-pass-vs-two-pass-assignment" title="Permanent link">&para;</a></h2>
 <h3 id="single-pass-automatic-assignment-available">Single-pass automatic assignment (available)<a class="headerlink" href="#single-pass-automatic-assignment-available" title="Permanent link">&para;</a></h3>
 <p>Current constrained scheduling uses deterministic single-pass assignment while respecting dependencies, resource eligibility, calendars, and absences.</p>
 <p>You use it by defining top-level <code>resources</code> (and optionally <code>calendars</code>). No extra CLI flag is required.</p>
-<h3 id="double-pass-criticality-assignment-available">Double-pass criticality assignment (available)<a class="headerlink" href="#double-pass-criticality-assignment-available" title="Permanent link">&para;</a></h3>
-<p>Double-pass criticality-prioritized scheduling is available via CLI and config.</p>
+<h3 id="two-pass-criticality-assignment-available">Two-pass criticality assignment (available)<a class="headerlink" href="#two-pass-criticality-assignment-available" title="Permanent link">&para;</a></h3>
+<p>Two-pass criticality-prioritized scheduling is available via CLI and config.</p>
 <p>How it works:</p>
 <ol>
 <li>Pass 1 runs greedy scheduling for a subset of iterations to estimate task criticality.</li>

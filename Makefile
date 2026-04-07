@@ -2,7 +2,8 @@
 
 .PHONY: docs gen-examples update-version pdf-docs docs-serve \
  container-engine-check docs-container-build docs-container-start docs-container-stop \
- docs-container-restart docs-container-status docs-container-logs docs-deploy help
+ docs-container-restart docs-container-status docs-container-logs docs-deploy help clean really-clean \
+ pdf-api-ref pdfs pdf-docs 
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -144,11 +145,13 @@ CONTAINER_NAME := $(PROJECT)
 
 # Temporary build directory for user guide PDF generation
 USER_GUIDE_BUILD_DIR := $(BUILD_DIR)/user-guide
+API_REF_BUILD_DIR := $(BUILD_DIR)/api-reference
 
 # User guide PDF output paths and templates
 # Variant-specific paths are derived by DEFINE_USER_GUIDE_VARS below.
 # USER_GUIDE_LUA_FILTER is shared across all variants.
 USER_GUIDE_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
+API_REF_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
 
 # ============================================================================================
 # Macro: DEFINE_USER_GUIDE_VARS
@@ -173,8 +176,34 @@ $(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_B5))
 $(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK))
 $(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK_B5))
 
-# Doc files for User Guide PDF generation
-USER_GUIDE_DOCS := \
+# ============================================================================================
+# Macro: DEFINE_API_REF_VARS
+# Derives all variant-specific file-path variables from the base name alone.
+# $(1) = API_REF | API_REF_B5 | API_REF_DARK | API_REF_DARK_B5
+#
+# The suffix is extracted by stripping the API_REF prefix from $(1):
+#   tex_sfx  — lowercase with underscores (_b5, _dark, _dark_b5)  for LaTeX template names
+#   file_sfx — lowercase with hyphens    (-b5, -dark, -dark-b5)   for all other file names
+# ============================================================================================
+
+define DEFINE_API_REF_VARS
+$(1)_TEMPLATE  := $$(DOCS_DIR)/api_reference/api_ref_template$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
+$(1)_PDF       := $$(DIST_DIR)/$$(PROJECT)_api_ref$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
+$(1)_CONCAT_MD := $$(API_REF_BUILD_DIR)/api_ref_concat$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').md
+$(1)_BODY_TEX  := $$(API_REF_BUILD_DIR)/api_ref_body$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
+$(1)_TEX       := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
+$(1)_PDF_BUILT := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').pdf
+endef
+
+$(eval $(call DEFINE_API_REF_VARS,API_REF))
+$(eval $(call DEFINE_API_REF_VARS,API_REF_DARK))
+$(eval $(call DEFINE_API_REF_VARS,API_REF_B5))
+$(eval $(call DEFINE_API_REF_VARS,API_REF_DARK_B5))
+
+# Markdown sources that are concatenated into the User Guide PDF body.
+# Keep this list markdown-only; non-markdown assets are tracked separately
+# via USER_GUIDE_PDF_DEPS so they trigger rebuilds without polluting content.
+USER_GUIDE_MD_SOURCES := \
 	$(DOCS_DIR)/user_guide/getting_started.md \
 	$(DOCS_DIR)/user_guide/introduction.md \
 	$(DOCS_DIR)/user_guide/your_first_project.md  \
@@ -189,15 +218,18 @@ USER_GUIDE_DOCS := \
 	$(DOCS_DIR)/user_guide/interpreting_results.md  \
 	$(DOCS_DIR)/user_guide/configuration.md  \
 	$(DOCS_DIR)/user_guide/mcp-server.md \
+	$(DOCS_DIR)/examples.md
+
+# Non-markdown assets that should still trigger a rebuild when changed.
+USER_GUIDE_PDF_DEPS := \
 	$(DOCS_DIR)/user_guide/pagebreaks.lua \
 	$(DOCS_DIR)/user_guide/report_template.tex \
 	$(DOCS_DIR)/user_guide/report_template_dark.tex \
 	$(DOCS_DIR)/user_guide/report_template_b5.tex \
-	$(DOCS_DIR)/user_guide/report_template_b5_dark.tex \
-	$(DOCS_DIR)/examples.md \
+	$(DOCS_DIR)/user_guide/report_template_dark_b5.tex \
 	$(DOCS_DIR)/examples_template.md
 
-API_REF_DOCS := \
+API_REF_MD_SOURCES := \
 	$(DOCS_DIR)/api_reference/01_intro.md \
 	$(DOCS_DIR)/api_reference/02_core.md \
 	$(DOCS_DIR)/api_reference/03_project_model.md \
@@ -207,7 +239,7 @@ API_REF_DOCS := \
 	$(DOCS_DIR)/api_reference/07_exporters.md \
 	$(DOCS_DIR)/api_reference/08_analysis_helpers.md \
 	$(DOCS_DIR)/api_reference/09_validation_utilities.md \
-	$(DOCS_DIR)/api_reference/10_nlp_parser.md \
+	$(DOCS_DIR)/api_reference/10_nl_parser.md \
 	$(DOCS_DIR)/api_reference/11_api_examples.md
 
 # Example generation
@@ -261,8 +293,14 @@ help: ## Show this help message
 docs: $(DOC_STAMP) ## Build the HTML project documentation with MkDocs
 	@:
 
+pdfs: pdf-docs pdf-api-ref ## Build all PDF documentation variants in parallel
+	@:
+
 pdf-docs:  ## Build the user guide in all PDF variants (A4 light/dark, B5 light/dark) in parallel
-	+@$(MAKE) -j4 $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
+	@$(MAKE) -j4 $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
+
+pdf-api-ref:  ## Build the API reference in all PDF variants (A4 light/dark, B5 light/dark) in parallel
+	@$(MAKE) -j4 $(API_REF_PDF) $(API_REF_DARK_PDF) $(API_REF_B5_PDF) $(API_REF_DARK_B5_PDF)
 
 gen-examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
 	@:
@@ -280,14 +318,14 @@ $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES)
 # $(call) expansion and are resolved at recipe-execution time.
 # ============================================================================================
 define BUILD_USER_GUIDE_PDF
-$$($1_PDF): $$(USER_GUIDE_DOCS) $$($1_TEMPLATE) $$(USER_GUIDE_LUA_FILTER)
+$$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$(USER_GUIDE_LUA_FILTER)
 	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
 	@rm -f $$($1_TEMPLATE).bak
 	@echo -e "$$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$(USER_GUIDE_BUILD_DIR)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
-	@cat $$(USER_GUIDE_DOCS) > $$($1_CONCAT_MD)
+	@cat $$(USER_GUIDE_MD_SOURCES) > $$($1_CONCAT_MD)
 	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
@@ -306,12 +344,70 @@ $$($1_PDF): $$(USER_GUIDE_DOCS) $$($1_TEMPLATE) $$(USER_GUIDE_LUA_FILTER)
 endef
 
 # ============================================================================================
+# Macro: BUILD_API_REF_PDF
+# Shared recipe for every API Reference PDF variant. Call via $(eval $(call BUILD_API_REF_PDF,...)).
+# $(1) = variable name prefix (e.g. API_REF, API_REF_B5)
+# $(2) = paper format: a4 or b5  (passed to the pandoc Lua filter)
+# Note: Make variables used inside recipe lines are escaped as $$(VAR) so they survive 
+# $(call) expansion and are resolved at recipe-execution time.
+# ============================================================================================
+define BUILD_API_REF_PDF
+$$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_REF_LUA_FILTER)
+	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
+	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
+	@rm -f $$($1_TEMPLATE).bak
+	@echo -e "$$(DARKYELLOW)- Building API reference PDF via LaTeX report pipeline...$$(NC)"
+	@mkdir -p $$(API_REF_BUILD_DIR)
+	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
+	@cat $$(API_REF_MD_SOURCES) > $$($1_CONCAT_MD)
+	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(API_REF_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
+	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
+	@rm -f $$($1_BODY_TEX).bak
+	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$$(NC)"
+	@awk -v body="$$($1_BODY_TEX)" '\
+		/%%__API_REF_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
+		{ print } \
+		END { if (!inserted) { print "Template placeholder %%__API_REF_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
+		$$($1_TEMPLATE) > $$($1_TEX)
+	@echo -e "$$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$$(NC)"
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) >/dev/null
+	@cp $$($1_PDF_BUILT) $$($1_PDF)
+	@echo -e "$$(GREEN)✓ API reference PDF built: $$($1_PDF)$$(NC)"
+endef
+
+
+# ============================================================================================
 # User Guide PDF targets — A4 light, A4 dark, B5 light, B5 dark
 # ============================================================================================
 $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE,a4))
 $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_B5,b5))
 $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK,a4))
 $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK_B5,b5))
+
+
+# ============================================================================================
+#  API Reference PDF targets — A4 light, A4 dark, B5 light, B5 dark
+# ============================================================================================
+$(eval $(call BUILD_API_REF_PDF,API_REF,a4))
+$(eval $(call BUILD_API_REF_PDF,API_REF_B5,b5))
+$(eval $(call BUILD_API_REF_PDF,API_REF_DARK,a4))
+$(eval $(call BUILD_API_REF_PDF,API_REF_DARK_B5,b5))
+
+# Echo all API REF Variables for debugging Makefile variable generation. 
+# $(info API_REF_PDF_DEPS: $(API_REF_PDF_DEPS))
+# $(info API_REF_MD_SOURCES: $(API_REF_MD_SOURCES))
+# $(info API_REF_LUA_FILTER: $(API_REF_LUA_FILTER))
+# $(info API_REF_BUILD_DIR: $(API_REF_BUILD_DIR))
+
+# $(info API_REF_DARK_B5_TEMPLATE: $(API_REF_DARK_B5_TEMPLATE))
+# $(info API_REF_DARK_B5_PDF: $(API_REF_DARK_B5_PDF))
+# $(info API_REF_DARK_B5_CONCAT_MD: $(API_REF_DARK_B5_CONCAT_MD))
+# $(info API_REF_DARK_B5_BODY_TEX: $(API_REF_DARK_B5_BODY_TEX))
+# $(info API_REF_DARK_B5_TEX: $(API_REF_DARK_B5_TEX))
+# $(info API_REF_DARK_B5_PDF_BUILT: $(API_REF_DARK_B5_PDF_BUILT))
+
 
 serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"

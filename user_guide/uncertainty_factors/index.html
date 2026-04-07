@@ -2032,7 +2032,9 @@
 </tr>
 </tbody>
 </table>
-<p>A task that omits the <code>uncertainty_factors</code> block entirely still receives these defaults, resulting in a combined multiplier based on the default levels. In the default configuration, <code>medium</code> maps to <code>1.00</code> for <code>team_experience</code> but <code>1.15</code> for <code>requirements_maturity</code>, <code>1.20</code> for <code>technical_complexity</code>, and <code>1.15</code> for <code>integration_complexity</code>, so the default combined multiplier is not simply <code>1.0</code>.</p>
+<p>A task that omits the <code>uncertainty_factors</code> block entirely still receives these defaults, resulting in a combined multiplier based on the default levels. In the default configuration, <code>medium</code> maps to <code>1.00</code> for <code>team_experience</code> but <code>1.15</code> for <code>requirements_maturity</code>, <code>1.20</code> for <code>technical_complexity</code>, and <code>1.15</code> for <code>integration_complexity</code>, so the default combined multiplier is not simply <code>1.0</code>:</p>
+<p>$$1.00 \times 1.15 \times 1.20 \times 1.00 \times 1.15 \approx 1.587$$</p>
+<p>This means a task with no explicit uncertainty factors will still have its sampled base duration stretched by roughly 59% before any risks are applied. If your project results look longer than your estimates, this default compounding is a likely contributor. Setting <code>requirements_maturity</code>, <code>technical_complexity</code>, and <code>integration_complexity</code> to <code>"high"</code>, <code>"low"</code>, and <code>"low"</code> respectively, or calibrating their multipliers in your configuration file, are common ways to bring the baseline back toward <code>1.0</code>.</p>
 <p>\newpage</p>
 <h2 id="defining-uncertainty-factors-in-the-project-file">Defining Uncertainty Factors in the Project File<a class="headerlink" href="#defining-uncertainty-factors-in-the-project-file" title="Permanent link">&para;</a></h2>
 <p>Uncertainty factors are specified per task. You only need to include the factors you want to set explicitly; any omitted factors use their default level.</p>

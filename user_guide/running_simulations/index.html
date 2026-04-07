@@ -2102,7 +2102,7 @@
 <tr>
 <td><code>--critical-paths N</code></td>
 <td>Number of critical paths to display</td>
-<td>2</td>
+<td>config default: 2</td>
 </tr>
 <tr>
 <td><code>--number-bins N</code></td>
@@ -2156,7 +2156,7 @@
 </tr>
 <tr>
 <td><code>--include-historic-base</code></td>
-<td>Add a <code>Historic Base</code> section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under <code>sprint_planning.historic_base</code>.</td>
+<td>Add a <code>Historic Base</code> section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under <code>sprint_planning.historic_base</code>. <strong>Requires <code>-f</code> to include <code>json</code> or <code>html</code>.</strong></td>
 <td>off</td>
 </tr>
 <tr>
@@ -2224,8 +2224,8 @@
 </span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>-f<span class="w"> </span>json,html<span class="w"> </span>--include-historic-base
 </span></code></pre></div>
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
-<p>By default, the simulation prints a plain-text summary. With <code>--table</code> (<code>-t</code>), the confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are formatted as ASCII tables with column headers and box-drawing borders:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Confidence Intervals:
+<p>By default, the simulation prints a plain-text summary. With <code>--table</code> (<code>-t</code>), the project overview, statistical summaries, confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are all formatted as ASCII tables with column headers and box-drawing borders:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Calendar Time Confidence Intervals:
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>┌──────────────┬─────────┬────────────────┬────────────┐
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>│ Percentile   │   Hours │   Working Days │ Date       │
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>├──────────────┼─────────┼────────────────┼────────────┤
@@ -2254,33 +2254,52 @@
 </span></code></pre></div>
 <p>Using a higher percentile produces more conservative staffing (since we want to be more confident in our recommendations because it accounts for higher-effort scenarios).</p>
 <p>Pass <code>--staffing</code> to expand this into a full table for each experience profile (senior, mixed, junior). With <code>--table</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>=== Staffing Analysis ===
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>--- senior ---
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>│   Team Size │   Eff. Capacity │   Working Days │ Delivery Date   │ Efficiency   │
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>│           1 │            1.00 │            114 │ 2026-06-15      │ 100.0%       │
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>│           2 │            1.92 │             60 │ 2026-03-27      │ 96.0%        │
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>│          *3 │            2.76 │             42 │ 2026-03-02      │ 92.2%        │
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Staffing Analysis (senior team, overhead=4%/person, productivity=100%):
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>  Effort basis: mean (910 person-hours, 571 critical-path hours)
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>│ 1           │ 1.00            │ 114            │ 2026-06-15      │ 100.0%       │
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>│ 2           │ 1.92            │ 60             │ 2026-03-27      │ 96.0%        │
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>│ 3 *         │ 2.76            │ 42             │ 2026-03-02      │ 92.2%        │
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
 </span></code></pre></div>
-<p>The row marked with <code>*</code> is the recommended team size for that profile. Without <code>--table</code>, the same information appears in plain indented text with <code>&lt;-- recommended</code> annotations. See <a href="../interpreting_results/#staffing-recommendations">Interpreting Results — Staffing recommendations</a> for a detailed explanation of the model and columns.</p>
+<p>The <code>*</code> suffix in the "Team Size" column marks the recommended team size for that profile. Without <code>--table</code>, the same information appears in plain indented text with <code>&lt;-- recommended</code> annotations. See <a href="../interpreting_results/#staffing-recommendations">Interpreting Results — Staffing recommendations</a> for a detailed explanation of the model and columns.</p>
 <p>Without <code>--table</code>, the same data is printed as indented text:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>=== Simulation Results ===
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>Project: Website Refresh
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>Hours per Day: 8.0
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>Mean: 126.78 hours (16 working days)
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>Median (P50): 125.36 hours
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>Std Dev: 18.01 hours
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>Confidence Intervals:
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>  P50: 125.36 hours (16 working days)  (2026-04-22)
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>  P80: 143.08 hours (18 working days)  (2026-04-24)
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>  P90: 151.74 hours (19 working days)  (2026-04-27)
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>Most Frequent Critical Paths:
-</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>  1. task_001 -&gt; task_002 (10000/10000, 100.0%)
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>Project Overview:
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>Project: Website Refresh
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>Hours per Day: 8.0
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>Max Parallel Tasks: 2
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>Schedule Mode: dependency_only
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>Calendar Time Statistical Summary:
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>Mean: 126.78 hours (16 working days)
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>Median (P50): 125.36 hours
+</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>Std Dev: 18.01 hours
+</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>Minimum: 98.40 hours
+</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>Maximum: 192.30 hours
+</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>Coefficient of Variation: 0.1421
+</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>Skewness: 0.4123
+</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>Excess Kurtosis: -0.2341
+</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>
+</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>Project Effort Statistical Summary:
+</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>Mean: 232.45 person-hours (30 person-days)
+</span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>Median (P50): 229.80 person-hours
+</span><span id="__span-15-22"><a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>Std Dev: 34.22 person-hours
+</span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>...
+</span><span id="__span-15-24"><a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>
+</span><span id="__span-15-25"><a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a>Calendar Time Confidence Intervals:
+</span><span id="__span-15-26"><a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>  P50: 125.36 hours (16 working days)  (2026-04-22)
+</span><span id="__span-15-27"><a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>  P80: 143.08 hours (18 working days)  (2026-04-24)
+</span><span id="__span-15-28"><a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a>  P90: 151.74 hours (19 working days)  (2026-04-27)
+</span><span id="__span-15-29"><a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a>
+</span><span id="__span-15-30"><a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a>Most Frequent Critical Paths:
+</span><span id="__span-15-31"><a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a>  1. task_001 -&gt; task_002 (10000/10000, 100.0%)
+</span><span id="__span-15-32"><a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a>
+</span><span id="__span-15-33"><a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a>Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+</span><span id="__span-15-34"><a id="__codelineno-15-34" name="__codelineno-15-34" href="#__codelineno-15-34"></a>  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
 </span></code></pre></div>
 <p>When export formats are specified with <code>-f</code>, the following files are created:</p>
 <table>
@@ -2329,6 +2348,10 @@
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The auto-loaded user default configuration file (applied automatically when no <code>-c</code> flag is given to any command) lives at <code>~/.mcprojsim/configuration.yaml</code> — note the full name <code>configuration.yaml</code>, not <code>config.yaml</code>. The <code>--generate</code> flag writes to <code>config.yaml</code> as a starting template; rename it to <code>configuration.yaml</code> if you want it to be picked up automatically.</p>
+</div>
 <h3 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Show built-in defaults</span>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>mcprojsim<span class="w"> </span>config

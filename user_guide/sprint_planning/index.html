@@ -2755,6 +2755,7 @@
 <li><code>story_points</code>: forecast completion based on historical delivered story points</li>
 <li><code>tasks</code>: forecast completion based on historical completed task counts</li>
 </ul>
+<p><strong>Which capacity mode to choose:</strong> Use <code>story_points</code> when your backlog items have explicit story-point estimates and your team tracks points. It produces a more stable forecast when tasks vary in size. Use <code>tasks</code> when your backlog items are roughly comparable in scope (e.g., a bug-fix queue) and you want a simple throughput count. If tasks vary widely in size, <code>story_points</code> will generally produce a more reliable forecast than <code>tasks</code>.</p>
 <p>From your sprint history it models these signals:</p>
 <ul>
 <li>completed work: how many story points or tasks were actually delivered</li>
@@ -3637,7 +3638,7 @@ $$</p>
 <tr>
 <td>Days lost per sickness event</td>
 <td><code>sickness.duration_log_mu</code>, <code>sickness.duration_log_sigma</code></td>
-<td>LogNormal($\mu$, $\sigma$) capped at remaining sprint working days</td>
+<td>LogNormal($\mu$, $\sigma$) capped at total sprint working days (<code>sprint_length_weeks × 5</code>)</td>
 </tr>
 <tr>
 <td>Spillover probability in <code>table</code> mode</td>
@@ -3710,7 +3711,7 @@ $$</p>
 <p>$$
 d_i \sim \text{LogNormal}(\mu, \, \sigma)
 $$</p>
-<p>Each draw is capped at the number of working days remaining in the sprint.</p>
+<p>Each draw is capped at the total sprint working days (<code>sprint_length_weeks × 5</code>). The aggregate lost-days total is further capped at <code>team_size × sprint_length_weeks × 5</code> to ensure the result stays in a valid range.</p>
 </li>
 <li>
 <p><strong>Capacity multiplier.</strong> Total lost days are summed and converted to a fractional multiplier:</p>
@@ -3925,6 +3926,8 @@ $$</p>
 $$</p>
 <p>This produces a conservative "what should we plan for" number in the current capacity unit.</p>
 <p>It is important to read this as a heuristic derived from historical percentiles, not as the mean of a fitted probability distribution.</p>
+<p><strong>How to use the commitment guidance in practice:</strong></p>
+<p>The output line <code>Planned Commitment Guidance: 7.55</code> (in story-point mode) means: based on your history at the configured confidence level, loading the sprint with about 7.55 story points gives a reasonable chance of completing them without carry-over. Use it as the starting point for your sprint backlog cap, not as a hard limit. Teams usually round to the nearest whole item, then apply judgment about priority. A higher <code>planning_confidence_level</code> (e.g., <code>0.90</code>) makes the guidance more conservative; a lower value (e.g., <code>0.65</code>) makes it more optimistic.</p>
 <h2 id="natural-language-generation">Natural-language generation<a class="headerlink" href="#natural-language-generation" title="Permanent link">&para;</a></h2>
 <p>You do not have to hand-write the YAML from scratch. The local <code>generate</code> command can create a sprint-planning project file from semi-structured text.</p>
 <p>This is also optional. You can:</p>
@@ -3979,15 +3982,25 @@ $$</p>
 </span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 </span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>
-</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="nt">sprint_planning</span><span class="p">:</span>
-</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a><span class="w">  </span><span class="nt">sprint_length_weeks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="w">  </span><span class="nt">capacity_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;story_points&quot;</span>
-</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a><span class="w">  </span><span class="nt">planning_confidence_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.8</span>
-</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a><span class="w">  </span><span class="nt">history</span><span class="p">:</span>
-</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">sprint_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SPR-001&quot;</span>
-</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a><span class="w">      </span><span class="nt">completed_story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
-</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a><span class="w">      </span><span class="nt">spillover_story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;task_003&quot;</span>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Frontend</span><span class="nv"> </span><span class="s">integration&quot;</span>
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="w">      </span><span class="nt">story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a><span class="nt">sprint_planning</span><span class="p">:</span>
+</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a><span class="w">  </span><span class="nt">sprint_length_weeks</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a><span class="w">  </span><span class="nt">capacity_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;story_points&quot;</span>
+</span><span id="__span-14-29"><a id="__codelineno-14-29" name="__codelineno-14-29" href="#__codelineno-14-29"></a><span class="w">  </span><span class="nt">planning_confidence_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.8</span>
+</span><span id="__span-14-30"><a id="__codelineno-14-30" name="__codelineno-14-30" href="#__codelineno-14-30"></a><span class="w">  </span><span class="nt">history</span><span class="p">:</span>
+</span><span id="__span-14-31"><a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">sprint_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SPR-001&quot;</span>
+</span><span id="__span-14-32"><a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a><span class="w">      </span><span class="nt">completed_story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</span><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a><span class="w">      </span><span class="nt">spillover_story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-14-34"><a id="__codelineno-14-34" name="__codelineno-14-34" href="#__codelineno-14-34"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">sprint_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SPR-002&quot;</span>
+</span><span id="__span-14-35"><a id="__codelineno-14-35" name="__codelineno-14-35" href="#__codelineno-14-35"></a><span class="w">      </span><span class="nt">completed_story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+</span><span id="__span-14-36"><a id="__codelineno-14-36" name="__codelineno-14-36" href="#__codelineno-14-36"></a><span class="w">      </span><span class="nt">spillover_story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-14-37"><a id="__codelineno-14-37" name="__codelineno-14-37" href="#__codelineno-14-37"></a><span class="w">      </span><span class="nt">added_story_points</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 </span></code></pre></div>
 <h3 id="example-2-task-count-throughput-mode">Example 2: task-count throughput mode<a class="headerlink" href="#example-2-task-count-throughput-mode" title="Permanent link">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Project: Maintenance Queue

@@ -2061,7 +2061,7 @@
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">      </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span></code></pre></div>
-<p>The structured form with <code>type: "absolute"</code> behaves the same as the simple numeric form but is more explicit. When a <code>unit</code> is specified (e.g., <code>"days"</code>), the value is converted to hours using the project's <code>hours_per_day</code> setting.</p>
+<p>The structured form with <code>type: "absolute"</code> behaves the same as the simple numeric form but is more explicit. When <code>unit</code> is omitted, it defaults to <code>"hours"</code> — the same as the simple numeric form. When a <code>unit</code> is specified (e.g., <code>"days"</code>), the value is converted to hours using the project's <code>hours_per_day</code> setting.</p>
 <h3 id="summary-of-impact-types">Summary of Impact Types<a class="headerlink" href="#summary-of-impact-types" title="Permanent link">&para;</a></h3>
 <table>
 <thead>

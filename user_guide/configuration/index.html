@@ -2720,7 +2720,7 @@
 <p>Tasks using those symbolic forms are resolved through the active configuration.</p>
 <p>If you override only part of either mapping table, the remaining built-in defaults stay available.</p>
 <h3 id="t-shirt-sizes">T-shirt sizes<a class="headerlink" href="#t-shirt-sizes" title="Permanent link">&para;</a></h3>
-<p>Tasks may use <code>t_shirt_size</code> instead of explicit <code>min</code> / <code>expected</code> / <code>max</code> values.</p>
+<p>Tasks may use <code>t_shirt_size</code> instead of explicit <code>low</code> / <code>expected</code> / <code>high</code> values.</p>
 <p>Canonical configuration shape:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">t_shirt_sizes</span><span class="p">:</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">story</span><span class="p">:</span>
@@ -2761,9 +2761,9 @@
 <thead>
 <tr>
 <th>Size</th>
-<th style="text-align: right;"><code>min</code></th>
+<th style="text-align: right;"><code>low</code></th>
 <th style="text-align: right;"><code>expected</code></th>
-<th style="text-align: right;"><code>max</code></th>
+<th style="text-align: right;"><code>high</code></th>
 </tr>
 </thead>
 <tbody>
@@ -2898,9 +2898,9 @@ the shifted log-normal distribution.</p>
 <thead>
 <tr>
 <th>Points</th>
-<th style="text-align: right;"><code>min</code></th>
+<th style="text-align: right;"><code>low</code></th>
 <th style="text-align: right;"><code>expected</code></th>
-<th style="text-align: right;"><code>max</code></th>
+<th style="text-align: right;"><code>high</code></th>
 </tr>
 </thead>
 <tbody>
@@ -3533,7 +3533,7 @@ $$</p>
 <li><code>t_shirt_sizes</code> accepts either a nested <code>&lt;category&gt;: &lt;size&gt;: {low, expected, high}</code> map or a legacy flat size map,</li>
 <li>if <code>t_shirt_size_categories</code> is used as a transitional alias, it cannot appear together with <code>t_shirt_sizes</code>,</li>
 <li>T-shirt size tokens in config must normalize to one of <code>XS</code>, <code>S</code>, <code>M</code>, <code>L</code>, <code>XL</code>, or <code>XXL</code>,</li>
-<li>all configured estimate ranges require positive <code>min</code>, <code>expected</code>, and <code>max</code>,</li>
+<li>all configured estimate ranges require positive <code>low</code>, <code>expected</code>, and <code>high</code>,</li>
 <li><code>lognormal.high_percentile</code> must be one of <code>70</code>, <code>75</code>, <code>80</code>, <code>85</code>, <code>90</code>, <code>95</code>, or <code>99</code>,</li>
 <li><code>simulation.default_iterations</code> must be greater than 0,</li>
 <li><code>simulation.max_stored_critical_paths</code> must be greater than 0,</li>
@@ -3559,8 +3559,8 @@ $$</p>
 <li><code>sprint_defaults.sickness.duration_log_sigma</code> must be greater than 0.</li>
 </ul>
 <h2 id="related-settings-in-the-project-file">Related settings in the project file<a class="headerlink" href="#related-settings-in-the-project-file" title="Permanent link">&para;</a></h2>
-<p>Some important reporting and visualization settings are <strong>not</strong> part of <code>config.yaml</code>. They belong in the project file instead.</p>
-<p>For example, the HTML thermometer visualization uses these project-level settings:</p>
+<p>Some important settings are <strong>not</strong> part of <code>config.yaml</code>. They belong in the project file instead.</p>
+<p>For example, <code>probability_red_threshold</code> and <code>probability_green_threshold</code> are project-level fields stored in the simulation results and available for programmatic use:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nt">project</span><span class="p">:</span>
 </span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;My</span><span class="nv"> </span><span class="s">Project&quot;</span>
 </span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="w">  </span><span class="nt">start_date</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2025-01-01&quot;</span>
@@ -3572,12 +3572,10 @@ $$</p>
 <li><code>probability_red_threshold</code>: <code>0.50</code></li>
 <li><code>probability_green_threshold</code>: <code>0.90</code></li>
 </ul>
-<p>These thresholds control how probabilities are colored in the HTML report:</p>
-<ul>
-<li>below the red threshold: high risk,</li>
-<li>above the green threshold: low risk,</li>
-<li>between them: intermediate risk.</li>
-</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These thresholds are stored in simulation results and exported in JSON output, but they do <strong>not</strong> control the colour of the HTML thermometer chart. The thermometer uses a fixed gradient from dark orange at 50 % to dark green at 99 %, computed solely from the probability value of each segment.</p>
+</div>
 <h2 id="calibrating-configuration-values">Calibrating configuration values<a class="headerlink" href="#calibrating-configuration-values" title="Permanent link">&para;</a></h2>
 <p>To calibrate the configuration for your organisation:</p>
 <ol>

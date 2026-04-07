@@ -1122,6 +1122,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#validate_generated_project_yaml-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        validate_generated_project_yaml parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate_project_yaml-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        validate_project_yaml parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_project_yaml-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        update_project_yaml parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2163,6 +2196,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#validate_generated_project_yaml-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        validate_generated_project_yaml parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate_project_yaml-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        validate_project_yaml parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update_project_yaml-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        update_project_yaml parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2904,6 +2970,111 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </tbody>
 </table>
 <p><code>validate_project_description</code> is fast and useful during drafting. Use <code>validate_generated_project_yaml</code> or <code>validate_project_yaml</code> when you want strict behavior equivalent to normal YAML parsing and simulation setup.</p>
+<h4 id="validate_generated_project_yaml-parameters"><code>validate_generated_project_yaml</code> parameters<a class="headerlink" href="#validate_generated_project_yaml-parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>description</code></td>
+<td>string</td>
+<td>required</td>
+<td>Natural language project description</td>
+</tr>
+<tr>
+<td><code>config_yaml</code></td>
+<td>string</td>
+<td>none</td>
+<td>Custom configuration YAML content (as a string)</td>
+</tr>
+<tr>
+<td><code>velocity_model</code></td>
+<td>string</td>
+<td>none</td>
+<td>Sprint velocity override: <code>empirical</code> or <code>neg_binomial</code></td>
+</tr>
+<tr>
+<td><code>no_sickness</code></td>
+<td>boolean</td>
+<td><code>false</code></td>
+<td>Disable sprint sickness modeling for this validation</td>
+</tr>
+</tbody>
+</table>
+<h4 id="validate_project_yaml-parameters"><code>validate_project_yaml</code> parameters<a class="headerlink" href="#validate_project_yaml-parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project_yaml</code></td>
+<td>string</td>
+<td>required</td>
+<td>Existing mcprojsim YAML project content</td>
+</tr>
+<tr>
+<td><code>config_yaml</code></td>
+<td>string</td>
+<td>none</td>
+<td>Custom configuration YAML content (as a string)</td>
+</tr>
+<tr>
+<td><code>velocity_model</code></td>
+<td>string</td>
+<td>none</td>
+<td>Sprint velocity override: <code>empirical</code> or <code>neg_binomial</code></td>
+</tr>
+<tr>
+<td><code>no_sickness</code></td>
+<td>boolean</td>
+<td><code>false</code></td>
+<td>Disable sprint sickness modeling for this validation</td>
+</tr>
+</tbody>
+</table>
+<h4 id="update_project_yaml-parameters"><code>update_project_yaml</code> parameters<a class="headerlink" href="#update_project_yaml-parameters" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>existing_yaml</code></td>
+<td>string</td>
+<td>required</td>
+<td>Existing mcprojsim project YAML content to update</td>
+</tr>
+<tr>
+<td><code>update_description</code></td>
+<td>string</td>
+<td>required</td>
+<td>Semi-structured NL instructions describing the changes to apply</td>
+</tr>
+<tr>
+<td><code>replace_tasks</code></td>
+<td>boolean</td>
+<td><code>false</code></td>
+<td>When <code>true</code>, replaces all existing tasks with tasks parsed from the update description. When <code>false</code> (default), existing tasks are preserved and only project metadata, sprint planning, resources, and calendars are updated</td>
+</tr>
+</tbody>
+</table>
 <h2 id="translating-nl-intent-to-simulation-options">Translating NL intent to simulation options<a class="headerlink" href="#translating-nl-intent-to-simulation-options" title="Permanent link">&para;</a></h2>
 <p>One of the biggest benefits of MCP is that assistants can map user intent to runtime options.</p>
 <h3 id="example-1-sprint-velocity-override">Example 1: Sprint velocity override<a class="headerlink" href="#example-1-sprint-velocity-override" title="Permanent link">&para;</a></h3>
