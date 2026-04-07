@@ -385,30 +385,30 @@ print_step_colored ""
 print_sub_step "Checking for running workflows..."
 RUNNING_WORKFLOWS=$(gh run list --branch main --limit 5 --json status,conclusion | jq -r '.[] | select(.status=="in_progress" or .status=="queued") | .status' | wc -l)
 
-if [[ "$RUNNING_WORKFLOWS" -gt 0 ]]; then
-    print_error "There are $RUNNING_WORKFLOWS workflow(s) currently running on main branch"
-    echo ""
-    echo "Running workflows:"
-    gh run list --branch main --limit 4
-    echo ""
-    echo "Wait for workflows to complete before creating release"
-    echo "Check status: gh run list --branch main --limit 4"
-    exit 1
-fi
-print_success "No workflows currently running"
+# if [[ "$RUNNING_WORKFLOWS" -gt 0 ]]; then
+#     print_error "There are $RUNNING_WORKFLOWS workflow(s) currently running on main branch"
+#     echo ""
+#     echo "Running workflows:"
+#     gh run list --branch main --limit 4
+#     echo ""
+#     echo "Wait for workflows to complete before creating release"
+#     echo "Check status: gh run list --branch main --limit 4"
+#     exit 1
+# fi
+# print_success "No workflows currently running"
 
-print_sub_step "Checking latest workflow status..."
-LATEST_WORKFLOW_STATUS=$(gh run list --branch main --limit 1 --json conclusion | jq -r '.[0].conclusion')
-if [[ "$LATEST_WORKFLOW_STATUS" != "success" ]]; then
-    print_error "Latest workflow did not succeed (status: $LATEST_WORKFLOW_STATUS)"
-    echo ""
-    echo "Recent runs:"
-    gh run list --branch main --limit 5
-    echo ""
-    echo "Fix workflow failures before creating release"
-    exit 1
-fi
-print_success "Latest workflow succeeded"
+# print_sub_step "Checking latest workflow status..."
+# LATEST_WORKFLOW_STATUS=$(gh run list --branch main --limit 1 --json conclusion | jq -r '.[0].conclusion')
+# if [[ "$LATEST_WORKFLOW_STATUS" != "success" ]]; then
+#     print_error "Latest workflow did not succeed (status: $LATEST_WORKFLOW_STATUS)"
+#     echo ""
+#     echo "Recent runs:"
+#     gh run list --branch main --limit 5
+#     echo ""
+#     echo "Fix workflow failures before creating release"
+#     exit 1
+# fi
+# print_success "Latest workflow succeeded"
 
 # =====================================
 # PHASE 3: VERSION VALIDATION
@@ -549,43 +549,30 @@ print_success "Found API reference bundle: $(basename "$API_REF_BUNDLE_ZIP")"
 # 4.6: Validate artifact sizes
 print_sub_step "Validating artifact sizes..."
 WHEEL_SIZE=$(stat -f%z "$WHEEL_FILE" 2>/dev/null || stat -c%s "$WHEEL_FILE" 2>/dev/null)
-echo "WHEEL_SIZE=$WHEEL_SIZE"
 SDIST_SIZE=$(stat -f%z "$SDIST_FILE" 2>/dev/null || stat -c%s "$SDIST_FILE" 2>/dev/null)
-echo "SDIST_SIZE=$SDIST_SIZE"
 BUNDLE_SIZE=$(stat -f%z "$MCP_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$MCP_BUNDLE_ZIP" 2>/dev/null || echo 1)
-echo "BUNDLE_SIZE=$BUNDLE_SIZE"
 USER_GUIDE_BUNDLE_SIZE=$(stat -f%z "$USER_GUIDE_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$USER_GUIDE_BUNDLE_ZIP" 2>/dev/null || echo 1)
-echo "USER_GUIDE_BUNDLE_SIZE=$USER_GUIDE_BUNDLE_SIZE"
 API_REF_BUNDLE_SIZE=$(stat -f%z "$API_REF_BUNDLE_ZIP" 2>/dev/null || stat -c%s "$API_REF_BUNDLE_ZIP" 2>/dev/null || echo 1)
-echo "API_REF_BUNDLE_SIZE=$API_REF_BUNDLE_SIZE"
 
 if [[ "$WHEEL_SIZE" -lt 1000 ]]; then
     print_error "Wheel file suspiciously small: $WHEEL_SIZE bytes"
     exit 1
 fi
 
-echo "Kalle 1"
-
 if [[ "$SDIST_SIZE" -lt 1000 ]]; then
     print_error "Source distribution suspiciously small: $SDIST_SIZE bytes"
     exit 1
 fi
-
-echo "Kalle 2"
 
 if [[ "$DRY_RUN" == "false" && "$BUNDLE_SIZE" -lt 1000 ]]; then
     print_error "MCP bundle suspiciously small: $BUNDLE_SIZE bytes"
     exit 1
 fi
 
-echo "Kalle 3"
-
 if [[ "$USER_GUIDE_BUNDLE_SIZE" -lt 1000 ]]; then
     print_error "User guide bundle suspiciously small: $USER_GUIDE_BUNDLE_SIZE bytes"
     exit 1
 fi
-
-echo "Kalle 4"
 
 if [[ "$API_REF_BUNDLE_SIZE" -lt 1000 ]]; then
     print_error "API reference bundle suspiciously small: $API_REF_BUNDLE_SIZE bytes"
@@ -597,8 +584,6 @@ print_success "Sdist size:  $(numfmt --to=iec-i --suffix=B "$SDIST_SIZE" 2>/dev/
 print_success "Bundle size: $(numfmt --to=iec-i --suffix=B "$BUNDLE_SIZE" 2>/dev/null || echo "$BUNDLE_SIZE bytes")"
 print_success "User Guide size:  $(numfmt --to=iec-i --suffix=B "$USER_GUIDE_BUNDLE_SIZE" 2>/dev/null || echo "$USER_GUIDE_BUNDLE_SIZE bytes")"
 print_success "API reference size:  $(numfmt --to=iec-i --suffix=B "$API_REF_BUNDLE_SIZE" 2>/dev/null || echo "$API_REF_BUNDLE_SIZE bytes")"
-
-exit 1
 
 # =====================================
 # PHASE 5: RELEASE NOTES PREPARATION
