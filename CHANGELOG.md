@@ -1,3 +1,28 @@
+## [v0.12.1] - 2026-04-07
+
+Release Type: patch
+
+### 📋 Summary
+This release fixes several PDF build pipeline issues introduced in v0.12.0 and improves the release artefact layout by bundling PDF variants into zip archives. User guide content has been updated to match current CLI output formatting.
+
+### 🐛 Bug Fixes
+- Fixed missing table of contents in generated User Guide PDFs caused by a pipeline ordering issue in the Makefile
+- Fixed incorrect filename for the B5 LaTeX template, which prevented the B5 PDF variants from building
+- Fixed `Dockerfile` builder stage failing to install Poetry when system CA certificates were not yet configured — certificate setup now runs before the `pip install poetry` call
+
+### 📚 Documentation
+- Updated User Guide examples throughout so all sample output matches the formatting and calculated values produced by the current version
+- Fixed minor errors across several API reference sections
+- Added instructions for installing and running the pre-built Docker image
+
+### 🛠 Internal
+- Replaced individual PDF release artefacts with zip bundles grouping all layout variants (A4 light/dark, B5 light/dark) for both the User Guide and API Reference, reducing the number of files attached to each GitHub release
+- Added PDF build of the API Reference to the release artefact set
+- Improved CI to verify that all expected PDFs are generated before the release step proceeds
+- Bumped version strings in all LaTeX template files to match the release version
+- Switched lint and type-check jobs to run in parallel, reducing total CI time
+
+
 ## [v0.12.0] - 2026-04-06
 
 Release Type: minor
