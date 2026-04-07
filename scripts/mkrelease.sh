@@ -385,14 +385,14 @@ else
           || ! -f "./dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" \
           || ! -f "./dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" \
           || ! -f "./dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf" ]]; then
-        print_error_colored "Expected PDF not found at ../dist directory"
+        print_error_colored "Expected PDF not found at ./dist directory"
         exit 1;
     fi    
 
     # Zip-the PDFs into one API-bundle and one User-guide-budle for easier distribution and upload to GitHub releases
     echo "  ✓ Creating ZIP bundles of generated PDFs for release assets..."
-    (cd ../dist && zip -9 "${PROGRAMNAME}_user_guide_bundle-${VERSION}.zip" "${PROGRAMNAME}_user_guide-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf")
-    (cd ../dist && zip -9 "${PROGRAMNAME}_api_ref_bundle-${VERSION}.zip" "${PROGRAMNAME}_api_ref-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf")
+    (cd ./dist && zip -9 "${PROGRAMNAME}_user_guide_bundle-${VERSION}.zip" "${PROGRAMNAME}_user_guide-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" "${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf")
+    (cd ./dist && zip -9 "${PROGRAMNAME}_api_ref_bundle-${VERSION}.zip" "${PROGRAMNAME}_api_ref-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" "${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf")
 
     echo "  ✓ Generating HTML version of User Guide for release assets..."
     $(MAKE) -C docs docs || {
