@@ -366,20 +366,14 @@ else
         print_warning_colored "Makefile target 'pdf-docs' failed. Skipping PDF generation."
         exit 1;
     }
-    # Make sure the PDFs :
-    # mcprojsim_user_guide-<version>.pdf) 
-    # mcprojsim_user_guide-dark-<version>.pdf 
-    # mcprojsim_user_guide-b5-<version>.pdf
-    # mcprojsim_user_guide-dark-b5-<version>.pdf) 
-    # are generated in the ../dist directory 
-    if [[ ! -f "../dist/${PROGRAMNAME}_user_guide-${VERSION}.pdf" 
-          -o ! -f "../dist/${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" 
-          -o ! -f "../dist/${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" 
-          -o ! -f "../dist/${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf" 
-          -o ! -f "../dist/${PROGRAMNAME}_api_ref-${VERSION}.pdf" 
-          -o ! -f "../dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" 
-          -o ! -f "../dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" 
-          -o ! -f "../dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf" ]]; then        
+    if [[ ! -f "../dist/${PROGRAMNAME}_user_guide-${VERSION}.pdf" \
+          || ! -f "../dist/${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" \
+          || ! -f "../dist/${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" \
+          || ! -f "../dist/${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf" \
+          || ! -f "../dist/${PROGRAMNAME}_api_ref-${VERSION}.pdf" \
+          || ! -f "../dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" \
+          || ! -f "../dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" \
+          || ! -f "../dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf" ]]; then
         print_error_colored "Expected PDF not found at ../dist directory"
         exit 1;
     fi    
