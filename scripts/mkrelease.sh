@@ -362,7 +362,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [DRY-RUN] Would generate PDF versions of User Guide for release assets"
 else
     echo "  ✓ Generating all PDF version of User Guide for release assets..."
-    $(MAKE) -C docs pdf-docs || {
+    $(MAKE) -C docs -j 4 pdf-docs pdf-api-ref || {
         print_warning_colored "Makefile target 'pdf-docs' failed. Skipping PDF generation."
         exit 1;
     }
@@ -375,7 +375,11 @@ else
     if [[ ! -f "../dist/mcprojsim_user_guide-${VERSION}.pdf" 
           -o ! -f "../dist/mcprojsim_user_guide-dark-${VERSION}.pdf" 
           -o ! -f "../dist/mcprojsim_user_guide-b5-${VERSION}.pdf" 
-          -o ! -f "../dist/mcprojsim_user_guide-dark-b5-${VERSION}.pdf" ]]; then        
+          -o ! -f "../dist/mcprojsim_user_guide-dark-b5-${VERSION}.pdf" 
+          -o ! -f "../dist/mcprojsim_api_ref-${VERSION}.pdf" 
+          -o ! -f "../dist/mcprojsim_api_ref-dark-${VERSION}.pdf" 
+          -o ! -f "../dist/mcprojsim_api_ref-b5-${VERSION}.pdf" 
+          -o ! -f "../dist/mcprojsim_api_ref-dark-b5-${VERSION}.pdf" ]]; then        
         print_error_colored "Expected PDF not found at ../dist directory"
         exit 1;
     fi    
@@ -395,7 +399,7 @@ print_step_colored "🎯 PHASE 4: RELEASE EXECUTION"
 print_step_colored ""
 
 # 4.1: Commit version updates
-run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md docs/user_guide/report_template*.tex docs/examples.md" "Staging release files..."
+run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md docs/user_guide/report_template*.tex docs/api_reference/api_ref_template*.tex docs/examples.md" "Staging release files..."
 run_command "git commit -m \"chore(release): prepare $VERSION
 
 - Update version to $VERSION

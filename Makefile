@@ -537,6 +537,9 @@ pdf-design: ## Create a PDF of the design documentation for distribution
 docs: ## Build the documentation site with MkDoc
 	@$(MAKE) -C $(DOCS_DIR)
 
+pdfs: ## Build the documentation site with MkDoc
+	@$(MAKE) -j 4 -C $(DOCS_DIR) pdf-docs pdf-api-ref
+
 docs-serve: ## Serve the documentation site locally with live reload
 	@$(MAKE) -C $(DOCS_DIR) serve
 
