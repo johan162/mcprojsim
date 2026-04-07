@@ -21,13 +21,6 @@ ARG CA_CERT_FILE=CA_proxy_fw_all.pem
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# All runtime deps ship binary wheels for Python 3.13 
-# Poetry is only needed in the builder stage.
-RUN pip install --no-cache-dir poetry \
-    && poetry config virtualenvs.in-project true
-
-WORKDIR /build
-
 # Optionally configure a proxy CA certificate for corporate/proxied environments.
 # The certificate is provided as a build secret named "proxy_ca", so standard
 # builds do not require any placeholder file in the build context.
@@ -45,6 +38,14 @@ RUN --mount=type=secret,id=proxy_ca,target=/run/secrets/proxy_ca,required=false 
     else \
         echo "→ Using standard SSL certificates (no proxy)"; \
     fi
+
+# All runtime deps ship binary wheels for Python 3.13 
+# Poetry is only needed in the builder stage.
+RUN pip install --no-cache-dir poetry \
+    && poetry config virtualenvs.in-project true \
+    && poetry config certificates.pypi.cert /etc/ssl/certs/ca-certificates.crt
+
+WORKDIR /build
 
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
