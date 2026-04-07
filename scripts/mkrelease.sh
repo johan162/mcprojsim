@@ -329,7 +329,7 @@ run_command "poetry run mypy src/${PROGRAMNAME} --ignore-missing-imports" "Runni
 
 
 # 2.2: Full test suite with coverage requirements
-run_command "poetry run pytest tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
+run_command "poetry run pytest -n auto tests/ --cov=src/${PROGRAMNAME} --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml --cov-fail-under=${COVERAGE}"  "Running full test suite with coverage..."
 
 if [[ "$DRY_RUN" == "false" && $? -ne 0 ]]; then
     print_error_colored "Test suite failed - aborting release"
@@ -362,7 +362,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "  [DRY-RUN] Would generate PDF versions of User Guide for release assets"
 else
     echo "  ✓ Generating all PDF version of User Guide for release assets..."
-    $(MAKE) -C docs -j 4 pdf-docs pdf-api-ref || {
+    make -C docs -j 4 pdf-docs pdf-api-ref || {
         print_warning_colored "Makefile target 'pdf-docs' failed. Skipping PDF generation."
         exit 1;
     }
