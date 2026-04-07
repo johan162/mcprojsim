@@ -188,7 +188,7 @@ $(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK_B5))
 
 define DEFINE_API_REF_VARS
 $(1)_TEMPLATE  := $$(DOCS_DIR)/api_reference/api_ref_template$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
-$(1)_PDF       := $$(DIST_DIR)/api_ref$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
+$(1)_PDF       := $$(DIST_DIR)/$$(PROJECT)_api_ref$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
 $(1)_CONCAT_MD := $$(API_REF_BUILD_DIR)/api_ref_concat$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').md
 $(1)_BODY_TEX  := $$(API_REF_BUILD_DIR)/api_ref_body$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
 $(1)_TEX       := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
