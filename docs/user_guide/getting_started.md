@@ -60,15 +60,28 @@ pipx install mcprojsim
 ```bash
 pip install mcprojsim
 ```
+### Run mcprojsim using a Docker image from `ghcr.io`
 
-### From source
+If you prefer not to install Python or want to try `mcprojsim` without installing, you can run it using the official Docker image. 
 
-For developers
+You can run the image directly with `docker run`, but it is a bit more complex to set up and use.
 
 ```bash
-git clone https://github.com/johan162/mcprojsim.git
-cd mcprojsim
-pip install -e .
+docker run --rm -v "$(pwd)":/app ghcr.io/johan162/mcprojsim:latest --help
+```
+
+In the source distribution there is a helper script `mcprojsim.sh` that simplifies running the Docker image. It handles mounting the current directory and passing through command-line arguments, so you can use it as if `mcprojsim` were installed locally. It is available in the `bin/` directory of the repository, so you can copy it to a location on your `PATH` for easy access.
+
+First pull the latest image:
+
+```bash
+docker pull ghcr.io/johan162/mcprojsim:latest
+```
+
+Then you can run `mcprojsim` commands using the `mcprojsim.sh` script (just be sure to put it in your `PATH` or always run it with `./mcprojsim.sh` from the directory where it is located). For example, to see the help message:
+
+```bash
+./mcprojsim.sh --help
 ```
 
 ## Verify the installation:
@@ -77,6 +90,15 @@ pip install -e .
 mcprojsim --version
 mcprojsim --help
 ```
+
+or , if you installed with Docker:
+
+```bash
+./mcprojsim.sh --version
+./mcprojsim.sh --help
+```
+
+Note: You need to add the location of `mcprojsim.sh` to your `PATH` or always run it with `./mcprojsim.sh` from the directory where it is located
 
 ## Creating the project specification file
 
