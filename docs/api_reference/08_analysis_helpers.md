@@ -1,9 +1,36 @@
 
-## Analysis Helpers
+# Analysis Helpers
+
+## Overview
+
+The `analysis` package provides four post-processing analyzers that extract deeper insights from a completed `SimulationResults` object. `StatisticalAnalyzer` computes descriptive statistics and confidence intervals; `SensitivityAnalyzer` ranks tasks by their Spearman rank correlation with total project duration; `CriticalPathAnalyzer` surfaces task criticality indices and the most frequent end-to-end critical sequences; and `StaffingAnalyzer` recommends team sizes using a Brooks's Law–inspired communication-overhead model.
+
+**When to use this module:** Use these analyzers when you need custom thresholds, deeper statistical breakdowns, or want to integrate simulation insights into your own tooling beyond what the CLI output provides.
+
+| Capability | Description |
+|---|---|
+| Descriptive statistics | Mean, median, std dev, CV, min/max on any duration array |
+| Percentile calculation | Arbitrary percentile queries on simulation output |
+| Confidence intervals | Bootstrap confidence interval at configurable confidence level |
+| Sensitivity ranking | Spearman rank correlation of each task's duration against total project duration |
+| Critical-path analysis | Per-task criticality index (0–1) and most frequent full path sequences |
+| Staffing recommendations | Team-size vs. delivery-date trade-offs across senior/mixed/junior profiles |
+
+**Background: Spearman rank correlation** — `SensitivityAnalyzer` converts each task's sampled durations and the total project durations to ranks before computing the correlation coefficient, making it robust to non-normal distributions and outliers. A coefficient near 1.0 means that task's duration strongly drives the overall schedule.
+
+**Background: Communication overhead** — `StaffingAnalyzer` models individual productivity as `max(min_prod, 1 − c·(n−1))`, inspired by Brooks's Law, so adding team members beyond an optimal point yields diminishing and eventually negative returns on elapsed calendar time.
+
+**Imports:**
+```python
+from mcprojsim.analysis.statistics import StatisticalAnalyzer
+from mcprojsim.analysis.sensitivity import SensitivityAnalyzer
+from mcprojsim.analysis.critical_path import CriticalPathAnalyzer
+from mcprojsim.analysis.staffing import StaffingAnalyzer
+```
 
 These specialized analysis modules provide focused statistical, sensitivity, and staffing analysis capabilities beyond what `SimulationResults` provides directly.
 
-### `StatisticalAnalyzer`
+## `StatisticalAnalyzer`
 
 Convenience helpers for descriptive statistics on duration arrays.
 
@@ -19,7 +46,7 @@ from mcprojsim.analysis.statistics import StatisticalAnalyzer
 - **`calculate_percentiles(durations: np.ndarray, percentiles: list[int]) -> dict[int, float]`** — Compute specific percentiles
 - **`confidence_interval(durations: np.ndarray, confidence: float = 0.95) -> tuple[float, float]`** — Return lower/upper bounds for a confidence interval
 
-### `SensitivityAnalyzer`
+## `SensitivityAnalyzer`
 
 Analyzes which tasks have the strongest correlation with total project duration (Spearman rank correlation).
 
@@ -46,7 +73,7 @@ for task_id, correlation in top_5:
     print(f"{task_id}: correlation = {correlation:.3f}")
 ```
 
-### `CriticalPathAnalyzer`
+## `CriticalPathAnalyzer`
 
 Specialized analysis for critical paths and task criticality.
 
@@ -77,7 +104,7 @@ if paths:
     print(f"Most common path: {paths[0].format_path()}")
 ```
 
-### `StaffingAnalyzer`
+## `StaffingAnalyzer`
 
 Provides team-size recommendations and breaks down staffing by experience profile.
 

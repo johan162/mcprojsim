@@ -1,6 +1,6 @@
-# API Reference
+# Introduction - API Reference 
 
-This page documents the main Python API intended for library consumers. For installation and first steps, see the [Quickstart](../quickstart.md).
+This document describes the main Python API intended for library consumers. For installation and first steps, see the [Quickstart](../quickstart.md).
 
 The most stable entry points are:
 

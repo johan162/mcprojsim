@@ -1,7 +1,27 @@
 
-## Configuration
+# Configuration
 
-### `Config`
+## Overview
+
+`Config` is the single source of truth for all default values in mcprojsim — uncertainty multipliers, T-shirt-size and story-point mappings, output settings, staffing profiles, constrained-scheduling parameters, and sprint-planning defaults. `Config.load_from_file()` merges YAML overrides onto the built-in defaults rather than replacing the whole structure, so you only need to specify the fields you want to change. Use this module whenever you need to customise simulation behaviour programmatically or inspect the defaults your project file inherits.
+
+**When to use this module:** Customise T-shirt sizes, story-point ranges, uncertainty factors, constrained-scheduling assignment mode, or output format settings without modifying the project YAML.
+
+| Capability | Description |
+|---|---|
+| T-shirt size mappings | Configurable low/expected/high hour ranges per size label, organised by category |
+| Story-point mappings | Configurable low/expected/high day ranges per point value |
+| Uncertainty factor multipliers | Per-factor, per-level multipliers (e.g. `team_experience: high → 0.90`) applied during simulation |
+| Sub-config classes | `SimulationConfig`, `LognormalConfig`, `OutputConfig`, `StaffingConfig`, `ConstrainedSchedulingConfig`, `SprintDefaultsConfig` |
+| Merge-onto-defaults loading | `Config.load_from_file()` deep-merges a YAML file onto built-in defaults |
+| Programmatic defaults | `Config.get_default()` returns a fully populated instance with no file required |
+
+**Imports:**
+```python
+from mcprojsim.config import Config
+```
+
+## `Config`
 
 Application-wide configuration for simulation settings, output formatting, uncertainty-factor multipliers, T-shirt-size mappings, story-point mappings, staffing recommendations, and sprint-planning defaults.
 
@@ -69,9 +89,9 @@ print(f"Default histogram bins: {config.output.histogram_bins}")
 print(f"Critical path limit: {config.output.critical_path_report_limit}")
 ```
 
-### Config Sub-Models
+## Config Sub-Models
 
-#### `TShirtSizeConfig` / `StoryPointConfig`
+### `TShirtSizeConfig` / `StoryPointConfig`
 
 Both inherit from `EstimateRangeConfig` and contain:
 
@@ -83,7 +103,7 @@ Both inherit from `EstimateRangeConfig` and contain:
 
 Returned by `config.get_t_shirt_size()` and `config.get_story_point()`.
 
-#### `ExperienceProfileConfig`
+### `ExperienceProfileConfig`
 
 Productivity and overhead parameters for an experience profile.
 
@@ -94,7 +114,7 @@ Productivity and overhead parameters for an experience profile.
 
 Used inside `StaffingConfig.experience_profiles`.
 
-#### `OutputConfig`
+### `OutputConfig`
 
 Settings for simulation output and export behavior.
 
@@ -107,7 +127,7 @@ Settings for simulation output and export behavior.
 
 **Histogram binning note:** The `histogram_bins` setting is used by all exporters when generating distribution charts in JSON, CSV, and HTML reports. You can also override this per-run via the `--number-bins` CLI flag.
 
-#### `SimulationConfig`
+### `SimulationConfig`
 
 Defaults for simulation runs.
 
@@ -117,7 +137,7 @@ Defaults for simulation runs.
 | `random_seed` | `int \| None` | `None` | Default random seed |
 | `max_stored_critical_paths` | `int` | `20` | Maximum distinct critical paths to track |
 
-#### `LogNormalConfig`
+### `LogNormalConfig`
 
 Shifted log-normal interpretation settings.
 
@@ -125,7 +145,7 @@ Shifted log-normal interpretation settings.
 |-------|------|---------|-------------|
 | `high_percentile` | `int` | `95` | The percentile the "high" estimate maps to. Allowed values: `70`, `75`, `80`, `85`, `90`, `95`, `99`. |
 
-#### `StaffingConfig`
+### `StaffingConfig`
 
 Configuration for staffing recommendations.
 
@@ -146,7 +166,7 @@ engine = SimulationEngine(iterations=10000, config=config)
 results = engine.run(project)
 ```
 
-#### `ConstrainedSchedulingConfig`
+### `ConstrainedSchedulingConfig`
 
 Settings for resource-constrained scheduling.
 
@@ -156,7 +176,7 @@ Settings for resource-constrained scheduling.
 | `assignment_mode` | `ConstrainedSchedulingAssignmentMode` | `"greedy_single_pass"` | Scheduling dispatch policy. `"greedy_single_pass"` uses deterministic ID-order greedy dispatch; `"criticality_two_pass"` runs a criticality-ranking pass first. |
 | `pass1_iterations` | `int` | `1000` | Iteration count for the criticality-ranking pass when using `"criticality_two_pass"`. |
 
-#### `SprintDefaultsConfig`
+### `SprintDefaultsConfig`
 
 Company-wide defaults for sprint-planning behavior.
 
@@ -178,7 +198,7 @@ Company-wide defaults for sprint-planning behavior.
 | `spillover_logistic_intercept` | `float` | `~-1.99` | Intercept for the logistic spillover model. |
 | `sickness` | `SprintSicknessDefaultsConfig` | See below | Company-wide sprint sickness defaults. |
 
-#### `SprintSicknessDefaultsConfig`
+### `SprintSicknessDefaultsConfig`
 
 Company-wide defaults for sprint sickness modelling. Nested inside `SprintDefaultsConfig.sickness`.
 
