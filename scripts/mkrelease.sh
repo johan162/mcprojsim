@@ -366,14 +366,25 @@ else
         print_warning_colored "Makefile target 'pdf-docs' failed. Skipping PDF generation."
         exit 1;
     }
-    if [[ ! -f "../dist/${PROGRAMNAME}_user_guide-${VERSION}.pdf" \
-          || ! -f "../dist/${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" \
-          || ! -f "../dist/${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" \
-          || ! -f "../dist/${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf" \
-          || ! -f "../dist/${PROGRAMNAME}_api_ref-${VERSION}.pdf" \
-          || ! -f "../dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" \
-          || ! -f "../dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" \
-          || ! -f "../dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf" ]]; then
+
+    echo "  ✓ Checking if these files exist:"
+    echo "./dist/${PROGRAMNAME}_user_guide-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_api_ref-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf"
+
+    if [[ ! -f "./dist/${PROGRAMNAME}_user_guide-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_api_ref-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf" ]]; then
         print_error_colored "Expected PDF not found at ../dist directory"
         exit 1;
     fi    
