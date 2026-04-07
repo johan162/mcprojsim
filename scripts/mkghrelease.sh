@@ -564,26 +564,31 @@ if [[ "$WHEEL_SIZE" -lt 1000 ]]; then
     exit 1
 fi
 
+echo "Kalle 1"
+
 if [[ "$SDIST_SIZE" -lt 1000 ]]; then
     print_error "Source distribution suspiciously small: $SDIST_SIZE bytes"
     exit 1
 fi
+
+echo "Kalle 2"
 
 if [[ "$DRY_RUN" == "false" && "$BUNDLE_SIZE" -lt 1000 ]]; then
     print_error "MCP bundle suspiciously small: $BUNDLE_SIZE bytes"
     exit 1
 fi
 
+echo "Kalle 3"
+
 if [[ "$USER_GUIDE_BUNDLE_SIZE" -lt 1000 ]]; then
     print_error "User guide bundle suspiciously small: $USER_GUIDE_BUNDLE_SIZE bytes"
     exit 1
 fi
 
+echo "Kalle 4"
+
 if [[ "$API_REF_BUNDLE_SIZE" -lt 1000 ]]; then
     print_error "API reference bundle suspiciously small: $API_REF_BUNDLE_SIZE bytes"
-    exit 1
-fi
-
     exit 1
 fi
 
