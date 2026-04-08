@@ -1014,9 +1014,15 @@ class HTMLExporter:
         start_date_str = (
             results.start_date.isoformat() if results.start_date else "Not specified"
         )
-        num_tasks = len(results.critical_path_frequency) if results.critical_path_frequency else 0
+        num_tasks = (
+            len(results.critical_path_frequency)
+            if results.critical_path_frequency
+            else 0
+        )
         effective_default_distribution = (
-            project.project.distribution.value if project is not None else "Not specified"
+            project.project.distribution.value
+            if project is not None
+            else "Not specified"
         )
 
         html = template.render(

@@ -725,9 +725,7 @@ class ProjectMetadata(BaseModel):
 
         normalized = value.strip().lower()
         if not normalized:
-            raise ValueError(
-                "t_shirt_size_default_category must be a non-empty string"
-            )
+            raise ValueError("t_shirt_size_default_category must be a non-empty string")
         if not normalized.replace("_", "").isalpha():
             raise ValueError(
                 "t_shirt_size_default_category must contain only letters and underscores"

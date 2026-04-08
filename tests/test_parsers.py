@@ -343,8 +343,7 @@ class TestTOMLParser:
     def test_parse_toml_project_t_shirt_default_category(self, tmp_path):
         """TOML project files should accept a project-level T-shirt default category."""
         file_path = tmp_path / "project.toml"
-        file_path.write_text(
-            """
+        file_path.write_text("""
 [project]
 name = "Test Project"
 start_date = "2025-01-01"
@@ -356,8 +355,7 @@ name = "Task 1"
 
 [tasks.estimate]
 t_shirt_size = "M"
-""".strip()
-        )
+""".strip())
 
         parser = TOMLParser()
         project = parser.parse_file(file_path)

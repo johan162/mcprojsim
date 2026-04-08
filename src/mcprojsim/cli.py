@@ -1030,7 +1030,9 @@ def simulate(
 
             project_uncertainty_factors = project.project.uncertainty_factors
             if project_uncertainty_factors is not None:
-                raw_default_uncertainty_levels = project_uncertainty_factors.model_dump()
+                raw_default_uncertainty_levels = (
+                    project_uncertainty_factors.model_dump()
+                )
             else:
                 raw_default_uncertainty_levels = DEFAULT_UNCERTAINTY_FACTOR_LEVELS
 
@@ -1079,9 +1081,13 @@ def simulate(
                     factor_name,
                     default_level,
                 ) in effective_default_uncertainty_levels.items():
-                    multiplier = cfg.get_uncertainty_multiplier(factor_name, default_level)
+                    multiplier = cfg.get_uncertainty_multiplier(
+                        factor_name, default_level
+                    )
                     factor_display = factor_name.replace("_", " ").title()
-                    uncertainty_rows.append([factor_display, f"{default_level} ({multiplier})"])
+                    uncertainty_rows.append(
+                        [factor_display, f"{default_level} ({multiplier})"]
+                    )
                 click.echo("\nDefault Uncertainty Factors:")
                 click.echo(
                     _tabulate(
@@ -1150,7 +1156,9 @@ def simulate(
                     "  Effective Default Distribution: "
                     f"{project.project.distribution.value}"
                 )
-                click.echo(f"  T-Shirt Category Used: {cfg.t_shirt_size_default_category}")
+                click.echo(
+                    f"  T-Shirt Category Used: {cfg.t_shirt_size_default_category}"
+                )
                 click.echo(f"  Hours per Day: {hours_per_day}")
                 click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")
                 click.echo(f"  Schedule Mode: {schedule_mode}")
@@ -1160,7 +1168,9 @@ def simulate(
                     factor_name,
                     default_level,
                 ) in effective_default_uncertainty_levels.items():
-                    multiplier = cfg.get_uncertainty_multiplier(factor_name, default_level)
+                    multiplier = cfg.get_uncertainty_multiplier(
+                        factor_name, default_level
+                    )
                     factor_display = factor_name.replace("_", " ").title()
                     click.echo(f"  {factor_display}: {default_level} ({multiplier})")
 

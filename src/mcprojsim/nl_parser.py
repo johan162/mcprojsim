@@ -1286,9 +1286,7 @@ class NLProjectParser:
                 refs = self._resolve_dependency_refs(dep_text, known_tasks or [])
                 if refs:
                     task.dependency_refs = refs
-                    remaining = (
-                        remaining[: m.start()] + remaining[m.end() :]
-                    ).strip()
+                    remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
 
         # Clean up the task name: remove extracted tokens
         cleaned = remaining.strip().rstrip(".,;:- ")
@@ -1344,7 +1342,9 @@ class NLProjectParser:
         sprint_weeks: int | None = None,
     ) -> tuple[int, int] | None:
         """Parse fuzzy natural-language duration phrases into T-shirt sizes."""
-        sprint_match = re.search(r"\ba\s+sprint\b|\babout\s+a\s+sprint\b", text, re.IGNORECASE)
+        sprint_match = re.search(
+            r"\ba\s+sprint\b|\babout\s+a\s+sprint\b", text, re.IGNORECASE
+        )
         if sprint_match is not None:
             task.t_shirt_size = self._t_shirt_size_for_sprint_weeks(sprint_weeks or 2)
             return (sprint_match.start(), sprint_match.end())

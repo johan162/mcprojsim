@@ -71,35 +71,46 @@ mcprojsim simulate examples/quickstart_example.yaml --minimal --seed 42
 === Simulation Results ===
 
 Project Overview:
-Project: Website Refresh
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Website Refresh
+  Start Date: 2026-04-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 126.93 hours (16 working days)
-Median (P50): 125.74 hours
-Std Dev: 17.68 hours
-Minimum: 78.43 hours
-Maximum: 184.27 hours
-Coefficient of Variation: 0.1393
-Skewness: 0.2267
-Excess Kurtosis: -0.4206
+  Mean: 90.65 hours (12 working days)
+  Median (P50): 89.68 hours
+  Std Dev: 12.97 hours
+  Minimum: 55.92 hours
+  Maximum: 131.62 hours
+  Coefficient of Variation: 0.1430
+  Skewness: 0.2419
+  Excess Kurtosis: -0.4576
 
 Project Effort Statistical Summary:
-Mean: 126.93 person-hours (16 person-days)
-Median (P50): 125.74 person-hours
-Std Dev: 17.68 person-hours
-Minimum: 78.43 person-hours
-Maximum: 184.27 person-hours
-Coefficient of Variation: 0.1393
-Skewness: 0.2267
-Excess Kurtosis: -0.4206
+  Mean: 90.65 person-hours (12 person-days)
+  Median (P50): 89.68 person-hours
+  Std Dev: 12.97 person-hours
+  Minimum: 55.92 person-hours
+  Maximum: 131.62 person-hours
+  Coefficient of Variation: 0.1430
+  Skewness: 0.2419
+  Excess Kurtosis: -0.4576
 
 Calendar Time Confidence Intervals:
-  P50: 125.74 hours (16 working days)  (2026-04-23)
-  P80: 142.59 hours (18 working days)  (2026-04-27)
-  P90: 151.18 hours (19 working days)  (2026-04-28)
+  P50: 89.68 hours (12 working days)  (2026-04-17)
+  P80: 102.25 hours (13 working days)  (2026-04-20)
+  P90: 108.53 hours (14 working days)  (2026-04-21)
 ```
 
 Key observations: two sequential tasks, no parallelism (`Max Parallel Tasks: 1`), `dependency_only` scheduling.
@@ -199,40 +210,51 @@ mcprojsim simulate examples/tshirt_sizing_project.yaml --minimal --seed 42
 === Simulation Results ===
 
 Project Overview:
-Project: Mobile App Development
-Hours per Day: 8.0
-Max Parallel Tasks: 2
-Schedule Mode: dependency_only
+  Project: Mobile App Development
+  Start Date: 2025-11-01
+  Number of Tasks: 6
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 2
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 9139.12 hours (1143 working days)
-Median (P50): 9026.56 hours
-Std Dev: 1330.03 hours
-Minimum: 5637.10 hours
-Maximum: 14631.87 hours
-Coefficient of Variation: 0.1455
-Skewness: 0.4609
-Excess Kurtosis: 0.1204
+  Mean: 2635.93 hours (330 working days)
+  Median (P50): 2584.12 hours
+  Std Dev: 436.95 hours
+  Minimum: 1653.07 hours
+  Maximum: 4602.84 hours
+  Coefficient of Variation: 0.1658
+  Skewness: 0.5890
+  Excess Kurtosis: 0.1211
 
 Project Effort Statistical Summary:
-Mean: 9177.16 person-hours (1148 person-days)
-Median (P50): 9116.60 person-hours
-Std Dev: 1131.90 person-hours
-Minimum: 5968.67 person-hours
-Maximum: 12762.03 person-hours
-Coefficient of Variation: 0.1233
-Skewness: 0.1534
-Excess Kurtosis: -0.4970
+  Mean: 2622.12 person-hours (328 person-days)
+  Median (P50): 2578.96 person-hours
+  Std Dev: 384.08 person-hours
+  Minimum: 1721.88 person-hours
+  Maximum: 3990.15 person-hours
+  Coefficient of Variation: 0.1465
+  Skewness: 0.4076
+  Excess Kurtosis: -0.4391
 
 Calendar Time Confidence Intervals:
-  P10: 7499.79 hours (938 working days)  (2029-06-06)
-  P50: 9026.56 hours (1129 working days)  (2030-02-28)
-  P75: 10010.94 hours (1252 working days)  (2030-08-20)
-  P80: 10249.62 hours (1282 working days)  (2030-10-01)
-  P85: 10519.72 hours (1315 working days)  (2030-11-15)
-  P90: 10883.39 hours (1361 working days)  (2031-01-20)
-  P95: 11455.40 hours (1432 working days)  (2031-04-29)
-  P99: 12716.79 hours (1590 working days)  (2031-12-05)
+  P10: 2107.45 hours (264 working days)  (2026-11-05)
+  P50: 2584.12 hours (324 working days)  (2027-01-28)
+  P75: 2921.42 hours (366 working days)  (2027-03-29)
+  P80: 3006.12 hours (376 working days)  (2027-04-12)
+  P85: 3099.16 hours (388 working days)  (2027-04-28)
+  P90: 3227.73 hours (404 working days)  (2027-05-20)
+  P95: 3411.59 hours (427 working days)  (2027-06-22)
+  P99: 3818.90 hours (478 working days)  (2027-09-01)
 ```
 
 Key observations: two independent starting tasks yield `Max Parallel Tasks: 2`. The wide P10–P99 spread (938–1590 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.
@@ -288,50 +310,65 @@ mcprojsim simulate examples/story_points_walkthrough_project.yaml --minimal --ta
 === Simulation Results ===
 
 Project Overview:
-┌────────────────────┬───────────────────┐
-│ Field              │ Value             │
-├────────────────────┼───────────────────┤
-│ Project            │ Tiny Landing Page │
-│ Hours per Day      │ 8.0               │
-│ Max Parallel Tasks │ 1                 │
-│ Schedule Mode      │ dependency_only   │
-└────────────────────┴───────────────────┘
+┌────────────────────────────────┬───────────────────┐
+│ Field                          │ Value             │
+├────────────────────────────────┼───────────────────┤
+│ Project                        │ Tiny Landing Page │
+│ Start Date                     │ 2026-03-01        │
+│ Number of Tasks                │ 3                 │
+│ Effective Default Distribution │ triangular        │
+│ T-Shirt Category Used          │ story             │
+│ Hours per Day                  │ 8.0               │
+│ Max Parallel Tasks             │ 1                 │
+│ Schedule Mode                  │ dependency_only   │
+└────────────────────────────────┴───────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
 
 Calendar Time Statistical Summary:
-┌──────────────────────────┬────────────────────────────────┐
-│ Metric                   │ Value                          │
-├──────────────────────────┼────────────────────────────────┤
-│ Mean                     │ 109.90 hours (14 working days) │
-│ Median (P50)             │ 109.21 hours                   │
-│ Std Dev                  │ 15.97 hours                    │
-│ Minimum                  │ 64.96 hours                    │
-│ Maximum                  │ 167.85 hours                   │
-│ Coefficient of Variation │ 0.1453                         │
-│ Skewness                 │ 0.1731                         │
-│ Excess Kurtosis          │ -0.2637                        │
-└──────────────────────────┴────────────────────────────────┘
+┌──────────────────────────┬───────────────────────────────┐
+│ Metric                   │ Value                         │
+├──────────────────────────┼───────────────────────────────┤
+│ Mean                     │ 79.98 hours (10 working days) │
+│ Median (P50)             │ 79.44 hours                   │
+│ Std Dev                  │ 11.65 hours                   │
+│ Minimum                  │ 47.31 hours                   │
+│ Maximum                  │ 121.18 hours                  │
+│ Coefficient of Variation │ 0.1457                        │
+│ Skewness                 │ 0.1707                        │
+│ Excess Kurtosis          │ -0.2974                       │
+└──────────────────────────┴───────────────────────────────┘
 
 Project Effort Statistical Summary:
-┌──────────────────────────┬──────────────────────────────────────┐
-│ Metric                   │ Value                                │
-├──────────────────────────┼──────────────────────────────────────┤
-│ Mean                     │ 109.90 person-hours (14 person-days) │
-│ Median (P50)             │ 109.21 person-hours                  │
-│ Std Dev                  │ 15.97 person-hours                   │
-│ Minimum                  │ 64.96 person-hours                   │
-│ Maximum                  │ 167.85 person-hours                  │
-│ Coefficient of Variation │ 0.1453                               │
-│ Skewness                 │ 0.1731                               │
-│ Excess Kurtosis          │ -0.2637                              │
-└──────────────────────────┴──────────────────────────────────────┘
+┌──────────────────────────┬─────────────────────────────────────┐
+│ Metric                   │ Value                               │
+├──────────────────────────┼─────────────────────────────────────┤
+│ Mean                     │ 79.98 person-hours (10 person-days) │
+│ Median (P50)             │ 79.44 person-hours                  │
+│ Std Dev                  │ 11.65 person-hours                  │
+│ Minimum                  │ 47.31 person-hours                  │
+│ Maximum                  │ 121.18 person-hours                 │
+│ Coefficient of Variation │ 0.1457                              │
+│ Skewness                 │ 0.1707                              │
+│ Excess Kurtosis          │ -0.2974                             │
+└──────────────────────────┴─────────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
 ┌──────────────┬─────────┬────────────────┬────────────┐
 │ Percentile   │   Hours │   Working Days │ Date       │
 ├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │  109.21 │             14 │ 2026-03-19 │
-│ P80          │  123.81 │             16 │ 2026-03-23 │
-│ P90          │  131.03 │             17 │ 2026-03-24 │
+│ P50          │   79.44 │             10 │ 2026-03-13 │
+│ P80          │   90.19 │             12 │ 2026-03-17 │
+│ P90          │   95.57 │             12 │ 2026-03-17 │
 └──────────────┴─────────┴────────────────┴────────────┘
 ```
 
@@ -553,30 +590,41 @@ mcprojsim simulate examples/sample_project.yaml --minimal --seed 42
 === Simulation Results ===
 
 Project Overview:
-Project: Customer Portal Redesign
-Hours per Day: 8.0
-Max Parallel Tasks: 2
-Schedule Mode: dependency_only
+  Project: Customer Portal Redesign
+  Start Date: 2025-11-01
+  Number of Tasks: 8
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 2
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 580.89 hours (73 working days)
-Median (P50): 574.73 hours
-Std Dev: 78.46 hours
-Minimum: 365.50 hours
-Maximum: 924.02 hours
-Coefficient of Variation: 0.1351
-Skewness: 0.4798
-Excess Kurtosis: 0.1518
+  Mean: 580.89 hours (73 working days)
+  Median (P50): 574.73 hours
+  Std Dev: 78.46 hours
+  Minimum: 365.50 hours
+  Maximum: 924.02 hours
+  Coefficient of Variation: 0.1351
+  Skewness: 0.4798
+  Excess Kurtosis: 0.1518
 
 Project Effort Statistical Summary:
-Mean: 686.35 person-hours (86 person-days)
-Median (P50): 684.08 person-hours
-Std Dev: 61.54 person-hours
-Minimum: 487.94 person-hours
-Maximum: 902.14 person-hours
-Coefficient of Variation: 0.0897
-Skewness: 0.1210
-Excess Kurtosis: -0.1140
+  Mean: 686.35 person-hours (86 person-days)
+  Median (P50): 684.08 person-hours
+  Std Dev: 61.54 person-hours
+  Minimum: 487.94 person-hours
+  Maximum: 902.14 person-hours
+  Coefficient of Variation: 0.0897
+  Skewness: 0.1210
+  Excess Kurtosis: -0.1140
 
 Calendar Time Confidence Intervals:
   P25: 524.00 hours (66 working days)  (2026-02-02)
@@ -650,41 +698,52 @@ mcprojsim simulate examples/team_size_demo_with_team_size.yaml --minimal --seed 
 === Simulation Results ===
 
 Project Overview:
-Project: Team Size Demo
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: resource_constrained
+  Project: Team Size Demo
+  Start Date: 2026-04-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: resource_constrained
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 538.33 hours (68 working days)
-Median (P50): 530.25 hours
-Std Dev: 80.28 hours
-Minimum: 337.16 hours
-Maximum: 793.05 hours
-Coefficient of Variation: 0.1491
-Skewness: 0.1334
-Excess Kurtosis: -0.3907
+  Mean: 335.59 hours (42 working days)
+  Median (P50): 338.16 hours
+  Std Dev: 46.63 hours
+  Minimum: 196.00 hours
+  Maximum: 486.77 hours
+  Coefficient of Variation: 0.1389
+  Skewness: 0.0483
+  Excess Kurtosis: 1.5845
 
 Project Effort Statistical Summary:
-Mean: 131.12 person-hours (17 person-days)
-Median (P50): 130.25 person-hours
-Std Dev: 18.79 person-hours
-Minimum: 81.16 person-hours
-Maximum: 185.05 person-hours
-Coefficient of Variation: 0.1433
-Skewness: 0.1250
-Excess Kurtosis: -0.5403
+  Mean: 82.69 person-hours (11 person-days)
+  Median (P50): 82.16 person-hours
+  Std Dev: 11.85 person-hours
+  Minimum: 52.00 person-hours
+  Maximum: 118.77 person-hours
+  Coefficient of Variation: 0.1433
+  Skewness: 0.1368
+  Excess Kurtosis: -0.5265
 
 Calendar Time Confidence Intervals:
-  P10: 459.03 hours (58 working days)  (2026-06-22)
-  P25: 485.56 hours (61 working days)  (2026-06-25)
-  P50: 530.25 hours (67 working days)  (2026-07-03)
-  P75: 624.72 hours (79 working days)  (2026-07-21)
-  P80: 627.91 hours (79 working days)  (2026-07-21)
-  P85: 648.18 hours (82 working days)  (2026-07-24)
-  P90: 652.93 hours (82 working days)  (2026-07-24)
-  P95: 675.08 hours (85 working days)  (2026-07-29)
-  P99: 701.04 hours (88 working days)  (2026-08-03)
+  P10: 291.31 hours (37 working days)  (2026-05-22)
+  P25: 314.03 hours (40 working days)  (2026-05-27)
+  P50: 338.16 hours (43 working days)  (2026-06-01)
+  P75: 363.12 hours (46 working days)  (2026-06-04)
+  P80: 365.33 hours (46 working days)  (2026-06-04)
+  P85: 384.05 hours (49 working days)  (2026-06-09)
+  P90: 386.92 hours (49 working days)  (2026-06-09)
+  P95: 390.98 hours (49 working days)  (2026-06-09)
+  P99: 461.04 hours (58 working days)  (2026-06-22)
 ```
 
 Compare with the same project **without** `team_size` (dependency-only mode):
@@ -697,41 +756,52 @@ mcprojsim simulate examples/team_size_demo_base.yaml --minimal --seed 42
 === Simulation Results ===
 
 Project Overview:
-Project: Team Size Demo
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Team Size Demo
+  Start Date: 2026-04-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 131.18 hours (17 working days)
-Median (P50): 130.38 hours
-Std Dev: 18.95 hours
-Minimum: 78.42 hours
-Maximum: 184.91 hours
-Coefficient of Variation: 0.1445
-Skewness: 0.1120
-Excess Kurtosis: -0.5163
+  Mean: 82.66 hours (11 working days)
+  Median (P50): 82.16 hours
+  Std Dev: 11.94 hours
+  Minimum: 49.42 hours
+  Maximum: 116.52 hours
+  Coefficient of Variation: 0.1445
+  Skewness: 0.1120
+  Excess Kurtosis: -0.5163
 
 Project Effort Statistical Summary:
-Mean: 131.18 person-hours (17 person-days)
-Median (P50): 130.38 person-hours
-Std Dev: 18.95 person-hours
-Minimum: 78.42 person-hours
-Maximum: 184.91 person-hours
-Coefficient of Variation: 0.1445
-Skewness: 0.1120
-Excess Kurtosis: -0.5163
+  Mean: 82.66 person-hours (11 person-days)
+  Median (P50): 82.16 person-hours
+  Std Dev: 11.94 person-hours
+  Minimum: 49.42 person-hours
+  Maximum: 116.52 person-hours
+  Coefficient of Variation: 0.1445
+  Skewness: 0.1120
+  Excess Kurtosis: -0.5163
 
 Calendar Time Confidence Intervals:
-  P10: 106.30 hours (14 working days)  (2026-04-21)
-  P25: 117.83 hours (15 working days)  (2026-04-22)
-  P50: 130.38 hours (17 working days)  (2026-04-24)
-  P75: 144.63 hours (19 working days)  (2026-04-28)
-  P80: 148.37 hours (19 working days)  (2026-04-28)
-  P85: 152.21 hours (20 working days)  (2026-04-29)
-  P90: 156.96 hours (20 working days)  (2026-04-29)
-  P95: 163.60 hours (21 working days)  (2026-04-30)
-  P99: 172.95 hours (22 working days)  (2026-05-01)
+  P10: 66.98 hours (9 working days)  (2026-04-14)
+  P25: 74.24 hours (10 working days)  (2026-04-15)
+  P50: 82.16 hours (11 working days)  (2026-04-16)
+  P75: 91.13 hours (12 working days)  (2026-04-17)
+  P80: 93.49 hours (12 working days)  (2026-04-17)
+  P85: 95.91 hours (12 working days)  (2026-04-17)
+  P90: 98.90 hours (13 working days)  (2026-04-20)
+  P95: 103.09 hours (13 working days)  (2026-04-20)
+  P99: 108.98 hours (14 working days)  (2026-04-21)
 ```
 
 Key observations:
@@ -807,36 +877,47 @@ mcprojsim simulate examples/constrained_portal.yaml --minimal --seed 42 --iterat
 === Simulation Results ===
 
 Project Overview:
-Project: Onboarding Portal
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: resource_constrained
+  Project: Onboarding Portal
+  Start Date: 2026-04-01
+  Number of Tasks: 3
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: resource_constrained
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 622.15 hours (78 working days)
-Median (P50): 628.65 hours
-Std Dev: 95.53 hours
-Minimum: 389.53 hours
-Maximum: 1153.71 hours
-Coefficient of Variation: 0.1535
-Skewness: 1.0737
-Excess Kurtosis: 4.4867
+  Mean: 377.05 hours (48 working days)
+  Median (P50): 363.68 hours
+  Std Dev: 50.00 hours
+  Minimum: 288.97 hours
+  Maximum: 531.94 hours
+  Coefficient of Variation: 0.1326
+  Skewness: 1.0826
+  Excess Kurtosis: 0.3376
 
 Project Effort Statistical Summary:
-Mean: 173.36 person-hours (22 person-days)
-Median (P50): 172.34 person-hours
-Std Dev: 20.63 person-hours
-Minimum: 124.81 person-hours
-Maximum: 222.92 person-hours
-Coefficient of Variation: 0.1190
-Skewness: 0.1664
-Excess Kurtosis: -0.4446
+  Mean: 108.80 person-hours (14 person-days)
+  Median (P50): 108.03 person-hours
+  Std Dev: 12.31 person-hours
+  Minimum: 74.53 person-hours
+  Maximum: 137.90 person-hours
+  Coefficient of Variation: 0.1131
+  Skewness: 0.0787
+  Excess Kurtosis: -0.4372
 
 Calendar Time Confidence Intervals:
-  P50: 628.65 hours (79 working days)  (2026-07-21)
-  P80: 678.25 hours (85 working days)  (2026-07-29)
-  P90: 701.40 hours (88 working days)  (2026-08-03)
-  P95: 793.66 hours (100 working days)  (2026-08-19)
+  P50: 363.68 hours (46 working days)  (2026-06-04)
+  P80: 391.05 hours (49 working days)  (2026-06-09)
+  P90: 462.23 hours (58 working days)  (2026-06-22)
+  P95: 482.20 hours (61 working days)  (2026-06-25)
 ```
 
 Key observations:
@@ -884,36 +965,47 @@ mcprojsim simulate .build/gen-examples/nl_project.yaml --minimal --seed 42
 === Simulation Results ===
 
 Project Overview:
-Project: Rework Web Interface
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Rework Web Interface
+  Start Date: 2026-06-02
+  Number of Tasks: 3
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 3679.64 hours (460 working days)
-Median (P50): 3668.32 hours
-Std Dev: 422.02 hours
-Minimum: 2428.15 hours
-Maximum: 5140.73 hours
-Coefficient of Variation: 0.1147
-Skewness: 0.0908
-Excess Kurtosis: -0.2639
+  Mean: 1052.49 hours (132 working days)
+  Median (P50): 1042.54 hours
+  Std Dev: 132.88 hours
+  Minimum: 736.96 hours
+  Maximum: 1533.41 hours
+  Coefficient of Variation: 0.1263
+  Skewness: 0.3511
+  Excess Kurtosis: -0.2986
 
 Project Effort Statistical Summary:
-Mean: 3679.64 person-hours (460 person-days)
-Median (P50): 3668.32 person-hours
-Std Dev: 422.02 person-hours
-Minimum: 2428.15 person-hours
-Maximum: 5140.73 person-hours
-Coefficient of Variation: 0.1147
-Skewness: 0.0908
-Excess Kurtosis: -0.2639
+  Mean: 1052.49 person-hours (132 person-days)
+  Median (P50): 1042.54 person-hours
+  Std Dev: 132.88 person-hours
+  Minimum: 736.96 person-hours
+  Maximum: 1533.41 person-hours
+  Coefficient of Variation: 0.1263
+  Skewness: 0.3511
+  Excess Kurtosis: -0.2986
 
 Calendar Time Confidence Intervals:
-  P50: 3668.32 hours (459 working days)  (2028-03-06)
-  P80: 4046.01 hours (506 working days)  (2028-05-10)
-  P90: 4235.46 hours (530 working days)  (2028-06-13)
-  P95: 4386.72 hours (549 working days)  (2028-07-10)
+  P50: 1042.54 hours (131 working days)  (2026-12-02)
+  P80: 1167.75 hours (146 working days)  (2026-12-23)
+  P90: 1233.46 hours (155 working days)  (2027-01-05)
+  P95: 1285.85 hours (161 working days)  (2027-01-13)
 ```
 
 ### Text input with resources and calendars (constrained)
@@ -987,36 +1079,47 @@ mcprojsim simulate .build/gen-examples/nl_constrained_project.yaml --minimal --s
 === Simulation Results ===
 
 Project Overview:
-Project: Platform Migration
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: resource_constrained
+  Project: Platform Migration
+  Start Date: 2026-05-01
+  Number of Tasks: 4
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: resource_constrained
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 1291.85 hours (162 working days)
-Median (P50): 1279.73 hours
-Std Dev: 142.76 hours
-Minimum: 939.51 hours
-Maximum: 1758.59 hours
-Coefficient of Variation: 0.1105
-Skewness: 0.3584
-Excess Kurtosis: 0.2064
+  Mean: 840.04 hours (106 working days)
+  Median (P50): 819.88 hours
+  Std Dev: 90.25 hours
+  Minimum: 630.72 hours
+  Maximum: 1272.02 hours
+  Coefficient of Variation: 0.1074
+  Skewness: 1.1354
+  Excess Kurtosis: 2.8696
 
 Project Effort Statistical Summary:
-Mean: 421.32 person-hours (53 person-days)
-Median (P50): 417.82 person-hours
-Std Dev: 41.05 person-hours
-Minimum: 316.16 person-hours
-Maximum: 539.46 person-hours
-Coefficient of Variation: 0.0974
-Skewness: 0.1775
-Excess Kurtosis: -0.3019
+  Mean: 264.61 person-hours (34 person-days)
+  Median (P50): 263.89 person-hours
+  Std Dev: 24.51 person-hours
+  Minimum: 206.48 person-hours
+  Maximum: 326.63 person-hours
+  Coefficient of Variation: 0.0926
+  Skewness: 0.1880
+  Excess Kurtosis: -0.3326
 
 Calendar Time Confidence Intervals:
-  P50: 1279.73 hours (160 working days)  (2026-12-11)
-  P80: 1440.25 hours (181 working days)  (2027-01-11)
-  P90: 1466.59 hours (184 working days)  (2027-01-14)
-  P95: 1514.26 hours (190 working days)  (2027-01-22)
+  P50: 819.88 hours (103 working days)  (2026-09-23)
+  P80: 918.51 hours (115 working days)  (2026-10-09)
+  P90: 942.87 hours (118 working days)  (2026-10-14)
+  P95: 991.48 hours (124 working days)  (2026-10-22)
 ```
 
 The generated YAML includes full `resources:` and `calendars:` sections. Use `--validate-only` to check your description before generating:
@@ -1094,35 +1197,46 @@ mcprojsim simulate examples/sprint_planning_minimal.yaml --minimal --seed 42
 === Simulation Results ===
 
 Project Overview:
-Project: Sprint Planning Minimal
-Hours per Day: 8.0
-Max Parallel Tasks: 5
-Schedule Mode: dependency_only
+  Project: Sprint Planning Minimal
+  Start Date: 2026-05-04
+  Number of Tasks: 5
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 5
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 118.89 hours (15 working days)
-Median (P50): 115.18 hours
-Std Dev: 26.00 hours
-Minimum: 65.66 hours
-Maximum: 189.74 hours
-Coefficient of Variation: 0.2186
-Skewness: 0.4313
-Excess Kurtosis: -0.5763
+  Mean: 74.92 hours (10 working days)
+  Median (P50): 72.58 hours
+  Std Dev: 16.38 hours
+  Minimum: 41.37 hours
+  Maximum: 119.56 hours
+  Coefficient of Variation: 0.2186
+  Skewness: 0.4313
+  Excess Kurtosis: -0.5763
 
 Project Effort Statistical Summary:
-Mean: 334.08 person-hours (42 person-days)
-Median (P50): 332.47 person-hours
-Std Dev: 34.77 person-hours
-Minimum: 232.35 person-hours
-Maximum: 460.47 person-hours
-Coefficient of Variation: 0.1041
-Skewness: 0.2056
-Excess Kurtosis: -0.1693
+  Mean: 210.51 person-hours (27 person-days)
+  Median (P50): 209.49 person-hours
+  Std Dev: 21.91 person-hours
+  Minimum: 146.41 person-hours
+  Maximum: 290.15 person-hours
+  Coefficient of Variation: 0.1041
+  Skewness: 0.2056
+  Excess Kurtosis: -0.1693
 
 Calendar Time Confidence Intervals:
-  P50: 115.18 hours (15 working days)  (2026-05-25)
-  P80: 142.80 hours (18 working days)  (2026-05-28)
-  P90: 156.82 hours (20 working days)  (2026-06-01)
+  P50: 72.58 hours (10 working days)  (2026-05-18)
+  P80: 89.98 hours (12 working days)  (2026-05-20)
+  P90: 98.82 hours (13 working days)  (2026-05-21)
 
 Sprint Planning Summary:
 Sprint Length: 2 weeks
@@ -1244,38 +1358,53 @@ mcprojsim simulate examples/sprint_planning_advanced.yaml --minimal --table --se
 === Simulation Results ===
 
 Project Overview:
-┌────────────────────┬──────────────────────────┐
-│ Field              │ Value                    │
-├────────────────────┼──────────────────────────┤
-│ Project            │ Sprint Planning Advanced │
-│ Hours per Day      │ 8.0                      │
-│ Max Parallel Tasks │ 6                        │
-│ Schedule Mode      │ dependency_only          │
-└────────────────────┴──────────────────────────┘
+┌────────────────────────────────┬──────────────────────────┐
+│ Field                          │ Value                    │
+├────────────────────────────────┼──────────────────────────┤
+│ Project                        │ Sprint Planning Advanced │
+│ Start Date                     │ 2026-05-04               │
+│ Number of Tasks                │ 6                        │
+│ Effective Default Distribution │ triangular               │
+│ T-Shirt Category Used          │ story                    │
+│ Hours per Day                  │ 8.0                      │
+│ Max Parallel Tasks             │ 6                        │
+│ Schedule Mode                  │ dependency_only          │
+└────────────────────────────────┴──────────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
 
 Calendar Time Statistical Summary:
-┌──────────────────────────┬────────────────────────────────┐
-│ Metric                   │ Value                          │
-├──────────────────────────┼────────────────────────────────┤
-│ Mean                     │ 136.97 hours (18 working days) │
-│ Median (P50)             │ 136.38 hours                   │
-│ Std Dev                  │ 23.09 hours                    │
-│ Minimum                  │ 84.80 hours                    │
-│ Maximum                  │ 188.66 hours                   │
-│ Coefficient of Variation │ 0.1686                         │
-│ Skewness                 │ 0.0783                         │
-│ Excess Kurtosis          │ -0.8139                        │
-└──────────────────────────┴────────────────────────────────┘
+┌──────────────────────────┬───────────────────────────────┐
+│ Metric                   │ Value                         │
+├──────────────────────────┼───────────────────────────────┤
+│ Mean                     │ 86.31 hours (11 working days) │
+│ Median (P50)             │ 85.93 hours                   │
+│ Std Dev                  │ 14.55 hours                   │
+│ Minimum                  │ 53.43 hours                   │
+│ Maximum                  │ 118.88 hours                  │
+│ Coefficient of Variation │ 0.1686                        │
+│ Skewness                 │ 0.0783                        │
+│ Excess Kurtosis          │ -0.8139                       │
+└──────────────────────────┴───────────────────────────────┘
 
 Project Effort Statistical Summary:
 ┌──────────────────────────┬──────────────────────────────────────┐
 │ Metric                   │ Value                                │
 ├──────────────────────────┼──────────────────────────────────────┤
-│ Mean                     │ 455.70 person-hours (57 person-days) │
-│ Median (P50)             │ 456.26 person-hours                  │
-│ Std Dev                  │ 43.32 person-hours                   │
-│ Minimum                  │ 361.20 person-hours                  │
-│ Maximum                  │ 586.08 person-hours                  │
+│ Mean                     │ 287.15 person-hours (36 person-days) │
+│ Median (P50)             │ 287.50 person-hours                  │
+│ Std Dev                  │ 27.30 person-hours                   │
+│ Minimum                  │ 227.60 person-hours                  │
+│ Maximum                  │ 369.30 person-hours                  │
 │ Coefficient of Variation │ 0.0951                               │
 │ Skewness                 │ 0.0635                               │
 │ Excess Kurtosis          │ -0.2823                              │
@@ -1285,9 +1414,9 @@ Calendar Time Confidence Intervals:
 ┌──────────────┬─────────┬────────────────┬────────────┐
 │ Percentile   │   Hours │   Working Days │ Date       │
 ├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │  136.38 │             18 │ 2026-05-28 │
-│ P80          │  158.59 │             20 │ 2026-06-01 │
-│ P90          │  169.52 │             22 │ 2026-06-03 │
+│ P50          │   85.93 │             11 │ 2026-05-19 │
+│ P80          │   99.93 │             13 │ 2026-05-21 │
+│ P90          │  106.82 │             14 │ 2026-05-22 │
 └──────────────┴─────────┴────────────────┴────────────┘
 
 Sprint Planning Summary:
@@ -1409,35 +1538,46 @@ mcprojsim simulate examples/sprint_planning_tasks.yaml --minimal --seed 42
 === Simulation Results ===
 
 Project Overview:
-Project: Sprint Planning Tasks Mode
-Hours per Day: 8.0
-Max Parallel Tasks: 6
-Schedule Mode: dependency_only
+  Project: Sprint Planning Tasks Mode
+  Start Date: 2026-05-04
+  Number of Tasks: 6
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 6
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 11.16 hours (2 working days)
-Median (P50): 11.21 hours
-Std Dev: 0.73 hours
-Minimum: 8.49 hours
-Maximum: 12.67 hours
-Coefficient of Variation: 0.0656
-Skewness: -0.3072
-Excess Kurtosis: -0.4514
+  Mean: 7.03 hours (1 working days)
+  Median (P50): 7.06 hours
+  Std Dev: 0.46 hours
+  Minimum: 5.35 hours
+  Maximum: 7.99 hours
+  Coefficient of Variation: 0.0656
+  Skewness: -0.3072
+  Excess Kurtosis: -0.4514
 
 Project Effort Statistical Summary:
-Mean: 57.12 person-hours (8 person-days)
-Median (P50): 57.11 person-hours
-Std Dev: 3.15 person-hours
-Minimum: 44.41 person-hours
-Maximum: 68.77 person-hours
-Coefficient of Variation: 0.0551
-Skewness: -0.0057
-Excess Kurtosis: -0.0762
+  Mean: 35.99 person-hours (5 person-days)
+  Median (P50): 35.98 person-hours
+  Std Dev: 1.98 person-hours
+  Minimum: 27.99 person-hours
+  Maximum: 43.33 person-hours
+  Coefficient of Variation: 0.0551
+  Skewness: -0.0057
+  Excess Kurtosis: -0.0762
 
 Calendar Time Confidence Intervals:
-  P50: 11.21 hours (2 working days)  (2026-05-06)
-  P80: 11.84 hours (2 working days)  (2026-05-06)
-  P90: 12.11 hours (2 working days)  (2026-05-06)
+  P50: 7.06 hours (1 working days)  (2026-05-05)
+  P80: 7.46 hours (1 working days)  (2026-05-05)
+  P90: 7.63 hours (1 working days)  (2026-05-05)
 
 Sprint Planning Summary:
 Sprint Length: 1 weeks
@@ -1650,36 +1790,47 @@ mcprojsim simulate .build/gen-examples/sprint_planning_nl.yaml --minimal --seed 
 === Simulation Results ===
 
 Project Overview:
-Project: Sprint Planning from Text
-Hours per Day: 8.0
-Max Parallel Tasks: 3
-Schedule Mode: dependency_only
+  Project: Sprint Planning from Text
+  Start Date: 2026-05-04
+  Number of Tasks: 3
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 3
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
 
 Calendar Time Statistical Summary:
-Mean: 118.50 hours (15 working days)
-Median (P50): 115.22 hours
-Std Dev: 26.19 hours
-Minimum: 63.87 hours
-Maximum: 188.52 hours
-Coefficient of Variation: 0.2210
-Skewness: 0.4093
-Excess Kurtosis: -0.5588
+  Mean: 74.67 hours (10 working days)
+  Median (P50): 72.60 hours
+  Std Dev: 16.50 hours
+  Minimum: 40.24 hours
+  Maximum: 118.79 hours
+  Coefficient of Variation: 0.2210
+  Skewness: 0.4093
+  Excess Kurtosis: -0.5588
 
 Project Effort Statistical Summary:
-Mean: 226.21 person-hours (29 person-days)
-Median (P50): 223.89 person-hours
-Std Dev: 30.93 person-hours
-Minimum: 143.14 person-hours
-Maximum: 338.00 person-hours
-Coefficient of Variation: 0.1368
-Skewness: 0.2634
-Excess Kurtosis: -0.3135
+  Mean: 142.54 person-hours (18 person-days)
+  Median (P50): 141.08 person-hours
+  Std Dev: 19.49 person-hours
+  Minimum: 90.20 person-hours
+  Maximum: 212.98 person-hours
+  Coefficient of Variation: 0.1368
+  Skewness: 0.2634
+  Excess Kurtosis: -0.3135
 
 Calendar Time Confidence Intervals:
-  P50: 115.22 hours (15 working days)  (2026-05-25)
-  P80: 142.26 hours (18 working days)  (2026-05-28)
-  P90: 156.49 hours (20 working days)  (2026-06-01)
-  P95: 166.67 hours (21 working days)  (2026-06-02)
+  P50: 72.60 hours (10 working days)  (2026-05-18)
+  P80: 89.64 hours (12 working days)  (2026-05-20)
+  P90: 98.61 hours (13 working days)  (2026-05-21)
+  P95: 105.02 hours (14 working days)  (2026-05-22)
 
 Sprint Planning Summary:
 Sprint Length: 2 weeks

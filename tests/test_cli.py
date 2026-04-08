@@ -737,7 +737,13 @@ class TestCli:
 
             result = runner.invoke(
                 cli,
-                ["simulate", str(project_file), "--config", str(config_file), "--quiet"],
+                [
+                    "simulate",
+                    str(project_file),
+                    "--config",
+                    str(config_file),
+                    "--quiet",
+                ],
             )
 
         assert result.exit_code == 0

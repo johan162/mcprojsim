@@ -95,9 +95,7 @@ class JSONExporter:
         # Get current date and time for simulation timestamp
         simulation_date = datetime.now().isoformat()
 
-        start_date_str = (
-            results.start_date.isoformat() if results.start_date else None
-        )
+        start_date_str = results.start_date.isoformat() if results.start_date else None
         effective_default_distribution = (
             project.project.distribution.value if project is not None else None
         )
@@ -105,7 +103,11 @@ class JSONExporter:
             "project": {
                 "name": results.project_name,
                 "start_date": start_date_str,
-                "num_tasks": len(results.critical_path_frequency) if results.critical_path_frequency else 0,
+                "num_tasks": (
+                    len(results.critical_path_frequency)
+                    if results.critical_path_frequency
+                    else 0
+                ),
                 "effective_default_distribution": effective_default_distribution,
                 "t_shirt_category_used": effective_config.t_shirt_size_default_category,
             },
