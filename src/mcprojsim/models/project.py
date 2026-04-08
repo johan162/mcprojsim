@@ -699,6 +699,7 @@ class ProjectMetadata(BaseModel):
     )
     team_size: Optional[int] = Field(default=None, ge=0)
     t_shirt_size_default_category: Optional[str] = Field(default=None)
+    uncertainty_factors: Optional[UncertaintyFactors] = Field(default=None)
 
     @field_validator("start_date", mode="before")
     @classmethod
@@ -778,6 +779,9 @@ class Project(BaseModel):
 
         # Check for circular dependencies
         self._check_circular_dependencies()
+
+        # Apply project-level uncertainty factors as defaults to tasks
+        self._apply_project_uncertainty_factors()
 
         # Validate effective task distributions after project defaults are known
         self._validate_effective_task_distributions()
@@ -900,6 +904,36 @@ class Project(BaseModel):
                     raise ValueError(
                         f"Circular dependency detected involving task {task.id}"
                     )
+
+    def _apply_project_uncertainty_factors(self) -> None:
+        """Apply project-level uncertainty factors as defaults to tasks.
+
+        Tasks that don't explicitly override uncertainty factors inherit
+        from the project metadata. This provides a way to set org/project-wide
+        defaults that avoid repetition in the task list.
+        """
+        if self.project.uncertainty_factors is None:
+            return
+
+        project_factors = self.project.uncertainty_factors
+        for task in self.tasks:
+            # Merge project factors with task factors, where task factors take precedence
+            if task.uncertainty_factors is not None:
+                # Task has explicit factors, merge them with project defaults
+                # Task-level values override project-level values
+                task_factors_dict = task.uncertainty_factors.model_dump(
+                    exclude_unset=True
+                )
+                # Get project factors as defaults
+                merged = project_factors.model_copy()
+                # Update merged with task-specific overrides
+                for field, value in task_factors_dict.items():
+                    if value is not None:
+                        setattr(merged, field, value)
+                task.uncertainty_factors = merged
+            else:
+                # Task has no explicit factors, use project defaults
+                task.uncertainty_factors = project_factors.model_copy()
 
     def _validate_effective_task_distributions(self) -> None:
         """Validate explicit task ranges against the effective distribution."""

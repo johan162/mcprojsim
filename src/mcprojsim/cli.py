@@ -1028,6 +1028,22 @@ def simulate(
 
             click.echo("\n=== Simulation Results ===")
 
+            project_uncertainty_factors = project.project.uncertainty_factors
+            if project_uncertainty_factors is not None:
+                raw_default_uncertainty_levels = project_uncertainty_factors.model_dump()
+            else:
+                raw_default_uncertainty_levels = DEFAULT_UNCERTAINTY_FACTOR_LEVELS
+
+            effective_default_uncertainty_levels = {
+                factor_name: str(
+                    raw_default_uncertainty_levels.get(
+                        factor_name,
+                        DEFAULT_UNCERTAINTY_FACTOR_LEVELS[factor_name],
+                    )
+                )
+                for factor_name in DEFAULT_UNCERTAINTY_FACTOR_LEVELS
+            }
+
             if table:
                 start_date_str = (
                     project.project.start_date.isoformat()
@@ -1055,7 +1071,10 @@ def simulate(
 
                 # Default Uncertainty Factors table
                 uncertainty_rows = []
-                for factor_name, default_level in DEFAULT_UNCERTAINTY_FACTOR_LEVELS.items():
+                for (
+                    factor_name,
+                    default_level,
+                ) in effective_default_uncertainty_levels.items():
                     multiplier = cfg.get_uncertainty_multiplier(factor_name, default_level)
                     factor_display = factor_name.replace("_", " ").title()
                     uncertainty_rows.append([factor_display, f"{default_level} ({multiplier})"])
@@ -1129,7 +1148,10 @@ def simulate(
                 click.echo(f"  Schedule Mode: {schedule_mode}")
 
                 click.echo("\nDefault Uncertainty Factors:")
-                for factor_name, default_level in DEFAULT_UNCERTAINTY_FACTOR_LEVELS.items():
+                for (
+                    factor_name,
+                    default_level,
+                ) in effective_default_uncertainty_levels.items():
                     multiplier = cfg.get_uncertainty_multiplier(factor_name, default_level)
                     factor_display = factor_name.replace("_", " ").title()
                     click.echo(f"  {factor_display}: {default_level} ({multiplier})")
