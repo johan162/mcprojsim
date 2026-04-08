@@ -60,8 +60,8 @@ nav:
       - Running Simulations: user_guide/running_simulations.md
       - Interpreting Results: user_guide/interpreting_results.md
       - Configuration: user_guide/configuration.md
+      - Natural Language Input: user_guide/nl_processing.md      
       - MCP Server: user_guide/mcp-server.md
-      - Natural Language Input: user_guide/nl_processing.md
       - Examples: examples.md
   - API Reference:
       - API Reference: api_reference/01_intro.md
