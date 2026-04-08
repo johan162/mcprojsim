@@ -1,0 +1,17 @@
+Project name: Prose Dependencies Explicit
+Start date: 2026-05-01
+
+Task 1:
+- Name: Data pipeline setup
+
+Task 2:
+- Name: Reporting layer
+- blocked by task 1
+
+Task 3:
+- Name: Dashboard pages
+- following task 2
+
+Task 4:
+- Name: Final rollout
+- based on dashboard pages

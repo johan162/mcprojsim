@@ -1,7 +1,31 @@
 
-## Natural Language Parser
+# Natural Language Parser
 
-### `NLProjectParser`
+## Overview
+
+`NLProjectParser` converts semi-structured, informal plain text into valid mcprojsim YAML project files. It sits at the boundary between human-readable input and the structured project model, and is the backend for both the `mcprojsim generate` CLI command and the MCP server's `generate_project_file` tool. The parser processes input line by line using a section-based state machine: a header line (e.g. `Task 1:`, `Resource 2: Alice`) opens a new section, and subsequent bullet lines fill in that section's properties.
+
+**When to use this module:** Use `NLProjectParser` when you want to create project files from natural language — for rapid prototyping, LLM-generated descriptions, or programmatic project creation without writing YAML by hand.
+
+| Capability | Description |
+|---|---|
+| `parse(text)` | Runs the state machine over plain text and returns a `ParsedProject` dataclass |
+| `to_yaml(project)` | Renders a `ParsedProject` to a valid YAML project file string |
+| `parse_and_generate(text)` | Convenience wrapper combining `parse` + `to_yaml` in one call |
+| Flexible separators | Keyword–value separators `:`, `.`, `=`, or space are all equivalent |
+| T-shirt size normalisation | Aliases like `Extra Large`, `2XL`, or `Medium` resolve to canonical sizes |
+| Resources & calendars | Parses `Resource N:` and `Calendar:` sections alongside tasks and sprint planning |
+
+**Background: Section-based state machine** — The parser reads input top to bottom. Any line matching a section-header pattern (`Task N:`, `Resource N:`, `Calendar:`, `Sprint planning:`, etc.) switches the current active section. Bullet lines (`-`, `*`, `•`) are dispatched to the active section's property handler. Project-level metadata (name, start date, hours per day) is matched anywhere outside a section.
+
+**Imports:**
+```python
+from mcprojsim.nl_parser import NLProjectParser
+```
+
+---
+
+## `NLProjectParser`
 
 Converts semi-structured, plain-text project descriptions into valid mcprojsim YAML project files. Also available via the `mcprojsim generate` CLI command and the MCP server's `generate_project_file` tool.
 
@@ -17,7 +41,7 @@ parser = NLProjectParser()
 | `to_yaml` | `(project: ParsedProject) -> str` | Render a `ParsedProject` as a valid YAML project file string. |
 | `parse_and_generate` | `(text: str) -> str` | Convenience wrapper: calls `parse` then `to_yaml` and returns the YAML string directly. |
 
-#### Input format
+### Input format
 
 The parser processes the description line by line using a section-based state machine. A **section header** line (e.g. `Task 1:`, `Resource 2: Alice`, `Sprint planning:`) opens a new section; subsequent **bullet lines** (prefixed with `-`, `*`, or `•`) are parsed as properties of that section. Blank lines are ignored. Project-level metadata (name, start date, etc.) can appear anywhere outside a section.
 
@@ -32,7 +56,7 @@ size XL
 
 ---
 
-#### Project-level metadata
+### Project-level metadata
 
 These lines can appear before the first task or between sections:
 
@@ -46,9 +70,39 @@ These lines can appear before the first task or between sections:
 
 ---
 
-#### Tasks
+### Tasks
 
-A task section starts with `Task N:` optionally followed by the task name on the same line. Subsequent bullet lines define properties:
+A task section starts with `Task N:` optionally followed by the task name on the same line. Subsequent bullet lines define properties.
+
+Alternatively, when no `Task N:` headers are present, the parser auto-detects tasks from plain lists:
+
+| List format | Example | Numbering |
+|-------------|---------|-----------|
+| Dot numbered | `1. Design phase` | Preserved from source |
+| Paren numbered | `2) Implementation` | Preserved from source |
+| Bracket numbered | `[3] Testing` | Preserved from source |
+| Bullet (`-`, `*`, `•`) | `- Backend API` | Auto-assigned (1, 2, 3, …) |
+| Hash numbered | `# 1 First task` | Preserved from source |
+
+Auto-task mode activates only when **no** `Task N:` headers have been seen. The two modes cannot be mixed.
+
+Indented continuation lines under auto-detected tasks are parsed as bullet properties, identical to the explicit-header format.
+
+#### Inline properties on task lines
+
+When using auto-detected lists, properties can appear inline on the task name line:
+
+| Inline pattern | Example | Effect |
+|----------------|---------|--------|
+| Bracketed size | `Backend API [XL]` | Sets `t_shirt_size = "XL"` |
+| Parenthesized size | `Frontend (M)` | Sets `t_shirt_size = "M"` |
+| Fuzzy size hint | `probably an M`, `likely L`, `assume S` | Sets `t_shirt_size` |
+| Inline range | `3–5 days`, `2-4 hours` | Sets `low`, `expected`, `high`, `unit` |
+| Inline dependency | `depends on Task 1` | Sets `dependency_refs` |
+
+The parser extracts inline properties and strips them from the task name.
+
+#### Task bullet properties
 
 | Bullet keyword | Example | Notes |
 |----------------|---------|-------|
@@ -76,7 +130,7 @@ A task section starts with `Task N:` optionally followed by the task name on the
 
 ---
 
-#### Resources
+### Resources
 
 A resource section starts with `Resource N: Name`. Bullet properties:
 
@@ -91,7 +145,7 @@ A resource section starts with `Resource N: Name`. Bullet properties:
 
 ---
 
-#### Calendars
+### Calendars
 
 A calendar section starts with `Calendar: id`. Bullet properties:
 
@@ -103,7 +157,7 @@ A calendar section starts with `Calendar: id`. Bullet properties:
 
 ---
 
-#### Sprint planning
+### Sprint planning
 
 A `Sprint planning:` header opens the sprint planning section. Bullet properties:
 
@@ -134,7 +188,7 @@ A `Sprint planning:` header opens the sprint planning section. Bullet properties
 
 ---
 
-#### Complete example
+### Complete example
 
 ```text
 Project name: Platform Migration
@@ -173,9 +227,9 @@ from mcprojsim.nl_parser import NLProjectParser
 yaml_output = NLProjectParser().parse_and_generate(description)
 ```
 
-### Data Classes
+## Data Classes
 
-#### `ParsedProject`
+### `ParsedProject`
 
 Top-level container for all data extracted from a natural language description.
 
@@ -191,7 +245,7 @@ Top-level container for all data extracted from a natural language description.
 | `calendars` | `list[ParsedCalendar]` | `[]` | Extracted working calendars. |
 | `sprint_planning` | `ParsedSprintPlanning \| None` | `None` | Sprint planning configuration, if present. |
 
-#### `ParsedTask`
+### `ParsedTask`
 
 A single task extracted from the description.
 
@@ -211,7 +265,7 @@ A single task extracted from the description.
 | `max_resources` | `int` | `1` | Maximum number of resources that can work the task concurrently. |
 | `min_experience_level` | `int` | `1` | Minimum experience level required for an assigned resource. |
 
-#### `ParsedResource`
+### `ParsedResource`
 
 A team member or resource extracted from the description.
 
@@ -226,7 +280,7 @@ A team member or resource extracted from the description.
 | `sickness_prob` | `float` | `0.0` | Per-day sickness probability. |
 | `planned_absence` | `list[str]` | `[]` | List of planned absence date strings. |
 
-#### `ParsedCalendar`
+### `ParsedCalendar`
 
 A working calendar extracted from the description.
 
@@ -237,7 +291,7 @@ A working calendar extracted from the description.
 | `work_days` | `list[int]` | `[1, 2, 3, 4, 5]` | Working days of the week (1 = Monday … 7 = Sunday). |
 | `holidays` | `list[str]` | `[]` | ISO 8601 holiday date strings. |
 
-#### `ParsedSprintPlanning`
+### `ParsedSprintPlanning`
 
 Sprint planning configuration extracted from the description.
 
@@ -257,7 +311,7 @@ Sprint planning configuration extracted from the description.
 | `future_sprint_overrides` | `list[ParsedFutureSprintOverride]` | `[]` | Capacity overrides for future sprints. |
 | `history` | `list[ParsedSprintHistoryEntry]` | `[]` | Historical sprint data. |
 
-#### `ParsedFutureSprintOverride`
+### `ParsedFutureSprintOverride`
 
 A capacity override for a future sprint.
 
@@ -269,7 +323,7 @@ A capacity override for a future sprint.
 | `capacity_multiplier` | `float \| None` | `None` | Overall capacity multiplier for the sprint. |
 | `notes` | `str \| None` | `None` | Free-text notes for this override. |
 
-#### `ParsedSprintHistoryEntry`
+### `ParsedSprintHistoryEntry`
 
 A historical sprint outcome.
 

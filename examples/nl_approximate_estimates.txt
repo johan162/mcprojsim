@@ -1,0 +1,7 @@
+Project name: Incident Remediation
+Starting in 2 weeks
+
+- Quick patch about 10 hours
+- Auth hardening around 3 to 5 days
+- Database cleanup 2-4 hours
+- Rollout verification roughly 6 hours

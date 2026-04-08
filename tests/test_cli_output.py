@@ -386,7 +386,11 @@ class TestSimulateExports:
         captured = {}
 
         def fake_csv_export(
-            results, output_path, config=None, critical_path_limit=None
+            results,
+            output_path,
+            project=None,
+            config=None,
+            critical_path_limit=None,
         ):
             captured["path"] = str(output_path)
 

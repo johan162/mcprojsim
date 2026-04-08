@@ -68,10 +68,10 @@ DEFAULT_LOGNORMAL_HIGH_PERCENTILE = 95
 ALLOWED_LOGNORMAL_HIGH_PERCENTILES = [70, 75, 80, 85, 90, 95, 99]
 DEFAULT_UNCERTAINTY_FACTOR_LEVELS = {
     "team_experience": "medium",
-    "requirements_maturity": "medium",
-    "technical_complexity": "medium",
+    "requirements_maturity": "high",
+    "technical_complexity": "low",
     "team_distribution": "colocated",
-    "integration_complexity": "medium",
+    "integration_complexity": "low",
 }
 DEFAULT_UNCERTAINTY_FACTORS = {
     "team_experience": {"high": 0.90, "medium": 1.0, "low": 1.30},
@@ -122,7 +122,7 @@ DEFAULT_T_SHIRT_SIZE_VALUES: dict[str, dict[str, dict[str, float]]] = {
         "XXL": {"low": 80000, "expected": 160000, "high": 400000},
     },
 }
-DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY = "epic"
+DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY = "story"
 T_SHIRT_SIZE_TOKEN_ALIASES = {
     "XS": "XS",
     "S": "S",

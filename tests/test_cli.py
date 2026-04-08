@@ -584,6 +584,171 @@ class TestCli:
         assert result.exit_code == 0
         assert captured["config"].t_shirt_size_default_category == "bug"
 
+    def test_simulate_project_default_category_overrides_builtin_default(
+        self, monkeypatch
+    ) -> None:
+        """Project-level default category should override the built-in config default."""
+        runner = CliRunner()
+        captured: dict[str, Any] = {}
+
+        class FakeEngine:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
+                captured["config"] = config
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Test",
+                            "start_date": "2025-01-01",
+                            "t_shirt_size_default_category": "bug",
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"t_shirt_size": "M"},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(cli, ["simulate", str(project_file), "--quiet"])
+
+        assert result.exit_code == 0
+        assert captured["config"].t_shirt_size_default_category == "bug"
+
+    def test_simulate_config_file_overrides_project_default_category(
+        self, monkeypatch
+    ) -> None:
+        """Config-file category should take precedence over project-level category."""
+        runner = CliRunner()
+        captured: dict[str, Any] = {}
+
+        class FakeEngine:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+            ) -> None:
+                captured["config"] = config
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            config_file = Path("config.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {
+                            "name": "CLI Test",
+                            "start_date": "2025-01-01",
+                            "t_shirt_size_default_category": "bug",
+                        },
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"t_shirt_size": "M"},
+                            }
+                        ],
+                    }
+                )
+            )
+            config_file.write_text(
+                yaml.safe_dump({"t_shirt_size_default_category": "story"})
+            )
+
+            result = runner.invoke(
+                cli,
+                [
+                    "simulate",
+                    str(project_file),
+                    "--config",
+                    str(config_file),
+                    "--quiet",
+                ],
+            )
+
+        assert result.exit_code == 0
+        assert captured["config"].t_shirt_size_default_category == "story"
+
     def test_simulate_shows_critical_path_sequences(self, monkeypatch) -> None:
         """The simulate command should print the most frequent critical paths."""
         runner = CliRunner()
@@ -1291,7 +1456,7 @@ class TestCli:
         default_z = 1.6448536269514722
         tshirt_mu, tshirt_sigma = fit_shifted_lognormal(40, 60, 120, default_z)
         story_mu, story_sigma = fit_shifted_lognormal(3, 5, 8, default_z)
-        assert "default_category: epic" in result.output
+        assert "default_category: story" in result.output
         assert "categories: story, bug, epic, business, initiative" in result.output
         assert (
             "lognormal params: "
@@ -1385,7 +1550,7 @@ class TestCli:
         tshirt_mu, tshirt_sigma = fit_shifted_lognormal(4, 6, 10, custom_z)
         story_mu, story_sigma = fit_shifted_lognormal(2, 3, 7, custom_z)
         assert "High percentile for 'high' value: P90" in result.output
-        assert "default_category: epic" in result.output
+        assert "default_category: story" in result.output
         assert (
             "lognormal params: "
             f"mu: {tshirt_mu:.4f}, sigma: {tshirt_sigma:.4f}, "

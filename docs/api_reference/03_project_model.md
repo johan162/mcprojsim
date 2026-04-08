@@ -1,6 +1,29 @@
-## Project Models
+# Project Models
 
-### `Project`
+## Overview
+
+The project model is a set of Pydantic v2 classes that together define every aspect of a simulation input. At the top sits `Project`, which owns `ProjectMetadata`, a list of `Task` objects, optional `Risk` entries, and optional `ResourceSpec`/`CalendarSpec` pools. Pydantic validators enforce structural rules at parse time: dependency integrity (no cycles, no missing IDs), symbolic estimate rules (T-shirt sizes and story points must not include an explicit unit), and threshold validation (red/green confidence thresholds). The YAML and TOML parsers both return a validated `Project` instance — these models are what you read or build when working programmatically.
+
+**When to use this module:** Use it directly when constructing projects in code, inspecting parsed results, or adding custom validation logic on top of a parsed `Project`.
+
+| Capability | Description |
+|---|---|
+| Hierarchical schema | `Project` composes metadata, tasks, risks, resources, and calendars in one validated object |
+| Flexible task estimates | `TaskEstimate` supports explicit low/expected/high ranges, T-shirt sizes, or story points |
+| Dependency validation | Model validator rejects unknown `depends_on` IDs and cyclic dependency graphs |
+| Resource and calendar specs | `ResourceSpec` and `CalendarSpec` define availability, productivity, and working-day rules |
+| Risk modelling | `Risk` entries carry probability, impact type (percentage or absolute), and optional distribution |
+| Config-driven symbolic estimates | T-shirt and story-point mappings are resolved from `Config` at simulation time, not stored on the model |
+
+**Imports:**
+```python
+from mcprojsim.models.project import (
+    Project, ProjectMetadata, Task, TaskEstimate, Risk,
+    ResourceSpec, CalendarSpec, UncertaintyFactors,
+)
+```
+
+## `Project`
 
 Represents the complete project definition with metadata, tasks, risks, resources, and calendars.
 
@@ -90,7 +113,7 @@ project = Project(
 )
 ```
 
-### `ProjectMetadata`
+## `ProjectMetadata`
 
 Stores top-level project settings and characteristics.
 
@@ -123,7 +146,7 @@ if meta.team_size:
     print(f"Team size: {meta.team_size} people")
 ```
 
-### `Task`
+## `Task`
 
 Represents a single work item in the project network.
 
@@ -174,7 +197,7 @@ longest_task = max(project.tasks, key=lambda t: t.estimate.high if t.estimate.hi
 print(f"Longest task: {longest_task.id}, up to {longest_task.estimate.high} hours")
 ```
 
-### `TaskEstimate`
+## `TaskEstimate`
 
 Supports four estimation styles:
 
@@ -213,7 +236,7 @@ for task in project.tasks:
         print(f"  Distribution: {est.distribution.value}")
 ```
 
-### `Risk` and `RiskImpact`
+## `Risk` and `RiskImpact`
 
 Represents task-level or project-level risk.
 
@@ -258,7 +281,7 @@ for task in project.tasks:
         print(f"  Impact: {impact:.1f} hours")
 ```
 
-### `ResourceSpec`
+## `ResourceSpec`
 
 Defines an individual resource (team member) that can be assigned to tasks.
 
@@ -287,7 +310,7 @@ for resource in project.resources:
         print(f"  Planned absence: {len(resource.planned_absence)} days")
 ```
 
-### `CalendarSpec`
+## `CalendarSpec`
 
 Defines a working calendar for scheduling.
 
@@ -311,7 +334,7 @@ for calendar in project.calendars:
         print(f"  Holidays: {len(calendar.holidays)} days")
 ```
 
-### `UncertaintyFactors`
+## `UncertaintyFactors`
 
 Applies multipliers to adjust base task duration based on project characteristics.
 
@@ -340,11 +363,11 @@ for task in project.tasks:
             print(f"  Technical complexity: {factors.technical_complexity}")
 ```
 
-### Sprint Planning Models
+## Sprint Planning Models
 
 These models define the sprint-planning input configuration. They are populated from the `sprint_planning:` block in a project YAML file.
 
-#### `SprintPlanningSpec`
+### `SprintPlanningSpec`
 
 Top-level sprint planning configuration.
 
@@ -364,7 +387,7 @@ Top-level sprint planning configuration.
 | `velocity_model` | `SprintVelocityModel` | `"empirical"` | `"empirical"` or `"neg_binomial"` |
 | `sickness` | `SprintSicknessSpec` | `SprintSicknessSpec()` | Per-person sickness model |
 
-#### `SprintHistoryEntry`
+### `SprintHistoryEntry`
 
 One historical sprint outcome row.
 
@@ -387,7 +410,7 @@ One historical sprint outcome row.
 | `team_size` | `int \| None` | `None` | Team size during this sprint |
 | `notes` | `str \| None` | `None` | Free-text notes |
 
-#### `FutureSprintOverrideSpec`
+### `FutureSprintOverrideSpec`
 
 Forward-looking capacity adjustment for a specific future sprint. At least one of `sprint_number` or `start_date` must be provided.
 
@@ -401,7 +424,7 @@ Forward-looking capacity adjustment for a specific future sprint. At least one o
 | `capacity_multiplier` | `float` | `1.0` | Overall capacity multiplier for this sprint |
 | `notes` | `str \| None` | `None` | Free-text notes |
 
-#### `SprintVolatilitySpec`
+### `SprintVolatilitySpec`
 
 Sprint-level disruption overlay (unexpected events reducing capacity).
 
@@ -415,7 +438,7 @@ Sprint-level disruption overlay (unexpected events reducing capacity).
 | `disruption_multiplier_expected` | `float` | `1.0` | Expected value of capacity-reduction distribution |
 | `disruption_multiplier_high` | `float` | `1.0` | High end of triangular capacity-reduction distribution |
 
-#### `SprintSpilloverSpec`
+### `SprintSpilloverSpec`
 
 Task-level execution spillover model.
 
@@ -432,7 +455,7 @@ Task-level execution spillover model.
 | `logistic_slope` | `float` | `1.9` | Logistic model slope parameter |
 | `logistic_intercept` | `float` | `≈ -1.992` | Logistic model intercept parameter |
 
-#### `SprintSpilloverBracketSpec`
+### `SprintSpilloverBracketSpec`
 
 One bracket in the table-based spillover model, mapping a story-point range to a spillover probability.
 
@@ -443,7 +466,7 @@ One bracket in the table-based spillover model, mapping a story-point range to a
 | `max_points` | `float \| None` | `None` | Upper bound of this bracket in story points. `None` creates an unbounded catch-all bracket (must be last). |
 | `probability` | `float` | required | Spillover probability for tasks in this bracket (0.0–1.0) |
 
-#### `SprintSicknessSpec`
+### `SprintSicknessSpec`
 
 Per-person sickness model for sprint capacity.
 
@@ -457,7 +480,7 @@ Per-person sickness model for sprint capacity.
 | `duration_log_mu` | `float` | `0.693` | Log-normal μ for sickness duration |
 | `duration_log_sigma` | `float` | `0.75` | Log-normal σ for sickness duration |
 
-### Enums
+## Enums
 
 The following enums are part of the model API:
 

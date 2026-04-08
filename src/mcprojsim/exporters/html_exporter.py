@@ -210,8 +210,12 @@ HTML_TEMPLATE = """
         <h3>Simulation Parameters</h3>
         <table>
             <tr><td class="metric">Simulation Date</td><td class="value">{{ simulation_date }}</td></tr>
+            <tr><td class="metric">Project Start Date</td><td class="value">{{ project_start_date }}</td></tr>
+            <tr><td class="metric">Number of Tasks</td><td class="value">{{ project_num_tasks }}</td></tr>
+            <tr><td class="metric">Effective Default Distribution</td><td class="value">{{ effective_default_distribution }}</td></tr>
             <tr><td class="metric">Iterations</td><td class="value">{{ iterations }}</td></tr>
             <tr><td class="metric">Random Seed</td><td class="value">{{ random_seed }}</td></tr>
+            <tr><td class="metric">T-Shirt Category Used</td><td class="value">{{ t_shirt_category_used }}</td></tr>
             <tr><td class="metric">Hours per Day</td><td class="value">{{ hours_per_day }}</td></tr>
             <tr><td class="metric">Schedule Mode</td><td class="value">{{ schedule_mode }}</td></tr>
         </table>
@@ -1007,12 +1011,29 @@ class HTMLExporter:
 
         # Get current date and time for simulation timestamp
         simulation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        start_date_str = (
+            results.start_date.isoformat() if results.start_date else "Not specified"
+        )
+        num_tasks = (
+            len(results.critical_path_frequency)
+            if results.critical_path_frequency
+            else 0
+        )
+        effective_default_distribution = (
+            project.project.distribution.value
+            if project is not None
+            else "Not specified"
+        )
 
         html = template.render(
             project_name=results.project_name,
+            project_start_date=start_date_str,
+            project_num_tasks=num_tasks,
+            effective_default_distribution=effective_default_distribution,
             simulation_date=simulation_date,
             iterations=results.iterations,
             random_seed=results.random_seed or "None",
+            t_shirt_category_used=effective_config.t_shirt_size_default_category,
             hours_per_day=results.hours_per_day,
             schedule_mode=results.schedule_mode,
             resource_constraints_active=results.resource_constraints_active,

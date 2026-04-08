@@ -17,6 +17,7 @@ from mcprojsim.config import (
     DEFAULT_CONFIDENCE_LEVELS,
     DEFAULT_PROBABILITY_GREEN_THRESHOLD,
     DEFAULT_PROBABILITY_RED_THRESHOLD,
+    DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY,
     DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU,
     DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA,
     DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
@@ -697,6 +698,8 @@ class ProjectMetadata(BaseModel):
         ),
     )
     team_size: Optional[int] = Field(default=None, ge=0)
+    t_shirt_size_default_category: Optional[str] = Field(default=None)
+    uncertainty_factors: Optional[UncertaintyFactors] = Field(default=None)
 
     @field_validator("start_date", mode="before")
     @classmethod
@@ -710,6 +713,26 @@ class ProjectMetadata(BaseModel):
             raise ValueError(
                 f"Invalid date value: {v}. Must be a date object or ISO format string."
             )
+
+    @field_validator("t_shirt_size_default_category")
+    @classmethod
+    def validate_t_shirt_size_default_category(
+        cls, value: Optional[str]
+    ) -> Optional[str]:
+        """Validate and normalize a project-level default T-shirt category."""
+        if value is None:
+            return value
+
+        normalized = value.strip().lower()
+        if not normalized:
+            raise ValueError("t_shirt_size_default_category must be a non-empty string")
+        if not normalized.replace("_", "").isalpha():
+            raise ValueError(
+                "t_shirt_size_default_category must contain only letters and underscores"
+            )
+        if normalized == DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY:
+            return normalized
+        return normalized
 
     @model_validator(mode="after")
     def validate_thresholds(self) -> "ProjectMetadata":
@@ -754,6 +777,9 @@ class Project(BaseModel):
 
         # Check for circular dependencies
         self._check_circular_dependencies()
+
+        # Apply project-level uncertainty factors as defaults to tasks
+        self._apply_project_uncertainty_factors()
 
         # Validate effective task distributions after project defaults are known
         self._validate_effective_task_distributions()
@@ -876,6 +902,36 @@ class Project(BaseModel):
                     raise ValueError(
                         f"Circular dependency detected involving task {task.id}"
                     )
+
+    def _apply_project_uncertainty_factors(self) -> None:
+        """Apply project-level uncertainty factors as defaults to tasks.
+
+        Tasks that don't explicitly override uncertainty factors inherit
+        from the project metadata. This provides a way to set org/project-wide
+        defaults that avoid repetition in the task list.
+        """
+        if self.project.uncertainty_factors is None:
+            return
+
+        project_factors = self.project.uncertainty_factors
+        for task in self.tasks:
+            # Merge project factors with task factors, where task factors take precedence
+            if task.uncertainty_factors is not None:
+                # Task has explicit factors, merge them with project defaults
+                # Task-level values override project-level values
+                task_factors_dict = task.uncertainty_factors.model_dump(
+                    exclude_unset=True
+                )
+                # Get project factors as defaults
+                merged = project_factors.model_copy()
+                # Update merged with task-specific overrides
+                for field, value in task_factors_dict.items():
+                    if value is not None:
+                        setattr(merged, field, value)
+                task.uncertainty_factors = merged
+            else:
+                # Task has no explicit factors, use project defaults
+                task.uncertainty_factors = project_factors.model_copy()
 
     def _validate_effective_task_distributions(self) -> None:
         """Validate explicit task ranges against the effective distribution."""

@@ -113,6 +113,7 @@ endef
 #            2. A human-readable name for the design document (used in output messages)
 # Note: This macro assumes that the markdown file has a specific format where the version number is on the 
 # first line in the format "Version: x.y.z" and the title is the first level 1 heading (e.g., "# Title").
+# WARNING: THE TITLE CAN NOT CONTAIN '&' CHARACTER AS THE SUBSTITUTION WILL BE MESSED UP.
 # The generated PDF will be placed in the specified distribution directory and named according to the provided variables.
 # ============================================================================================
 define DESIGN_DOC_PDF_RULE
@@ -146,7 +147,7 @@ $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_D
 		exit 1; \
 	fi; \
 	if ! grep -q "$$$$TITLE_FROM_MD" $$($1_TEX); then \
-		echo -e "$$(RED)✗ Error: Failed to update title in LaTeX template from markdown source$$(NC)"; \
+		echo -e "$$(RED)✗ Error: Failed to update title ($$$$TITLE_FROM_MD) in LaTeX template $$($1_TEX) from markdown source$$(NC)"; \
 		exit 1; \
 	fi; \
 	rm -f $$($1_TEX).bak; \
@@ -176,10 +177,22 @@ $(eval $(call DEFINE_DESIGN_DOC_VARS,TSHIRT_CATEGORY,tshirt-categories,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,MULTIPHASE_SIM,multiphase-simulation,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,SENSITIVITY_ANALYSIS,sensitivity-analysis,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,PLUGGABLE_DISTRIBUTIONS,pluggable-distributions,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,NL_MCP_IMPROVEMENTS,nl_mcp_improvements,,))
 
 # ============================================================================================
 # Makefile Targets
 # ============================================================================================
+
+$(eval $(call DESIGN_DOC_PDF_RULE,SPRINT_PLANNING,sprint-based planning))
+$(eval $(call DESIGN_DOC_PDF_RULE,TSHIRT_CATEGORY,t-shirt category))
+$(eval $(call DESIGN_DOC_PDF_RULE,MULTIPHASE_SIM,multi-phase simulation))
+$(eval $(call DESIGN_DOC_PDF_RULE,SENSITIVITY_ANALYSIS,sensitivity analysis))
+$(eval $(call DESIGN_DOC_PDF_RULE,PLUGGABLE_DISTRIBUTIONS,pluggable distributions))	
+$(eval $(call DESIGN_DOC_PDF_RULE,NL_MCP_IMPROVEMENTS,non-linear MCP improvements))
+
+PDF_DESIGN_DOCS := $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) \
+$(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) $(NL_MCP_IMPROVEMENTS_PDF)
+
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
 	@$(call print_section,Build & Documentation,build|pdf-design-docs|dark|clean|really-clean)
@@ -202,14 +215,8 @@ really-clean: ## Clean all generated intermediate documentation files and all ge
 	@rm -rf $(BUILD_DIR) $(STAMP_DIR) $(DIST_DIR)
 	@echo -e "$(GREEN)✓ Really cleaned all generated documentation files and PDFs$(NC)"
 
-pdf-design-docs: $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) $(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) ## Build all the PDF versions of the design documents (light theme)
+pdf-design-docs: $(PDF_DESIGN_DOCS) ## Build all the PDF versions of the design documents (light theme)
 	@:
 
 dark: ## Build all PDFs in dark theme (adds -dark suffix to filenames)
 	@$(MAKE) pdf-design-docs THEME=dark
-
-$(eval $(call DESIGN_DOC_PDF_RULE,SPRINT_PLANNING,sprint-based planning))
-$(eval $(call DESIGN_DOC_PDF_RULE,TSHIRT_CATEGORY,t-shirt category))
-$(eval $(call DESIGN_DOC_PDF_RULE,MULTIPHASE_SIM,multi-phase simulation))
-$(eval $(call DESIGN_DOC_PDF_RULE,SENSITIVITY_ANALYSIS,sensitivity analysis))
-$(eval $(call DESIGN_DOC_PDF_RULE,PLUGGABLE_DISTRIBUTIONS,pluggable distributions))	

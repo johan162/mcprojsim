@@ -1,9 +1,32 @@
 
-## Core API
+# Core API
 
-### `SimulationEngine`
+## Overview
 
-Main entry point for Monte Carlo simulation.
+`SimulationEngine` is the central entry point for running Monte Carlo simulations in mcprojsim. It samples task durations (triangular or lognormal), evaluates risks, delegates scheduling to `TaskScheduler`, and aggregates thousands of iterations into a `SimulationResults` object containing duration arrays, percentiles, and critical-path data. The scheduler supports two modes: a fast dependency-only topological sort, and a resource-calendar-constrained mode with optional two-pass criticality prioritisation.
+
+**When to use this module:** Use it whenever you want to run a simulation programmatically — whether from a parsed YAML project or one built in code.
+
+| Capability | Description |
+|---|---|
+| Monte Carlo sampling | Runs `iterations` independent samples via triangular or shifted-lognormal distributions |
+| Dependency scheduling | Topological ordering of tasks respecting `depends_on` chains |
+| Resource-constrained scheduling | Assigns named resources with availability, calendars, and experience modifiers |
+| Two-pass criticality mode | Pass 1 builds criticality indices with greedy dispatch; Pass 2 replays with criticality-prioritised assignment |
+| Risk evaluation | Applies project and task-level risks (percentage or absolute) per iteration |
+| Reproducibility | Flows all randomness through a seeded `numpy.random.RandomState` |
+
+**Background: Monte Carlo project simulation** — Each iteration independently samples every task duration and risk event, then schedules tasks to compute a total elapsed project duration. Repeating this thousands of times yields a distribution from which percentiles (P50, P80, P95, etc.) and critical-path frequencies are derived.
+
+**Imports:**
+```python
+from mcprojsim import SimulationEngine
+from mcprojsim.models.simulation import SimulationResults
+```
+
+## `SimulationEngine`
+
+Main entry point for Monte Carlo simulation. 
 
 ```python
 from mcprojsim import SimulationEngine
@@ -33,7 +56,7 @@ results = engine.run(project)
 
 - `run(project: Project) -> SimulationResults` — Run the Monte Carlo simulation and return aggregated results. When two-pass mode is active and resource constraints are present, the engine first runs `pass1_iterations` with greedy scheduling to build criticality indices, then reruns the full simulation with criticality-prioritised dispatch.
 
-### `SimulationResults`
+## `SimulationResults`
 
 Holds the output of a simulation run, including durations, summary statistics, percentiles, and critical-path frequency data.
 
@@ -94,7 +117,7 @@ for task_id, value in criticality.items():
     print(task_id, value)
 ```
 
-### `CriticalPathRecord`
+## `CriticalPathRecord`
 
 Aggregated full critical path sequence information.
 
@@ -110,7 +133,7 @@ Aggregated full critical path sequence information.
 
 - `format_path() -> str` — returns `"task_a -> task_b -> task_c"`
 
-### `TwoPassDelta`
+## `TwoPassDelta`
 
 Traceability payload for two-pass constrained scheduling. Populated in `SimulationResults.two_pass_trace` when `two_pass=True`.
 
@@ -141,7 +164,7 @@ from mcprojsim.models.simulation import TwoPassDelta
 
 - `to_dict() -> dict[str, Any]` — Serialise the trace payload to a plain dictionary.
 
-### `SprintSimulationEngine`
+## `SprintSimulationEngine`
 
 Entry point for sprint-planning Monte Carlo simulation.
 
@@ -162,7 +185,7 @@ from mcprojsim.planning.sprint_engine import SprintSimulationEngine
 
 - `run(project: Project) -> SprintPlanningResults` — Run the sprint-planning simulation. Raises `ValueError` if `project.sprint_planning` is not enabled.
 
-### `SprintPlanningResults`
+## `SprintPlanningResults`
 
 Result model for sprint-planning simulations.
 

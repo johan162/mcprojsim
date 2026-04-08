@@ -1,0 +1,9 @@
+Project name: Data Pipeline Rebuild
+Start date: 2026-07-01
+
+[1] Audit existing ETL jobs [S]
+[2] Design new pipeline architecture [M] depends on Task 1
+[3] Implement ingestion layer 3–5 days depends on Task 2
+[4] Build transformation engine [XL] depends on Task 3
+[5] Set up monitoring and alerts [M] depends on Task 4
+[6] Migration and cutover, assume S, depends on Task 5

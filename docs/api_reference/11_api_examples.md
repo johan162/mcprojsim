@@ -1,7 +1,24 @@
 
-## Complete External API Examples
+# API Examples
 
-### Example 1: Programmatic Simulation with Full Analysis
+## Overview
+
+This page contains complete, runnable code examples that show end-to-end usage of the mcprojsim public API. Each example is self-contained and covers a distinct integration pattern — from single-project simulation to portfolio batch processing and web dashboard embedding. They are designed to serve as integration test templates or as starting points for custom tooling built on top of mcprojsim.
+
+For parameter details, consult the API reference pages for [`SimulationEngine`](./02_core.md), [`Config`](./06_configuration.md), [`YAMLParser`](./05_parsers.md), the [analysis modules](./08_analysis_helpers.md), and [exporters](./07_exporters.md).
+
+| Example | What it demonstrates |
+|---|---|
+| 1 — Programmatic Simulation with Full Analysis | Load a YAML project, run a simulation, run critical-path / sensitivity / staffing analysis, export JSON and HTML |
+| 2 — Resource-Constrained and Two-Pass Scheduling | Build a `Project` model in code, enable two-pass scheduling, inspect resource utilisation metrics |
+| 3 — Dashboard Integration | Embed mcprojsim in a Flask API endpoint; parse a project file and return percentile results as JSON |
+| 4 — Sprint Planning with Forecast | Run `SprintSimulationEngine` on a sprint-enabled project and build a sprint-by-sprint delivery forecast |
+| 5 — Batch Processing Multiple Projects | Scan a directory of YAML files, simulate each project, and aggregate results into a pandas DataFrame |
+| 6 — Configuration-Driven Customization | Load a `Config` from file and apply programmatic overrides before running a simulation |
+
+---
+
+## Example 1: Programmatic Simulation with Full Analysis
 
 This example shows how an external tool can load a project, run a simulation, and perform comprehensive analysis:
 
@@ -61,7 +78,7 @@ results = run_comprehensive_analysis("project.yaml", "reports/")
 print(f"\nSimulation complete. Mean duration: {results.mean:.0f} hours")
 ```
 
-### Example 2: Resource-Constrained and Two-Pass Scheduling
+## Example 2: Resource-Constrained and Two-Pass Scheduling
 
 This example shows how to enable resource-constrained scheduling and two-pass mode:
 
@@ -136,7 +153,7 @@ if results.two_pass_trace and results.two_pass_trace.enabled:
     print(f"Two-pass P50 improvement: {delta.delta_p50_hours:+.1f} hours")
 ```
 
-### Example 3: Dashboard Integration
+## Example 3: Dashboard Integration
 
 This example demonstrates integrating mcprojsim into a web dashboard:
 
@@ -199,7 +216,7 @@ def get_config():
     })
 ```
 
-### Example 4: Sprint Planning with Forecast
+## Example 4: Sprint Planning with Forecast
 
 This example shows sprint-planning integration:
 
@@ -244,7 +261,7 @@ forecast = forecast_project_completion("sprint_project.yaml")
 print(f"P80 completion: {forecast['forecasts']['p80_date']}")
 ```
 
-### Example 5: Batch Processing Multiple Projects
+## Example 5: Batch Processing Multiple Projects
 
 This example processes multiple projects and generates a portfolio view:
 
@@ -296,7 +313,7 @@ def analyze_portfolio(project_dir: str) -> pd.DataFrame:
 portfolio = analyze_portfolio("projects/")
 ```
 
-### Example 6: Configuration-Driven Customization
+## Example 6: Configuration-Driven Customization
 
 This example shows how to customize the simulation via configuration:
 

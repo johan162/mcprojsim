@@ -1,13 +1,28 @@
 
-## Parsers
+# Parsers
 
-Both parsers translate project definition files into [`Project`](03_project_model.md) model objects. They share an identical public interface and emit file-and-line-aware error messages on invalid input.
+## Overview
 
+The `mcprojsim.parsers` module translates YAML and TOML project definition files into validated [`Project`](03_project_model.md) model objects. `YAMLParser` and `TOMLParser` share an identical public interface — `parse_file`, `parse_dict`, and `validate_file` — so they are interchangeable given a file format. Both parsers use `error_reporting.py` to preserve file-and-line context when surfacing validation errors, so error messages point to the exact source location rather than generic Pydantic output.
+
+**When to use this module:** Use the parsers when loading a project from disk in a script or tool integration; use `validate_file` for non-raising pre-flight checks before a simulation run.
+
+| Capability | Description |
+|---|---|
+| YAML loading | `YAMLParser.parse_file` reads and parses a `.yaml` project file into a `Project` |
+| TOML loading | `TOMLParser.parse_file` reads and parses a `.toml` project file into a `Project` |
+| In-memory parsing | `parse_dict` constructs a `Project` from an already-loaded dictionary |
+| Non-raising validation | `validate_file` returns `(bool, error_message)` without raising an exception |
+| Line-aware errors | All errors include the file path and source line number via `error_reporting.py` |
+
+**Imports:**
 ```python
 from mcprojsim.parsers import YAMLParser, TOMLParser
 ```
 
-### `YAMLParser`
+---
+
+## `YAMLParser`
 
 Parses YAML project files into `Project` objects.
 
@@ -31,7 +46,7 @@ if not is_valid:
     print(f"Validation error: {error}")
 ```
 
-### `TOMLParser`
+## `TOMLParser`
 
 Identical interface to `YAMLParser`, but for TOML project files.
 

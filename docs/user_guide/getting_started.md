@@ -174,6 +174,19 @@ mcprojsim generate description.txt -o project.yaml
 
 That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
 
+!!! tip "Flexible input formats"
+    You don't have to use the `Task N:` header format. The parser also accepts plain numbered lists, bullet lists, and even inline sizes — great for copy-paste from meeting notes or planning tools:
+
+    ```text
+    Project name: Website Refresh
+    Start date: 2026-04-01
+
+    1. Design updates [S]
+    2. Frontend changes (M) depends on Task 1
+    ```
+
+    See [Natural Language Input](nl_processing.md) for the full range of supported formats.
+
 
 ## Validate the file
 

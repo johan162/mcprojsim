@@ -59,6 +59,28 @@ class TestYAMLParser:
         assert isinstance(project, Project)
         assert project.project.name == "Test Project"
 
+    def test_parse_yaml_project_t_shirt_default_category(self):
+        """YAML project files should accept a project-level T-shirt default category."""
+        parser = YAMLParser()
+        project = parser.parse_dict(
+            {
+                "project": {
+                    "name": "Test Project",
+                    "start_date": "2025-01-01",
+                    "t_shirt_size_default_category": "bug",
+                },
+                "tasks": [
+                    {
+                        "id": "task_001",
+                        "name": "Task 1",
+                        "estimate": {"t_shirt_size": "M"},
+                    }
+                ],
+            }
+        )
+
+        assert project.project.t_shirt_size_default_category == "bug"
+
     def test_parse_examples_external_json_project_file(self, tmp_path):
         """Example project with external JSON history should parse successfully."""
         examples_dir = Path(__file__).resolve().parents[1] / "examples"
@@ -317,6 +339,28 @@ class TestTOMLParser:
         project = parser.parse_dict(sample_project_dict)
         assert isinstance(project, Project)
         assert project.project.name == "Test Project"
+
+    def test_parse_toml_project_t_shirt_default_category(self, tmp_path):
+        """TOML project files should accept a project-level T-shirt default category."""
+        file_path = tmp_path / "project.toml"
+        file_path.write_text("""
+[project]
+name = "Test Project"
+start_date = "2025-01-01"
+t_shirt_size_default_category = "bug"
+
+[[tasks]]
+id = "task_001"
+name = "Task 1"
+
+[tasks.estimate]
+t_shirt_size = "M"
+""".strip())
+
+        parser = TOMLParser()
+        project = parser.parse_file(file_path)
+
+        assert project.project.t_shirt_size_default_category == "bug"
 
     def test_parse_file_not_found(self):
         """Test parsing non-existent file."""

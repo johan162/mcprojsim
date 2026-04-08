@@ -1,0 +1,8 @@
+Project name: Platform Modernization
+Start date: next Monday
+
+- Discovery workshop a couple of days
+- Architecture review about a week
+- Frontend integration will take a few weeks
+- Migration effort is a month or so
+- Post-launch monitoring takes a sprint

@@ -1,0 +1,8 @@
+Project: Prose Dependencies Auto
+Start date: next Monday
+
+1. Database schema design
+2. Authentication service implementation (builds on the database schema)
+3. API endpoints (after task 2)
+4. UI integration (once authentication is done)
+5. Deployment checks (requires the API endpoints)

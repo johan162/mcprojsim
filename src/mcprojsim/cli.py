@@ -23,6 +23,7 @@ from mcprojsim.config import (
     DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE,
     DEFAULT_SPRINT_SPILLOVER_MODEL,
     DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS,
+    DEFAULT_UNCERTAINTY_FACTOR_LEVELS,
     DEFAULT_SPRINT_VELOCITY_MODEL,
     DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED,
     DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH,
@@ -871,6 +872,25 @@ def simulate(
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
+        if (
+            tshirt_category is None
+            and loaded_config_path is None
+            and project.project.t_shirt_size_default_category is not None
+        ):
+            project_default_category = project.project.t_shirt_size_default_category
+            valid_categories = cfg.get_t_shirt_categories()
+            if project_default_category not in valid_categories:
+                allowed = ", ".join(valid_categories)
+                raise ValueError(
+                    "Invalid project.t_shirt_size_default_category: "
+                    f"'{project_default_category}'. Valid categories: {allowed}"
+                )
+            cfg.t_shirt_size_default_category = project_default_category
+            logger.info(
+                "Using project T-shirt default category %s",
+                project_default_category,
+            )
+
         apply_sprint_defaults(project, cfg)
 
         tasks_mode_warning = _get_tasks_mode_heterogeneity_warning(project)
@@ -1008,13 +1028,76 @@ def simulate(
 
             click.echo("\n=== Simulation Results ===")
 
+            project_uncertainty_factors = project.project.uncertainty_factors
+            if project_uncertainty_factors is not None:
+                raw_default_uncertainty_levels = (
+                    project_uncertainty_factors.model_dump()
+                )
+            else:
+                raw_default_uncertainty_levels = DEFAULT_UNCERTAINTY_FACTOR_LEVELS
+
+            effective_default_uncertainty_levels = {
+                factor_name: str(
+                    raw_default_uncertainty_levels.get(
+                        factor_name,
+                        DEFAULT_UNCERTAINTY_FACTOR_LEVELS[factor_name],
+                    )
+                )
+                for factor_name in DEFAULT_UNCERTAINTY_FACTOR_LEVELS
+            }
+
             if table:
+                start_date_str = (
+                    project.project.start_date.isoformat()
+                    if project.project.start_date
+                    else "Not specified"
+                )
                 common_rows = [
                     ["Project", results.project_name],
+                    ["Start Date", start_date_str],
+                    ["Number of Tasks", f"{len(project.tasks)}"],
+                    [
+                        "Effective Default Distribution",
+                        project.project.distribution.value,
+                    ],
+                    ["T-Shirt Category Used", cfg.t_shirt_size_default_category],
                     ["Hours per Day", f"{hours_per_day}"],
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
                     ["Schedule Mode", schedule_mode],
                 ]
+                click.echo("\nProject Overview:")
+                click.echo(
+                    _tabulate(
+                        common_rows,
+                        headers=["Field", "Value"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+
+                # Default Uncertainty Factors table
+                uncertainty_rows = []
+                for (
+                    factor_name,
+                    default_level,
+                ) in effective_default_uncertainty_levels.items():
+                    multiplier = cfg.get_uncertainty_multiplier(
+                        factor_name, default_level
+                    )
+                    factor_display = factor_name.replace("_", " ").title()
+                    uncertainty_rows.append(
+                        [factor_display, f"{default_level} ({multiplier})"]
+                    )
+                click.echo("\nDefault Uncertainty Factors:")
+                click.echo(
+                    _tabulate(
+                        uncertainty_rows,
+                        headers=["Factor", "Default Level (Multiplier)"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+
                 calendar_summary_rows = [
                     ["Mean", f"{results.mean:.2f} hours ({mean_wd} working days)"],
                     ["Median (P50)", f"{results.median:.2f} hours"],
@@ -1041,15 +1124,6 @@ def simulate(
                     ["Skewness", f"{effort_stats['skewness']:.4f}"],
                     ["Excess Kurtosis", f"{effort_stats['kurtosis']:.4f}"],
                 ]
-                click.echo("\nProject Overview:")
-                click.echo(
-                    _tabulate(
-                        common_rows,
-                        headers=["Field", "Value"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
-                )
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(
                     _tabulate(
@@ -1069,35 +1143,60 @@ def simulate(
                     )
                 )
             else:
+                start_date_str = (
+                    project.project.start_date.isoformat()
+                    if project.project.start_date
+                    else "Not specified"
+                )
                 click.echo("\nProject Overview:")
-                click.echo(f"Project: {results.project_name}")
-                click.echo(f"Hours per Day: {hours_per_day}")
-                click.echo(f"Max Parallel Tasks: {results.max_parallel_tasks}")
-                click.echo(f"Schedule Mode: {schedule_mode}")
+                click.echo(f"  Project: {results.project_name}")
+                click.echo(f"  Start Date: {start_date_str}")
+                click.echo(f"  Number of Tasks: {len(project.tasks)}")
+                click.echo(
+                    "  Effective Default Distribution: "
+                    f"{project.project.distribution.value}"
+                )
+                click.echo(
+                    f"  T-Shirt Category Used: {cfg.t_shirt_size_default_category}"
+                )
+                click.echo(f"  Hours per Day: {hours_per_day}")
+                click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")
+                click.echo(f"  Schedule Mode: {schedule_mode}")
+
+                click.echo("\nDefault Uncertainty Factors:")
+                for (
+                    factor_name,
+                    default_level,
+                ) in effective_default_uncertainty_levels.items():
+                    multiplier = cfg.get_uncertainty_multiplier(
+                        factor_name, default_level
+                    )
+                    factor_display = factor_name.replace("_", " ").title()
+                    click.echo(f"  {factor_display}: {default_level} ({multiplier})")
 
                 click.echo("\nCalendar Time Statistical Summary:")
-                click.echo(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
-                click.echo(f"Median (P50): {results.median:.2f} hours")
-                click.echo(f"Std Dev: {results.std_dev:.2f} hours")
-                click.echo(f"Minimum: {min_duration:.2f} hours")
-                click.echo(f"Maximum: {max_duration:.2f} hours")
-                click.echo(f"Coefficient of Variation: {cv:.4f}")
-                click.echo(f"Skewness: {results.skewness:.4f}")
-                click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
+                click.echo(f"  Mean: {results.mean:.2f} hours ({mean_wd} working days)")
+                click.echo(f"  Median (P50): {results.median:.2f} hours")
+                click.echo(f"  Std Dev: {results.std_dev:.2f} hours")
+                click.echo(f"  Minimum: {min_duration:.2f} hours")
+                click.echo(f"  Maximum: {max_duration:.2f} hours")
+                click.echo(f"  Coefficient of Variation: {cv:.4f}")
+                click.echo(f"  Skewness: {results.skewness:.4f}")
+                click.echo(f"  Excess Kurtosis: {results.kurtosis:.4f}")
 
                 click.echo("\nProject Effort Statistical Summary:")
                 click.echo(
-                    "Mean: "
+                    "  Mean: "
                     f"{effort_stats['mean']:.2f} person-hours "
                     f"({effort_stats['mean_person_days']} person-days)"
                 )
-                click.echo(f"Median (P50): {effort_stats['median']:.2f} person-hours")
-                click.echo(f"Std Dev: {effort_stats['std_dev']:.2f} person-hours")
-                click.echo(f"Minimum: {effort_stats['min']:.2f} person-hours")
-                click.echo(f"Maximum: {effort_stats['max']:.2f} person-hours")
-                click.echo(f"Coefficient of Variation: {effort_stats['cv']:.4f}")
-                click.echo(f"Skewness: {effort_stats['skewness']:.4f}")
-                click.echo(f"Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
+                click.echo(f"  Median (P50): {effort_stats['median']:.2f} person-hours")
+                click.echo(f"  Std Dev: {effort_stats['std_dev']:.2f} person-hours")
+                click.echo(f"  Minimum: {effort_stats['min']:.2f} person-hours")
+                click.echo(f"  Maximum: {effort_stats['max']:.2f} person-hours")
+                click.echo(f"  Coefficient of Variation: {effort_stats['cv']:.4f}")
+                click.echo(f"  Skewness: {effort_stats['skewness']:.4f}")
+                click.echo(f"  Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
 
             if table:
                 # Confidence Intervals table
@@ -1562,6 +1661,7 @@ def simulate(
                         CSVExporter.export(
                             results,
                             output_file,
+                            project=project,
                             config=cfg,
                             critical_path_limit=critical_path_limit,
                             sprint_results=sprint_results,
@@ -1570,11 +1670,12 @@ def simulate(
                         CSVExporter.export(
                             results,
                             output_file,
+                            project=project,
                             config=cfg,
                             critical_path_limit=critical_path_limit,
                         )
                     if quiet == 0 and not minimal:
-                        click.echo(f"Results exported to {output_file}")
+                        click.echo(f"\nResults exported to {output_file}")
                 elif fmt == "html":
                     output_file = base_output.with_suffix(".html")
                     if sprint_results is not None:
@@ -1597,11 +1698,11 @@ def simulate(
                             include_historic_base=include_historic_base,
                         )
                     if quiet == 0 and not minimal:
-                        click.echo(f"Results exported to {output_file}")
+                        click.echo(f"\nResults exported to {output_file}")
         else:
             if quiet == 0 and not minimal:
                 click.echo(
-                    "\nNo export formats specified. Use -f to export results to files."
+                    "\n\nNo export formats specified. Use -f to export results to files."
                 )
 
     except Exception as e:

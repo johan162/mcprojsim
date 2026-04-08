@@ -1,7 +1,31 @@
 
-## Simulation Results Models
+# Simulation Results Models
 
-### `CriticalPathRecord`
+## Overview
+
+`mcprojsim.models.simulation` holds the output models produced by `SimulationEngine` after a Monte Carlo run. `SimulationResults` stores numpy arrays of per-iteration elapsed project durations alongside aggregated statistics, per-task metrics, and critical-path data. A key design distinction is that `durations` represents *elapsed* project time (critical-path length), while `effort_durations` represents *total person-effort* (the sum of all task durations per iteration) — these differ whenever tasks run in parallel.
+
+**When to use this module:** Access it directly when reading simulation output, computing custom percentiles, querying critical-path sequences, or serialising results to JSON/CSV via `to_dict()`.
+
+| Capability | Description |
+|---|---|
+| Elapsed duration percentiles | `percentile(p)` queries `durations` (critical-path hours) at any percentile |
+| Total effort percentiles | `effort_percentile(p)` queries `effort_durations` (person-hours) at any percentile |
+| Critical-path task frequency | `get_critical_path()` returns each task's criticality index (0–1) across iterations |
+| Full path sequences | `get_critical_path_sequences()` returns ordered `CriticalPathRecord` objects by frequency |
+| Delivery date projection | `delivery_date(hours)` adds working days to `start_date`, skipping weekends |
+| Serialisation | `to_dict()` converts the full result to a nested plain dictionary for export |
+
+**Background: Elapsed duration vs. total effort** — Monte Carlo simulation samples each task's duration stochastically. The *elapsed* project duration is the critical-path length (tasks that cannot run in parallel). *Total effort* is the arithmetic sum of all task durations and represents person-hours of work. When tasks run in parallel, elapsed < total effort; keeping both arrays enables accurate both schedule and staffing estimates.
+
+**Imports:**
+```python
+from mcprojsim.models.simulation import SimulationResults, CriticalPathRecord, TwoPassDelta
+```
+
+---
+
+## `CriticalPathRecord`
 
 Represents one aggregated critical-path sequence across all simulation iterations.
 
@@ -15,7 +39,7 @@ Represents one aggregated critical-path sequence across all simulation iteration
 
 ---
 
-### `TwoPassDelta`
+## `TwoPassDelta`
 
 Traceability payload produced when the `criticality_two_pass` scheduling mode is active. Stores pass-1 baseline statistics, pass-2 full-run statistics, and the deltas between them.
 
@@ -52,7 +76,7 @@ Traceability payload produced when the `criticality_two_pass` scheduling mode is
 
 ---
 
-### `SimulationResults`
+## `SimulationResults`
 
 Holds the complete output of a Monte Carlo simulation run, including all percentiles, critical path analysis, risk summaries, resource diagnostics, and per-task metrics.
 

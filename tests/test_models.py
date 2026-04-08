@@ -329,6 +329,16 @@ class TestProject:
         )
         assert project.project.team_size == 5
 
+    def test_project_metadata_accepts_t_shirt_default_category(self):
+        """Project metadata should accept and normalize a T-shirt default category."""
+        metadata = ProjectMetadata(
+            name="Team Project",
+            start_date=date(2025, 1, 1),
+            t_shirt_size_default_category="Bug",
+        )
+
+        assert metadata.t_shirt_size_default_category == "bug"
+
     def test_project_accepts_valid_sprint_planning_configuration(self):
         """Sprint-planning config should validate when task sizing and history are valid."""
         project = Project(
