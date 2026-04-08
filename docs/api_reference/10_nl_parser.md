@@ -72,7 +72,37 @@ These lines can appear before the first task or between sections:
 
 ### Tasks
 
-A task section starts with `Task N:` optionally followed by the task name on the same line. Subsequent bullet lines define properties:
+A task section starts with `Task N:` optionally followed by the task name on the same line. Subsequent bullet lines define properties.
+
+Alternatively, when no `Task N:` headers are present, the parser auto-detects tasks from plain lists:
+
+| List format | Example | Numbering |
+|-------------|---------|-----------|
+| Dot numbered | `1. Design phase` | Preserved from source |
+| Paren numbered | `2) Implementation` | Preserved from source |
+| Bracket numbered | `[3] Testing` | Preserved from source |
+| Bullet (`-`, `*`, `•`) | `- Backend API` | Auto-assigned (1, 2, 3, …) |
+| Hash numbered | `# 1 First task` | Preserved from source |
+
+Auto-task mode activates only when **no** `Task N:` headers have been seen. The two modes cannot be mixed.
+
+Indented continuation lines under auto-detected tasks are parsed as bullet properties, identical to the explicit-header format.
+
+#### Inline properties on task lines
+
+When using auto-detected lists, properties can appear inline on the task name line:
+
+| Inline pattern | Example | Effect |
+|----------------|---------|--------|
+| Bracketed size | `Backend API [XL]` | Sets `t_shirt_size = "XL"` |
+| Parenthesized size | `Frontend (M)` | Sets `t_shirt_size = "M"` |
+| Fuzzy size hint | `probably an M`, `likely L`, `assume S` | Sets `t_shirt_size` |
+| Inline range | `3–5 days`, `2-4 hours` | Sets `low`, `expected`, `high`, `unit` |
+| Inline dependency | `depends on Task 1` | Sets `dependency_refs` |
+
+The parser extracts inline properties and strips them from the task name.
+
+#### Task bullet properties
 
 | Bullet keyword | Example | Notes |
 |----------------|---------|-------|

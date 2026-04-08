@@ -370,7 +370,7 @@ The assistant will call `validate_project_description` and report any warnings (
 
 ## Natural language input format
 
-The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes.
+The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes. It also accepts plain numbered lists, bullet lists, and inline properties — see [Natural Language Input](nl_processing.md) for the comprehensive reference.
 
 The parser also supports sprint-planning phrasing, including sprint history and future sprint capacity override sections.
 
@@ -738,6 +738,43 @@ Task 3:
 
 `Extra Small` becomes `XS`, `Extra Large` becomes `XL`, and `Small` becomes `S` in the generated YAML.
 
+### Example 7: Auto-detected lists with inline properties
+
+You don't need `Task N:` headers at all. Plain numbered lists, bullet lists, and bracket-numbered lists are automatically detected as tasks. Sizes, estimates, and dependencies can appear inline on the same line:
+
+```text
+Project name: Mobile App MVP
+Start date: 2026-06-01
+
+- Discovery and requirements (S)
+- UX wireframes (M)
+  Depends on Task 1
+- Backend API, probably an XL
+  Depends on Task 2
+- iOS frontend (XL)
+  Depends on Task 3
+- QA and bug fixes, likely an L
+  Depends on Task 4
+- App store submission (S)
+  Depends on Task 5
+```
+
+The parser auto-numbers the bullet items (1, 2, 3, …), extracts parenthesized sizes like `(S)` and `(M)`, and recognizes fuzzy phrasing like `probably an XL` and `likely an L`. Indented continuation lines are parsed as task properties.
+
+Numbered lists also work — and preserve the original numbering:
+
+```text
+Project name: Data Pipeline Rebuild
+Start date: 2026-07-01
+
+[1] Audit existing ETL jobs [S]
+[2] Design new pipeline architecture [M] depends on Task 1
+[3] Implement ingestion layer 3–5 days depends on Task 2
+[4] Build transformation engine [XL] depends on Task 3
+```
+
+See [Natural Language Input](nl_processing.md) for the full range of supported list formats and inline properties.
+
 
 
 ## Using the parser from the command line
@@ -818,7 +855,9 @@ The `validate_project_description` tool will flag:
 
 ### Be consistent with task numbering
 
-Tasks must be numbered with `Task N:` headers. The parser uses these numbers to resolve dependencies. If you write `Task 1`, `Task 2`, `Task 5` (skipping 3 and 4), the parser will still work — but a dependency like `Depends on Task 3` will not resolve to anything.
+When using `Task N:` headers, the parser uses these numbers to resolve dependencies. If you write `Task 1`, `Task 2`, `Task 5` (skipping 3 and 4), the parser will still work — but a dependency like `Depends on Task 3` will not resolve to anything.
+
+When using auto-detected lists (plain numbered or bullets), the same numbering rules apply. Bullet lists are auto-numbered starting from 1.
 
 ### Mix estimation methods across tasks
 
@@ -893,7 +932,7 @@ The natural language parser is a pattern-based parser, not a full natural langua
 - **Task-level risks** and **uncertainty factors** cannot be specified in the natural language input. Add them to the YAML file after generation.
 - **Resource definitions** and **calendar constraints** are supported, but only through recognized semi-structured patterns (not arbitrary prose).
 - **Project-level risks** are not extracted from the description. Add them manually.
-- The parser expects **numbered task headers** (`Task 1:`, `Task 2:`). Free-form task lists without numbers are not recognized.
+- The parser expects either **numbered task headers** (`Task 1:`, `Task 2:`) or **auto-detected lists** (plain numbered, bullet, or bracket lists). The two modes cannot be mixed in the same description. See [Natural Language Input](nl_processing.md) for details.
 - **Circular dependencies** are not detected by the parser — they will be caught when you load the file with `mcprojsim validate`.
 - Advanced structures such as full volatility-overlay and spillover calibration blocks are still best edited directly in YAML after generation.
 
