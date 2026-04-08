@@ -37,6 +37,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                        [<confidence_levels>]
                        [<probability_thresholds>]
                        [<project_distribution>]
+                       [<project_t_shirt_default_category>]
                        [<team_size>]
 
 <project_name> ::= "name:" <string>
@@ -49,6 +50,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 <red_threshold> ::= "probability_red_threshold:" <probability>
 <green_threshold> ::= "probability_green_threshold:" <probability>
 <project_distribution> ::= "distribution:" <distribution_type>
+<project_t_shirt_default_category> ::= "t_shirt_size_default_category:" <category_name>
 <team_size> ::= "team_size:" <non_negative_integer>
 
 <distribution_type> ::= "triangular" | "lognormal"
@@ -397,6 +399,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 5. If `team_size` is omitted or `0`, only explicitly listed resources are used.
 6. If `team_size > explicit_resources`, unnamed default resources are generated up to `team_size`.
 7. If `team_size < explicit_resources`, validation fails.
+8. `t_shirt_size_default_category`, when present, overrides the built-in program default but is itself overridden by a loaded config file or the `--tshirt-category` CLI flag.
 
 ### Tasks and estimates
 

@@ -96,7 +96,10 @@ class JSONExporter:
         simulation_date = datetime.now().isoformat()
 
         data = {
-            "project": {"name": results.project_name},
+            "project": {
+                "name": results.project_name,
+                "t_shirt_category_used": effective_config.t_shirt_size_default_category,
+            },
             "simulation": {
                 "date": simulation_date,
                 "iterations": results.iterations,

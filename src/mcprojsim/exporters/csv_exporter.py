@@ -46,6 +46,12 @@ class CSVExporter:
             # Write project info
             simulation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             writer.writerow(["Project Name", results.project_name])
+            writer.writerow(
+                [
+                    "T-Shirt Category Used",
+                    effective_config.t_shirt_size_default_category,
+                ]
+            )
             writer.writerow(["Simulation Date", simulation_date])
             writer.writerow(["Iterations", results.iterations])
             writer.writerow(["Random Seed", results.random_seed])

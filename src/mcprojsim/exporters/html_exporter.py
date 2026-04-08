@@ -212,6 +212,7 @@ HTML_TEMPLATE = """
             <tr><td class="metric">Simulation Date</td><td class="value">{{ simulation_date }}</td></tr>
             <tr><td class="metric">Iterations</td><td class="value">{{ iterations }}</td></tr>
             <tr><td class="metric">Random Seed</td><td class="value">{{ random_seed }}</td></tr>
+            <tr><td class="metric">T-Shirt Category Used</td><td class="value">{{ t_shirt_category_used }}</td></tr>
             <tr><td class="metric">Hours per Day</td><td class="value">{{ hours_per_day }}</td></tr>
             <tr><td class="metric">Schedule Mode</td><td class="value">{{ schedule_mode }}</td></tr>
         </table>
@@ -1013,6 +1014,7 @@ class HTMLExporter:
             simulation_date=simulation_date,
             iterations=results.iterations,
             random_seed=results.random_seed or "None",
+            t_shirt_category_used=effective_config.t_shirt_size_default_category,
             hours_per_day=results.hours_per_day,
             schedule_mode=results.schedule_mode,
             resource_constraints_active=results.resource_constraints_active,

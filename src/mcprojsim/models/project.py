@@ -17,6 +17,7 @@ from mcprojsim.config import (
     DEFAULT_CONFIDENCE_LEVELS,
     DEFAULT_PROBABILITY_GREEN_THRESHOLD,
     DEFAULT_PROBABILITY_RED_THRESHOLD,
+    DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY,
     DEFAULT_SPRINT_SICKNESS_DURATION_LOG_MU,
     DEFAULT_SPRINT_SICKNESS_DURATION_LOG_SIGMA,
     DEFAULT_SPRINT_SICKNESS_PROBABILITY_PER_PERSON_PER_WEEK,
@@ -697,6 +698,7 @@ class ProjectMetadata(BaseModel):
         ),
     )
     team_size: Optional[int] = Field(default=None, ge=0)
+    t_shirt_size_default_category: Optional[str] = Field(default=None)
 
     @field_validator("start_date", mode="before")
     @classmethod
@@ -710,6 +712,28 @@ class ProjectMetadata(BaseModel):
             raise ValueError(
                 f"Invalid date value: {v}. Must be a date object or ISO format string."
             )
+
+    @field_validator("t_shirt_size_default_category")
+    @classmethod
+    def validate_t_shirt_size_default_category(
+        cls, value: Optional[str]
+    ) -> Optional[str]:
+        """Validate and normalize a project-level default T-shirt category."""
+        if value is None:
+            return value
+
+        normalized = value.strip().lower()
+        if not normalized:
+            raise ValueError(
+                "t_shirt_size_default_category must be a non-empty string"
+            )
+        if not normalized.replace("_", "").isalpha():
+            raise ValueError(
+                "t_shirt_size_default_category must contain only letters and underscores"
+            )
+        if normalized == DEFAULT_T_SHIRT_SIZE_DEFAULT_CATEGORY:
+            return normalized
+        return normalized
 
     @model_validator(mode="after")
     def validate_thresholds(self) -> "ProjectMetadata":

@@ -953,6 +953,7 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "probability_green_threshold",
             "distribution",
             "team_size",
+            "t_shirt_size_default_category",
         }
 
     if len(path) == 2 and path[0] == "tasks" and isinstance(path[1], int):

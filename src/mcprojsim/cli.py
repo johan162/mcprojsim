@@ -871,6 +871,25 @@ def simulate(
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
+        if (
+            tshirt_category is None
+            and loaded_config_path is None
+            and project.project.t_shirt_size_default_category is not None
+        ):
+            project_default_category = project.project.t_shirt_size_default_category
+            valid_categories = cfg.get_t_shirt_categories()
+            if project_default_category not in valid_categories:
+                allowed = ", ".join(valid_categories)
+                raise ValueError(
+                    "Invalid project.t_shirt_size_default_category: "
+                    f"'{project_default_category}'. Valid categories: {allowed}"
+                )
+            cfg.t_shirt_size_default_category = project_default_category
+            logger.info(
+                "Using project T-shirt default category %s",
+                project_default_category,
+            )
+
         apply_sprint_defaults(project, cfg)
 
         tasks_mode_warning = _get_tasks_mode_heterogeneity_warning(project)
@@ -1011,6 +1030,7 @@ def simulate(
             if table:
                 common_rows = [
                     ["Project", results.project_name],
+                    ["T-Shirt Category Used", cfg.t_shirt_size_default_category],
                     ["Hours per Day", f"{hours_per_day}"],
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
                     ["Schedule Mode", schedule_mode],
@@ -1071,6 +1091,10 @@ def simulate(
             else:
                 click.echo("\nProject Overview:")
                 click.echo(f"Project: {results.project_name}")
+                click.echo(
+                    "T-Shirt Category Used: "
+                    f"{cfg.t_shirt_size_default_category}"
+                )
                 click.echo(f"Hours per Day: {hours_per_day}")
                 click.echo(f"Max Parallel Tasks: {results.max_parallel_tasks}")
                 click.echo(f"Schedule Mode: {schedule_mode}")

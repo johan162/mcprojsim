@@ -13,5 +13,7 @@ Start date: 2026-08-01
   Depends on Task 3, Task 4
 6. Security audit, assume M
   Depends on Task 5
-7. Staged rollout [S]
+7. Staged rollout, probably S
   Depends on Task 6
+8. Wrapup, (S)
+  Depends on 7
