@@ -1,0 +1,17 @@
+Project name: Auth Service Rewrite
+Description: Replace legacy auth with OAuth2/OIDC
+Start date: 2026-08-01
+
+1. Evaluate identity providers 2–4 days
+2. Design token flow and session management [M]
+  Depends on Task 1
+3. Implement OAuth2 authorization server, probably an XL
+  Depends on Task 2
+4. Migrate user database (L)
+  Depends on Task 2
+5. Integration testing [L]
+  Depends on Task 3, Task 4
+6. Security audit, assume M
+  Depends on Task 5
+7. Staged rollout [S]
+  Depends on Task 6

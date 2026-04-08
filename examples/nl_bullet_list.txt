@@ -1,0 +1,16 @@
+Project name: Mobile App MVP
+Start date: 2026-06-01
+
+- Discovery and requirements (S)
+- UX wireframes (M)
+  Depends on Task 1
+- Backend API, probably an XL
+  Depends on Task 2
+- iOS frontend (XL)
+  Depends on Task 3
+- Android frontend (XL)
+  Depends on Task 3
+- QA and bug fixes, likely an L
+  Depends on Task 4, Task 5
+- App store submission (S)
+  Depends on Task 6
