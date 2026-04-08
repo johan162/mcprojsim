@@ -516,3 +516,350 @@ Task 3:
         assert sprint["sickness"]["team_size"] == 5
         assert sprint["future_sprint_overrides"][0]["sprint_number"] == 3
         assert sprint["future_sprint_overrides"][0]["holiday_factor"] == 0.8
+
+
+class TestAutoTaskDetection:
+    """Tests for auto-task detection from unnumbered/plain lists (Item 1)."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser()
+
+    # -- AC 1: Plain numbered list produces one ParsedTask per item ----------
+
+    def test_plain_numbered_dot_list(self) -> None:
+        text = """
+Project name: Test
+1. Design database schema
+2. Implement REST API
+3. Frontend integration testing
+4. Deployment and smoke tests
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 4
+        assert project.tasks[0].name == "Design database schema"
+        assert project.tasks[1].name == "Implement REST API"
+        assert project.tasks[2].name == "Frontend integration testing"
+        assert project.tasks[3].name == "Deployment and smoke tests"
+
+    def test_plain_numbered_paren_list(self) -> None:
+        text = """
+Project name: Test
+1) Authentication module
+2) User management
+3) Reporting
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 3
+        assert project.tasks[0].name == "Authentication module"
+        assert project.tasks[1].name == "User management"
+        assert project.tasks[2].name == "Reporting"
+
+    def test_bracket_numbered_list(self) -> None:
+        text = """
+Project name: Test
+[1] Authentication
+[2] User management
+[3] Reporting module
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 3
+        assert project.tasks[0].name == "Authentication"
+        assert project.tasks[1].name == "User management"
+        assert project.tasks[2].name == "Reporting module"
+
+    # -- AC 2: Task numbers preserved from source numbering ------------------
+
+    def test_numbered_list_preserves_numbers(self) -> None:
+        text = """
+Project name: Test
+1. First task
+2. Second task
+3. Third task
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].number == 1
+        assert project.tasks[1].number == 2
+        assert project.tasks[2].number == 3
+
+    def test_bullet_list_auto_numbers(self) -> None:
+        text = """
+Project name: Test
+- Discovery and requirements
+- Database design
+- Backend implementation
+- Frontend
+- QA
+- Deployment
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 6
+        assert project.tasks[0].number == 1
+        assert project.tasks[0].name == "Discovery and requirements"
+        assert project.tasks[1].number == 2
+        assert project.tasks[2].number == 3
+        assert project.tasks[3].number == 4
+        assert project.tasks[4].number == 5
+        assert project.tasks[5].number == 6
+
+    def test_asterisk_bullet_list(self) -> None:
+        text = """
+Project name: Test
+* Design phase
+* Implementation
+* Testing
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 3
+        assert project.tasks[0].name == "Design phase"
+
+    def test_unicode_bullet_list(self) -> None:
+        text = """
+Project name: Test
+• Design phase
+• Implementation
+• Testing
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 3
+
+    def test_hash_numbered_list(self) -> None:
+        text = """
+Project name: Test
+# 1 First task
+# 2 Second task
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 2
+        assert project.tasks[0].number == 1
+        assert project.tasks[0].name == "First task"
+
+    # -- AC 6: Mixing explicit Task N: with plain bullets disables auto-task --
+
+    def test_explicit_tasks_disable_auto_task(self) -> None:
+        text = """
+Project name: Test
+Task 1: Real task
+- Size: M
+- some extra bullet line that looks like a list item
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 1
+        assert project.tasks[0].name == "Real task"
+        assert project.tasks[0].t_shirt_size == "M"
+
+    def test_explicit_and_plain_bullets_no_auto(self) -> None:
+        """When Task N: headers appear, plain bullets are NOT auto-tasks."""
+        text = """
+Project name: Test
+Task 1: Design
+- Size: M
+Task 2: Implementation
+- Size: L
+- Not a new task
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 2
+
+    # -- AC 7: Indented continuation lines under auto-task bullets -----------
+
+    def test_continuation_lines_under_numbered(self) -> None:
+        text = """
+Project name: Test
+1. Design database schema
+  Size: M
+2. Implement REST API
+  Size: XL
+  Depends on Task 1
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 2
+        assert project.tasks[0].t_shirt_size == "M"
+        assert project.tasks[1].t_shirt_size == "XL"
+        assert project.tasks[1].dependency_refs == ["1"]
+
+    def test_continuation_lines_under_bullets(self) -> None:
+        text = """
+Project name: Test
+- Design phase
+  Size: M
+- Implementation
+  Size: L
+  Estimate: 3/5/10 days
+"""
+        project = self.parser.parse(text)
+        assert len(project.tasks) == 2
+        assert project.tasks[0].t_shirt_size == "M"
+        assert project.tasks[1].t_shirt_size == "L"
+        assert project.tasks[1].low_estimate == pytest.approx(3.0)
+
+    def test_auto_task_with_project_metadata(self) -> None:
+        """Auto-task lines work alongside project metadata."""
+        text = """
+Project name: My Project
+Start date: 2026-01-15
+1. Design phase
+2. Implementation
+"""
+        project = self.parser.parse(text)
+        assert project.name == "My Project"
+        assert project.start_date == "2026-01-15"
+        assert len(project.tasks) == 2
+
+    def test_auto_task_yaml_roundtrip(self) -> None:
+        """Auto-detected tasks produce valid YAML output."""
+        text = """
+Project name: Test
+1. Design
+2. Implementation
+3. Testing
+"""
+        yaml_str = self.parser.parse_and_generate(text)
+        data = yaml.safe_load(yaml_str)
+        assert len(data["tasks"]) == 3
+        assert data["tasks"][0]["id"] == "task_001"
+        assert data["tasks"][0]["name"] == "Design"
+
+
+class TestInlinePropertyExtraction:
+    """Tests for inline property extraction on auto-task lines (Item 1, AC 3-5)."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser()
+
+    # -- AC 3: Bracketed/parenthesized size on task name line ----------------
+
+    def test_bracket_size_on_numbered_item(self) -> None:
+        text = """
+Project name: Test
+1. Backend API [XL]
+2. Frontend [M]
+3. QA [S]
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "XL"
+        assert project.tasks[1].t_shirt_size == "M"
+        assert project.tasks[2].t_shirt_size == "S"
+        # Size token stripped from name
+        assert "XL" not in project.tasks[0].name
+        assert "Backend API" in project.tasks[0].name
+
+    def test_paren_size_on_bullet_item(self) -> None:
+        text = """
+Project name: Test
+- Backend API (XL)
+- Frontend (M)
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "XL"
+        assert project.tasks[1].t_shirt_size == "M"
+
+    def test_paren_size_lowercase(self) -> None:
+        text = """
+Project name: Test
+- Backend (xl)
+- Frontend (m)
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "XL"
+        assert project.tasks[1].t_shirt_size == "M"
+
+    # -- AC 5: Inline estimate ranges ----------------------------------------
+
+    def test_inline_range_on_task_line(self) -> None:
+        """'3–5 days' on task line → low=3, expected=4, high=5, unit=days."""
+        text = """
+Project name: Test
+- QA: 3–5 days
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate == pytest.approx(3.0)
+        assert project.tasks[0].expected_estimate == pytest.approx(4.0)
+        assert project.tasks[0].high_estimate == pytest.approx(5.0)
+        assert project.tasks[0].estimate_unit == "days"
+
+    def test_inline_range_hours(self) -> None:
+        text = """
+Project name: Test
+1. Quick fix 2-4 hours
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate == pytest.approx(2.0)
+        assert project.tasks[0].high_estimate == pytest.approx(4.0)
+        assert project.tasks[0].estimate_unit == "hours"
+
+    def test_inline_range_weeks(self) -> None:
+        text = """
+Project name: Test
+- Backend migration 2–4 weeks
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate == pytest.approx(2.0)
+        assert project.tasks[0].high_estimate == pytest.approx(4.0)
+        assert project.tasks[0].estimate_unit == "weeks"
+
+    def test_inline_range_with_to(self) -> None:
+        """'3 to 5 days' also works."""
+        text = """
+Project name: Test
+- Implementation 3 to 5 days
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate == pytest.approx(3.0)
+        assert project.tasks[0].high_estimate == pytest.approx(5.0)
+
+    # -- Inline dependency on task line --------------------------------------
+
+    def test_inline_depends_on_task_line(self) -> None:
+        text = """
+Project name: Test
+1. Design database schema
+2. Implement REST API depends on Task 1
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == ["1"]
+
+    # -- Combined: size + estimate on same line ------------------------------
+
+    def test_size_and_range_on_same_line(self) -> None:
+        text = """
+Project name: Test
+- Backend API [XL] 3–5 days
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "XL"
+        assert project.tasks[0].low_estimate == pytest.approx(3.0)
+
+    # -- AC 4: Fuzzy size tokens ---------------------------------------------
+
+    def test_fuzzy_probably_m(self) -> None:
+        text = """
+Project name: Test
+- Backend refactoring, probably an M
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "M"
+
+    def test_fuzzy_likely_l(self) -> None:
+        text = """
+Project name: Test
+- Frontend overhaul, likely an L
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "L"
+
+    def test_fuzzy_assume_s(self) -> None:
+        text = """
+Project name: Test
+- Quick patch, assume S
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "S"
+
+    def test_bracket_size_takes_precedence_over_fuzzy(self) -> None:
+        """If both bracket size and fuzzy are present, bracket wins."""
+        text = """
+Project name: Test
+- Backend [XL] probably an M
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "XL"

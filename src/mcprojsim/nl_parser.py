@@ -173,6 +173,33 @@ class NLProjectParser:
         r"confidence\s*(?:levels?)?\s*[:.=]\s*([\d,\s]+)", re.IGNORECASE
     )
 
+    # -- Auto-task trigger patterns (unnumbered/plain lists) ------------------
+    _PLAIN_NUMBERED_RE = re.compile(
+        r"^(\d+)\s*[.)\]]\s*(.+)", re.IGNORECASE
+    )  # "1. foo", "2) bar", "3] baz"
+    _BRACKET_NUMBERED_RE = re.compile(
+        r"^\[(\d+)\]\s*(.+)", re.IGNORECASE
+    )  # "[1] foo", "[2] bar"
+    _PLAIN_BULLET_RE = re.compile(
+        r"^[-*•]\s+(.+)", re.IGNORECASE
+    )  # "- foo", "* bar", "• baz"
+    _HASH_NUMBERED_RE = re.compile(r"^#\s*(\d+)\s+(.+)", re.IGNORECASE)  # "# 1 foo"
+
+    # -- Inline property patterns (auto-task line scanning) -------------------
+    _INLINE_BRACKET_SIZE_RE = re.compile(r"[\[(](XS|S|M|L|XL|XXL)[\])]", re.IGNORECASE)
+    _INLINE_RANGE_RE = re.compile(
+        r"(?:about\s+|around\s+|roughly\s+|~\s*)?(\d+(?:\.\d+)?)"
+        r"\s*(?:[-–—]|to)\s*(\d+(?:\.\d+)?)"
+        r"(?:\s+(hours?|days?|weeks?|h|d|w))?",
+        re.IGNORECASE,
+    )
+    _INLINE_DEPENDS_RE = re.compile(r"depends?\s*(?:on)?\s+(.+)", re.IGNORECASE)
+    _INLINE_FUZZY_SIZE_RE = re.compile(
+        r"(?:probably|likely|assume|estimate[ds]?\s+(?:as\s+)?)"
+        r"\s+(?:an?\s+)?(XS|S|M|L|XL|XXL)\b",
+        re.IGNORECASE,
+    )
+
     # -- Task header -----------------------------------------------------------
     _TASK_HEADER_RE = re.compile(r"task\s*(\d+)\s*[:.=]?\s*(.*)", re.IGNORECASE)
 
@@ -362,6 +389,10 @@ class NLProjectParser:
         current_sprint_history: ParsedSprintHistoryEntry | None = None
         current_future_override: ParsedFutureSprintOverride | None = None
         in_sprint_planning = False
+        # Auto-task detection state
+        auto_task_mode = False
+        auto_task_counter = 1
+        any_explicit_task_seen = False
 
         def _flush_section() -> None:
             nonlocal current_task, current_resource, current_calendar
@@ -406,6 +437,7 @@ class NLProjectParser:
             task_match = self._TASK_HEADER_RE.match(line)
             if task_match:
                 _flush_section()
+                any_explicit_task_seen = True
                 task_num = int(task_match.group(1))
                 inline_name = task_match.group(2).strip().rstrip(":.")
                 current_task = ParsedTask(number=task_num)
@@ -480,6 +512,57 @@ class NLProjectParser:
                 elif self._ISO_DATE_RE.fullmatch(locator):
                     current_future_override.start_date = locator
                 continue
+
+            # Auto-task mode: decide whether a line is a continuation,
+            # a new auto-task, or ends the current auto-task section.
+            if auto_task_mode and current_task is not None:
+                is_indented = raw_line != raw_line.lstrip() and bool(line)
+                if is_indented:
+                    # Indented continuation → treat as task bullet
+                    bullet_text = re.sub(r"^[-*•]\s*", "", line).strip()
+                    if not bullet_text:
+                        continue
+                    if self._try_parse_task_name(bullet_text, current_task):
+                        continue
+                    if self._try_parse_task_max_resources(bullet_text, current_task):
+                        continue
+                    if self._try_parse_task_min_experience(bullet_text, current_task):
+                        continue
+                    if self._try_parse_task_resources(bullet_text, current_task):
+                        continue
+                    if self._try_parse_size(bullet_text, current_task):
+                        continue
+                    if self._try_parse_story_points(bullet_text, current_task):
+                        continue
+                    if self._try_parse_depends(bullet_text, current_task):
+                        continue
+                    if self._try_parse_estimate(bullet_text, current_task):
+                        continue
+                    # Unmatched continuation → name or description
+                    if not current_task.name:
+                        current_task.name = bullet_text
+                    elif not current_task.description:
+                        current_task.description = bullet_text
+                    continue
+                # Not indented: check for a new auto-task item
+                new_auto = self._try_start_auto_task(
+                    line,
+                    current_task,
+                    auto_task_counter,
+                    _flush_section,
+                )
+                if new_auto is not None:
+                    current_task = new_auto
+                    if new_auto.number >= auto_task_counter:
+                        auto_task_counter = new_auto.number + 1
+                    else:
+                        auto_task_counter += 1
+                    continue
+                # Not indented and not a list item → close auto-task
+                _flush_section()
+                current_task = None
+                auto_task_mode = False
+                # Fall through to normal processing
 
             # Inside a task: process bullet points
             if current_task is not None:
@@ -556,6 +639,29 @@ class NLProjectParser:
                     bullet_text, project.sprint_planning
                 )
                 continue
+
+            # Auto-task detection: plain numbered/bullet/bracket lists
+            if not any_explicit_task_seen and not self._is_section_open(
+                current_resource,
+                current_calendar,
+                current_sprint_history,
+                current_future_override,
+                in_sprint_planning,
+            ):
+                auto_task_started = self._try_start_auto_task(
+                    line,
+                    current_task,
+                    auto_task_counter,
+                    _flush_section,
+                )
+                if auto_task_started is not None:
+                    current_task = auto_task_started
+                    auto_task_mode = True
+                    if auto_task_started.number >= auto_task_counter:
+                        auto_task_counter = auto_task_started.number + 1
+                    else:
+                        auto_task_counter += 1
+                    continue
 
             # Project-level metadata
             self._try_parse_project_metadata(line, project)
@@ -841,6 +947,148 @@ class NLProjectParser:
         return self.to_yaml(project)
 
     # -- Private helpers -------------------------------------------------------
+
+    @staticmethod
+    def _is_section_open(
+        current_resource: ParsedResource | None,
+        current_calendar: ParsedCalendar | None,
+        current_sprint_history: ParsedSprintHistoryEntry | None,
+        current_future_override: ParsedFutureSprintOverride | None,
+        in_sprint_planning: bool,
+    ) -> bool:
+        """Return True if a non-task section is currently open."""
+        return (
+            current_resource is not None
+            or current_calendar is not None
+            or current_sprint_history is not None
+            or current_future_override is not None
+            or in_sprint_planning
+        )
+
+    def _try_start_auto_task(
+        self,
+        line: str,
+        current_task: ParsedTask | None,
+        auto_task_counter: int,
+        flush: object,
+    ) -> ParsedTask | None:
+        """Try to start an auto-detected task from a plain list line.
+
+        Returns a new ParsedTask if the line matches an auto-task pattern,
+        or None if it does not match.
+        """
+        # Bracket numbered: [1] foo
+        m = self._BRACKET_NUMBERED_RE.match(line)
+        if m:
+            if current_task is not None:
+                flush()  # type: ignore[operator]
+            task_num = int(m.group(1))
+            name = m.group(2).strip()
+            task = ParsedTask(number=task_num, name=name)
+            self._extract_inline_properties(name, task)
+            return task
+
+        # Plain numbered: 1. foo, 2) bar
+        m = self._PLAIN_NUMBERED_RE.match(line)
+        if m:
+            if current_task is not None:
+                flush()  # type: ignore[operator]
+            task_num = int(m.group(1))
+            name = m.group(2).strip()
+            task = ParsedTask(number=task_num, name=name)
+            self._extract_inline_properties(name, task)
+            return task
+
+        # Hash numbered: # 1 foo
+        m = self._HASH_NUMBERED_RE.match(line)
+        if m:
+            if current_task is not None:
+                flush()  # type: ignore[operator]
+            task_num = int(m.group(1))
+            name = m.group(2).strip()
+            task = ParsedTask(number=task_num, name=name)
+            self._extract_inline_properties(name, task)
+            return task
+
+        # Plain bullet: - foo, * bar, • baz
+        m = self._PLAIN_BULLET_RE.match(line)
+        if m:
+            if current_task is not None:
+                flush()  # type: ignore[operator]
+            name = m.group(1).strip()
+            task = ParsedTask(number=auto_task_counter, name=name)
+            self._extract_inline_properties(name, task)
+            return task
+
+        return None
+
+    def _extract_inline_properties(self, text: str, task: ParsedTask) -> None:
+        """Extract inline size, estimate, or dependency from a task name line.
+
+        Scans the text for bracketed/parenthesized size tokens, fuzzy size
+        hints, inline estimate ranges, and dependency phrases.
+        Modifies the task in-place and strips matched tokens from the name.
+        """
+        remaining = text
+
+        # Bracketed/parenthesized size: [XL], (M)
+        m = self._INLINE_BRACKET_SIZE_RE.search(remaining)
+        if m and task.t_shirt_size is None:
+            raw = m.group(1).upper()
+            normalized = _SIZE_ALIASES.get(raw)
+            if normalized and normalized in _VALID_SIZES:
+                task.t_shirt_size = normalized
+                remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
+
+        # Fuzzy size hint: "probably an M", "likely L", "assume S"
+        if task.t_shirt_size is None:
+            m = self._INLINE_FUZZY_SIZE_RE.search(remaining)
+            if m:
+                raw = m.group(1).upper()
+                normalized = _SIZE_ALIASES.get(raw)
+                if normalized and normalized in _VALID_SIZES:
+                    task.t_shirt_size = normalized
+                    remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
+
+        # Inline estimate range: "3-5 days", "3–5 days"
+        if task.low_estimate is None:
+            m = self._INLINE_RANGE_RE.search(remaining)
+            if m:
+                low = float(m.group(1))
+                high = float(m.group(2))
+                if low < high:
+                    task.low_estimate = low
+                    task.expected_estimate = (low + high) / 2
+                    task.high_estimate = high
+                    if m.group(3):
+                        task.estimate_unit = self._normalize_unit(m.group(3))
+                    remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
+
+        # Inline dependency: "depends on Task 1"
+        m = self._INLINE_DEPENDS_RE.search(remaining)
+        if m and not task.dependency_refs:
+            dep_text = m.group(1)
+            refs = self._TASK_REF_RE.findall(dep_text)
+            if not refs:
+                refs = re.findall(r"(\d+)", dep_text)
+            if refs:
+                task.dependency_refs = [str(int(r)) for r in refs]
+                remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
+
+        # Clean up the task name: remove extracted tokens
+        cleaned = remaining.strip().rstrip(".,;:- ")
+        if cleaned:
+            task.name = cleaned
+
+    @staticmethod
+    def _normalize_unit(unit_str: str) -> str:
+        """Normalize a time unit string to canonical form."""
+        u = unit_str.lower()
+        if u.startswith("hour") or u == "h":
+            return "hours"
+        if u.startswith("week") or u == "w":
+            return "weeks"
+        return "days"
 
     def _try_parse_project_metadata(self, line: str, project: ParsedProject) -> bool:
         m = self._PROJECT_NAME_RE.match(line)
