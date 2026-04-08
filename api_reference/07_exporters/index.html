@@ -865,6 +865,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../user_guide/nl_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Natural Language Input
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../user_guide/mcp-server/" class="md-nav__link">
         
   
@@ -1159,6 +1187,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -1201,6 +1231,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1209,18 +1241,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#exporters" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exporters
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Exporters">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#jsonexporter" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1230,8 +1261,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#csvexporter" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1241,8 +1272,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#htmlexporter" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1250,11 +1281,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1457,6 +1483,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1465,18 +1493,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#exporters" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Exporters
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Exporters">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#jsonexporter" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1486,8 +1513,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#csvexporter" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1497,8 +1524,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#htmlexporter" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1506,11 +1533,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1534,11 +1556,49 @@
   
 
 
-  <h1>Exporters</h1>
-
-<h2 id="exporters">Exporters<a class="headerlink" href="#exporters" title="Permanent link">&para;</a></h2>
+<h1 id="exporters">Exporters<a class="headerlink" href="#exporters" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The exporters module converts a <code>SimulationResults</code> object into persistent output files. All three exporters — <code>JSONExporter</code>, <code>CSVExporter</code>, and <code>HTMLExporter</code> — expose the same design: a single static <code>export()</code> class method that writes directly to a file path. Choose JSON for downstream tooling and API integration, CSV for spreadsheet analysis, and HTML for human-readable reports that can be shared without any tooling. Sprint-planning results and the original <code>Project</code> definition are optional enrichments accepted by all three. The <code>include_historic_base</code> flag embeds baseline comparison data and is supported only by JSON and HTML; passing it to CSV raises a <code>ValueError</code>.</p>
+<p><strong>When to use this module:</strong> Write simulation output to disk from your own Python code, or extend a pipeline that consumes JSON, CSV, or HTML artefacts.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JSON export</td>
+<td>Full results: percentiles, statistics, histogram, critical paths, risk summaries, sprint data</td>
+</tr>
+<tr>
+<td>CSV export</td>
+<td>Flat table: metrics, percentiles, critical paths, histogram bins, risk impact, resource diagnostics</td>
+</tr>
+<tr>
+<td>HTML export</td>
+<td>Self-contained visual report with embedded charts (requires <code>matplotlib</code>)</td>
+</tr>
+<tr>
+<td>Sprint results embedding</td>
+<td>All three exporters accept optional <code>SprintPlanningResults</code></td>
+</tr>
+<tr>
+<td>Historic baseline</td>
+<td><code>include_historic_base=True</code> embeds baseline comparison data (JSON and HTML only)</td>
+</tr>
+<tr>
+<td>Config-driven output</td>
+<td>Histogram bin count and critical-path report limit come from <code>Config.output</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Imports:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONExporter</span><span class="p">,</span> <span class="n">CSVExporter</span><span class="p">,</span> <span class="n">HTMLExporter</span>
+</span></code></pre></div></p>
 <p>All exporters support histogram data, critical-path output, sprint-planning results, and historic-base data (when available). The histogram bin count defaults to 50 but is controlled by <code>config.output.histogram_bins</code>.</p>
-<h3 id="jsonexporter"><code>JSONExporter</code><a class="headerlink" href="#jsonexporter" title="Permanent link">&para;</a></h3>
+<h2 id="jsonexporter"><code>JSONExporter</code><a class="headerlink" href="#jsonexporter" title="Permanent link">&para;</a></h2>
 <p>Exports comprehensive results including all percentiles, statistics, histogram data, critical paths, risk summaries, and sprint-planning data to JSON.</p>
 <p><strong>Method:</strong> <code>export(results, output_path, config=None, critical_path_limit=None, sprint_results=None, project=None, include_historic_base=False) -&gt; None</code></p>
 <table>
@@ -1596,18 +1656,18 @@
 </tbody>
 </table>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONExporter</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">JSONExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">results</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="s2">&quot;results.json&quot;</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">critical_path_limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">sprint_results</span><span class="o">=</span><span class="n">sprint_results</span><span class="p">,</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONExporter</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">JSONExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">results</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="s2">&quot;results.json&quot;</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">critical_path_limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">sprint_results</span><span class="o">=</span><span class="n">sprint_results</span><span class="p">,</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="csvexporter"><code>CSVExporter</code><a class="headerlink" href="#csvexporter" title="Permanent link">&para;</a></h3>
+<h2 id="csvexporter"><code>CSVExporter</code><a class="headerlink" href="#csvexporter" title="Permanent link">&para;</a></h2>
 <p>Exports results as a CSV table format: metrics, percentiles, critical paths, histogram data, risk impact, resource diagnostics, and sprint data.</p>
 <p><strong>Method:</strong> <code>export(results, output_path, config=None, critical_path_limit=None, sprint_results=None) -&gt; None</code></p>
 <table>
@@ -1653,11 +1713,11 @@
 </tbody>
 </table>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSVExporter</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">CSVExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="s2">&quot;results.csv&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSVExporter</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">CSVExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="s2">&quot;results.csv&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="htmlexporter"><code>HTMLExporter</code><a class="headerlink" href="#htmlexporter" title="Permanent link">&para;</a></h3>
+<h2 id="htmlexporter"><code>HTMLExporter</code><a class="headerlink" href="#htmlexporter" title="Permanent link">&para;</a></h2>
 <p>Exports a formatted, interactive HTML report with thermometers, percentile tables, charts (using matplotlib), critical-path analysis, staffing recommendations, and sprint-planning traceability.</p>
 <p><strong>Method:</strong> <code>export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, include_historic_base=False) -&gt; None</code></p>
 <table>
@@ -1722,17 +1782,17 @@
 <li>Effort data is shown per task.</li>
 </ul>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLExporter</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">HTMLExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">results</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="s2">&quot;report.html&quot;</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">critical_path_limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">sprint_results</span><span class="o">=</span><span class="n">sprint_results</span><span class="p">,</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">include_historic_base</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.exporters</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLExporter</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">HTMLExporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">results</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="s2">&quot;report.html&quot;</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">critical_path_limit</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">sprint_results</span><span class="o">=</span><span class="n">sprint_results</span><span class="p">,</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">include_historic_base</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">)</span>
 </span></code></pre></div>
 
 

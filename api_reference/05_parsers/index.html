@@ -865,6 +865,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../user_guide/nl_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Natural Language Input
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../user_guide/mcp-server/" class="md-nav__link">
         
   
@@ -1103,6 +1131,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -1145,6 +1175,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1153,18 +1185,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#parsers" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parsers
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Parsers">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#yamlparser" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1174,8 +1205,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#tomlparser" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1183,11 +1214,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1446,6 +1472,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1454,18 +1482,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#parsers" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parsers
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Parsers">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#yamlparser" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1475,8 +1502,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#tomlparser" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1484,11 +1511,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1512,13 +1534,45 @@
   
 
 
-  <h1>Parsers</h1>
-
-<h2 id="parsers">Parsers<a class="headerlink" href="#parsers" title="Permanent link">&para;</a></h2>
-<p>Both parsers translate project definition files into <a href="../03_project_model/"><code>Project</code></a> model objects. They share an identical public interface and emit file-and-line-aware error messages on invalid input.</p>
+<h1 id="parsers">Parsers<a class="headerlink" href="#parsers" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The <code>mcprojsim.parsers</code> module translates YAML and TOML project definition files into validated <a href="../03_project_model/"><code>Project</code></a> model objects. <code>YAMLParser</code> and <code>TOMLParser</code> share an identical public interface — <code>parse_file</code>, <code>parse_dict</code>, and <code>validate_file</code> — so they are interchangeable given a file format. Both parsers use <code>error_reporting.py</code> to preserve file-and-line context when surfacing validation errors, so error messages point to the exact source location rather than generic Pydantic output.</p>
+<p><strong>When to use this module:</strong> Use the parsers when loading a project from disk in a script or tool integration; use <code>validate_file</code> for non-raising pre-flight checks before a simulation run.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>YAML loading</td>
+<td><code>YAMLParser.parse_file</code> reads and parses a <code>.yaml</code> project file into a <code>Project</code></td>
+</tr>
+<tr>
+<td>TOML loading</td>
+<td><code>TOMLParser.parse_file</code> reads and parses a <code>.toml</code> project file into a <code>Project</code></td>
+</tr>
+<tr>
+<td>In-memory parsing</td>
+<td><code>parse_dict</code> constructs a <code>Project</code> from an already-loaded dictionary</td>
+</tr>
+<tr>
+<td>Non-raising validation</td>
+<td><code>validate_file</code> returns <code>(bool, error_message)</code> without raising an exception</td>
+</tr>
+<tr>
+<td>Line-aware errors</td>
+<td>All errors include the file path and source line number via <code>error_reporting.py</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Imports:</strong>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">YAMLParser</span><span class="p">,</span> <span class="n">TOMLParser</span>
-</span></code></pre></div>
-<h3 id="yamlparser"><code>YAMLParser</code><a class="headerlink" href="#yamlparser" title="Permanent link">&para;</a></h3>
+</span></code></pre></div></p>
+<hr />
+<h2 id="yamlparser"><code>YAMLParser</code><a class="headerlink" href="#yamlparser" title="Permanent link">&para;</a></h2>
 <p>Parses YAML project files into <code>Project</code> objects.</p>
 <table>
 <thead>
@@ -1558,7 +1612,7 @@
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">:</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="tomlparser"><code>TOMLParser</code><a class="headerlink" href="#tomlparser" title="Permanent link">&para;</a></h3>
+<h2 id="tomlparser"><code>TOMLParser</code><a class="headerlink" href="#tomlparser" title="Permanent link">&para;</a></h2>
 <p>Identical interface to <code>YAMLParser</code>, but for TOML project files.</p>
 <table>
 <thead>

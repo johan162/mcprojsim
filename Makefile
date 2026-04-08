@@ -217,6 +217,7 @@ USER_GUIDE_MD_SOURCES := \
 	$(DOCS_DIR)/user_guide/running_simulations.md  \
 	$(DOCS_DIR)/user_guide/interpreting_results.md  \
 	$(DOCS_DIR)/user_guide/configuration.md  \
+	$(DOCS_DIR)/user_guide/nl_processing.md  \
 	$(DOCS_DIR)/user_guide/mcp-server.md \
 	$(DOCS_DIR)/examples.md
 

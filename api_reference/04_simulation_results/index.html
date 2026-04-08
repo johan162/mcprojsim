@@ -865,6 +865,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../user_guide/nl_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Natural Language Input
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../user_guide/mcp-server/" class="md-nav__link">
         
   
@@ -1075,6 +1103,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -1117,6 +1147,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1125,18 +1157,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#simulation-results-models" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Simulation Results Models
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Simulation Results Models">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#criticalpathrecord" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1146,8 +1177,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#twopassdelta" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1157,8 +1188,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#simulationresults" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1166,11 +1197,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1457,6 +1483,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1465,18 +1493,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#simulation-results-models" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Simulation Results Models
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Simulation Results Models">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#criticalpathrecord" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1486,8 +1513,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#twopassdelta" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1497,8 +1524,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#simulationresults" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1506,11 +1533,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1534,10 +1556,50 @@
   
 
 
-  <h1>Simulation</h1>
-
-<h2 id="simulation-results-models">Simulation Results Models<a class="headerlink" href="#simulation-results-models" title="Permanent link">&para;</a></h2>
-<h3 id="criticalpathrecord"><code>CriticalPathRecord</code><a class="headerlink" href="#criticalpathrecord" title="Permanent link">&para;</a></h3>
+<h1 id="simulation-results-models">Simulation Results Models<a class="headerlink" href="#simulation-results-models" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p><code>mcprojsim.models.simulation</code> holds the output models produced by <code>SimulationEngine</code> after a Monte Carlo run. <code>SimulationResults</code> stores numpy arrays of per-iteration elapsed project durations alongside aggregated statistics, per-task metrics, and critical-path data. A key design distinction is that <code>durations</code> represents <em>elapsed</em> project time (critical-path length), while <code>effort_durations</code> represents <em>total person-effort</em> (the sum of all task durations per iteration) — these differ whenever tasks run in parallel.</p>
+<p><strong>When to use this module:</strong> Access it directly when reading simulation output, computing custom percentiles, querying critical-path sequences, or serialising results to JSON/CSV via <code>to_dict()</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Elapsed duration percentiles</td>
+<td><code>percentile(p)</code> queries <code>durations</code> (critical-path hours) at any percentile</td>
+</tr>
+<tr>
+<td>Total effort percentiles</td>
+<td><code>effort_percentile(p)</code> queries <code>effort_durations</code> (person-hours) at any percentile</td>
+</tr>
+<tr>
+<td>Critical-path task frequency</td>
+<td><code>get_critical_path()</code> returns each task's criticality index (0–1) across iterations</td>
+</tr>
+<tr>
+<td>Full path sequences</td>
+<td><code>get_critical_path_sequences()</code> returns ordered <code>CriticalPathRecord</code> objects by frequency</td>
+</tr>
+<tr>
+<td>Delivery date projection</td>
+<td><code>delivery_date(hours)</code> adds working days to <code>start_date</code>, skipping weekends</td>
+</tr>
+<tr>
+<td>Serialisation</td>
+<td><code>to_dict()</code> converts the full result to a nested plain dictionary for export</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Background: Elapsed duration vs. total effort</strong> — Monte Carlo simulation samples each task's duration stochastically. The <em>elapsed</em> project duration is the critical-path length (tasks that cannot run in parallel). <em>Total effort</em> is the arithmetic sum of all task durations and represents person-hours of work. When tasks run in parallel, elapsed &lt; total effort; keeping both arrays enables accurate both schedule and staffing estimates.</p>
+<p><strong>Imports:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.models.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationResults</span><span class="p">,</span> <span class="n">CriticalPathRecord</span><span class="p">,</span> <span class="n">TwoPassDelta</span>
+</span></code></pre></div></p>
+<hr />
+<h2 id="criticalpathrecord"><code>CriticalPathRecord</code><a class="headerlink" href="#criticalpathrecord" title="Permanent link">&para;</a></h2>
 <p>Represents one aggregated critical-path sequence across all simulation iterations.</p>
 <table>
 <thead>
@@ -1567,7 +1629,7 @@
 </table>
 <p><strong>Method:</strong> <code>format_path() -&gt; str</code> — Returns the path as a human-readable arrow-separated string (e.g. <code>"task_a -&gt; task_b -&gt; task_c"</code>).</p>
 <hr />
-<h3 id="twopassdelta"><code>TwoPassDelta</code><a class="headerlink" href="#twopassdelta" title="Permanent link">&para;</a></h3>
+<h2 id="twopassdelta"><code>TwoPassDelta</code><a class="headerlink" href="#twopassdelta" title="Permanent link">&para;</a></h2>
 <p>Traceability payload produced when the <code>criticality_two_pass</code> scheduling mode is active. Stores pass-1 baseline statistics, pass-2 full-run statistics, and the deltas between them.</p>
 <p><strong>Pass metadata:</strong></p>
 <table>
@@ -1670,7 +1732,7 @@
 <code>delta_mean_hours</code>, <code>delta_p50_hours</code>, <code>delta_p80_hours</code>, <code>delta_p90_hours</code>, <code>delta_p95_hours</code>, <code>delta_resource_wait_hours</code>, <code>delta_resource_utilization</code>, <code>delta_calendar_delay_hours</code></p>
 <p><strong>Method:</strong> <code>to_dict() -&gt; dict[str, Any]</code> — Serialize the traceability payload to a nested dictionary.</p>
 <hr />
-<h3 id="simulationresults"><code>SimulationResults</code><a class="headerlink" href="#simulationresults" title="Permanent link">&para;</a></h3>
+<h2 id="simulationresults"><code>SimulationResults</code><a class="headerlink" href="#simulationresults" title="Permanent link">&para;</a></h2>
 <p>Holds the complete output of a Monte Carlo simulation run, including all percentiles, critical path analysis, risk summaries, resource diagnostics, and per-task metrics.</p>
 <p><strong>Fields:</strong></p>
 <table>
@@ -1897,66 +1959,66 @@
 <li><strong><code>to_dict() -&gt; dict[str, Any]</code></strong> — Serialize results to a dictionary</li>
 </ul>
 <p><strong>Example: Complete Results Query</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEngine</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">YAMLParser</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Setup</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">project</span> <span class="o">=</span> <span class="n">YAMLParser</span><span class="p">()</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">SimulationEngine</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">results</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># Query duration statistics</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean duration: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours (</span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">hours_per_day</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> days)&quot;</span><span class="p">)</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median (P50): </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P80 estimate: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P95 estimate: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">95</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="c1"># Calculate success odds for a deadline</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">deadline_hours</span> <span class="o">=</span> <span class="mi">500</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="n">success_prob</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">probability_of_completion</span><span class="p">(</span><span class="n">deadline_hours</span><span class="p">)</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Probability of completion within </span><span class="si">{</span><span class="n">deadline_hours</span><span class="si">}</span><span class="s2"> hours: </span><span class="si">{</span><span class="n">success_prob</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="c1"># Get a delivery date for a specific duration</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="n">delivery</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">delivery_date</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">80</span><span class="p">))</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P80 delivery date: </span><span class="si">{</span><span class="n">delivery</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="c1"># Analyze critical path</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="n">critical_tasks</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_critical_path</span><span class="p">()</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="n">top_critical</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">critical_tasks</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="mi">5</span><span class="p">]</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Top 5 critical tasks (frequency on critical path):&quot;</span><span class="p">)</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">for</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">criticality</span> <span class="ow">in</span> <span class="n">top_critical</span><span class="p">:</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">criticality</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="c1"># Get most common path</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="n">most_common</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_most_frequent_critical_path</span><span class="p">()</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">if</span> <span class="n">most_common</span><span class="p">:</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Most frequent path (</span><span class="si">{</span><span class="n">most_common</span><span class="o">.</span><span class="n">frequency</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%): </span><span class="si">{</span><span class="n">most_common</span><span class="o">.</span><span class="n">format_path</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="c1"># Show histogram data (for charting)</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="n">bin_edges</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_histogram_data</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Histogram: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2"> bins, total observations: </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="c1"># Risk analysis</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="n">risk_summary</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_risk_impact_summary</span><span class="p">()</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">for</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">stats</span> <span class="ow">in</span> <span class="n">risk_summary</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>    <span class="k">if</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;trigger_rate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>  <span class="c1"># Show risks triggered in &gt;5% of iterations</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;trigger_rate&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">% trigger rate, &quot;</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>              <span class="sa">f</span><span class="s2">&quot;mean impact </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;mean_impact&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">h&quot;</span><span class="p">)</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="c1"># Resource constraints info (if applicable)</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">resource_constraints_active</span><span class="p">:</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Resource utilization: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">resource_utilization</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average resource wait time: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">resource_wait_time_hours</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calendar delay time: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">calendar_delay_time_hours</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="c1"># Two-pass scheduling info (if used)</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span> <span class="ow">and</span> <span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Two-pass scheduling used:&quot;</span><span class="p">)</span>
-</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Pass 1 iterations: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">pass1_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Pass 2 iterations: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">pass2_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-60"><a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  P50 delta: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">delta_p50_hours</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEngine</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.parsers</span><span class="w"> </span><span class="kn">import</span> <span class="n">YAMLParser</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Setup</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">project</span> <span class="o">=</span> <span class="n">YAMLParser</span><span class="p">()</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">engine</span> <span class="o">=</span> <span class="n">SimulationEngine</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">results</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># Query duration statistics</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean duration: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours (</span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">mean</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">results</span><span class="o">.</span><span class="n">hours_per_day</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> days)&quot;</span><span class="p">)</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median (P50): </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P80 estimate: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P95 estimate: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">95</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="c1"># Calculate success odds for a deadline</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="n">deadline_hours</span> <span class="o">=</span> <span class="mi">500</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="n">success_prob</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">probability_of_completion</span><span class="p">(</span><span class="n">deadline_hours</span><span class="p">)</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Probability of completion within </span><span class="si">{</span><span class="n">deadline_hours</span><span class="si">}</span><span class="s2"> hours: </span><span class="si">{</span><span class="n">success_prob</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="c1"># Get a delivery date for a specific duration</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="n">delivery</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">delivery_date</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="mi">80</span><span class="p">))</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P80 delivery date: </span><span class="si">{</span><span class="n">delivery</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="c1"># Analyze critical path</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="n">critical_tasks</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_critical_path</span><span class="p">()</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="n">top_critical</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">critical_tasks</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="mi">5</span><span class="p">]</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Top 5 critical tasks (frequency on critical path):&quot;</span><span class="p">)</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="k">for</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">criticality</span> <span class="ow">in</span> <span class="n">top_critical</span><span class="p">:</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">criticality</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="c1"># Get most common path</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="n">most_common</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_most_frequent_critical_path</span><span class="p">()</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="k">if</span> <span class="n">most_common</span><span class="p">:</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Most frequent path (</span><span class="si">{</span><span class="n">most_common</span><span class="o">.</span><span class="n">frequency</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%): </span><span class="si">{</span><span class="n">most_common</span><span class="o">.</span><span class="n">format_path</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="c1"># Show histogram data (for charting)</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="n">bin_edges</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_histogram_data</span><span class="p">(</span><span class="n">bins</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Histogram: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">bin_edges</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2"> bins, total observations: </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
+</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="c1"># Risk analysis</span>
+</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="n">risk_summary</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get_risk_impact_summary</span><span class="p">()</span>
+</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">for</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">stats</span> <span class="ow">in</span> <span class="n">risk_summary</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>    <span class="k">if</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;trigger_rate&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>  <span class="c1"># Show risks triggered in &gt;5% of iterations</span>
+</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;trigger_rate&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">% trigger rate, &quot;</span>
+</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>              <span class="sa">f</span><span class="s2">&quot;mean impact </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;mean_impact&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">h&quot;</span><span class="p">)</span>
+</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>
+</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="c1"># Resource constraints info (if applicable)</span>
+</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">resource_constraints_active</span><span class="p">:</span>
+</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Resource utilization: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">resource_utilization</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average resource wait time: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">resource_wait_time_hours</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
+</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calendar delay time: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">calendar_delay_time_hours</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
+</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="c1"># Two-pass scheduling info (if used)</span>
+</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a><span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span> <span class="ow">and</span> <span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+</span><span id="__span-1-57"><a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Two-pass scheduling used:&quot;</span><span class="p">)</span>
+</span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Pass 1 iterations: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">pass1_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-59"><a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Pass 2 iterations: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">pass2_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-1-60"><a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  P50 delta: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">delta_p50_hours</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 
 

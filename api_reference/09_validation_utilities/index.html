@@ -865,6 +865,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../user_guide/nl_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Natural Language Input
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../user_guide/mcp-server/" class="md-nav__link">
         
   
@@ -1215,6 +1243,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -1257,6 +1287,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1265,18 +1297,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#validation-utilities" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Validation Utilities
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Validation Utilities">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#validator" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1286,8 +1317,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#setup_logging" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1295,11 +1326,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1446,6 +1472,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1454,18 +1482,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#validation-utilities" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Validation Utilities
+        Overview
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Validation Utilities">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
+</li>
+      
+        <li class="md-nav__item">
   <a href="#validator" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1475,8 +1502,8 @@
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#setup_logging" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1484,11 +1511,6 @@
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1512,37 +1534,72 @@
   
 
 
-  <h1>Validation utilities</h1>
-
-<h2 id="validation-utilities">Validation Utilities<a class="headerlink" href="#validation-utilities" title="Permanent link">&para;</a></h2>
-<h3 id="validator"><code>Validator</code><a class="headerlink" href="#validator" title="Permanent link">&para;</a></h3>
+<h1 id="validation-utilities">Validation Utilities<a class="headerlink" href="#validation-utilities" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>This module provides two lightweight utilities for integrating mcprojsim into scripts and pipelines. <code>Validator</code> offers a single static method that auto-detects a project file's format from its extension (<code>.yaml</code>/<code>.yml</code> or <code>.toml</code>), delegates to the appropriate parser, and returns a structured <code>(bool, str)</code> result — no parser knowledge required. <code>setup_logging</code> configures the named <code>mcprojsim</code> logger for library consumers, directing output to stdout with a timestamped format and a configurable log level.</p>
+<p><strong>When to use this module:</strong> Use <code>Validator</code> for pre-flight checks in CI/CD pipelines before running a simulation, and <code>setup_logging</code> when embedding mcprojsim as a library to control log verbosity without touching the root logger.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Format auto-detection</td>
+<td>Chooses <code>YAMLParser</code> or <code>TOMLParser</code> based on file extension</td>
+</tr>
+<tr>
+<td>File existence check</td>
+<td>Returns a clear error if the file path does not exist</td>
+</tr>
+<tr>
+<td>Structured result</td>
+<td>Returns <code>(True, "")</code> on success or <code>(False, error_message)</code> on failure</td>
+</tr>
+<tr>
+<td>Logger configuration</td>
+<td>Configures the <code>mcprojsim</code> named logger with a stdout handler and formatter</td>
+</tr>
+<tr>
+<td>Configurable log level</td>
+<td>Accepts <code>DEBUG</code>, <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>, or <code>CRITICAL</code> as a string</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Imports:</strong>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Validator</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils.logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_logging</span>
+</span></code></pre></div></p>
+<h2 id="validator"><code>Validator</code><a class="headerlink" href="#validator" title="Permanent link">&para;</a></h2>
 <p>Convenience utility for validating project files by extension.</p>
 <p>Import:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Validator</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">Validator</span>
 </span></code></pre></div>
 <p><strong>Method:</strong></p>
 <ul>
 <li><strong><code>validate_file(file_path: Path | str) -&gt; tuple[bool, str]</code></strong> — Returns <code>(True, "")</code> on success or <code>(False, error_message)</code> on failure. Selects the parser automatically based on file extension (<code>.yaml</code>/<code>.yml</code> or <code>.toml</code>). Returns an error for unsupported extensions or missing files.</li>
 </ul>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">is_valid</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">Validator</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">:</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation failed: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">else</span><span class="p">:</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Project is valid!&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">is_valid</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">Validator</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">:</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation failed: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">else</span><span class="p">:</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Project is valid!&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h3 id="setup_logging"><code>setup_logging</code><a class="headerlink" href="#setup_logging" title="Permanent link">&para;</a></h3>
+<h2 id="setup_logging"><code>setup_logging</code><a class="headerlink" href="#setup_logging" title="Permanent link">&para;</a></h2>
 <p>Configure logging verbosity and output for library usage.</p>
 <p>Import:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_logging</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_logging</span>
 </span></code></pre></div>
 <p><strong>Method:</strong></p>
 <ul>
 <li><strong><code>setup_logging(level: str = "INFO") -&gt; logging.Logger</code></strong> — Configure and return the <code>mcprojsim</code> named logger at the specified level. Accepted levels: <code>"DEBUG"</code>, <code>"INFO"</code>, <code>"WARNING"</code>, <code>"ERROR"</code>, <code>"CRITICAL"</code>.</li>
 </ul>
 <p><strong>Example:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logging</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Simulation started&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logging</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Simulation started&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 
 

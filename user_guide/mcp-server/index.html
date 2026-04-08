@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://johan162.github.io/mcprojsim/user_guide/mcp-server/">
       
       
-        <link rel="prev" href="../configuration/">
+        <link rel="prev" href="../nl_processing/">
       
       
         <link rel="next" href="../../examples/">
@@ -865,6 +865,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../nl_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Natural Language Input
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1370,6 +1398,17 @@
     <span class="md-ellipsis">
       
         Example 6: Verbose size labels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-7-auto-detected-lists-with-inline-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 7: Auto-detected lists with inline properties
       
     </span>
   </a>
@@ -2450,6 +2489,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#example-7-auto-detected-lists-with-inline-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 7: Auto-detected lists with inline properties
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3125,7 +3175,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </blockquote>
 <p>The assistant will call <code>validate_project_description</code> and report any warnings (missing estimates, undefined dependencies) before you commit to generating the file.</p>
 <h2 id="natural-language-input-format">Natural language input format<a class="headerlink" href="#natural-language-input-format" title="Permanent link">&para;</a></h2>
-<p>The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes.</p>
+<p>The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes. It also accepts plain numbered lists, bullet lists, and inline properties — see <a href="../nl_processing/">Natural Language Input</a> for the comprehensive reference.</p>
 <p>The parser also supports sprint-planning phrasing, including sprint history and future sprint capacity override sections.</p>
 <h3 id="project-level-fields">Project-level fields<a class="headerlink" href="#project-level-fields" title="Permanent link">&para;</a></h3>
 <table>
@@ -3576,45 +3626,73 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a>- Size: Small
 </span></code></pre></div>
 <p><code>Extra Small</code> becomes <code>XS</code>, <code>Extra Large</code> becomes <code>XL</code>, and <code>Small</code> becomes <code>S</code> in the generated YAML.</p>
+<h3 id="example-7-auto-detected-lists-with-inline-properties">Example 7: Auto-detected lists with inline properties<a class="headerlink" href="#example-7-auto-detected-lists-with-inline-properties" title="Permanent link">&para;</a></h3>
+<p>You don't need <code>Task N:</code> headers at all. Plain numbered lists, bullet lists, and bracket-numbered lists are automatically detected as tasks. Sizes, estimates, and dependencies can appear inline on the same line:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>Project name: Mobile App MVP
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>Start date: 2026-06-01
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>- Discovery and requirements (S)
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>- UX wireframes (M)
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>  Depends on Task 1
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>- Backend API, probably an XL
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>  Depends on Task 2
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>- iOS frontend (XL)
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>  Depends on Task 3
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a>- QA and bug fixes, likely an L
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a>  Depends on Task 4
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a>- App store submission (S)
+</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a>  Depends on Task 5
+</span></code></pre></div>
+<p>The parser auto-numbers the bullet items (1, 2, 3, …), extracts parenthesized sizes like <code>(S)</code> and <code>(M)</code>, and recognizes fuzzy phrasing like <code>probably an XL</code> and <code>likely an L</code>. Indented continuation lines are parsed as task properties.</p>
+<p>Numbered lists also work — and preserve the original numbering:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>Project name: Data Pipeline Rebuild
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>Start date: 2026-07-01
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>[1] Audit existing ETL jobs [S]
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>[2] Design new pipeline architecture [M] depends on Task 1
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>[3] Implement ingestion layer 3–5 days depends on Task 2
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a>[4] Build transformation engine [XL] depends on Task 3
+</span></code></pre></div>
+<p>See <a href="../nl_processing/">Natural Language Input</a> for the full range of supported list formats and inline properties.</p>
 <h2 id="using-the-parser-from-the-command-line">Using the parser from the command line<a class="headerlink" href="#using-the-parser-from-the-command-line" title="Permanent link">&para;</a></h2>
 <p>You do not need an MCP client or an AI service to use the natural language parser. The <code>mcprojsim generate</code> command runs the same parser directly from the terminal:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>mcprojsim<span class="w"> </span>generate<span class="w"> </span>description.txt<span class="w"> </span>-o<span class="w"> </span>my_project.yaml
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>mcprojsim<span class="w"> </span>generate<span class="w"> </span>description.txt<span class="w"> </span>-o<span class="w"> </span>my_project.yaml
 </span></code></pre></div>
 <p>See <a href="../running_simulations/#mcprojsim-generate">Running Simulations — <code>mcprojsim generate</code></a> for the full command reference and all options.</p>
 <h2 id="using-the-mcp-tools-directly-from-python">Using the MCP tools directly from Python<a class="headerlink" href="#using-the-mcp-tools-directly-from-python" title="Permanent link">&para;</a></h2>
 <p>While the MCP server is the primary way to use the parser through an AI assistant, you can also call the parser directly from Python code:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.nl_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">NLProjectParser</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
-</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="s2">Project name: My Project</span>
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="s2">Start date: 2026-01-15</span>
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="s2">Task 1:</span>
-</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="s2">- Design phase</span>
-</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="s2">- Size: M</span>
-</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="s2">Task 2:</span>
-</span><span id="__span-28-10"><a id="__codelineno-28-10" name="__codelineno-28-10" href="#__codelineno-28-10"></a><span class="s2">- Implementation</span>
-</span><span id="__span-28-11"><a id="__codelineno-28-11" name="__codelineno-28-11" href="#__codelineno-28-11"></a><span class="s2">- Depends on Task 1</span>
-</span><span id="__span-28-12"><a id="__codelineno-28-12" name="__codelineno-28-12" href="#__codelineno-28-12"></a><span class="s2">- Size: XL</span>
-</span><span id="__span-28-13"><a id="__codelineno-28-13" name="__codelineno-28-13" href="#__codelineno-28-13"></a><span class="s2">&quot;&quot;&quot;</span>
-</span><span id="__span-28-14"><a id="__codelineno-28-14" name="__codelineno-28-14" href="#__codelineno-28-14"></a>
-</span><span id="__span-28-15"><a id="__codelineno-28-15" name="__codelineno-28-15" href="#__codelineno-28-15"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">NLProjectParser</span><span class="p">()</span>
-</span><span id="__span-28-16"><a id="__codelineno-28-16" name="__codelineno-28-16" href="#__codelineno-28-16"></a>
-</span><span id="__span-28-17"><a id="__codelineno-28-17" name="__codelineno-28-17" href="#__codelineno-28-17"></a><span class="c1"># Parse and generate YAML in one step</span>
-</span><span id="__span-28-18"><a id="__codelineno-28-18" name="__codelineno-28-18" href="#__codelineno-28-18"></a><span class="n">yaml_output</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_and_generate</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
-</span><span id="__span-28-19"><a id="__codelineno-28-19" name="__codelineno-28-19" href="#__codelineno-28-19"></a><span class="nb">print</span><span class="p">(</span><span class="n">yaml_output</span><span class="p">)</span>
-</span><span id="__span-28-20"><a id="__codelineno-28-20" name="__codelineno-28-20" href="#__codelineno-28-20"></a>
-</span><span id="__span-28-21"><a id="__codelineno-28-21" name="__codelineno-28-21" href="#__codelineno-28-21"></a><span class="c1"># Or parse first, inspect, then generate</span>
-</span><span id="__span-28-22"><a id="__codelineno-28-22" name="__codelineno-28-22" href="#__codelineno-28-22"></a><span class="n">project</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
-</span><span id="__span-28-23"><a id="__codelineno-28-23" name="__codelineno-28-23" href="#__codelineno-28-23"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Project: </span><span class="si">{</span><span class="n">project</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-28-24"><a id="__codelineno-28-24" name="__codelineno-28-24" href="#__codelineno-28-24"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tasks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-28-25"><a id="__codelineno-28-25" name="__codelineno-28-25" href="#__codelineno-28-25"></a><span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
-</span><span id="__span-28-26"><a id="__codelineno-28-26" name="__codelineno-28-26" href="#__codelineno-28-26"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">t_shirt_size</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
-</span><span id="__span-28-27"><a id="__codelineno-28-27" name="__codelineno-28-27" href="#__codelineno-28-27"></a>
-</span><span id="__span-28-28"><a id="__codelineno-28-28" name="__codelineno-28-28" href="#__codelineno-28-28"></a><span class="n">yaml_output</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
-</span><span id="__span-28-29"><a id="__codelineno-28-29" name="__codelineno-28-29" href="#__codelineno-28-29"></a>
-</span><span id="__span-28-30"><a id="__codelineno-28-30" name="__codelineno-28-30" href="#__codelineno-28-30"></a><span class="c1"># Save to file</span>
-</span><span id="__span-28-31"><a id="__codelineno-28-31" name="__codelineno-28-31" href="#__codelineno-28-31"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_project.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span id="__span-28-32"><a id="__codelineno-28-32" name="__codelineno-28-32" href="#__codelineno-28-32"></a>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml_output</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.nl_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">NLProjectParser</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="n">description</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="s2">Project name: My Project</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="s2">Start date: 2026-01-15</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="s2">Task 1:</span>
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="s2">- Design phase</span>
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a><span class="s2">- Size: M</span>
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="s2">Task 2:</span>
+</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a><span class="s2">- Implementation</span>
+</span><span id="__span-30-11"><a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a><span class="s2">- Depends on Task 1</span>
+</span><span id="__span-30-12"><a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a><span class="s2">- Size: XL</span>
+</span><span id="__span-30-13"><a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-30-14"><a id="__codelineno-30-14" name="__codelineno-30-14" href="#__codelineno-30-14"></a>
+</span><span id="__span-30-15"><a id="__codelineno-30-15" name="__codelineno-30-15" href="#__codelineno-30-15"></a><span class="n">parser</span> <span class="o">=</span> <span class="n">NLProjectParser</span><span class="p">()</span>
+</span><span id="__span-30-16"><a id="__codelineno-30-16" name="__codelineno-30-16" href="#__codelineno-30-16"></a>
+</span><span id="__span-30-17"><a id="__codelineno-30-17" name="__codelineno-30-17" href="#__codelineno-30-17"></a><span class="c1"># Parse and generate YAML in one step</span>
+</span><span id="__span-30-18"><a id="__codelineno-30-18" name="__codelineno-30-18" href="#__codelineno-30-18"></a><span class="n">yaml_output</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_and_generate</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+</span><span id="__span-30-19"><a id="__codelineno-30-19" name="__codelineno-30-19" href="#__codelineno-30-19"></a><span class="nb">print</span><span class="p">(</span><span class="n">yaml_output</span><span class="p">)</span>
+</span><span id="__span-30-20"><a id="__codelineno-30-20" name="__codelineno-30-20" href="#__codelineno-30-20"></a>
+</span><span id="__span-30-21"><a id="__codelineno-30-21" name="__codelineno-30-21" href="#__codelineno-30-21"></a><span class="c1"># Or parse first, inspect, then generate</span>
+</span><span id="__span-30-22"><a id="__codelineno-30-22" name="__codelineno-30-22" href="#__codelineno-30-22"></a><span class="n">project</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+</span><span id="__span-30-23"><a id="__codelineno-30-23" name="__codelineno-30-23" href="#__codelineno-30-23"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Project: </span><span class="si">{</span><span class="n">project</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-30-24"><a id="__codelineno-30-24" name="__codelineno-30-24" href="#__codelineno-30-24"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Tasks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-30-25"><a id="__codelineno-30-25" name="__codelineno-30-25" href="#__codelineno-30-25"></a><span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+</span><span id="__span-30-26"><a id="__codelineno-30-26" name="__codelineno-30-26" href="#__codelineno-30-26"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">t_shirt_size</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span id="__span-30-27"><a id="__codelineno-30-27" name="__codelineno-30-27" href="#__codelineno-30-27"></a>
+</span><span id="__span-30-28"><a id="__codelineno-30-28" name="__codelineno-30-28" href="#__codelineno-30-28"></a><span class="n">yaml_output</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+</span><span id="__span-30-29"><a id="__codelineno-30-29" name="__codelineno-30-29" href="#__codelineno-30-29"></a>
+</span><span id="__span-30-30"><a id="__codelineno-30-30" name="__codelineno-30-30" href="#__codelineno-30-30"></a><span class="c1"># Save to file</span>
+</span><span id="__span-30-31"><a id="__codelineno-30-31" name="__codelineno-30-31" href="#__codelineno-30-31"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my_project.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="__span-30-32"><a id="__codelineno-30-32" name="__codelineno-30-32" href="#__codelineno-30-32"></a>    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml_output</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="tips-tricks">Tips &amp; tricks<a class="headerlink" href="#tips-tricks" title="Permanent link">&para;</a></h2>
 <h3 id="start-simple-then-enrich">Start simple, then enrich<a class="headerlink" href="#start-simple-then-enrich" title="Permanent link">&para;</a></h3>
@@ -3638,38 +3716,39 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 <li>Dependencies referencing non-existent tasks</li>
 </ul>
 <h3 id="be-consistent-with-task-numbering">Be consistent with task numbering<a class="headerlink" href="#be-consistent-with-task-numbering" title="Permanent link">&para;</a></h3>
-<p>Tasks must be numbered with <code>Task N:</code> headers. The parser uses these numbers to resolve dependencies. If you write <code>Task 1</code>, <code>Task 2</code>, <code>Task 5</code> (skipping 3 and 4), the parser will still work — but a dependency like <code>Depends on Task 3</code> will not resolve to anything.</p>
+<p>When using <code>Task N:</code> headers, the parser uses these numbers to resolve dependencies. If you write <code>Task 1</code>, <code>Task 2</code>, <code>Task 5</code> (skipping 3 and 4), the parser will still work — but a dependency like <code>Depends on Task 3</code> will not resolve to anything.</p>
+<p>When using auto-detected lists (plain numbered or bullets), the same numbering rules apply. Bullet lists are auto-numbered starting from 1.</p>
 <h3 id="mix-estimation-methods-across-tasks">Mix estimation methods across tasks<a class="headerlink" href="#mix-estimation-methods-across-tasks" title="Permanent link">&para;</a></h3>
 <p>Different tasks can use different estimation methods within the same project. For example:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>Task 1:
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>- Well-understood work
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>- Estimate: 3/5/8 days
-</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>Task 2:
-</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>- Vaguely scoped work
-</span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>- Size: XL
-</span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>Task 3:
-</span><span id="__span-29-8"><a id="__codelineno-29-8" name="__codelineno-29-8" href="#__codelineno-29-8"></a>- Agile team estimate
-</span><span id="__span-29-9"><a id="__codelineno-29-9" name="__codelineno-29-9" href="#__codelineno-29-9"></a>- Story points: 8
+<div class="language-text highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>Task 1:
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>- Well-understood work
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>- Estimate: 3/5/8 days
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>Task 2:
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>- Vaguely scoped work
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>- Size: XL
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a>Task 3:
+</span><span id="__span-31-8"><a id="__codelineno-31-8" name="__codelineno-31-8" href="#__codelineno-31-8"></a>- Agile team estimate
+</span><span id="__span-31-9"><a id="__codelineno-31-9" name="__codelineno-31-9" href="#__codelineno-31-9"></a>- Story points: 8
 </span></code></pre></div>
 <p>The parser handles this correctly, and <code>mcprojsim</code> will resolve each estimate type using the appropriate configuration mapping.</p>
 <h3 id="use-a-configuration-file-for-t-shirt-sizes-and-story-points">Use a configuration file for T-shirt sizes and story points<a class="headerlink" href="#use-a-configuration-file-for-t-shirt-sizes-and-story-points" title="Permanent link">&para;</a></h3>
 <p>The generated YAML uses symbolic estimates (<code>t_shirt_size: "M"</code> or <code>story_points: 5</code>). These are resolved to numeric ranges at simulation time using a configuration file. If you want custom mappings, create a <code>config.yaml</code>:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="nt">t_shirt_sizes</span><span class="p">:</span>
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="w">  </span><span class="nt">story</span><span class="p">:</span>
-</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="w">    </span><span class="nt">M</span><span class="p">:</span>
-</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">40</span>
-</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
-</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span>
-</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="w">  </span><span class="nt">epic</span><span class="p">:</span>
-</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a><span class="w">    </span><span class="nt">M</span><span class="p">:</span>
-</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
-</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">480</span>
-</span><span id="__span-30-11"><a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1200</span>
-</span><span id="__span-30-12"><a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a>
-</span><span id="__span-30-13"><a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a><span class="nt">t_shirt_size_default_category</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">epic</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="nt">t_shirt_sizes</span><span class="p">:</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="w">  </span><span class="nt">story</span><span class="p">:</span>
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a><span class="w">    </span><span class="nt">M</span><span class="p">:</span>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">40</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span>
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="w">  </span><span class="nt">epic</span><span class="p">:</span>
+</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a><span class="w">    </span><span class="nt">M</span><span class="p">:</span>
+</span><span id="__span-32-9"><a id="__codelineno-32-9" name="__codelineno-32-9" href="#__codelineno-32-9"></a><span class="w">      </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+</span><span id="__span-32-10"><a id="__codelineno-32-10" name="__codelineno-32-10" href="#__codelineno-32-10"></a><span class="w">      </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">480</span>
+</span><span id="__span-32-11"><a id="__codelineno-32-11" name="__codelineno-32-11" href="#__codelineno-32-11"></a><span class="w">      </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1200</span>
+</span><span id="__span-32-12"><a id="__codelineno-32-12" name="__codelineno-32-12" href="#__codelineno-32-12"></a>
+</span><span id="__span-32-13"><a id="__codelineno-32-13" name="__codelineno-32-13" href="#__codelineno-32-13"></a><span class="nt">t_shirt_size_default_category</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">epic</span>
 </span></code></pre></div>
 <p>Then run the simulation with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>my_project.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>my_project.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml
 </span></code></pre></div>
 <p>See <a href="../configuration/">Configuration</a> for full details on customizing the mappings.</p>
 <h3 id="generating-files-for-quick-what-if-scenarios">Generating files for quick "what-if" scenarios<a class="headerlink" href="#generating-files-for-quick-what-if-scenarios" title="Permanent link">&para;</a></h3>
@@ -3685,7 +3764,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 <li><strong>Ask the assistant to save it</strong> if your MCP client supports file operations.</li>
 <li><strong>Pipe it into the simulation</strong> if you prefer a scripted workflow:</li>
 </ol>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;&lt;paste YAML here&gt;&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>project.yaml<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;&lt;paste YAML here&gt;&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>project.yaml<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml
 </span></code></pre></div>
 <h3 id="known-limitations">Known limitations<a class="headerlink" href="#known-limitations" title="Permanent link">&para;</a></h3>
 <p>The natural language parser is a pattern-based parser, not a full natural language understanding system. Keep these points in mind:</p>
@@ -3693,7 +3772,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 <li><strong>Task-level risks</strong> and <strong>uncertainty factors</strong> cannot be specified in the natural language input. Add them to the YAML file after generation.</li>
 <li><strong>Resource definitions</strong> and <strong>calendar constraints</strong> are supported, but only through recognized semi-structured patterns (not arbitrary prose).</li>
 <li><strong>Project-level risks</strong> are not extracted from the description. Add them manually.</li>
-<li>The parser expects <strong>numbered task headers</strong> (<code>Task 1:</code>, <code>Task 2:</code>). Free-form task lists without numbers are not recognized.</li>
+<li>The parser expects either <strong>numbered task headers</strong> (<code>Task 1:</code>, <code>Task 2:</code>) or <strong>auto-detected lists</strong> (plain numbered, bullet, or bracket lists). The two modes cannot be mixed in the same description. See <a href="../nl_processing/">Natural Language Input</a> for details.</li>
 <li><strong>Circular dependencies</strong> are not detected by the parser — they will be caught when you load the file with <code>mcprojsim validate</code>.</li>
 <li>Advanced structures such as full volatility-overlay and spillover calibration blocks are still best edited directly in YAML after generation.</li>
 </ul>

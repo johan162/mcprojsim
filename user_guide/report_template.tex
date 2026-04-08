@@ -18,6 +18,7 @@
 \usepackage{setspace}
 \usepackage{parskip}
 \usepackage{fancyvrb}
+\usepackage{shorttoc}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeborder}{HTML}{C0C0C0}
 \fvset{fontsize=\small}
@@ -72,7 +73,7 @@
   \vspace*{2.0cm}
   {\Huge\bfseries\color{brandblue}User Guide\par}
   \vspace{1.2cm}
-  {\Large \texttt{mcprojsim}, v0.12.2\par}
+  {\Large \texttt{mcprojsim}, v0.13.0\par}
   \vspace{1.2cm}
   {\Large Monte Carlo Project Simulation\par}
   \vfill
@@ -80,8 +81,15 @@
   {\large Generated on \today\par}
 \end{titlepage}
 
+% --- SHORT TOC ---
+% Command: \shorttoc{Title}{Depth}
+% Depth 0 = Chapters, 1 = Chapters + Sections, etc.
+\shorttoc{Chapters}{0} 
+\cleardoublepage
+
 \tableofcontents
-\clearpage
+\cleardoublepage
+
 
 %%__USER_GUIDE_CONTENT__%%
 
