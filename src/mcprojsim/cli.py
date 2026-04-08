@@ -1054,6 +1054,10 @@ def simulate(
                     ["Project", results.project_name],
                     ["Start Date", start_date_str],
                     ["Number of Tasks", f"{len(project.tasks)}"],
+                    [
+                        "Effective Default Distribution",
+                        project.project.distribution.value,
+                    ],
                     ["T-Shirt Category Used", cfg.t_shirt_size_default_category],
                     ["Hours per Day", f"{hours_per_day}"],
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
@@ -1142,6 +1146,10 @@ def simulate(
                 click.echo(f"  Project: {results.project_name}")
                 click.echo(f"  Start Date: {start_date_str}")
                 click.echo(f"  Number of Tasks: {len(project.tasks)}")
+                click.echo(
+                    "  Effective Default Distribution: "
+                    f"{project.project.distribution.value}"
+                )
                 click.echo(f"  T-Shirt Category Used: {cfg.t_shirt_size_default_category}")
                 click.echo(f"  Hours per Day: {hours_per_day}")
                 click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")
@@ -1643,6 +1651,7 @@ def simulate(
                         CSVExporter.export(
                             results,
                             output_file,
+                            project=project,
                             config=cfg,
                             critical_path_limit=critical_path_limit,
                             sprint_results=sprint_results,
@@ -1651,6 +1660,7 @@ def simulate(
                         CSVExporter.export(
                             results,
                             output_file,
+                            project=project,
                             config=cfg,
                             critical_path_limit=critical_path_limit,
                         )

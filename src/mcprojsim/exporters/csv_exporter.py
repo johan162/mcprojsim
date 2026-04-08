@@ -7,6 +7,7 @@ from pathlib import Path
 
 from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
+from mcprojsim.models.project import Project
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.models.sprint_simulation import SprintPlanningResults
 
@@ -18,6 +19,7 @@ class CSVExporter:
     def export(
         results: SimulationResults,
         output_path: Path | str,
+        project: Project | None = None,
         config: Config | None = None,
         critical_path_limit: int | None = None,
         sprint_results: SprintPlanningResults | None = None,
@@ -52,6 +54,14 @@ class CSVExporter:
             writer.writerow(["Start Date", start_date_str])
             num_tasks = len(results.critical_path_frequency) if results.critical_path_frequency else 0
             writer.writerow(["Number of Tasks", num_tasks])
+            effective_default_distribution = (
+                project.project.distribution.value
+                if project is not None
+                else "Not specified"
+            )
+            writer.writerow(
+                ["Effective Default Distribution", effective_default_distribution]
+            )
             writer.writerow(
                 [
                     "T-Shirt Category Used",
