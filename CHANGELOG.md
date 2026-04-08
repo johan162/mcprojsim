@@ -1,3 +1,34 @@
+## [v0.13.0] - 2026-04-08
+
+Release Type: minor
+
+### 📋 Summary
+This release significantly extends natural-language (NL) input with auto-task detection, richer dependency phrasing, and improved fuzzy duration parsing. Simulation defaults are also refined: uncertainty factors now default to 1.0 (no inflation) and `story` becomes the default t-shirt category. Reports and console output gain more contextual information including project start date, task count, active uncertainty factors, and the default distribution type.
+
+### ✨ Additions
+- Added auto-detection of tasks from plain numbered and bullet lists in NL input, removing the need for explicit "Task N:" prefixes
+- Added `~` prefix notation in NL input as shorthand for "very uncertain" duration estimates
+- Added `uncertainty_factors` field to project files, allowing per-project override of estimate uncertainty multipliers without a separate config file
+- Added `default_tshirt_category` field to project files for overriding the active t-shirt size category per project
+
+### 🚀 Improvements
+- Changed the default t-shirt category to `story` for better alignment with story-point-based agile workflows
+- Changed default uncertainty factors to `1.0` so estimates are not inflated unless explicitly configured
+- Improved fuzzy date and duration parsing in NL input to recognise a wider range of informal expressions
+- Improved dependency resolution in prose NL input to handle diverse phrasing and more task-reference synonyms
+- Added project start date and total task count to console output and simulation reports
+- Added active uncertainty factor values and default distribution type to console output
+- Added default t-shirt category display to console output and reports
+- Added support for dependency synonyms in prose NL input (`blocked by`, `after`, `requires`, `following`, etc.) alongside the existing `depends on`
+
+### 📚 Documentation
+- Added NL input user guide covering auto-task detection, fuzzy duration estimates, and dependency syntax
+- Add short TOC with just chapters to user guide
+
+### 🛠 Internal
+- Applied Black formatting across modified source and test files
+
+
 ## [v0.12.2] - 2026-04-07
 
 Release Type: patch
