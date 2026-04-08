@@ -128,6 +128,7 @@ if not current_task and not any_explicit_task_seen:
 
 After extracting the task name, scan the remainder of the line for:
 - A bracketed or parenthesized size token: `\[?(XS|S|M|L|XL|XXL)\]?`
+- A fuzzy t-Shirt size, `probably an M`, `probably M`, `likely an L`, `assume S` should be parsed correctly.
 - An inline estimate range (see Item 2)
 - A dependency phrase (see Item 3)
 
@@ -147,9 +148,13 @@ This inline scan reuses the same helper methods already used for bullet parsing.
    bullet lists.
 3. `[M]`, `(XL)`, or inline size in parentheses after the task name is parsed as
    `t_shirt_size`.
-4. When a description mixes `Task 1:` headers with plain bullets, the plain bullets
+4. A valid T-Shirt size token on the same line as the task name is parsed even in auto-task mode. 
+   For example `probably an M` or `frontend (L)` should set the `t_shirt_size` field of the task.
+5. Inline estimate ranges like `3–5 days` or `about 2 weeks` are parsed correctly
+   even when on the same line as the task name.
+6. When a description mixes `Task 1:` headers with plain bullets, the plain bullets
    are NOT treated as auto-tasks.
-5. Indented continuation lines under a plain bullet are parsed as task bullet
+7. Indented continuation lines under a plain bullet are parsed as task bullet
    properties (size, estimate, dependency, resources).
 
 
