@@ -5,6 +5,93 @@ The `mcprojsim` natural language parser accepts a wide range of input formats â€
 !!! tip "Quick rule of thumb"
     If it looks like a task list a human would write, the parser will probably understand it. When in doubt, run `mcprojsim generate` and inspect the output.
 
+## Introductory example
+As an introduction the following "human" project description can be used:
+
+```txt
+Project: New feature launch
+Start date: next Monday
+
+1. Design database schema (about a week)
+2. Implement backend REST API (probably 2â€“4 days, depends on the DB work)
+3. UI design , about ~ 2 weeks
+4. Frontend integration testing (around 3 weeks)
+5. Deployment and smoke tests (a few days), depends on UI and backend being ready
+6. Post-launch monitoring (a sprint),  after deployment
+7. Delivery report , about 2-3 days
+```
+
+Save this as `proj1.txt` . Then run
+
+```bash
+mcprojsim generate proj1.txt
+```
+
+It will then generate the full project specification as:
+
+```yaml
+project:
+  name: "New feature launch"
+  start_date: "2026-04-13"
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "task_001"
+    name: "Design database schema ()"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: []
+
+  - id: "task_002"
+    name: "Implement backend REST API (probably"
+    estimate:
+      low: 2
+      expected: 3
+      high: 4
+      unit: "days"
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "UI design"
+    estimate:
+      low: 1.5
+      expected: 2
+      high: 5
+      unit: "weeks"
+    dependencies: []
+
+  - id: "task_004"
+    name: "Frontend integration testing ()"
+    estimate:
+      low: 2.1
+      expected: 3
+      high: 5.4
+      unit: "weeks"
+    dependencies: []
+
+  - id: "task_005"
+    name: "Deployment and smoke tests ()"
+    estimate:
+      t_shirt_size: "S"
+    dependencies: ["task_002", "task_003", "task_004"]
+
+  - id: "task_006"
+    name: "Post-launch monitoring ()"
+    estimate:
+      t_shirt_size: "L"
+    dependencies: ["task_005"]
+
+  - id: "task_007"
+    name: "Delivery report"
+    estimate:
+      low: 2
+      expected: 2.5
+      high: 3
+      unit: "days"
+    dependencies: []
+```
+
+
 ## Input modes
 
 The parser supports two task-definition modes. They cannot be mixed in the same description.
