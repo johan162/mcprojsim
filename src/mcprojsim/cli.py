@@ -23,6 +23,7 @@ from mcprojsim.config import (
     DEFAULT_SPRINT_SPILLOVER_LOGISTIC_SLOPE,
     DEFAULT_SPRINT_SPILLOVER_MODEL,
     DEFAULT_SPRINT_SPILLOVER_SIZE_REFERENCE_POINTS,
+    DEFAULT_UNCERTAINTY_FACTOR_LEVELS,
     DEFAULT_SPRINT_VELOCITY_MODEL,
     DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_EXPECTED,
     DEFAULT_SPRINT_VOLATILITY_DISRUPTION_MULTIPLIER_HIGH,
@@ -1035,6 +1036,32 @@ def simulate(
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
                     ["Schedule Mode", schedule_mode],
                 ]
+                click.echo("\nProject Overview:")
+                click.echo(
+                    _tabulate(
+                        common_rows,
+                        headers=["Field", "Value"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+
+                # Default Uncertainty Factors table
+                uncertainty_rows = []
+                for factor_name, default_level in DEFAULT_UNCERTAINTY_FACTOR_LEVELS.items():
+                    multiplier = cfg.get_uncertainty_multiplier(factor_name, default_level)
+                    factor_display = factor_name.replace("_", " ").title()
+                    uncertainty_rows.append([factor_display, f"{default_level} ({multiplier})"])
+                click.echo("\nDefault Uncertainty Factors:")
+                click.echo(
+                    _tabulate(
+                        uncertainty_rows,
+                        headers=["Factor", "Default Level (Multiplier)"],
+                        tablefmt="simple_outline",
+                        disable_numparse=True,
+                    )
+                )
+
                 calendar_summary_rows = [
                     ["Mean", f"{results.mean:.2f} hours ({mean_wd} working days)"],
                     ["Median (P50)", f"{results.median:.2f} hours"],
@@ -1061,15 +1088,6 @@ def simulate(
                     ["Skewness", f"{effort_stats['skewness']:.4f}"],
                     ["Excess Kurtosis", f"{effort_stats['kurtosis']:.4f}"],
                 ]
-                click.echo("\nProject Overview:")
-                click.echo(
-                    _tabulate(
-                        common_rows,
-                        headers=["Field", "Value"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
-                )
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(
                     _tabulate(
@@ -1090,38 +1108,41 @@ def simulate(
                 )
             else:
                 click.echo("\nProject Overview:")
-                click.echo(f"Project: {results.project_name}")
-                click.echo(
-                    "T-Shirt Category Used: "
-                    f"{cfg.t_shirt_size_default_category}"
-                )
-                click.echo(f"Hours per Day: {hours_per_day}")
-                click.echo(f"Max Parallel Tasks: {results.max_parallel_tasks}")
-                click.echo(f"Schedule Mode: {schedule_mode}")
+                click.echo(f"  Project: {results.project_name}")
+                click.echo(f"  T-Shirt Category Used: {cfg.t_shirt_size_default_category}")
+                click.echo(f"  Hours per Day: {hours_per_day}")
+                click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")
+                click.echo(f"  Schedule Mode: {schedule_mode}")
+
+                click.echo("\nDefault Uncertainty Factors:")
+                for factor_name, default_level in DEFAULT_UNCERTAINTY_FACTOR_LEVELS.items():
+                    multiplier = cfg.get_uncertainty_multiplier(factor_name, default_level)
+                    factor_display = factor_name.replace("_", " ").title()
+                    click.echo(f"  {factor_display}: {default_level} ({multiplier})")
 
                 click.echo("\nCalendar Time Statistical Summary:")
-                click.echo(f"Mean: {results.mean:.2f} hours ({mean_wd} working days)")
-                click.echo(f"Median (P50): {results.median:.2f} hours")
-                click.echo(f"Std Dev: {results.std_dev:.2f} hours")
-                click.echo(f"Minimum: {min_duration:.2f} hours")
-                click.echo(f"Maximum: {max_duration:.2f} hours")
-                click.echo(f"Coefficient of Variation: {cv:.4f}")
-                click.echo(f"Skewness: {results.skewness:.4f}")
-                click.echo(f"Excess Kurtosis: {results.kurtosis:.4f}")
+                click.echo(f"  Mean: {results.mean:.2f} hours ({mean_wd} working days)")
+                click.echo(f"  Median (P50): {results.median:.2f} hours")
+                click.echo(f"  Std Dev: {results.std_dev:.2f} hours")
+                click.echo(f"  Minimum: {min_duration:.2f} hours")
+                click.echo(f"  Maximum: {max_duration:.2f} hours")
+                click.echo(f"  Coefficient of Variation: {cv:.4f}")
+                click.echo(f"  Skewness: {results.skewness:.4f}")
+                click.echo(f"  Excess Kurtosis: {results.kurtosis:.4f}")
 
                 click.echo("\nProject Effort Statistical Summary:")
                 click.echo(
-                    "Mean: "
+                    "  Mean: "
                     f"{effort_stats['mean']:.2f} person-hours "
                     f"({effort_stats['mean_person_days']} person-days)"
                 )
-                click.echo(f"Median (P50): {effort_stats['median']:.2f} person-hours")
-                click.echo(f"Std Dev: {effort_stats['std_dev']:.2f} person-hours")
-                click.echo(f"Minimum: {effort_stats['min']:.2f} person-hours")
-                click.echo(f"Maximum: {effort_stats['max']:.2f} person-hours")
-                click.echo(f"Coefficient of Variation: {effort_stats['cv']:.4f}")
-                click.echo(f"Skewness: {effort_stats['skewness']:.4f}")
-                click.echo(f"Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
+                click.echo(f"  Median (P50): {effort_stats['median']:.2f} person-hours")
+                click.echo(f"  Std Dev: {effort_stats['std_dev']:.2f} person-hours")
+                click.echo(f"  Minimum: {effort_stats['min']:.2f} person-hours")
+                click.echo(f"  Maximum: {effort_stats['max']:.2f} person-hours")
+                click.echo(f"  Coefficient of Variation: {effort_stats['cv']:.4f}")
+                click.echo(f"  Skewness: {effort_stats['skewness']:.4f}")
+                click.echo(f"  Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
 
             if table:
                 # Confidence Intervals table
@@ -1598,7 +1619,7 @@ def simulate(
                             critical_path_limit=critical_path_limit,
                         )
                     if quiet == 0 and not minimal:
-                        click.echo(f"Results exported to {output_file}")
+                        click.echo(f"\nResults exported to {output_file}")
                 elif fmt == "html":
                     output_file = base_output.with_suffix(".html")
                     if sprint_results is not None:
@@ -1621,11 +1642,11 @@ def simulate(
                             include_historic_base=include_historic_base,
                         )
                     if quiet == 0 and not minimal:
-                        click.echo(f"Results exported to {output_file}")
+                        click.echo(f"\nResults exported to {output_file}")
         else:
             if quiet == 0 and not minimal:
                 click.echo(
-                    "\nNo export formats specified. Use -f to export results to files."
+                    "\n\nNo export formats specified. Use -f to export results to files."
                 )
 
     except Exception as e:
