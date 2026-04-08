@@ -233,7 +233,7 @@ _INLINE_POINT_WITH_QUALIFIER_RE = re.compile(
 When `_INLINE_RANGE_RE` matches with two numbers (low, high), synthesize `expected`
 as `(low + high) / 2`. When `_INLINE_POINT_WITH_QUALIFIER_RE` matches a single
 number with a qualifier word, treat it as `expected` and synthesize
-`low = expected * 0.7`, `high = expected * 1.5`.
+`low = expected * 0.7`, `high = expected * 1.8`.
 
 These patterns are applied only inside task bullet/line context, never to
 project-level metadata lines, to avoid false positives on version numbers or dates.
@@ -269,6 +269,43 @@ converts the matched phrase to an ISO 8601 string. Handle:
 - `beginning of May` / `May 2026` — first day of that month
 
 
+
+#### 2e - Fuzzy specification of previous tasks
+
+Allow fuzz determination of previous tasks by identifying words in previous tasls. 
+For example, if a task is described as "Frontend integration testing (after the API work)", 
+the parser should be able to identify that "the API work" likely refers to a previously mentioned 
+task with "API" in its name, and establish a dependency accordingly. 
+
+This requires a new helper that, given a phrase and the list of already parsed tasks, 
+attempts to match the phrase to one or more tasks based on name similarity (e.g. token overlap). 
+
+Some common terms should be inferred such as 
+
+- "DB" likely refers to a task with "database" in the name
+- "API" likely refers to a task with "API" or "REST" in the name
+- "frontend" likely refers to a task with "frontend" or "UI" in the name
+- "backend" likely refers to a task with "backend" or "server" in the name
+- "authentication" likely refers to a task with "auth" or "authentication" or "login" in the name
+- "deployment" likely refers to a task with "deploy" or "deployment" in the name
+- "QA" or "testing" likely refers to a task with "test", "testing", "QA", "quality" in the name
+
+This would be used in the dependency parsing logic to allow for more natural language expressions of dependencies.
+
+Should be able to correctly parse the following project example:
+
+```txt
+Project: New feature launch
+Start date: next Monday
+1. Design database schema (about a week)
+2. Implement backend REST API (probably 2–4 days, depends on the DB work)
+3. Frontend integration testing (around 3 weeks)
+4. Deployment and smoke tests (a few days), depends on frontend and backend being ready
+5. Post-launch monitoring (a sprint)
+```
+
+
+
 ### Files changed
 
 - `nl_parser.py` — `_FUZZY_DURATION_PATTERNS` list, `_INLINE_RANGE_RE`,
@@ -280,15 +317,25 @@ converts the matched phrase to an ISO 8601 string. Handle:
 
 ### Acceptance criteria
 
-1. `"takes a couple of days"` → `t_shirt_size = "S"`
-2. `"about 2–4 days"` → `low=2, expected=3, high=4, unit="days"`
-3. `"around 3 weeks"` → `t_shirt_size = "L"` (no number triggers fuzzy map)
-4. `"about 10 hours"` (single approximate value) → `low=7, expected=10, high=15, unit="hours"`
-5. `"Start date: next Monday"` resolves to the correct ISO date
-6. `"starting in 2 weeks"` resolves relative to today
+1. Should infer `"takes a couple of days"` → `t_shirt_size = "S"`
+2. Should infer `"about 2–4 days"` → `low=2, expected=3, high=4, unit="days"`
+3. Should infer `"around 3 weeks"` → `t_shirt_size = "L"` (no number triggers fuzzy map)
+4. Should infer `"about 10 hours"` (single approximate value) → `low=7, expected=10, high=18, unit="hours"`
+5. Should resolve `"Start date: next Monday"` to the correct ISO date
+6. Should resolve `"starting in 2 weeks"` relative to today
 7. A bare number range `"3–5 days"` without qualifier still parses correctly
 8. Version numbers like `"v2.4"` and date fragments like `"2026-04"` are NOT parsed
    as estimates.
+9. 
+ ```txt
+    Project: New feature launch
+    Start date: next Monday
+    Design database schema (about a week)
+    Implement backend REST API (probably 2–4 days, depends on the DB work)
+    Frontend integration testing (around 3 weeks)
+    Deployment and smoke tests (a few days), depends on frontend and backend being ready
+    Post-launch monitoring (a sprint)
+```
 
 
 
