@@ -28,6 +28,137 @@ Each item below is ordered by impact vs. effort. Each section describes the feat
 its design, the exact code changes required, and acceptance criteria.
 
 
+
+## Item 1 — Unnumbered / auto-numbered list → task auto-detection
+
+### Problem
+
+The parser only starts a task when it sees `Task N:` (with a number). Any numbered or
+bulleted list that doesn't use that exact keyword is silently dropped to
+project-level metadata processing where it either hits a project-name match or is
+ignored. This breaks every workflow involving copy-paste from a planning tool.
+
+Examples that currently produce no tasks:
+
+```
+1. Design database schema
+2. Implement REST API
+3. Frontend integration testing
+4. Deployment and smoke tests
+```
+
+```
+- Discovery and requirements
+- Database design
+- Backend implementation
+- Frontend
+- QA
+- Deployment
+```
+
+```
+[1] Authentication
+[2] User management
+[3] Reporting module
+```
+
+### Design
+
+Add a two-phase line classification in `parse()`. Phase 1 (current behaviour) checks
+for recognized section headers. If no section was matched and the line looks like a
+numbered or bulleted list item that carries no other recognized keyword, classify it
+as an **implicit task line** and auto-assign the next task number.
+
+An implicit task line satisfies ALL of:
+1. Is not already matched by a section header regex
+2. Matches one of the auto-task patterns below
+3. Is not inside an existing open section (flush first)
+
+**Auto-task trigger patterns:**
+```python
+_PLAIN_NUMBERED_RE  = re.compile(
+    r'^(\d+)\s*[.)\]]\s*(.+)', re.IGNORECASE)           # "1. foo", "2) bar", "[3] baz"
+_PLAIN_BULLET_RE    = re.compile(
+    r'^[-*•]\s+(.+)', re.IGNORECASE)                     # "- foo", "* bar", "• baz"
+_HASH_NUMBERED_RE   = re.compile(
+    r'^#\s*(\d+)\s+(.+)', re.IGNORECASE)                 # "# 1 foo" (rare but seen)
+```
+
+When `_PLAIN_NUMBERED_RE` matches, preserve the number from the source (group 1).
+When `_PLAIN_BULLET_RE` or `_HASH_NUMBERED_RE` matches, use a monotonically
+increasing counter.
+
+**Trigger condition:** Only activate when no section is currently open AND no
+`Task N:` headers have been seen yet. Once a real `Task N:` header appears, disable
+auto-task mode to prevent collisions. This also means auto-task mode is "all or
+nothing" per description — mixing explicit and auto-numbered tasks in the same
+description is disallowed.
+
+**After the task name is extracted**, subsequent indented lines (indented by at least
+2 spaces or a tab) belonging to the same item are treated as task bullet lines,
+exactly as today. Lines that are not indented and not themselves matching
+an auto-task pattern close the previous task.
+
+```python
+# In parse(), after all section header checks fail:
+if not current_task and not any_explicit_task_seen:
+    m = self._PLAIN_NUMBERED_RE.match(line)
+    if m:
+        _flush_section()
+        task_num = int(m.group(1))
+        current_task = ParsedTask(number=task_num, name=m.group(2).strip())
+        auto_task_mode = True
+        continue
+    m = self._PLAIN_BULLET_RE.match(line)
+    if m:
+        _flush_section()
+        current_task = ParsedTask(number=auto_task_counter, name=m.group(1).strip())
+        auto_task_counter += 1
+        auto_task_mode = True
+        continue
+```
+
+**Inline properties on the same line** — common in board exports:
+
+```
+- Backend API [XL] depends on DB schema
+- Frontend (M, after task 2)
+- QA: 3–5 days
+```
+
+After extracting the task name, scan the remainder of the line for:
+- A bracketed or parenthesized size token: `\[?(XS|S|M|L|XL|XXL)\]?`
+- A fuzzy t-Shirt size, `probably an M`, `probably M`, `likely an L`, `assume S` should be parsed correctly.
+- An inline estimate range (see Item 2)
+- A dependency phrase (see Item 3)
+
+This inline scan reuses the same helper methods already used for bullet parsing.
+
+### Files changed
+
+- `nl_parser.py` — add `auto_task_mode: bool`, `auto_task_counter: int`,
+  `any_explicit_task_seen: bool` to parse loop state; add the three new class-level
+  compiled regexes; add inline-property extraction after name assignment
+- `tests/test_nl_parser.py` — new `TestAutoTaskDetection` class
+
+### Acceptance criteria
+
+1. A plain numbered list with no other structure produces one `ParsedTask` per item.
+2. Task numbers preserved from source `1. / 2.` lists; auto-assigned from counter for
+   bullet lists.
+3. `[M]`, `(XL)`, or inline size in parentheses after the task name is parsed as
+   `t_shirt_size`.
+4. A valid T-Shirt size token on the same line as the task name is parsed even in auto-task mode. 
+   For example `probably an M` or `frontend (L)` should set the `t_shirt_size` field of the task.
+5. Inline estimate ranges like `3–5 days` or `about 2 weeks` are parsed correctly
+   even when on the same line as the task name.
+6. When a description mixes `Task 1:` headers with plain bullets, the plain bullets
+   are NOT treated as auto-tasks.
+7. Indented continuation lines under a plain bullet are parsed as task bullet
+   properties (size, estimate, dependency, resources).
+
+
+
 ## Item 2 — Natural duration phrases and inline estimate ranges
 
 ### Problem

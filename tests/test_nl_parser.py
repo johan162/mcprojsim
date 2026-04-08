@@ -1042,6 +1042,89 @@ Start date: next Monday
         assert project.tasks[4].t_shirt_size == "L"
 
 
+class TestProseDependencies:
+    """Tests for prose-style dependency connectors."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser(today=date(2026, 4, 8))
+
+    def test_after_task_connector_parses_dependency(self) -> None:
+        text = """
+Project name: Test
+Task 1:
+- Design database schema
+Task 2:
+- after task 1
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == ["1"]
+
+    def test_blocked_by_task_connector_parses_dependency(self) -> None:
+        text = """
+Project name: Test
+Task 1:
+- Design
+Task 2:
+- blocked by task 1
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == ["1"]
+
+    def test_once_done_connector_matches_previous_task_name(self) -> None:
+        text = """
+Project name: Test
+Task 1:
+- Authentication
+Task 2:
+- once authentication is done
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == ["1"]
+
+    def test_requires_phrase_matches_db_migration_task(self) -> None:
+        text = """
+Project name: Test
+Task 1:
+- Database migration
+Task 2:
+- requires the DB migration
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == ["1"]
+
+    def test_single_generic_token_does_not_add_dependency(self) -> None:
+        text = """
+Project name: Test
+Task 1:
+- Payment service
+Task 2:
+- builds on the system
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == []
+
+    def test_self_referential_dependency_text_does_not_add_dependency(self) -> None:
+        text = """
+Project name: Test
+Task 1:
+- This task has dependencies
+Task 2:
+- this task has dependencies
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == []
+
+    def test_inline_prose_dependency_in_auto_task_line(self) -> None:
+        text = """
+Project name: Test
+1. Design database schema
+2. API implementation (builds on the DB schema)
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].name == "API implementation"
+        assert project.tasks[1].dependency_refs == ["1"]
+
+
 class TestFreeformExplicitTaskBullets:
     """Integration tests for Item 2 features inside explicit Task N sections."""
 

@@ -308,6 +308,15 @@ class NLProjectParser:
         re.IGNORECASE,
     )
     _INLINE_DEPENDS_RE = re.compile(r"depends?\s*(?:on)?\s+(.+)", re.IGNORECASE)
+    _PROSE_DEPENDS_RE = re.compile(
+        r"(?:"
+        r"after\s+|"
+        r"following\s+|"
+        r"once\s+|"
+        r"(?:blocked\s+by|requires?|needs?|depends?\s+on|builds?\s+on|based\s+on)\s+"
+        r")(.+)",
+        re.IGNORECASE,
+    )
     _INLINE_FUZZY_SIZE_RE = re.compile(
         r"(?:probably|likely|assume|estimate[ds]?\s+(?:as\s+)?)"
         r"\s+(?:an?\s+)?(XS|S|M|L|XL|XXL)\b",
@@ -1268,8 +1277,22 @@ class NLProjectParser:
                 task.dependency_refs = refs
                 remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
 
+        # Prose dependency connectors: "after ...", "blocked by ...",
+        # "builds on ...", "once authentication is done", etc.
+        if not task.dependency_refs:
+            m = self._PROSE_DEPENDS_RE.search(remaining)
+            if m:
+                dep_text = m.group(1)
+                refs = self._resolve_dependency_refs(dep_text, known_tasks or [])
+                if refs:
+                    task.dependency_refs = refs
+                    remaining = (
+                        remaining[: m.start()] + remaining[m.end() :]
+                    ).strip()
+
         # Clean up the task name: remove extracted tokens
         cleaned = remaining.strip().rstrip(".,;:- ")
+        cleaned = re.sub(r"[\s\(\[]+$", "", cleaned).strip()
         if cleaned and assign_name:
             task.name = cleaned
 
@@ -1536,8 +1559,15 @@ class NLProjectParser:
         known_tasks: list[ParsedTask] | None = None,
     ) -> bool:
         m = self._DEPENDS_RE.match(text)
+        dep_text: str | None = None
         if m:
             dep_text = m.group(1)
+        else:
+            prose_match = self._PROSE_DEPENDS_RE.match(text)
+            if prose_match:
+                dep_text = prose_match.group(1)
+
+        if dep_text is not None:
             refs = self._resolve_dependency_refs(dep_text, known_tasks or [])
             task.dependency_refs = refs
             return True

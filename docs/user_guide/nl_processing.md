@@ -233,6 +233,19 @@ Numeric expressions still take precedence. For example, `around 3 weeks` is trea
 2. Implement REST API depends on Task 1
 ```
 
+The parser also understands prose-style dependency connectors in task lines and bullets:
+
+```text
+1. Database schema design
+2. Authentication service implementation (builds on the database schema)
+3. API endpoints (after task 2)
+4. UI integration (once authentication is done)
+5. Deployment checks (requires the API endpoints)
+```
+
+Supported connectors include `after`, `following`, `blocked by`, `requires`,
+`needs`, `depends on`, `builds on`, and `based on`.
+
 The parser also resolves natural references to previous tasks when the text does not name an explicit `Task N` reference:
 
 ```text
@@ -243,6 +256,8 @@ The parser also resolves natural references to previous tasks when the text does
 ```
 
 Supported fuzzy references include terms such as `DB`, `API`, `frontend`, `backend`, `auth`, `deployment`, and `QA/testing`, matched against previously parsed task names.
+
+Name-based matching only looks at tasks that were parsed earlier in the file.
 
 ### Combined example
 
