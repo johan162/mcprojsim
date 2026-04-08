@@ -197,6 +197,13 @@ For these phrases, the parser keeps the stated value as `expected` and synthesiz
 
 So `about 10 hours` becomes `low=7`, `expected=10`, `high=18`, `unit=hours`.
 
+When the estimate includes `~` (for example `about ~2 weeks` or `~10 hours`), the parser treats it as a higher-uncertainty signal and widens the synthesized range:
+
+- `low = expected * 0.75`
+- `high = expected * 2.5`
+
+So `about ~2 weeks` becomes `low=1.5`, `expected=2`, `high=5`, `unit=weeks`.
+
 ### Natural duration phrases
 
 Common prose-style duration phrases are mapped directly to T-shirt sizes when no explicit numeric estimate is present:

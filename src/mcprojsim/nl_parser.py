@@ -302,6 +302,11 @@ class NLProjectParser:
         r"(?:\s+(hours?|days?|weeks?|h|d|w))?",
         re.IGNORECASE,
     )
+    _INLINE_POINT_WITH_TILDE_RE = re.compile(
+        r"(?:about|around|roughly|approx(?:imately)?)?\s*~\s*(\d+(?:\.\d+)?)"
+        r"(?:\s+(hours?|days?|weeks?|h|d|w))?",
+        re.IGNORECASE,
+    )
     _INLINE_DEPENDS_RE = re.compile(r"depends?\s*(?:on)?\s+(.+)", re.IGNORECASE)
     _INLINE_FUZZY_SIZE_RE = re.compile(
         r"(?:probably|likely|assume|estimate[ds]?\s+(?:as\s+)?)"
@@ -1286,6 +1291,16 @@ class NLProjectParser:
                 if unit_token:
                     task.estimate_unit = self._normalize_unit(unit_token)
                 return (range_match.start(), range_match.end())
+
+        tilde_match = self._INLINE_POINT_WITH_TILDE_RE.search(text)
+        if tilde_match is not None:
+            expected = float(tilde_match.group(1))
+            task.low_estimate = round(expected * 0.75, 1)
+            task.expected_estimate = expected
+            task.high_estimate = round(expected * 2.5, 1)
+            if tilde_match.group(2):
+                task.estimate_unit = self._normalize_unit(tilde_match.group(2))
+            return (tilde_match.start(), tilde_match.end())
 
         point_match = self._INLINE_POINT_WITH_QUALIFIER_RE.search(text)
         if point_match is not None:

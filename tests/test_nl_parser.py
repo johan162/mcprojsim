@@ -866,6 +866,28 @@ Project name: Test
         assert project.tasks[0].high_estimate == 5.4
         assert project.tasks[0].estimate_unit == "weeks"
 
+    def test_inline_tilde_point_estimate_uses_high_uncertainty(self) -> None:
+        text = """
+Project name: Test
+3. UI design , about ~2 weeks
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate == 1.5
+        assert project.tasks[0].expected_estimate == pytest.approx(2.0)
+        assert project.tasks[0].high_estimate == 5.0
+        assert project.tasks[0].estimate_unit == "weeks"
+
+    def test_inline_tilde_without_word_qualifier_is_supported(self) -> None:
+        text = """
+Project name: Test
+- Quick patch ~10 hours
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate == 7.5
+        assert project.tasks[0].expected_estimate == pytest.approx(10.0)
+        assert project.tasks[0].high_estimate == 25.0
+        assert project.tasks[0].estimate_unit == "hours"
+
     def test_inline_range_does_not_parse_date_fragment(self) -> None:
         text = """
 Project name: Test
