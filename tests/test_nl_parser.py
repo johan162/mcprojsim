@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 import yaml
 
@@ -278,6 +280,41 @@ class TestNLProjectParserDates:
             "2026-03-22",
             "2026-03-24",
         ]
+
+
+class TestRelativeStartDates:
+    """Tests for relative project start-date parsing."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser(today=date(2026, 4, 8))
+
+    def test_start_date_next_monday(self) -> None:
+        text = "Start date: next Monday\nTask 1:\n- Work\n- Size: S"
+        assert self.parser.parse(text).start_date == "2026-04-13"
+
+    def test_starting_in_two_weeks(self) -> None:
+        text = "Starting in 2 weeks\nTask 1:\n- Work\n- Size: S"
+        assert self.parser.parse(text).start_date == "2026-04-22"
+
+    def test_starting_in_five_days(self) -> None:
+        text = "Starting in 5 days\nTask 1:\n- Work\n- Size: S"
+        assert self.parser.parse(text).start_date == "2026-04-13"
+
+    def test_start_date_beginning_of_may(self) -> None:
+        text = "Start date: beginning of May\nTask 1:\n- Work\n- Size: S"
+        assert self.parser.parse(text).start_date == "2026-05-01"
+
+    def test_start_date_beginning_of_next_month(self) -> None:
+        text = "Start date: beginning of next month\nTask 1:\n- Work\n- Size: S"
+        assert self.parser.parse(text).start_date == "2026-05-01"
+
+    def test_start_date_month_and_year(self) -> None:
+        text = "Start date: May 2026\nTask 1:\n- Work\n- Size: S"
+        assert self.parser.parse(text).start_date == "2026-05-01"
+
+    def test_iso_start_date_still_parses(self) -> None:
+        text = "Start date: 2026-06-02\nTask 1:\n- Work\n- Size: S"
+        assert self.parser.parse(text).start_date == "2026-06-02"
 
 
 class TestNLProjectParserYAML:
@@ -807,6 +844,48 @@ Project name: Test
         assert project.tasks[0].low_estimate == pytest.approx(3.0)
         assert project.tasks[0].high_estimate == pytest.approx(5.0)
 
+    def test_inline_qualified_point_estimate(self) -> None:
+        text = """
+Project name: Test
+- Quick fix about 10 hours
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate == pytest.approx(7.0)
+        assert project.tasks[0].expected_estimate == pytest.approx(10.0)
+        assert project.tasks[0].high_estimate == pytest.approx(18.0)
+        assert project.tasks[0].estimate_unit == "hours"
+
+    def test_inline_point_estimate_in_weeks(self) -> None:
+        text = """
+Project name: Test
+1. Frontend integration around 3 weeks
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate == 2.1
+        assert project.tasks[0].expected_estimate == pytest.approx(3.0)
+        assert project.tasks[0].high_estimate == 5.4
+        assert project.tasks[0].estimate_unit == "weeks"
+
+    def test_inline_range_does_not_parse_date_fragment(self) -> None:
+        text = """
+Project name: Test
+- Release train for 2026-04 planning
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate is None
+        assert project.tasks[0].expected_estimate is None
+        assert project.tasks[0].high_estimate is None
+
+    def test_inline_point_does_not_parse_version_number(self) -> None:
+        text = """
+Project name: Test
+- Upgrade service to v2.4
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].low_estimate is None
+        assert project.tasks[0].expected_estimate is None
+        assert project.tasks[0].high_estimate is None
+
     # -- Inline dependency on task line --------------------------------------
 
     def test_inline_depends_on_task_line(self) -> None:
@@ -817,6 +896,157 @@ Project name: Test
 """
         project = self.parser.parse(text)
         assert project.tasks[1].dependency_refs == ["1"]
+
+
+class TestFuzzyDurations:
+    """Tests for fuzzy natural duration phrase parsing."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser(today=date(2026, 4, 8))
+
+    def test_couple_of_days_maps_to_small(self) -> None:
+        text = """
+Project name: Test
+- Quick patch takes a couple of days
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "S"
+
+    def test_about_a_week_maps_to_medium(self) -> None:
+        text = """
+Project name: Test
+- Design database schema about a week
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "M"
+
+    def test_a_few_weeks_maps_to_large(self) -> None:
+        text = """
+Project name: Test
+- Frontend integration will take a few weeks
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "L"
+
+    def test_month_or_so_maps_to_large(self) -> None:
+        text = """
+Project name: Test
+- Migration effort is a month or so
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "L"
+
+    def test_a_sprint_defaults_to_large(self) -> None:
+        text = """
+Project name: Test
+- Post-launch monitoring takes a sprint
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "L"
+
+    def test_a_sprint_uses_configured_sprint_length(self) -> None:
+        text = """
+Project name: Test
+Sprint planning:
+- Sprint length: 4
+Sprint history S1:
+- Done: 10 points
+- Carryover: 1 points
+Task 1:
+- Future sprint tasks are about a sprint
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].t_shirt_size == "XL"
+
+
+class TestFuzzyDependencyMatching:
+    """Tests for fuzzy matching of dependency phrases to previous tasks."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser(today=date(2026, 4, 8))
+
+    def test_db_work_phrase_matches_database_task(self) -> None:
+        text = """
+Project: New feature launch
+1. Design database schema
+2. Implement backend REST API (probably 2–4 days, depends on the DB work)
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == ["1"]
+
+    def test_frontend_and_backend_phrase_matches_multiple_tasks(self) -> None:
+        text = """
+Project: New feature launch
+1. Design database schema
+2. Implement backend REST API
+3. Frontend integration testing
+4. Deployment and smoke tests (a few days), depends on frontend and backend being ready
+"""
+        project = self.parser.parse(text)
+        assert set(project.tasks[3].dependency_refs) == {"2", "3"}
+
+    def test_no_false_positive_on_generic_dependency_phrase(self) -> None:
+        text = """
+Project: New feature launch
+1. Design database schema
+2. This task has dependencies
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == []
+
+    def test_design_example_parses_correctly(self) -> None:
+        text = """
+Project: New feature launch
+Start date: next Monday
+1. Design database schema (about a week)
+2. Implement backend REST API (probably 2–4 days, depends on the DB work)
+3. Frontend integration testing (around 3 weeks)
+4. Deployment and smoke tests (a few days), depends on frontend and backend being ready
+5. Post-launch monitoring (a sprint)
+"""
+        project = self.parser.parse(text)
+
+        assert project.start_date == "2026-04-13"
+        assert len(project.tasks) == 5
+
+        assert project.tasks[0].t_shirt_size == "M"
+        assert project.tasks[1].low_estimate == pytest.approx(2.0)
+        assert project.tasks[1].expected_estimate == pytest.approx(3.0)
+        assert project.tasks[1].high_estimate == pytest.approx(4.0)
+        assert project.tasks[1].dependency_refs == ["1"]
+        assert project.tasks[2].expected_estimate == pytest.approx(3.0)
+        assert project.tasks[2].estimate_unit == "weeks"
+        assert set(project.tasks[3].dependency_refs) == {"2", "3"}
+        assert project.tasks[4].t_shirt_size == "L"
+
+
+class TestFreeformExplicitTaskBullets:
+    """Integration tests for Item 2 features inside explicit Task N sections."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser(today=date(2026, 4, 8))
+
+    def test_freeform_duration_bullet_sets_name_and_size(self) -> None:
+        text = """
+Project: Test
+Task 1:
+- Design database schema about a week
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[0].name == "Design database schema"
+        assert project.tasks[0].t_shirt_size == "M"
+
+    def test_freeform_dependency_bullet_resolves_previous_task(self) -> None:
+        text = """
+Project: Test
+Task 1:
+- Design database schema
+Task 2:
+- Implement backend REST API (probably 2–4 days, depends on the DB work)
+"""
+        project = self.parser.parse(text)
+        assert project.tasks[1].dependency_refs == ["1"]
+        assert project.tasks[1].expected_estimate == pytest.approx(3.0)
 
     # -- Combined: size + estimate on same line ------------------------------
 

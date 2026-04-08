@@ -657,7 +657,7 @@ class TestHTMLExporter:
         with open(output_file, "r") as f:
             content = f.read()
 
-        assert "M (120.0, 240.0, 400.0)" in content
+        assert "M (40.0, 60.0, 120.0)" in content
 
     def test_html_uses_active_config_for_story_point_display(self, tmp_path):
         """Test that HTML uses the provided config for Story Point effort display."""

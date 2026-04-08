@@ -26,9 +26,13 @@ These lines can appear anywhere outside a task section:
 Project name: Website Redesign
 Description: Q3 infrastructure work
 Start date: 2026-06-01
+Starting in 2 weeks
+Start date: next Monday
 Hours per day: 7.5
 Confidence levels: 50, 80, 90, 95
 ```
+
+`Start date` also accepts relative phrases such as `next Monday`, `in 5 days`, `in 2 weeks`, `beginning of May`, and `May 2026`.
 
 All fields are optional. Defaults: name = "Untitled Project", hours = 8.0, confidence = [50, 80, 90, 95].
 
@@ -176,12 +180,62 @@ Numeric ranges on the task line are parsed as explicit estimates:
 
 The parser calculates `expected = (low + high) / 2` automatically.
 
+### Approximate point estimates
+
+Approximate single-value estimates on the task line are expanded into a three-point range automatically:
+
+```text
+- Quick fix about 10 hours
+- Frontend integration around 3 weeks
+- Rollout verification roughly 6 hours
+```
+
+For these phrases, the parser keeps the stated value as `expected` and synthesizes:
+
+- `low = expected * 0.7`
+- `high = expected * 1.8`
+
+So `about 10 hours` becomes `low=7`, `expected=10`, `high=18`, `unit=hours`.
+
+### Natural duration phrases
+
+Common prose-style duration phrases are mapped directly to T-shirt sizes when no explicit numeric estimate is present:
+
+```text
+- Quick patch takes a couple of days
+- Design database schema about a week
+- Frontend integration will take a few weeks
+- Migration effort is a month or so
+- Post-launch monitoring takes a sprint
+```
+
+Examples:
+
+- `a couple of days` -> `S`
+- `about a week` -> `M`
+- `a few weeks` -> `L`
+- `a month or so` -> `L`
+- `a sprint` -> derived from sprint cadence when sprint planning is available
+
+Numeric expressions still take precedence. For example, `around 3 weeks` is treated as an approximate point estimate in weeks, not as a T-shirt phrase.
+
 ### Inline dependencies
 
 ```text
 1. Design database schema
 2. Implement REST API depends on Task 1
 ```
+
+The parser also resolves natural references to previous tasks when the text does not name an explicit `Task N` reference:
+
+```text
+1. Design database schema
+2. Implement backend REST API (probably 2–4 days, depends on the DB work)
+3. Frontend integration testing (around 3 weeks)
+4. Deployment and smoke tests (a few days), depends on frontend and backend being ready
+```
+
+Supported fuzzy references include terms such as `DB`, `API`, `frontend`, `backend`, `auth`, `deployment`, and `QA/testing`, matched against previously parsed task names.
 
 ### Combined example
 
@@ -300,6 +354,31 @@ Task 2: Create wireframes
 Task 3: Build frontend
 - Depends on Task 2
 - Size: XL
+```
+
+### Example 6: Relative dates and prose-style estimates
+
+```text
+Project: New feature launch
+Start date: next Monday
+
+1. Design database schema (about a week)
+2. Implement backend REST API (probably 2–4 days, depends on the DB work)
+3. Frontend integration testing (around 3 weeks)
+4. Deployment and smoke tests (a few days), depends on frontend and backend being ready
+5. Post-launch monitoring (a sprint)
+```
+
+### Example 7: Approximate point estimates
+
+```text
+Project name: Incident Remediation
+Starting in 2 weeks
+
+- Quick patch about 10 hours
+- Auth hardening around 3 to 5 days
+- Database cleanup 2-4 hours
+- Rollout verification roughly 6 hours
 ```
 
 ---

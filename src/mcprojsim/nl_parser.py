@@ -45,6 +45,100 @@ _SIZE_ALIASES: dict[str, str] = {
 
 _VALID_SIZES = {"XS", "S", "M", "L", "XL", "XXL"}
 
+_REFERENCE_TOKEN_ALIASES: dict[str, set[str]] = {
+    "db": {"db", "database"},
+    "database": {"db", "database"},
+    "api": {"api", "rest", "backend", "server"},
+    "rest": {"api", "rest", "backend", "server"},
+    "backend": {"api", "rest", "backend", "server"},
+    "server": {"api", "rest", "backend", "server"},
+    "frontend": {"frontend", "ui"},
+    "ui": {"frontend", "ui"},
+    "authentication": {"authentication", "auth", "login"},
+    "auth": {"authentication", "auth", "login"},
+    "login": {"authentication", "auth", "login"},
+    "deployment": {"deployment", "deploy"},
+    "deploy": {"deployment", "deploy"},
+    "qa": {"qa", "test", "testing", "quality"},
+    "test": {"qa", "test", "testing", "quality"},
+    "testing": {"qa", "test", "testing", "quality"},
+    "quality": {"qa", "test", "testing", "quality"},
+}
+
+_GENERIC_REFERENCE_TOKENS = {
+    "a",
+    "an",
+    "and",
+    "after",
+    "being",
+    "by",
+    "depends",
+    "done",
+    "is",
+    "on",
+    "ready",
+    "the",
+    "this",
+    "work",
+}
+
+_FUZZY_DURATION_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (
+        re.compile(
+            r"\ba\s*few\s+hours?\b|\bcouple\s+of\s+hours?\b|"
+            r"\ban?\s+hour\s+or\s+two\b",
+            re.IGNORECASE,
+        ),
+        "XS",
+    ),
+    (
+        re.compile(
+            r"\ba\s*day\s+or\s+two\b|\bcouple\s+of\s+days?\b|"
+            r"\ba?\s*(?:half\s+a?\s*)?day\b|\bone\s+day\b|"
+            r"\ba\s+full\s+day\b|\b(?:a?\s*few|several)\s+days?\b",
+            re.IGNORECASE,
+        ),
+        "S",
+    ),
+    (
+        re.compile(
+            r"\b(?:about\s+)?(?:a|one)\s+week\b|\b5\s+(?:working\s+)?days?\b|"
+            r"\b(?:half\s+a\s+week)\b",
+            re.IGNORECASE,
+        ),
+        "M",
+    ),
+    (
+        re.compile(
+            r"\b(?:a?\s*few|several)\s+weeks?\b|\ba\s+month\s+or\s+(?:so|two)\b",
+            re.IGNORECASE,
+        ),
+        "L",
+    ),
+    (
+        re.compile(
+            r"\b(?:a|one)\s+month\b|\bfour\s+weeks?\b|\ba\s+full\s+month\b",
+            re.IGNORECASE,
+        ),
+        "XL",
+    ),
+    (
+        re.compile(
+            r"\b(?:a?\s*couple\s+of\s+|two\s+)months?\b|\bsix\s+weeks?\b",
+            re.IGNORECASE,
+        ),
+        "XL",
+    ),
+    (
+        re.compile(
+            r"\b(?:a?\s*few|several|[3-6])\s+months?\b|\ba\s+quarter\b|"
+            r"\bhalf\s+a\s+year\b|\bsix\s+months\b",
+            re.IGNORECASE,
+        ),
+        "XXL",
+    ),
+]
+
 
 @dataclass
 class ParsedTask:
@@ -165,6 +259,16 @@ class NLProjectParser:
     _START_DATE_RE = re.compile(
         r"start\s*date\s*[:.=]\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE
     )
+    _RELATIVE_DATE_RE = re.compile(
+        r"start(?:ing|s)?\s+(?:date\s*[:.=]?\s*)?"
+        r"(next\s+(?:monday|tuesday|wednesday|thursday|friday)|"
+        r"in\s+\d+\s+(?:days?|weeks?)|"
+        r"(?:beginning|start)\s+of\s+(?:next\s+)?(?:month|[A-Za-z]+)|"
+        r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+        r"Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+        r"(?:\s+\d{1,2})?(?:\s+\d{4})?)\s*$",
+        re.IGNORECASE,
+    )
     _DESCRIPTION_RE = re.compile(r"description\s*[:.=]\s*(.+)", re.IGNORECASE)
     _HOURS_PER_DAY_RE = re.compile(
         r"hours?\s*per\s*day\s*[:.=]\s*([\d.]+)", re.IGNORECASE
@@ -190,6 +294,11 @@ class NLProjectParser:
     _INLINE_RANGE_RE = re.compile(
         r"(?:about\s+|around\s+|roughly\s+|~\s*)?(\d+(?:\.\d+)?)"
         r"\s*(?:[-–—]|to)\s*(\d+(?:\.\d+)?)"
+        r"(?:\s+(hours?|days?|weeks?|h|d|w))?",
+        re.IGNORECASE,
+    )
+    _INLINE_POINT_WITH_QUALIFIER_RE = re.compile(
+        r"(?:about|around|roughly|~|approx(?:imately)?)\s+(\d+(?:\.\d+)?)"
         r"(?:\s+(hours?|days?|weeks?|h|d|w))?",
         re.IGNORECASE,
     )
@@ -364,9 +473,14 @@ class NLProjectParser:
 
     # -- Public API ------------------------------------------------------------
 
-    def __init__(self, current_year: int | None = None) -> None:
+    def __init__(
+        self,
+        current_year: int | None = None,
+        today: date | None = None,
+    ) -> None:
+        self.today = today if today is not None else date.today()
         self.current_year = (
-            current_year if current_year is not None else date.today().year
+            current_year if current_year is not None else self.today.year
         )
 
     def parse(self, text: str) -> ParsedProject:
@@ -427,6 +541,11 @@ class NLProjectParser:
                         current_future_override
                     )
                 current_future_override = None
+
+        def _current_sprint_weeks() -> int | None:
+            if project.sprint_planning is None:
+                return None
+            return project.sprint_planning.sprint_length_weeks
 
         for raw_line in lines:
             line = raw_line.strip()
@@ -549,6 +668,8 @@ class NLProjectParser:
                     line,
                     current_task,
                     auto_task_counter,
+                    _current_sprint_weeks(),
+                    project.tasks,
                     _flush_section,
                 )
                 if new_auto is not None:
@@ -582,9 +703,42 @@ class NLProjectParser:
                     continue
                 if self._try_parse_story_points(bullet_text, current_task):
                     continue
-                if self._try_parse_depends(bullet_text, current_task):
+                if self._try_parse_depends(bullet_text, current_task, project.tasks):
                     continue
                 if self._try_parse_estimate(bullet_text, current_task):
+                    continue
+
+                before_state = (
+                    current_task.name,
+                    current_task.t_shirt_size,
+                    current_task.low_estimate,
+                    current_task.expected_estimate,
+                    current_task.high_estimate,
+                    tuple(current_task.dependency_refs),
+                )
+                self._extract_inline_properties(
+                    bullet_text,
+                    current_task,
+                    sprint_weeks=_current_sprint_weeks(),
+                    known_tasks=project.tasks,
+                    assign_name=not bool(current_task.name),
+                )
+                after_state = (
+                    current_task.name,
+                    current_task.t_shirt_size,
+                    current_task.low_estimate,
+                    current_task.expected_estimate,
+                    current_task.high_estimate,
+                    tuple(current_task.dependency_refs),
+                )
+                if after_state != before_state:
+                    if (
+                        current_task.description is None
+                        and current_task.name
+                        and current_task.name != bullet_text
+                        and before_state[0]
+                    ):
+                        current_task.description = bullet_text
                     continue
 
                 # Unmatched bullet → task name or description
@@ -652,6 +806,8 @@ class NLProjectParser:
                     line,
                     current_task,
                     auto_task_counter,
+                    _current_sprint_weeks(),
+                    project.tasks,
                     _flush_section,
                 )
                 if auto_task_started is not None:
@@ -970,6 +1126,8 @@ class NLProjectParser:
         line: str,
         current_task: ParsedTask | None,
         auto_task_counter: int,
+        sprint_weeks: int | None,
+        known_tasks: list[ParsedTask],
         flush: object,
     ) -> ParsedTask | None:
         """Try to start an auto-detected task from a plain list line.
@@ -985,7 +1143,12 @@ class NLProjectParser:
             task_num = int(m.group(1))
             name = m.group(2).strip()
             task = ParsedTask(number=task_num, name=name)
-            self._extract_inline_properties(name, task)
+            self._extract_inline_properties(
+                name,
+                task,
+                sprint_weeks=sprint_weeks,
+                known_tasks=known_tasks,
+            )
             return task
 
         # Plain numbered: 1. foo, 2) bar
@@ -996,7 +1159,12 @@ class NLProjectParser:
             task_num = int(m.group(1))
             name = m.group(2).strip()
             task = ParsedTask(number=task_num, name=name)
-            self._extract_inline_properties(name, task)
+            self._extract_inline_properties(
+                name,
+                task,
+                sprint_weeks=sprint_weeks,
+                known_tasks=known_tasks,
+            )
             return task
 
         # Hash numbered: # 1 foo
@@ -1007,7 +1175,12 @@ class NLProjectParser:
             task_num = int(m.group(1))
             name = m.group(2).strip()
             task = ParsedTask(number=task_num, name=name)
-            self._extract_inline_properties(name, task)
+            self._extract_inline_properties(
+                name,
+                task,
+                sprint_weeks=sprint_weeks,
+                known_tasks=known_tasks,
+            )
             return task
 
         # Plain bullet: - foo, * bar, • baz
@@ -1017,12 +1190,24 @@ class NLProjectParser:
                 flush()  # type: ignore[operator]
             name = m.group(1).strip()
             task = ParsedTask(number=auto_task_counter, name=name)
-            self._extract_inline_properties(name, task)
+            self._extract_inline_properties(
+                name,
+                task,
+                sprint_weeks=sprint_weeks,
+                known_tasks=known_tasks,
+            )
             return task
 
         return None
 
-    def _extract_inline_properties(self, text: str, task: ParsedTask) -> None:
+    def _extract_inline_properties(
+        self,
+        text: str,
+        task: ParsedTask,
+        sprint_weeks: int | None = None,
+        known_tasks: list[ParsedTask] | None = None,
+        assign_name: bool = True,
+    ) -> None:
         """Extract inline size, estimate, or dependency from a task name line.
 
         Scans the text for bracketed/parenthesized size tokens, fuzzy size
@@ -1050,35 +1235,110 @@ class NLProjectParser:
                     task.t_shirt_size = normalized
                     remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
 
-        # Inline estimate range: "3-5 days", "3–5 days"
+        # Inline estimate range or qualified point estimate.
         if task.low_estimate is None:
-            m = self._INLINE_RANGE_RE.search(remaining)
-            if m:
-                low = float(m.group(1))
-                high = float(m.group(2))
-                if low < high:
-                    task.low_estimate = low
-                    task.expected_estimate = (low + high) / 2
-                    task.high_estimate = high
-                    if m.group(3):
-                        task.estimate_unit = self._normalize_unit(m.group(3))
-                    remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
+            matched_slice = self._try_parse_inline_estimate(remaining, task)
+            if matched_slice is not None:
+                remaining = (
+                    remaining[: matched_slice[0]] + remaining[matched_slice[1] :]
+                ).strip()
+
+        if task.t_shirt_size is None and task.low_estimate is None:
+            matched_slice = self._try_parse_fuzzy_duration(
+                remaining,
+                task,
+                sprint_weeks=sprint_weeks,
+            )
+            if matched_slice is not None:
+                remaining = (
+                    remaining[: matched_slice[0]] + remaining[matched_slice[1] :]
+                ).strip()
 
         # Inline dependency: "depends on Task 1"
         m = self._INLINE_DEPENDS_RE.search(remaining)
         if m and not task.dependency_refs:
             dep_text = m.group(1)
-            refs = self._TASK_REF_RE.findall(dep_text)
-            if not refs:
-                refs = re.findall(r"(\d+)", dep_text)
+            refs = self._resolve_dependency_refs(dep_text, known_tasks or [])
             if refs:
-                task.dependency_refs = [str(int(r)) for r in refs]
+                task.dependency_refs = refs
                 remaining = (remaining[: m.start()] + remaining[m.end() :]).strip()
 
         # Clean up the task name: remove extracted tokens
         cleaned = remaining.strip().rstrip(".,;:- ")
-        if cleaned:
+        if cleaned and assign_name:
             task.name = cleaned
+
+    def _try_parse_inline_estimate(
+        self,
+        text: str,
+        task: ParsedTask,
+    ) -> tuple[int, int] | None:
+        """Parse an inline range or qualified point estimate from task text."""
+        range_match = self._INLINE_RANGE_RE.search(text)
+        if range_match is not None:
+            low = float(range_match.group(1))
+            high = float(range_match.group(2))
+            unit_token = range_match.group(3)
+            if low < high and not self._looks_like_date_fragment(low, high, unit_token):
+                task.low_estimate = low
+                task.expected_estimate = (low + high) / 2
+                task.high_estimate = high
+                if unit_token:
+                    task.estimate_unit = self._normalize_unit(unit_token)
+                return (range_match.start(), range_match.end())
+
+        point_match = self._INLINE_POINT_WITH_QUALIFIER_RE.search(text)
+        if point_match is not None:
+            expected = float(point_match.group(1))
+            task.low_estimate = round(expected * 0.7, 1)
+            task.expected_estimate = expected
+            task.high_estimate = round(expected * 1.8, 1)
+            if point_match.group(2):
+                task.estimate_unit = self._normalize_unit(point_match.group(2))
+            return (point_match.start(), point_match.end())
+
+        return None
+
+    def _try_parse_fuzzy_duration(
+        self,
+        text: str,
+        task: ParsedTask,
+        sprint_weeks: int | None = None,
+    ) -> tuple[int, int] | None:
+        """Parse fuzzy natural-language duration phrases into T-shirt sizes."""
+        sprint_match = re.search(r"\ba\s+sprint\b|\babout\s+a\s+sprint\b", text, re.IGNORECASE)
+        if sprint_match is not None:
+            task.t_shirt_size = self._t_shirt_size_for_sprint_weeks(sprint_weeks or 2)
+            return (sprint_match.start(), sprint_match.end())
+
+        for pattern, size in _FUZZY_DURATION_PATTERNS:
+            match = pattern.search(text)
+            if match is not None:
+                task.t_shirt_size = size
+                return (match.start(), match.end())
+        return None
+
+    @staticmethod
+    def _t_shirt_size_for_sprint_weeks(sprint_weeks: int) -> str:
+        """Map sprint cadence in weeks to a default T-shirt size."""
+        if sprint_weeks <= 1:
+            return "M"
+        if sprint_weeks <= 3:
+            return "L"
+        if sprint_weeks <= 6:
+            return "XL"
+        return "XXL"
+
+    @staticmethod
+    def _looks_like_date_fragment(
+        low: float,
+        high: float,
+        unit_token: str | None,
+    ) -> bool:
+        """Reject year-month style fragments such as 2026-04 as estimates."""
+        if unit_token is not None:
+            return False
+        return low >= 1900 and low == int(low) and 1 <= high <= 31 and high == int(high)
 
     @staticmethod
     def _normalize_unit(unit_str: str) -> str:
@@ -1101,6 +1361,13 @@ class NLProjectParser:
             project.start_date = m.group(1)
             return True
 
+        m = self._RELATIVE_DATE_RE.match(line)
+        if m:
+            resolved = self._resolve_relative_date(m.group(1), self.today)
+            if resolved is not None:
+                project.start_date = resolved
+                return True
+
         m = self._DESCRIPTION_RE.match(line)
         if m:
             project.description = m.group(1).strip()
@@ -1119,6 +1386,101 @@ class NLProjectParser:
             return True
 
         return False
+
+    def _resolve_relative_date(self, phrase: str, today: date) -> str | None:
+        """Resolve a relative start-date phrase to an ISO date string."""
+        normalized = " ".join(phrase.strip().lower().split())
+        if not normalized:
+            return None
+
+        weekday_names = {
+            "monday": 0,
+            "tuesday": 1,
+            "wednesday": 2,
+            "thursday": 3,
+            "friday": 4,
+        }
+        if normalized.startswith("next "):
+            weekday_name = normalized.removeprefix("next ").strip()
+            if weekday_name in weekday_names:
+                target_weekday = weekday_names[weekday_name]
+                days_ahead = (target_weekday - today.weekday()) % 7
+                if days_ahead == 0:
+                    days_ahead = 7
+                return (today + timedelta(days=days_ahead)).isoformat()
+
+        in_match = re.fullmatch(r"in\s+(\d+)\s+(days?|weeks?)", normalized)
+        if in_match:
+            magnitude = int(in_match.group(1))
+            unit = in_match.group(2)
+            if unit.startswith("week"):
+                return (today + timedelta(weeks=magnitude)).isoformat()
+            return (today + timedelta(days=magnitude)).isoformat()
+
+        if normalized in {"beginning of next month", "start of next month"}:
+            year = today.year + (1 if today.month == 12 else 0)
+            next_month = 1 if today.month == 12 else today.month + 1
+            return date(year, next_month, 1).isoformat()
+
+        month_aliases = {
+            "jan": 1,
+            "january": 1,
+            "feb": 2,
+            "february": 2,
+            "mar": 3,
+            "march": 3,
+            "apr": 4,
+            "april": 4,
+            "may": 5,
+            "jun": 6,
+            "june": 6,
+            "jul": 7,
+            "july": 7,
+            "aug": 8,
+            "august": 8,
+            "sep": 9,
+            "september": 9,
+            "oct": 10,
+            "october": 10,
+            "nov": 11,
+            "november": 11,
+            "dec": 12,
+            "december": 12,
+        }
+
+        beginning_match = re.fullmatch(
+            r"(?:beginning|start) of (?:(next) )?([a-z]+)",
+            normalized,
+        )
+        if beginning_match:
+            is_next = beginning_match.group(1) is not None
+            month_name = beginning_match.group(2)
+            month_number = month_aliases.get(month_name)
+            if month_number is not None:
+                year = today.year
+                if is_next or month_number < today.month:
+                    year += 1
+                return date(year, month_number, 1).isoformat()
+
+        month_year_match = re.fullmatch(
+            r"([a-z]+)(?:\s+(\d{1,2}))?(?:\s+(\d{4}))?",
+            normalized,
+        )
+        if month_year_match:
+            month_name = month_year_match.group(1)
+            second_token = month_year_match.group(2)
+            year_token = month_year_match.group(3)
+            month_number = month_aliases.get(month_name)
+            if month_number is not None:
+                day_token: str | None = second_token
+                if second_token is not None and len(second_token) == 4:
+                    day_token = None
+                    year_token = second_token
+                day = int(day_token) if day_token is not None else 1
+                year = int(year_token) if year_token is not None else today.year
+                return date(year, month_number, day).isoformat()
+
+        return None
 
     def _try_parse_size(self, text: str, task: ParsedTask) -> bool:
         m = self._SIZE_RE.match(text)
@@ -1152,17 +1514,68 @@ class NLProjectParser:
             return True
         return False
 
-    def _try_parse_depends(self, text: str, task: ParsedTask) -> bool:
+    def _try_parse_depends(
+        self,
+        text: str,
+        task: ParsedTask,
+        known_tasks: list[ParsedTask] | None = None,
+    ) -> bool:
         m = self._DEPENDS_RE.match(text)
         if m:
             dep_text = m.group(1)
-            refs = self._TASK_REF_RE.findall(dep_text)
-            if not refs:
-                # Fallback: extract plain numbers
-                refs = re.findall(r"(\d+)", dep_text)
-            task.dependency_refs = [str(int(r)) for r in refs]
+            refs = self._resolve_dependency_refs(dep_text, known_tasks or [])
+            task.dependency_refs = refs
             return True
         return False
+
+    def _resolve_dependency_refs(
+        self,
+        dep_text: str,
+        known_tasks: list[ParsedTask],
+    ) -> list[str]:
+        """Resolve dependency references from explicit task numbers or prior task names."""
+        refs = self._TASK_REF_RE.findall(dep_text)
+        if not refs:
+            refs = re.findall(r"(\d+)", dep_text)
+        if refs:
+            return [str(int(ref)) for ref in refs]
+
+        return self._resolve_task_ref_by_name(dep_text, known_tasks)
+
+    def _resolve_task_ref_by_name(
+        self,
+        phrase: str,
+        known_tasks: list[ParsedTask],
+    ) -> list[str]:
+        """Match a natural-language dependency phrase to previously parsed tasks."""
+        phrase_tokens = self._reference_tokens(phrase)
+        if not phrase_tokens:
+            return []
+
+        matches: list[str] = []
+        for known_task in known_tasks:
+            task_tokens = self._reference_tokens(known_task.name)
+            overlap = phrase_tokens & task_tokens
+            if len(overlap) >= 2:
+                matches.append(str(known_task.number))
+                continue
+
+            if overlap and any(token in _REFERENCE_TOKEN_ALIASES for token in overlap):
+                matches.append(str(known_task.number))
+
+        return matches
+
+    def _reference_tokens(self, text: str) -> set[str]:
+        """Return normalized reference tokens with domain alias expansion."""
+        base_tokens = {
+            token
+            for token in re.findall(r"[a-z0-9]+", text.lower())
+            if token not in _GENERIC_REFERENCE_TOKENS
+        }
+        expanded_tokens = set(base_tokens)
+        for token in base_tokens:
+            expanded_tokens.update(_REFERENCE_TOKEN_ALIASES.get(token, {token}))
+        return expanded_tokens
 
     def _try_parse_estimate(self, text: str, task: ParsedTask) -> bool:
         m = self._ESTIMATE_RE.match(text)
