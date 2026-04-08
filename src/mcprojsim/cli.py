@@ -1029,8 +1029,15 @@ def simulate(
             click.echo("\n=== Simulation Results ===")
 
             if table:
+                start_date_str = (
+                    project.project.start_date.isoformat()
+                    if project.project.start_date
+                    else "Not specified"
+                )
                 common_rows = [
                     ["Project", results.project_name],
+                    ["Start Date", start_date_str],
+                    ["Number of Tasks", f"{len(project.tasks)}"],
                     ["T-Shirt Category Used", cfg.t_shirt_size_default_category],
                     ["Hours per Day", f"{hours_per_day}"],
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
@@ -1107,8 +1114,15 @@ def simulate(
                     )
                 )
             else:
+                start_date_str = (
+                    project.project.start_date.isoformat()
+                    if project.project.start_date
+                    else "Not specified"
+                )
                 click.echo("\nProject Overview:")
                 click.echo(f"  Project: {results.project_name}")
+                click.echo(f"  Start Date: {start_date_str}")
+                click.echo(f"  Number of Tasks: {len(project.tasks)}")
                 click.echo(f"  T-Shirt Category Used: {cfg.t_shirt_size_default_category}")
                 click.echo(f"  Hours per Day: {hours_per_day}")
                 click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")

@@ -46,6 +46,12 @@ class CSVExporter:
             # Write project info
             simulation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             writer.writerow(["Project Name", results.project_name])
+            start_date_str = (
+                results.start_date.isoformat() if results.start_date else "Not specified"
+            )
+            writer.writerow(["Start Date", start_date_str])
+            num_tasks = len(results.critical_path_frequency) if results.critical_path_frequency else 0
+            writer.writerow(["Number of Tasks", num_tasks])
             writer.writerow(
                 [
                     "T-Shirt Category Used",
