@@ -424,10 +424,18 @@ In each iteration, the scheduler assigns alice and bob to `backend` and tracks h
 - HTML exporter cost summary, histogram, and tornado chart
 - Cost breakdown by task in HTML report
 
-**Phase 3 — Advanced features:**
+**Phase 3 — Budget confidence analysis:**
+- `probability_within_budget(target_budget)` method on `SimulationResults`
+- `budget_confidence_interval` with normal-approximation CI (Wilson fallback for extremes)
+- `budget_for_confidence(p)` quantile lookup
+- `joint_probability(target_hours, target_budget)` for joint duration-cost analysis
+- `--target-budget` CLI option and MCP parameter
+- JSON `budget_analysis` section in export
+- HTML budget confidence card, CDF chart, and joint scatter plot
+
+**Phase 4 — Advanced features:**
 - Sprint planning cost integration (cost burn-up curves)
 - Time-varying rates (e.g., contractor rate changes after month 3)
-- Budget threshold analysis (probability of exceeding a target budget)
 - Cost risk register (risks with only cost impact, no time impact)
 
 ### Backward Compatibility
@@ -449,10 +457,286 @@ All cost fields are optional with `None` or `0` defaults. Existing projects, con
 | Per-resource rate resolution adds complexity to dependency-only mode | In dependency-only mode, always use `default_hourly_rate`; resource rates only apply in resource-constrained mode where assignment is tracked |
 | Overhead model is too simplistic for some organizations | Phase 3 can add per-category overhead; percentage markup covers the common case |
 
+## Budget Confidence Analysis — Detailed Design
+
+### Motivation
+
+Duration-based planning already answers "what is the probability we finish by date *D*?" via `probability_of_completion(target_hours)`. The budget analogue asks: **given a budget of *B* monetary units, what is the probability the project's total cost stays at or below *B*?**
+
+This is the single most actionable cost metric for stakeholders. It turns a cost distribution into a decision tool: *"There is a 72% chance we stay within the €500k budget"* or *"To reach 90% confidence, the budget needs to be €620k."*
+
+### Mathematical Foundation
+
+#### The Empirical CDF Estimator
+
+The cost distribution is produced by the Monte Carlo simulation as an array of *N* i.i.d. cost samples:
+
+$$C_1, C_2, \ldots, C_N$$
+
+where each $C_i$ is the total project cost computed in iteration $i$. The **empirical cumulative distribution function** (ECDF) is:
+
+$$\hat{F}_N(b) = \frac{1}{N} \sum_{i=1}^{N} \mathbf{1}(C_i \le b)$$
+
+where $\mathbf{1}(\cdot)$ is the indicator function. This is the natural non-parametric estimator of the true CDF $F(b) = P(C \le b)$.
+
+For a given budget target *B*, the **probability of staying within budget** is:
+
+$$P(\text{within budget}) = \hat{F}_N(B) = \frac{|\{i : C_i \le B\}|}{N}$$
+
+This is identical in form to the existing `probability_of_completion`:
+
+```python
+# Existing duration method
+def probability_of_completion(self, target_hours: float) -> float:
+    return float(np.mean(self.durations <= target_hours))
+
+# Analogous cost method
+def probability_within_budget(self, target_budget: float) -> float:
+    return float(np.mean(self.cost_durations <= target_budget))
+```
+
+#### Confidence Interval on the Probability Estimate
+
+The ECDF estimator $\hat{F}_N(b)$ is itself a random variable (it depends on the Monte Carlo sample). Its sampling uncertainty is characterized by the **Dvoretzky–Kiefer–Wolfowitz (DKW) inequality**, which gives a distribution-free confidence band:
+
+$$P\!\left(\sup_b \left|\hat{F}_N(b) - F(b)\right| > \varepsilon\right) \le 2e^{-2N\varepsilon^2}$$
+
+For a pointwise $(1-\alpha)$ confidence interval at a specific budget *B*, the normal approximation to the binomial proportion gives:
+
+$$\hat{p} \pm z_{\alpha/2} \sqrt{\frac{\hat{p}(1-\hat{p})}{N}}$$
+
+where $\hat{p} = \hat{F}_N(B)$ and $z_{\alpha/2}$ is the standard normal quantile.
+
+| *N* (iterations) | Max half-width at $\hat{p}=0.5$, 95% CI | Interpretation |
+|---|---|---|
+| 1,000 | ±3.1% | Rough screening |
+| 10,000 | ±1.0% | Standard precision (mcprojsim default) |
+| 100,000 | ±0.31% | High precision |
+
+At the default 10,000 iterations, the budget probability estimate is accurate to approximately ±1 percentage point at 95% confidence — adequate for project decision-making.
+
+#### The Inverse Problem: Budget Required for Target Confidence
+
+The complementary question is: *"What budget do I need to reach *p*% confidence?"* This is the **quantile function** (inverse CDF):
+
+$$B_p = \hat{F}_N^{-1}(p) = \inf\{b : \hat{F}_N(b) \ge p\}$$
+
+In practice, this is computed as the *p*-th percentile of the cost sample array, which `numpy.percentile` already provides. This is the same computation used for duration percentiles.
+
+For example, "the budget required for 80% confidence" is `np.percentile(cost_durations, 80)`.
+
+#### Joint Duration-Cost Confidence Region (Optional Extension)
+
+Stakeholders sometimes need to answer: *"What is the probability we finish by date D **and** stay within budget B?"* This is the joint probability:
+
+$$P(T \le D \text{ and } C \le B) = \frac{1}{N} \sum_{i=1}^{N} \mathbf{1}(T_i \le D) \cdot \mathbf{1}(C_i \le B)$$
+
+where $T_i$ and $C_i$ are the duration and cost from the same iteration *i*. Because both are computed from the same sampled task durations, their correlation is naturally preserved — this is a key advantage of per-iteration cost accumulation (Approach B from the main design).
+
+Note that the joint probability is **not** the product of the marginal probabilities unless duration and cost are independent (which they are not):
+
+$$P(T \le D \text{ and } C \le B) \ne P(T \le D) \cdot P(C \le B)$$
+
+The per-iteration pairing is essential for correct joint estimation.
+
+### API Design
+
+#### Model: `SimulationResults` Methods
+
+```python
+def probability_within_budget(self, target_budget: float) -> float:
+    """Calculate the probability of total project cost staying within budget.
+
+    Args:
+        target_budget: Budget threshold in project currency units.
+
+    Returns:
+        Probability (0.0 to 1.0) of staying within the target budget.
+
+    Raises:
+        ValueError: If cost estimation is not active (cost_durations is None).
+    """
+    if self.cost_durations is None:
+        raise ValueError(
+            "Cost estimation is not active. "
+            "Set default_hourly_rate or resource hourly_rate to enable cost tracking."
+        )
+    return float(np.mean(self.cost_durations <= target_budget))
+
+def budget_confidence_interval(
+    self,
+    target_budget: float,
+    confidence_level: float = 0.95,
+) -> tuple[float, float, float]:
+    """Return point estimate and confidence interval for budget probability.
+
+    Uses the normal approximation to the binomial proportion.
+
+    Args:
+        target_budget: Budget threshold in project currency units.
+        confidence_level: Confidence level for the interval (default 0.95).
+
+    Returns:
+        Tuple of (point_estimate, lower_bound, upper_bound) where all
+        values are probabilities in [0.0, 1.0].
+    """
+    if self.cost_durations is None:
+        raise ValueError("Cost estimation is not active.")
+    p_hat = float(np.mean(self.cost_durations <= target_budget))
+    n = len(self.cost_durations)
+    z = float(scipy.stats.norm.ppf((1 + confidence_level) / 2))
+    half_width = z * math.sqrt(p_hat * (1 - p_hat) / n)
+    return (p_hat, max(0.0, p_hat - half_width), min(1.0, p_hat + half_width))
+
+def budget_for_confidence(self, confidence: float) -> float:
+    """Return the minimum budget required to reach a target confidence level.
+
+    This is the inverse CDF (quantile function) of the cost distribution.
+
+    Args:
+        confidence: Desired probability of staying within budget (0.0 to 1.0).
+
+    Returns:
+        Budget amount in project currency units.
+    """
+    if self.cost_durations is None:
+        raise ValueError("Cost estimation is not active.")
+    return float(np.percentile(self.cost_durations, confidence * 100))
+
+def joint_probability(
+    self, target_hours: float, target_budget: float
+) -> float:
+    """Probability of finishing by target_hours AND staying within budget.
+
+    Args:
+        target_hours: Duration threshold in hours.
+        target_budget: Budget threshold in currency units.
+
+    Returns:
+        Joint probability (0.0 to 1.0).
+    """
+    if self.cost_durations is None:
+        raise ValueError("Cost estimation is not active.")
+    return float(
+        np.mean(
+            (self.durations <= target_hours)
+            & (self.cost_durations <= target_budget)
+        )
+    )
+```
+
+#### CLI Integration
+
+Extend the existing `--target-date` pattern with a `--target-budget` option on the `simulate` command:
+
+```
+mcprojsim simulate project.yaml --target-budget 500000
+```
+
+Output:
+
+```
+Probability of staying within budget (€500,000): 72.3% (95% CI: 71.4%–73.2%)
+Budget required for 80% confidence: €548,200
+Budget required for 90% confidence: €621,400
+```
+
+When both `--target-date` and `--target-budget` are provided, also report the joint probability:
+
+```
+Probability of completing by 2026-09-01 AND staying within €500,000: 65.1%
+```
+
+#### MCP Integration
+
+Add an optional `target_budget` parameter to the `simulate_project` and `simulate_project_yaml` MCP tools. When provided, the results summary includes the budget probability, confidence interval, and the budgets required for P50/P80/P90 confidence levels.
+
+#### JSON Export
+
+When a `target_budget` is set, add a `budget_analysis` section to the JSON output:
+
+```json
+{
+  "budget_analysis": {
+    "target_budget": 500000,
+    "currency": "EUR",
+    "probability_within_budget": 0.723,
+    "confidence_interval_95": [0.714, 0.732],
+    "budget_for_p50": 462000,
+    "budget_for_p80": 548200,
+    "budget_for_p90": 621400,
+    "joint_analysis": {
+      "target_hours": 960,
+      "target_budget": 500000,
+      "joint_probability": 0.651,
+      "marginal_duration_probability": 0.81,
+      "marginal_budget_probability": 0.723
+    }
+  }
+}
+```
+
+The `joint_analysis` section is only present when both a target date/hours and target budget are specified.
+
+#### HTML Export
+
+Add a **Budget Confidence** card to the HTML report:
+
+1. **Budget probability gauge**: A visual indicator showing the probability of staying within the target budget (similar to a speedometer or progress bar with color zones: green >80%, amber 60–80%, red <60%).
+2. **Budget percentile table**: Rows for P50, P80, P90, P95 showing the budget amount at each confidence level.
+3. **Cost CDF chart**: An S-curve plotting budget amount (x-axis) against cumulative probability (y-axis), with the target budget marked as a vertical line and the corresponding probability marked as a horizontal line. This gives stakeholders an intuitive visual of the full cost risk profile.
+4. **Joint confidence scatter** (optional): A 2D scatter or contour plot of (duration, cost) pairs from the simulation, with the target budget and target date drawn as threshold lines, and the four quadrants labeled (on-time & on-budget, on-time & over-budget, late & on-budget, late & over-budget) with their respective probabilities.
+
+### Worked Example
+
+Consider the "API Rewrite" project from the earlier example, with 10,000 iterations producing a cost distribution. A stakeholder asks: *"We have a €500k budget — will we make it?"*
+
+**Step 1 — Point estimate:**
+
+$$P(C \le 500{,}000) = \frac{|\{i : C_i \le 500{,}000\}|}{10{,}000} = \frac{7{,}230}{10{,}000} = 0.723$$
+
+*"72.3% probability of staying within the €500k budget."*
+
+**Step 2 — Confidence interval (95%):**
+
+$$\hat{p} = 0.723,\quad z_{0.025} = 1.96,\quad \text{half-width} = 1.96 \sqrt{\frac{0.723 \times 0.277}{10{,}000}} = 0.0088$$
+
+$$CI = [0.714,\ 0.732]$$
+
+*"We are 95% confident the true probability is between 71.4% and 73.2%."*
+
+**Step 3 — Budget for target confidence:**
+
+$$B_{0.80} = \hat{F}^{-1}(0.80) = \text{np.percentile}(\mathbf{C}, 80) = 548{,}200$$
+
+$$B_{0.90} = \hat{F}^{-1}(0.90) = \text{np.percentile}(\mathbf{C}, 90) = 621{,}400$$
+
+*"To reach 80% confidence, budget €548k. To reach 90% confidence, budget €621k."*
+
+**Step 4 — Joint analysis (if target date September 1, 2026 is also set):**
+
+$$P(T \le 960 \text{ and } C \le 500{,}000) = \frac{|\{i : T_i \le 960 \text{ and } C_i \le 500{,}000\}|}{10{,}000} = 0.651$$
+
+*"65.1% probability of finishing on time AND within budget."*
+
+Note: the marginal probabilities are $P(T \le 960) = 0.81$ and $P(C \le 500{,}000) = 0.723$, whose product is $0.586$ — less than the joint $0.651$, because duration and cost are positively correlated (iterations where tasks take longer also cost more, so the "bad" outcomes tend to cluster together, leaving more probability mass in the "both good" quadrant than independence would predict).
+
+### Implementation Considerations
+
+**Computational cost:** Zero additional simulation iterations are required. Budget analysis is a pure post-processing step over the existing `cost_durations` array. The ECDF lookup, percentile computation, and confidence interval are all O(N) or O(N log N) operations on the already-stored array.
+
+**Numerical edge cases:**
+- When $\hat{p} = 0$ or $\hat{p} = 1$, the normal approximation confidence interval degenerates. Use the Wilson score interval or Clopper-Pearson exact interval as a fallback when $\hat{p} \cdot N < 5$ or $(1-\hat{p}) \cdot N < 5$.
+- When `cost_durations` is `None`, all budget methods raise `ValueError` with a message guiding the user to enable cost estimation.
+
+**Interpolation for quantiles:** `numpy.percentile` uses linear interpolation between order statistics by default. This is consistent with how duration percentiles are already computed in mcprojsim and is appropriate for the sample sizes used (≥1,000 iterations).
+
+**Currency formatting:** Budget amounts in CLI and HTML output should be formatted with the project's `currency` label and locale-appropriate thousand separators. The currency field is display-only — no exchange-rate logic.
+
 ## Future Work
 
-- **Budget confidence analysis**: Given a budget of $X, what is the probability the project stays within budget? (Analogous to `probability_of_completion` for duration.)
 - **Earned value metrics**: Planned Value, Earned Value, and Cost Performance Index computed from sprint-level cost data.
 - **Multi-currency support**: Resources in different currencies with exchange-rate conversion.
 - **Rate uncertainty**: Model hourly rates as distributions rather than point values (e.g., contractor rate negotiation range).
 - **Cost breakdown structure**: Hierarchical cost categories (labor, infrastructure, licensing, overhead) with separate distributions.
+- **Budget-at-risk (BaR)**: The monetary amount at risk at a given confidence level, analogous to Value-at-Risk in finance: $\text{BaR}_\alpha = \hat{F}^{-1}(\alpha) - \hat{F}^{-1}(0.50)$, representing the additional contingency reserve above the median cost needed to achieve $\alpha$-level confidence.
