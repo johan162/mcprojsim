@@ -178,6 +178,7 @@ $(eval $(call DEFINE_DESIGN_DOC_VARS,MULTIPHASE_SIM,multiphase-simulation,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,SENSITIVITY_ANALYSIS,sensitivity-analysis,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,PLUGGABLE_DISTRIBUTIONS,pluggable-distributions,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,NL_MCP_IMPROVEMENTS,nl_mcp_improvements,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,HANDLING_COST,handling-cost,,))
 
 # ============================================================================================
 # Makefile Targets
@@ -189,9 +190,10 @@ $(eval $(call DESIGN_DOC_PDF_RULE,MULTIPHASE_SIM,multi-phase simulation))
 $(eval $(call DESIGN_DOC_PDF_RULE,SENSITIVITY_ANALYSIS,sensitivity analysis))
 $(eval $(call DESIGN_DOC_PDF_RULE,PLUGGABLE_DISTRIBUTIONS,pluggable distributions))	
 $(eval $(call DESIGN_DOC_PDF_RULE,NL_MCP_IMPROVEMENTS,non-linear MCP improvements))
+$(eval $(call DESIGN_DOC_PDF_RULE,HANDLING_COST,handling cost))
 
 PDF_DESIGN_DOCS := $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) \
-$(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) $(NL_MCP_IMPROVEMENTS_PDF)
+$(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) $(NL_MCP_IMPROVEMENTS_PDF) $(HANDLING_COST_PDF)
 
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
@@ -220,3 +222,6 @@ pdf-design-docs: $(PDF_DESIGN_DOCS) ## Build all the PDF versions of the design 
 
 dark: ## Build all PDFs in dark theme (adds -dark suffix to filenames)
 	@$(MAKE) pdf-design-docs THEME=dark
+
+cost: $(HANDLING_COST_PDF) ## Build the handling cost design document PDF
+	@:
