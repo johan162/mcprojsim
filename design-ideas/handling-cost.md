@@ -587,7 +587,9 @@ def budget_confidence_interval(
     z = float(scipy.stats.norm.ppf((1 + confidence_level) / 2))
     half_width = z * math.sqrt(p_hat * (1 - p_hat) / n)
     return (p_hat, max(0.0, p_hat - half_width), min(1.0, p_hat + half_width))
+```
 
+```python
 def budget_for_confidence(self, confidence: float) -> float:
     """Return the minimum budget required to reach a target confidence level.
 
