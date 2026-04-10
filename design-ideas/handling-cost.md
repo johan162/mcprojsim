@@ -69,11 +69,11 @@ What is missing:
 
 **Recommendation: Approach B** — per-iteration cost accumulation. This produces statistically correct cost distributions that are naturally correlated with duration, supports the full range of cost inputs (rates, fixed costs, risk impacts), and integrates cleanly with existing analysis and export infrastructure.
 
-## Recommended Design
+# Recommended Design
 
-### 1. Model Changes
+## Model Changes
 
-#### 1.1 Project-Level Cost Defaults
+### Project-Level Cost Defaults
 
 Add optional cost fields to `ProjectMetadata`:
 
@@ -88,7 +88,7 @@ project:
 
 All three fields are optional. If `default_hourly_rate` is not set and no resource rates exist, cost estimation is skipped entirely — existing behavior is preserved.
 
-#### 1.2 Resource-Level Rates
+### Resource-Level Rates
 
 Add an optional `hourly_rate` field to `ResourceSpec`:
 
@@ -107,7 +107,7 @@ resources:
 
 When a resource has an `hourly_rate`, that rate is used for any task the resource is assigned to. When a resource does not have an `hourly_rate`, the project-level `default_hourly_rate` is used as a fallback.
 
-#### 1.3 Task-Level Fixed Costs
+### Task-Level Fixed Costs
 
 Add an optional `fixed_cost` field to `Task`:
 
@@ -125,7 +125,7 @@ tasks:
 
 Fixed costs are added once per iteration when the task is scheduled, independent of its sampled duration.
 
-#### 1.4 Risk Cost Impacts
+### Risk Cost Impacts
 
 Extend `RiskImpact` to support a monetary impact type:
 
@@ -143,7 +143,7 @@ risks:
 
 A risk can have both a time `impact` and a `cost_impact`. They trigger together (same probability roll). This avoids complicating the existing impact model while supporting the common case where a risk has both schedule and budget consequences.
 
-### 2. Config Changes
+## Config Changes
 
 Add a `cost` section to the config structure with sensible defaults:
 
@@ -157,9 +157,9 @@ cost:
 
 Project-level values override config-level values, following the existing merge pattern.
 
-### 3. Simulation Engine Changes
+## Simulation Engine Changes
 
-#### 3.1 Per-Iteration Cost Computation
+### Per-Iteration Cost Computation
 
 Inside the existing iteration loop, after task durations are sampled and scheduled:
 
@@ -196,11 +196,11 @@ When the scheduler assigns specific resources to tasks, use the assigned resourc
 
 Use `project.default_hourly_rate` for all tasks. If the project defines a `team_size`, the effort is already parallelized in the duration model; cost is based on total effort hours (sum of individual task durations), not elapsed duration, so parallelism does not double-count.
 
-#### 3.2 Risk Cost Evaluation
+### Risk Cost Evaluation
 
 Extend `RiskEvaluator` to return both the time impact (existing) and the cost impact (new) from a single probability roll per risk per iteration. This preserves the correlation between time overruns and cost overruns.
 
-### 4. Results Model Changes
+## Results Model Changes
 
 Add cost arrays to `SimulationResults`:
 
@@ -216,23 +216,23 @@ cost_sensitivity: Optional[Dict[str, float]] = None  # Spearman: task cost vs pr
 
 All fields are `Optional` and default to `None`, preserving backward compatibility. Cost statistics are only populated when at least one cost input is present in the project.
 
-### 5. Analysis Changes
+##  Analysis Changes
 
-#### 5.1 Cost Statistics
+### Cost Statistics
 
 Extend `StatisticalAnalyzer` (or add a thin `CostAnalyzer`) to compute mean, median, standard deviation, skewness, kurtosis, and percentiles over the `cost_durations` array — same treatment as duration statistics.
 
-#### 5.2 Cost Sensitivity
+### Cost Sensitivity
 
 Run Spearman rank correlation between per-task cost arrays and total project cost, producing a cost tornado chart. This tells users which tasks are the biggest cost drivers, which may differ from the biggest schedule drivers (e.g., a short task done by an expensive contractor).
 
-#### 5.3 Cost-Duration Correlation
+### Cost-Duration Correlation
 
 Report the Pearson correlation between `cost_durations` and `durations`. In most projects this will be very high (>0.9), but it can diverge when resource rates vary significantly or when fixed costs dominate.
 
-### 6. Export Changes
+##  Export Changes
 
-#### 6.1 JSON Exporter
+### JSON Exporter
 
 Add a `cost` section to the output when cost data is present:
 
@@ -262,30 +262,30 @@ Add a `cost` section to the output when cost data is present:
 }
 ```
 
-#### 6.2 CSV Exporter
+### CSV Exporter
 
 Add `cost` column to the per-iteration output, and a `task_cost_mean` / `task_cost_p90` column set in the per-task summary.
 
-#### 6.3 HTML Exporter
+### HTML Exporter
 
 - Add a **Cost Summary** card alongside the existing Duration Summary, showing cost mean/P50/P80/P90 with the currency label.
 - Add a **Cost Histogram** showing the cost distribution.
 - Add a **Cost Tornado Chart** for cost sensitivity (which tasks drive cost variance).
 - In the existing task table, add a **Mean Cost** column when cost data is present.
 
-### 7. CLI and MCP Changes
+##  CLI and MCP Changes
 
 No new commands are needed. The existing `simulate` command and MCP `simulate_project` / `simulate_project_yaml` tools automatically pick up cost data from the project definition and include cost results in output.
 
 The `generate` command and MCP `generate_project_file` tool should accept cost-related natural-language inputs (e.g., "Alice costs $180/hour", "infrastructure fixed cost $5000") and emit the corresponding YAML fields.
 
-### 8. Parser Changes
+## Parser Changes
 
-#### 8.1 YAML Parser
+### YAML Parser
 
 Parse the new optional fields: `default_hourly_rate`, `overhead_rate`, `currency` on project metadata; `hourly_rate` on resources; `fixed_cost` on tasks; `cost_impact` on risks. Validation errors should use the existing location-aware error reporting.
 
-#### 8.2 NL Parser
+### NL Parser
 
 Recognize cost-related patterns in natural-language input:
 
@@ -294,33 +294,33 @@ Recognize cost-related patterns in natural-language input:
 - "fixed cost: $5000" or "one-time cost $5000" → task `fixed_cost`
 - "overhead: 20%" → `overhead_rate`
 
-### 9. Sprint Planning Integration
+## Sprint Planning Integration
 
 For sprint-based planning mode, cost estimation follows the same principle: each sprint's cost is the sum of task costs for tasks completed (or partially completed) in that sprint. The sprint results model would gain optional `cost_per_sprint` and `cumulative_cost_percentiles` arrays, enabling burn-up style cost projections alongside work-item burn-up.
 
 This is a natural follow-on but not required for the initial implementation.
 
-## Design Decisions and Rationale
+# Design Decisions and Rationale
 
-### Why effort-based costing (not duration-based)?
+## Why effort-based costing (not duration-based)?
 
 Cost should be proportional to **effort** (person-hours worked), not **elapsed duration** (calendar time). If two developers work 40 hours each over a 1-week elapsed period, the cost is 80 hours × rate, not 40 hours × rate. The existing `effort_durations` array already captures this distinction; cost extends it.
 
-### Why a single probability roll for time and cost risk impacts?
+## Why a single probability roll for time and cost risk impacts?
 
 Risks that cause schedule delays usually also cause cost increases. Using a single random draw per risk per iteration preserves this correlation. A risk that triggers in iteration #42 adds both its time impact and its cost impact in that same iteration. This produces realistic joint (duration, cost) distributions.
 
-### Why overhead as a percentage rather than a fixed amount?
+## Why overhead as a percentage rather than a fixed amount?
 
 Overhead costs (management time, office space, tooling) typically scale with project size and effort. A percentage markup is the simplest model that captures this scaling. Projects with known fixed overhead can model it as a task with `fixed_cost` and zero effort instead.
 
-### Why Optional[...] = None rather than a separate CostResults class?
+## Why Optional[...] = None rather than a separate CostResults class?
 
 Keeping cost fields on `SimulationResults` (as optional) avoids a parallel results hierarchy and keeps exporters simple — they check `if results.cost_durations is not None` and include the section. This matches how `effort_durations` and scheduling diagnostics are already handled.
 
-## Worked Example
+# Worked Example
 
-### Project Without Resources
+## Project Without Resources
 
 ```yaml
 project:
@@ -370,7 +370,7 @@ Over 10,000 iterations this produces a cost distribution, e.g.:
 - P80: €68,000
 - P90: €78,000
 
-### Project With Resources
+## Project With Resources
 
 ```yaml
 project:
@@ -406,9 +406,9 @@ tasks:
 
 In each iteration, the scheduler assigns alice and bob to `backend` and tracks how many hours each contributes. If alice works 90 hours and bob works 110 hours, the labor cost for that iteration is (90 × $200) + (110 × $130) = $32,300.
 
-## Implementation Considerations
+# Implementation Considerations
 
-### Phased Rollout
+## Phased Rollout
 
 **Phase 1 — Core cost model:**
 - Model fields (`default_hourly_rate`, `hourly_rate`, `fixed_cost`, `cost_impact`, `overhead_rate`, `currency`)
@@ -438,18 +438,18 @@ In each iteration, the scheduler assigns alice and bob to `backend` and tracks h
 - Time-varying rates (e.g., contractor rate changes after month 3)
 - Cost risk register (risks with only cost impact, no time impact)
 
-### Backward Compatibility
+## Backward Compatibility
 
 All cost fields are optional with `None` or `0` defaults. Existing projects, configs, CLI commands, and MCP tools continue to work unchanged. Cost sections appear in output only when cost data is present.
 
-### Testing Strategy
+## Testing Strategy
 
 - **Unit tests**: Model validation for cost fields (valid rates, non-negative fixed costs, currency string).
 - **Engine tests**: Verify per-iteration cost computation matches manual calculation for a small project with known seed.
 - **Integration tests**: End-to-end simulation with cost inputs, verify cost percentiles in JSON output.
 - **Regression tests**: Existing test suite must pass unchanged — no cost output when no cost inputs.
 
-### Risks
+## Risks
 
 | Risk | Mitigation |
 |------|------------|
@@ -457,17 +457,17 @@ All cost fields are optional with `None` or `0` defaults. Existing projects, con
 | Per-resource rate resolution adds complexity to dependency-only mode | In dependency-only mode, always use `default_hourly_rate`; resource rates only apply in resource-constrained mode where assignment is tracked |
 | Overhead model is too simplistic for some organizations | Phase 3 can add per-category overhead; percentage markup covers the common case |
 
-## Budget Confidence Analysis — Detailed Design
+# Budget Confidence Analysis — Detailed Design
 
-### Motivation
+## Motivation
 
 Duration-based planning already answers "what is the probability we finish by date *D*?" via `probability_of_completion(target_hours)`. The budget analogue asks: **given a budget of *B* monetary units, what is the probability the project's total cost stays at or below *B*?**
 
 This is the single most actionable cost metric for stakeholders. It turns a cost distribution into a decision tool: *"There is a 72% chance we stay within the €500k budget"* or *"To reach 90% confidence, the budget needs to be €620k."*
 
-### Mathematical Foundation
+## Mathematical Foundation
 
-#### The Empirical CDF Estimator
+### The Empirical CDF Estimator
 
 The cost distribution is produced by the Monte Carlo simulation as an array of *N* i.i.d. cost samples:
 
@@ -495,7 +495,7 @@ def probability_within_budget(self, target_budget: float) -> float:
     return float(np.mean(self.cost_durations <= target_budget))
 ```
 
-#### Confidence Interval on the Probability Estimate
+### Confidence Interval on the Probability Estimate
 
 The ECDF estimator $\hat{F}_N(b)$ is itself a random variable (it depends on the Monte Carlo sample). Its sampling uncertainty is characterized by the **Dvoretzky–Kiefer–Wolfowitz (DKW) inequality**, which gives a distribution-free confidence band:
 
@@ -515,7 +515,7 @@ where $\hat{p} = \hat{F}_N(B)$ and $z_{\alpha/2}$ is the standard normal quantil
 
 At the default 10,000 iterations, the budget probability estimate is accurate to approximately ±1 percentage point at 95% confidence — adequate for project decision-making.
 
-#### The Inverse Problem: Budget Required for Target Confidence
+### The Inverse Problem: Budget Required for Target Confidence
 
 The complementary question is: *"What budget do I need to reach *p*% confidence?"* This is the **quantile function** (inverse CDF):
 
@@ -525,7 +525,7 @@ In practice, this is computed as the *p*-th percentile of the cost sample array,
 
 For example, "the budget required for 80% confidence" is `np.percentile(cost_durations, 80)`.
 
-#### Joint Duration-Cost Confidence Region (Optional Extension)
+### Joint Duration-Cost Confidence Region (Optional Extension)
 
 Stakeholders sometimes need to answer: *"What is the probability we finish by date D **and** stay within budget B?"* This is the joint probability:
 
@@ -539,9 +539,9 @@ $$P(T \le D \text{ and } C \le B) \ne P(T \le D) \cdot P(C \le B)$$
 
 The per-iteration pairing is essential for correct joint estimation.
 
-### API Design
+## API Design
 
-#### Model: `SimulationResults` Methods
+### Model: `SimulationResults` Methods
 
 ```python
 def probability_within_budget(self, target_budget: float) -> float:
@@ -627,7 +627,7 @@ def joint_probability(
     )
 ```
 
-#### CLI Integration
+### CLI Integration
 
 Extend the existing `--target-date` pattern with a `--target-budget` option on the `simulate` command:
 
@@ -649,11 +649,11 @@ When both `--target-date` and `--target-budget` are provided, also report the jo
 Probability of completing by 2026-09-01 AND staying within €500,000: 65.1%
 ```
 
-#### MCP Integration
+### MCP Integration
 
 Add an optional `target_budget` parameter to the `simulate_project` and `simulate_project_yaml` MCP tools. When provided, the results summary includes the budget probability, confidence interval, and the budgets required for P50/P80/P90 confidence levels.
 
-#### JSON Export
+### JSON Export
 
 When a `target_budget` is set, add a `budget_analysis` section to the JSON output:
 
@@ -680,7 +680,7 @@ When a `target_budget` is set, add a `budget_analysis` section to the JSON outpu
 
 The `joint_analysis` section is only present when both a target date/hours and target budget are specified.
 
-#### HTML Export
+### HTML Export
 
 Add a **Budget Confidence** card to the HTML report:
 
@@ -689,7 +689,7 @@ Add a **Budget Confidence** card to the HTML report:
 3. **Cost CDF chart**: An S-curve plotting budget amount (x-axis) against cumulative probability (y-axis), with the target budget marked as a vertical line and the corresponding probability marked as a horizontal line. This gives stakeholders an intuitive visual of the full cost risk profile.
 4. **Joint confidence scatter** (optional): A 2D scatter or contour plot of (duration, cost) pairs from the simulation, with the target budget and target date drawn as threshold lines, and the four quadrants labeled (on-time & on-budget, on-time & over-budget, late & on-budget, late & over-budget) with their respective probabilities.
 
-### Worked Example
+## Worked Example
 
 Consider the "API Rewrite" project from the earlier example, with 10,000 iterations producing a cost distribution. A stakeholder asks: *"We have a €500k budget — will we make it?"*
 
@@ -723,7 +723,7 @@ $$P(T \le 960 \text{ and } C \le 500{,}000) = \frac{|\{i : T_i \le 960 \text{ an
 
 Note: the marginal probabilities are $P(T \le 960) = 0.81$ and $P(C \le 500{,}000) = 0.723$, whose product is $0.586$ — less than the joint $0.651$, because duration and cost are positively correlated (iterations where tasks take longer also cost more, so the "bad" outcomes tend to cluster together, leaving more probability mass in the "both good" quadrant than independence would predict).
 
-### Implementation Considerations
+## Implementation Considerations
 
 **Computational cost:** Zero additional simulation iterations are required. Budget analysis is a pure post-processing step over the existing `cost_durations` array. The ECDF lookup, percentile computation, and confidence interval are all O(N) or O(N log N) operations on the already-stored array.
 
@@ -735,10 +735,247 @@ Note: the marginal probabilities are $P(T \le 960) = 0.81$ and $P(C \le 500{,}00
 
 **Currency formatting:** Budget amounts in CLI and HTML output should be formatted with the project's `currency` label and locale-appropriate thousand separators. The currency field is display-only — no exchange-rate logic.
 
-## Future Work
+# Secondary Currencies
+
+## Overview
+
+The primary project currency (set via the `currency` field in project metadata, defaulting to `"EUR"`) is the unit of account for all cost calculations. Secondary currencies allow stakeholders in different countries to view cost estimates in their local or reporting currencies without affecting the simulation model. Conversion uses live mid-market exchange rates fetched from a free public source, adjusted by a configurable overhead fraction that accounts for real-world transaction costs (bank spreads, transfer fees). Because conversion is a linear scaling of the existing `cost_durations` array, no additional simulation iterations are required.
+
+## Project file additions
+
+Three new optional display-currency fields and two rate-control fields in the `project:` metadata block:
+
+```yaml
+project:
+  name: "API Rewrite"
+  currency: "EUR"           # nominal currency (default: "EUR")
+  currency1: "SEK"          # first secondary display currency
+  currency2: "USD"          # second secondary display currency
+  currency3: "GBP"          # third secondary display currency
+  xe_conversion_rate: 0.05  # overhead fraction, default 0.0
+  xe_rates:                 # optional manual overrides (see below)
+    SEK: 10.50
+    USD: 1.08
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `currency` | `str` | `"EUR"` | Nominal project currency. Source currency for all exchange-rate lookups. |
+| `currency1` | `str \| None` | `None` | ISO 4217 code for the first secondary display currency. |
+| `currency2` | `str \| None` | `None` | ISO 4217 code for the second secondary display currency. |
+| `currency3` | `str \| None` | `None` | ISO 4217 code for the third secondary display currency. |
+| `xe_conversion_rate` | `float` | `0.0` | Conversion overhead as a fraction in [0, 1]. A value of `0.05` means you effectively pay 5% above the published mid-market rate. |
+| `xe_rates` | `dict[str, float]` | `{}` | Manual rate overrides keyed by ISO 4217 target code. When present, these take precedence over any live fetch for those currencies. Useful for offline use, reproducibility in tests, or locking a rate at report time. |
+
+All secondary currency fields are display-only and have no effect on the simulation itself. If no secondary currencies are specified, cost output is unchanged.
+
+## Exchange rate lookup
+
+Exchange rates are fetched once at report-generation time (after the simulation completes) from **[Frankfurter](https://www.frankfurter.app/)** — a free, key-less service backed by European Central Bank data:
+
+```
+GET https://api.frankfurter.app/latest?from={base_currency}&to={c1},{c2},{c3}
+→ { "base": "EUR", "rates": { "SEK": 10.50, "USD": 1.08, "GBP": 0.856 } }
+```
+
+When the project's nominal currency is not EUR and Frankfurter requires EUR as the base, fetch EUR→base and EUR→target and triangulate:
+
+$$r(\text{base} \to \text{target}) = \frac{r(\text{EUR} \to \text{target})}{r(\text{EUR} \to \text{base})}$$
+
+**Rate caching.** Fetched rates are cached in memory for the duration of a single invocation. No persistent on-disk cache is needed since each CLI run is short-lived.
+
+**Failure mode.** If a fetch fails (network unavailable, unknown currency code, service down), emit a warning and skip secondary currency output for that currency rather than failing the whole run. The `--no-xe` flag on `simulate` disables all exchange rate fetches for offline use or CI environments.
+
+**`xe_rates` override.** When `xe_rates` contains an entry for a requested currency, the live fetch for that currency is skipped entirely and the specified value is used directly. This allows the rate to be locked at a contract-agreed value or at the rate used when a project was last reported.
+
+## Adjusted rate formula
+
+The adjusted exchange rate accounts for the real cost of currency conversion:
+
+$$r_{\text{adj}}(\text{base} \to \text{target}) = (1 + r_\text{xe}) \times r_\text{official}(\text{base} \to \text{target})$$
+
+where $r_\text{xe}$ is `xe_conversion_rate` and $r_\text{official}$ is the mid-market rate from the lookup.
+
+**Example** (`currency=EUR`, `currency1=SEK`, `xe_conversion_rate=0.05`):
+
+$$r_\text{official}(\text{EUR} \to \text{SEK}) = 10.50$$
+
+$$r_\text{adj}(\text{EUR} \to \text{SEK}) = 1.05 \times 10.50 = 11.025 \text{ SEK/EUR}$$
+
+To express a cost estimate of €50,000 in SEK:
+
+$$C_\text{SEK} = 50{,}000 \times 11.025 = 551{,}250 \text{ SEK}$$
+
+Because conversion is a linear operation, it is applied element-wise to the existing `cost_durations` array after the simulation:
+
+$$C_\text{target}^{(i)} = C_\text{base}^{(i)} \times r_\text{adj}(\text{base} \to \text{target}) \quad \forall i \in [1, N]$$
+
+The percentile ordering and distribution shape are preserved exactly — no re-sampling is required. All reported statistics (mean, median, P50, P80, P90, P95) are derived from this scaled array.
+
+## Implementation: `ExchangeRateProvider`
+
+Add a new module `src/mcprojsim/exchange_rates.py`:
+
+```python
+@dataclass
+class ExchangeRateProvider:
+    base_currency: str
+    conversion_rate_overhead: float = 0.0         # xe_conversion_rate
+    manual_overrides: dict[str, float] = field(default_factory=dict)  # xe_rates
+    _cache: dict[str, float] = field(default_factory=dict, init=False)
+
+    def get_adjusted_rate(self, target: str) -> float | None:
+        """Return the adjusted rate from base to target, or None if unavailable."""
+        official = self._get_official_rate(target)
+        if official is None:
+            return None
+        return (1.0 + self.conversion_rate_overhead) * official
+
+    def convert_array(self, arr: np.ndarray, target: str) -> np.ndarray | None:
+        """Scale a cost array to the target currency. Returns None if rate unavailable."""
+        rate = self.get_adjusted_rate(target)
+        if rate is None:
+            return None
+        return arr * rate
+
+    def _get_official_rate(self, target: str) -> float | None:
+        if target in self.manual_overrides:
+            return self.manual_overrides[target]
+        if target in self._cache:
+            return self._cache[target]
+        rate = self._fetch_from_frankfurter(target)
+        if rate is not None:
+            self._cache[target] = rate
+        return rate
+
+    def _fetch_from_frankfurter(self, target: str) -> float | None:
+        """Fetch official rate from Frankfurter (ECB). Returns None on any failure."""
+        ...
+```
+
+`ExchangeRateProvider` is constructed from `ProjectMetadata` fields and passed to the CLI output formatter and all three exporters. It is never used during the simulation itself.
+
+## Data model additions
+
+`ProjectMetadata` gains five new optional fields:
+
+```python
+currency1: str | None = None
+currency2: str | None = None
+currency3: str | None = None
+xe_conversion_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+xe_rates: dict[str, float] = Field(default_factory=dict)
+```
+
+Validation: `xe_conversion_rate` must be in [0, 1] (enforced by Pydantic `ge=0, le=1`). Currency codes that do not match the pattern `^[A-Z]{3}$` should emit a validation warning (not a hard error, as the authoritative ISO 4217 list is long and occasionally updated).
+
+The NL parser should recognise natural-language currency hints such as `"secondary currencies: SEK, USD"` and map them to `currency1`/`currency2` in order.
+
+## Console output
+
+Add a **Cost in Secondary Currencies** section after the primary cost summary, one block per secondary currency:
+
+```
+Cost in Secondary Currencies:
+  SEK  1 EUR = 11.025 SEK (official: 10.500, overhead: +5.0%)
+       Mean:  5,689,613 SEK | P50:  5,431,200 SEK | P80:  6,498,024 SEK | P90:  7,340,209 SEK
+
+  USD  1 EUR = 1.134 USD (official: 1.080, overhead: +5.0%)
+       Mean:    618,714 USD | P50:    590,424 USD | P80:    706,302 USD | P90:    797,681 USD
+```
+
+When `xe_conversion_rate` is 0, the `(official: … overhead: …)` parenthetical is omitted. When a fetch fails, replace the block with:
+
+```
+  SEK  [exchange rate unavailable — skipping SEK output]
+```
+
+## JSON export
+
+Add a `secondary_currencies` array inside the existing `cost_summary` object:
+
+```json
+{
+  "cost_summary": {
+    "currency": "EUR",
+    "mean": 541868,
+    "p50": 517257,
+    "p80": 619812,
+    "p90": 699924,
+    "secondary_currencies": [
+      {
+        "currency": "SEK",
+        "official_rate": 10.50,
+        "adjusted_rate": 11.025,
+        "xe_conversion_rate": 0.05,
+        "rate_source": "frankfurter.app",
+        "rate_fetched_at": "2026-04-10T10:00:00Z",
+        "mean": 5689613,
+        "p50": 5431200,
+        "p80": 6498024,
+        "p90": 7340209
+      },
+      {
+        "currency": "USD",
+        "official_rate": 1.08,
+        "adjusted_rate": 1.134,
+        "xe_conversion_rate": 0.05,
+        "rate_source": "frankfurter.app",
+        "rate_fetched_at": "2026-04-10T10:00:00Z",
+        "mean": 618714,
+        "p50": 590424,
+        "p80": 706302,
+        "p90": 797681
+      }
+    ]
+  }
+}
+```
+
+When a rate was unavailable for a currency, include `{ "currency": "SEK", "error": "rate_unavailable" }` rather than omitting the entry, so downstream tools can detect the gap.
+
+## HTML export
+
+Extend the **Cost Summary** card with an additional multi-currency statistics table:
+
+| Statistic | EUR | SEK | USD |
+|---|---|---|---|
+| Mean | €541,868 | 5,689,613 kr | $618,714 |
+| P50 | €517,257 | 5,431,200 kr | $590,424 |
+| P80 | €619,812 | 6,498,024 kr | $706,302 |
+| P90 | €699,924 | 7,340,209 kr | $797,681 |
+
+Below the table, render an exchange-rate footnote:
+
+> *Rates fetched from Frankfurter (ECB) at 2026-04-10 10:00 UTC.*
+> *SEK: 1 EUR = 11.025 SEK (official 10.500, +5.0% overhead).*
+> *USD: 1 EUR = 1.134 USD (official 1.080, +5.0% overhead).*
+
+Currency symbols (`€`, `$`, `kr`, etc.) are resolved from a small built-in ISO 4217 symbol map; unrecognised codes fall back to the three-letter code as a suffix.
+
+## Design decisions and tradeoffs
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Exchange rate provider | Frankfurter (ECB data) | No API key, reliable, official EU rates, EUR-native base |
+| Rate granularity | Daily mid-market | Intra-day fluctuation is noise relative to simulation uncertainty |
+| Non-EUR base triangulation | `r(base→target) = r(EUR→target) / r(EUR→base)` | Minimises API calls; ECB provides comprehensive EUR crosses |
+| Maximum secondary currencies | 3 (`currency1`–`currency3`) | Enough for typical multi-stakeholder reports; keeps console output readable |
+| Single `xe_conversion_rate` | One overhead for all currencies | Simplest useful model; per-currency overheads add complexity with marginal benefit |
+| Failure mode | Warn and skip | Avoids blocking offline runs due to a network call |
+| `xe_rates` override | Precedence over live fetch | Reproducibility, air-gapped environments, contract-agreed rates |
+| `--no-xe` CLI flag | Disable all fetches | CI environments and offline use |
+
+## Impact on existing behaviour
+
+- No changes to simulation logic, `SimulationResults` fields, or the existing `cost_durations` array.
+- `ExchangeRateProvider` is only instantiated when at least one of `currency1`/`currency2`/`currency3` is set.
+- Network I/O is entirely confined to `exchange_rates.py`; all existing code paths remain offline.
+- Projects with no secondary currencies produce identical output to the current implementation.
+
+# Future Work
 
 - **Earned value metrics**: Planned Value, Earned Value, and Cost Performance Index computed from sprint-level cost data.
-- **Multi-currency support**: Resources in different currencies with exchange-rate conversion.
 - **Rate uncertainty**: Model hourly rates as distributions rather than point values (e.g., contractor rate negotiation range).
 - **Cost breakdown structure**: Hierarchical cost categories (labor, infrastructure, licensing, overhead) with separate distributions.
 - **Budget-at-risk (BaR)**: The monetary amount at risk at a given confidence level, analogous to Value-at-Risk in finance: $\text{BaR}_\alpha = \hat{F}^{-1}(\alpha) - \hat{F}^{-1}(0.50)$, representing the additional contingency reserve above the median cost needed to achieve $\alpha$-level confidence.
