@@ -151,11 +151,17 @@ Add a `cost` section to the config structure with sensible defaults:
 cost:
   default_hourly_rate: null        # no default — cost disabled unless set
   overhead_rate: 0.0
-  currency: "USD"
+  currency: "EUR"                  # used only when project does not specify currency
   include_in_output: true          # when cost data exists, include in reports
 ```
 
 Project-level values override config-level values, following the existing merge pattern.
+
+`include_in_output` controls whether cost sections are **rendered** in reports and
+console output when cost data is present. It does not affect whether cost is
+**computed** — cost accumulation runs whenever at least one cost input (hourly
+rate or fixed cost) is present. This allows programmatic consumers to suppress
+cost output while keeping cost data available in the `SimulationResults` object.
 
 ## Simulation Engine Changes
 
@@ -165,28 +171,41 @@ Inside the existing iteration loop, after task durations are sampled and schedul
 
 ```
 for each iteration:
-    total_cost = 0
+    total_labor_cost = 0
+    total_fixed_cost = 0
+    total_risk_cost  = 0
+
     for each task:
-        # Labor cost
+        # Labor cost: effort hours × applicable rate
         rate = resource_rate(task) or project.default_hourly_rate
-        labor_cost = task_duration_hours[task] * rate
+        task_labor = task_duration_hours[task] * rate
 
-        # Fixed cost
-        labor_cost += task.fixed_cost (if any)
+        # Fixed cost: one-time charge independent of effort
+        task_fixed = task.fixed_cost if any, else 0
 
-        task_costs[task][iteration] = labor_cost
-        total_cost += labor_cost
+        # Task-level risk cost impacts (same probability roll as time impact)
+        task_risk = sum(risk.cost_impact for triggered task_risks)
 
-    # Risk cost impacts (project-level risks)
+        task_costs[task][iteration] = task_labor + task_fixed + task_risk
+        total_labor_cost += task_labor
+        total_fixed_cost += task_fixed
+        total_risk_cost  += task_risk
+
+    # Project-level risk cost impacts
     for each triggered project_risk:
-        total_cost += risk.cost_impact (if any)
+        total_risk_cost += risk.cost_impact if any
 
-    # Overhead
-    labor_total = sum of all task labor costs
-    total_cost += labor_total * project.overhead_rate
+    # Overhead: applied to labor only (fixed costs and risk impacts are excluded)
+    overhead = total_labor_cost * project.overhead_rate
 
-    cost_durations[iteration] = total_cost
+    cost_durations[iteration] = (
+        total_labor_cost + total_fixed_cost + total_risk_cost + overhead
+    )
 ```
+
+> **Note on overhead base**: overhead is intentionally applied only to labor cost.
+> Fixed costs (e.g. licence fees) and risk cost impacts are already fully
+> expensed; marking them up again would double-count their indirect burden.
 
 **Rate resolution for resource-constrained mode:**
 
@@ -320,6 +339,20 @@ Keeping cost fields on `SimulationResults` (as optional) avoids a parallel resul
 
 # Worked Example
 
+The two examples below illustrate how cost estimation works under the two
+scheduling modes supported by `mcprojsim`. The first uses a simple project with
+no explicit resources, relying on a project-level blended hourly rate and a
+fixed cost to show how the engine accumulates labor, fixed, and risk costs per
+iteration. 
+
+The second introduces named resources with individual hourly rates
+to demonstrate how per-resource assignment affects the cost calculation when
+the constrained scheduler is active. 
+
+Both examples carry the same Monte Carlo semantics—cost is sampled across all 
+iterations and aggregated into a distribution—but they differ in how the applicable 
+rate is resolved for each task.
+
 ## Project Without Resources
 
 ```yaml
@@ -426,14 +459,25 @@ In each iteration, the scheduler assigns alice and bob to `backend` and tracks h
 
 **Phase 3 — Budget confidence analysis:**
 - `probability_within_budget(target_budget)` method on `SimulationResults`
-- `budget_confidence_interval` with normal-approximation CI (Wilson fallback for extremes)
+- `budget_confidence_interval` using normal approximation; fall back to Wilson
+  score interval when $\hat{p} \cdot N < 5$ or $(1-\hat{p}) \cdot N < 5$
+  (the detailed API design section currently shows only the normal approximation
+  — the Wilson fallback must be added before this phase ships)
 - `budget_for_confidence(p)` quantile lookup
 - `joint_probability(target_hours, target_budget)` for joint duration-cost analysis
 - `--target-budget` CLI option and MCP parameter
 - JSON `budget_analysis` section in export
 - HTML budget confidence card, CDF chart, and joint scatter plot
 
-**Phase 4 — Advanced features:**
+**Phase 4 — Secondary currencies:**
+- `currency1`/`currency2`/`currency3` fields on `ProjectMetadata`
+- `xe_conversion_rate` and `xe_rates` override fields
+- `ExchangeRateProvider` module with Frankfurter fetch, caching, and graceful
+  failure; socket timeout ≤ 3 s
+- `--no-xe` CLI flag
+- Multi-currency cost table in console, JSON, and HTML output
+
+**Phase 5 — Advanced features:**
 - Sprint planning cost integration (cost burn-up curves)
 - Time-varying rates (e.g., contractor rate changes after month 3)
 - Cost risk register (risks with only cost impact, no time impact)
@@ -455,7 +499,11 @@ All cost fields are optional with `None` or `0` defaults. Existing projects, con
 |------|------------|
 | Cost fields clutter the model for users who don't need them | All optional; not shown in output when absent |
 | Per-resource rate resolution adds complexity to dependency-only mode | In dependency-only mode, always use `default_hourly_rate`; resource rates only apply in resource-constrained mode where assignment is tracked |
-| Overhead model is too simplistic for some organizations | Phase 3 can add per-category overhead; percentage markup covers the common case |
+| Overhead model is too simplistic for some organizations | Phase 4 can add per-category overhead; percentage markup covers the common case |
+| Memory footprint: per-task cost arrays double results storage for large projects | `task_costs` is O(tasks × iterations), matching existing `task_durations_all`; acceptable up to ~1 000 tasks × 10 000 iterations (~80 MB). Document the tradeoff and consider a `--no-task-cost-detail` flag if needed |
+| JSON output for large projects is very large when task cost arrays are included | Omit `task_costs` from JSON by default; include only task-level summary statistics (mean, p50, p90); provide a `--full-cost-detail` flag for the raw arrays |
+| Network latency for exchange-rate fetches blocks CLI runs | Impose a short socket timeout (e.g. 3 s); warn and skip on timeout; document `--no-xe` flag and `xe_rates` overrides for offline use |
+| Phase boundaries are unclear for partial implementations | `cost_sensitivity` and other analysis fields on `SimulationResults` should remain `None` until their populating phase ships; exporters must gate on `is not None` checks throughout |
 
 # Budget Confidence Analysis — Detailed Design
 
@@ -979,3 +1027,83 @@ Currency symbols (`€`, `$`, `kr`, etc.) are resolved from a small built-in ISO
 - **Rate uncertainty**: Model hourly rates as distributions rather than point values (e.g., contractor rate negotiation range).
 - **Cost breakdown structure**: Hierarchical cost categories (labor, infrastructure, licensing, overhead) with separate distributions.
 - **Budget-at-risk (BaR)**: The monetary amount at risk at a given confidence level, analogous to Value-at-Risk in finance: $\text{BaR}_\alpha = \hat{F}^{-1}(\alpha) - \hat{F}^{-1}(0.50)$, representing the additional contingency reserve above the median cost needed to achieve $\alpha$-level confidence.
+
+# Architectural Review Notes
+
+The following observations were recorded during an implementation-focused review
+of this proposal. They do not block Phase 1, but should be resolved before each
+relevant phase is started.
+
+## Open issues
+
+### 1. `SimulationResults` conflates raw output and analysis results
+`cost_sensitivity` is an analysis artifact (Spearman rank correlation computed
+post-simulation), yet it is proposed as a field on `SimulationResults`. This
+is consistent with how `critical_path_tasks` and similar fields are currently
+handled, but it means `SimulationResults` will grow increasingly large. For
+Phase 2 it is acceptable; if this pattern repeats across many analysis fields
+in future phases, a `CostAnalysis` sibling dataclass should be introduced.
+
+### 2. `task_costs` JSON output size for large projects
+A project with 200 tasks and 10 000 iterations would produce ~1.6 M floats
+(~13 MB) in the `task_costs` section alone. The JSON exporter should emit
+only task-level summary statistics (mean, p50, p90) by default and gate the
+full per-iteration arrays behind an explicit flag.
+
+### 3. NL parser cost patterns are Phase 1 scope — consider deferring
+Phase 1 already spans model, engine, exports, and YAML parser. Adding NL
+parser patterns in the same phase raises the implementation surface for the
+first shippable increment. Deferring NL cost patterns to Phase 2 (alongside
+other analysis additions) would yield a leaner Phase 1 that is easier to
+review and test.
+
+### 4. `budget_confidence_interval` — Wilson fallback is not implemented
+The phase description says "Wilson fallback for extremes" but the detailed
+API design only shows the normal approximation. Before Phase 3 ships, add:
+```python
+if p_hat * n < 5 or (1 - p_hat) * n < 5:
+    # Wilson score interval
+    ...
+``` 
+
+### 5. Exchange-rate fetch timeout must be explicit
+The `_fetch_from_frankfurter` stub has no timeout. A network hang will block
+the entire CLI run. The implementation must set a socket timeout (≤ 3 s) and
+treat any exception (timeout, DNS failure, HTTP error) as a rate-unavailable
+condition.
+
+### 6. `xe_conversion_rate` name is confusing
+Users could mistake it for the exchange rate itself. Rename to
+`fx_overhead_rate` or `conversion_overhead_rate` before this field is
+documented in the user guide.
+
+### 7. Validation constraints not fully specified
+The proposal does not define:
+- Upper bound for `overhead_rate` (is 2.0 = 200% overhead valid?)
+- Whether `fixed_cost` can be negative (to model a subsidy or rebate)
+- Currency code validation strategy (strict ISO 4217 list vs. loose `^[A-Z]{3}$` regex)
+
+Resolve these before writing Pydantic validators; the choices affect error messages.
+
+### 8. Secondary currencies are not in the original phased rollout
+The secondary currencies section was added without being assigned a phase
+number. This has been corrected — it is now Phase 4. The section is substantial
+(new module, network I/O, five new model fields) and should be scoped and
+estimated independently.
+
+## Closed Issues
+
+### 1. Overhead base is implicit in the pseudocode 
+The original pseudocode accumulated fixed costs into the same variable as labor
+cost, making it ambiguous what overhead would be applied to. The pseudocode has
+been corrected to accumulate labor, fixed, and risk costs separately and to
+apply overhead to labor only — matching the worked example.
+
+
+### 2. Task-level risk cost was missing from the pseudocode 
+The YAML worked example shows a task-level risk with a `cost_impact`, but the
+original pseudocode only looped over project-level risks. The pseudocode now
+handles both.
+
+
+
