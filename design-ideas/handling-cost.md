@@ -1141,51 +1141,51 @@ of this proposal. All issues have been addressed in the body of the document.
 
 ## Closed Issues
 
-### 1. Overhead base is implicit in the pseudocode 
+### Overhead base is implicit in the pseudocode 
 The original pseudocode accumulated fixed costs into the same variable as labor
 cost, making it ambiguous what overhead would be applied to. The pseudocode has
 been corrected to accumulate labor, fixed, and risk costs separately and to
 apply overhead to labor only — matching the worked example.
 
-### 2. Task-level risk cost was missing from the pseudocode 
+### Task-level risk cost was missing from the pseudocode 
 The YAML worked example shows a task-level risk with a `cost_impact`, but the
 original pseudocode only looped over project-level risks. The pseudocode now
 handles both.
 
-### 3. `SimulationResults` conflates raw output and analysis results
+### `SimulationResults` conflates raw output and analysis results
 `cost_sensitivity` has been removed from `SimulationResults`. Analysis artifacts
 (sensitivity, duration-cost correlation) are now produced by `CostAnalyzer` and
 returned in a separate `CostAnalysis` dataclass. The Results Model Changes and
 Analysis Changes sections have been updated accordingly. The rationale section
 now explains the split.
 
-### 4. `task_costs` JSON output size for large projects
+### `task_costs` JSON output size for large projects
 The JSON Exporter section now states that only per-task summary statistics
 (mean, p50, p90) are included by default. A `--full-cost-detail` flag is
 required to emit per-iteration arrays. The risk table entry for this issue
 has been preserved.
 
-### 5. NL parser cost patterns deferred from Phase 1 to Phase 2
+### NL parser cost patterns deferred from Phase 1 to Phase 2
 NL parser cost pattern recognition has been moved to Phase 2 in the phased
 rollout and marked as such in the NL Parser section, reducing Phase 1 scope
 to model + engine + YAML parser + JSON/CSV export.
 
-### 6. `budget_confidence_interval` — Wilson fallback implemented
+### `budget_confidence_interval` — Wilson fallback implemented
 The `budget_confidence_interval` API code now includes a Wilson score interval
 fallback when $\hat{p} \cdot N < 5$ or $(1-\hat{p}) \cdot N < 5$. The Phase 3
 description in the rollout plan already noted this requirement.
 
-### 7. Exchange-rate fetch timeout added
+### Exchange-rate fetch timeout added
 The `_fetch_from_frankfurter` implementation now uses `urllib.request.urlopen`
 with a 3-second timeout. Any exception (network, parse, key error) is caught
 and the rate is treated as unavailable.
 
-### 8. `fx_conversion_rate` renamed to `fx_overhead_rate`
+### `fx_conversion_rate` renamed to `fx_overhead_rate`
 All occurrences (YAML examples, field tables, formulas, code, JSON, design
 decisions table) have been renamed from `fx_conversion_rate` to
 `fx_overhead_rate` to avoid confusion with the exchange rate itself.
 
-### 9. Validation constraints specified
+### Validation constraints specified
 A validation constraints table has been added to the Model Changes section,
 covering `default_hourly_rate` (≥0), `overhead_rate` (0–3.0), `currency`
 (loose `^[A-Z]{3}$` with warning), `hourly_rate` (≥0), `fixed_cost`
@@ -1197,7 +1197,7 @@ The phased rollout now explicitly includes Phase 4 for secondary currencies,
 listing all deliverables (model fields, `ExchangeRateProvider`, `--no-fx` flag,
 multi-currency output in all exporters).
 
-### 11. Frankfurter API updated to v2
+### Frankfurter API updated to v2
 All API URLs, request parameters, response parsing, and the `ExchangeRateProvider`
 code have been updated from the deprecated v1 (`api.frankfurter.app/latest?from=...
 &to=...`) to v2 (`api.frankfurter.dev/v2/rates?base=...&quotes=...`). The v2 API
@@ -1205,40 +1205,40 @@ supports any base currency natively, so the EUR-only triangulation workaround ha
 been removed. The implementation now uses a single batch request for all secondary
 currencies instead of one request per currency.
 
-### 12. `CostResults` reference corrected
+### `CostResults` reference corrected
 The Executive Summary referenced a `CostResults` class that was never defined.
 Replaced with `SimulationResults` cost arrays.
 
-### 13. `task_durations_all` corrected to `task_durations`
+### `task_durations_all` corrected to `task_durations`
 The Current State section referenced `task_durations_all`, which does not exist
 on `SimulationResults`. Corrected to `task_durations`.
 
-### 14. `cost_durations` renamed to `costs`
+### `cost_durations` renamed to `costs`
 The per-iteration cost array has been renamed from `cost_durations` to `costs`
 throughout the document. The `_durations` suffix was misleading for a monetary
 quantity. The new name parallels `durations` (elapsed) and `effort_durations`
 (effort) while being unambiguously non-temporal.
 
-### 15. `currency1`/`currency2`/`currency3` replaced with `secondary_currencies` list
+### `currency1`/`currency2`/`currency3` replaced with `secondary_currencies` list
 The three numbered fields have been replaced with a single
 `secondary_currencies: list[str]` field (max 5 entries). This is more natural
 YAML, easier to extend, and avoids arbitrary cap rigidity.
 
-### 16. Scheduler gap acknowledged for multi-resource costing
+### Scheduler gap acknowledged for multi-resource costing
 The claim that the scheduler “already tracks per-resource hour splits” has been
 corrected. The current scheduler tracks assignment but not contributed hours per
 resource. Phase 1 must extend the scheduler or fall back to equal-split.
 
-### 17. Overhead rate cap raised to 300%
+### Overhead rate cap raised to 300%
 The `overhead_rate` validation constraint has been raised from `le=1.0` to
 `le=3.0` to accommodate government, defense, and consulting organizations that
 routinely have overhead rates above 100%.
 
-### 18. Negative `fixed_cost` now allowed
+### Negative `fixed_cost` now allowed
 The `fixed_cost` constraint has been changed from `ge=0` to unrestricted float,
 allowing negative values for subsidies, rebates, and credits.
 
-### 19. `budget_for_confidence` input validation added
+### `budget_for_confidence` input validation added
 The method now raises `ValueError` when `confidence` is outside [0.0, 1.0],
 preventing silent misuse (e.g., passing 90 instead of 0.90).
 
@@ -1246,43 +1246,43 @@ preventing silent misuse (e.g., passing 90 instead of 0.90).
 The Phase 3 rollout description contained a stale note saying the Wilson fallback
 “must be added before this phase ships” — it was already implemented. Removed.
 
-### 21. Clopper-Pearson mention cleaned up
+### Clopper-Pearson mention cleaned up
 The Implementation Considerations section mentioned both Wilson and Clopper-Pearson
 as fallback options, but only Wilson is implemented. Clarified to reference only
 the Wilson score interval.
 
-### 22. JSON key alignment
+### JSON key alignment
 The Secondary Currencies JSON section used `cost_summary` as the top-level key
 while the Phase 1 JSON section used `cost`. Aligned both to `cost`.
 
-### 23. Fixed-cost-only activation rule clarified
+### Fixed-cost-only activation rule clarified
 The activation rule now states that cost estimation runs whenever any cost input
 is present (hourly rate **or** fixed cost), not only when hourly rates are present.
 
-### 24. Consolidated CLI flags table added
+### Consolidated CLI flags table added
 A new "New CLI Flags" subsection lists all flags introduced across the phased
 rollout (`--target-budget`, `--full-cost-detail`, `--no-task-cost-detail`,
 `--no-fx`) with their phase and description.
 
-### 25. Worked example P50 plausibility explained
+### Worked example P50 plausibility explained
 Added a note below the sample cost distribution explaining why the single worked
 iteration (€55,887) is above the P50 (€52,000): the example deliberately shows
 a risk-triggered, above-expected-hours scenario.
 
-### 26. Formula variable `$r_\text{xe}$` renamed to `$r_\text{oh}$`
+### Formula variable `$r_\text{xe}$` renamed to `$r_\text{oh}$`
 The adjusted-rate formula used a stale `xe` subscript from the old
 `xe_conversion_rate` naming. Updated to `oh` to match `fx_overhead_rate`.
 
-### 27. NL parser phase for secondary currencies clarified
+### NL parser phase for secondary currencies clarified
 The secondary currencies NL parser hint now explicitly states it ships in Phase 4
 (with the rest of the secondary currencies feature), not Phase 2.
 
-### 28. Document promoted to v1.1.0 — Final for Implementation
+### Document promoted to v1.1.0 — Final for Implementation
 Version bumped from 1.0.0 to 1.1.0. Date updated to 2026-04-11. Status changed
 to "Design Proposal — Final for Implementation" to reflect the completion of all
 review passes.
 
-### 29. Section header formatting corrected
+### Section header formatting corrected
 Three `##` headings ("Analysis Changes", "Export Changes", "CLI and MCP Changes")
 had extra leading spaces that could produce inconsistent rendering in LaTeX/PDF
 output. Normalized to standard `## ` prefix.
@@ -1293,43 +1293,43 @@ recomputed as EUR value × adjusted exchange rate, fixing arithmetic errors in
 the original examples. For instance, SEK mean corrected from 5,689,613 to
 5,974,095 (= 541,868 × 11.025).
 
-### 31. Budget worked example decoupled from API Rewrite
+### Budget worked example decoupled from API Rewrite
 The Budget Confidence Analysis worked example previously referenced "the API
 Rewrite project from the earlier example" but used a €500k budget, which is
 unrealistic for a 3-task project (max cost ~€91k). Changed to a generic
 "mid-size project" description so the example stands alone.
 
-### 32. Phase 4 rollout duplicate removed
+### Phase 4 rollout duplicate removed
 The Phase 4 bullet list contained a duplicate line for `fx_overhead_rate` and
 `fx_rates` fields. Consolidated into a single bullet.
 
-### 33. JSON format aligned across sections
+### JSON format aligned across sections
 The Secondary Currencies JSON example used flat `p50`/`p80`/`p90` keys at the
 top level, inconsistent with Phase 1's `"percentiles": { ... }` object. Changed
 to use the same `percentiles` object structure for consistency.
 
-### 34. Config/ProjectMetadata currency interaction documented
+### Config/ProjectMetadata currency interaction documented
 Added a note in Config Changes explaining that `ProjectMetadata.currency`
 currently defaults to `"USD"` and that the model default must change to `None`
 during implementation so the config-level fallback can take effect.
 
-### 35. Frankfurter provider count updated
+### Frankfurter provider count updated
 Changed "50+ other central banks" and "ECB + 50 central banks" to
 "52 central banks and official sources" to match the current Frankfurter docs.
 
-### 36. Testing strategy fixed-cost wording corrected
+### Testing strategy fixed-cost wording corrected
 "non-negative fixed costs" in Testing Strategy was stale after the `fixed_cost`
 constraint change (issue #18). Updated to "fixed cost sign semantics."
 
-### 37. Sprint Planning Integration labeled Phase 5
+### Sprint Planning Integration labeled Phase 5
 Added "(Phase 5)" annotation so the reader knows where this feature sits in the
 phased rollout.
 
-### 38. Export gating on `include_in_output` documented
+### Export gating on `include_in_output` documented
 Added a preamble to the Export Changes section stating that all three exporters
 gate cost output on `cost.include_in_output` (default `true`).
 
-### 39. `cost_percentiles` comment updated
+### `cost_percentiles` comment updated
 The inline comment on the `cost_percentiles` field referenced a hardcoded set of
 percentile levels. Changed to reference the project's `confidence_levels` to
 match how duration percentiles are already computed.
