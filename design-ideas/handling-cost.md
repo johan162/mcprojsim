@@ -539,7 +539,7 @@ In each iteration, the scheduler assigns alice and bob to `backend` and tracks h
 - HTML budget confidence card, CDF chart, and joint scatter plot
 
 **Phase 4 — Secondary currencies:**
-- `secondary_currencies` list, `fx_overhead_rate`, and `fx_rates` override fields on `ProjectMetadata`
+- `secondary_currencies` list, `fx_conversion_cost`, `fx_overhead_rate`, and `fx_rates` override fields on `ProjectMetadata`
 - `ExchangeRateProvider` module with Frankfurter fetch, caching, and graceful
   failure; socket timeout ≤ 3 s
 - `--no-fx` CLI flag
@@ -872,22 +872,23 @@ Note: the marginal probabilities are $P(T \le 960) = 0.81$ and $P(C \le 500{,}00
 
 ## Overview
 
-The primary project currency (set via the `currency` field in project metadata, defaulting to the config value — see Config Changes) is the unit of account for all cost calculations. Secondary currencies allow stakeholders in different countries to view cost estimates in their local or reporting currencies without affecting the simulation model. Conversion uses live mid-market exchange rates fetched from a free public source, adjusted by a configurable overhead fraction that accounts for real-world transaction costs (bank spreads, transfer fees). Because conversion is a linear scaling of the existing `costs` array, no additional simulation iterations are required.
+The primary project currency (set via the `currency` field in project metadata, defaulting to the config value — see Config Changes) is the unit of account for all cost calculations. Secondary currencies allow stakeholders in different countries to view cost estimates in their local or reporting currencies without affecting the simulation model. Conversion uses live mid-market exchange rates fetched from a free public source, adjusted by two configurable markups: a **bank conversion cost** (the spread charged by real-world financial institutions to buy the target currency) and a general **overhead fraction** (for hedging, admin, or other indirect currency-handling costs). Because conversion is a linear scaling of the existing `costs` array, no additional simulation iterations are required.
 
 ## Project file additions
 
-Three new optional display-currency fields and two rate-control fields in the `project:` metadata block:
+New optional display-currency fields and rate-control fields in the `project:` metadata block:
 
 ```yaml
 project:
   name: "API Rewrite"
-  currency: "EUR"           # nominal currency (default: "EUR")
-  secondary_currencies:     # up to 5 display-only output currencies
+  currency: "EUR"              # nominal currency (default: "EUR")
+  secondary_currencies:        # up to 5 display-only output currencies
     - "SEK"
     - "USD"
     - "GBP"
-  fx_overhead_rate: 0.05  # overhead fraction, default 0.0
-  fx_rates:                 # optional manual overrides (see below)
+  fx_conversion_cost: 0.02     # bank spread, default 0.0
+  fx_overhead_rate: 0.05       # additional overhead fraction, default 0.0
+  fx_rates:                    # optional manual overrides (see below)
     SEK: 10.50
     USD: 1.08
 ```
@@ -896,8 +897,9 @@ project:
 |---|---|---|---|
 | `currency` | `str` | `"EUR"` | Nominal project currency. Source currency for all exchange-rate lookups. |
 | `secondary_currencies` | `list[str]` | `[]` | ISO 4217 codes for secondary display currencies. Maximum 5 entries; validated like `currency` (warning-only regex). |
-| `fx_overhead_rate` | `float` | `0.0` | Conversion overhead as a fraction in [0, 1]. A value of `0.05` means you effectively pay 5% above the published mid-market rate. |
-| `fx_rates` | `dict[str, float]` | `{}` | Manual rate overrides keyed by ISO 4217 target code. When present, these take precedence over any live fetch for those currencies. Useful for offline use, reproducibility in tests, or locking a rate at report time. |
+| `fx_conversion_cost` | `float` | `0.0` | Bank conversion spread as a fraction in [0, 0.50]. A value of `0.02` means the bank charges 2% above the mid-market rate when buying the target currency. Values above 0.50 (50%) are rejected as unrealistic. |
+| `fx_overhead_rate` | `float` | `0.0` | Additional overhead as a fraction in [0, 1]. Covers hedging, admin, or other indirect currency-handling costs beyond the bank spread. Applied on top of `fx_conversion_cost`. |
+| `fx_rates` | `dict[str, float]` | `{}` | Manual rate overrides keyed by ISO 4217 target code. When present, these take precedence over any live fetch for those currencies. The override is the **final** rate — neither `fx_conversion_cost` nor `fx_overhead_rate` is applied on top of it. Useful for offline use, reproducibility in tests, or locking a rate at report time. |
 
 All secondary currency fields are display-only and have no effect on the simulation itself. If no secondary currencies are specified, cost output is unchanged.
 
@@ -924,21 +926,23 @@ The v2 API supports any base currency via the `base` parameter — no EUR-only t
 
 ## Adjusted rate formula
 
-The adjusted exchange rate accounts for the real cost of currency conversion:
+The adjusted exchange rate accounts for both the bank conversion spread and any additional overhead:
 
-$$r_{\text{adj}}(\text{base} \to \text{target}) = (1 + r_\text{oh}) \times r_\text{official}(\text{base} \to \text{target})$$
+$$r_{\text{adj}}(\text{base} \to \text{target}) = (1 + r_\text{conv} + r_\text{oh}) \times r_\text{official}(\text{base} \to \text{target})$$
 
-where $r_\text{oh}$ is `fx_overhead_rate` and $r_\text{official}$ is the mid-market rate from the lookup.
+where $r_\text{conv}$ is `fx_conversion_cost` (bank spread), $r_\text{oh}$ is `fx_overhead_rate` (additional overhead), and $r_\text{official}$ is the mid-market rate from the lookup. The two markups are additive because they represent independent cost sources applied to the same notional amount.
 
-**Example** (`currency=EUR`, `secondary_currencies=["SEK"]`, `fx_overhead_rate=0.05`):
+**Example** (`currency=EUR`, `secondary_currencies=["SEK"]`, `fx_conversion_cost=0.02`, `fx_overhead_rate=0.05`):
 
 $$r_\text{official}(\text{EUR} \to \text{SEK}) = 10.50$$
 
-$$r_\text{adj}(\text{EUR} \to \text{SEK}) = 1.05 \times 10.50 = 11.025 \text{ SEK/EUR}$$
+$$r_\text{adj}(\text{EUR} \to \text{SEK}) = (1 + 0.02 + 0.05) \times 10.50 = 1.07 \times 10.50 = 11.235 \text{ SEK/EUR}$$
 
 To express a cost estimate of €50,000 in SEK:
 
-$$C_\text{SEK} = 50{,}000 \times 11.025 = 551{,}250 \text{ SEK}$$
+$$C_\text{SEK} = 50{,}000 \times 11.235 = 561{,}750 \text{ SEK}$$
+
+When `fx_rates` provides a manual override for a currency, that value is the **final rate** — neither `fx_conversion_cost` nor `fx_overhead_rate` is applied on top of it.
 
 Because conversion is a linear operation, it is applied element-wise to the existing `costs` array after the simulation:
 
@@ -954,16 +958,19 @@ Add a new module `src/mcprojsim/exchange_rates.py`:
 @dataclass
 class ExchangeRateProvider:
     base_currency: str
+    fx_conversion_cost: float = 0.0
     fx_overhead_rate: float = 0.0
     manual_overrides: dict[str, float] = field(default_factory=dict)  # fx_rates
     _cache: dict[str, float] = field(default_factory=dict, init=False)
 
     def get_adjusted_rate(self, target: str) -> float | None:
         """Return the adjusted rate from base to target, or None if unavailable."""
+        if target in self.manual_overrides:
+            return self.manual_overrides[target]  # final rate — no markups applied
         official = self._get_official_rate(target)
         if official is None:
             return None
-        return (1.0 + self.fx_overhead_rate) * official
+        return (1.0 + self.fx_conversion_cost + self.fx_overhead_rate) * official
 
     def convert_array(self, arr: np.ndarray, target: str) -> np.ndarray | None:
         """Scale a cost array to the target currency. Returns None if rate unavailable."""
@@ -981,8 +988,6 @@ class ExchangeRateProvider:
         self._cache.update(fetched)
 
     def _get_official_rate(self, target: str) -> float | None:
-        if target in self.manual_overrides:
-            return self.manual_overrides[target]
         if target in self._cache:
             return self._cache[target]
         # Single-currency fallback if fetch_rates was not called
@@ -1014,15 +1019,16 @@ class ExchangeRateProvider:
 
 ## Data model additions
 
-`ProjectMetadata` gains three new optional fields:
+`ProjectMetadata` gains four new optional fields:
 
 ```python
 secondary_currencies: list[str] = Field(default_factory=list, max_length=5)
+fx_conversion_cost: float = Field(default=0.0, ge=0.0, le=0.50)
 fx_overhead_rate: float = Field(default=0.0, ge=0.0, le=1.0)
 fx_rates: dict[str, float] = Field(default_factory=dict)
 ```
 
-Validation: `fx_overhead_rate` must be in [0, 1] (enforced by Pydantic `ge=0, le=1`). `secondary_currencies` entries that do not match the pattern `^[A-Z]{3}$` should emit a validation warning (not a hard error, as the authoritative ISO 4217 list is long and occasionally updated). Maximum of 5 entries is enforced at the model level.
+Validation: `fx_conversion_cost` must be in [0, 0.50] — any value above 50% is unrealistic for a real bank spread and likely a data-entry error. `fx_overhead_rate` must be in [0, 1] (enforced by Pydantic `ge=0, le=1`). `secondary_currencies` entries that do not match the pattern `^[A-Z]{3}$` should emit a validation warning (not a hard error, as the authoritative ISO 4217 list is long and occasionally updated). Maximum of 5 entries is enforced at the model level.
 
 The NL parser should recognise natural-language currency hints such as `"secondary currencies: SEK, USD"` and map them to `secondary_currencies` (ships in **Phase 4**, alongside the rest of the secondary currencies feature).
 
@@ -1032,14 +1038,14 @@ Add a **Cost in Secondary Currencies** section after the primary cost summary, o
 
 ```
 Cost in Secondary Currencies:
-  SEK  1 EUR = 11.025 SEK (official: 10.500, overhead: +5.0%)
-       Mean:  5,974,095 SEK | P50:  5,702,758 SEK | P80:  6,833,427 SEK | P90:  7,716,662 SEK
+  SEK  1 EUR = 11.235 SEK (official: 10.500, bank: +2.0%, overhead: +5.0%)
+       Mean:  6,087,887 SEK | P50:  5,811,382 SEK | P80:  6,963,588 SEK | P90:  7,863,646 SEK
 
-  USD  1 EUR = 1.134 USD (official: 1.080, overhead: +5.0%)
-       Mean:    614,478 USD | P50:    586,569 USD | P80:    702,867 USD | P90:    793,714 USD
+  USD  1 EUR = 1.1556 USD (official: 1.080, bank: +2.0%, overhead: +5.0%)
+       Mean:    626,183 USD | P50:    597,742 USD | P80:    716,255 USD | P90:    808,832 USD
 ```
 
-When `fx_overhead_rate` is 0, the `(official: … overhead: …)` parenthetical is omitted. When a fetch fails, replace the block with:
+When both `fx_conversion_cost` and `fx_overhead_rate` are 0, the parenthetical is omitted entirely. When only one is non-zero, only that component is shown. When a fetch fails, replace the block with:
 
 ```
   SEK  [exchange rate unavailable — skipping SEK output]
@@ -1064,22 +1070,24 @@ Add a `secondary_currencies` array inside the existing `cost` object:
       {
         "currency": "SEK",
         "official_rate": 10.50,
-        "adjusted_rate": 11.025,
+        "adjusted_rate": 11.235,
+        "fx_conversion_cost": 0.02,
         "fx_overhead_rate": 0.05,
         "rate_source": "frankfurter.dev",
         "rate_fetched_at": "2026-04-10T10:00:00Z",
-        "mean": 5974095,
-        "percentiles": { "50": 5702758, "80": 6833427, "90": 7716662 }
+        "mean": 6087887,
+        "percentiles": { "50": 5811382, "80": 6963588, "90": 7863646 }
       },
       {
         "currency": "USD",
         "official_rate": 1.08,
-        "adjusted_rate": 1.134,
+        "adjusted_rate": 1.1556,
+        "fx_conversion_cost": 0.02,
         "fx_overhead_rate": 0.05,
         "rate_source": "frankfurter.dev",
         "rate_fetched_at": "2026-04-10T10:00:00Z",
-        "mean": 614478,
-        "percentiles": { "50": 586569, "80": 702867, "90": 793714 }
+        "mean": 626183,
+        "percentiles": { "50": 597742, "80": 716255, "90": 808832 }
       }
     ]
   }
@@ -1094,16 +1102,16 @@ Extend the **Cost Summary** card with an additional multi-currency statistics ta
 
 | Statistic | EUR | SEK | USD |
 |---|---|---|---|
-| Mean | €541,868 | 5,974,095 kr | $614,478 |
-| P50 | €517,257 | 5,702,758 kr | $586,569 |
-| P80 | €619,812 | 6,833,427 kr | $702,867 |
-| P90 | €699,924 | 7,716,662 kr | $793,714 |
+| Mean | €541,868 | 6,087,887 kr | $626,183 |
+| P50 | €517,257 | 5,811,382 kr | $597,742 |
+| P80 | €619,812 | 6,963,588 kr | $716,255 |
+| P90 | €699,924 | 7,863,646 kr | $808,832 |
 
 Below the table, render an exchange-rate footnote:
 
 > *Rates fetched from Frankfurter at 2026-04-10 10:00 UTC.*
-> *SEK: 1 EUR = 11.025 SEK (official 10.500, +5.0% overhead).*
-> *USD: 1 EUR = 1.134 USD (official 1.080, +5.0% overhead).*
+> *SEK: 1 EUR = 11.235 SEK (official 10.500, bank +2.0%, overhead +5.0%).*
+> *USD: 1 EUR = 1.1556 USD (official 1.080, bank +2.0%, overhead +5.0%).*
 
 Currency symbols (`€`, `$`, `kr`, etc.) are resolved from a small built-in ISO 4217 symbol map; unrecognised codes fall back to the three-letter code as a suffix.
 
@@ -1115,9 +1123,10 @@ Currency symbols (`€`, `$`, `kr`, etc.) are resolved from a small built-in ISO
 | Rate granularity | Daily mid-market | Intra-day fluctuation is noise relative to simulation uncertainty |
 | Base currency support | v2 `base` parameter, no triangulation needed | Direct request; avoids rounding errors from EUR cross-division |
 | Maximum secondary currencies | 5 (list-based, `secondary_currencies`) | Enough for typical multi-stakeholder reports; keeps console output readable; extensible without schema changes |
-| Single `fx_overhead_rate` | One overhead for all currencies | Simplest useful model; per-currency overheads add complexity with marginal benefit |
+| Separate `fx_conversion_cost` and `fx_overhead_rate` | Bank spread vs. general overhead | Makes the bank's conversion markup explicit and independently auditable; both are additive fractions applied to the official rate |
+| `fx_conversion_cost` ceiling 0.50 | Reject values above 50 % | A spread above 50 % of the mid-market rate is unrealistic for any major currency pair; catches typos (e.g., entering 5 instead of 0.05) |
+| `fx_rates` override semantics | Final rate — neither markup applies | Manual overrides represent negotiated or contractual rates that already include any spread; applying markups on top would double-count |
 | Failure mode | Warn and skip | Avoids blocking offline runs due to a network call |
-| `fx_rates` override | Precedence over live fetch | Reproducibility, air-gapped environments, contract-agreed rates |
 | `--no-fx` CLI flag | Disable all fetches | CI environments and offline use |
 
 ## Impact on existing behaviour
@@ -1337,3 +1346,11 @@ match how duration percentiles are already computed.
 ### 40. Secondary Currencies Overview default corrected
 Removed hardcoded "EUR" default from the Overview paragraph; now references the
 Config Changes section for the default chain.
+
+### Separate `fx_conversion_cost` field added
+Introduced `fx_conversion_cost` (bank spread, validated 0–0.50) as a distinct
+field from `fx_overhead_rate` (general overhead). The adjusted-rate formula is
+now $r_{\text{adj}} = (1 + r_{\text{conv}} + r_{\text{oh}}) \times r_{\text{official}}$.
+Manual `fx_rates` overrides are documented as final rates — neither markup
+applies. All examples, pseudocode, output formats, and the design-decisions
+table have been updated.
