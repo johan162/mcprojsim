@@ -1,0 +1,68 @@
+Project name: Warehouse Automation Upgrade
+Start date: 2026-09-01
+Currency: USD
+Hourly rate: 120
+Overhead: 15%
+
+Resource 1: Dev Lead
+- Experience: 3
+- Productivity: 1.1
+- Rate: $180/hour
+
+Resource 2: Backend Engineer
+- Experience: 2
+- Rate: $130/hour
+
+Resource 3: Integration Specialist
+- Experience: 2
+- Rate: $140/hour
+
+Task 1: System Assessment and Planning
+- Estimate: 20/40/60 hours
+- Resources: Dev Lead
+- Min experience: 3
+- There is a 15% chance that legacy documentation is missing, causing a $6000 penalty and 2 days of delay
+
+Task 2: Inventory Database Migration
+- Estimate: 40/80/130 hours
+- Depends on Task 1
+- Resources: Backend Engineer
+- Fixed cost: $3000
+- Risks:
+  - Data Format Incompatibility
+  - Probability: 0.25
+  - Impact: 3/5 days
+  - Cost impact: 9000
+
+Task 3: Barcode Scanner Integration
+- Estimate: 30/50/90 hours
+- Depends on Task 2
+- Resources: Integration Specialist, Backend Engineer
+- Max resources: 2
+- There is a 20% risk of hardware delivery delays costing a $4500 fee and adding 3 days
+- There is a 10% chance of early vendor delivery, saving $2000
+
+Task 4: Real-time Dashboard
+- Estimate: 24/40/70 hours
+- Depends on Task 2
+- Resources: Backend Engineer
+- Fixed cost: $1500
+- There is a 30% chance the analytics provider offers a bulk discount giving a $3500 bonus
+
+Task 5: End-to-End Testing
+- Estimate: 16/32/50 hours
+- Depends on Task 3, Task 4
+- Resources: Dev Lead, Integration Specialist
+- Max resources: 2
+- Risks:
+  - Compliance Certification Delay
+  - Probability: 0.20
+  - Impact: 1/3 days
+  - Cost impact: 7000
+
+Task 6: Go-Live and Handover
+- Estimate: 10/20/35 hours
+- Depends on Task 5
+- Resources: Dev Lead
+- There is a 25% probability of a deployment rollback penalty of $5000 and 2 days delay
+- There is a 15% chance the client rewards early delivery with a $4000 bonus

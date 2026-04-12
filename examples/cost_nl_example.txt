@@ -1,0 +1,72 @@
+Project name: Data Platform Build
+Start date: 2026-06-01
+Currency: EUR
+Hourly rate: 150
+Overhead: 20%
+
+Resource 1: Alice
+- Experience: 3
+- Productivity: 1.1
+- Rate: €200/hour
+
+Resource 2: Bob
+- Experience: 2
+- Rate: €140/hour
+
+Resource 3: Carol
+- Experience: 1
+- Availability: 0.8
+- Rate: €95/hour
+
+Task 1: Requirements and Architecture
+- Estimate: 20/40/70 hours
+- Resources: Alice
+- Min experience: 3
+
+Task 2: Data Ingestion Pipeline
+- Estimate: 60/100/180 hours
+- Depends on Task 1
+- Resources: Alice, Bob
+- Max resources: 2
+- Fixed cost: €4000
+
+Task 3: Data Transformation Layer
+- Estimate: 40/80/140 hours
+- Depends on Task 2
+- Resources: Bob, Carol
+- Max resources: 2
+- Risks:
+  - Third-Party API Changes
+  - Probability: 0.25
+  - Impact: 3/5 days
+  - Cost impact: 8000
+
+Task 4: Analytics Dashboard
+- Estimate: 30/60/100 hours
+- Depends on Task 3
+- Resources: Carol, Bob
+- Max resources: 2
+- Fixed cost: €2500
+
+Task 5: Security Hardening
+- Estimate: 16/32/56 hours
+- Depends on Task 2
+- Resources: Alice
+- Risks:
+  - Audit Findings Require Rework
+  - Probability: 0.30
+  - Impact: 2/4 days
+  - Cost impact: 5000
+
+Task 6: Load Testing and Performance Tuning
+- Estimate: 20/40/70 hours
+- Depends on Task 4, Task 5
+- Resources: Bob, Carol
+- Max resources: 2
+- Fixed cost: €1200
+
+Task 7: Deployment and Handover
+- Estimate: 16/24/40 hours
+- Depends on Task 6
+- Resources: Alice, Bob
+- Max resources: 2

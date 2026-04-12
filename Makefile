@@ -3,7 +3,7 @@
 # Each command target may depend on one or more timestamp files that encapsulate the logic for when
 # to re-run certain tasks based on file changes.
 
-.PHONY: help dev install clean-venv reinstall run test test-short test-param test-html lint format typecheck migrate init-db check \
+.PHONY: help dev install clean-venv reinstall run test test-short test-param test-html test-probabilistic test-probabilistic-full lint format typecheck migrate init-db check \
 pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all  black flake8 mypy pyright _check
@@ -308,7 +308,7 @@ help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
 	@$(call print_section,Project Setup & Development,dev|install|reinstall|run)
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
-	@$(call print_section,Testing,test|test-short|test-param|test-html)
+	@$(call print_section,Testing,test|test-short|test-param|test-html|test-probabilistic|test-probabilistic-full)
 	@$(call print_section,Database,migrate|init-db)
 	@$(call print_section,Build & Documentation,build)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
@@ -349,6 +349,24 @@ test-html: ## Run tests in parallel, HTML & XML coverage report
 	@echo -e "$(DARKYELLOW)- Starting parallel test coverage...$(NC)"
 	@poetry run pytest -q -n auto --cov=src/$(PROJECT) --cov-report=xml --cov-report=html --cov-fail-under=${COVERAGE}
 	@echo -e "$(GREEN)✓ Test coverage report generated in \"coverage.xml\" and \"htmlcov/index.html\"$(NC)"
+
+test-probabilistic: ## Run probabilistic simulation verification tests (CI suite, ~3 min)
+	@echo -e "$(DARKYELLOW)- Running probabilistic verification tests (CI suite)...$(NC)"
+	@if poetry run pytest -n auto -m "probabilistic" --no-cov -v -x; then \
+		echo -e "$(GREEN)✓ Probabilistic verification tests passed$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Probabilistic verification tests failed$(NC)"; \
+		exit 1; \
+	fi
+
+test-probabilistic-full: ## Run full probabilistic verification suite (slow, ~40 min)
+	@echo -e "$(DARKYELLOW)- Running full probabilistic verification suite...$(NC)"
+	@if poetry run pytest -n auto -m "probabilistic or probabilistic_full" --no-cov -v; then \
+		echo -e "$(GREEN)✓ Full probabilistic verification suite passed$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Full probabilistic verification suite failed$(NC)"; \
+		exit 1; \
+	fi
 
 # ============================================================================================
 # Code Quality Targets

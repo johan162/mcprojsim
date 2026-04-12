@@ -600,6 +600,32 @@ class SprintDefaultsConfig(BaseModel):
     )
 
 
+class CostConfig(BaseModel):
+    """Configuration for monetary cost estimation."""
+
+    model_config = {"extra": "forbid"}
+
+    default_hourly_rate: Optional[float] = Field(
+        default=None,
+        ge=0,
+        description="Default hourly rate when project does not specify one.",
+    )
+    overhead_rate: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=3.0,
+        description="Default fractional overhead markup on labor cost.",
+    )
+    currency: str = Field(
+        default="EUR",
+        description="Default currency code when project does not specify one.",
+    )
+    include_in_output: bool = Field(
+        default=True,
+        description="Whether to include cost sections in reports and console output when cost data exists.",
+    )
+
+
 class EstimateRangeConfig(BaseModel):
     """Range configuration for a symbolic estimate."""
 
@@ -639,6 +665,7 @@ class Config(BaseModel):
         default_factory=ConstrainedSchedulingConfig
     )
     sprint_defaults: SprintDefaultsConfig = Field(default_factory=SprintDefaultsConfig)
+    cost: CostConfig = Field(default_factory=CostConfig)
 
     @classmethod
     def load_from_file(cls, config_path: Path | str) -> "Config":

@@ -2,7 +2,10 @@
 
 import math
 from datetime import date, timedelta
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    pass
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -150,6 +153,17 @@ class SimulationResults(BaseModel):
     # Two-pass scheduling traceability (populated only when two-pass mode is active)
     two_pass_trace: Optional["TwoPassDelta"] = None
 
+    # Cost tracking (None when cost estimation is not active)
+    costs: Optional[np.ndarray] = None
+    task_costs: Optional[Dict[str, np.ndarray]] = None
+    cost_mean: Optional[float] = None
+    cost_std_dev: Optional[float] = None
+    cost_percentiles: Optional[Dict[int, float]] = None
+    currency: Optional[str] = None
+
+    # Derived cost analysis (populated by CostAnalyzer after simulation)
+    cost_analysis: Optional[Any] = Field(default=None, exclude=True)
+
     mean: float = 0.0
     median: float = 0.0
     std_dev: float = 0.0
@@ -159,6 +173,133 @@ class SimulationResults(BaseModel):
     kurtosis: float = 0.0
     percentiles: Dict[int, float] = Field(default_factory=dict)
     effort_percentiles: Dict[int, float] = Field(default_factory=dict)
+
+    def calculate_cost_statistics(self) -> None:
+        """Populate cost_mean and cost_std_dev from self.costs."""
+        if self.costs is None:
+            return
+        self.cost_mean = float(np.mean(self.costs))
+        self.cost_std_dev = float(np.std(self.costs))
+        if self.cost_percentiles is None:
+            self.cost_percentiles = {}
+
+    def cost_percentile(self, p: int) -> float:
+        """Get percentile of cost distribution.
+
+        Raises:
+            ValueError: If cost estimation is not active (costs is None).
+        """
+        if self.costs is None:
+            raise ValueError(
+                "Cost estimation is not active. "
+                "Set default_hourly_rate or resource hourly_rate to enable cost tracking."
+            )
+        if self.cost_percentiles is None:
+            self.cost_percentiles = {}
+        if p not in self.cost_percentiles:
+            self.cost_percentiles[p] = float(np.percentile(self.costs, p))
+        return self.cost_percentiles[p]
+
+    def probability_within_budget(self, target_budget: float) -> float:
+        """Calculate the probability of total project cost staying within budget.
+
+        Args:
+            target_budget: Budget threshold in project currency units.
+
+        Returns:
+            Probability (0.0 to 1.0) of staying within the target budget.
+
+        Raises:
+            ValueError: If cost estimation is not active (costs is None).
+        """
+        if self.costs is None:
+            raise ValueError(
+                "Cost estimation is not active. "
+                "Set default_hourly_rate or resource hourly_rate to enable cost tracking."
+            )
+        return float(np.mean(self.costs <= target_budget))
+
+    def budget_confidence_interval(
+        self,
+        target_budget: float,
+        confidence_level: float = 0.95,
+    ) -> tuple[float, float, float]:
+        """Return point estimate and confidence interval for budget probability.
+
+        Uses the normal approximation to the binomial proportion for typical
+        samples, and falls back to the Wilson score interval when the sample
+        count in either tail is too small for the normal approximation to be
+        reliable.
+
+        Args:
+            target_budget: Budget threshold in project currency units.
+            confidence_level: Confidence level for the interval (default 0.95).
+
+        Returns:
+            Tuple of (point_estimate, lower_bound, upper_bound) where all
+            values are probabilities in [0.0, 1.0].
+
+        Raises:
+            ValueError: If cost estimation is not active (costs is None).
+        """
+        if self.costs is None:
+            raise ValueError("Cost estimation is not active.")
+        p_hat = float(np.mean(self.costs <= target_budget))
+        n = len(self.costs)
+        z = float(scipy_stats.norm.ppf((1 + confidence_level) / 2))
+
+        if p_hat * n < 5 or (1 - p_hat) * n < 5:
+            # Wilson score interval — reliable near p=0 or p=1
+            denom = 1 + z**2 / n
+            centre = (p_hat + z**2 / (2 * n)) / denom
+            margin = z * math.sqrt((p_hat * (1 - p_hat) + z**2 / (4 * n)) / n) / denom
+            return (p_hat, max(0.0, centre - margin), min(1.0, centre + margin))
+
+        # Normal approximation — adequate when both tails have ≥5 counts
+        half_width = z * math.sqrt(p_hat * (1 - p_hat) / n)
+        return (p_hat, max(0.0, p_hat - half_width), min(1.0, p_hat + half_width))
+
+    def budget_for_confidence(self, confidence: float) -> float:
+        """Return the minimum budget required to reach a target confidence level.
+
+        This is the inverse CDF (quantile function) of the cost distribution.
+
+        Args:
+            confidence: Desired probability of staying within budget (0.0 to 1.0).
+
+        Returns:
+            Budget amount in project currency units.
+
+        Raises:
+            ValueError: If cost estimation is not active or confidence out of range.
+        """
+        if self.costs is None:
+            raise ValueError("Cost estimation is not active.")
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError(
+                f"confidence must be between 0.0 and 1.0, got {confidence}. "
+                "Pass 0.90 for 90% confidence, not 90."
+            )
+        return float(np.percentile(self.costs, confidence * 100))
+
+    def joint_probability(self, target_hours: float, target_budget: float) -> float:
+        """Probability of finishing by target_hours AND staying within budget.
+
+        Args:
+            target_hours: Duration threshold in hours.
+            target_budget: Budget threshold in currency units.
+
+        Returns:
+            Joint probability (0.0 to 1.0).
+
+        Raises:
+            ValueError: If cost estimation is not active (costs is None).
+        """
+        if self.costs is None:
+            raise ValueError("Cost estimation is not active.")
+        return float(
+            np.mean((self.durations <= target_hours) & (self.costs <= target_budget))
+        )
 
     def calculate_statistics(self) -> None:
         """Calculate statistical measures from simulation results."""

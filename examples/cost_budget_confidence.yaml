@@ -1,0 +1,117 @@
+# Budget confidence analysis example
+# Designed to exercise --target-budget mode with a target that
+# lands near P75 so all budget metrics are meaningful.
+#
+# Usage:
+#   mcprojsim simulate examples/cost_budget_confidence.yaml \
+#       --target-budget 50000 --seed 42 -n 2000
+#
+# The target of 50,000 EUR should land around P70-P80 of the
+# total cost distribution, producing interesting budget analysis.
+
+project:
+  name: "Internal Analytics Dashboard"
+  start_date: "2025-09-01"
+  hours_per_day: 8
+  default_hourly_rate: 105.0
+  overhead_rate: 0.20
+  currency: "EUR"
+  confidence_levels: [50, 80, 90, 95]
+
+resources:
+  - name: "backend_dev"
+    hourly_rate: 120.0
+  - name: "frontend_dev"
+    hourly_rate: 110.0
+  - name: "data_engineer"
+    hourly_rate: 130.0
+  - name: "qa_engineer"
+    hourly_rate: 95.0
+
+tasks:
+  - id: "design"
+    name: "Architecture and design"
+    estimate:
+      low: 20
+      expected: 32
+      high: 50
+      unit: "hours"
+    resources: ["backend_dev", "frontend_dev"]
+
+  - id: "data_pipeline"
+    name: "Build ETL data pipeline"
+    estimate:
+      low: 40
+      expected: 60
+      high: 100
+      unit: "hours"
+    resources: ["data_engineer"]
+    dependencies: ["design"]
+    fixed_cost: 500.0        # Cloud staging environment
+
+  - id: "api"
+    name: "REST API and business logic"
+    estimate:
+      low: 50
+      expected: 72
+      high: 110
+      unit: "hours"
+    resources: ["backend_dev"]
+    dependencies: ["design"]
+    risks:
+      - id: "legacy_integration"
+        name: "Legacy system integration issues"
+        probability: 0.35
+        impact:
+          type: "absolute"
+          value: 25
+          unit: "hours"
+        cost_impact: 4000.0
+
+  - id: "frontend"
+    name: "Dashboard frontend"
+    estimate:
+      low: 40
+      expected: 60
+      high: 90
+      unit: "hours"
+    resources: ["frontend_dev"]
+    dependencies: ["api"]
+    fixed_cost: 200.0        # UI component license
+
+  - id: "integration"
+    name: "Integration testing"
+    estimate:
+      low: 15
+      expected: 24
+      high: 40
+      unit: "hours"
+    resources: ["qa_engineer", "backend_dev"]
+    dependencies: ["data_pipeline", "frontend"]
+    risks:
+      - id: "data_quality"
+        name: "Data quality problems in staging"
+        probability: 0.25
+        impact:
+          type: "absolute"
+          value: 12
+          unit: "hours"
+        cost_impact: 2000.0
+
+  - id: "deployment"
+    name: "Production deployment and monitoring"
+    estimate:
+      low: 10
+      expected: 16
+      high: 28
+      unit: "hours"
+    resources: ["backend_dev", "data_engineer"]
+    dependencies: ["integration"]
+    fixed_cost: 1200.0       # Monitoring tool setup
+
+project_risks:
+  - id: "key_person"
+    name: "Key person unavailability"
+    probability: 0.15
+    impact: 0                # no schedule impact — cost-only
+    cost_impact: 5000.0

@@ -1541,6 +1541,51 @@ class TestSimulationEngineDistributionResolution:
         assert schedule["task_001"]["start"] == 24.0
         assert schedule["task_001"]["end"] == 32.0
 
+    def test_schedule_tasks_resource_constraints_use_custom_calendar_windows(self):
+        """Constrained mode should honor custom work hours and holidays."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Custom Calendar",
+                start_date=date(2025, 1, 6),
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    resources=["res_a"],
+                )
+            ],
+            resources=[
+                {
+                    "name": "res_a",
+                    "experience_level": 2,
+                    "productivity_level": 1.0,
+                    "calendar": "short_week",
+                }
+            ],
+            calendars=[
+                {
+                    "id": "short_week",
+                    "work_hours_per_day": 6.0,
+                    "work_days": [1, 2, 3, 4, 5],
+                    "holidays": ["2025-01-07"],
+                }
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        schedule = scheduler.schedule_tasks(
+            {"task_001": 12.0},
+            use_resource_constraints=True,
+            start_date=project.project.start_date,
+            hours_per_day=8.0,
+        )
+
+        # Monday 6h + Tuesday holiday + Wednesday 6h => end at hour 54.
+        assert schedule["task_001"]["start"] == 0.0
+        assert schedule["task_001"]["end"] == 54.0
+
     def test_get_critical_paths_returns_full_sequences(self):
         """Test tracing all full critical path sequences in a branching schedule."""
         project = Project(
@@ -1770,6 +1815,83 @@ class TestSimulationEngine:
         assert results.percentiles[99] == pytest.approx(
             float(np.percentile(results.durations, 99))
         )
+
+    def test_run_simulation_caches_static_task_inputs(self, monkeypatch):
+        """Static estimate resolution and uncertainty lookup happen once per task."""
+        config = Config.get_default().model_copy(deep=True)
+        call_counts = {
+            "resolve_t_shirt_size": 0,
+            "get_story_point": 0,
+            "get_uncertainty_multiplier": 0,
+        }
+
+        original_resolve_t_shirt_size = Config.resolve_t_shirt_size
+        original_get_story_point = Config.get_story_point
+        original_get_uncertainty_multiplier = Config.get_uncertainty_multiplier
+
+        def counting_resolve_t_shirt_size(self, size):
+            call_counts["resolve_t_shirt_size"] += 1
+            return original_resolve_t_shirt_size(self, size)
+
+        def counting_get_story_point(self, points):
+            call_counts["get_story_point"] += 1
+            return original_get_story_point(self, points)
+
+        def counting_get_uncertainty_multiplier(self, factor_name, level):
+            call_counts["get_uncertainty_multiplier"] += 1
+            return original_get_uncertainty_multiplier(self, factor_name, level)
+
+        monkeypatch.setattr(
+            Config, "resolve_t_shirt_size", counting_resolve_t_shirt_size
+        )
+        monkeypatch.setattr(Config, "get_story_point", counting_get_story_point)
+        monkeypatch.setattr(
+            Config,
+            "get_uncertainty_multiplier",
+            counting_get_uncertainty_multiplier,
+        )
+
+        project = Project(
+            project=ProjectMetadata(name="Cached Inputs", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="T-shirt task",
+                    estimate=TaskEstimate(t_shirt_size="M"),
+                    uncertainty_factors=UncertaintyFactors(
+                        team_experience="high",
+                        requirements_maturity=None,
+                        technical_complexity=None,
+                        team_distribution=None,
+                        integration_complexity=None,
+                    ),
+                ),
+                Task(
+                    id="task_002",
+                    name="Story-point task",
+                    estimate=TaskEstimate(story_points=5),
+                    uncertainty_factors=UncertaintyFactors(
+                        team_experience="medium",
+                        requirements_maturity=None,
+                        technical_complexity=None,
+                        team_distribution=None,
+                        integration_complexity=None,
+                    ),
+                ),
+            ],
+        )
+
+        engine = SimulationEngine(
+            iterations=6,
+            random_seed=42,
+            config=config,
+            show_progress=False,
+        )
+        engine.run(project)
+
+        assert call_counts["resolve_t_shirt_size"] == 1
+        assert call_counts["get_story_point"] == 1
+        assert call_counts["get_uncertainty_multiplier"] == 2
 
     def test_simulation_reproducibility(self, simple_project):
         """Test simulation reproducibility with same seed."""

@@ -391,6 +391,7 @@ class TestSimulateExports:
             project=None,
             config=None,
             critical_path_limit=None,
+            fx_provider=None,
         ):
             captured["path"] = str(output_path)
 

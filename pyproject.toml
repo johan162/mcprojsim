@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "mcprojsim"
-version = "0.13.0"
+version = "0.14.0"
 description = "Monte Carlo simulation system for software development effort estimation"
 readme = "README.md"
 authors = ["Johan Persson <johan162@gmail.com>"]
@@ -32,7 +32,7 @@ include = ["src/mcprojsim/py.typed"]
 
 [tool.poetry.dependencies]
 python = ">=3.13"
-numpy = ">=2.4.3"
+numpy = ">=2.4.4"
 pyyaml = ">=6.0"
 tomli-w = ">=1.0.0"
 pydantic = ">=2.0.0"
@@ -44,11 +44,11 @@ tabulate = "^0.10.0"
 pyright = "^1.1.408"
 
 [tool.poetry.group.dev.dependencies]
-pytest = ">=9.0.1"
-pytest-cov = ">=7.0.0"
+pytest = ">=9.0.3"
+pytest-cov = ">=7.1.0"
 pytest-xdist = ">=3.8.0"
 black = ">=26.3.1"
-mypy = ">=1.0.0"
+mypy = ">=1.20.0"
 flake8 = ">=7.3.0"
 pyright = ">=1.1.400"
 pre-commit = ">=4.3.0"
@@ -58,7 +58,7 @@ types-tabulate = "^0.10.0.20260308"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = ">=1.5.0"
-mkdocs-material = ">=9.7.5"
+mkdocs-material = ">=9.7.6"
 mkdocstrings = {extras = ["python"], version = ">=0.22.0"}
 
 [tool.poetry.group.mcp]
@@ -125,11 +125,13 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
     "heavy: long-running integration tests that can be excluded in CI/CD",
+    "probabilistic: statistical verification tests for the simulation engine",
+    "probabilistic_full: full probabilistic verification suite (very slow, run periodically)",
 ]
 addopts = [
     "--strict-markers",
     "-m",
-    "not heavy",
+    "not heavy and not probabilistic and not probabilistic_full",
     "--cov=mcprojsim",
     "--cov-report=term-missing",
     "--cov-report=html",

@@ -1,3 +1,32 @@
+## [v0.14.0] - 2026-04-12
+
+Release Type: minor
+
+### 📋 Summary
+This release sees two major features:
+1. The addition of cost estimation feature based on efforts and risk. 
+This also supports a budget confidence analysis that determines how likely it is to
+meet a given budget.
+The reports includes cost data. The HTML report now also include a cost histogram, cost tornado chart, and per-task cost breakdown table. 
+The cost feature also supports secondary-currency display with automatic exchange
+rates fetched from https://frankfurter.dev/
+
+2. Resource-constrained scheduling has been significantly optimised, reducing simulation time by 2–3× on projects with a `resources:` block.
+
+### ✨ Additions
+- Added cost analysis and estimation
+- Added `--target-budget` CLI flag to report the probability of staying within a given budget and the budgets required for each confidence level
+- Added NL parser support for cost-related patterns (`Alice costs $180/hour`, `fixed cost: $5000`, `overhead: 20%`)
+- New chapter in User Guide describing cost analysis.
+
+### 🚀 Improvements
+- Improved resource-constrained scheduling performance by 3–5× on projects with a `resources:` block: eliminated per-step Pydantic `CalendarSpec` allocations, inlined working-day checks in the capacity integration hot path, pre-computed topological sort once per simulation pass, and replaced day-by-day capacity probing with an iteration-local cached availability window.
+- Suppressed the Staffing Analysis section in HTML reports when the project defines an explicit `resources:` block, since team-size recommendations are not meaningful when staffing is already specified.
+
+### 🛠 Internal
+- Added detailed design document for cost estimate.
+
+
 ## [v0.13.0] - 2026-04-08
 
 Release Type: minor

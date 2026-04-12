@@ -1,6 +1,6 @@
 # Makefile for Design Documentation in MCProjSim project
 
-.PHONY: pdf-design help clean really-clean
+.PHONY: pdf-design-docs help clean really-clean dark
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -62,10 +62,10 @@ DESIGN_IDEAS_DIR := .
 THEME ?= light
 
 ifeq ($(THEME),dark)
-DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template_dark.tex
+DESIGN_LATEX_TEMPLATE := design_template_dark.tex
 THEME_SUFFIX := -dark
 else
-DESIGN_LATEX_TEMPLATE := $(DESIGN_IDEAS_DIR)/design_template.tex
+DESIGN_LATEX_TEMPLATE := design_template.tex
 THEME_SUFFIX :=
 endif
 
@@ -178,6 +178,8 @@ $(eval $(call DEFINE_DESIGN_DOC_VARS,MULTIPHASE_SIM,multiphase-simulation,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,SENSITIVITY_ANALYSIS,sensitivity-analysis,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,PLUGGABLE_DISTRIBUTIONS,pluggable-distributions,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,NL_MCP_IMPROVEMENTS,nl_mcp_improvements,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,HANDLING_COST,handling-cost,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,PROBABILISTIC_TESTING,probabilistic-testing,,))
 
 # ============================================================================================
 # Makefile Targets
@@ -189,9 +191,12 @@ $(eval $(call DESIGN_DOC_PDF_RULE,MULTIPHASE_SIM,multi-phase simulation))
 $(eval $(call DESIGN_DOC_PDF_RULE,SENSITIVITY_ANALYSIS,sensitivity analysis))
 $(eval $(call DESIGN_DOC_PDF_RULE,PLUGGABLE_DISTRIBUTIONS,pluggable distributions))	
 $(eval $(call DESIGN_DOC_PDF_RULE,NL_MCP_IMPROVEMENTS,non-linear MCP improvements))
+$(eval $(call DESIGN_DOC_PDF_RULE,HANDLING_COST,handling cost))
+$(eval $(call DESIGN_DOC_PDF_RULE,PROBABILISTIC_TESTING,probabilistic testing))
 
 PDF_DESIGN_DOCS := $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) \
-$(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) $(NL_MCP_IMPROVEMENTS_PDF)
+$(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) $(NL_MCP_IMPROVEMENTS_PDF) \
+$(HANDLING_COST_PDF) $(PROBABILISTIC_TESTING_PDF)
 
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
@@ -220,3 +225,6 @@ pdf-design-docs: $(PDF_DESIGN_DOCS) ## Build all the PDF versions of the design 
 
 dark: ## Build all PDFs in dark theme (adds -dark suffix to filenames)
 	@$(MAKE) pdf-design-docs THEME=dark
+
+cost: $(HANDLING_COST_PDF) ## Build the handling cost design document PDF
+	@:

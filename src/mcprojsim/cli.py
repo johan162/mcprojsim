@@ -3,7 +3,7 @@
 from pathlib import Path
 import sys
 import time
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import click
 import yaml
@@ -41,6 +41,35 @@ from mcprojsim.simulation.distributions import fit_shifted_lognormal
 from mcprojsim.utils import Validator, setup_logging
 
 ALLOWED_OUTPUT_FORMATS = {"json", "csv", "html"}
+
+_CURRENCY_SYMBOLS = {
+    "EUR": "€",
+    "USD": "$",
+    "GBP": "£",
+    "SEK": "kr",
+    "NOK": "kr",
+    "DKK": "kr",
+    "JPY": "¥",
+    "CNY": "¥",
+    "CHF": "Fr",
+    "AUD": "A$",
+    "CAD": "C$",
+}
+
+# Symbols that are conventionally placed after the number (e.g. "480,000 kr")
+_SUFFIX_SYMBOLS = {"kr", "Fr"}
+
+
+def _cost_currency_symbol(currency: str) -> str:
+    """Return display symbol for a currency code."""
+    return _CURRENCY_SYMBOLS.get(currency.upper(), currency)
+
+
+def _fmt_cost(value: float, sym: str) -> str:
+    """Format a monetary value with thousands separator and currency symbol."""
+    if sym in _SUFFIX_SYMBOLS:
+        return f"{value:,.0f} {sym}"
+    return f"{sym}{value:,.0f}"
 
 
 def _parse_output_formats(output_format: str) -> list[str]:
@@ -670,6 +699,320 @@ def cli() -> None:
     pass
 
 
+def _build_fx_provider(
+    results: SimulationResults,
+    project: "Any",
+    no_fx: bool,
+) -> "Any":
+    """Build an ExchangeRateProvider if secondary currencies are configured.
+
+    Returns None when no secondary currencies are set, when ``no_fx`` is True,
+    or when cost estimation was not active.
+    """
+    from mcprojsim.exchange_rates import ExchangeRateProvider
+
+    meta = project.project
+    secondary: list[str] = list(getattr(meta, "secondary_currencies", None) or [])
+    if no_fx or not secondary or results.costs is None:
+        return None
+    provider = ExchangeRateProvider(
+        base_currency=str(results.currency or "EUR"),
+        fx_conversion_cost=float(getattr(meta, "fx_conversion_cost", 0.0)),
+        fx_overhead_rate=float(getattr(meta, "fx_overhead_rate", 0.0)),
+        manual_overrides=dict(getattr(meta, "fx_rates", {}) or {}),
+    )
+    provider.fetch_rates(secondary)
+    return provider
+
+
+def _output_cost_table(
+    results: SimulationResults,
+    include_in_output: bool,
+    target_budget: Optional[float],
+    target_date: Optional[str],
+    hours_per_day: float,
+    fx_provider: "Any" = None,
+) -> None:
+    """Output cost analysis in table mode."""
+    import numpy as np
+    from tabulate import tabulate as _tabulate
+
+    _costs = getattr(results, "costs", None)
+    if _costs is None or not include_in_output:
+        return
+    _currency = str(getattr(results, "currency", None) or "")
+    _sym = _cost_currency_symbol(_currency)
+    _cost_mean = float(getattr(results, "cost_mean", None) or 0.0)
+    _cost_std = float(getattr(results, "cost_std_dev", None) or 0.0)
+    _cost_cv = _cost_std / _cost_mean if _cost_mean > 0 else 0.0
+    _cost_min = float(np.min(_costs))
+    _cost_max = float(np.max(_costs))
+    _cost_pcts: dict[int, float] = getattr(results, "cost_percentiles", None) or {}
+    _cost_median = _cost_pcts.get(50, _cost_mean)
+    cost_stat_rows = [
+        ["Mean", _fmt_cost(_cost_mean, _sym)],
+        ["Median (P50)", _fmt_cost(_cost_median, _sym)],
+        ["Std Dev", _fmt_cost(_cost_std, _sym)],
+        ["Minimum", _fmt_cost(_cost_min, _sym)],
+        ["Maximum", _fmt_cost(_cost_max, _sym)],
+        ["CV", f"{_cost_cv*100:.1f}%"],
+    ]
+    header = (
+        f"\nCost Statistical Summary ({_currency}):"
+        if _currency
+        else "\nCost Statistical Summary:"
+    )
+    click.echo(header)
+    click.echo(
+        _tabulate(
+            cost_stat_rows,
+            headers=["Metric", "Value"],
+            tablefmt="simple_outline",
+            disable_numparse=True,
+        )
+    )
+    if _cost_pcts:
+        ci_rows = [[f"P{p}", _fmt_cost(v, _sym)] for p, v in sorted(_cost_pcts.items())]
+        click.echo("\nCost Confidence Intervals:")
+        click.echo(
+            _tabulate(
+                ci_rows,
+                headers=["Percentile", "Amount"],
+                tablefmt="simple_outline",
+                disable_numparse=True,
+            )
+        )
+    _cost_analysis_t = getattr(results, "cost_analysis", None)
+    if _cost_analysis_t is not None and _cost_analysis_t.sensitivity:
+        top_sens = sorted(
+            _cost_analysis_t.sensitivity.items(),
+            key=lambda x: abs(x[1]),
+            reverse=True,
+        )[:10]
+        sens_rows = [[tid, f"{corr:+.4f}"] for tid, corr in top_sens]
+        click.echo("\nCost Sensitivity Analysis:")
+        click.echo(
+            _tabulate(
+                sens_rows,
+                headers=["Task", "Correlation"],
+                tablefmt="simple_outline",
+                disable_numparse=True,
+            )
+        )
+    if target_budget is not None:
+        _prob = results.probability_within_budget(target_budget)
+        _, _ci_lo, _ci_hi = results.budget_confidence_interval(target_budget)
+        _p50_budget = results.budget_for_confidence(0.50)
+        _p80_budget = results.budget_for_confidence(0.80)
+        _p90_budget = results.budget_for_confidence(0.90)
+        budget_rows = [
+            [
+                "Probability within budget",
+                f"{_prob*100:.1f}%  (95% CI: {_ci_lo*100:.1f}% – {_ci_hi*100:.1f}%)",
+            ],
+            ["Budget for P50 confidence", _fmt_cost(_p50_budget, _sym)],
+            ["Budget for P80 confidence", _fmt_cost(_p80_budget, _sym)],
+            ["Budget for P90 confidence", _fmt_cost(_p90_budget, _sym)],
+        ]
+        click.echo(f"\nBudget Analysis (target: {_fmt_cost(target_budget, _sym)}):")
+        click.echo(
+            _tabulate(
+                budget_rows,
+                headers=["Metric", "Value"],
+                tablefmt="simple_outline",
+                disable_numparse=True,
+            )
+        )
+        if target_date and results.start_date:
+            try:
+                from datetime import date as _date_t, timedelta as _td
+
+                _tgt = _date_t.fromisoformat(target_date)
+                _wd = 0
+                _cur = results.start_date
+                while _cur < _tgt:
+                    _cur += _td(days=1)
+                    if _cur.weekday() < 5:
+                        _wd += 1
+                _th = _wd * hours_per_day
+                _joint = results.joint_probability(_th, target_budget)
+                click.echo(f"  Joint P(on time AND within budget): {_joint*100:.1f}%")
+            except ValueError:
+                pass
+
+    # Secondary currency output
+    if fx_provider is not None and results.costs is not None:
+        from mcprojsim.exchange_rates import ExchangeRateProvider as _ERP
+
+        provider: _ERP = fx_provider
+        all_targets: list[str] = list(getattr(provider, "_requested_targets", []))
+        if all_targets:
+            click.echo("\nCost in Secondary Currencies:")
+        for target in all_targets:
+            info = provider.rate_info(target)
+            if info is None:
+                click.echo(
+                    f"  {target}  [exchange rate unavailable — skipping {target} output]"
+                )
+                continue
+            adj = info["adjusted_rate"]
+            official = info["official_rate"]
+            conv_c = info["fx_conversion_cost"]
+            oh_c = info["fx_overhead_rate"]
+            target_sym = _cost_currency_symbol(target)
+            rate_note = ""
+            if info["source"] == "manual_override":
+                rate_note = " (manual)"
+            elif conv_c or oh_c:
+                parts = []
+                if conv_c:
+                    parts.append(f"bank: +{conv_c*100:.1f}%")
+                if oh_c:
+                    parts.append(f"overhead: +{oh_c*100:.1f}%")
+                rate_note = f" (official: {official:,.4g}, {', '.join(parts)})"
+            click.echo(
+                f"  {target}  1 {results.currency or 'EUR'} = {adj:,.4g} {target}"
+                f"{rate_note}"
+            )
+            pcts = (
+                sorted(results.cost_percentiles.items())
+                if results.cost_percentiles
+                else []
+            )
+            if pcts:
+                pct_parts = "  |  ".join(
+                    f"P{p}: {_fmt_cost(float(v * adj), target_sym)}" for p, v in pcts
+                )
+                click.echo(f"       {pct_parts}")
+
+
+def _output_cost_text(
+    results: SimulationResults,
+    include_in_output: bool,
+    target_budget: Optional[float],
+    target_date: Optional[str],
+    hours_per_day: float,
+    fx_provider: "Any" = None,
+) -> None:
+    """Output cost analysis in plain-text mode."""
+    import numpy as np
+
+    _costs = getattr(results, "costs", None)
+    if _costs is None or not include_in_output:
+        return
+    _currency = str(getattr(results, "currency", None) or "")
+    _sym = _cost_currency_symbol(_currency)
+    _cost_mean = float(getattr(results, "cost_mean", None) or 0.0)
+    _cost_std = float(getattr(results, "cost_std_dev", None) or 0.0)
+    _cost_cv = _cost_std / _cost_mean if _cost_mean > 0 else 0.0
+    _cost_min = float(np.min(_costs))
+    _cost_max = float(np.max(_costs))
+    _cost_pcts: dict[int, float] = getattr(results, "cost_percentiles", None) or {}
+    _cost_median = _cost_pcts.get(50, _cost_mean)
+    _hdr = (
+        f"\nCost Statistical Summary ({_currency}):"
+        if _currency
+        else "\nCost Statistical Summary:"
+    )
+    click.echo(_hdr)
+    click.echo(f"  Mean:    {_fmt_cost(_cost_mean, _sym)}")
+    click.echo(f"  Median:  {_fmt_cost(_cost_median, _sym)}")
+    click.echo(f"  Std Dev: {_fmt_cost(_cost_std, _sym)}")
+    click.echo(f"  Min:     {_fmt_cost(_cost_min, _sym)}")
+    click.echo(f"  Max:     {_fmt_cost(_cost_max, _sym)}")
+    click.echo(f"  CV:      {_cost_cv*100:.1f}%")
+    if _cost_pcts:
+        click.echo("\nCost Confidence Intervals:")
+        parts = "  |  ".join(
+            f"P{p}: {_fmt_cost(v, _sym)}" for p, v in sorted(_cost_pcts.items())
+        )
+        click.echo(f"  {parts}")
+    _cost_analysis = getattr(results, "cost_analysis", None)
+    if _cost_analysis is not None and _cost_analysis.sensitivity:
+        click.echo("\nCost Sensitivity Analysis:")
+        top_sens = sorted(
+            _cost_analysis.sensitivity.items(),
+            key=lambda x: abs(x[1]),
+            reverse=True,
+        )[:10]
+        for tid, corr in top_sens:
+            click.echo(f"  {tid}: {corr:+.4f}")
+    if target_budget is not None:
+        _prob = results.probability_within_budget(target_budget)
+        _, _ci_lo, _ci_hi = results.budget_confidence_interval(target_budget)
+        _p50_budget = results.budget_for_confidence(0.50)
+        _p80_budget = results.budget_for_confidence(0.80)
+        _p90_budget = results.budget_for_confidence(0.90)
+        click.echo(f"\nBudget Analysis (target: {_fmt_cost(target_budget, _sym)}):")
+        click.echo(
+            f"  Probability within budget:  {_prob*100:.1f}%  (95% CI: {_ci_lo*100:.1f}% – {_ci_hi*100:.1f}%)"
+        )
+        click.echo(f"  Budget for P50 confidence:  {_fmt_cost(_p50_budget, _sym)}")
+        click.echo(f"  Budget for P80 confidence:  {_fmt_cost(_p80_budget, _sym)}")
+        click.echo(f"  Budget for P90 confidence:  {_fmt_cost(_p90_budget, _sym)}")
+        if target_date and results.start_date:
+            try:
+                from datetime import date as _date_t, timedelta as _td
+
+                _tgt = _date_t.fromisoformat(target_date)
+                _wd = 0
+                _cur = results.start_date
+                while _cur < _tgt:
+                    _cur += _td(days=1)
+                    if _cur.weekday() < 5:
+                        _wd += 1
+                _th = _wd * hours_per_day
+                _joint = results.joint_probability(_th, target_budget)
+                click.echo(f"  Joint P(on time AND within budget): {_joint*100:.1f}%")
+            except ValueError:
+                pass
+
+    # Secondary currency output
+    if fx_provider is not None and results.costs is not None:
+        from mcprojsim.exchange_rates import ExchangeRateProvider as _ERP2
+
+        provider2: _ERP2 = fx_provider
+        all_targets2: list[str] = list(getattr(provider2, "_requested_targets", []))
+        if all_targets2:
+            click.echo("\nCost in Secondary Currencies:")
+        for target in all_targets2:
+            info2 = provider2.rate_info(target)
+            if info2 is None:
+                click.echo(
+                    f"  {target}  [exchange rate unavailable — skipping {target} output]"
+                )
+                continue
+            adj2 = info2["adjusted_rate"]
+            official2 = info2["official_rate"]
+            conv_c2 = info2["fx_conversion_cost"]
+            oh_c2 = info2["fx_overhead_rate"]
+            target_sym2 = _cost_currency_symbol(target)
+            rate_note2 = ""
+            if info2["source"] == "manual_override":
+                rate_note2 = " (manual)"
+            elif conv_c2 or oh_c2:
+                parts2 = []
+                if conv_c2:
+                    parts2.append(f"bank: +{conv_c2*100:.1f}%")
+                if oh_c2:
+                    parts2.append(f"overhead: +{oh_c2*100:.1f}%")
+                rate_note2 = f" (official: {official2:,.4g}, {', '.join(parts2)})"
+            click.echo(
+                f"  {target}  1 {results.currency or 'EUR'} = {adj2:,.4g} {target}"
+                f"{rate_note2}"
+            )
+            pcts2 = (
+                sorted(results.cost_percentiles.items())
+                if results.cost_percentiles
+                else []
+            )
+            if pcts2:
+                pct_parts2 = "  |  ".join(
+                    f"P{p}: {_fmt_cost(float(v * adj2), target_sym2)}" for p, v in pcts2
+                )
+                click.echo(f"       {pct_parts2}")
+
+
 @cli.command()
 @click.argument("project_file", type=click.Path(exists=True))
 @click.option(
@@ -789,6 +1132,24 @@ def cli() -> None:
         "Overrides the config file setting if specified."
     ),
 )
+@click.option(
+    "--target-budget",
+    type=float,
+    default=None,
+    help="Report probability of staying within this budget amount.",
+)
+@click.option(
+    "--full-cost-detail",
+    is_flag=True,
+    default=False,
+    help="Include per-iteration task cost arrays in JSON output.",
+)
+@click.option(
+    "--no-fx",
+    is_flag=True,
+    default=False,
+    help="Disable exchange rate fetches (offline / CI mode).",
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -810,6 +1171,9 @@ def simulate(
     two_pass: bool,
     pass1_iterations: Optional[int],
     number_bins: Optional[int],
+    target_budget: Optional[float],
+    full_cost_detail: bool,
+    no_fx: bool,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
     if quiet < 2:
@@ -962,6 +1326,7 @@ def simulate(
                     f"{_format_memory_size(sprint_peak_memory_bytes)}"
                 )
 
+        _fx_provider = None
         if quiet == 0:
             import math
 
@@ -1045,6 +1410,9 @@ def simulate(
                 )
                 for factor_name in DEFAULT_UNCERTAINTY_FACTOR_LEVELS
             }
+
+            # Build FX provider once — used for both console output and exporters
+            _fx_provider = _build_fx_provider(results, project, no_fx)
 
             if table:
                 start_date_str = (
@@ -1233,7 +1601,15 @@ def simulate(
                             )
                         )
 
-                    # Sensitivity analysis table
+                    # Cost output (table mode)
+                    _output_cost_table(
+                        results,
+                        cfg.cost.include_in_output,
+                        target_budget,
+                        target_date,
+                        hours_per_day,
+                        _fx_provider,
+                    )
                     if results.sensitivity:
                         sorted_sens = sorted(
                             results.sensitivity.items(),
@@ -1394,6 +1770,16 @@ def simulate(
                             click.echo(
                                 f"  P{p}: {eh:.2f} person-hours" f" ({epd} person-days)"
                             )
+
+                    # Cost output (plain-text)
+                    _output_cost_text(
+                        results,
+                        cfg.cost.include_in_output,
+                        target_budget,
+                        target_date,
+                        hours_per_day,
+                        _fx_provider,
+                    )
 
                     # Sensitivity analysis
                     if results.sensitivity:
@@ -1631,6 +2017,19 @@ def simulate(
                 Path(output) if output else Path(f"{project.project.name}_results")
             )
 
+            # Pre-compute target_hours from target_date for exporter joint analysis
+            _export_target_hours: Optional[float] = None
+            if target_date and results.start_date:
+                try:
+                    from datetime import date as _date_t2
+
+                    _tgt2 = _date_t2.fromisoformat(target_date)
+                    _wd2 = (_tgt2 - results.start_date).days
+                    if _wd2 > 0:
+                        _export_target_hours = _wd2 * results.hours_per_day
+                except (ValueError, TypeError):
+                    pass
+
             for fmt in formats:
                 if fmt == "json":
                     output_file = base_output.with_suffix(".json")
@@ -1643,6 +2042,10 @@ def simulate(
                             sprint_results=sprint_results,
                             project=project,
                             include_historic_base=include_historic_base,
+                            full_cost_detail=full_cost_detail,
+                            fx_provider=_fx_provider,
+                            target_budget=target_budget,
+                            target_hours=_export_target_hours,
                         )
                     else:
                         JSONExporter.export(
@@ -1652,6 +2055,10 @@ def simulate(
                             critical_path_limit=critical_path_limit,
                             project=project,
                             include_historic_base=include_historic_base,
+                            full_cost_detail=full_cost_detail,
+                            fx_provider=_fx_provider,
+                            target_budget=target_budget,
+                            target_hours=_export_target_hours,
                         )
                     if quiet == 0 and not minimal:
                         click.echo(f"\nResults exported to {output_file}")
@@ -1665,6 +2072,7 @@ def simulate(
                             config=cfg,
                             critical_path_limit=critical_path_limit,
                             sprint_results=sprint_results,
+                            fx_provider=_fx_provider,
                         )
                     else:
                         CSVExporter.export(
@@ -1673,6 +2081,7 @@ def simulate(
                             project=project,
                             config=cfg,
                             critical_path_limit=critical_path_limit,
+                            fx_provider=_fx_provider,
                         )
                     if quiet == 0 and not minimal:
                         click.echo(f"\nResults exported to {output_file}")
@@ -1687,6 +2096,9 @@ def simulate(
                             critical_path_limit=critical_path_limit,
                             sprint_results=sprint_results,
                             include_historic_base=include_historic_base,
+                            fx_provider=_fx_provider,
+                            target_budget=target_budget,
+                            target_hours=_export_target_hours,
                         )
                     else:
                         HTMLExporter.export(
@@ -1696,6 +2108,9 @@ def simulate(
                             config=cfg,
                             critical_path_limit=critical_path_limit,
                             include_historic_base=include_historic_base,
+                            fx_provider=_fx_provider,
+                            target_budget=target_budget,
+                            target_hours=_export_target_hours,
                         )
                     if quiet == 0 and not minimal:
                         click.echo(f"\nResults exported to {output_file}")

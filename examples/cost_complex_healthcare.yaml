@@ -1,0 +1,198 @@
+# cost_complex_healthcare.yaml — Complex cost example: Healthcare Data Platform
+#
+# Exercises many cost features in a realistic mid-size project:
+#   - Per-resource hourly rates with wide spread (consultant at €300/hr, junior at €80/hr)
+#   - project.default_hourly_rate as fallback for unassigned tasks
+#   - overhead_rate at 25% (typical for healthcare/regulated industries)
+#   - Multiple positive fixed_costs (license fees, hardware, compliance audits)
+#   - One negative fixed_cost (government grant offset)
+#   - Risks with time-only impact, cost-only impact, and both combined
+#   - Project-level risk with cost_impact (regulatory delay)
+#   - Secondary currencies: SEK and USD with manual fx_rates (no network needed)
+#   - Mix of dependency chains and parallel work paths
+#
+# Expected behaviour when simulated:
+#   - Cost distribution primarily driven by "backend" and "integration" tasks
+#     (long durations × high-rate resources)
+#   - Compliance audit fixed cost (€12,000) appears in every iteration
+#   - Government grant credit (-€8,000) reduces every iteration
+#   - "Regulatory rejection" project risk (~15%) adds €25,000 cost spike
+#   - Overhead (25%) applied to labor only, not to fixed costs or risk impacts
+#   - Secondary currency output shows SEK and USD at the manual rates
+
+project:
+  name: "Patient Records Platform"
+  description: "HIPAA-compliant data platform for hospital patient records"
+  start_date: "2026-07-01"
+  hours_per_day: 8
+  default_hourly_rate: 120.0
+  overhead_rate: 0.25
+  currency: "EUR"
+  confidence_levels: [50, 80, 90, 95]
+
+  secondary_currencies: [SEK, USD]
+  fx_rates:
+    SEK: 11.35
+    USD: 1.09
+
+resources:
+  - name: "dr_chen"
+    experience_level: 3
+    productivity_level: 1.1
+    hourly_rate: 300.0   # external healthcare IT consultant
+
+  - name: "maria"
+    experience_level: 3
+    productivity_level: 1.0
+    hourly_rate: 180.0   # senior backend engineer
+
+  - name: "lars"
+    experience_level: 2
+    productivity_level: 1.0
+    hourly_rate: 140.0   # mid-level full-stack
+
+  - name: "anna"
+    experience_level: 1
+    productivity_level: 0.9
+    hourly_rate: 80.0    # junior developer
+
+tasks:
+  - id: "requirements"
+    name: "Requirements & Compliance Analysis"
+    description: "Map regulatory requirements (HIPAA, GDPR) to technical constraints"
+    estimate:
+      low: 40
+      expected: 80
+      high: 140
+      unit: hours
+    resources: ["dr_chen"]
+    fixed_cost: 12000.0    # compliance audit / legal review fee
+    risks:
+      - id: "scope_change"
+        name: "Regulatory scope expansion"
+        probability: 0.20
+        impact:
+          type: absolute
+          value: 40
+          unit: hours
+        cost_impact: 6000   # additional legal consultation
+
+  - id: "data_model"
+    name: "Data Model & Schema Design"
+    estimate:
+      low: 30
+      expected: 50
+      high: 90
+      unit: hours
+    dependencies: ["requirements"]
+    resources: ["maria", "dr_chen"]
+    max_resources: 2
+
+  - id: "backend"
+    name: "Backend Services & API Layer"
+    estimate:
+      low: 120
+      expected: 200
+      high: 350
+      unit: hours
+    dependencies: ["data_model"]
+    resources: ["maria", "lars"]
+    max_resources: 2
+    risks:
+      - id: "tech_debt"
+        name: "Legacy system integration complexity"
+        probability: 0.35
+        impact:
+          type: percentage
+          value: 25
+        cost_impact: 3000   # emergency contractor hours
+
+  - id: "frontend"
+    name: "Clinical Dashboard UI"
+    estimate:
+      low: 80
+      expected: 140
+      high: 220
+      unit: hours
+    dependencies: ["data_model"]
+    resources: ["lars", "anna"]
+    max_resources: 2
+
+  - id: "encryption"
+    name: "Data Encryption & Access Control"
+    estimate:
+      low: 40
+      expected: 70
+      high: 120
+      unit: hours
+    dependencies: ["backend"]
+    resources: ["maria"]
+    fixed_cost: 5500.0     # HSM hardware security module procurement
+
+  - id: "integration"
+    name: "Hospital System Integration (HL7/FHIR)"
+    estimate:
+      low: 60
+      expected: 110
+      high: 200
+      unit: hours
+    dependencies: ["backend", "encryption"]
+    resources: ["dr_chen", "maria"]
+    max_resources: 2
+    fixed_cost: -8000.0    # government digitalization grant offset
+    risks:
+      - id: "hl7_compat"
+        name: "HL7 version incompatibility"
+        probability: 0.25
+        impact:
+          type: absolute
+          value: 30
+          unit: hours
+      - id: "vendor_delay"
+        name: "Hospital IT vendor unresponsive"
+        probability: 0.15
+        impact: 0            # no schedule impact
+        cost_impact: 9000    # cost-only: escalation and workaround fees
+
+  - id: "testing"
+    name: "Penetration Testing & Compliance Validation"
+    estimate:
+      low: 50
+      expected: 80
+      high: 130
+      unit: hours
+    dependencies: ["integration", "frontend"]
+    resources: ["dr_chen", "anna"]
+    max_resources: 2
+    fixed_cost: 7500.0     # external pen-test vendor fee
+    risks:
+      - id: "pentest_fail"
+        name: "Critical vulnerability found"
+        probability: 0.20
+        impact:
+          type: absolute
+          value: 60
+          unit: hours
+        cost_impact: 4000   # emergency remediation + re-test
+
+  - id: "deployment"
+    name: "Production Deployment & Handover"
+    estimate:
+      low: 20
+      expected: 35
+      high: 60
+      unit: hours
+    dependencies: ["testing"]
+    resources: ["lars", "maria"]
+    max_resources: 2
+    fixed_cost: 3000.0     # production infrastructure provisioning
+
+project_risks:
+  - id: "regulatory_rejection"
+    name: "Regulatory body rejects initial submission"
+    probability: 0.15
+    impact:
+      type: absolute
+      value: 80
+      unit: hours
+    cost_impact: 25000     # resubmission fees + additional consultant time

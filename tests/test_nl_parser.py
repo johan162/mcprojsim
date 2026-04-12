@@ -1198,3 +1198,135 @@ Project name: Test
 """
         project = self.parser.parse(text)
         assert project.tasks[0].t_shirt_size == "XL"
+
+
+class TestNLParserCostPatterns:
+    """Tests for cost-related parsing in the NL parser."""
+
+    def setup_method(self) -> None:
+        self.parser = NLProjectParser()
+
+    # -- Project-level patterns -----------------------------------------------
+
+    def test_default_hourly_rate_dollar(self) -> None:
+        text = "hourly rate: $150\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.default_hourly_rate == pytest.approx(150.0)
+
+    def test_default_hourly_rate_bare(self) -> None:
+        text = "rate: 150/hour\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.default_hourly_rate == pytest.approx(150.0)
+
+    def test_default_rate_blended(self) -> None:
+        text = "blended rate: $120\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.default_hourly_rate == pytest.approx(120.0)
+
+    def test_overhead_percent(self) -> None:
+        text = "overhead: 20%\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.overhead_rate == pytest.approx(0.20)
+
+    def test_overhead_fraction(self) -> None:
+        text = "overhead rate: 0.20\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.overhead_rate == pytest.approx(0.20)
+
+    def test_overhead_bare_number(self) -> None:
+        text = "overhead: 20\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.overhead_rate == pytest.approx(0.20)
+
+    def test_currency(self) -> None:
+        text = "currency: EUR\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.currency == "EUR"
+
+    def test_currency_usd(self) -> None:
+        text = "currency: USD\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.currency == "USD"
+
+    # -- Task-level bullet patterns -------------------------------------------
+
+    def test_task_fixed_cost(self) -> None:
+        text = "Task 1:\n- Design phase\n- Fixed cost: $5000\n- Size: M"
+        project = self.parser.parse(text)
+        assert project.tasks[0].fixed_cost == pytest.approx(5000.0)
+
+    def test_task_fixed_cost_one_time(self) -> None:
+        text = "Task 1:\n- Licence\n- one-time cost: 2500\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.tasks[0].fixed_cost == pytest.approx(2500.0)
+
+    def test_task_fixed_cost_no_currency_symbol(self) -> None:
+        text = "Task 1:\n- Setup\n- fixed cost: 1000\n- Size: XS"
+        project = self.parser.parse(text)
+        assert project.tasks[0].fixed_cost == pytest.approx(1000.0)
+
+    def test_task_no_fixed_cost_by_default(self) -> None:
+        text = "Task 1:\n- Work\n- Size: M"
+        project = self.parser.parse(text)
+        assert project.tasks[0].fixed_cost is None
+
+    # -- Resource-level bullet patterns ---------------------------------------
+
+    def test_resource_hourly_rate(self) -> None:
+        text = "Resource 1: Alice\n- Rate: $200/hour\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.resources[0].hourly_rate == pytest.approx(200.0)
+
+    def test_resource_hourly_rate_bare(self) -> None:
+        text = "Resource 1: Bob\n- hourly rate: 180\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.resources[0].hourly_rate == pytest.approx(180.0)
+
+    def test_resource_cost_per_hour(self) -> None:
+        text = "Resource 1: Carol\n- cost: $150/h\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.resources[0].hourly_rate == pytest.approx(150.0)
+
+    def test_resource_costs_sentence(self) -> None:
+        text = "Resource 1: Alice\n- Alice costs $200/hour\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.resources[0].hourly_rate == pytest.approx(200.0)
+
+    def test_resource_no_hourly_rate_by_default(self) -> None:
+        text = "Resource 1: Alice\n- Experience: 3\nTask 1:\n- Work\n- Size: S"
+        project = self.parser.parse(text)
+        assert project.resources[0].hourly_rate is None
+
+    # -- YAML output ----------------------------------------------------------
+
+    def test_yaml_output_includes_cost_fields(self) -> None:
+        text = (
+            "Project name: Cost Project\n"
+            "hourly rate: $150\n"
+            "overhead: 20%\n"
+            "currency: EUR\n"
+            "Task 1:\n"
+            "- Design\n"
+            "- Fixed cost: $5000\n"
+            "- Size: M\n"
+            "Resource 1: Alice\n"
+            "- Rate: $200/hour\n"
+        )
+        project = self.parser.parse(text)
+        yaml_text = self.parser.to_yaml(project)
+        parsed = yaml.safe_load(yaml_text)
+        assert parsed["project"]["default_hourly_rate"] == pytest.approx(150.0)
+        assert parsed["project"]["overhead_rate"] == pytest.approx(0.20)
+        assert parsed["project"]["currency"] == "EUR"
+        assert parsed["tasks"][0]["fixed_cost"] == pytest.approx(5000.0)
+        assert parsed["resources"][0]["hourly_rate"] == pytest.approx(200.0)
+
+    def test_no_cost_fields_no_output(self) -> None:
+        text = "Project name: Simple\nTask 1:\n- Work\n- Size: M"
+        project = self.parser.parse(text)
+        yaml_text = self.parser.to_yaml(project)
+        parsed = yaml.safe_load(yaml_text)
+        assert "default_hourly_rate" not in parsed["project"]
+        assert "overhead_rate" not in parsed["project"]
+        assert "currency" not in parsed["project"]
+        assert "fixed_cost" not in parsed["tasks"][0]
