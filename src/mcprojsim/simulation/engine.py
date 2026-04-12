@@ -1,6 +1,7 @@
 """Monte Carlo simulation engine."""
 
 from collections import Counter
+from dataclasses import dataclass
 import logging
 import sys
 from typing import Any, Dict, Optional, TextIO
@@ -31,6 +32,24 @@ from mcprojsim.simulation.risk_evaluator import RiskEvaluator
 from mcprojsim.simulation.scheduler import TaskScheduler
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class TaskRunStaticData:
+    """Task-specific data that does not change within one simulation run."""
+
+    task: Task
+    resolved_estimate: TaskEstimate
+    hours_multiplier: float
+    uncertainty_multiplier: float
+
+
+@dataclass(frozen=True)
+class ProjectRunStaticData:
+    """Project-level cached inputs reused across all iterations in one run."""
+
+    task_data: tuple[TaskRunStaticData, ...]
+    task_ids: tuple[str, ...]
 
 
 class DurationCache:
@@ -156,6 +175,7 @@ class SimulationEngine:
         Returns:
             Simulation results
         """
+        static_data = self._build_project_run_static_data(project)
         use_two_pass = (
             self.config.constrained_scheduling.assignment_mode
             == ConstrainedSchedulingAssignmentMode.CRITICALITY_TWO_PASS
@@ -163,14 +183,18 @@ class SimulationEngine:
         )
 
         if use_two_pass:
-            return self._run_two_pass(project)
-        return self._run_single_pass(project)
+            return self._run_two_pass(project, static_data)
+        return self._run_single_pass(project, static_data)
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _run_single_pass(self, project: Project) -> SimulationResults:
+    def _run_single_pass(
+        self,
+        project: Project,
+        static_data: ProjectRunStaticData,
+    ) -> SimulationResults:
         """Run the standard (single-pass greedy) simulation."""
         scheduler = TaskScheduler(project, self.random_state, self.config)
         hours_per_day = project.project.hours_per_day
@@ -213,7 +237,7 @@ class SimulationEngine:
                 slack,
                 max_parallel,
                 constrained_diagnostics,
-            ) = self._run_iteration(project, scheduler, hours_per_day)
+            ) = self._run_iteration(project, scheduler, hours_per_day, static_data)
 
             project_durations[iteration] = duration
             max_parallel_overall = max(max_parallel_overall, max_parallel)
@@ -279,7 +303,11 @@ class SimulationEngine:
             task_costs_all=task_costs_all if cost_active else None,
         )
 
-    def _run_two_pass(self, project: Project) -> SimulationResults:
+    def _run_two_pass(
+        self,
+        project: Project,
+        static_data: ProjectRunStaticData,
+    ) -> SimulationResults:
         """Run two-pass criticality-aware constrained simulation."""
         hours_per_day = project.project.hours_per_day
         effective_p1_iters = min(
@@ -334,6 +362,7 @@ class SimulationEngine:
                 project,
                 pass1_scheduler,
                 hours_per_day,
+                static_data,
                 pass1_sampler,
                 pass1_risk_eval,
                 task_priority=None,
@@ -415,7 +444,7 @@ class SimulationEngine:
             if iteration < effective_p1_iters:
                 cached_durations = {
                     task_id: duration_cache.retrieve(iteration, task_id)
-                    for task_id in task_ci
+                    for task_id in static_data.task_ids
                 }
                 cached_cost_impacts: Dict[str, float] | None = (
                     cost_impact_cache.retrieve(iteration)
@@ -443,6 +472,7 @@ class SimulationEngine:
                 project,
                 pass2_scheduler,
                 hours_per_day,
+                static_data,
                 self.sampler,
                 self.risk_evaluator,
                 task_priority=task_ci,
@@ -832,7 +862,11 @@ class SimulationEngine:
         return total_cost, per_task
 
     def _run_iteration(
-        self, project: Project, scheduler: TaskScheduler, hours_per_day: float
+        self,
+        project: Project,
+        scheduler: TaskScheduler,
+        hours_per_day: float,
+        static_data: ProjectRunStaticData,
     ) -> tuple[
         float,
         Dict[str, float],
@@ -852,6 +886,7 @@ class SimulationEngine:
             project,
             scheduler,
             hours_per_day,
+            static_data,
             self.sampler,
             self.risk_evaluator,
         )
@@ -861,6 +896,7 @@ class SimulationEngine:
         project: Project,
         scheduler: TaskScheduler,
         hours_per_day: float,
+        static_data: ProjectRunStaticData,
         sampler: DistributionSampler,
         risk_evaluator: RiskEvaluator,
         task_priority: Dict[str, float] | None = None,
@@ -924,15 +960,12 @@ class SimulationEngine:
                 )
         else:
             # Sample and adjust task durations
-            for task in project.tasks:
-                estimate = self._resolve_estimate(task, project.project.distribution)
-                base_duration = sampler.sample(estimate)
-                unit = estimate.unit or EffortUnit.HOURS
-                base_duration_hours = convert_to_hours(
-                    base_duration, unit, hours_per_day
-                )
-                adjusted_duration = self._apply_uncertainty_factors(
-                    task, base_duration_hours
+            for task_static_data in static_data.task_data:
+                task = task_static_data.task
+                base_duration = sampler.sample(task_static_data.resolved_estimate)
+                base_duration_hours = base_duration * task_static_data.hours_multiplier
+                adjusted_duration = (
+                    base_duration_hours * task_static_data.uncertainty_multiplier
                 )
                 risk_impact, risk_cost_impact = risk_evaluator.evaluate_risks_with_cost(
                     task.risks, adjusted_duration, hours_per_day
@@ -1000,13 +1033,16 @@ class SimulationEngine:
         Returns:
             Adjusted duration
         """
+        return base_duration * self._resolve_uncertainty_multiplier(task)
+
+    def _resolve_uncertainty_multiplier(self, task: Task) -> float:
+        """Resolve the combined uncertainty multiplier for one task."""
         if not task.uncertainty_factors:
-            return base_duration
+            return 1.0
 
         multiplier = 1.0
         factors = task.uncertainty_factors
 
-        # Apply each uncertainty factor
         if factors.team_experience:
             multiplier *= self.config.get_uncertainty_multiplier(
                 "team_experience", factors.team_experience
@@ -1032,7 +1068,40 @@ class SimulationEngine:
                 "integration_complexity", factors.integration_complexity
             )
 
-        return base_duration * multiplier
+        return multiplier
+
+    def _build_project_run_static_data(
+        self,
+        project: Project,
+    ) -> ProjectRunStaticData:
+        """Precompute project-static task inputs for one simulation run."""
+        task_data: list[TaskRunStaticData] = []
+        task_ids: list[str] = []
+        hours_per_day = project.project.hours_per_day
+
+        for task in project.tasks:
+            resolved_estimate = self._resolve_estimate(
+                task, project.project.distribution
+            )
+            hours_multiplier = convert_to_hours(
+                1.0,
+                resolved_estimate.unit or EffortUnit.HOURS,
+                hours_per_day,
+            )
+            task_data.append(
+                TaskRunStaticData(
+                    task=task,
+                    resolved_estimate=resolved_estimate,
+                    hours_multiplier=hours_multiplier,
+                    uncertainty_multiplier=self._resolve_uncertainty_multiplier(task),
+                )
+            )
+            task_ids.append(task.id)
+
+        return ProjectRunStaticData(
+            task_data=tuple(task_data),
+            task_ids=tuple(task_ids),
+        )
 
     def _resolve_estimate(
         self, task: Task, project_distribution: DistributionType

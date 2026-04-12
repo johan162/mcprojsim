@@ -1771,6 +1771,83 @@ class TestSimulationEngine:
             float(np.percentile(results.durations, 99))
         )
 
+    def test_run_simulation_caches_static_task_inputs(self, monkeypatch):
+        """Static estimate resolution and uncertainty lookup happen once per task."""
+        config = Config.get_default().model_copy(deep=True)
+        call_counts = {
+            "resolve_t_shirt_size": 0,
+            "get_story_point": 0,
+            "get_uncertainty_multiplier": 0,
+        }
+
+        original_resolve_t_shirt_size = Config.resolve_t_shirt_size
+        original_get_story_point = Config.get_story_point
+        original_get_uncertainty_multiplier = Config.get_uncertainty_multiplier
+
+        def counting_resolve_t_shirt_size(self, size):
+            call_counts["resolve_t_shirt_size"] += 1
+            return original_resolve_t_shirt_size(self, size)
+
+        def counting_get_story_point(self, points):
+            call_counts["get_story_point"] += 1
+            return original_get_story_point(self, points)
+
+        def counting_get_uncertainty_multiplier(self, factor_name, level):
+            call_counts["get_uncertainty_multiplier"] += 1
+            return original_get_uncertainty_multiplier(self, factor_name, level)
+
+        monkeypatch.setattr(
+            Config, "resolve_t_shirt_size", counting_resolve_t_shirt_size
+        )
+        monkeypatch.setattr(Config, "get_story_point", counting_get_story_point)
+        monkeypatch.setattr(
+            Config,
+            "get_uncertainty_multiplier",
+            counting_get_uncertainty_multiplier,
+        )
+
+        project = Project(
+            project=ProjectMetadata(name="Cached Inputs", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="T-shirt task",
+                    estimate=TaskEstimate(t_shirt_size="M"),
+                    uncertainty_factors=UncertaintyFactors(
+                        team_experience="high",
+                        requirements_maturity=None,
+                        technical_complexity=None,
+                        team_distribution=None,
+                        integration_complexity=None,
+                    ),
+                ),
+                Task(
+                    id="task_002",
+                    name="Story-point task",
+                    estimate=TaskEstimate(story_points=5),
+                    uncertainty_factors=UncertaintyFactors(
+                        team_experience="medium",
+                        requirements_maturity=None,
+                        technical_complexity=None,
+                        team_distribution=None,
+                        integration_complexity=None,
+                    ),
+                ),
+            ],
+        )
+
+        engine = SimulationEngine(
+            iterations=6,
+            random_seed=42,
+            config=config,
+            show_progress=False,
+        )
+        engine.run(project)
+
+        assert call_counts["resolve_t_shirt_size"] == 1
+        assert call_counts["get_story_point"] == 1
+        assert call_counts["get_uncertainty_multiplier"] == 2
+
     def test_simulation_reproducibility(self, simple_project):
         """Test simulation reproducibility with same seed."""
         engine1 = SimulationEngine(iterations=10, random_seed=42, show_progress=False)

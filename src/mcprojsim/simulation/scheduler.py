@@ -54,6 +54,7 @@ class TaskScheduler:
         self.task_map = {task.id: task for task in project.tasks}
         self.random_state = random_state or np.random.RandomState()
         self.config = config or Config.get_default()
+        self._topological_order, self._successor_map = self._build_static_graph_data()
 
     @overload
     def schedule_tasks(
@@ -135,9 +136,8 @@ class TaskScheduler:
     ) -> Dict[str, Dict[str, Any]]:
         """Schedule tasks using dependency-only earliest-start logic."""
         schedule: Dict[str, Dict[str, Any]] = {}
-        sorted_tasks = self._topological_sort()
 
-        for task_id in sorted_tasks:
+        for task_id in self._topological_order:
             duration = task_durations[task_id]
             task = self.task_map[task_id]
 
@@ -184,9 +184,8 @@ class TaskScheduler:
                 When ``None`` the default greedy ID-order policy is used.
         """
         schedule: Dict[str, Dict[str, Any]] = {}
-        sorted_tasks = self._topological_sort()
 
-        remaining = set(sorted_tasks)
+        remaining = set(self._topological_order)
         active: list[tuple[float, str, list[str]]] = []
         current_time = 0.0
         resource_wait_time_hours = 0.0
@@ -735,12 +734,10 @@ class TaskScheduler:
 
         return total_capacity
 
-    def _topological_sort(self) -> List[str]:
-        """Perform topological sort using Kahn's algorithm.
-
-        Returns:
-            List of task IDs in topological order
-        """
+    def _build_static_graph_data(
+        self,
+    ) -> tuple[tuple[str, ...], Dict[str, tuple[str, ...]]]:
+        """Compute task graph data that stays constant for one scheduler instance."""
         # Calculate in-degree for each task
         in_degree: Dict[str, int] = {task.id: 0 for task in self.project.tasks}
         adjacency: Dict[str, List[str]] = {task.id: [] for task in self.project.tasks}
@@ -768,7 +765,12 @@ class TaskScheduler:
         if len(sorted_tasks) != len(self.project.tasks):
             raise ValueError("Circular dependency detected in project tasks")
 
-        return sorted_tasks
+        successor_map = {task_id: tuple(adjacency[task_id]) for task_id in sorted_tasks}
+        return tuple(sorted_tasks), successor_map
+
+    def _topological_sort(self) -> List[str]:
+        """Return the cached topological task order as a list."""
+        return list(self._topological_order)
 
     def calculate_slack(
         self, schedule: Dict[str, Dict[str, float]]
@@ -790,22 +792,16 @@ class TaskScheduler:
 
         project_end = max(info["end"] for info in schedule.values())
 
-        # Build successor map
-        successors: Dict[str, List[str]] = {tid: [] for tid in schedule}
-        for task in self.project.tasks:
-            for dep_id in task.dependencies:
-                if dep_id in successors:
-                    successors[dep_id].append(task.id)
-
         # Backward pass: compute latest start
         latest_start: Dict[str, float] = {}
-        for task_id in reversed(self._topological_sort()):
-            if not successors[task_id]:
+        for task_id in reversed(self._topological_order):
+            successors = self._successor_map[task_id]
+            if not successors:
                 # No successors: latest finish = project end
                 latest_start[task_id] = project_end - schedule[task_id]["duration"]
             else:
                 # LF = min(LS of successors), LS = LF - duration
-                min_succ_ls = min(latest_start[succ] for succ in successors[task_id])
+                min_succ_ls = min(latest_start[succ] for succ in successors)
                 latest_start[task_id] = min_succ_ls - schedule[task_id]["duration"]
 
         slack: Dict[str, float] = {}
