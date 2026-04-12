@@ -1541,6 +1541,51 @@ class TestSimulationEngineDistributionResolution:
         assert schedule["task_001"]["start"] == 24.0
         assert schedule["task_001"]["end"] == 32.0
 
+    def test_schedule_tasks_resource_constraints_use_custom_calendar_windows(self):
+        """Constrained mode should honor custom work hours and holidays."""
+        project = Project(
+            project=ProjectMetadata(
+                name="Custom Calendar",
+                start_date=date(2025, 1, 6),
+            ),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=1, high=1),
+                    resources=["res_a"],
+                )
+            ],
+            resources=[
+                {
+                    "name": "res_a",
+                    "experience_level": 2,
+                    "productivity_level": 1.0,
+                    "calendar": "short_week",
+                }
+            ],
+            calendars=[
+                {
+                    "id": "short_week",
+                    "work_hours_per_day": 6.0,
+                    "work_days": [1, 2, 3, 4, 5],
+                    "holidays": ["2025-01-07"],
+                }
+            ],
+        )
+
+        scheduler = TaskScheduler(project)
+        schedule = scheduler.schedule_tasks(
+            {"task_001": 12.0},
+            use_resource_constraints=True,
+            start_date=project.project.start_date,
+            hours_per_day=8.0,
+        )
+
+        # Monday 6h + Tuesday holiday + Wednesday 6h => end at hour 54.
+        assert schedule["task_001"]["start"] == 0.0
+        assert schedule["task_001"]["end"] == 54.0
+
     def test_get_critical_paths_returns_full_sequences(self):
         """Test tracing all full critical path sequences in a branching schedule."""
         project = Project(

@@ -1,5 +1,7 @@
 """Task scheduler with dependency and optional resource constraints."""
 
+from bisect import bisect_right
+from dataclasses import dataclass
 import logging
 import math
 from collections import deque
@@ -12,6 +14,29 @@ from mcprojsim.config import Config
 from mcprojsim.models.project import CalendarSpec, Project, ResourceSpec
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class ResourceCalendarState:
+    """Resolved per-resource calendar data reused within one iteration."""
+
+    resource: ResourceSpec
+    work_days: frozenset[int]
+    holidays: frozenset[date]
+    planned_absence: frozenset[date]
+    capacity_per_hour: float
+    work_end_hour: float
+
+
+@dataclass(frozen=True)
+class ResourceAvailabilityState:
+    """Per-iteration availability windows and lookup tables for one resource."""
+
+    calendar_state: ResourceCalendarState
+    sickness_absence: frozenset[date]
+    windows: tuple[tuple[float, float], ...]
+    starts: tuple[float, ...]
+    ends: tuple[float, ...]
 
 
 class TaskScheduler:
@@ -196,19 +221,26 @@ class TaskScheduler:
             for resource in self.project.resources
             if resource.name is not None
         }
+        all_resource_names = tuple(sorted(resource_map.keys()))
         free_resources = set(resource_map.keys())
 
         calendar_map = {calendar.id: calendar for calendar in self.project.calendars}
         default_calendar = calendar_map.get("default")
         if default_calendar is None:
-            # Materialise the fallback calendar once so _resolve_calendar never
-            # constructs a new Pydantic model per call (avoids ~1M allocations).
+            # Materialise the fallback calendar once for the iteration-local
+            # calendar state cache used by constrained scheduling.
             default_calendar = CalendarSpec(
                 id="default",
                 work_hours_per_day=hours_per_day,
                 work_days=[1, 2, 3, 4, 5],
                 holidays=[],
             )
+        resource_calendar_states = self._build_resource_calendar_states(
+            resource_map,
+            calendar_map,
+            default_calendar,
+            hours_per_day,
+        )
         horizon_days = self._estimate_sickness_horizon_days(
             task_durations,
             resource_map,
@@ -220,6 +252,13 @@ class TaskScheduler:
             horizon_days,
             calendar_map,
             default_calendar,
+            resource_calendar_states=resource_calendar_states,
+        )
+        resource_availability_states = self._build_resource_availability_states(
+            resource_calendar_states,
+            start_date,
+            horizon_days,
+            sickness_absence,
         )
 
         while remaining:
@@ -257,7 +296,7 @@ class TaskScheduler:
                 eligible_pool = (
                     [r for r in task.resources if r in resource_map]
                     if task.resources
-                    else sorted(resource_map.keys())
+                    else all_resource_names
                 )
 
                 eligible_free = [
@@ -293,12 +332,7 @@ class TaskScheduler:
                 actual_start = self._find_next_time_with_capacity(
                     current_time,
                     assigned,
-                    resource_map,
-                    calendar_map,
-                    default_calendar,
-                    sickness_absence,
-                    start_date,
-                    hours_per_day,
+                    resource_availability_states,
                 )
 
                 if actual_start is None:
@@ -312,12 +346,7 @@ class TaskScheduler:
                         actual_start,
                         task_durations[task_id],
                         assigned,
-                        resource_map,
-                        calendar_map,
-                        default_calendar,
-                        sickness_absence,
-                        start_date,
-                        hours_per_day,
+                        resource_availability_states,
                     )
                 )
                 calendar_delay_time_hours += execution_calendar_delay
@@ -359,13 +388,8 @@ class TaskScheduler:
         total_available_capacity = self._integrate_available_capacity(
             0.0,
             project_end,
-            sorted(resource_map.keys()),
-            resource_map,
-            calendar_map,
-            default_calendar,
-            sickness_absence,
-            start_date,
-            hours_per_day,
+            all_resource_names,
+            resource_availability_states,
         )
         utilization = (
             min(1.0, total_effort / total_available_capacity)
@@ -430,26 +454,35 @@ class TaskScheduler:
         horizon_days: int,
         calendar_map: Dict[str, CalendarSpec],
         default_calendar: CalendarSpec | None,
+        *,
+        resource_calendar_states: Dict[str, ResourceCalendarState] | None = None,
     ) -> Dict[str, Set[date]]:
         """Generate sickness absence days per resource for an iteration."""
         sickness_by_resource: Dict[str, Set[date]] = {
             name: set() for name in resource_map.keys()
         }
+        resolved_calendar_states = resource_calendar_states or (
+            self._build_resource_calendar_states(
+                resource_map,
+                calendar_map,
+                default_calendar,
+                self.project.project.hours_per_day,
+            )
+        )
 
         sickness_defaults = self.config.sprint_defaults.sickness
         mu = sickness_defaults.duration_log_mu
         sigma = sickness_defaults.duration_log_sigma
 
         for resource_name, resource in resource_map.items():
+            resource_calendar_state = resolved_calendar_states[resource_name]
             sickness_prob = self._resource_sickness_probability(resource)
             current_day = 0
             while current_day < horizon_days:
                 d = start_date + timedelta(days=current_day)
-                if self._is_resource_working_day(
-                    resource,
+                if self._is_resource_working_day_in_state(
+                    resource_calendar_state,
                     d,
-                    calendar_map,
-                    default_calendar,
                     preplanned_absence_only=True,
                 ):
                     if self.random_state.random() < sickness_prob:
@@ -495,6 +528,34 @@ class TaskScheduler:
             )
         return calendar
 
+    def _build_resource_calendar_states(
+        self,
+        resource_map: Dict[str, ResourceSpec],
+        calendar_map: Dict[str, CalendarSpec],
+        default_calendar: CalendarSpec | None,
+        hours_per_day: float,
+    ) -> Dict[str, ResourceCalendarState]:
+        """Resolve per-resource calendar attributes once for an iteration."""
+        resource_calendar_states: Dict[str, ResourceCalendarState] = {}
+
+        for resource_name, resource in resource_map.items():
+            calendar = self._resolve_calendar(
+                resource,
+                calendar_map,
+                default_calendar,
+                hours_per_day,
+            )
+            resource_calendar_states[resource_name] = ResourceCalendarState(
+                resource=resource,
+                work_days=frozenset(calendar.work_days),
+                holidays=frozenset(calendar.holidays),
+                planned_absence=frozenset(resource.planned_absence),
+                capacity_per_hour=resource.productivity_level * resource.availability,
+                work_end_hour=min(calendar.work_hours_per_day, 24.0),
+            )
+
+        return resource_calendar_states
+
     def _is_resource_working_day(
         self,
         resource: ResourceSpec,
@@ -506,135 +567,171 @@ class TaskScheduler:
         sickness_absence: Dict[str, Set[date]] | None = None,
     ) -> bool:
         """Check whether a date is a working day for a resource."""
-        calendar = self._resolve_calendar(
-            resource, calendar_map, default_calendar, self.project.project.hours_per_day
+        resource_name = resource.name or resource.id
+        if resource_name is None:
+            return False
+
+        calendar_state = self._build_resource_calendar_states(
+            {resource_name: resource},
+            calendar_map,
+            default_calendar,
+            self.project.project.hours_per_day,
+        )[resource_name]
+        sickness_days = (
+            sickness_absence.get(resource_name)
+            if sickness_absence is not None
+            else None
         )
+        return self._is_resource_working_day_in_state(
+            calendar_state,
+            d,
+            preplanned_absence_only=preplanned_absence_only,
+            sickness_absence=sickness_days,
+        )
+
+    def _is_resource_working_day_in_state(
+        self,
+        resource_calendar_state: ResourceCalendarState,
+        d: date,
+        *,
+        preplanned_absence_only: bool = False,
+        sickness_absence: Set[date] | frozenset[date] | None = None,
+    ) -> bool:
+        """Check whether a date is workable using cached calendar state."""
         weekday = d.weekday() + 1  # Monday=1
 
-        if weekday not in calendar.work_days:
+        if weekday not in resource_calendar_state.work_days:
             return False
-        if d in calendar.holidays:
+        if d in resource_calendar_state.holidays:
             return False
-        if d in resource.planned_absence:
+        if d in resource_calendar_state.planned_absence:
             return False
-        if not preplanned_absence_only and sickness_absence is not None:
-            if (
-                resource.name in sickness_absence
-                and d in sickness_absence[resource.name]
-            ):
-                return False
+        if (
+            not preplanned_absence_only
+            and sickness_absence is not None
+            and d in sickness_absence
+        ):
+            return False
         return True
+
+    def _build_resource_availability_states(
+        self,
+        resource_calendar_states: Dict[str, ResourceCalendarState],
+        start_date: date,
+        horizon_days: int,
+        sickness_absence: Dict[str, Set[date]],
+    ) -> Dict[str, ResourceAvailabilityState]:
+        """Build per-resource availability windows for one iteration."""
+        resource_availability_states: Dict[str, ResourceAvailabilityState] = {}
+
+        for resource_name, calendar_state in resource_calendar_states.items():
+            windows: list[tuple[float, float]] = []
+            sickness_days = frozenset(sickness_absence.get(resource_name, set()))
+
+            for current_day in range(horizon_days):
+                current_date = start_date + timedelta(days=current_day)
+                if not self._is_resource_working_day_in_state(
+                    calendar_state,
+                    current_date,
+                    sickness_absence=sickness_days,
+                ):
+                    continue
+
+                start_hour = current_day * 24.0
+                end_hour = start_hour + calendar_state.work_end_hour
+                if end_hour > start_hour:
+                    windows.append((start_hour, end_hour))
+
+            resource_availability_states[resource_name] = ResourceAvailabilityState(
+                calendar_state=calendar_state,
+                sickness_absence=sickness_days,
+                windows=tuple(windows),
+                starts=tuple(start for start, _ in windows),
+                ends=tuple(end for _, end in windows),
+            )
+
+        return resource_availability_states
+
+    @staticmethod
+    def _resource_has_capacity_at_time(
+        resource_availability_state: ResourceAvailabilityState,
+        t: float,
+    ) -> bool:
+        """Return whether a resource is available at time ``t``."""
+        idx = bisect_right(resource_availability_state.starts, t) - 1
+        return idx >= 0 and t < resource_availability_state.ends[idx] - 1e-9
+
+    @staticmethod
+    def _next_resource_change_after(
+        resource_availability_state: ResourceAvailabilityState,
+        t: float,
+    ) -> float | None:
+        """Return the next start or end boundary for one resource after ``t``."""
+        idx = bisect_right(resource_availability_state.starts, t) - 1
+        if idx >= 0 and t < resource_availability_state.ends[idx] - 1e-9:
+            return resource_availability_state.ends[idx]
+
+        next_idx = bisect_right(resource_availability_state.starts, t + 1e-9)
+        if next_idx < len(resource_availability_state.starts):
+            return resource_availability_state.starts[next_idx]
+        return None
 
     def _capacity_at_time(
         self,
         t: float,
-        assigned: list[str],
-        resource_map: Dict[str, ResourceSpec],
-        calendar_map: Dict[str, CalendarSpec],
-        default_calendar: CalendarSpec | None,
-        sickness_absence: Dict[str, Set[date]],
-        start_date: date,
-        hours_per_day: float,
+        assigned: list[str] | tuple[str, ...],
+        resource_availability_states: Dict[str, ResourceAvailabilityState],
     ) -> float:
         """Compute effective capacity (person-hours/clock-hour) at time t."""
-        day_index = int(math.floor(t / 24.0))
-        d = start_date + timedelta(days=day_index)
-        hour_of_day = t - day_index * 24.0
-        weekday = d.weekday() + 1  # Monday=1 — computed once for all resources
-
         capacity = 0.0
         for resource_name in assigned:
-            resource = resource_map[resource_name]
-            calendar = self._resolve_calendar(
-                resource, calendar_map, default_calendar, hours_per_day
-            )
-            if hour_of_day < 0 or hour_of_day >= calendar.work_hours_per_day:
-                continue
-            # Inline working-day check to avoid a second _resolve_calendar call
-            # that would happen inside _is_resource_working_day.
-            if weekday not in calendar.work_days:
-                continue
-            if d in calendar.holidays:
-                continue
-            if d in resource.planned_absence:
-                continue
-            if (
-                resource.name in sickness_absence
-                and d in sickness_absence[resource.name]
-            ):
-                continue
-            capacity += resource.productivity_level * resource.availability
-
+            resource_availability_state = resource_availability_states[resource_name]
+            if self._resource_has_capacity_at_time(resource_availability_state, t):
+                capacity += resource_availability_state.calendar_state.capacity_per_hour
         return capacity
-
-    @staticmethod
-    def _next_day_start(t: float) -> float:
-        """Return next day boundary in clock hours."""
-        day_index = int(math.floor(t / 24.0))
-        return (day_index + 1) * 24.0
 
     def _next_capacity_change(
         self,
         t: float,
-        assigned: list[str],
-        resource_map: Dict[str, ResourceSpec],
-        calendar_map: Dict[str, CalendarSpec],
-        default_calendar: CalendarSpec | None,
-        hours_per_day: float,
-    ) -> float:
-        """Find next time where capacity may change for assigned resources."""
-        day_index = int(math.floor(t / 24.0))
-        hour_of_day = t - day_index * 24.0
-
-        candidates = [self._next_day_start(t)]
-        for resource_name in assigned:
-            resource = resource_map[resource_name]
-            calendar = self._resolve_calendar(
-                resource, calendar_map, default_calendar, hours_per_day
+        assigned: list[str] | tuple[str, ...],
+        resource_availability_states: Dict[str, ResourceAvailabilityState],
+    ) -> float | None:
+        """Find the next time where assigned aggregate capacity may change."""
+        candidates = [
+            next_change
+            for resource_name in assigned
+            if (
+                next_change := self._next_resource_change_after(
+                    resource_availability_states[resource_name],
+                    t,
+                )
             )
-            start_of_day = day_index * 24.0
-            if hour_of_day < calendar.work_hours_per_day:
-                candidates.append(start_of_day + calendar.work_hours_per_day)
-
-        return min(c for c in candidates if c > t + 1e-9)
+            is not None
+        ]
+        if not candidates:
+            return None
+        return min(candidates)
 
     def _find_next_time_with_capacity(
         self,
         start_t: float,
         assigned: list[str],
-        resource_map: Dict[str, ResourceSpec],
-        calendar_map: Dict[str, CalendarSpec],
-        default_calendar: CalendarSpec | None,
-        sickness_absence: Dict[str, Set[date]],
-        start_date: date,
-        hours_per_day: float,
+        resource_availability_states: Dict[str, ResourceAvailabilityState],
     ) -> float | None:
         """Find next time point with non-zero available capacity."""
         t = start_t
         max_search_hours = 24.0 * 730.0  # Safety bound: ~2 years
         while t - start_t < max_search_hours:
-            if (
-                self._capacity_at_time(
-                    t,
-                    assigned,
-                    resource_map,
-                    calendar_map,
-                    default_calendar,
-                    sickness_absence,
-                    start_date,
-                    hours_per_day,
-                )
-                > 0
-            ):
+            if self._capacity_at_time(t, assigned, resource_availability_states) > 0:
                 return t
-            t = self._next_capacity_change(
+            next_change = self._next_capacity_change(
                 t,
                 assigned,
-                resource_map,
-                calendar_map,
-                default_calendar,
-                hours_per_day,
+                resource_availability_states,
             )
+            if next_change is None:
+                return None
+            t = next_change
         return None
 
     def _compute_task_end_with_calendars(
@@ -642,37 +739,26 @@ class TaskScheduler:
         start_t: float,
         effort_hours: float,
         assigned: list[str],
-        resource_map: Dict[str, ResourceSpec],
-        calendar_map: Dict[str, CalendarSpec],
-        default_calendar: CalendarSpec | None,
-        sickness_absence: Dict[str, Set[date]],
-        start_date: date,
-        hours_per_day: float,
+        resource_availability_states: Dict[str, ResourceAvailabilityState],
     ) -> tuple[float, float]:
-        """Integrate effort over time-varying resource capacity windows."""
+        """Integrate effort over cached resource-capacity windows."""
         remaining_effort = effort_hours
         t = start_t
         calendar_delay_hours = 0.0
 
         while remaining_effort > 1e-9:
-            cap = self._capacity_at_time(
-                t,
-                assigned,
-                resource_map,
-                calendar_map,
-                default_calendar,
-                sickness_absence,
-                start_date,
-                hours_per_day,
-            )
+            cap = self._capacity_at_time(t, assigned, resource_availability_states)
             next_change = self._next_capacity_change(
                 t,
                 assigned,
-                resource_map,
-                calendar_map,
-                default_calendar,
-                hours_per_day,
+                resource_availability_states,
             )
+
+            if next_change is None:
+                raise RuntimeError(
+                    "Resource-constrained scheduler exhausted precomputed capacity "
+                    "windows before task completion."
+                )
 
             if cap <= 0:
                 calendar_delay_hours += max(0.0, next_change - t)
@@ -694,13 +780,8 @@ class TaskScheduler:
         self,
         start_t: float,
         end_t: float,
-        resource_names: list[str],
-        resource_map: Dict[str, ResourceSpec],
-        calendar_map: Dict[str, CalendarSpec],
-        default_calendar: CalendarSpec | None,
-        sickness_absence: Dict[str, Set[date]],
-        start_date: date,
-        hours_per_day: float,
+        resource_names: list[str] | tuple[str, ...],
+        resource_availability_states: Dict[str, ResourceAvailabilityState],
     ) -> float:
         """Integrate available capacity (person-hours) over a timeline."""
         if end_t <= start_t:
@@ -712,21 +793,15 @@ class TaskScheduler:
             cap = self._capacity_at_time(
                 t,
                 resource_names,
-                resource_map,
-                calendar_map,
-                default_calendar,
-                sickness_absence,
-                start_date,
-                hours_per_day,
+                resource_availability_states,
             )
             next_change = self._next_capacity_change(
                 t,
                 resource_names,
-                resource_map,
-                calendar_map,
-                default_calendar,
-                hours_per_day,
+                resource_availability_states,
             )
+            if next_change is None:
+                break
             segment_end = min(end_t, next_change)
             dt = max(0.0, segment_end - t)
             total_capacity += cap * dt
