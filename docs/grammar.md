@@ -34,6 +34,12 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                        <start_date>
                        [<hours_per_day>]
                        [<currency>]
+                       [<default_hourly_rate>]
+                       [<overhead_rate>]
+                       [<secondary_currencies>]
+                       [<fx_conversion_cost>]
+                       [<fx_overhead_rate>]
+                       [<fx_rates>]
                        [<confidence_levels>]
                        [<probability_thresholds>]
                        [<project_distribution>]
@@ -46,6 +52,12 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 <start_date> ::= "start_date:" <date_string>
 <hours_per_day> ::= "hours_per_day:" <positive_number>
 <currency> ::= "currency:" <string>
+<default_hourly_rate> ::= "default_hourly_rate:" <non_negative_number>
+<overhead_rate> ::= "overhead_rate:" <non_negative_number>
+<secondary_currencies> ::= "secondary_currencies:" <string_list>
+<fx_conversion_cost> ::= "fx_conversion_cost:" <non_negative_number>
+<fx_overhead_rate> ::= "fx_overhead_rate:" <non_negative_number>
+<fx_rates> ::= "fx_rates:" <map>
 <confidence_levels> ::= "confidence_levels:" "[" <percentile_list> "]"
 <probability_thresholds> ::= [<red_threshold>] [<green_threshold>]
 <red_threshold> ::= "probability_red_threshold:" <probability>
@@ -75,6 +87,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                       [<task_priority>]
                       [<task_spillover_probability_override>]
                       [<task_risks>]
+                      [<task_fixed_cost>]
 
 <task_id> ::= "id:" <identifier>
 <task_name> ::= "name:" <string>
@@ -89,6 +102,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 <task_planning_story_points> ::= "planning_story_points:" <positive_integer>
 <task_priority> ::= "priority:" <integer>
 <task_spillover_probability_override> ::= "spillover_probability_override:" <probability>
+<task_fixed_cost> ::= "fixed_cost:" <number>
 
 # Estimates
 <estimate> ::= "estimate:" <estimate_spec>
@@ -141,19 +155,21 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                      <risk_probability>
                      <risk_impact>
                      [<risk_description>]
+                     [<risk_cost_impact>]
 
 <risk_id> ::= "id:" <identifier>
 <risk_name> ::= "name:" <string>
 <risk_probability> ::= "probability:" <probability>
 <risk_description> ::= "description:" <string>
+<risk_cost_impact> ::= "cost_impact:" <number>
 
 <risk_impact> ::= "impact:" <impact_spec>
 <impact_spec> ::= <fixed_impact>
                 | <percentage_impact>
                 | <absolute_impact>
 
-# Raw numeric risk impact is interpreted as hours
-<fixed_impact> ::= <positive_number>
+# Raw numeric risk impact is interpreted as hours; may be 0 or negative
+<fixed_impact> ::= <number>
 <percentage_impact> ::= "type:" "percentage"
                         "value:" <positive_number>
 <absolute_impact> ::= "type:" "absolute"
@@ -172,6 +188,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                          [<resource_productivity_level>]
                          [<resource_sickness_prob>]
                          [<resource_planned_absence>]
+                         [<resource_hourly_rate>]
 
 <resource_name> ::= "name:" <identifier>
 <legacy_resource_id> ::= "id:" <identifier>
@@ -181,6 +198,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 <resource_productivity_level> ::= "productivity_level:" <positive_number>
 <resource_sickness_prob> ::= "sickness_prob:" <probability>
 <resource_planned_absence> ::= "planned_absence:" <date_list>
+<resource_hourly_rate> ::= "hourly_rate:" <non_negative_number>
 
 <calendars_section> ::= "calendars:" <calendar_list>
 <calendar_list> ::= { <calendar> }
@@ -280,12 +298,14 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 <date_string> ::= <year> "-" <month> "-" <day>
 
 <positive_number> ::= <integer_gt_zero> | <float_gt_zero>
+<number> ::= <signed_integer> | <float>
 <non_negative_number> ::= <non_negative_integer> | <non_negative_float>
 <probability> ::= <float_between_0_and_1_inclusive>
 <probability_exclusive> ::= <float_between_0_and_1_exclusive>
 
 <positive_integer> ::= <integer_gt_zero>
 <non_negative_integer> ::= "0" | <integer_gt_zero>
+<signed_integer> ::= ["-"] <integer>
 
 <integer> ::= <digit> { <digit> }
 <integer_gt_zero> ::= <non_zero_digit> { <digit> }
@@ -331,6 +351,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                            | <staffing_config>
                            | <constrained_scheduling_config>
                            | <sprint_defaults_config>
+                           | <cost_config>
 
 <uncertainty_factors_config> ::= "uncertainty_factors:" <map>
 <t_shirt_sizes_config> ::= "t_shirt_sizes:" <map>
@@ -381,6 +402,12 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                                       ["duration_log_mu:" <float>]
                                       ["duration_log_sigma:" <positive_number>]
 
+<cost_config> ::= "cost:"
+                  ["default_hourly_rate:" <non_negative_number>]
+                  ["overhead_rate:" <non_negative_number>]
+                  ["currency:" <string>]
+                  ["include_in_output:" <boolean>]
+
 # Generic placeholders for map/list structures accepted by YAML/TOML.
 # Their semantic content is constrained by Pydantic models.
 <map> ::= mapping object
@@ -404,6 +431,13 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 8. `t_shirt_size_default_category`, when present, overrides the built-in program default but is itself overridden by a loaded config file or the `--tshirt-category` CLI flag.
 9. `project.uncertainty_factors`, when present, overrides built-in task-factor defaults.
 10. Config-file `uncertainty_factors` multipliers override project-file uncertainty factor assumptions.
+11. Cost-related project fields:
+   - `default_hourly_rate` must be `>= 0`
+   - `overhead_rate` must be in `[0.0, 3.0]`
+   - `secondary_currencies` may contain at most 5 entries
+   - `fx_conversion_cost` must be in `[0.0, 0.50]`
+   - `fx_overhead_rate` must be in `[0.0, 1.0]`
+   - `fx_rates` values must be positive
 
 ### Tasks and estimates
 
@@ -425,6 +459,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 8. `max_resources >= 1`.
 9. `min_experience_level` must be `1`, `2`, or `3`.
 10. `spillover_probability_override` must be in `[0.0, 1.0]`.
+11. `fixed_cost`, when present, is interpreted in project currency units and may be positive or negative.
 
 ### Uncertainty factors
 
@@ -448,6 +483,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 7. Resource `calendar` references must exist; when no calendars are defined, `default` is valid.
 8. Task `resources` entries must reference existing resources.
 9. If a task references named resources, each referenced resource must satisfy that task's `min_experience_level`.
+10. `hourly_rate`, when present, must be `>= 0` and overrides project-level `default_hourly_rate` for that resource.
 
 ### Sprint planning
 
@@ -470,10 +506,12 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 ### Risks
 
 1. `probability` must be in `[0.0, 1.0]`.
-2. Numeric `impact` is interpreted as hours.
-3. Absolute structured impact supports `type: absolute`, `value`, and optional `unit` (`hours`, `days`, `weeks`).
-4. Percentage impact supports `type: percentage` and `value`.
+2. Numeric `impact` is interpreted as hours; may be `0` (cost-only risk) or negative (time saving).
+3. Absolute structured impact supports `type: absolute`, `value` (must be `> 0`), and optional `unit` (`hours`, `days`, `weeks`).
+4. Percentage impact supports `type: percentage` and `value` (must be `> 0`).
 5. A global uniqueness constraint for risk IDs is not currently enforced by a dedicated validator.
+6. `cost_impact`, when present, may be positive (additional cost) or negative (cost saving / credit).
+7. `cost_impact` shares the same probability roll as the time `impact`.
 
 ### Config
 
@@ -483,6 +521,10 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 4. `sprint_defaults.sickness.probability_per_person_per_week` must be in `(0.0, 1.0)`.
 5. `sprint_defaults.sickness.duration_log_sigma` must be `> 0`.
 6. `sprint_defaults.sickness.duration_log_mu` is any real number.
+7. `cost.default_hourly_rate`, when present, must be `>= 0`.
+8. `cost.overhead_rate` must be in `[0.0, 3.0]`.
+9. `cost.currency` defaults to `"EUR"`.
+10. `cost.include_in_output` defaults to `true`; when `false`, cost sections are suppressed in output but cost calculations still run.
 
 ## Example Validation
 
@@ -624,5 +666,4 @@ Core implementation components:
 - Pydantic v2 model validation
 - PyYAML parsing
 - `tomllib` (Python built-in, 3.11+) for TOML reading; `tomli-w` for TOML writing
-
 

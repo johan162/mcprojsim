@@ -1,0 +1,109 @@
+# Customer Portal Rebuild — Project Brief
+#
+# This is a free-text project description that can be fed directly to
+# `mcprojsim generate`. Narrative lines are ignored by the parser; the
+# structured labels (Project name:, Start date:, Rate:, Resource N:, etc.)
+# are what get parsed into YAML.
+#
+# Intended to demonstrate that you can write a human-readable project brief
+# and still get a valid simulation input out of it.
+
+Project name: Customer Portal Rebuild
+Start date: 2026-07-01
+Currency: EUR
+Hourly rate: 130
+Overhead: 18%
+
+We are rebuilding the customer-facing portal for a mid-size financial
+services firm. The existing portal is a legacy monolith; the new one will
+be a React/FastAPI stack deployed on AWS. The engagement starts in July
+and the go-live target is Q4 2026.
+
+# ── Team ────────────────────────────────────────────────────────────────────
+
+Resource 1: Alice
+Alice is the lead architect and the most senior engineer on the project.
+- Experience: 3
+- Productivity: 1.1
+- Rate: €145/hour
+
+Resource 2: Bob
+Bob is a mid-level full-stack developer who has shipped two similar portals.
+- Experience: 2
+- Rate: €110/hour
+
+Resource 3: Carol
+Carol is a junior front-end developer; she joins the project part-time
+while wrapping up a previous engagement.
+- Experience: 1
+- Availability: 0.75
+- Rate: €75/hour
+
+# ── Work Breakdown ───────────────────────────────────────────────────────────
+
+Task 1: Discovery and Requirements
+Alice leads two weeks of stakeholder interviews, API contract negotiation,
+and architecture decisions. No handoff before this is done.
+- Estimate: 16/30/50 hours
+- Resources: Alice
+- Min experience: 3
+
+Task 2: Backend API Development
+The core REST API layer: authentication, account data, transaction history,
+and document storage endpoints. A third-party payment gateway integration
+adds uncertainty here.
+- Estimate: 60/120/200 hours
+- Depends on Task 1
+- Resources: Alice, Bob
+- Max resources: 2
+- Fixed cost: 3500
+- Risks:
+    Integration complexity higher than expected
+    Probability: 0.30
+    Impact: 2/4 days
+    Cost impact: 6000
+
+Task 3: Frontend Development
+React single-page application wired to the API. Bob and Carol pair on this
+while Alice is unblocked on backend tasks.
+- Estimate: 40/80/140 hours
+- Depends on Task 1
+- Resources: Bob, Carol
+- Max resources: 2
+- Fixed cost: 1800
+
+Task 4: Authentication and Security
+OAuth2/OIDC integration plus a penetration-testing pass. Experience level
+minimum is 3 — only Alice is qualified to lead this.
+- Estimate: 20/40/70 hours
+- Depends on Task 2
+- Resources: Alice
+- Risks:
+    Security audit requires rework
+    Probability: 0.25
+    Impact: 1/3 days
+    Cost impact: 4500
+
+Task 5: Integration Testing
+End-to-end test suites across the full stack. We schedule this after both
+frontend and security work are stable.
+- Estimate: 24/48/80 hours
+- Depends on Task 3, Task 4
+- Resources: Bob, Carol
+- Max resources: 2
+
+Task 6: UAT and Stakeholder Review
+Two-week sprint of user-acceptance testing with the client's key users,
+followed by a sign-off meeting.
+- Estimate: 16/24/40 hours
+- Depends on Task 5
+- Resources: Alice, Bob
+- Max resources: 2
+
+Task 7: Deployment and Go-Live
+Infrastructure provisioning, DNS cut-over, and hypercare support window.
+The one-time AWS setup fee is fixed at €2 200 regardless of effort.
+- Estimate: 8/16/24 hours
+- Depends on Task 6
+- Resources: Alice
+- Fixed cost: 2200

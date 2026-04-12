@@ -4,6 +4,7 @@ import csv
 import math
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from mcprojsim.analysis.staffing import StaffingAnalyzer
 from mcprojsim.config import Config
@@ -23,6 +24,7 @@ class CSVExporter:
         config: Config | None = None,
         critical_path_limit: int | None = None,
         sprint_results: SprintPlanningResults | None = None,
+        fx_provider: Any | None = None,
     ) -> None:
         """Export results to CSV file.
 
@@ -128,6 +130,48 @@ class CSVExporter:
                             f"{person_days} person-days",
                         ]
                     )
+                writer.writerow([])
+
+            # Write cost statistics
+            if results.costs is not None and (
+                config is None or effective_config.cost.include_in_output
+            ):
+                currency = results.currency or ""
+                writer.writerow(["Cost Statistics", ""])
+                if results.cost_mean is not None:
+                    writer.writerow(["cost_mean", f"{results.cost_mean:.2f}", currency])
+                if results.cost_std_dev is not None:
+                    writer.writerow(
+                        ["cost_std_dev", f"{results.cost_std_dev:.2f}", currency]
+                    )
+                for p, v in sorted((results.cost_percentiles or {}).items()):
+                    writer.writerow([f"cost_p{p}", f"{v:.2f}", currency])
+
+                # Write secondary currency costs
+                if fx_provider is not None and project is not None:
+                    import numpy as np
+
+                    sec_curs = list(project.project.secondary_currencies)
+                    if sec_curs:
+                        writer.writerow([])
+                        writer.writerow(
+                            ["secondary_currency_costs", "statistic", "value"]
+                        )
+                        for cur in sec_curs:
+                            cost_arr = fx_provider.convert_array(results.costs, cur)
+                            if cost_arr is None:
+                                writer.writerow([cur, "error", "rate_unavailable"])
+                                continue
+                            if results.cost_mean is not None:
+                                writer.writerow(
+                                    [cur, "mean", f"{float(np.mean(cost_arr)):.2f}"]
+                                )
+                            for p, v in sorted(
+                                (results.cost_percentiles or {}).items()
+                            ):
+                                pv = float(np.percentile(cost_arr, p))
+                                writer.writerow([cur, f"p{p}", f"{pv:.2f}"])
+
                 writer.writerow([])
 
             # Write critical path

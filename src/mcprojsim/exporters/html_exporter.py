@@ -32,6 +32,29 @@ except ImportError:
     MATPLOTLIB_AVAILABLE = False  # pyright: ignore[reportConstantRedefinition]
 
 
+_CURRENCY_SYMBOLS = {
+    "EUR": "€",
+    "USD": "$",
+    "GBP": "£",
+    "SEK": "kr",
+    "NOK": "kr",
+    "DKK": "kr",
+    "JPY": "¥",
+    "CNY": "¥",
+    "CHF": "Fr",
+    "AUD": "A$",
+    "CAD": "C$",
+}
+
+# Symbols that are conventionally placed after the number (e.g. "480,000 kr")
+_SUFFIX_SYMBOLS = {"kr", "Fr"}
+
+
+def _cost_currency_symbol(currency: str) -> str:
+    """Return a symbol for the currency code, falling back to the code itself."""
+    return _CURRENCY_SYMBOLS.get(currency.upper(), currency)
+
+
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -383,6 +406,190 @@ HTML_TEMPLATE = """
                     <td>P{{ p }}</td>
                     <td class="value-center">{{ person_hours }}</td>
                     <td class="value-center">{{ person_days }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% if cost_summary %}
+    <div class="stats-row">
+        <div class="section statistical-summary">
+            <h3>Cost Statistical Summary ({{ cost_summary.currency }})</h3>
+            <table>
+                <tr><td class="metric">Mean</td><td class="value">{{ cost_summary.mean }}</td></tr>
+                <tr><td class="metric">Median (P50)</td><td class="value">{{ cost_summary.median }}</td></tr>
+                <tr><td class="metric">Standard Deviation</td><td class="value">{{ cost_summary.std_dev }}</td></tr>
+                <tr><td class="metric">Minimum</td><td class="value">{{ cost_summary.min_val }}</td></tr>
+                <tr><td class="metric">Maximum</td><td class="value">{{ cost_summary.max_val }}</td></tr>
+                <tr><td class="metric">Coefficient of Variation</td><td class="value">{{ cost_summary.cv }}</td></tr>
+            </table>
+        </div>
+        <div class="section">
+            <h3>Cost Confidence Intervals</h3>
+            <table>
+                <thead>
+                    <tr><th>Percentile</th><th class="header-center">Amount</th></tr>
+                </thead>
+                <tbody>
+                    {% for p, amount in cost_summary.percentiles %}
+                    <tr class="{% if p in highlighted_percentiles %}highlight{% endif %}">
+                        <td>P{{ p }}</td>
+                        <td class="value-center">{{ amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if cost_summary.sensitivity %}
+    <div class="section">
+        <h3>Cost Sensitivity (top drivers)</h3>
+        <table>
+            <thead>
+                <tr><th>Task</th><th class="header-center">Correlation</th></tr>
+            </thead>
+            <tbody>
+                {% for task_id, corr in cost_summary.sensitivity %}
+                <tr><td>{{ task_id }}</td><td class="value-center">{{ corr }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    {% if cost_summary.secondary_currencies %}
+    <div class="section">
+      <h4 style="margin-bottom:0.5rem">Cost in Secondary Currencies</h4>
+      {% for sc in cost_summary.secondary_currencies %}
+        {% if sc.get('error') %}
+          <p style="color:#999">{{ sc.currency }}: exchange rate unavailable</p>
+        {% else %}
+          <p style="margin:0.25rem 0">
+            <strong>{{ sc.currency }}</strong>
+            — 1 {{ cost_summary.currency }} = {{ "%.3f"|format(sc.adjusted_rate) }} {{ sc.currency }}
+            {% if sc.fx_conversion_cost > 0 or sc.fx_overhead_rate > 0 %}
+              <small style="color:#666">
+                (official: {{ "%.3f"|format(sc.official_rate) }},
+                 bank: +{{ "%.1f"|format(sc.fx_conversion_cost * 100) }}%,
+                 overhead: +{{ "%.1f"|format(sc.fx_overhead_rate * 100) }}%)
+              </small>
+            {% endif %}
+          </p>
+          {% if sc.get('percentiles') %}
+          <table style="font-size:0.85em;margin:0.25rem 0 0.75rem 1rem">
+            <tr>
+              {% for p, v in sc.percentiles %}
+              <td style="padding:0 0.75rem 0 0"><strong>P{{ p }}</strong>: {{ v }}</td>
+              {% endfor %}
+            </tr>
+          </table>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if budget_confidence %}
+    <div class="stats-row">
+        <div class="section">
+            <h3>Budget Confidence Analysis</h3>
+            <p style="margin-bottom:0.75rem">Target: <strong>{{ budget_confidence.target_budget }}</strong></p>
+            <div style="margin-bottom:1rem">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                    <span style="font-size:1.5rem;font-weight:700;color:{{ budget_confidence.gauge_colour }}">
+                        {{ budget_confidence.probability_pct }}%
+                    </span>
+                    <span style="color:#666;font-size:0.9rem">
+                        probability within budget
+                        <span style="color:#999">(95% CI: {{ budget_confidence.ci_lo_pct }}%&ndash;{{ budget_confidence.ci_hi_pct }}%)</span>
+                    </span>
+                </div>
+                <div style="background:#e0e0e0;border-radius:4px;height:10px;margin-top:0.4rem;overflow:hidden">
+                    <div style="width:{{ budget_confidence.gauge_width_pct }}%;background:{{ budget_confidence.gauge_colour }};height:100%;border-radius:4px;transition:width 0.3s"></div>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Confidence</th><th class="header-center">Budget Required</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>50%</td><td class="value-center">{{ budget_confidence.budget_for_p50 }}</td></tr>
+                    <tr class="highlight"><td>80%</td><td class="value-center">{{ budget_confidence.budget_for_p80 }}</td></tr>
+                    <tr class="highlight"><td>90%</td><td class="value-center">{{ budget_confidence.budget_for_p90 }}</td></tr>
+                </tbody>
+            </table>
+            {% if budget_confidence.joint %}
+            <div style="margin-top:1rem;padding:0.75rem;background:#f5f5f5;border-radius:4px;font-size:0.9rem">
+                <strong>Joint Probability (on time &amp; within budget):</strong>
+                {{ budget_confidence.joint.joint_pct }}%
+                <span style="color:#999;margin-left:0.5rem">
+                    (duration: {{ budget_confidence.joint.duration_pct }}%,
+                     budget: {{ budget_confidence.joint.budget_pct }}%)
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        {% if cost_cdf_image %}
+        <div class="section">
+            <h3>Cost Distribution (S-Curve)</h3>
+            <div style="text-align:center">
+                <img src="data:image/png;base64,{{ cost_cdf_image }}" alt="Cost CDF" style="max-width:100%;height:auto">
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if cost_histogram_image %}
+    <div class="section">
+        <h3>Cost Distribution</h3>
+        <div style="text-align: center;">
+            <img src="data:image/png;base64,{{ cost_histogram_image }}" alt="Cost Distribution" style="max-width: 100%; height: auto;">
+        </div>
+    </div>
+    {% endif %}
+
+    {% if cost_sensitivity_image %}
+    <div class="section">
+        <h3>Cost Sensitivity Analysis (Tornado Chart)</h3>
+        <div style="text-align: center;">
+            <img src="data:image/png;base64,{{ cost_sensitivity_image }}" alt="Cost Sensitivity Tornado Chart" style="max-width: 100%; height: auto;">
+        </div>
+        <div style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #FF9800; border-radius: 4px;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.5;">
+                <strong>About Cost Sensitivity:</strong> Spearman rank correlation between each task's
+                cost and the total project cost. Higher absolute values indicate tasks whose cost variability
+                has the greatest influence on overall project cost uncertainty.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if task_cost_breakdown %}
+    <div class="section">
+        <h3>Cost Breakdown by Task</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Task</th>
+                    <th class="header-center">Mean Cost</th>
+                    <th class="header-center">Std Dev</th>
+                    <th class="header-center">Min</th>
+                    <th class="header-center">Max</th>
+                    <th class="header-center">% of Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in task_cost_breakdown %}
+                <tr>
+                    <td>{{ row.task_id }}</td>
+                    <td class="value-center">{{ row.mean }}</td>
+                    <td class="value-center">{{ row.std_dev }}</td>
+                    <td class="value-center">{{ row.min_val }}</td>
+                    <td class="value-center">{{ row.max_val }}</td>
+                    <td class="value-center">{{ row.pct_of_total }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -914,6 +1121,9 @@ class HTMLExporter:
         critical_path_limit: int | None = None,
         sprint_results: SprintPlanningResults | None = None,
         include_historic_base: bool = False,
+        fx_provider: Any | None = None,
+        target_budget: float | None = None,
+        target_hours: float | None = None,
     ) -> None:
         """Export results to HTML file.
 
@@ -923,6 +1133,8 @@ class HTMLExporter:
             project: Original project data (optional, for enhanced effort display)
             config: Active simulation configuration (optional, for T-shirt sizing display)
             critical_path_limit: Maximum number of critical path sequences to include
+            target_budget: Optional budget target for budget confidence card
+            target_hours: Optional duration target (hours) for joint probability
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -987,6 +1199,29 @@ class HTMLExporter:
         sprint_burnup_image = HTMLExporter._generate_sprint_burnup_image(sprint_results)
         historic_base = build_historic_base(project) if include_historic_base else None
         historic_base_image = HTMLExporter._generate_historic_base_image(historic_base)
+
+        cost_summary = HTMLExporter._compute_cost_summary(
+            results,
+            effective_config,
+            fx_provider=fx_provider,
+            secondary_currencies=(
+                list(project.project.secondary_currencies)
+                if project is not None
+                else None
+            ),
+        )
+
+        budget_confidence = HTMLExporter._compute_budget_confidence(
+            results, effective_config, target_budget, target_hours
+        )
+        cost_cdf_image = HTMLExporter._generate_cost_cdf_image(results, target_budget)
+        cost_histogram_image = HTMLExporter._generate_cost_histogram_image(
+            results, effective_config
+        )
+        cost_sensitivity_image = HTMLExporter._generate_cost_sensitivity_image(results)
+        task_cost_breakdown = HTMLExporter._compute_task_cost_breakdown(
+            results, effective_config
+        )
 
         # Prepare schedule slack data (sorted by slack ascending, hours ceiled)
         schedule_slack = (
@@ -1074,6 +1309,12 @@ class HTMLExporter:
             risk_impact_data=risk_impact_data,
             max_parallel_tasks=results.max_parallel_tasks,
             effort_stats=HTMLExporter._compute_effort_stats(results),
+            cost_summary=cost_summary,
+            budget_confidence=budget_confidence,
+            cost_cdf_image=cost_cdf_image,
+            cost_histogram_image=cost_histogram_image,
+            cost_sensitivity_image=cost_sensitivity_image,
+            task_cost_breakdown=task_cost_breakdown,
             sprint_summary=sprint_context,
             sprint_burnup_image=sprint_burnup_image,
             historic_base=HTMLExporter._format_historic_base_for_template(
@@ -1115,6 +1356,449 @@ class HTMLExporter:
             "kurtosis": float(scipy_stats.kurtosis(effort)) if std_dev > 0 else 0.0,
             "mean_working_days": math.ceil(mean / results.hours_per_day),
         }
+
+    @staticmethod
+    def _compute_cost_summary(
+        results: SimulationResults,
+        config: Config,
+        fx_provider: Any | None = None,
+        secondary_currencies: list[str] | None = None,
+    ) -> dict[str, Any] | None:
+        """Compute cost summary context for the HTML template.
+
+        Returns a dict ready for template rendering, or None when cost data is
+        absent or config.cost.include_in_output is False.
+        """
+        if results.costs is None or not config.cost.include_in_output:
+            return None
+
+        currency = results.currency or ""
+        sym = _cost_currency_symbol(currency)
+
+        def fmt(v: float) -> str:
+            if not sym:
+                return f"{v:,.0f} {currency}".strip()
+            if sym in _SUFFIX_SYMBOLS:
+                return f"{v:,.0f} {sym}"
+            return f"{sym}{v:,.0f}"
+
+        mean = results.cost_mean or 0.0
+        std_dev = results.cost_std_dev or 0.0
+        percentiles_raw = results.cost_percentiles or {}
+        median = percentiles_raw.get(50, mean)
+        min_val = float(np.min(results.costs))
+        max_val = float(np.max(results.costs))
+        cv = std_dev / mean if mean > 0 else 0.0
+
+        sensitivity_pairs: list[tuple[str, str]] = []
+        if results.cost_analysis is not None:
+            top10 = sorted(
+                results.cost_analysis.sensitivity.items(),
+                key=lambda kv: abs(kv[1]),
+                reverse=True,
+            )[:10]
+            sensitivity_pairs = [(tid, f"{corr:+.4f}") for tid, corr in top10]
+
+        sc_data: list[dict[str, Any]] = []
+        if fx_provider is not None and secondary_currencies:
+            for cur in secondary_currencies:
+                info = fx_provider.rate_info(cur)
+                if info is None:
+                    sc_data.append({"currency": cur, "error": "rate_unavailable"})
+                    continue
+                adj_rate = info["adjusted_rate"]
+                cost_arr = fx_provider.convert_array(results.costs, cur)
+                entry: dict[str, Any] = {
+                    "currency": cur,
+                    "adjusted_rate": adj_rate,
+                    "official_rate": info["official_rate"],
+                    "fx_conversion_cost": info["fx_conversion_cost"],
+                    "fx_overhead_rate": info["fx_overhead_rate"],
+                    "source": info["source"],
+                }
+                if cost_arr is not None:
+                    entry["mean"] = fmt(float(np.mean(cost_arr)))
+                    entry["percentiles"] = [
+                        (p, fmt(float(np.percentile(cost_arr, p))))
+                        for p in sorted((results.cost_percentiles or {}).keys())
+                    ]
+                sc_data.append(entry)
+
+        return {
+            "currency": currency,
+            "mean": fmt(mean),
+            "median": fmt(median),
+            "std_dev": fmt(std_dev),
+            "min_val": fmt(min_val),
+            "max_val": fmt(max_val),
+            "cv": f"{cv*100:.1f}%",
+            "percentiles": [(p, fmt(v)) for p, v in sorted(percentiles_raw.items())],
+            "sensitivity": sensitivity_pairs,
+            "secondary_currencies": sc_data,
+        }
+
+    @staticmethod
+    def _compute_budget_confidence(
+        results: SimulationResults,
+        config: Config,
+        target_budget: float | None,
+        target_hours: float | None,
+    ) -> dict[str, Any] | None:
+        """Compute budget confidence context for the HTML template.
+
+        Returns a dict ready for template rendering, or None when no target
+        budget is set, cost data is absent, or include_in_output is False.
+        """
+        if (
+            results.costs is None
+            or target_budget is None
+            or not config.cost.include_in_output
+        ):
+            return None
+
+        currency = results.currency or ""
+        sym = _cost_currency_symbol(currency)
+
+        def fmt(v: float) -> str:
+            if not sym:
+                return f"{v:,.0f} {currency}".strip()
+            if sym in _SUFFIX_SYMBOLS:
+                return f"{v:,.0f} {sym}"
+            return f"{sym}{v:,.0f}"
+
+        prob = results.probability_within_budget(target_budget)
+        _, ci_lo, ci_hi = results.budget_confidence_interval(target_budget)
+        p50 = results.budget_for_confidence(0.50)
+        p80 = results.budget_for_confidence(0.80)
+        p90 = results.budget_for_confidence(0.90)
+
+        # Gauge colour based on probability
+        if prob >= 0.80:
+            gauge_colour = "#4CAF50"  # green
+        elif prob >= 0.60:
+            gauge_colour = "#FF9800"  # amber
+        else:
+            gauge_colour = "#F44336"  # red
+
+        ctx: dict[str, Any] = {
+            "target_budget": fmt(target_budget),
+            "currency": currency,
+            "probability_pct": f"{prob * 100:.1f}",
+            "ci_lo_pct": f"{ci_lo * 100:.1f}",
+            "ci_hi_pct": f"{ci_hi * 100:.1f}",
+            "gauge_colour": gauge_colour,
+            "gauge_width_pct": round(prob * 100, 1),
+            "budget_for_p50": fmt(p50),
+            "budget_for_p80": fmt(p80),
+            "budget_for_p90": fmt(p90),
+            "joint": None,
+        }
+
+        if target_hours is not None:
+            marginal_dur = float(np.mean(results.durations <= target_hours))
+            joint_prob = results.joint_probability(target_hours, target_budget)
+            ctx["joint"] = {
+                "joint_pct": f"{joint_prob * 100:.1f}",
+                "duration_pct": f"{marginal_dur * 100:.1f}",
+                "budget_pct": f"{prob * 100:.1f}",
+            }
+
+        return ctx
+
+    @staticmethod
+    def _generate_cost_cdf_image(
+        results: SimulationResults,
+        target_budget: float | None = None,
+    ) -> str:
+        """Generate a cost CDF (S-curve) chart as a base64-encoded PNG.
+
+        Returns an empty string when cost data is absent or matplotlib is
+        unavailable.
+        """
+        if results.costs is None or not MATPLOTLIB_AVAILABLE:
+            return ""
+
+        try:
+            costs_sorted = np.sort(results.costs)
+            n = len(costs_sorted)
+            cum_prob = np.arange(1, n + 1) / n
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(costs_sorted, cum_prob, color="#2196F3", linewidth=2)
+            ax.fill_between(costs_sorted, cum_prob, alpha=0.08, color="#2196F3")
+
+            currency = results.currency or ""
+            sym = _cost_currency_symbol(currency)
+
+            def fmt_x(v: float) -> str:
+                return f"{sym}{v:,.0f}" if sym else f"{v:,.0f}"
+
+            # Mark common confidence percentiles
+            for conf, colour in [
+                (0.50, "#9E9E9E"),
+                (0.80, "#FF9800"),
+                (0.90, "#F44336"),
+            ]:
+                bval = float(np.percentile(costs_sorted, conf * 100))
+                ax.axvline(
+                    bval,
+                    color=colour,
+                    linestyle=":",
+                    linewidth=1.5,
+                    alpha=0.8,
+                    label=f"P{int(conf*100)}: {fmt_x(bval)}",
+                )
+                ax.axhline(conf, color=colour, linestyle=":", linewidth=1.0, alpha=0.5)
+
+            # Mark target budget if provided
+            if target_budget is not None:
+                prob = float(np.mean(costs_sorted <= target_budget))
+                ax.axvline(
+                    target_budget,
+                    color="#E91E63",
+                    linestyle="--",
+                    linewidth=2,
+                    label=f"Budget {fmt_x(target_budget)} → {prob*100:.1f}%",
+                )
+                ax.axhline(
+                    prob, color="#E91E63", linestyle="--", linewidth=1.2, alpha=0.7
+                )
+                ax.scatter([target_budget], [prob], color="#E91E63", s=60, zorder=5)
+
+            x_label = f"Total Cost ({currency})" if currency else "Total Cost"
+            ax.set_xlabel(x_label, fontsize=12, fontweight="bold")
+            ax.set_ylabel("Cumulative Probability", fontsize=12, fontweight="bold")
+            ax.set_title(
+                "Cost Cumulative Distribution (S-Curve)",
+                fontsize=14,
+                fontweight="bold",
+                pad=20,
+            )
+            ax.set_ylim(0, 1)
+            from matplotlib.ticker import FuncFormatter as _FuncFormatter
+
+            ax.yaxis.set_major_formatter(_FuncFormatter(lambda y, _: f"{y*100:.0f}%"))
+            ax.legend(loc="lower right", framealpha=0.9, fontsize=10)
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+            plt.tight_layout()
+
+            from io import BytesIO as _BytesIO
+
+            buf = _BytesIO()
+            plt.savefig(buf, format="png", dpi=100, bbox_inches="tight")
+            plt.close(fig)
+            buf.seek(0)
+            return base64.b64encode(buf.read()).decode("utf-8")
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _generate_cost_histogram_image(
+        results: SimulationResults, config: Config
+    ) -> str:
+        """Generate a base64-encoded histogram of per-iteration total cost.
+
+        Returns an empty string when cost data is absent or matplotlib is
+        unavailable.
+        """
+        if results.costs is None or not MATPLOTLIB_AVAILABLE:
+            return ""
+
+        try:
+            costs = results.costs
+            counts, bin_edges = np.histogram(costs, bins=config.output.histogram_bins)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+            fig, ax = plt.subplots(figsize=(10, 6))
+
+            ax.bar(
+                bin_centers,
+                counts,
+                width=np.diff(bin_edges),
+                color="#FF9800",
+                alpha=0.7,
+                edgecolor="#E65100",
+                linewidth=1.5,
+            )
+
+            currency = results.currency or ""
+            sym = _cost_currency_symbol(currency)
+
+            cost_mean = results.cost_mean or float(np.mean(costs))
+            cost_median: float
+            if results.cost_percentiles is not None and 50 in results.cost_percentiles:
+                cost_median = results.cost_percentiles[50]
+            else:
+                cost_median = float(np.median(costs))
+
+            def fmt_label(v: float) -> str:
+                if sym and sym not in _SUFFIX_SYMBOLS:
+                    return f"{sym}{v:,.0f}"
+                if sym:
+                    return f"{v:,.0f} {sym}"
+                return f"{v:,.0f}"
+
+            ax.axvline(
+                cost_mean,
+                color="#FF5722",
+                linestyle="--",
+                linewidth=2,
+                label=f"Mean: {fmt_label(cost_mean)}",
+            )
+            ax.axvline(
+                cost_median,
+                color="#2196F3",
+                linestyle="--",
+                linewidth=2,
+                label=f"Median: {fmt_label(cost_median)}",
+            )
+
+            for p in [80, 90, 95]:
+                pval = (results.cost_percentiles or {}).get(p)
+                if pval is not None:
+                    ax.axvline(
+                        pval,
+                        color="#9E9E9E",
+                        linestyle=":",
+                        linewidth=1.5,
+                        alpha=0.7,
+                        label=f"P{p}: {fmt_label(pval)}",
+                    )
+
+            x_label = f"Total Cost ({currency})" if currency else "Total Cost"
+            ax.set_xlabel(x_label, fontsize=12, fontweight="bold")
+            ax.set_ylabel("Frequency", fontsize=12, fontweight="bold")
+            ax.set_title(
+                f"Cost Distribution ({results.iterations:,} simulations)",
+                fontsize=14,
+                fontweight="bold",
+                pad=20,
+            )
+            ax.legend(loc="upper right", framealpha=0.9, fontsize=10)
+            ax.grid(True, alpha=0.3, linestyle="--")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+            plt.tight_layout()
+
+            buffer = BytesIO()
+            plt.savefig(buffer, format="png", dpi=100, bbox_inches="tight")
+            plt.close(fig)
+            buffer.seek(0)
+
+            return base64.b64encode(buffer.read()).decode("utf-8")
+
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _generate_cost_sensitivity_image(results: SimulationResults) -> str:
+        """Generate a base64-encoded tornado chart for cost sensitivity.
+
+        Returns an empty string when cost analysis is absent or matplotlib is
+        unavailable.
+        """
+        if (
+            not MATPLOTLIB_AVAILABLE
+            or results.cost_analysis is None
+            or not results.cost_analysis.sensitivity
+        ):
+            return ""
+
+        try:
+            sorted_items = sorted(
+                results.cost_analysis.sensitivity.items(),
+                key=lambda x: abs(x[1]),
+            )
+            if len(sorted_items) > 15:
+                sorted_items = sorted_items[-15:]
+
+            task_ids = [item[0] for item in sorted_items]
+            correlations = [item[1] for item in sorted_items]
+
+            fig, ax = plt.subplots(figsize=(10, max(4, len(task_ids) * 0.4 + 1)))
+
+            colors = ["#FF9800" if c >= 0 else "#2196F3" for c in correlations]
+            y_pos = range(len(task_ids))
+            ax.barh(y_pos, correlations, color=colors, edgecolor="#333", linewidth=0.5)
+
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(task_ids, fontsize=10)
+            ax.set_xlabel("Spearman Rank Correlation", fontsize=12, fontweight="bold")
+            ax.set_title(
+                "Cost Sensitivity Analysis — Task Impact on Project Cost",
+                fontsize=14,
+                fontweight="bold",
+                pad=20,
+            )
+            ax.axvline(0, color="#333", linewidth=0.8)
+            ax.grid(True, axis="x", alpha=0.3, linestyle="--")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+
+            plt.tight_layout()
+
+            buffer = BytesIO()
+            plt.savefig(buffer, format="png", dpi=100, bbox_inches="tight")
+            plt.close(fig)
+            buffer.seek(0)
+
+            return base64.b64encode(buffer.read()).decode("utf-8")
+
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _compute_task_cost_breakdown(
+        results: SimulationResults,
+        config: Config,
+    ) -> list[dict[str, str]] | None:
+        """Compute per-task cost statistics for the HTML breakdown table.
+
+        Returns a list of dicts (one per task, sorted by mean cost descending),
+        or None when task cost data is absent or cost output is suppressed.
+        """
+        if (
+            results.task_costs is None
+            or results.costs is None
+            or not config.cost.include_in_output
+        ):
+            return None
+
+        currency = results.currency or ""
+        sym = _cost_currency_symbol(currency)
+
+        def fmt(v: float) -> str:
+            if not sym:
+                return f"{v:,.0f} {currency}".strip()
+            if sym in _SUFFIX_SYMBOLS:
+                return f"{v:,.0f} {sym}"
+            return f"{sym}{v:,.0f}"
+
+        total_mean = results.cost_mean or float(np.mean(results.costs))
+        rows: list[dict[str, Any]] = []
+        for task_id, arr in results.task_costs.items():
+            t_mean = float(np.mean(arr))
+            rows.append(
+                {
+                    "task_id": task_id,
+                    "mean": fmt(t_mean),
+                    "std_dev": fmt(float(np.std(arr))),
+                    "min_val": fmt(float(np.min(arr))),
+                    "max_val": fmt(float(np.max(arr))),
+                    "pct_of_total": (
+                        f"{t_mean / total_mean * 100:.1f}%" if total_mean > 0 else "—"
+                    ),
+                    "_sort_key": t_mean,
+                }
+            )
+
+        rows.sort(key=lambda r: r["_sort_key"], reverse=True)
+        for r in rows:
+            del r["_sort_key"]
+        return rows
 
     @staticmethod
     def _prepare_sprint_context(

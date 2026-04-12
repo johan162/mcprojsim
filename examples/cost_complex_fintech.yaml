@@ -1,0 +1,211 @@
+# cost_complex_fintech.yaml — Complex cost example: FinTech Payment Gateway
+#
+# Exercises cost features in a resource-constrained project with:
+#   - Five named resources with different hourly rates (SEK currency)
+#   - Overhead rate of 30% (financial services overhead)
+#   - Fixed costs: PCI-DSS audit, payment processor integration fee, HSM lease
+#   - Negative fixed cost: partner co-development credit
+#   - Risk cost impacts: fraud pattern trigger, API partner outage, compliance rework
+#   - Cost-only risks (no schedule impact): penalty clauses, insurance claims
+#   - Multiple dependency paths creating scheduling contention
+#   - No secondary currencies (tests single-currency path)
+#
+# Expected behaviour:
+#   - The PCI-DSS audit (25,000 kr) on compliance_review is the largest fixed cost
+#   - "fraud_spike" risk on monitoring task is cost-only (80,000 kr penalty)
+#   - Resource contention between backend tasks drives schedule variance
+#   - Overhead (30%) is substantial and will visibly inflate mean cost vs labor total
+
+project:
+  name: "NexPay Payment Gateway"
+  description: "PCI-DSS Level 1 compliant payment gateway with real-time fraud detection"
+  start_date: "2026-09-01"
+  hours_per_day: 8
+  default_hourly_rate: 900.0     # SEK per hour (fallback)
+  overhead_rate: 0.30
+  currency: "SEK"
+  confidence_levels: [50, 80, 90, 95]
+
+resources:
+  - name: "erik"
+    experience_level: 3
+    productivity_level: 1.15
+    hourly_rate: 1800.0   # principal architect
+
+  - name: "sofia"
+    experience_level: 3
+    productivity_level: 1.0
+    hourly_rate: 1400.0   # senior backend engineer
+
+  - name: "oscar"
+    experience_level: 2
+    productivity_level: 1.0
+    hourly_rate: 1100.0   # mid-level backend
+
+  - name: "hanna"
+    experience_level: 2
+    productivity_level: 0.95
+    hourly_rate: 1000.0   # mid-level frontend
+
+  - name: "nils"
+    experience_level: 1
+    productivity_level: 0.85
+    hourly_rate: 700.0    # junior QA engineer
+
+tasks:
+  - id: "architecture"
+    name: "System Architecture & Security Design"
+    estimate:
+      low: 60
+      expected: 100
+      high: 170
+      unit: hours
+    resources: ["erik"]
+    risks:
+      - id: "scope_creep"
+        name: "Payment network adds new compliance requirement"
+        probability: 0.15
+        impact:
+          type: absolute
+          value: 30
+          unit: hours
+        cost_impact: 45000  # external security consultant engagement
+
+  - id: "payment_core"
+    name: "Payment Processing Core"
+    estimate:
+      low: 150
+      expected: 250
+      high: 420
+      unit: hours
+    dependencies: ["architecture"]
+    resources: ["erik", "sofia"]
+    max_resources: 2
+    fixed_cost: 15000.0    # payment processor sandbox + integration fee
+    risks:
+      - id: "api_breaking"
+        name: "Payment processor API breaking change"
+        probability: 0.20
+        impact:
+          type: absolute
+          value: 40
+          unit: hours
+        cost_impact: 20000  # rushed rework + overtime
+
+  - id: "fraud_engine"
+    name: "Real-Time Fraud Detection Engine"
+    estimate:
+      low: 100
+      expected: 180
+      high: 300
+      unit: hours
+    dependencies: ["architecture"]
+    resources: ["sofia", "oscar"]
+    max_resources: 2
+    fixed_cost: -35000.0   # partner co-development credit from ML vendor
+
+  - id: "merchant_portal"
+    name: "Merchant Self-Service Portal"
+    estimate:
+      low: 80
+      expected: 130
+      high: 210
+      unit: hours
+    dependencies: ["payment_core"]
+    resources: ["hanna", "oscar"]
+    max_resources: 2
+
+  - id: "settlement"
+    name: "Settlement & Reconciliation Engine"
+    estimate:
+      low: 90
+      expected: 160
+      high: 260
+      unit: hours
+    dependencies: ["payment_core"]
+    resources: ["sofia"]
+    risks:
+      - id: "bank_format"
+        name: "Bank file format discrepancy"
+        probability: 0.25
+        impact:
+          type: percentage
+          value: 20
+
+  - id: "monitoring"
+    name: "Transaction Monitoring & Alerting"
+    estimate:
+      low: 50
+      expected: 90
+      high: 150
+      unit: hours
+    dependencies: ["fraud_engine", "settlement"]
+    resources: ["oscar", "nils"]
+    max_resources: 2
+    risks:
+      - id: "fraud_spike"
+        name: "Fraud pattern triggers regulatory notification"
+        probability: 0.10
+        impact: 0              # no schedule impact
+        cost_impact: 80000     # cost-only: regulatory penalty + investigation
+
+  - id: "compliance_review"
+    name: "PCI-DSS Level 1 Compliance Review"
+    estimate:
+      low: 40
+      expected: 70
+      high: 120
+      unit: hours
+    dependencies: ["payment_core", "fraud_engine", "monitoring"]
+    resources: ["erik", "nils"]
+    max_resources: 2
+    fixed_cost: 25000.0    # external PCI-DSS QSA audit fee
+    risks:
+      - id: "audit_fail"
+        name: "Audit findings require remediation"
+        probability: 0.30
+        impact:
+          type: absolute
+          value: 50
+          unit: hours
+        cost_impact: 18000  # re-audit + consultant remediation
+
+  - id: "load_test"
+    name: "Load Testing & Performance Tuning"
+    estimate:
+      low: 40
+      expected: 65
+      high: 110
+      unit: hours
+    dependencies: ["merchant_portal", "monitoring"]
+    resources: ["nils", "oscar"]
+    max_resources: 2
+    fixed_cost: 8000.0     # cloud load-testing infrastructure
+
+  - id: "go_live"
+    name: "Go-Live Deployment & Cutover"
+    estimate:
+      low: 30
+      expected: 50
+      high: 85
+      unit: hours
+    dependencies: ["compliance_review", "load_test"]
+    resources: ["erik", "sofia", "oscar"]
+    max_resources: 3
+    fixed_cost: 12000.0    # HSM production lease + key ceremony
+
+project_risks:
+  - id: "partner_outage"
+    name: "Payment network partner extended outage"
+    probability: 0.10
+    impact:
+      type: absolute
+      value: 40
+      unit: hours
+    cost_impact: 50000     # SLA penalty + customer compensation
+
+  - id: "insurance_claim"
+    name: "Cyber insurance deductible trigger"
+    probability: 0.05
+    impact: 0              # no schedule impact — pure cost event
+    cost_impact: 120000    # insurance deductible

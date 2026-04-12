@@ -516,7 +516,7 @@ The parser handles this correctly, and `mcprojsim` resolves each estimate type u
 
 ## What is NOT supported in NL input
 
-- **Task-level risks** and **uncertainty factors** — add these to the YAML after generation
+- **Uncertainty factors** — add these to the YAML after generation
 - **Project-level risks** — add manually to YAML
 - **Circular dependency detection** — caught later by `mcprojsim validate`
 - **Volatility-overlay and spillover calibration** — edit directly in YAML

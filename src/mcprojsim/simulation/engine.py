@@ -3,7 +3,7 @@
 from collections import Counter
 import logging
 import sys
-from typing import Dict, Optional, TextIO
+from typing import Any, Dict, Optional, TextIO
 
 import numpy as np
 
@@ -57,6 +57,33 @@ class DurationCache:
 
     def __len__(self) -> int:
         return len(self._cache)
+
+
+class CostImpactCache:
+    """Cache of per-task risk cost impacts from pass-1 for deterministic replay.
+
+    Without this cache, pass-2 would zero out all task-level cost impacts for
+    replayed iterations, causing cost underestimation when task risks carry a
+    ``cost_impact``. The cache pairs each replayed iteration with the cost
+    impacts computed by the same probability roll in pass-1, preserving the
+    correlation between schedule overruns and cost overruns.
+    """
+
+    def __init__(self) -> None:
+        self._cache: dict[int, Dict[str, float]] = {}
+
+    def store(self, iteration_idx: int, task_cost_impacts: Dict[str, float]) -> None:
+        """Store the per-task cost impact map for a given iteration."""
+        self._cache[iteration_idx] = dict(task_cost_impacts)
+
+    def retrieve(self, iteration_idx: int) -> Dict[str, float]:
+        """Return the cached per-task cost impact map; raises KeyError if missing."""
+        if iteration_idx not in self._cache:
+            raise KeyError(f"No cached cost impacts for iteration {iteration_idx}")
+        return self._cache[iteration_idx]
+
+    def __contains__(self, iteration_idx: object) -> bool:
+        return iteration_idx in self._cache
 
 
 class SimulationEngine:
@@ -168,6 +195,10 @@ class SimulationEngine:
         calendar_delay_time_all: list[float] = []
         last_reported_progress = -1
 
+        cost_active = self._cost_estimation_active(project)
+        project_costs_all: list[float] = []
+        task_costs_all: Dict[str, list[float]] = {task.id: [] for task in project.tasks}
+
         for iteration in range(self.iterations):
             (
                 duration,
@@ -176,6 +207,9 @@ class SimulationEngine:
                 critical_paths,
                 task_risk_impacts,
                 project_risk_impact,
+                task_risk_cost_impacts,
+                project_risk_cost_impact,
+                schedule,
                 slack,
                 max_parallel,
                 constrained_diagnostics,
@@ -198,6 +232,18 @@ class SimulationEngine:
             calendar_delay_time_all.append(
                 constrained_diagnostics["calendar_delay_time_hours"]
             )
+
+            if cost_active:
+                total_cost, per_task_cost = self._compute_iteration_costs(
+                    project,
+                    task_durations,
+                    task_risk_cost_impacts,
+                    project_risk_cost_impact,
+                    schedule,
+                )
+                project_costs_all.append(total_cost)
+                for task_id, tc in per_task_cost.items():
+                    task_costs_all[task_id].append(tc)
 
             for task_id, slack_val in slack.items():
                 task_slack_accum[task_id].append(slack_val)
@@ -229,6 +275,8 @@ class SimulationEngine:
             resource_wait_time_all,
             resource_utilization_all,
             calendar_delay_time_all,
+            project_costs_all=project_costs_all if cost_active else None,
+            task_costs_all=task_costs_all if cost_active else None,
         )
 
     def _run_two_pass(self, project: Project) -> SimulationResults:
@@ -261,6 +309,7 @@ class SimulationEngine:
         p1_resource_util: list[float] = []
         p1_calendar_delay: list[float] = []
         duration_cache = DurationCache()
+        cost_impact_cache = CostImpactCache()
 
         if self.show_progress:
             self.progress_stream.write("Pass 1: computing criticality indices\n")
@@ -275,6 +324,9 @@ class SimulationEngine:
                 _critical_paths,
                 _task_risk_impacts,
                 _proj_risk_impact,
+                task_risk_cost_impacts_p1,
+                _proj_risk_cost_impact,
+                _schedule,
                 _slack,
                 _max_parallel,
                 constrained_diagnostics,
@@ -296,9 +348,13 @@ class SimulationEngine:
                 constrained_diagnostics["calendar_delay_time_hours"]
             )
 
-            # Cache sampled durations for paired replay in pass-2
+            # Cache sampled durations and cost risk impacts for paired replay in
+            # pass-2. Cost impacts must be replayed alongside their corresponding
+            # durations so that cost overruns stay correlated with schedule
+            # overruns from the same iteration.
             for task_id, dur in task_durations.items():
                 duration_cache.store(iteration, task_id, dur)
+            cost_impact_cache.store(iteration, task_risk_cost_impacts_p1)
 
             if self.show_progress:
                 completed = iteration + 1
@@ -344,6 +400,10 @@ class SimulationEngine:
         resource_utilization_all: list[float] = []
         calendar_delay_time_all: list[float] = []
 
+        cost_active = self._cost_estimation_active(project)
+        project_costs_all: list[float] = []
+        task_costs_all: Dict[str, list[float]] = {task.id: [] for task in project.tasks}
+
         if self.show_progress:
             self.progress_stream.write("Pass 2: priority-ordered scheduling\n")
             self.progress_stream.flush()
@@ -357,8 +417,14 @@ class SimulationEngine:
                     task_id: duration_cache.retrieve(iteration, task_id)
                     for task_id in task_ci
                 }
+                cached_cost_impacts: Dict[str, float] | None = (
+                    cost_impact_cache.retrieve(iteration)
+                    if iteration in cost_impact_cache
+                    else None
+                )
             else:
                 cached_durations = None
+                cached_cost_impacts = None
 
             (
                 duration,
@@ -367,6 +433,9 @@ class SimulationEngine:
                 critical_paths,
                 task_risk_impacts,
                 project_risk_impact,
+                task_risk_cost_impacts,
+                project_risk_cost_impact,
+                schedule,
                 slack,
                 max_parallel,
                 constrained_diagnostics,
@@ -378,6 +447,7 @@ class SimulationEngine:
                 self.risk_evaluator,
                 task_priority=task_ci,
                 cached_task_durations=cached_durations,
+                cached_task_risk_cost_impacts=cached_cost_impacts,
             )
 
             project_durations[iteration] = duration
@@ -397,6 +467,19 @@ class SimulationEngine:
             calendar_delay_time_all.append(
                 constrained_diagnostics["calendar_delay_time_hours"]
             )
+
+            if cost_active:
+                total_cost, per_task_cost = self._compute_iteration_costs(
+                    project,
+                    task_durations,
+                    task_risk_cost_impacts,
+                    project_risk_cost_impact,
+                    schedule,
+                )
+                project_costs_all.append(total_cost)
+                for task_id, tc in per_task_cost.items():
+                    task_costs_all[task_id].append(tc)
+
             for task_id, slack_val in slack.items():
                 task_slack_accum[task_id].append(slack_val)
             for task_id in critical_path:
@@ -432,6 +515,8 @@ class SimulationEngine:
             resource_wait_time_all,
             resource_utilization_all,
             calendar_delay_time_all,
+            project_costs_all=project_costs_all if cost_active else None,
+            task_costs_all=task_costs_all if cost_active else None,
         )
 
         # Compute pass-delta traceability
@@ -501,6 +586,8 @@ class SimulationEngine:
         resource_wait_time_all: list[float],
         resource_utilization_all: list[float],
         calendar_delay_time_all: list[float],
+        project_costs_all: Optional[list[float]] = None,
+        task_costs_all: Optional[Dict[str, list[float]]] = None,
     ) -> SimulationResults:
         """Assemble a :class:`SimulationResults` from accumulated per-iteration data."""
         n_iterations = len(project_durations)
@@ -534,6 +621,19 @@ class SimulationEngine:
         else:
             effort_durations = project_durations.copy()
 
+        # Resolve cost arrays
+        costs_arr: Optional[np.ndarray] = None
+        task_costs_arrays: Optional[Dict[str, np.ndarray]] = None
+        resolved_currency: Optional[str] = None
+        if project_costs_all:
+            costs_arr = np.array(project_costs_all)
+            task_costs_arrays = (
+                {tid: np.array(v) for tid, v in task_costs_all.items()}
+                if task_costs_all is not None
+                else None
+            )
+            resolved_currency = project.project.currency or self.config.cost.currency
+
         results = SimulationResults(
             iterations=n_iterations,
             project_name=project.project.name,
@@ -563,17 +663,28 @@ class SimulationEngine:
             resource_wait_time_hours=float(np.mean(resource_wait_time_all)),
             resource_utilization=float(np.mean(resource_utilization_all)),
             calendar_delay_time_hours=float(np.mean(calendar_delay_time_all)),
+            costs=costs_arr,
+            task_costs=task_costs_arrays,
+            currency=resolved_currency,
         )
 
         results.calculate_statistics()
+        results.calculate_cost_statistics()
 
         for p in project.project.confidence_levels:
             results.percentile(p)
             results.effort_percentile(p)
+            if results.costs is not None:
+                results.cost_percentile(p)
 
         from mcprojsim.analysis.sensitivity import SensitivityAnalyzer
 
         results.sensitivity = SensitivityAnalyzer.calculate_correlations(results)
+
+        if results.costs is not None:
+            from mcprojsim.analysis.cost import CostAnalyzer
+
+            results.cost_analysis = CostAnalyzer().analyze(results)
 
         return results
 
@@ -612,6 +723,114 @@ class SimulationEngine:
             self.progress_stream.write(f"{message}\n")
         self.progress_stream.flush()
 
+    def _cost_estimation_active(self, project: Project) -> bool:
+        """Return True if any cost input is present in the project."""
+        meta = project.project
+        if meta.default_hourly_rate is not None and meta.default_hourly_rate > 0:
+            return True
+        if any(r.hourly_rate is not None for r in project.resources):
+            return True
+        if any(t.fixed_cost is not None for t in project.tasks):
+            return True
+        if any(
+            risk.cost_impact is not None
+            for task in project.tasks
+            for risk in task.risks
+        ):
+            return True
+        if any(r.cost_impact is not None for r in project.project_risks):
+            return True
+        return False
+
+    def _resolve_task_rate(
+        self,
+        task: Task,
+        schedule_entry: Dict[str, Any],
+        project: Project,
+    ) -> float:
+        """Return the effective hourly rate for one task.
+
+        In constrained mode, use the assigned resource's hourly_rate if present,
+        falling back to project default. For multi-resource tasks, return the
+        mean rate across assignees.
+
+        **Phase 1 simplifying assumption — equal-effort split**: each assignee
+        is assumed to contribute an equal share of the task's sampled duration.
+        The mean rate × total elapsed duration is mathematically equivalent to
+        (rate_i × duration/n) summed over n resources. This underestimates cost
+        when resources work in parallel (each for the full elapsed duration
+        rather than 1/n of it). Full per-resource contributed-hours tracking
+        is deferred to a later phase.
+
+        In dependency-only mode, always use project default_hourly_rate.
+
+        Returns 0.0 if no rate is configured anywhere.
+        """
+        assigned = schedule_entry.get("assigned", [])
+        default_rate = project.project.default_hourly_rate or 0.0
+        if assigned:
+            resource_map = {r.name: r for r in project.resources}
+            rates: list[float] = []
+            for name in assigned:
+                r = resource_map.get(name)
+                if r is not None and r.hourly_rate is not None:
+                    rates.append(float(r.hourly_rate))
+                else:
+                    rates.append(default_rate)
+            return float(np.mean(rates)) if rates else default_rate
+        return default_rate
+
+    def _compute_iteration_costs(
+        self,
+        project: Project,
+        task_durations: Dict[str, float],
+        task_risk_cost_impacts: Dict[str, float],
+        project_risk_cost_impact: float,
+        schedule: Dict[str, Dict[str, Any]],
+    ) -> tuple[float, Dict[str, float]]:
+        """Compute total project cost and per-task cost for one iteration.
+
+        Args:
+            project: Project definition
+            task_durations: Sampled task durations in hours
+            task_risk_cost_impacts: Per-task cost impacts from triggered risks
+            project_risk_cost_impact: Cost impact from project-level risks
+            schedule: Schedule dict with "assigned" key per task
+
+        Returns:
+            (total_cost, per_task_costs) where total_cost includes overhead.
+
+        Note:
+            ``per_task_costs`` contains labor + fixed + risk cost per task but
+            does **not** include overhead (overhead is a project-level markup
+            applied on top of total labor, not distributed back to individual
+            tasks). As a result, ``sum(per_task_costs.values()) < total_cost``
+            whenever ``overhead_rate > 0``.
+        """
+        meta = project.project
+        overhead_rate = meta.overhead_rate
+
+        total_labor = 0.0
+        total_fixed = 0.0
+        total_risk_cost = 0.0
+        per_task: Dict[str, float] = {}
+
+        for task in project.tasks:
+            rate = self._resolve_task_rate(task, schedule.get(task.id, {}), project)
+            labor = task_durations.get(task.id, 0.0) * rate
+            fixed = task.fixed_cost or 0.0
+            risk_c = task_risk_cost_impacts.get(task.id, 0.0)
+            per_task[task.id] = labor + fixed + risk_c
+            total_labor += labor
+            total_fixed += fixed
+            total_risk_cost += risk_c
+
+        total_risk_cost += project_risk_cost_impact
+
+        overhead = total_labor * overhead_rate
+        total_cost = total_labor + total_fixed + total_risk_cost + overhead
+        return total_cost, per_task
+
     def _run_iteration(
         self, project: Project, scheduler: TaskScheduler, hours_per_day: float
     ) -> tuple[
@@ -621,6 +840,9 @@ class SimulationEngine:
         list[tuple[str, ...]],
         Dict[str, float],
         float,
+        Dict[str, float],
+        float,
+        Dict[str, Dict[str, Any]],
         Dict[str, float],
         int,
         Dict[str, float],
@@ -643,6 +865,7 @@ class SimulationEngine:
         risk_evaluator: RiskEvaluator,
         task_priority: Dict[str, float] | None = None,
         cached_task_durations: Dict[str, float] | None = None,
+        cached_task_risk_cost_impacts: Dict[str, float] | None = None,
     ) -> tuple[
         float,
         Dict[str, float],
@@ -650,6 +873,9 @@ class SimulationEngine:
         list[tuple[str, ...]],
         Dict[str, float],
         float,
+        Dict[str, float],
+        float,
+        Dict[str, Dict[str, Any]],
         Dict[str, float],
         int,
         Dict[str, float],
@@ -666,7 +892,12 @@ class SimulationEngine:
             risk_evaluator: Risk evaluator to use for this iteration
             task_priority: Optional criticality-index map for priority ordering.
             cached_task_durations: When provided, use these task durations instead
-                of sampling (paired-replay for pass-2).
+                of sampling (paired-replay for pass-2). The cached durations
+                already include the task-level time risk impacts from pass-1.
+            cached_task_risk_cost_impacts: When provided alongside
+                cached_task_durations, restore the pass-1 task-level cost risk
+                impacts rather than zeroing them. This preserves the correlation
+                between schedule overruns and cost overruns in pass-2 replay.
 
         Returns:
             Tuple of (project_duration, task_durations, critical_path_tasks,
@@ -675,12 +906,22 @@ class SimulationEngine:
         """
         task_durations: Dict[str, float] = {}
         task_risk_impacts: Dict[str, float] = {}
+        task_risk_cost_impacts: Dict[str, float] = {}
 
         if cached_task_durations is not None:
             # Paired replay: reuse pass-1 sampled durations exactly.
+            # Time risk impacts are zeroed because they are already baked into
+            # the cached duration values. Cost risk impacts are restored from
+            # the pass-1 cache when available so that cost overruns stay
+            # correlated with the schedule overruns from the same iteration.
             for task in project.tasks:
                 task_durations[task.id] = cached_task_durations[task.id]
                 task_risk_impacts[task.id] = 0.0
+                task_risk_cost_impacts[task.id] = (
+                    cached_task_risk_cost_impacts.get(task.id, 0.0)
+                    if cached_task_risk_cost_impacts is not None
+                    else 0.0
+                )
         else:
             # Sample and adjust task durations
             for task in project.tasks:
@@ -693,12 +934,13 @@ class SimulationEngine:
                 adjusted_duration = self._apply_uncertainty_factors(
                     task, base_duration_hours
                 )
-                risk_impact = risk_evaluator.evaluate_risks(
+                risk_impact, risk_cost_impact = risk_evaluator.evaluate_risks_with_cost(
                     task.risks, adjusted_duration, hours_per_day
                 )
                 final_duration = adjusted_duration + risk_impact
                 task_durations[task.id] = final_duration
                 task_risk_impacts[task.id] = risk_impact
+                task_risk_cost_impacts[task.id] = risk_cost_impact
 
         # Schedule tasks (all durations in hours)
         use_resource_constraints = len(project.resources) > 0
@@ -722,8 +964,10 @@ class SimulationEngine:
         project_duration = max(info["end"] for info in schedule.values())
 
         # Apply project-level risks (impacts converted to hours)
-        project_risk_impact = risk_evaluator.evaluate_risks(
-            project.project_risks, project_duration, hours_per_day
+        project_risk_impact, project_risk_cost_impact = (
+            risk_evaluator.evaluate_risks_with_cost(
+                project.project_risks, project_duration, hours_per_day
+            )
         )
         project_duration += project_risk_impact
 
@@ -738,6 +982,9 @@ class SimulationEngine:
             critical_paths,
             task_risk_impacts,
             project_risk_impact,
+            task_risk_cost_impacts,
+            project_risk_cost_impact,
+            schedule,
             slack,
             max_parallel,
             constrained_diagnostics,

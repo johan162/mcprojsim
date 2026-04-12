@@ -2,7 +2,7 @@
 
 from datetime import date
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import (
     AliasChoices,
@@ -277,6 +277,14 @@ class Risk(BaseModel):
         description="Time penalty as float (hours) or RiskImpact object"
     )
     description: Optional[str] = None
+    cost_impact: Optional[float] = Field(
+        default=None,
+        description=(
+            "Monetary cost impact when this risk triggers. "
+            "Shares the same probability roll as the time impact. "
+            "May be negative to represent cost savings."
+        ),
+    )
 
     @field_validator("impact", mode="before")
     @classmethod
@@ -358,6 +366,13 @@ class Task(BaseModel):
         le=1.0,
     )
     risks: List[Risk] = Field(default_factory=list)
+    fixed_cost: Optional[float] = Field(
+        default=None,
+        description=(
+            "One-time monetary cost for this task, independent of effort duration. "
+            "May be negative to represent subsidies or credits."
+        ),
+    )
 
     @field_validator("min_experience_level")
     @classmethod
@@ -675,7 +690,41 @@ class ProjectMetadata(BaseModel):
         gt=0,
         description="Working hours per day (default 8)",
     )
-    currency: Optional[str] = Field(default="USD")
+    currency: Optional[str] = Field(
+        default=None,
+        description="ISO 4217 currency code for cost display. Falls back to config default when not set.",
+    )
+    default_hourly_rate: Optional[float] = Field(
+        default=None,
+        ge=0,
+        description="Blended hourly rate when no resource rates are given. Activates cost estimation.",
+    )
+    overhead_rate: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=3.0,
+        description="Fractional overhead markup on labor cost (e.g. 0.20 = 20%). Applied after all other cost components.",
+    )
+    secondary_currencies: List[str] = Field(
+        default_factory=list,
+        description="Up to 5 ISO 4217 codes for secondary display currencies (e.g. ['SEK', 'USD']).",
+    )
+    fx_conversion_cost: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=0.50,
+        description="Bank conversion spread fraction [0, 0.50] added to the official mid-market rate.",
+    )
+    fx_overhead_rate: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Additional overhead fraction [0, 1] for hedging or admin costs, applied on top of fx_conversion_cost.",
+    )
+    fx_rates: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Manual exchange rate overrides by ISO 4217 target code. Bypass live fetch; no markups applied.",
+    )
     confidence_levels: List[int] = Field(
         default_factory=lambda: list(DEFAULT_CONFIDENCE_LEVELS)
     )
@@ -713,6 +762,41 @@ class ProjectMetadata(BaseModel):
             raise ValueError(
                 f"Invalid date value: {v}. Must be a date object or ISO format string."
             )
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency(cls, v: Optional[str]) -> Optional[str]:
+        import re
+
+        if v is not None and not re.match(r"^[A-Z]{3}$", v):
+            import warnings
+
+            warnings.warn(
+                f"currency '{v}' does not look like a valid ISO 4217 code (expected 3 uppercase letters).",
+                UserWarning,
+                stacklevel=2,
+            )
+        return v
+
+    @field_validator("secondary_currencies")
+    @classmethod
+    def validate_secondary_currencies(cls, v: List[str]) -> List[str]:
+        import re
+        import warnings
+
+        if len(v) > 5:
+            raise ValueError(
+                f"secondary_currencies may contain at most 5 entries, got {len(v)}."
+            )
+        for code in v:
+            if not re.match(r"^[A-Z]{3}$", code):
+                warnings.warn(
+                    f"secondary_currencies entry '{code}' does not look like a valid "
+                    f"ISO 4217 code (expected 3 uppercase letters).",
+                    UserWarning,
+                    stacklevel=2,
+                )
+        return v
 
     @field_validator("t_shirt_size_default_category")
     @classmethod
@@ -1035,6 +1119,11 @@ class ResourceSpec(BaseModel):
     productivity_level: float = Field(default=1.0)
     sickness_prob: float = Field(default=0.0, ge=0.0, le=1.0)
     planned_absence: List[date] = Field(default_factory=list)
+    hourly_rate: Optional[float] = Field(
+        default=None,
+        ge=0,
+        description="Hourly cost rate for this resource. Overrides project-level default_hourly_rate.",
+    )
 
     @model_validator(mode="after")
     def normalize_name(self) -> "ResourceSpec":

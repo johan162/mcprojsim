@@ -165,6 +165,9 @@ class TestCli:
             critical_path_limit=None,
             sprint_results=None,
             include_historic_base=False,
+            fx_provider=None,
+            target_budget=None,
+            target_hours=None,
         ):
             captured["output_path"] = str(output_path)
             captured["project"] = project
@@ -1058,6 +1061,10 @@ class TestCli:
             sprint_results=None,
             project=None,
             include_historic_base=False,
+            full_cost_detail=False,
+            fx_provider=None,
+            target_budget=None,
+            target_hours=None,
         ):
             captured["json_sprint_results"] = sprint_results
             captured["json_project"] = project

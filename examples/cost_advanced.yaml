@@ -1,0 +1,206 @@
+# cost_advanced.yaml — Comprehensive example using ALL cost features together
+#
+# Key cost features used:
+#   - project.default_hourly_rate: $130/hr fallback for tasks with no assigned resource
+#   - project.overhead_rate: 18% markup on total labor cost
+#   - project.currency: "USD"
+#   - resource.hourly_rate: per-resource rates that OVERRIDE the default (alice $240, bob $160, carol $105)
+#   - task.fixed_cost (positive): software licenses, cloud setup fees
+#   - task.fixed_cost (negative): infrastructure credit / rebate on one task
+#   - Risks with time impact only, cost_impact only, or both simultaneously
+#   - confidence_levels: [50, 80, 90, 95]
+#
+# What to look for in the output:
+#   - Cost distribution (P50/P80/P90/P95) in USD with overhead included
+#   - Tasks assigned to alice are the most expensive per hour ($240/hr)
+#   - Tasks with no resource assignment use the $130/hr default rate
+#   - The -$5,000 cloud credit on "Cloud Infrastructure" reduces base cost every iteration
+#   - Risks with cost_impact only (no schedule impact) affect cost distribution but not duration
+#   - Risks with both impact and cost_impact shift both distributions simultaneously
+#   - Overhead of 18% applied to total labor in every iteration
+
+project:
+  name: "E-Commerce Platform Launch"
+  description: "Build and launch a new multi-vendor e-commerce platform from scratch"
+  start_date: "2026-08-01"
+  hours_per_day: 8
+  default_hourly_rate: 130.0
+  overhead_rate: 0.18
+  currency: "USD"
+  confidence_levels: [50, 80, 90, 95]
+
+resources:
+  - name: "alice"
+    experience_level: 3
+    productivity_level: 1.2
+    hourly_rate: 240.0  # Principal engineer / system architect — overrides default_hourly_rate
+
+  - name: "bob"
+    experience_level: 3
+    productivity_level: 1.0
+    hourly_rate: 160.0  # Senior full-stack engineer — overrides default_hourly_rate
+
+  - name: "carol"
+    experience_level: 2
+    productivity_level: 1.0
+    hourly_rate: 105.0  # Frontend engineer — overrides default_hourly_rate
+
+tasks:
+  - id: "discovery"
+    name: "Product Discovery & Architecture"
+    description: "Define product requirements, system architecture, and data model"
+    estimate:
+      low: 32
+      expected: 48
+      high: 80
+      unit: "hours"
+    resources: ["alice"]
+    # alice at $240/hr — most expensive phase but highest leverage
+
+  - id: "cloud-infra"
+    name: "Cloud Infrastructure Provisioning"
+    description: "Terraform AWS infrastructure: VPC, RDS, ECS, CDN, CI/CD pipelines"
+    estimate:
+      low: 24
+      expected: 40
+      high: 64
+      unit: "hours"
+    dependencies: ["discovery"]
+    resources: ["bob"]
+    fixed_cost: -5000.0  # AWS Activate startup credit offsets setup cost (negative = rebate)
+    risks:
+      - id: "region-quota"
+        name: "AWS Region Quota Limit"
+        description: "Account quota increase request delayed, blocking compute provisioning"
+        probability: 0.15
+        impact:
+          type: "absolute"
+          value: 16
+          unit: "hours"
+        # time impact only — no extra monetary cost, just schedule delay
+
+  - id: "catalog"
+    name: "Product Catalog & Search Service"
+    description: "Build product indexing, category tree, and Elasticsearch integration"
+    estimate:
+      low: 48
+      expected: 80
+      high: 140
+      unit: "hours"
+    dependencies: ["cloud-infra"]
+    resources: ["alice", "bob"]
+    max_resources: 2
+    fixed_cost: 4800.0  # annual Elasticsearch managed service license
+
+  - id: "checkout"
+    name: "Checkout & Payment Integration"
+    description: "Cart, order flow, Stripe payment gateway, and tax calculation"
+    estimate:
+      low: 56
+      expected: 96
+      high: 160
+      unit: "hours"
+    dependencies: ["catalog"]
+    resources: ["bob"]
+    fixed_cost: 1200.0  # Stripe Connect setup and compliance fee
+    risks:
+      - id: "pci-scope"
+        name: "PCI Scope Expansion"
+        description: "Auditor expands PCI DSS scope requiring additional controls"
+        probability: 0.20
+        impact:
+          type: "absolute"
+          value: 32
+          unit: "hours"
+        cost_impact: 9500.0  # external PCI QSA assessment surcharge
+
+  - id: "vendor-portal"
+    name: "Vendor Onboarding Portal"
+    description: "Multi-vendor dashboard: product listings, inventory, payouts"
+    estimate:
+      low: 40
+      expected: 72
+      high: 120
+      unit: "hours"
+    dependencies: ["cloud-infra"]
+    resources: ["bob", "carol"]
+    max_resources: 2
+
+  - id: "storefront"
+    name: "Customer Storefront (React)"
+    description: "Responsive storefront UI with product pages, search, and checkout flow"
+    estimate:
+      low: 64
+      expected: 112
+      high: 180
+      unit: "hours"
+    dependencies: ["catalog", "vendor-portal"]
+    resources: ["carol"]
+    risks:
+      - id: "design-rework"
+        name: "Design System Rework"
+        description: "Brand guidelines change mid-sprint requiring UI overhaul"
+        probability: 0.25
+        impact: 0  # no schedule effect — cost-only risk (contractor works in parallel)
+        cost_impact: 3200.0  # external design agency cost for revised assets
+
+  - id: "admin"
+    name: "Admin & Operations Dashboard"
+    description: "Order management, refunds, analytics, and content moderation tools"
+    estimate:
+      low: 32
+      expected: 56
+      high: 88
+      unit: "hours"
+    dependencies: ["checkout"]
+    # no resource assigned — uses project default_hourly_rate of $130/hr
+
+  - id: "qa"
+    name: "QA, Performance Testing & Security Audit"
+    description: "Full regression suite, load testing to 10k RPS, and OWASP audit"
+    estimate:
+      low: 40
+      expected: 64
+      high: 112
+      unit: "hours"
+    dependencies: ["storefront", "admin", "checkout"]
+    resources: ["alice", "carol"]
+    max_resources: 2
+    risks:
+      - id: "perf-regression"
+        name: "Performance Regression Under Load"
+        description: "Load test reveals database bottleneck requiring schema redesign"
+        probability: 0.30
+        impact:
+          type: "absolute"
+          value: 24
+          unit: "hours"
+        cost_impact: 5500.0  # database consultant and extra cloud capacity during remediation
+
+  - id: "launch"
+    name: "Launch Readiness & Go-Live"
+    description: "Final smoke tests, DNS cutover, runbook execution, and hypercare"
+    estimate:
+      low: 16
+      expected: 24
+      high: 40
+      unit: "hours"
+    dependencies: ["qa"]
+    resources: ["alice", "bob"]
+    max_resources: 2
+    risks:
+      - id: "launch-delay"
+        name: "Go-Live Delay"
+        description: "Critical bug discovered during final smoke test delays launch"
+        probability: 0.20
+        impact:
+          type: "absolute"
+          value: 16
+          unit: "hours"
+        cost_impact: 6000.0  # extended hypercare team and war-room infrastructure costs
+      - id: "early-launch"
+        name: "Ahead-of-Schedule Launch"
+        description: "All checks pass early; unused cloud reservation is refunded"
+        probability: 0.15
+        impact: 0  # no schedule effect — cost-only saving
+        cost_impact: -2000.0  # unused reserved-instance refund (negative = cost saving)

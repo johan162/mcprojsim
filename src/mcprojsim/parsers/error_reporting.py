@@ -955,6 +955,12 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "team_size",
             "t_shirt_size_default_category",
             "uncertainty_factors",
+            "default_hourly_rate",
+            "overhead_rate",
+            "secondary_currencies",
+            "fx_conversion_cost",
+            "fx_overhead_rate",
+            "fx_rates",
         }
 
     if len(path) == 2 and path[0] == "tasks" and isinstance(path[1], int):
@@ -972,6 +978,7 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "priority",
             "spillover_probability_override",
             "risks",
+            "fixed_cost",
         }
 
     if path == ("sprint_planning",):
@@ -1075,6 +1082,7 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
             "productivity_level",
             "sickness_prob",
             "planned_absence",
+            "hourly_rate",
         }
 
     if len(path) == 2 and path[0] == "calendars" and isinstance(path[1], int):
@@ -1122,10 +1130,10 @@ def _allowed_fields_for_path(path: LocationPath) -> set[str] | None:
         and path[2] == "risks"
         and isinstance(path[3], int)
     ):
-        return {"id", "name", "probability", "impact", "description"}
+        return {"id", "name", "probability", "impact", "description", "cost_impact"}
 
     if len(path) == 2 and path[0] == "project_risks" and isinstance(path[1], int):
-        return {"id", "name", "probability", "impact", "description"}
+        return {"id", "name", "probability", "impact", "description", "cost_impact"}
 
     if path and path[-1] == "impact":
         return {"type", "value", "unit"}

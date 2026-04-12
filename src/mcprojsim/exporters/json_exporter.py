@@ -41,6 +41,10 @@ class JSONExporter:
         sprint_results: SprintPlanningResults | None = None,
         project: Project | None = None,
         include_historic_base: bool = False,
+        full_cost_detail: bool = False,
+        fx_provider: Any = None,
+        target_budget: float | None = None,
+        target_hours: float | None = None,
     ) -> None:
         """Export results to JSON file.
 
@@ -49,6 +53,10 @@ class JSONExporter:
             output_path: Path to output file
             config: Active configuration
             critical_path_limit: Maximum number of critical path sequences to include
+            full_cost_detail: Include per-iteration task cost arrays (omitted by default)
+            fx_provider: Optional ExchangeRateProvider for secondary currency output
+            target_budget: Optional budget target for budget_analysis section
+            target_hours: Optional duration target (hours) for joint_analysis section
         """
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -60,6 +68,10 @@ class JSONExporter:
             sprint_results,
             project,
             include_historic_base,
+            full_cost_detail,
+            fx_provider,
+            target_budget,
+            target_hours,
         )
 
         with open(output_path, "w") as f:
@@ -73,6 +85,10 @@ class JSONExporter:
         sprint_results: SprintPlanningResults | None = None,
         project: Project | None = None,
         include_historic_base: bool = False,
+        full_cost_detail: bool = False,
+        fx_provider: Any = None,
+        target_budget: float | None = None,
+        target_hours: float | None = None,
     ) -> Dict[str, Any]:
         """Prepare data for JSON export.
 
@@ -193,6 +209,115 @@ class JSONExporter:
             },
             "staffing": JSONExporter._prepare_staffing_data(results, effective_config),
         }
+
+        if results.costs is not None and (
+            config is None or config.cost.include_in_output
+        ):
+            cost_section: Dict[str, Any] = {
+                "currency": results.currency or "?",
+                "mean": (
+                    round(float(results.cost_mean), 2)
+                    if results.cost_mean is not None
+                    else None
+                ),
+                "std_dev": (
+                    round(float(results.cost_std_dev), 2)
+                    if results.cost_std_dev is not None
+                    else None
+                ),
+                "percentiles": {
+                    str(p): round(v, 2)
+                    for p, v in (results.cost_percentiles or {}).items()
+                },
+                "overhead_rate": project.project.overhead_rate if project else None,
+            }
+            if results.task_costs and not full_cost_detail:
+                cost_section["task_costs"] = {
+                    task_id: {
+                        "mean": round(float(np.mean(arr)), 2),
+                        "p50": round(float(np.percentile(arr, 50)), 2),
+                        "p90": round(float(np.percentile(arr, 90)), 2),
+                    }
+                    for task_id, arr in results.task_costs.items()
+                }
+            elif results.task_costs and full_cost_detail:
+                cost_section["task_costs"] = {
+                    task_id: arr.tolist() for task_id, arr in results.task_costs.items()
+                }
+            if results.cost_analysis is not None:
+                cost_section["sensitivity"] = {
+                    k: round(v, 4) for k, v in results.cost_analysis.sensitivity.items()
+                }
+                cost_section["duration_correlation"] = round(
+                    results.cost_analysis.duration_correlation, 4
+                )
+            # Secondary currencies
+            if fx_provider is not None:
+                from mcprojsim.exchange_rates import ExchangeRateProvider as _ERP
+
+                _provider: _ERP = fx_provider
+                sec_list: list[Dict[str, Any]] = []
+                for target in list(_provider.requested_targets):
+                    info = _provider.rate_info(target)
+                    if info is None:
+                        sec_list.append(
+                            {"currency": target, "error": "rate_unavailable"}
+                        )
+                        continue
+                    adj = info["adjusted_rate"]
+                    mean_val = (
+                        round(float(results.cost_mean * adj), 2)
+                        if results.cost_mean is not None
+                        else None
+                    )
+                    pcts_sec = {
+                        str(p): round(v * adj, 2)
+                        for p, v in (results.cost_percentiles or {}).items()
+                    }
+                    sec_entry: Dict[str, Any] = {
+                        "currency": target,
+                        "official_rate": info["official_rate"],
+                        "adjusted_rate": info["adjusted_rate"],
+                        "fx_conversion_cost": info["fx_conversion_cost"],
+                        "fx_overhead_rate": info["fx_overhead_rate"],
+                        "source": info["source"],
+                        "fetched_at": info["fetched_at"],
+                        "mean": mean_val,
+                        "percentiles": pcts_sec,
+                    }
+                    sec_list.append(sec_entry)
+                cost_section["secondary_currencies"] = sec_list
+            data["cost"] = cost_section
+
+        # Budget confidence analysis (Phase 3)
+        if (
+            results.costs is not None
+            and target_budget is not None
+            and (config is None or config.cost.include_in_output)
+        ):
+            prob = results.probability_within_budget(target_budget)
+            _, ci_lo, ci_hi = results.budget_confidence_interval(target_budget)
+            budget_analysis: Dict[str, Any] = {
+                "target_budget": target_budget,
+                "currency": results.currency or "EUR",
+                "probability_within_budget": round(prob, 4),
+                "confidence_interval_95": [round(ci_lo, 4), round(ci_hi, 4)],
+                "budget_for_p50": round(results.budget_for_confidence(0.50), 2),
+                "budget_for_p80": round(results.budget_for_confidence(0.80), 2),
+                "budget_for_p90": round(results.budget_for_confidence(0.90), 2),
+            }
+            if target_hours is not None:
+                marginal_duration = float(np.mean(results.durations <= target_hours))
+                budget_analysis["joint_analysis"] = {
+                    "target_hours": round(target_hours, 2),
+                    "target_budget": target_budget,
+                    "joint_probability": round(
+                        results.joint_probability(target_hours, target_budget), 4
+                    ),
+                    "marginal_duration_probability": round(marginal_duration, 4),
+                    "marginal_budget_probability": round(prob, 4),
+                }
+            data["budget_analysis"] = budget_analysis
 
         if sprint_results is not None:
             sprint_payload: Dict[str, Any] = JSONExporter._prepare_sprint_data(

@@ -1,0 +1,125 @@
+# cost_constrained.yaml — Demonstrates cost estimation WITH named resources
+#
+# Key cost features used:
+#   - resource.hourly_rate: each of three resources has a distinct rate
+#       Senior (alice): $220/hr — architect / tech lead
+#       Mid-level (bob): $150/hr — backend engineer
+#       Junior (carol): $95/hr  — frontend / QA engineer
+#   - project.overhead_rate: 20% markup on labor (no default_hourly_rate — rates come from resources)
+#   - project.currency: "USD"
+#   - task.fixed_cost: one-time enterprise software license fee
+#   - risk.cost_impact: project-level risk representing a compliance re-work cost
+#   - Resource-constrained scheduling activates automatically when resources are defined
+#
+# What to look for in the output:
+#   - Per-task labor cost reflects the assigned resource's rate, not a blended rate
+#   - alice's tasks cost more per hour than carol's, driving visible budget differences
+#   - The $12,000 software license fixed cost is added to every iteration for "Platform Setup"
+#   - When the "Security Audit Failure" risk triggers (~25%), an extra $8,000 compliance
+#     re-work cost is added to the total
+#   - 20% overhead applied on total labor across all iterations
+
+project:
+  name: "Platform Migration"
+  description: "Migrate monolithic Django app to a microservices platform on Kubernetes"
+  start_date: "2026-07-01"
+  hours_per_day: 8
+  overhead_rate: 0.20
+  currency: "USD"
+  confidence_levels: [50, 80, 90, 95]
+
+resources:
+  - name: "alice"
+    experience_level: 3
+    productivity_level: 1.2
+    hourly_rate: 220.0  # Senior architect / tech lead
+
+  - name: "bob"
+    experience_level: 2
+    productivity_level: 1.0
+    hourly_rate: 150.0  # Mid-level backend engineer
+
+  - name: "carol"
+    experience_level: 1
+    productivity_level: 0.9
+    hourly_rate: 95.0  # Junior frontend / QA engineer
+
+tasks:
+  - id: "discovery"
+    name: "Architecture Discovery & Domain Mapping"
+    description: "Audit the monolith, identify service boundaries, produce ADRs"
+    estimate:
+      low: 24
+      expected: 40
+      high: 64
+      unit: "hours"
+    resources: ["alice"]
+
+  - id: "platform"
+    name: "Platform Setup"
+    description: "Provision Kubernetes cluster, service mesh, observability stack, and CI/CD"
+    estimate:
+      low: 32
+      expected: 48
+      high: 80
+      unit: "hours"
+    dependencies: ["discovery"]
+    resources: ["alice", "bob"]
+    max_resources: 2
+    fixed_cost: 12000.0  # enterprise Kubernetes management software license
+
+  - id: "auth-service"
+    name: "Auth Service Extraction"
+    description: "Extract authentication and authorisation into a standalone service"
+    estimate:
+      low: 40
+      expected: 72
+      high: 120
+      unit: "hours"
+    dependencies: ["platform"]
+    resources: ["bob"]
+
+  - id: "data-service"
+    name: "Data Access Service Extraction"
+    description: "Decompose ORM layer into a dedicated data service with gRPC API"
+    estimate:
+      low: 48
+      expected: 88
+      high: 160
+      unit: "hours"
+    dependencies: ["platform"]
+    resources: ["alice", "bob"]
+    max_resources: 2
+
+  - id: "frontend"
+    name: "Frontend API Client Migration"
+    description: "Update React app to consume new microservice endpoints"
+    estimate:
+      low: 32
+      expected: 56
+      high: 96
+      unit: "hours"
+    dependencies: ["auth-service", "data-service"]
+    resources: ["carol"]
+
+  - id: "cutover"
+    name: "Traffic Cutover & Stabilisation"
+    description: "Blue/green deployment, traffic shifting, and post-cutover monitoring"
+    estimate:
+      low: 16
+      expected: 24
+      high: 48
+      unit: "hours"
+    dependencies: ["frontend"]
+    resources: ["alice", "bob", "carol"]
+    max_resources: 2
+    risks:
+      - id: "security-audit-fail"
+        name: "Security Audit Failure"
+        description: "Penetration test reveals critical vulnerabilities requiring rework"
+        probability: 0.25
+        impact:
+          type: "absolute"
+          value: 40
+          unit: "hours"
+        cost_impact: 8000.0  # external security remediation / compliance re-work cost

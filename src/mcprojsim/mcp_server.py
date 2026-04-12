@@ -149,6 +149,7 @@ def _format_simulation_output(
     yaml_str: str,
     results: "SimulationResults",
     critical_path_limit: int,
+    target_budget: float | None = None,
 ) -> str:
     """Render simulation output in the same MCP-friendly text layout."""
     hours_per_day = results.hours_per_day
@@ -228,6 +229,33 @@ def _format_simulation_output(
         lines.append(f"  Pass-1 Iterations: {two_pass_trace.pass1_iterations}")
         lines.append(f"  Assignment Mode: {two_pass_trace.assignment_mode}")
         lines.append(f"  P80 Delta: {two_pass_trace.delta_p80_hours:+.2f} hours")
+
+    # Cost summary
+    cost_mean = getattr(results, "cost_mean", None)
+    cost_pcts = getattr(results, "cost_percentiles", None) or {}
+    currency = getattr(results, "currency", None) or "EUR"
+    if cost_mean is not None:
+        lines.append("")
+        lines.append(f"Cost Summary ({currency}):")
+        lines.append(f"  Mean: {currency} {cost_mean:,.0f}")
+        for p in sorted(cost_pcts.keys()):
+            lines.append(f"  P{p}: {currency} {cost_pcts[p]:,.0f}")
+
+    # Budget confidence analysis
+    costs = getattr(results, "costs", None)
+    if costs is not None and target_budget is not None:
+        prob = results.probability_within_budget(target_budget)
+        _, ci_lo, ci_hi = results.budget_confidence_interval(target_budget)
+        p80 = results.budget_for_confidence(0.80)
+        p90 = results.budget_for_confidence(0.90)
+        lines.append("")
+        lines.append(f"Budget Analysis (target: {currency} {target_budget:,.0f}):")
+        lines.append(
+            f"  Probability within budget: {prob*100:.1f}%"
+            f" (95% CI: {ci_lo*100:.1f}%\u2013{ci_hi*100:.1f}%)"
+        )
+        lines.append(f"  Budget for 80% confidence: {currency} {p80:,.0f}")
+        lines.append(f"  Budget for 90% confidence: {currency} {p90:,.0f}")
 
     return "\n".join(lines)
 
@@ -470,6 +498,7 @@ def simulate_project(
     two_pass: bool = False,
     pass1_iterations: Optional[int] = None,
     critical_paths_limit: Optional[int] = None,
+    target_budget: float | None = None,
 ) -> str:
     """Generate a project file from a description and run a Monte Carlo simulation.
 
@@ -494,6 +523,8 @@ def simulate_project(
         two_pass: Enable criticality-two-pass scheduling for constrained mode.
         pass1_iterations: Optional pass-1 iteration override for two-pass mode.
         critical_paths_limit: Optional critical path report limit override.
+        target_budget: Optional budget target; when set, includes probability of
+            staying within this budget and budgets required for P80/P90 confidence.
 
     Returns:
         Simulation results summary including the generated YAML,
@@ -527,7 +558,9 @@ def simulate_project(
     )
     results = engine.run(project)
     critical_path_limit = critical_paths_limit or cfg.output.critical_path_report_limit
-    return _format_simulation_output(yaml_str, results, critical_path_limit)
+    return _format_simulation_output(
+        yaml_str, results, critical_path_limit, target_budget
+    )
 
 
 @mcp.tool()
@@ -541,11 +574,25 @@ def simulate_project_yaml(
     two_pass: bool = False,
     pass1_iterations: Optional[int] = None,
     critical_paths_limit: Optional[int] = None,
+    target_budget: float | None = None,
 ) -> str:
     """Run a simulation directly from existing YAML content.
 
     This is useful when MCP clients already maintain project YAML and only need
     validation/simulation controls without NL regeneration.
+
+    Args:
+        project_yaml: Full project YAML content as a string.
+        iterations: Number of simulation iterations (default 10000).
+        seed: Optional random seed for reproducible results.
+        config_yaml: Optional YAML configuration content (as a string).
+        velocity_model: Optional sprint velocity model override.
+        no_sickness: Disable sprint sickness modeling.
+        two_pass: Enable criticality-two-pass scheduling.
+        pass1_iterations: Optional pass-1 iteration override.
+        critical_paths_limit: Optional critical path report limit override.
+        target_budget: Optional budget target; when set, includes budget
+            confidence analysis in the output.
     """
     from mcprojsim.simulation import SimulationEngine
 
@@ -575,7 +622,9 @@ def simulate_project_yaml(
     )
     results = engine.run(project)
     critical_path_limit = critical_paths_limit or cfg.output.critical_path_report_limit
-    return _format_simulation_output(project_yaml, results, critical_path_limit)
+    return _format_simulation_output(
+        project_yaml, results, critical_path_limit, target_budget
+    )
 
 
 @mcp.tool()

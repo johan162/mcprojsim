@@ -1,0 +1,105 @@
+project:
+  name: "Data Platform Build"
+  start_date: "2026-06-01"
+  confidence_levels: [50, 80, 90, 95]
+  default_hourly_rate: 150
+  overhead_rate: 0.2
+  currency: EUR
+
+tasks:
+  - id: "task_001"
+    name: "Requirements and Architecture"
+    estimate:
+      low: 20
+      expected: 40
+      high: 70
+      unit: "hours"
+    dependencies: []
+    resources: ["Alice"]
+    min_experience_level: 3
+
+  - id: "task_002"
+    name: "Data Ingestion Pipeline"
+    estimate:
+      low: 60
+      expected: 100
+      high: 180
+      unit: "hours"
+    dependencies: ["task_001"]
+    resources: ["Alice", "Bob"]
+    max_resources: 2
+    fixed_cost: 4000
+
+  - id: "task_003"
+    name: "Data Transformation Layer"
+    description: "Risks:"
+    estimate:
+      low: 40
+      expected: 80
+      high: 140
+      unit: "hours"
+    dependencies: ["task_002"]
+    resources: ["Bob", "Carol"]
+    max_resources: 2
+
+  - id: "task_004"
+    name: "Analytics Dashboard"
+    estimate:
+      low: 30
+      expected: 60
+      high: 100
+      unit: "hours"
+    dependencies: ["task_003"]
+    resources: ["Carol", "Bob"]
+    max_resources: 2
+    fixed_cost: 2500
+
+  - id: "task_005"
+    name: "Security Hardening"
+    description: "Risks:"
+    estimate:
+      low: 16
+      expected: 32
+      high: 56
+      unit: "hours"
+    dependencies: ["task_002"]
+    resources: ["Alice"]
+
+  - id: "task_006"
+    name: "Load Testing and Performance Tuning"
+    estimate:
+      low: 20
+      expected: 40
+      high: 70
+      unit: "hours"
+    dependencies: ["task_004", "task_005"]
+    resources: ["Bob", "Carol"]
+    max_resources: 2
+    fixed_cost: 1200
+
+  - id: "task_007"
+    name: "Deployment and Handover"
+    estimate:
+      low: 16
+      expected: 24
+      high: 40
+      unit: "hours"
+    dependencies: ["task_006"]
+    resources: ["Alice", "Bob"]
+    max_resources: 2
+
+resources:
+  - name: "Alice"
+    experience_level: 3
+    productivity_level: 1.1
+    hourly_rate: 200
+  - name: "Bob"
+    experience_level: 2
+    productivity_level: 1
+    hourly_rate: 140
+  - name: "Carol"
+    availability: 0.8
+    experience_level: 1
+    productivity_level: 1
+    hourly_rate: 95
+

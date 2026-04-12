@@ -4,7 +4,7 @@ import logging
 import math
 from collections import deque
 from datetime import date, timedelta
-from typing import Dict, List, Literal, Set, overload
+from typing import Any, Dict, List, Literal, Set, overload
 
 import numpy as np
 
@@ -65,7 +65,7 @@ class TaskScheduler:
         start_date: date | None = None,
         hours_per_day: float = 8.0,
         task_priority: Dict[str, float] | None = None,
-    ) -> Dict[str, Dict[str, float]]: ...
+    ) -> Dict[str, Dict[str, Any]]: ...
 
     @overload
     def schedule_tasks(
@@ -77,7 +77,7 @@ class TaskScheduler:
         start_date: date | None = None,
         hours_per_day: float = 8.0,
         task_priority: Dict[str, float] | None = None,
-    ) -> tuple[Dict[str, Dict[str, float]], Dict[str, float]]: ...
+    ) -> tuple[Dict[str, Dict[str, Any]], Dict[str, float]]: ...
 
     def schedule_tasks(
         self,
@@ -88,10 +88,7 @@ class TaskScheduler:
         start_date: date | None = None,
         hours_per_day: float = 8.0,
         task_priority: Dict[str, float] | None = None,
-    ) -> (
-        Dict[str, Dict[str, float]]
-        | tuple[Dict[str, Dict[str, float]], Dict[str, float]]
-    ):
+    ) -> Dict[str, Dict[str, Any]] | tuple[Dict[str, Dict[str, Any]], Dict[str, float]]:
         """Schedule tasks respecting dependencies.
 
         Args:
@@ -135,9 +132,9 @@ class TaskScheduler:
 
     def _schedule_tasks_dependency_only(
         self, task_durations: Dict[str, float]
-    ) -> Dict[str, Dict[str, float]]:
+    ) -> Dict[str, Dict[str, Any]]:
         """Schedule tasks using dependency-only earliest-start logic."""
-        schedule: Dict[str, Dict[str, float]] = {}
+        schedule: Dict[str, Dict[str, Any]] = {}
         sorted_tasks = self._topological_sort()
 
         for task_id in sorted_tasks:
@@ -155,6 +152,7 @@ class TaskScheduler:
                 "start": start_time,
                 "end": start_time + duration,
                 "duration": duration,
+                "assigned": [],
             }
 
         return schedule
@@ -166,7 +164,7 @@ class TaskScheduler:
         start_date: date,
         hours_per_day: float,
         task_priority: Dict[str, float] | None = None,
-    ) -> tuple[Dict[str, Dict[str, float]], Dict[str, float]]:
+    ) -> tuple[Dict[str, Dict[str, Any]], Dict[str, float]]:
         """Schedule tasks with dependency and resource constraints.
 
         This first implementation is deterministic and non-preemptive. It
@@ -185,7 +183,7 @@ class TaskScheduler:
                 score with task_id as tie-break (criticality-two-pass policy).
                 When ``None`` the default greedy ID-order policy is used.
         """
-        schedule: Dict[str, Dict[str, float]] = {}
+        schedule: Dict[str, Dict[str, Any]] = {}
         sorted_tasks = self._topological_sort()
 
         remaining = set(sorted_tasks)
@@ -324,6 +322,7 @@ class TaskScheduler:
                     "start": actual_start,
                     "end": end_time,
                     "duration": elapsed_duration,
+                    "assigned": assigned,
                 }
                 active.append((end_time, task_id, assigned))
                 remaining.remove(task_id)
