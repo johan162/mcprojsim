@@ -823,7 +823,7 @@ HTML_TEMPLATE = """
         </div>
     </div>
 
-    {% if staffing_recommendations %}
+    {% if staffing_recommendations and not resource_constraints_active %}
     <div class="section">
         <h3>Staffing Analysis</h3>
         <p class="staffing-meta">

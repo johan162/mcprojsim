@@ -756,7 +756,9 @@ class TestHTMLExporter:
         assert "Calendar Delay Contribution (hours)" in content
 
     def test_html_contains_staffing_section(self, sample_results, tmp_path):
-        """Test that HTML contains staffing recommendations and table."""
+        """Staffing section appears only when no explicit resources are defined."""
+        # Unconstrained mode: staffing section should be rendered
+        sample_results.resource_constraints_active = False
         output_file = tmp_path / "results.html"
         HTMLExporter.export(sample_results, output_file)
 
@@ -769,6 +771,20 @@ class TestHTMLExporter:
         assert "Efficiency" in content
         # Should contain at least one profile table
         assert "team" in content.lower()
+
+    def test_html_no_staffing_section_when_resources_defined(
+        self, sample_results, tmp_path
+    ):
+        """Staffing section is suppressed when explicit resources are defined."""
+        # sample_results fixture has resource_constraints_active = True
+        assert sample_results.resource_constraints_active
+        output_file = tmp_path / "results.html"
+        HTMLExporter.export(sample_results, output_file)
+
+        with open(output_file, "r") as f:
+            content = f.read()
+
+        assert "Staffing Analysis" not in content
 
     def test_html_staffing_shows_effort_basis(self, tmp_path):
         """Test that HTML staffing section shows effort basis and hours."""

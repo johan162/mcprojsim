@@ -201,6 +201,15 @@ class TaskScheduler:
 
         calendar_map = {calendar.id: calendar for calendar in self.project.calendars}
         default_calendar = calendar_map.get("default")
+        if default_calendar is None:
+            # Materialise the fallback calendar once so _resolve_calendar never
+            # constructs a new Pydantic model per call (avoids ~1M allocations).
+            default_calendar = CalendarSpec(
+                id="default",
+                work_hours_per_day=hours_per_day,
+                work_days=[1, 2, 3, 4, 5],
+                holidays=[],
+            )
         horizon_days = self._estimate_sickness_horizon_days(
             task_durations,
             resource_map,
@@ -532,6 +541,7 @@ class TaskScheduler:
         day_index = int(math.floor(t / 24.0))
         d = start_date + timedelta(days=day_index)
         hour_of_day = t - day_index * 24.0
+        weekday = d.weekday() + 1  # Monday=1 — computed once for all resources
 
         capacity = 0.0
         for resource_name in assigned:
@@ -541,12 +551,17 @@ class TaskScheduler:
             )
             if hour_of_day < 0 or hour_of_day >= calendar.work_hours_per_day:
                 continue
-            if not self._is_resource_working_day(
-                resource,
-                d,
-                calendar_map,
-                default_calendar,
-                sickness_absence=sickness_absence,
+            # Inline working-day check to avoid a second _resolve_calendar call
+            # that would happen inside _is_resource_working_day.
+            if weekday not in calendar.work_days:
+                continue
+            if d in calendar.holidays:
+                continue
+            if d in resource.planned_absence:
+                continue
+            if (
+                resource.name in sickness_absence
+                and d in sickness_absence[resource.name]
             ):
                 continue
             capacity += resource.productivity_level * resource.availability
