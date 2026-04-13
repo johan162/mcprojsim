@@ -1548,7 +1548,9 @@ def simulate(
                             factor_name, default_level
                         )
                         factor_display = factor_name.replace("_", " ").title()
-                        click.echo(f"  {factor_display}: {default_level} ({multiplier})")
+                        click.echo(
+                            f"  {factor_display}: {default_level} ({multiplier})"
+                        )
 
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(f"  Mean: {results.mean:.2f} hours ({mean_wd} working days)")
