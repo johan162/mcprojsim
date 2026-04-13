@@ -42,7 +42,7 @@ Discrepancy:              ~37% lower across all percentiles
 ---
 
 ### 🔴 2. Stale Example Outputs Throughout "Your First Project" Tutorial
-
+FIXED
 **Severity**: CRITICAL  
 **Both Users**: ✅ YES (Report 1 noted discrepancies; Report 2 quantified them)
 
@@ -96,7 +96,7 @@ Discrepancy:              ~37% lower across all percentiles
 ---
 
 ### ⚠️ 4. Risk Impact Syntax Is Underdocumented
-
+FIXED
 **Severity**: MODERATE  
 **Both Users**: ✅ YES (both initially wrote `unit` at top level of risk, which is invalid)
 
@@ -129,7 +129,7 @@ Discrepancy:              ~37% lower across all percentiles
 ---
 
 ### ⚠️ 5. CLI Flags and Config Keys Use Inconsistent Names
-
+FIXED
 **Severity**: MODERATE  
 **Both Users**: ✅ YES (both tried `output.number_bins` in config, matching `--number-bins` CLI flag)
 
@@ -292,7 +292,7 @@ Discrepancy:              ~37% lower across all percentiles
 ---
 
 ## Minor Issues (Medium Priority, Report 2 Only)
-
+FIXED
 ### 💡 12. Cost Fields Missing from Project Files Reference
 
 **Location**: `docs/user_guide/project_files.md`
