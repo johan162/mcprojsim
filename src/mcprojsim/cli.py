@@ -1206,7 +1206,7 @@ def simulate(
         if number_bins is not None:
             if number_bins <= 0:
                 raise ValueError("--number-bins must be greater than 0")
-            cfg.output.histogram_bins = number_bins
+            cfg.output.number_bins = number_bins
             logger.info("Overriding histogram bins to %d", number_bins)
 
         formats: list[str] = []
@@ -2243,7 +2243,7 @@ def config(config_file: Optional[str], generate: bool) -> None:
     click.echo("\nOutput:")
     click.echo(f"  Formats: {', '.join(cfg.output.formats)}")
     click.echo(f"  Include histogram: {cfg.output.include_histogram}")
-    click.echo(f"  Histogram bins: {cfg.output.histogram_bins}")
+    click.echo(f"  Histogram bins: {cfg.output.number_bins}")
     click.echo(
         "  Critical path report limit: " f"{cfg.output.critical_path_report_limit}"
     )

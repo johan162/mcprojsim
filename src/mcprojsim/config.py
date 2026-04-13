@@ -184,7 +184,7 @@ def _build_default_config_data() -> dict[str, Any]:
         "output": {
             "formats": list(DEFAULT_OUTPUT_FORMATS),
             "include_histogram": True,
-            "histogram_bins": DEFAULT_HISTOGRAM_BINS,
+            "number_bins": DEFAULT_HISTOGRAM_BINS,
             "critical_path_report_limit": DEFAULT_CRITICAL_PATH_REPORT_LIMIT,
         },
         "staffing": {
@@ -389,7 +389,7 @@ class OutputConfig(BaseModel):
 
     formats: list[str] = Field(default_factory=lambda: list(DEFAULT_OUTPUT_FORMATS))
     include_histogram: bool = True
-    histogram_bins: int = Field(default=DEFAULT_HISTOGRAM_BINS, gt=0)
+    number_bins: int = Field(default=DEFAULT_HISTOGRAM_BINS, gt=0)
     critical_path_report_limit: int = Field(
         default=DEFAULT_CRITICAL_PATH_REPORT_LIMIT,
         gt=0,

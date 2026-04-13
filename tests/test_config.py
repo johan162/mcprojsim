@@ -68,7 +68,7 @@ class TestConfig:
             "output": {
                 "formats": ["json"],
                 "include_histogram": False,
-                "histogram_bins": 30,
+                "number_bins": 30,
             },
         }
 
@@ -497,7 +497,7 @@ class TestOutputConfig:
         assert "csv" in config.formats
         assert "html" in config.formats
         assert config.include_histogram is True
-        assert config.histogram_bins == 50
+        assert config.number_bins == 50
         assert config.critical_path_report_limit == 2
 
     def test_output_config_custom_critical_path_report_limit(self):

@@ -819,7 +819,7 @@ simulation:
 
 output:
   critical_path_report_limit: 5
-  histogram_bins: 80
+  number_bins: 80
 
 staffing:
   effort_percentile: 80

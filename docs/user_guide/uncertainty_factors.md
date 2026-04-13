@@ -121,16 +121,16 @@ If a task does not specify a particular uncertainty factor, the default level is
 | Factor                  | Default Level |
 |-------------------------|---------------|
 | `team_experience`       | `medium`      |
-| `requirements_maturity` | `medium`      |
-| `technical_complexity`  | `medium`      |
+| `requirements_maturity` | `high`        |
+| `technical_complexity`  | `low`         |
 | `team_distribution`     | `colocated`   |
-| `integration_complexity`| `medium`      |
+| `integration_complexity`| `low`         |
 
-A task that omits the `uncertainty_factors` block entirely still receives these defaults, resulting in a combined multiplier based on the default levels. In the default configuration, `medium` maps to `1.00` for `team_experience` but `1.15` for `requirements_maturity`, `1.20` for `technical_complexity`, and `1.15` for `integration_complexity`, so the default combined multiplier is not simply `1.0`:
+A task that omits the `uncertainty_factors` block entirely still receives these defaults, resulting in a combined multiplier based on the default levels. Each default level maps to a multiplier of exactly `1.0` in the default configuration, so the combined multiplier for a task with no explicit uncertainty factors is:
 
-$$1.00 \times 1.15 \times 1.20 \times 1.00 \times 1.15 \approx 1.587$$
+$$1.00 \times 1.00 \times 1.00 \times 1.00 \times 1.00 = 1.0$$
 
-This means a task with no explicit uncertainty factors will still have its sampled base duration stretched by roughly 59% before any risks are applied. If your project results look longer than your estimates, this default compounding is a likely contributor. Setting `requirements_maturity`, `technical_complexity`, and `integration_complexity` to `"high"`, `"low"`, and `"low"` respectively, or calibrating their multipliers in your configuration file, are common ways to bring the baseline back toward `1.0`.
+This means a task with no explicit uncertainty factors will have its sampled base duration used as-is, with no stretching applied before risks are evaluated.
 
 \newpage
 

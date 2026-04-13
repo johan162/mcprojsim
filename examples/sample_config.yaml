@@ -88,7 +88,7 @@ simulation:
 output:
   formats: ["json", "csv", "html"]
   include_histogram: true
-  histogram_bins: 50
+  number_bins: 50
   critical_path_report_limit: 2  # show the two most common full paths by default
 
 # Staffing analysis settings

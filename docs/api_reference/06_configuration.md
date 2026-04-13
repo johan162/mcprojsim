@@ -85,7 +85,7 @@ categories = config.get_t_shirt_categories()
 print(f"Available categories: {', '.join(categories)}")
 
 # Access output settings
-print(f"Default histogram bins: {config.output.histogram_bins}")
+print(f"Default histogram bins: {config.output.number_bins}")
 print(f"Critical path limit: {config.output.critical_path_report_limit}")
 ```
 
@@ -122,10 +122,10 @@ Settings for simulation output and export behavior.
 |-------|------|---------|-------------|
 | `formats` | `list[str]` | `["json", "csv", "html"]` | Default export formats |
 | `include_histogram` | `bool` | `True` | Include histogram data in exports |
-| `histogram_bins` | `int` | `50` | Number of bins for histogram charts |
+| `number_bins` | `int` | `50` | Number of bins for histogram charts |
 | `critical_path_report_limit` | `int` | `2` | Max critical path sequences to show |
 
-**Histogram binning note:** The `histogram_bins` setting is used by all exporters when generating distribution charts in JSON, CSV, and HTML reports. You can also override this per-run via the `--number-bins` CLI flag.
+**Histogram binning note:** The `number_bins` setting is used by all exporters when generating distribution charts in JSON, CSV, and HTML reports. You can also override this per-run via the `--number-bins` CLI flag.
 
 ### `SimulationConfig`
 

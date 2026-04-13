@@ -105,7 +105,7 @@ class JSONExporter:
 
         # Get histogram data
         bin_edges, counts = results.get_histogram_data(
-            bins=effective_config.output.histogram_bins
+            bins=effective_config.output.number_bins
         )
 
         # Get current date and time for simulation timestamp

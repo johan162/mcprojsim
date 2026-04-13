@@ -292,7 +292,7 @@ simulation:
 output:
   formats: ["json"]
   include_histogram: true
-  histogram_bins: 30
+  number_bins: 30
 ```
 
 Then add uncertainty-factor labels to the project file:

@@ -11,7 +11,7 @@ The review identified six high-impact implementation gaps and several quality im
 1. Requirement mismatch in story point set (11 vs 13)
 2. Missing environment-profile configuration selection (FR-012)
 3. Non-pluggable distribution/risk architecture (NFR-008)
-4. Exporters not honoring histogram config (`include_histogram`, `histogram_bins`)
+4. Exporters not honoring histogram config (`include_histogram`, `number_bins`)
 5. NL parser limitations for ambiguous/unstructured text
 6. Reporting quality improvements (content presentation/layout)
 
@@ -43,7 +43,7 @@ Exporters hardcode histogram bins and always include histogram payload/sections 
 
 ### Implementation Tasks
 
-1. Thread `Config.output.histogram_bins` into all histogram generation calls.
+1. Thread `Config.output.number_bins` into all histogram generation calls.
 2. Respect `Config.output.include_histogram` in JSON/CSV/HTML outputs.
 3. Keep output stable when omitted: either absent key/section or null depending on exporter contract decision.
 4. Add regression tests for enabled/disabled histogram behavior.
@@ -65,7 +65,7 @@ Exporters hardcode histogram bins and always include histogram payload/sections 
 ### Acceptance Criteria
 
 - `include_histogram: false` suppresses histogram output in all exporters.
-- `histogram_bins` controls bin count in all exporters.
+- `number_bins` controls bin count in all exporters.
 - Existing exporter tests still pass.
 
 ### Estimated Effort

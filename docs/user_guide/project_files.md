@@ -709,23 +709,12 @@ For the complete risk grammar see [Formal Grammar — `<risk_properties>`](../gr
 
 ### Risk impact syntax
 
-The `impact` field supports two forms.
+The `impact` field can be specified in two ways but is normally specified as as structured object. The two ways to specify risk impact are: 
 
-#### 1. Simple numeric impact
+#### 1. Structured impact object (recommended)
 
-This is interpreted as an absolute time penalty.
-
-```yaml
-risks:
-  - id: "risk_001"
-    name: "Integration issues"
-    probability: 0.25
-    impact: 3
-```
-
-#### 2. Structured impact object
-
-This may be either `absolute` or `percentage`.
+This may be either of type `"absolute"` or type `"percentage"` and is the 
+clearest way to specify a risk as it is unambigous. A unit can only be specified if the type `"absolute"` since the percentage is applied to the already specified unit for the simulation result either for the task or the overall effort for the project. The following example makes it clear:
 
 ```yaml
 risks:
@@ -745,6 +734,43 @@ risks:
       value: 15
 ```
 
+In the first case `risk_001` the risk adds 5 working days (`=hours_per_day*5`). Unit can be one of `"hours"`, `"days"` or `"weeks"`.
+
+#### 2. Short form
+
+This is interpreted as an absolute time penalty in hours and is supplied as a "quick-and-dirty" way to specify a risk impact. However, we strongly recommend that the full structured object way is used!
+
+```yaml
+risks:
+  - id: "risk_001"
+    name: "Integration issues"
+    probability: 0.25
+    impact: 3  # Interpretated as an absolute impact in hours
+```
+
+**Caution:**
+
+```
+  ✅ Correct:
+  risks:
+    - id: "risk_001"
+      name: "Delay"
+      probability: 0.2
+      impact:
+        type: "absolute"
+        value: 3
+        unit: "days"
+  
+  ❌ Wrong:
+  risks:
+    - id: "risk_001"
+      name: "Delay"
+      probability: 0.2
+      impact: 3
+      unit: "days"  ← unit goes inside impact, not outside
+  ```
+
+
 ### Validation rules for risks
 
 The model enforces:
@@ -753,6 +779,7 @@ The model enforces:
 - `impact.value` must be greater than `0` when object syntax is used,
 - numeric impacts are converted to floats,
 - structured impacts must use `type: "absolute"` or `type: "percentage"`.
+- a unit only makes sense for `"absolute"`type of impact
 
 ## The `project_risks` section
 
@@ -773,6 +800,8 @@ project_risks:
       unit: "days"
     description: "Late business scope change"
 ```
+
+**Note:** Be careful if you add an impact type of percentage as a top level risk as it is added as a multiplicative percentage to the overall simulated effort.
 
 ## The top-level `resources` section
 
@@ -1337,7 +1366,7 @@ simulation:
 output:
   formats: ["json", "csv", "html"]
   include_histogram: true
-  histogram_bins: 50
+  number_bins: 50
   critical_path_report_limit: 2
 
 staffing:
@@ -1619,7 +1648,7 @@ This section controls reporting and export defaults.
 |---|---|---|---|---|---|
 | `formats` | No | list of strings | `["json", "csv", "html"]` | each entry must be `json`, `csv`, or `html`; list must not be empty | Default export formats for config-driven workflows |
 | `include_histogram` | No | boolean | `true` | — | Whether histogram data should be included where supported |
-| `histogram_bins` | No | integer | `50` | `> 0` | Number of bins for histogram generation |
+| `number_bins` | No | integer | `50` | `> 0` | Number of bins for histogram generation |
 | `critical_path_report_limit` | No | integer | `2` | `> 0` | Number of stored full critical paths shown in reports by default |
 
 ### Example
@@ -1628,7 +1657,7 @@ This section controls reporting and export defaults.
 output:
   formats: ["json", "html"]
   include_histogram: true
-  histogram_bins: 80
+  number_bins: 80
   critical_path_report_limit: 5
 ```
 
@@ -1762,7 +1791,7 @@ The current configuration model validates these rules directly:
 - `output.formats` must be a non-empty list; each entry must be `json`, `csv`, or `html`,
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
-- `output.histogram_bins` must be greater than 0,
+- `output.number_bins` must be greater than 0,
 - `output.critical_path_report_limit` must be greater than 0,
 - `staffing.effort_percentile`, when set, must be between 1 and 99,
 - `staffing.min_individual_productivity` must be greater than 0 and at most 1,

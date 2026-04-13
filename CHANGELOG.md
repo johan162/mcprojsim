@@ -186,7 +186,7 @@ Release Type: minor
 This release adds a configurable histogram bin count for distribution charts, extends MCP server capabilities to cover two-pass scheduling and sprint override inputs, and refreshes documentation across sprint planning, examples, and the getting-started guide.
 
 ### ✨ Additions
-- Added `histogram_bins` config field and `--number-bins` CLI flag to control the number of bins in simulation output distribution charts (default 50)
+- Added `number_bins` config field and `--number-bins` CLI flag to control the number of bins in simulation output distribution charts (default 50)
 
 ### 🚀 Improvements
 - Updated MCP server bundle to reflect latest NL processing capabilities and new MCP command coverage

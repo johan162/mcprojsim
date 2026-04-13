@@ -137,7 +137,7 @@ lognormal:
 output:
   formats: ["json", "csv", "html"]
   include_histogram: true
-  histogram_bins: 50
+  number_bins: 50
   critical_path_report_limit: 2
 
 staffing:
@@ -495,7 +495,7 @@ simulation:
 output:
   formats: ["json", "html"]
   include_histogram: true
-  histogram_bins: 50
+  number_bins: 50
   critical_path_report_limit: 3
 ```
 
@@ -517,12 +517,12 @@ The `output` section controls reporting and export defaults.
 |---|---|---|---|
 | `formats` | list of strings | `["json", "csv", "html"]` | Default export formats |
 | `include_histogram` | boolean | `true` | Include histogram data where supported |
-| `histogram_bins` | integer | `50` | Number of bins used for histograms in JSON, CSV, and HTML exports |
+| `number_bins` | integer | `50` | Number of bins used for histograms in JSON, CSV, and HTML exports |
 | `critical_path_report_limit` | integer | `2` | Number of stored full critical paths shown by default |
 
 ### Histogram bins
 
-The `histogram_bins` setting controls the granularity of duration distribution charts in exported reports. Higher bin counts produce finer-grained histograms with narrower bars, while lower counts produce coarser histograms with wider bars.
+The `number_bins` setting controls the granularity of duration distribution charts in exported reports. Higher bin counts produce finer-grained histograms with narrower bars, while lower counts produce coarser histograms with wider bars.
 
 - **Typical range**: 20–100 bins
 - **Default**: 50 bins
@@ -539,7 +539,7 @@ The histogram data is included in:
 output:
   formats: ["json", "html"]
   include_histogram: true
-  histogram_bins: 80
+  number_bins: 80
   critical_path_report_limit: 5
 ```
 
@@ -851,7 +851,7 @@ The configuration model validates these constraints directly:
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
 - `output.formats` must be non-empty and may contain only `json`, `csv`, and `html`,
-- `output.histogram_bins` must be greater than 0,
+- `output.number_bins` must be greater than 0,
 - `output.critical_path_report_limit` must be greater than 0,
 - `staffing.effort_percentile`, when set, must be between 1 and 99,
 - `staffing.min_individual_productivity` must be greater than 0 and at most 1,

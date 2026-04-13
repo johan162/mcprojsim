@@ -135,14 +135,14 @@ Discrepancy:              ~37% lower across all percentiles
 
 **The Problem**:
 - CLI flag: `--number-bins`
-- Config key: `output.histogram_bins` (not `output.number_bins`)
+- Config key: `output.number_bins` (not `output.histogram_bins`)
 - Similar confusion likely for other flag↔config mappings.
 
 **Recommended Fix**:
 - Add a small table in `docs/user_guide/configuration.md`:
   | CLI Flag | Config Path | Notes |
   |----------|------------|-------|
-  | `--number-bins` | `output.histogram_bins` | Number of bins in distribution histogram |
+  | `--number-bins` | `output.number_bins` | Number of bins in distribution histogram |
   | `--iterations` | `simulation.default_iterations` | Default Monte Carlo iterations |
   | (continue for other mappings) |
 
