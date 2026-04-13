@@ -1473,10 +1473,13 @@ def simulate(
                     ["Std Dev", f"{results.std_dev:.2f} hours"],
                     ["Minimum", f"{min_duration:.2f} hours"],
                     ["Maximum", f"{max_duration:.2f} hours"],
-                    ["Coefficient of Variation", f"{cv:.4f}"],
-                    ["Skewness", f"{results.skewness:.4f}"],
-                    ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
                 ]
+                if not minimal:
+                    calendar_summary_rows += [
+                        ["Coefficient of Variation", f"{cv:.4f}"],
+                        ["Skewness", f"{results.skewness:.4f}"],
+                        ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
+                    ]
                 effort_summary_rows = [
                     [
                         "Mean",
@@ -1489,10 +1492,13 @@ def simulate(
                     ["Std Dev", f"{effort_stats['std_dev']:.2f} person-hours"],
                     ["Minimum", f"{effort_stats['min']:.2f} person-hours"],
                     ["Maximum", f"{effort_stats['max']:.2f} person-hours"],
-                    ["Coefficient of Variation", f"{effort_stats['cv']:.4f}"],
-                    ["Skewness", f"{effort_stats['skewness']:.4f}"],
-                    ["Excess Kurtosis", f"{effort_stats['kurtosis']:.4f}"],
                 ]
+                if not minimal:
+                    effort_summary_rows += [
+                        ["Coefficient of Variation", f"{effort_stats['cv']:.4f}"],
+                        ["Skewness", f"{effort_stats['skewness']:.4f}"],
+                        ["Excess Kurtosis", f"{effort_stats['kurtosis']:.4f}"],
+                    ]
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(
                     _tabulate(
@@ -1550,9 +1556,10 @@ def simulate(
                 click.echo(f"  Std Dev: {results.std_dev:.2f} hours")
                 click.echo(f"  Minimum: {min_duration:.2f} hours")
                 click.echo(f"  Maximum: {max_duration:.2f} hours")
-                click.echo(f"  Coefficient of Variation: {cv:.4f}")
-                click.echo(f"  Skewness: {results.skewness:.4f}")
-                click.echo(f"  Excess Kurtosis: {results.kurtosis:.4f}")
+                if not minimal:
+                    click.echo(f"  Coefficient of Variation: {cv:.4f}")
+                    click.echo(f"  Skewness: {results.skewness:.4f}")
+                    click.echo(f"  Excess Kurtosis: {results.kurtosis:.4f}")
 
                 click.echo("\nProject Effort Statistical Summary:")
                 click.echo(
@@ -1564,9 +1571,10 @@ def simulate(
                 click.echo(f"  Std Dev: {effort_stats['std_dev']:.2f} person-hours")
                 click.echo(f"  Minimum: {effort_stats['min']:.2f} person-hours")
                 click.echo(f"  Maximum: {effort_stats['max']:.2f} person-hours")
-                click.echo(f"  Coefficient of Variation: {effort_stats['cv']:.4f}")
-                click.echo(f"  Skewness: {effort_stats['skewness']:.4f}")
-                click.echo(f"  Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
+                if not minimal:
+                    click.echo(f"  Coefficient of Variation: {effort_stats['cv']:.4f}")
+                    click.echo(f"  Skewness: {effort_stats['skewness']:.4f}")
+                    click.echo(f"  Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
 
             if table:
                 # Confidence Intervals table
