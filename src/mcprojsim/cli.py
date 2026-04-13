@@ -1444,27 +1444,28 @@ def simulate(
                 )
 
                 # Default Uncertainty Factors table
-                uncertainty_rows = []
-                for (
-                    factor_name,
-                    default_level,
-                ) in effective_default_uncertainty_levels.items():
-                    multiplier = cfg.get_uncertainty_multiplier(
-                        factor_name, default_level
+                if not minimal:
+                    uncertainty_rows = []
+                    for (
+                        factor_name,
+                        default_level,
+                    ) in effective_default_uncertainty_levels.items():
+                        multiplier = cfg.get_uncertainty_multiplier(
+                            factor_name, default_level
+                        )
+                        factor_display = factor_name.replace("_", " ").title()
+                        uncertainty_rows.append(
+                            [factor_display, f"{default_level} ({multiplier})"]
+                        )
+                    click.echo("\nDefault Uncertainty Factors:")
+                    click.echo(
+                        _tabulate(
+                            uncertainty_rows,
+                            headers=["Factor", "Default Level (Multiplier)"],
+                            tablefmt="simple_outline",
+                            disable_numparse=True,
+                        )
                     )
-                    factor_display = factor_name.replace("_", " ").title()
-                    uncertainty_rows.append(
-                        [factor_display, f"{default_level} ({multiplier})"]
-                    )
-                click.echo("\nDefault Uncertainty Factors:")
-                click.echo(
-                    _tabulate(
-                        uncertainty_rows,
-                        headers=["Factor", "Default Level (Multiplier)"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
-                )
 
                 calendar_summary_rows = [
                     ["Mean", f"{results.mean:.2f} hours ({mean_wd} working days)"],
@@ -1531,16 +1532,17 @@ def simulate(
                 click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")
                 click.echo(f"  Schedule Mode: {schedule_mode}")
 
-                click.echo("\nDefault Uncertainty Factors:")
-                for (
-                    factor_name,
-                    default_level,
-                ) in effective_default_uncertainty_levels.items():
-                    multiplier = cfg.get_uncertainty_multiplier(
-                        factor_name, default_level
-                    )
-                    factor_display = factor_name.replace("_", " ").title()
-                    click.echo(f"  {factor_display}: {default_level} ({multiplier})")
+                if not minimal:
+                    click.echo("\nDefault Uncertainty Factors:")
+                    for (
+                        factor_name,
+                        default_level,
+                    ) in effective_default_uncertainty_levels.items():
+                        multiplier = cfg.get_uncertainty_multiplier(
+                            factor_name, default_level
+                        )
+                        factor_display = factor_name.replace("_", " ").title()
+                        click.echo(f"  {factor_display}: {default_level} ({multiplier})")
 
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(f"  Mean: {results.mean:.2f} hours ({mean_wd} working days)")
