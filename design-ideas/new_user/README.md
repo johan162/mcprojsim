@@ -17,7 +17,7 @@ The simulation engine is solid and feature-complete. However, documentation cont
 ## Critical Issues (Both Users Affected)
 
 ### 🔴 1. Uncertainty Factor Defaults Are Documented Incorrectly
-
+FIXED
 **Severity**: CRITICAL  
 **Both Users**: ✅ YES (Report 1 found defaults confusing; Report 2 found concrete evidence of wrongness)
 

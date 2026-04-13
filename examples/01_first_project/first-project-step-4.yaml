@@ -1,0 +1,43 @@
+project:
+  name: "Tiny Landing Page"
+  description: "Adding risk events"
+  start_date: "2026-03-01"
+  confidence_levels: [50, 80, 90]
+
+project_risks:
+  - id: "risk_001"
+    name: "Late stakeholder changes"
+    probability: 0.20
+    impact:
+      type: "absolute"
+      value: 2
+      unit: "days"
+
+tasks:
+  - id: "task_001"
+    name: "Create landing page"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days"
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "medium"
+
+  - id: "task_002"
+    name: "Deploy site"
+    estimate:
+      low: 1
+      expected: 2
+      high: 4
+      unit: "days"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"
+    risks:
+      - id: "risk_002"
+        name: "Hosting problem"
+        probability: 0.15
+        impact: 1.5     # bare float = hours; use impact.type/value/unit for other units
