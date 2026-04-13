@@ -1608,7 +1608,7 @@ class HTMLExporter:
 
         try:
             costs = results.costs
-            counts, bin_edges = np.histogram(costs, bins=config.output.histogram_bins)
+            counts, bin_edges = np.histogram(costs, bins=config.output.number_bins)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
             fig, ax = plt.subplots(figsize=(10, 6))
@@ -2571,7 +2571,7 @@ class HTMLExporter:
             # matplotlib.pyplot is already imported at module level as plt
             # Get histogram data
             bin_edges, counts = results.get_histogram_data(
-                bins=config.output.histogram_bins
+                bins=config.output.number_bins
             )
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
@@ -2666,7 +2666,7 @@ class HTMLExporter:
 
         try:
             effort = results.effort_durations
-            counts, bin_edges = np.histogram(effort, bins=config.output.histogram_bins)
+            counts, bin_edges = np.histogram(effort, bins=config.output.number_bins)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
             fig, ax = plt.subplots(figsize=(10, 6))

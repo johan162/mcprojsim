@@ -1,0 +1,9 @@
+project:
+  name: "MCP Chapter Companion"
+  start_date: "2026-06-01"
+
+tasks:
+  - id: "task_001"
+    name: "Generated from NL via CLI"
+    estimate:
+      t_shirt_size: "S"

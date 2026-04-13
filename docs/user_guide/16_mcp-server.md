@@ -65,19 +65,32 @@ This installs the `mcp` package alongside the existing dependencies. The `--with
 
 ### Step 2: Verify the installation
 
-After installation, the `mcprojsim-mcp` entry point should be available:
+!!! warning "mcprojsim-mcp does not accept --help"
+    `mcprojsim-mcp` is a **long-running server process**. When started from a terminal it
+    immediately begins listening for MCP protocol messages over stdio. It does not
+    accept `--help` or any command-line flags — running `mcprojsim-mcp --help` will
+    appear to hang, because the process is waiting for a client. Press `Ctrl+C` to exit.
 
-```bash
-mcprojsim-mcp --help
-```
-
-You can also verify from Python:
+To verify that the entry point and all MCP dependencies are correctly installed, use the Python import check instead:
 
 ```python
 from mcprojsim.mcp_server import main
+print("MCP server installed correctly")
 ```
 
-If this import succeeds without an `ImportError`, the MCP dependencies are correctly installed.
+If this import succeeds without an `ImportError`, the MCP dependencies are correctly installed. You can also run this as a one-liner from the terminal:
+
+```bash
+python -c "from mcprojsim.mcp_server import main; print('OK')"
+```
+
+With Poetry:
+
+```bash
+poetry run python -c "from mcprojsim.mcp_server import main; print('OK')"
+```
+
+A successful run prints `OK` and exits immediately. Any `ImportError` or `ModuleNotFoundError` means the `mcp` dependency group was not installed — re-run `poetry install --with mcp` to fix it.
 
 ### Step 3: Configure your MCP client
 

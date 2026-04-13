@@ -1,0 +1,167 @@
+## Running simulations command variants
+✓ Valid: 'Website Refresh' with 2 task(s)
+Validating new_user/running_simulations.yaml...
+✓ Project file is valid!
+mcprojsim, version 0.13.0
+Simulation time: 0.01 seconds
+Peak simulation memory: 0.00 B
+mcprojsim, version 0.13.0
+Progress: 10.0% (60/600)
+Progress: 20.0% (120/600)
+Progress: 30.0% (180/600)
+Progress: 40.0% (240/600)
+Progress: 50.0% (300/600)
+Progress: 60.0% (360/600)
+Progress: 70.0% (420/600)
+Progress: 80.0% (480/600)
+Progress: 90.0% (540/600)
+Progress: 100.0% (600/600)
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬─────────────────┐
+│ Field                          │ Value           │
+├────────────────────────────────┼─────────────────┤
+│ Project                        │ Website Refresh │
+│ Start Date                     │ 2026-04-01      │
+│ Number of Tasks                │ 2               │
+│ Effective Default Distribution │ triangular      │
+│ T-Shirt Category Used          │ story           │
+│ Hours per Day                  │ 8.0             │
+│ Max Parallel Tasks             │ 1               │
+│ Schedule Mode                  │ dependency_only │
+└────────────────────────────────┴─────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬───────────────────────────────┐
+│ Metric                   │ Value                         │
+├──────────────────────────┼───────────────────────────────┤
+│ Mean                     │ 94.21 hours (12 working days) │
+│ Median (P50)             │ 93.54 hours                   │
+│ Std Dev                  │ 18.67 hours                   │
+│ Minimum                  │ 54.37 hours                   │
+│ Maximum                  │ 147.23 hours                  │
+│ Coefficient of Variation │ 0.1982                        │
+│ Skewness                 │ 0.2879                        │
+│ Excess Kurtosis          │ -0.4973                       │
+└──────────────────────────┴───────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬─────────────────────────────────────┐
+│ Metric                   │ Value                               │
+├──────────────────────────┼─────────────────────────────────────┤
+│ Mean                     │ 94.21 person-hours (12 person-days) │
+│ Median (P50)             │ 93.54 person-hours                  │
+│ Std Dev                  │ 18.67 person-hours                  │
+│ Minimum                  │ 54.37 person-hours                  │
+│ Maximum                  │ 147.23 person-hours                 │
+│ Coefficient of Variation │ 0.1982                              │
+│ Skewness                 │ 0.2879                              │
+│ Excess Kurtosis          │ -0.4973                             │
+└──────────────────────────┴─────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │   93.54 │             12 │ 2026-04-17 │
+│ P80          │  110.77 │             14 │ 2026-04-21 │
+│ P90          │  120.71 │             16 │ 2026-04-23 │
+│ P95          │  127.46 │             16 │ 2026-04-23 │
+└──────────────┴─────────┴────────────────┴────────────┘
+mcprojsim, version 0.13.0
+Progress: 10.0% (60/600)
+Progress: 20.0% (120/600)
+Progress: 30.0% (180/600)
+Progress: 40.0% (240/600)
+Progress: 50.0% (300/600)
+Progress: 60.0% (360/600)
+Progress: 70.0% (420/600)
+Progress: 80.0% (480/600)
+Progress: 90.0% (540/600)
+Progress: 100.0% (600/600)
+Simulation time: 0.01 seconds
+Peak simulation memory: 0.00 B
+
+=== Simulation Results ===
+
+Project Overview:
+  Project: Website Refresh
+  Start Date: 2026-04-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
+
+Calendar Time Statistical Summary:
+  Mean: 94.21 hours (12 working days)
+  Median (P50): 93.54 hours
+  Std Dev: 18.67 hours
+  Minimum: 54.37 hours
+  Maximum: 147.23 hours
+  Coefficient of Variation: 0.1982
+  Skewness: 0.2879
+  Excess Kurtosis: -0.4973
+
+Project Effort Statistical Summary:
+  Mean: 94.21 person-hours (12 person-days)
+  Median (P50): 93.54 person-hours
+  Std Dev: 18.67 person-hours
+  Minimum: 54.37 person-hours
+  Maximum: 147.23 person-hours
+  Coefficient of Variation: 0.1982
+  Skewness: 0.2879
+  Excess Kurtosis: -0.4973
+
+Calendar Time Confidence Intervals:
+  P50: 93.54 hours (12 working days)  (2026-04-17)
+  P80: 110.77 hours (14 working days)  (2026-04-21)
+  P90: 120.71 hours (16 working days)  (2026-04-23)
+  P95: 127.46 hours (16 working days)  (2026-04-23)
+
+Effort Confidence Intervals:
+  P50: 93.54 person-hours (12 person-days)
+  P80: 110.77 person-hours (14 person-days)
+  P90: 120.71 person-hours (16 person-days)
+  P95: 127.46 person-hours (16 person-days)
+
+Sensitivity Analysis (top contributors):
+  task_002: +0.9145
+  task_001: +0.3817
+
+Schedule Slack:
+  task_001: 0.00 hours (Critical)
+  task_002: 0.00 hours (Critical)
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_002 (600/600, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 14 working days
+  Total effort: 94 person-hours (12 person-days) | Parallelism ratio: 1.0
+
+Results exported to new_user/running_simulations_results.json
+
+Results exported to new_user/running_simulations_results.csv
+
+Results exported to new_user/running_simulations_results.html

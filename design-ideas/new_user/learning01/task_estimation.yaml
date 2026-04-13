@@ -1,0 +1,31 @@
+project:
+  name: "Task Estimation Modes"
+  start_date: "2026-05-15"
+
+tasks:
+  - id: "task_001"
+    name: "Triangular estimate task"
+    estimate:
+      low: 2
+      expected: 3
+      high: 6
+      unit: "days"
+
+  - id: "task_002"
+    name: "Log-normal estimate task"
+    estimate:
+      distribution: "lognormal"
+      low: 3
+      expected: 8
+      high: 20
+      unit: "days"
+
+  - id: "task_003"
+    name: "T-shirt estimate task"
+    estimate:
+      t_shirt_size: "M"
+
+  - id: "task_004"
+    name: "Story-point estimate task"
+    estimate:
+      story_points: 5

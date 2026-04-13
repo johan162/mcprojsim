@@ -1,0 +1,31 @@
+project:
+  name: "Interpretation Trial"
+  start_date: "2026-05-25"
+
+tasks:
+  - id: "task_001"
+    name: "Research spike"
+    estimate:
+      distribution: "lognormal"
+      low: 2
+      expected: 6
+      high: 30
+      unit: "days"
+
+  - id: "task_002"
+    name: "Implementation"
+    estimate:
+      low: 3
+      expected: 6
+      high: 12
+      unit: "days"
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "Hardening"
+    estimate:
+      low: 1
+      expected: 3
+      high: 8
+      unit: "days"
+    dependencies: ["task_002"]

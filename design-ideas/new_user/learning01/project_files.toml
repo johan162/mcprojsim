@@ -1,0 +1,24 @@
+[project]
+name = "Project File TOML Trial"
+start_date = "2026-05-20"
+
+[[tasks]]
+id = "task_001"
+name = "Data model"
+
+[tasks.estimate]
+low = 2
+expected = 3
+high = 5
+unit = "days"
+
+[[tasks]]
+id = "task_002"
+name = "API"
+dependencies = ["task_001"]
+
+[tasks.estimate]
+low = 3
+expected = 5
+high = 8
+unit = "days"

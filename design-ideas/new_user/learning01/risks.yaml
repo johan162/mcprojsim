@@ -1,0 +1,38 @@
+project:
+  name: "Risk Modeling Trial"
+  start_date: "2026-05-18"
+
+project_risks:
+  - id: "project_risk_001"
+    name: "Vendor delay"
+    probability: 0.2
+    impact:
+      type: "absolute"
+      value: 3
+      unit: "days"
+
+tasks:
+  - id: "task_001"
+    name: "Integration prep"
+    estimate:
+      low: 2
+      expected: 4
+      high: 6
+      unit: "days"
+    risks:
+      - id: "task_risk_001"
+        name: "API incompatibility"
+        probability: 0.35
+        impact:
+          type: "absolute"
+          value: 2
+          unit: "days"
+
+  - id: "task_002"
+    name: "Integration implementation"
+    estimate:
+      low: 3
+      expected: 5
+      high: 9
+      unit: "days"
+    dependencies: ["task_001"]

@@ -1,0 +1,69 @@
+# Experiment: Risks - task-level and project-level
+project:
+  name: "Risk Experiment"
+  description: "Testing risk impacts and probabilities"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90, 95]
+
+project_risks:
+  - id: "proj_risk_001"
+    name: "Key developer leaves"
+    probability: 0.15
+    impact:
+      type: "percentage"
+      value: 20
+    description: "Risk of losing senior developer mid-project"
+
+  - id: "proj_risk_002"
+    name: "Requirements change"
+    probability: 0.30
+    impact:
+      type: "absolute"
+      value: 5
+      unit: "days"
+
+tasks:
+  - id: "task_001"
+    name: "Database redesign"
+    estimate:
+      low: 4
+      expected: 8
+      high: 15
+      unit: "days"
+    risks:
+      - id: "task_risk_001"
+        name: "Schema migration issues"
+        probability: 0.25
+        impact: 16
+      - id: "task_risk_002"
+        name: "Data format incompatibility"
+        probability: 0.10
+        impact:
+          type: "percentage"
+          value: 30
+
+  - id: "task_002"
+    name: "API development"
+    estimate:
+      low: 3
+      expected: 6
+      high: 12
+      unit: "days"
+    dependencies: ["task_001"]
+    risks:
+      - id: "task_risk_003"
+        name: "Integration failures"
+        probability: 0.20
+        impact:
+          type: "absolute"
+          value: 3
+          unit: "days"
+
+  - id: "task_003"
+    name: "Frontend integration"
+    estimate:
+      low: 2
+      expected: 4
+      high: 8
+      unit: "days"
+    dependencies: ["task_002"]

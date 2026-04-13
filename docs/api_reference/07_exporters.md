@@ -21,7 +21,7 @@ The exporters module converts a `SimulationResults` object into persistent outpu
 from mcprojsim.exporters import JSONExporter, CSVExporter, HTMLExporter
 ```
 
-All exporters support histogram data, critical-path output, sprint-planning results, and historic-base data (when available). The histogram bin count defaults to 50 but is controlled by `config.output.histogram_bins`.
+All exporters support histogram data, critical-path output, sprint-planning results, and historic-base data (when available). The histogram bin count defaults to 50 but is controlled by `config.output.number_bins`.
 
 ## `JSONExporter`
 

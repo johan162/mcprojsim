@@ -46,4 +46,4 @@ simulation:
 output:
   formats: ["json", "csv", "html"]
   include_histogram: true
-  histogram_bins: 50
+  number_bins: 50

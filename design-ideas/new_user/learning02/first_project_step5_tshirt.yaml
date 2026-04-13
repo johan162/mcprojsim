@@ -1,0 +1,29 @@
+# Step 5: T-shirt sizes
+project:
+  name: "Tiny Landing Page"
+  description: "T-shirt sizing example"
+  start_date: "2026-03-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Design page"
+    estimate:
+      t_shirt_size: "S"
+    dependencies: []
+    uncertainty_factors:
+      team_experience: "high"
+      requirements_maturity: "high"
+  - id: "task_002"
+    name: "Build page"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"
+  - id: "task_003"
+    name: "Deploy page"
+    estimate:
+      t_shirt_size: "XS"
+    dependencies: ["task_002"]

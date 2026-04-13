@@ -109,7 +109,7 @@ Validating first-project-step-1.yaml...
 Now run the simulation:
 
 ```bash
-mcprojsim simulate first-project-step-1.yaml --iterations 5000 --seed 42
+mcprojsim simulate first-project-step-1.yaml --iterations 5000 --seed 42 --minimal
 ```
 
 Example result summary:
@@ -118,32 +118,35 @@ Example result summary:
 === Simulation Results ===
 
 Project Overview:
-Project: Tiny Landing Page
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Tiny Landing Page
+  Start Date: 2026-03-01
+  Number of Tasks: 1
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
 
 Calendar Time Statistical Summary:
-Mean: 42.23 hours (6 working days)
-Median (P50): 41.49 hours
-Std Dev: 7.93 hours
-Minimum: 25.47 hours
-Maximum: 62.96 hours
-Coefficient of Variation: 0.1877
-Skewness: 0.3055
-Excess Kurtosis: -0.6103
+  Mean: 26.61 hours (4 working days)
+  Median (P50): 26.14 hours
+  Std Dev: 4.99 hours
+  Minimum: 16.05 hours
+  Maximum: 39.67 hours
 
 Project Effort Statistical Summary:
-Mean: 42.23 person-hours (6 person-days)
-Median (P50): 41.49 person-hours
-Std Dev: 7.93 person-hours
-...
+  Mean: 26.61 person-hours (4 person-days)
+  Median (P50): 26.14 person-hours
+  Std Dev: 4.99 person-hourstwo sections
+  Minimum: 16.05 person-hours
+  Maximum: 39.67 person-hours
 
 Calendar Time Confidence Intervals:
-  P50: 41.49 hours (6 working days)  (2026-03-09)
-  P80: 49.57 hours (7 working days)  (2026-03-10)
-  P90: 53.46 hours (7 working days)  (2026-03-10)
+  P50: 26.14 hours (4 working days)  (2026-03-05)
+  P80: 31.23 hours (4 working days)  (2026-03-05)
+  P90: 33.68 hours (5 working days)  (2026-03-06)
 ```
+
 
 The important thing here is not the exact numbers. The important thing is that even a one-task project produces a range of likely outcomes rather than one fixed answer. Results are reported in hours (the canonical internal unit) with working days shown alongside.
 
@@ -184,7 +187,7 @@ The new information is in the `dependencies` field. It says that deployment cann
 Run it:
 
 ```bash
-mcprojsim simulate first-project-step-2.yaml --iterations 5000 --seed 42
+mcprojsim simulate first-project-step-2.yaml --iterations 5000 --seed 42 
 ```
 
 Example result summary:
@@ -193,21 +196,16 @@ Example result summary:
 === Simulation Results ===
 
 Project Overview:
-Project: Tiny Landing Page
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Tiny Landing Page
+  Start Date: 2026-03-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
 
-Calendar Time Statistical Summary:
-Mean: 71.62 hours (9 working days)
-Median (P50): 71.22 hours
-Std Dev: 10.97 hours
-...
-
-Calendar Time Confidence Intervals:
-  P50: 71.22 hours (9 working days)  (2026-03-12)
-  P80: 80.99 hours (11 working days)  (2026-03-16)
-  P90: 85.99 hours (11 working days)  (2026-03-16)
+  < --- SKIP --- >
 
 Sensitivity Analysis (top contributors):
   task_002: +0.6901
@@ -219,6 +217,10 @@ Schedule Slack:
 
 Most Frequent Critical Paths:
   1. task_001 -> task_002 (5000/5000, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 7 working days
+  Total effort: 45 person-hours (6 person-days) | Parallelism ratio: 1.0
+
 ```
 
 Compared with the first example, the schedule is now longer because the project contains more work. More importantly, the dependency means the tasks form a chain rather than happening independently. This is the beginning of a project network.
@@ -237,7 +239,7 @@ That means the tool now shows:
 For this small example there is only one dependency chain, so the reported path is always:
 
 ```text
-task_001 -> task_002
+task_001 -> task_002 (5000/5000, 100.0%)
 ```
 
 In larger projects, several different paths may become critical across the Monte Carlo iterations. The simulator aggregates those paths and shows the most common ones.
@@ -247,6 +249,8 @@ You can request more than the default two paths in the CLI:
 ```bash
 mcprojsim simulate first-project-step-2.yaml --iterations 5000 --seed 42 --critical-paths 4
 ```
+
+For this small projectn there is really only one critical path so specifying to show more does not really make any difference.
 
 And you can control how many are stored and reported by default through `config.yaml`:
 
@@ -266,36 +270,22 @@ In `mcprojsim`, that sort of shared interpretation belongs in a configuration fi
 
 ### Step 3: add uncertainty factors
 
-First create a configuration file:
+Uncertainty factors are a mean to convert knowledge about project challenges into tangible consequences. For example, we might know that the work have very unmature requrements that will change after the work has started or we might now that the team will be located in two different offices in different countries (and time zones) and therefore have more than usual communication overhead and risks of misscommunications.
 
-```yaml
-uncertainty_factors:
-  team_experience:
-    high: 0.90
-    medium: 1.0
-    low: 1.25
+These types of know risks can be modelled by multiplicative factors. The program supports the following uncertaintly factors
 
-  requirements_maturity:
-    high: 1.0
-    medium: 1.10
-    low: 1.30
+| Factor                  | Default Level |
+|-------------------------|---------------|
+| `team_experience`       | `medium`      |
+| `requirements_maturity` | `high`        |
+| `technical_complexity`  | `low`         |
+| `team_distribution`     | `colocated`   |
+| `integration_complexity`| `low`         |
 
-  technical_complexity:
-    low: 1.0
-    medium: 1.15
-    high: 1.40
+The name of the factors should be self-explanatory. The values of the factors are heuristically determined and can be adjusted for company or team specific circumstances in the config file.
 
-simulation:
-  default_iterations: 10000
-  random_seed: null
+The uncertainty factors can be applied both on project- and task level. In the following example we add them for each task.
 
-output:
-  formats: ["json"]
-  include_histogram: true
-  histogram_bins: 30
-```
-
-Then add uncertainty-factor labels to the project file:
 
 ```yaml
 project:
@@ -332,10 +322,7 @@ tasks:
 Run it with the configuration file:
 
 ```bash
-mcprojsim simulate first-project-step-3.yaml \
-  --config first-project-config.yaml \
-  --iterations 5000 \
-  --seed 42
+mcprojsim simulate first-project-step-3.yaml --seed 42 --minimal
 ```
 
 Example result summary:
@@ -344,34 +331,124 @@ Example result summary:
 === Simulation Results ===
 
 Project Overview:
-Project: Tiny Landing Page
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Tiny Landing Page
+  Start Date: 2026-03-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
 
 Calendar Time Statistical Summary:
-Mean: 61.79 hours (8 working days)
-Median (P50): 61.43 hours
-Std Dev: 9.57 hours
-...
+  Mean: 49.98 hours (7 working days)
+  Median (P50): 49.67 hours
+  Std Dev: 7.88 hours
+  Minimum: 27.41 hours
+  Maximum: 76.84 hours
+
+Project Effort Statistical Summary:
+  Mean: 49.98 person-hours (7 person-days)
+  Median (P50): 49.67 person-hours
+  Std Dev: 7.88 person-hours
+  Minimum: 27.41 person-hours
+  Maximum: 76.84 person-hours
 
 Calendar Time Confidence Intervals:
-  P50: 61.43 hours (8 working days)  (2026-03-11)
-  P80: 70.04 hours (9 working days)  (2026-03-12)
-  P90: 74.32 hours (10 working days)  (2026-03-13)
+  P50: 49.67 hours (7 working days)  (2026-03-10)
+  P80: 56.79 hours (8 working days)  (2026-03-11)
+  P90: 60.43 hours (8 working days)  (2026-03-11)
 ```
 
-This is an important modeling step.
+This is an important modeling step. As can be seen from the simulation these uncertainty factors add another day effort to be 80% certain.
 
-The project file still contains the project-specific facts: tasks, estimates, and dependencies. The configuration file now contains the organization's shared interpretation of labels such as `high team_experience` or `medium technical_complexity`.
+To modify these factors according to the project specific circumstances add the specific values in separate config file that are used in the simulation. For example we can use slightly higher values for the uncertainty factors than the program uses by default as:
 
-In this example, the overall forecast becomes shorter than in Step 2 because setting `team_experience` to `"high"` applies a 0.90 multiplier to task_001, which more than offsets the modest increases from the other factors.
+```yaml
+uncertainty_factors:  
+  team_experience:    
+    high: 0.90    
+    medium: 1.1    
+    low: 1.50  
+    
+  requirements_maturity:    
+    high: 1.0    
+    medium: 1.40    
+    low: 1.80  
+    
+  technical_complexity:    
+    low: 1.0    
+    medium: 1.15    
+    high: 1.40
+  
+simulation:  
+  default_iterations: 10000  
+  random_seed: null
 
-If you want to inspect the active merged configuration (built-in defaults plus any custom overrides), run:
+output:
+    formats: ["json"]
+    include_histogram: true
+    number_bins: 30
+```
+
+To see the programs default values use
 
 ```bash
-mcprojsim config --config-file first-project-config.yaml
+mcprojsim config
 ```
+
+The interesting part of the output is
+
+```yaml
+Uncertainty Factors:
+  team_experience:
+    high: 0.9
+    medium: 1.0
+    low: 1.3
+  requirements_maturity:
+    high: 1.0
+    medium: 1.15
+    low: 1.4
+  technical_complexity:
+    low: 1.0
+    medium: 1.2
+    high: 1.5
+  team_distribution:
+    colocated: 1.0
+    distributed: 1.25
+  integration_complexity:
+    low: 1.0
+    medium: 1.15
+    high: 1.35
+  ...  
+```
+
+Save these updated values as `first-project-step-3-config.yaml` and then run the simulation again using these values as 
+
+```bash
+mcprojsim simulate first-project-step-3.yaml --seed 42 --minimal --config first-project-step-3-config.yaml
+```
+
+We do not repeat the full output but show only the summary as
+
+```txt
+<-- SKIP -->
+Calendar Time Statistical Summary:
+  Mean: 57.19 hours (8 working days)
+  Median (P50): 56.85 hours
+  Std Dev: 8.87 hours
+  Minimum: 31.76 hours
+  Maximum: 87.52 hours
+
+Project Effort Statistical Summary:
+  Mean: 57.19 person-hours (8 person-days)
+  Median (P50): 56.85 person-hours
+  Std Dev: 8.87 person-hours
+  Minimum: 31.76 person-hours
+  Maximum: 87.52 person-hours
+```
+
+As expected the simulation shows slightly hgher effort and longer calendar time.
 
 ## Add explicit risk events
 
@@ -427,13 +504,13 @@ tasks:
         impact: 1.5     # bare float = hours; use impact.type/value/unit for other units
 ```
 
-Run it:
+Again, run this as:
 
 ```bash
 mcprojsim simulate first-project-step-4.yaml \
-  --config first-project-config.yaml \
+  --config first-project-step-3-config.yaml \
   --iterations 5000 \
-  --seed 42
+  --seed 42 --minimal
 ```
 
 Example result summary:
@@ -442,31 +519,47 @@ Example result summary:
 === Simulation Results ===
 
 Project Overview:
-Project: Tiny Landing Page
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Tiny Landing Page
+  Start Date: 2026-03-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
 
 Calendar Time Statistical Summary:
-Mean: 65.36 hours (9 working days)
-Median (P50): 64.57 hours
-Std Dev: 11.60 hours
-...
+  Mean: 60.52 hours (8 working days)
+  Median (P50): 59.64 hours
+  Std Dev: 10.99 hours
+  Minimum: 32.85 hours
+  Maximum: 103.52 hours
+
+Project Effort Statistical Summary:
+  Mean: 57.35 person-hours (8 person-days)
+  Median (P50): 57.01 person-hours
+  Std Dev: 8.87 person-hours
+  Minimum: 31.76 person-hours
+  Maximum: 87.52 person-hours
 
 Calendar Time Confidence Intervals:
-  P50: 64.57 hours (9 working days)  (2026-03-12)
-  P80: 75.34 hours (10 working days)  (2026-03-13)
-  P90: 81.04 hours (11 working days)  (2026-03-16)
+  P50: 59.64 hours (8 working days)  (2026-03-11)
+  P80: 69.95 hours (9 working days)  (2026-03-12)
+  P90: 75.46 hours (10 working days)  (2026-03-13)
 
-Risk Impact Analysis:
-  task_002: mean=0.23h, triggers=15.4%, mean_when_triggered=1.50h
+  <-- SKIP -->
+
+  Risk Impact Analysis:
+    task_002: mean=0.23h, triggers=15.0%, mean_when_triggered=1.50h
 ```
 
 Notice what happened relative to Step 3:
 
-- the mean increased (from 61.79h to 65.36h),
+- the project mean increased 
 - the upper percentiles increased,
 - the spread increased.
+
+In this example the change was the added overall project risk and we kept the task risks the same. For that reason we do not see any change in the task effort but only in the overall calendar time for the project.
 
 A new section, **Risk Impact Analysis**, also appears. It shows how often each risk triggered and how much it added on average. In this example, `risk_002` ("Hosting problem") triggered in about 15% of iterations, adding 1.5 hours when it did — matching the 0.15 probability and 1.5-hour impact we specified.
 
@@ -482,7 +575,7 @@ However, some teams think more naturally in relative sizing. They can say that o
 
 ### Step 5: use `t_shirt_size` instead of explicit ranges
 
-In the source code, a task estimate may specify `t_shirt_size` instead of `expected` and the related range values. Validation accepts that form, and the simulation engine later resolves the symbolic size to concrete `low`, `expected`, and `high` values from the active configuration.
+In the source code, a task estimate may specify the field `t_shirt_size` instead of `expected` and the related range values. Validation accepts that form, and the simulation engine later resolves the symbolic size to concrete `low`, `expected`, and `high` values from the active configuration.
 
 That means a T-shirt-sized task still becomes an ordinary probabilistic range during simulation. The symbolic label is just a more convenient way to express the estimate in the input file.
 
@@ -523,11 +616,29 @@ tasks:
 
 Note that no `unit` field appears on any task — the unit is taken from the configuration.
 
-The same example is also available as `examples/tshirt_walkthrough_project.yaml`, with a matching configuration file at `examples/tshirt_walkthrough_config.yaml`.
+
+### Categories of T-shirt sizes
+
+T-shirt sizes are organized into categories so that the same label (`M`, `L`, etc.) can have different meanings depending on the type of work. An `M` story and an `M` epic represent vastly different amounts of work, and the category structure keeps those scales separate.
+
+The built-in categories cover the common levels of planning granularity in software delivery:
+
+| Category | Typical use | Example `M` expected (hours) |
+|---|---|---:|
+| `bug` | Individual defects and small fixes | 8 |
+| `story` | User-facing features and tasks (default) | 60 |
+| `epic` | Groups of related stories | 240 |
+| `business` | Larger business capabilities or programmes | 4 000 |
+| `initiative` | Strategic initiatives spanning multiple programmes | 20 000 |
+
+The default category is `story`. When a task specifies a bare size like `t_shirt_size: "M"`, it is resolved against the `story` category unless you override `t_shirt_size_default_category` in the configuration file.
+
+Use a qualified form such as `t_shirt_size: "epic.M"` to reference a size from a specific category directly, regardless of the default.
+
 
 ### How T-shirt sizes are configured
 
-If you want to use a custom configuration file with T-shirt estimates, add a `t_shirt_sizes` section like this:
+If you want to use a custom configuration file with T-shirt estimates, add a `t_shirt_sizes` section like this to the configuration file:
 
 ```yaml
 t_shirt_sizes:
@@ -548,7 +659,7 @@ t_shirt_sizes:
 t_shirt_size_default_category: story
 ```
 
-The application ships with built-in mappings for multiple categories (`bug`, `story`, `epic`, `business`, `initiative`) and defaults bare sizes like `M` to the `epic` category. In this example, `t_shirt_size_default_category: story` makes bare sizes use story-scale values instead.
+The application ships with built-in mappings for multiple categories (`bug`, `story`, `epic`, `business`, `initiative`) and defaults bare sizes like `M` to the `story` category. In this example, `t_shirt_size_default_category: story` makes bare sizes use story-scale values instead.
 
 If you use your own configuration file, it is merged onto built-in defaults. That means you do **not** need to redefine `t_shirt_sizes` unless you want to override defaults.
 
@@ -566,8 +677,7 @@ Run the T-shirt-sized example like this:
 ```bash
 mcprojsim simulate examples/tshirt_walkthrough_project.yaml \
   --config examples/tshirt_walkthrough_config.yaml \
-  --iterations 5000 \
-  --seed 42
+  --seed 42 --minimal
 ```
 
 Example result summary:
@@ -576,21 +686,33 @@ Example result summary:
 === Simulation Results ===
 
 Project Overview:
-Project: Tiny Landing Page
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Tiny Landing Page
+  Start Date: 2026-03-01
+  Number of Tasks: 3
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
 
 Calendar Time Statistical Summary:
-Mean: 13.18 hours (2 working days)
-Median (P50): 13.08 hours
-Std Dev: 1.87 hours
-...
+  Mean: 9.67 hours (2 working days)
+  Median (P50): 9.59 hours
+  Std Dev: 1.39 hours
+  Minimum: 5.83 hours
+  Maximum: 14.45 hours
+
+Project Effort Statistical Summary:
+  Mean: 9.67 person-hours (2 person-days)
+  Median (P50): 9.59 person-hours
+  Std Dev: 1.39 person-hours
+  Minimum: 5.83 person-hours
+  Maximum: 14.45 person-hours
 
 Calendar Time Confidence Intervals:
-  P50: 13.08 hours (2 working days)  (2026-03-03)
-  P80: 14.80 hours (2 working days)  (2026-03-03)
-  P90: 15.72 hours (2 working days)  (2026-03-03)
+  P50: 9.59 hours (2 working days)  (2026-03-03)
+  P80: 10.88 hours (2 working days)  (2026-03-03)
+  P90: 11.55 hours (2 working days)  (2026-03-03)
 ```
 
 The interpretation is exactly the same as for explicit ranges. The only difference is how the task effort was expressed in the input file.
@@ -604,6 +726,8 @@ Some teams prefer to estimate backlog items in Story Points rather than T-shirt 
 `mcprojsim` supports that style as another symbolic estimate form. In the input file you provide a `story_points` value, and during simulation the active configuration resolves it to a numeric `(low, expected, high)` range in the configured unit (default: days).
 
 **Important:** Story point estimates must not include a `unit` field in the project file. The unit is determined by the configuration file's `story_point_unit` setting (default: `"days"`).
+
+Story points was originally conceived as a way to model actual working time where 1 SP was eqal to 1 uninterrupted day of work (something that rarely happens in real life). Now, SP is an estimat calibrated to a specific team and story points are only valid within the same and stable team as their own "currency" were each team have different exchange rates between SP <--> days. The program have *one* exchange rate by default but that can easily be adjusted by supplying a different exchange rate in a config file as shown below
 
 ### Step 6: use `story_points`
 
@@ -638,7 +762,28 @@ tasks:
 
 Note that no `unit` field appears on any task — the unit is taken from the configuration.
 
-The same example is also available as `examples/story_points_walkthrough_project.yaml`, with a matching configuration file at `examples/story_points_walkthrough_config.yaml`.
+### Default Story Point
+
+The built-in Story Points have the following mapping to time (in days)
+
+```yaml
+Story Points (unit: days):
+  1:
+    low: 0.5, expected: 1.0, high: 3.0
+  2:
+    low: 1.0, expected: 2.0, high: 4.0
+  3:
+    low: 1.5, expected: 3.0, high: 5.0
+  5:
+    low: 3.0, expected: 5.0, high: 8.0
+  8:
+    low: 5.0, expected: 8.0, high: 15.0
+  13:
+    low: 8.0, expected: 13.0, high: 21.0
+  21:
+    low: 13.0, expected: 21.0, high: 34.0
+```
+
 
 ### How Story Points are configured
 
@@ -675,10 +820,9 @@ As with T-shirt sizes, a custom config file does not need to redefine `story_poi
 Run the Story Point example like this:
 
 ```bash
-mcprojsim simulate examples/story_points_walkthrough_project.yaml \
-  --config examples/story_points_walkthrough_config.yaml \
-  --iterations 5000 \
-  --seed 42
+mcprojsim simulate first-project-step-6.yaml \
+--config  first-project-step-6-config.yaml \
+--seed 42  --minimal
 ```
 
 Example result summary:
@@ -687,21 +831,33 @@ Example result summary:
 === Simulation Results ===
 
 Project Overview:
-Project: Tiny Landing Page
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Tiny Landing Page
+  Start Date: 2026-03-01
+  Number of Tasks: 3
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
 
 Calendar Time Statistical Summary:
-Mean: 105.69 hours (14 working days)
-Median (P50): 104.59 hours
-Std Dev: 14.93 hours
-...
+  Mean: 80.64 hours (11 working days)
+  Median (P50): 80.12 hours
+  Std Dev: 11.58 hours
+  Minimum: 47.68 hours
+  Maximum: 123.43 hours
+
+Project Effort Statistical Summary:
+  Mean: 80.64 person-hours (11 person-days)
+  Median (P50): 80.12 person-hours
+  Std Dev: 11.58 person-hours
+  Minimum: 47.68 person-hours
+  Maximum: 123.43 person-hours
 
 Calendar Time Confidence Intervals:
-  P50: 104.59 hours (14 working days)  (2026-03-19)
-  P80: 118.84 hours (15 working days)  (2026-03-20)
-  P90: 126.22 hours (16 working days)  (2026-03-23)
+  P50: 80.12 hours (11 working days)  (2026-03-16)
+  P80: 90.55 hours (12 working days)  (2026-03-17)
+  P90: 95.93 hours (12 working days)  (2026-03-17)
 ```
 
 Story Points are useful when the team has a stable internal understanding of what `1`, `2`, `3`, `5`, `8`, `13`, or `21` mean, but that understanding does not translate directly to raw hours or days. The config file is where that team-specific calibration belongs.
@@ -738,13 +894,7 @@ This approach helps prevent over-modeling too early. A simple, valid project fil
 
 ## How this chapter connects to the shipped examples
 
-The tiny examples in this chapter are teaching examples. The files in the `examples/` directory show how the same ideas scale up.
-
-- `examples/sample_project.yaml` shows a more complete project with several tasks, dependencies, uncertainty factors, and risks.
-- `examples/sample_config.yaml` shows a fuller configuration with reusable uncertainty-factor mappings and output settings.
-- `examples/tshirt_sizing_project.yaml` shows an alternative style where tasks use T-shirt sizes instead of explicit `low`, `expected`, and `high` values.
-- `examples/story_points_walkthrough_project.yaml` shows the same symbolic-estimate idea using Story Points and a configuration mapping.
-- `examples/project_with_custom_thresholds.yaml` shows how project-level reporting thresholds can be tuned for stricter or more conservative decision-making.
+The tiny examples in this chapter are teaching examples. The files in the `examples/01_first_project` directory show how the same ideas scale up.
 
 If you have understood the stages in this chapter, those larger example files should now feel much easier to read.
 

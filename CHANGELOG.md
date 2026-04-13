@@ -1,3 +1,24 @@
+## [v0.14.1] - 2026-04-13
+
+Release Type: patch
+
+### 📋 Summary
+This release tightens the `--minimal` CLI output mode and fixes several documentation issues found during new-user walkthroughs, including a corrected MCP server verification procedure and a new cost-fields reference section.
+
+### 🚀 Improvements
+- Hidden the `Default Uncertainty Factors` section from console output when `--minimal` is used
+- Hidden advanced statistics (Coefficient of Variation, Skewness, Excess Kurtosis) from Calendar Time and Project Effort summaries when `--minimal` is used
+- Changed configuration key `histogram_bins` to `number_bins` to make CLI flag and configuration field have same name
+
+### 📚 Documentation
+- Added cost estimation fields reference section to the Project Files user guide.
+- Corrected MCP server verification instructions
+- Fixed multiple issues in the User Guide identified during new-user walkthroughs
+
+### 🛠 Internal
+- Renamed User Guide files for consistent chapter ordering
+
+
 ## [v0.14.0] - 2026-04-12
 
 Release Type: minor
@@ -186,7 +207,7 @@ Release Type: minor
 This release adds a configurable histogram bin count for distribution charts, extends MCP server capabilities to cover two-pass scheduling and sprint override inputs, and refreshes documentation across sprint planning, examples, and the getting-started guide.
 
 ### ✨ Additions
-- Added `histogram_bins` config field and `--number-bins` CLI flag to control the number of bins in simulation output distribution charts (default 50)
+- Added `number_bins` config field and `--number-bins` CLI flag to control the number of bins in simulation output distribution charts (default 50)
 
 ### 🚀 Improvements
 - Updated MCP server bundle to reflect latest NL processing capabilities and new MCP command coverage

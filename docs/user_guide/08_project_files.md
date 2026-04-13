@@ -709,23 +709,12 @@ For the complete risk grammar see [Formal Grammar — `<risk_properties>`](../gr
 
 ### Risk impact syntax
 
-The `impact` field supports two forms.
+The `impact` field can be specified in two ways but is normally specified as as structured object. The two ways to specify risk impact are: 
 
-#### 1. Simple numeric impact
+#### 1. Structured impact object (recommended)
 
-This is interpreted as an absolute time penalty.
-
-```yaml
-risks:
-  - id: "risk_001"
-    name: "Integration issues"
-    probability: 0.25
-    impact: 3
-```
-
-#### 2. Structured impact object
-
-This may be either `absolute` or `percentage`.
+This may be either of type `"absolute"` or type `"percentage"` and is the 
+clearest way to specify a risk as it is unambigous. A unit can only be specified if the type `"absolute"` since the percentage is applied to the already specified unit for the simulation result either for the task or the overall effort for the project. The following example makes it clear:
 
 ```yaml
 risks:
@@ -745,6 +734,43 @@ risks:
       value: 15
 ```
 
+In the first case `risk_001` the risk adds 5 working days (`=hours_per_day*5`). Unit can be one of `"hours"`, `"days"` or `"weeks"`.
+
+#### 2. Short form
+
+This is interpreted as an absolute time penalty in hours and is supplied as a "quick-and-dirty" way to specify a risk impact. However, we strongly recommend that the full structured object way is used!
+
+```yaml
+risks:
+  - id: "risk_001"
+    name: "Integration issues"
+    probability: 0.25
+    impact: 3  # Interpretated as an absolute impact in hours
+```
+
+**Caution:**
+
+```
+  ✅ Correct:
+  risks:
+    - id: "risk_001"
+      name: "Delay"
+      probability: 0.2
+      impact:
+        type: "absolute"
+        value: 3
+        unit: "days"
+  
+  ❌ Wrong:
+  risks:
+    - id: "risk_001"
+      name: "Delay"
+      probability: 0.2
+      impact: 3
+      unit: "days"  ← unit goes inside impact, not outside
+  ```
+
+
 ### Validation rules for risks
 
 The model enforces:
@@ -753,6 +779,7 @@ The model enforces:
 - `impact.value` must be greater than `0` when object syntax is used,
 - numeric impacts are converted to floats,
 - structured impacts must use `type: "absolute"` or `type: "percentage"`.
+- a unit only makes sense for `"absolute"`type of impact
 
 ## The `project_risks` section
 
@@ -773,6 +800,289 @@ project_risks:
       unit: "days"
     description: "Late business scope change"
 ```
+
+**Note:** Be careful if you add an impact type of percentage as a top level risk as it is added as a multiplicative percentage to the overall simulated effort.
+
+## Cost estimation
+
+`mcprojsim` can model monetary costs alongside schedule duration. When cost estimation is active, each Monte Carlo iteration produces a total project cost in addition to an elapsed duration. The output includes a cost distribution with the same percentile structure as the schedule output.
+
+Cost estimation is **opt-in**: it activates automatically as soon as any of the following are present in the project file:
+
+- `project.default_hourly_rate` is set to a value greater than zero,
+- any `resources` entry has a non-null `hourly_rate`,
+- any task has a non-null `fixed_cost`,
+- any task-level or project-level risk has a non-null `cost_impact`.
+
+If none of these conditions hold, the simulation runs without cost tracking and no cost section appears in the output.
+
+### Cost components
+
+Each iteration's total project cost is the sum of four components:
+
+$$
+\text{total\_cost} = \text{labor\_cost} + \text{fixed\_cost} + \text{risk\_cost} + \text{overhead}
+$$
+
+**Labor cost** is `sum over all tasks of (sampled_task_duration_hours × effective_hourly_rate)`. The effective rate for a task is:
+
+- the **resource's** `hourly_rate` when the task is assigned to a named resource with a rate,
+- the **mean rate** across all assigned resources when multiple resources are assigned,
+- the **project-level** `default_hourly_rate` for tasks in dependency-only mode, or for tasks with no assigned resource or no resource rate.
+
+**Fixed cost** is the sum of `fixed_cost` across all tasks. Fixed costs are applied once per iteration regardless of sampled duration. They may be negative (to represent subsidies, credits, or rebates).
+
+**Risk cost** is the sum of all `cost_impact` values for risks that trigger in that iteration — both task-level and project-level risks. A risk's cost impact shares the same probability roll as its time impact: if the risk fires, both the time delay and the cost penalty are applied in the same iteration.
+
+**Overhead** is `labor_cost × overhead_rate`. It is applied **only to labor** — fixed costs and risk costs are not marked up by overhead. Per-task cost breakdowns in the output therefore do not include overhead; overhead is shown separately at the project level.
+
+### Project-level cost fields
+
+These fields are all optional and appear inside the `project` section.
+
+| Field | Type | Default | Constraints | Notes |
+|---|---|---|---|---|
+| `default_hourly_rate` | float | `null` | `≥ 0` | Blended hourly rate for all tasks when no per-resource rate is available; activates cost estimation when `> 0` |
+| `overhead_rate` | float | `0.0` | `0.0` – `3.0` | Fractional overhead markup on labor cost (e.g. `0.20` = 20%) |
+| `currency` | string | config default (`"EUR"`) | ISO 4217 | Currency label used in output and exports; non-standard codes produce a warning |
+| `secondary_currencies` | list of strings | `[]` | max 5 entries, ISO 4217 | Additional currencies for secondary conversion output in JSON exports |
+| `fx_conversion_cost` | float | `0.0` | `0.0` – `0.50` | Bank conversion spread fraction added to the official mid-market exchange rate |
+| `fx_overhead_rate` | float | `0.0` | `0.0` – `1.0` | Additional overhead fraction for hedging or admin costs, applied on top of `fx_conversion_cost` |
+| `fx_rates` | mapping | `{}` | — | Manual exchange rate overrides by ISO 4217 target code; bypasses live rate fetch and applies no markups |
+
+#### YAML example
+
+```yaml
+project:
+  name: "API Rewrite"
+  start_date: "2026-06-01"
+  default_hourly_rate: 150.0
+  overhead_rate: 0.15
+  currency: "EUR"
+  secondary_currencies: ["USD", "SEK"]
+  fx_conversion_cost: 0.015
+  fx_overhead_rate: 0.005
+```
+
+### Task-level cost field
+
+| Field | Type | Default | Constraints | Notes |
+|---|---|---|---|---|
+| `fixed_cost` | float | `null` | any finite float | One-time monetary cost for this task, independent of effort; may be negative |
+
+`fixed_cost` is applied once per iteration—it does not scale with sampled duration. Use it to represent predictable one-time fees attached to a task, such as cloud infrastructure provisioning charges, software licence costs, or vendor setup fees. A negative value models a credit or rebate.
+
+#### YAML example
+
+```yaml
+tasks:
+  - id: "infra_setup"
+    name: "Cloud Infrastructure Setup"
+    estimate:
+      low: 16
+      expected: 24
+      high: 40
+      unit: "hours"
+    fixed_cost: 3500.0      # one-time provisioning fee
+
+  - id: "data_migration"
+    name: "Data Migration"
+    estimate:
+      low: 8
+      expected: 16
+      high: 32
+      unit: "hours"
+    fixed_cost: -1200.0     # vendor credit applied on migration completion
+```
+
+### Risk `cost_impact` field
+
+Both task-level and project-level risks support an optional `cost_impact` field.
+
+| Field | Type | Default | Constraints | Notes |
+|---|---|---|---|---|
+| `cost_impact` | float | `null` | any finite float | Monetary cost added when this risk triggers; may be negative for cost savings; shares the probability roll of the time impact |
+
+`cost_impact` is independent of the time `impact` field. You can specify:
+
+- a time impact only (schedule delay, no cost),
+- a `cost_impact` only (cost penalty without schedule delay, using `impact: 0` for the time part),
+- or both together.
+
+When a risk fires, both the time impact and the cost impact are applied in the same iteration. The shared probability roll means cost and schedule impacts are always correlated: a risk either affects both, or neither.
+
+#### YAML example — task-level risk with both impacts
+
+```yaml
+risks:
+  - id: "risk_api_change"
+    name: "Third-Party API Breaking Change"
+    probability: 0.20
+    impact:
+      type: "absolute"
+      value: 2
+      unit: "days"
+    cost_impact: 4500.0     # emergency vendor support fee
+```
+
+#### YAML example — cost-only risk
+
+```yaml
+risks:
+  - id: "risk_audit_fee"
+    name: "Regulatory Audit Surcharge"
+    probability: 0.10
+    impact: 0               # no time delay
+    cost_impact: 8000.0     # external audit costs if triggered
+```
+
+#### YAML example — negative cost impact (saving)
+
+```yaml
+risks:
+  - id: "risk_early_signoff"
+    name: "Early Stakeholder Sign-off"
+    probability: 0.15
+    impact: 0
+    cost_impact: -1500.0    # early-completion bonus reduces total cost
+```
+
+### Resource-level cost field
+
+When named resources are defined (see [The top-level `resources` section](#the-top-level-resources-section)), each resource may specify its own hourly rate.
+
+| Field | Type | Default | Constraints | Notes |
+|---|---|---|---|---|
+| `hourly_rate` | float | `null` | `≥ 0` | Per-resource hourly cost rate; overrides `project.default_hourly_rate` for tasks assigned to this resource |
+
+When a task is assigned to resources, the effective rate used for labor cost is the mean of the `hourly_rate` values of the assigned resources. Resources with `hourly_rate: null` fall back to `project.default_hourly_rate`. Setting `hourly_rate: 0.0` is valid and models volunteer or no-cost resources.
+
+#### YAML example
+
+```yaml
+resources:
+  - name: "alice"
+    experience_level: 3
+    hourly_rate: 240.0      # principal engineer; overrides project default
+  - name: "bob"
+    experience_level: 2
+    hourly_rate: 160.0
+  - name: "carol"
+    experience_level: 2
+    hourly_rate: 105.0
+  - name: "intern"
+    experience_level: 1
+    hourly_rate: 0.0        # no cost
+```
+
+### Configuration file cost settings
+
+The `cost` section of the configuration file supplies defaults that apply when the project file does not specify a value.
+
+| Field | Type | Default | Constraints | Notes |
+|---|---|---|---|---|
+| `default_hourly_rate` | float | `null` | `≥ 0` | Fallback hourly rate when project does not set one |
+| `overhead_rate` | float | `0.0` | `0.0` – `3.0` | Fallback overhead markup when project does not set one |
+| `currency` | string | `"EUR"` | ISO 4217 | Fallback currency when `project.currency` is not set |
+| `include_in_output` | boolean | `true` | — | Whether to include cost sections in CLI output and exports when cost data is present |
+
+#### YAML example
+
+```yaml
+cost:
+  default_hourly_rate: 130.0
+  overhead_rate: 0.15
+  currency: "USD"
+  include_in_output: true
+```
+
+### Complete cost example
+
+The following project file uses all cost features: per-resource rates, a project fallback rate for unassigned tasks, fixed costs, positive and negative risk cost impacts, and overhead.
+
+```yaml
+project:
+  name: "E-Commerce Platform Launch"
+  start_date: "2026-08-01"
+  hours_per_day: 8
+  default_hourly_rate: 130.0   # fallback for tasks with no named resource rate
+  overhead_rate: 0.18          # 18 % markup on total labor
+  currency: "USD"
+  confidence_levels: [50, 80, 90, 95]
+
+resources:
+  - name: "alice"
+    experience_level: 3
+    hourly_rate: 240.0         # principal engineer
+  - name: "bob"
+    experience_level: 3
+    hourly_rate: 160.0         # senior engineer
+  - name: "carol"
+    experience_level: 2
+    hourly_rate: 105.0         # mid-level engineer
+
+project_risks:
+  - id: "proj_risk_001"
+    name: "Regulatory Delay"
+    probability: 0.12
+    impact:
+      type: "absolute"
+      value: 1
+      unit: "weeks"
+    cost_impact: 12000.0       # legal fees if triggered
+
+tasks:
+  - id: "cloud_infra"
+    name: "Cloud Infrastructure"
+    estimate:
+      low: 16
+      expected: 24
+      high: 40
+      unit: "hours"
+    resources: ["alice"]
+    fixed_cost: -5000.0        # AWS credit (negative = rebate)
+
+  - id: "checkout"
+    name: "Checkout & Payments"
+    estimate:
+      low: 40
+      expected: 80
+      high: 140
+      unit: "hours"
+    resources: ["bob"]
+    dependencies: ["cloud_infra"]
+    fixed_cost: 1200.0         # Stripe setup fee
+    risks:
+      - id: "risk_pci"
+        name: "PCI Scope Expansion"
+        probability: 0.20
+        impact:
+          type: "absolute"
+          value: 4
+          unit: "days"
+        cost_impact: 9500.0    # external QSA assessment
+
+  - id: "admin_tasks"
+    name: "Documentation and Handover"
+    estimate:
+      low: 8
+      expected: 16
+      high: 24
+      unit: "hours"
+    # no resource → uses project.default_hourly_rate ($130/hr)
+    dependencies: ["checkout"]
+```
+
+### Validation rules for cost fields
+
+- `default_hourly_rate` and `hourly_rate` must be `≥ 0` (zero is allowed; negative is rejected).
+- `overhead_rate` must be in the range `0.0` to `3.0`.
+- `fx_conversion_cost` must be in the range `0.0` to `0.50`.
+- `fx_overhead_rate` must be in the range `0.0` to `1.0`.
+- `secondary_currencies` may contain at most 5 entries.
+- Non-standard ISO 4217 currency codes produce a `UserWarning` rather than an error.
+- `fixed_cost` and `cost_impact` may be negative; no lower-bound constraint is applied.
+- `cost_impact: 0` on a risk is valid when a time-only impact is intended (the `cost_impact` field may simply be omitted in that case).
 
 ## The top-level `resources` section
 
@@ -1337,7 +1647,7 @@ simulation:
 output:
   formats: ["json", "csv", "html"]
   include_histogram: true
-  histogram_bins: 50
+  number_bins: 50
   critical_path_report_limit: 2
 
 staffing:
@@ -1619,7 +1929,7 @@ This section controls reporting and export defaults.
 |---|---|---|---|---|---|
 | `formats` | No | list of strings | `["json", "csv", "html"]` | each entry must be `json`, `csv`, or `html`; list must not be empty | Default export formats for config-driven workflows |
 | `include_histogram` | No | boolean | `true` | — | Whether histogram data should be included where supported |
-| `histogram_bins` | No | integer | `50` | `> 0` | Number of bins for histogram generation |
+| `number_bins` | No | integer | `50` | `> 0` | Number of bins for histogram generation |
 | `critical_path_report_limit` | No | integer | `2` | `> 0` | Number of stored full critical paths shown in reports by default |
 
 ### Example
@@ -1628,7 +1938,7 @@ This section controls reporting and export defaults.
 output:
   formats: ["json", "html"]
   include_histogram: true
-  histogram_bins: 80
+  number_bins: 80
   critical_path_report_limit: 5
 ```
 
@@ -1762,7 +2072,7 @@ The current configuration model validates these rules directly:
 - `output.formats` must be a non-empty list; each entry must be `json`, `csv`, or `html`,
 - `simulation.default_iterations` must be greater than 0,
 - `simulation.max_stored_critical_paths` must be greater than 0,
-- `output.histogram_bins` must be greater than 0,
+- `output.number_bins` must be greater than 0,
 - `output.critical_path_report_limit` must be greater than 0,
 - `staffing.effort_percentile`, when set, must be between 1 and 99,
 - `staffing.min_individual_productivity` must be greater than 0 and at most 1,

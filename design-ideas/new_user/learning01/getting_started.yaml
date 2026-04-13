@@ -1,0 +1,12 @@
+project:
+  name: "Getting Started Trial"
+  start_date: "2026-05-01"
+
+tasks:
+  - id: "task_001"
+    name: "Kickoff"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days"

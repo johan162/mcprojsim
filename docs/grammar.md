@@ -368,7 +368,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 
 <output_config> ::= "output:"
                     ["formats:" <string_list>]
-                    ["histogram_bins:" <positive_integer>]
+                    ["number_bins:" <positive_integer>]
                     ["max_stored_critical_paths:" <positive_integer>]
                     ["critical_path_report_limit:" <positive_integer>]
 

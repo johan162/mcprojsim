@@ -1,0 +1,229 @@
+## Sprint planning experiment
+Validating new_user/sprint_planning.yaml...
+✓ Project file is valid!
+mcprojsim, version 0.13.0
+Progress: 10.0% (120/1200)
+Progress: 20.0% (240/1200)
+Progress: 30.0% (360/1200)
+Progress: 40.0% (480/1200)
+Progress: 50.0% (600/1200)
+Progress: 60.0% (720/1200)
+Progress: 70.0% (840/1200)
+Progress: 80.0% (960/1200)
+Progress: 90.0% (1080/1200)
+Progress: 100.0% (1200/1200)
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬──────────────────────────┐
+│ Field                          │ Value                    │
+├────────────────────────────────┼──────────────────────────┤
+│ Project                        │ Sprint Planning Advanced │
+│ Start Date                     │ 2026-05-04               │
+│ Number of Tasks                │ 6                        │
+│ Effective Default Distribution │ triangular               │
+│ T-Shirt Category Used          │ story                    │
+│ Hours per Day                  │ 8.0                      │
+│ Max Parallel Tasks             │ 6                        │
+│ Schedule Mode                  │ dependency_only          │
+└────────────────────────────────┴──────────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬───────────────────────────────┐
+│ Metric                   │ Value                         │
+├──────────────────────────┼───────────────────────────────┤
+│ Mean                     │ 84.25 hours (11 working days) │
+│ Median (P50)             │ 84.25 hours                   │
+│ Std Dev                  │ 14.96 hours                   │
+│ Minimum                  │ 45.92 hours                   │
+│ Maximum                  │ 118.88 hours                  │
+│ Coefficient of Variation │ 0.1776                        │
+│ Skewness                 │ 0.0681                        │
+│ Excess Kurtosis          │ -0.8018                       │
+└──────────────────────────┴───────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 284.72 person-hours (36 person-days) │
+│ Median (P50)             │ 284.37 person-hours                  │
+│ Std Dev                  │ 26.75 person-hours                   │
+│ Minimum                  │ 212.53 person-hours                  │
+│ Maximum                  │ 369.30 person-hours                  │
+│ Coefficient of Variation │ 0.0939                               │
+│ Skewness                 │ 0.1190                               │
+│ Excess Kurtosis          │ -0.3863                              │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │   84.25 │             11 │ 2026-05-19 │
+│ P80          │   98.24 │             13 │ 2026-05-21 │
+│ P90          │  104.42 │             14 │ 2026-05-22 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Sprint Planning Summary:
+┌───────────────────────────────┬─────────────────────────────────────┐
+│ Field                         │ Value                               │
+├───────────────────────────────┼─────────────────────────────────────┤
+│ Sprint Length                 │ 2 weeks                             │
+│ Planning Confidence Level     │ 85%                                 │
+│ Removed Work Treatment        │ RemovedWorkTreatment.REDUCE_BACKLOG │
+│ Velocity Model                │ empirical                           │
+│ Planned Commitment Guidance   │ 7.13                                │
+│ Historical Sampling Mode      │ matching_cadence                    │
+│ Historical Observations       │ 4                                   │
+│ Carryover Mean                │ 2.32                                │
+│ Aggregate Spillover Rate      │ 0.1997                              │
+│ Observed Disruption Frequency │ 0.7192                              │
+└───────────────────────────────┴─────────────────────────────────────┘
+
+Sprint Count Statistical Summary:
+┌──────────────────────────┬───────────────┐
+│ Metric                   │ Value         │
+├──────────────────────────┼───────────────┤
+│ Mean                     │ 4.87 sprints  │
+│ Median (P50)             │ 4.00 sprints  │
+│ Std Dev                  │ 1.47 sprints  │
+│ Minimum                  │ 3.00 sprints  │
+│ Maximum                  │ 18.00 sprints │
+│ Coefficient of Variation │ 0.3016        │
+└──────────────────────────┴───────────────┘
+
+Sprint Count Confidence Intervals:
+┌──────────────┬───────────┬───────────────────────────┐
+│ Percentile   │ Sprints   │ Projected Delivery Date   │
+├──────────────┼───────────┼───────────────────────────┤
+│ P50          │ 4.00      │ 2026-06-15                │
+│ P80          │ 6.00      │ 2026-07-13                │
+│ P90          │ 7.00      │ 2026-07-27                │
+└──────────────┴───────────┴───────────────────────────┘
+mcprojsim, version 0.13.0
+Progress: 10.0% (120/1200)
+Progress: 20.0% (240/1200)
+Progress: 30.0% (360/1200)
+Progress: 40.0% (480/1200)
+Progress: 50.0% (600/1200)
+Progress: 60.0% (720/1200)
+Progress: 70.0% (840/1200)
+Progress: 80.0% (960/1200)
+Progress: 90.0% (1080/1200)
+Progress: 100.0% (1200/1200)
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬──────────────────────────┐
+│ Field                          │ Value                    │
+├────────────────────────────────┼──────────────────────────┤
+│ Project                        │ Sprint Planning Advanced │
+│ Start Date                     │ 2026-05-04               │
+│ Number of Tasks                │ 6                        │
+│ Effective Default Distribution │ triangular               │
+│ T-Shirt Category Used          │ story                    │
+│ Hours per Day                  │ 8.0                      │
+│ Max Parallel Tasks             │ 6                        │
+│ Schedule Mode                  │ dependency_only          │
+└────────────────────────────────┴──────────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬───────────────────────────────┐
+│ Metric                   │ Value                         │
+├──────────────────────────┼───────────────────────────────┤
+│ Mean                     │ 84.25 hours (11 working days) │
+│ Median (P50)             │ 84.25 hours                   │
+│ Std Dev                  │ 14.96 hours                   │
+│ Minimum                  │ 45.92 hours                   │
+│ Maximum                  │ 118.88 hours                  │
+│ Coefficient of Variation │ 0.1776                        │
+│ Skewness                 │ 0.0681                        │
+│ Excess Kurtosis          │ -0.8018                       │
+└──────────────────────────┴───────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 284.72 person-hours (36 person-days) │
+│ Median (P50)             │ 284.37 person-hours                  │
+│ Std Dev                  │ 26.75 person-hours                   │
+│ Minimum                  │ 212.53 person-hours                  │
+│ Maximum                  │ 369.30 person-hours                  │
+│ Coefficient of Variation │ 0.0939                               │
+│ Skewness                 │ 0.1190                               │
+│ Excess Kurtosis          │ -0.3863                              │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │   84.25 │             11 │ 2026-05-19 │
+│ P80          │   98.24 │             13 │ 2026-05-21 │
+│ P90          │  104.42 │             14 │ 2026-05-22 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Sprint Planning Summary:
+┌───────────────────────────────┬─────────────────────────────────────┐
+│ Field                         │ Value                               │
+├───────────────────────────────┼─────────────────────────────────────┤
+│ Sprint Length                 │ 2 weeks                             │
+│ Planning Confidence Level     │ 85%                                 │
+│ Removed Work Treatment        │ RemovedWorkTreatment.REDUCE_BACKLOG │
+│ Velocity Model                │ neg_binomial                        │
+│ Planned Commitment Guidance   │ 7.13                                │
+│ Historical Sampling Mode      │ neg_binomial_matching_cadence       │
+│ Historical Observations       │ 4                                   │
+│ Carryover Mean                │ 2.31                                │
+│ Aggregate Spillover Rate      │ 0.2003                              │
+│ Observed Disruption Frequency │ 0.7300                              │
+│ NB mu                         │ 11.7778                             │
+│ NB dispersion k               │ inf (Poisson fallback)              │
+└───────────────────────────────┴─────────────────────────────────────┘
+
+Sprint Count Statistical Summary:
+┌──────────────────────────┬───────────────┐
+│ Metric                   │ Value         │
+├──────────────────────────┼───────────────┤
+│ Mean                     │ 5.13 sprints  │
+│ Median (P50)             │ 5.00 sprints  │
+│ Std Dev                  │ 1.74 sprints  │
+│ Minimum                  │ 3.00 sprints  │
+│ Maximum                  │ 16.00 sprints │
+│ Coefficient of Variation │ 0.3397        │
+└──────────────────────────┴───────────────┘
+
+Sprint Count Confidence Intervals:
+┌──────────────┬───────────┬───────────────────────────┐
+│ Percentile   │ Sprints   │ Projected Delivery Date   │
+├──────────────┼───────────┼───────────────────────────┤
+│ P50          │ 5.00      │ 2026-06-29                │
+│ P80          │ 6.00      │ 2026-07-13                │
+│ P90          │ 7.00      │ 2026-07-27                │
+└──────────────┴───────────┴───────────────────────────┘

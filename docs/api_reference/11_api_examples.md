@@ -330,8 +330,8 @@ def simulate_with_custom_config(project_file: str, config_file: str, overrides: 
     config = Config.load_from_file(config_file)
     
     # Apply programmatic overrides
-    if 'histogram_bins' in overrides:
-        config.output.histogram_bins = overrides['histogram_bins']
+    if 'number_bins' in overrides:
+        config.output.number_bins = overrides['number_bins']
     
     if 'iterations' in overrides:
         iterations = overrides['iterations']
@@ -357,7 +357,7 @@ results = simulate_with_custom_config(
     'project.yaml',
     'config.yaml',
     {
-        'histogram_bins': 100,
+        'number_bins': 100,
         'staffing_percentile': 80,
         'iterations': 20000,
     }

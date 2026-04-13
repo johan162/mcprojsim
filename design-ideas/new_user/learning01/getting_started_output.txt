@@ -1,0 +1,296 @@
+## Getting Started: config/validate/simulate
+Default configuration:
+
+Uncertainty Factors:
+  team_experience:
+    high: 0.9
+    medium: 1.0
+    low: 1.3
+  requirements_maturity:
+    high: 1.0
+    medium: 1.15
+    low: 1.4
+  technical_complexity:
+    low: 1.0
+    medium: 1.2
+    high: 1.5
+  team_distribution:
+    colocated: 1.0
+    distributed: 1.25
+  integration_complexity:
+    low: 1.0
+    medium: 1.15
+    high: 1.35
+
+T-Shirt Sizes (unit: hours):
+  default_category: story
+  categories: story, bug, epic, business, initiative
+  story:
+    XS:
+      low: 3.0, expected: 5.0, high: 15.0
+      lognormal params: mu: 1.2536, sigma: 0.7486, z-score: 1.6449
+    S:
+      low: 5.0, expected: 16.0, high: 40.0
+      lognormal params: mu: 2.6807, sigma: 0.5318, z-score: 1.6449
+    M:
+      low: 40.0, expected: 60.0, high: 120.0
+      lognormal params: mu: 3.3725, sigma: 0.6138, z-score: 1.6449
+    L:
+      low: 160.0, expected: 240.0, high: 500.0
+      lognormal params: mu: 4.7849, sigma: 0.6347, z-score: 1.6449
+    XL:
+      low: 320.0, expected: 400.0, high: 750.0
+      lognormal params: mu: 4.8907, sigma: 0.7132, z-score: 1.6449
+    XXL:
+      low: 400.0, expected: 500.0, high: 1200.0
+      lognormal params: mu: 5.3068, sigma: 0.8376, z-score: 1.6449
+  bug:
+    XS:
+      low: 0.5, expected: 1.0, high: 4.0
+      lognormal params: mu: -0.0581, sigma: 0.7969, z-score: 1.6449
+    S:
+      low: 1.0, expected: 3.0, high: 10.0
+      lognormal params: mu: 1.1211, sigma: 0.6542, z-score: 1.6449
+    M:
+      low: 3.0, expected: 8.0, high: 24.0
+      lognormal params: mu: 2.0072, sigma: 0.6307, z-score: 1.6449
+    L:
+      low: 8.0, expected: 20.0, high: 60.0
+      lognormal params: mu: 2.8963, sigma: 0.6414, z-score: 1.6449
+    XL:
+      low: 20.0, expected: 40.0, high: 100.0
+      lognormal params: mu: 3.3725, sigma: 0.6138, z-score: 1.6449
+    XXL:
+      low: 40.0, expected: 80.0, high: 200.0
+      lognormal params: mu: 4.0656, sigma: 0.6138, z-score: 1.6449
+  epic:
+    XS:
+      low: 20.0, expected: 40.0, high: 60.0
+      lognormal params: mu: 3.1167, sigma: 0.3478, z-score: 1.6449
+    S:
+      low: 60.0, expected: 120.0, high: 170.0
+      lognormal params: mu: 4.1905, sigma: 0.3101, z-score: 1.6449
+    M:
+      low: 120.0, expected: 240.0, high: 400.0
+      lognormal params: mu: 4.9572, sigma: 0.4119, z-score: 1.6449
+    L:
+      low: 290.0, expected: 480.0, high: 700.0
+      lognormal params: mu: 5.3913, sigma: 0.3799, z-score: 1.6449
+    XL:
+      low: 600.0, expected: 1000.0, high: 1500.0
+      lognormal params: mu: 6.1492, sigma: 0.3971, z-score: 1.6449
+    XXL:
+      low: 1200.0, expected: 2000.0, high: 3200.0
+      lognormal params: mu: 6.8778, sigma: 0.4396, z-score: 1.6449
+  business:
+    XS:
+      low: 400.0, expected: 800.0, high: 2000.0
+      lognormal params: mu: 6.3682, sigma: 0.6138, z-score: 1.6449
+    S:
+      low: 800.0, expected: 2000.0, high: 5000.0
+      lognormal params: mu: 7.4110, sigma: 0.5665, z-score: 1.6449
+    M:
+      low: 2000.0, expected: 4000.0, high: 10000.0
+      lognormal params: mu: 7.9776, sigma: 0.6138, z-score: 1.6449
+    L:
+      low: 4000.0, expected: 8000.0, high: 20000.0
+      lognormal params: mu: 8.6708, sigma: 0.6138, z-score: 1.6449
+    XL:
+      low: 8000.0, expected: 16000.0, high: 40000.0
+      lognormal params: mu: 9.3639, sigma: 0.6138, z-score: 1.6449
+    XXL:
+      low: 16000.0, expected: 32000.0, high: 80000.0
+      lognormal params: mu: 10.0571, sigma: 0.6138, z-score: 1.6449
+  initiative:
+    XS:
+      low: 2000.0, expected: 4000.0, high: 10000.0
+      lognormal params: mu: 7.9776, sigma: 0.6138, z-score: 1.6449
+    S:
+      low: 4000.0, expected: 10000.0, high: 25000.0
+      lognormal params: mu: 9.0204, sigma: 0.5665, z-score: 1.6449
+    M:
+      low: 10000.0, expected: 20000.0, high: 50000.0
+      lognormal params: mu: 9.5871, sigma: 0.6138, z-score: 1.6449
+    L:
+      low: 20000.0, expected: 40000.0, high: 100000.0
+      lognormal params: mu: 10.2802, sigma: 0.6138, z-score: 1.6449
+    XL:
+      low: 40000.0, expected: 80000.0, high: 200000.0
+      lognormal params: mu: 10.9734, sigma: 0.6138, z-score: 1.6449
+    XXL:
+      low: 80000.0, expected: 160000.0, high: 400000.0
+      lognormal params: mu: 11.6665, sigma: 0.6138, z-score: 1.6449
+
+Story Points (unit: days):
+  1:
+    low: 0.5, expected: 1.0, high: 3.0
+    lognormal params: mu: -0.2178, sigma: 0.6895, z-score: 1.6449
+  2:
+    low: 1.0, expected: 2.0, high: 4.0
+    lognormal params: mu: 0.2600, sigma: 0.5099, z-score: 1.6449
+  3:
+    low: 1.5, expected: 3.0, high: 5.0
+    lognormal params: mu: 0.5752, sigma: 0.4119, z-score: 1.6449
+  5:
+    low: 3.0, expected: 5.0, high: 8.0
+    lognormal params: mu: 0.8864, sigma: 0.4396, z-score: 1.6449
+  8:
+    low: 5.0, expected: 8.0, high: 15.0
+    lognormal params: mu: 1.3998, sigma: 0.5488, z-score: 1.6449
+  13:
+    low: 8.0, expected: 13.0, high: 21.0
+    lognormal params: mu: 1.8165, sigma: 0.4550, z-score: 1.6449
+  21:
+    low: 13.0, expected: 21.0, high: 34.0
+    lognormal params: mu: 2.2899, sigma: 0.4588, z-score: 1.6449
+
+Simulation:
+  Default iterations: 10000
+  Random seed: None
+  Max stored critical paths: 20
+
+Lognormal:
+  High percentile for 'high' value: P95
+
+Output:
+  Formats: json, csv, html
+  Include histogram: True
+  Histogram bins: 50
+  Critical path report limit: 2
+
+Sprint Defaults:
+  Planning confidence level: 0.8
+  Removed work treatment: churn_only
+  Velocity model: empirical
+  Volatility disruption probability: 0.0
+  Volatility disruption multiplier (low/expected/high): 1.0/1.0/1.0
+  Spillover model: table
+  Spillover size reference points: 5.0
+  Spillover consumed fraction alpha/beta: 3.25/1.75
+  Spillover logistic slope/intercept: 1.9/-1.9924301646902063
+  Sickness enabled: False
+  Sickness probability per person per week: 0.058
+  Sickness duration log mu/sigma: 0.693/0.75
+Validating new_user/getting_started.yaml...
+✓ Project file is valid!
+mcprojsim, version 0.13.0
+Progress: 10.0% (60/600)
+Progress: 20.0% (120/600)
+Progress: 30.0% (180/600)
+Progress: 40.0% (240/600)
+Progress: 50.0% (300/600)
+Progress: 60.0% (360/600)
+Progress: 70.0% (420/600)
+Progress: 80.0% (480/600)
+Progress: 90.0% (540/600)
+Progress: 100.0% (600/600)
+Simulation time: 0.01 seconds
+Peak simulation memory: 0.00 B
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬───────────────────────┐
+│ Field                          │ Value                 │
+├────────────────────────────────┼───────────────────────┤
+│ Project                        │ Getting Started Trial │
+│ Start Date                     │ 2026-05-01            │
+│ Number of Tasks                │ 1                     │
+│ Effective Default Distribution │ triangular            │
+│ T-Shirt Category Used          │ story                 │
+│ Hours per Day                  │ 8.0                   │
+│ Max Parallel Tasks             │ 1                     │
+│ Schedule Mode                  │ dependency_only       │
+└────────────────────────────────┴───────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬──────────────────────────────┐
+│ Metric                   │ Value                        │
+├──────────────────────────┼──────────────────────────────┤
+│ Mean                     │ 26.65 hours (4 working days) │
+│ Median (P50)             │ 25.94 hours                  │
+│ Std Dev                  │ 5.07 hours                   │
+│ Minimum                  │ 16.52 hours                  │
+│ Maximum                  │ 39.45 hours                  │
+│ Coefficient of Variation │ 0.1904                       │
+│ Skewness                 │ 0.3082                       │
+│ Excess Kurtosis          │ -0.7334                      │
+└──────────────────────────┴──────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬────────────────────────────────────┐
+│ Metric                   │ Value                              │
+├──────────────────────────┼────────────────────────────────────┤
+│ Mean                     │ 26.65 person-hours (4 person-days) │
+│ Median (P50)             │ 25.94 person-hours                 │
+│ Std Dev                  │ 5.07 person-hours                  │
+│ Minimum                  │ 16.52 person-hours                 │
+│ Maximum                  │ 39.45 person-hours                 │
+│ Coefficient of Variation │ 0.1904                             │
+│ Skewness                 │ 0.3082                             │
+│ Excess Kurtosis          │ -0.7334                            │
+└──────────────────────────┴────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P10          │   20.4  │              3 │ 2026-05-06 │
+│ P25          │   22.85 │              3 │ 2026-05-06 │
+│ P50          │   25.94 │              4 │ 2026-05-07 │
+│ P75          │   30.43 │              4 │ 2026-05-07 │
+│ P80          │   31.62 │              4 │ 2026-05-07 │
+│ P85          │   32.78 │              5 │ 2026-05-08 │
+│ P90          │   34.1  │              5 │ 2026-05-08 │
+│ P95          │   35.64 │              5 │ 2026-05-08 │
+│ P99          │   37.64 │              5 │ 2026-05-08 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Effort Confidence Intervals:
+┌──────────────┬────────────────┬───────────────┐
+│ Percentile   │   Person-Hours │   Person-Days │
+├──────────────┼────────────────┼───────────────┤
+│ P10          │          20.4  │             3 │
+│ P25          │          22.85 │             3 │
+│ P50          │          25.94 │             4 │
+│ P75          │          30.43 │             4 │
+│ P80          │          31.62 │             4 │
+│ P85          │          32.78 │             5 │
+│ P90          │          34.1  │             5 │
+│ P95          │          35.64 │             5 │
+│ P99          │          37.64 │             5 │
+└──────────────┴────────────────┴───────────────┘
+
+Sensitivity Analysis (top contributors):
+┌──────────┬───────────────┐
+│ Task     │ Correlation   │
+├──────────┼───────────────┤
+│ task_001 │ +1.0000       │
+└──────────┴───────────────┘
+
+Schedule Slack:
+┌──────────┬─────────────────┬──────────┐
+│ Task     │ Slack (hours)   │ Status   │
+├──────────┼─────────────────┼──────────┤
+│ task_001 │ 0.00            │ Critical │
+└──────────┴─────────────────┴──────────┘
+
+Most Frequent Critical Paths:
+  1. task_001 (600/600, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 4 working days
+  Total effort: 27 person-hours (4 person-days) | Parallelism ratio: 1.0
+
+
+No export formats specified. Use -f to export results to files.

@@ -80,22 +80,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 90.65 hours (12 working days)
   Median (P50): 89.68 hours
   Std Dev: 12.97 hours
   Minimum: 55.92 hours
   Maximum: 131.62 hours
-  Coefficient of Variation: 0.1430
-  Skewness: 0.2419
-  Excess Kurtosis: -0.4576
 
 Project Effort Statistical Summary:
   Mean: 90.65 person-hours (12 person-days)
@@ -103,9 +93,6 @@ Project Effort Statistical Summary:
   Std Dev: 12.97 person-hours
   Minimum: 55.92 person-hours
   Maximum: 131.62 person-hours
-  Coefficient of Variation: 0.1430
-  Skewness: 0.2419
-  Excess Kurtosis: -0.4576
 
 Calendar Time Confidence Intervals:
   P50: 89.68 hours (12 working days)  (2026-04-17)
@@ -219,22 +206,12 @@ Project Overview:
   Max Parallel Tasks: 2
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 2635.93 hours (330 working days)
   Median (P50): 2584.12 hours
   Std Dev: 436.95 hours
   Minimum: 1653.07 hours
   Maximum: 4602.84 hours
-  Coefficient of Variation: 0.1658
-  Skewness: 0.5890
-  Excess Kurtosis: 0.1211
 
 Project Effort Statistical Summary:
   Mean: 2622.12 person-hours (328 person-days)
@@ -242,9 +219,6 @@ Project Effort Statistical Summary:
   Std Dev: 384.08 person-hours
   Minimum: 1721.88 person-hours
   Maximum: 3990.15 person-hours
-  Coefficient of Variation: 0.1465
-  Skewness: 0.4076
-  Excess Kurtosis: -0.4391
 
 Calendar Time Confidence Intervals:
   P10: 2107.45 hours (264 working days)  (2026-11-05)
@@ -323,44 +297,27 @@ Project Overview:
 │ Schedule Mode                  │ dependency_only   │
 └────────────────────────────────┴───────────────────┘
 
-Default Uncertainty Factors:
-┌────────────────────────┬──────────────────────────────┐
-│ Factor                 │ Default Level (Multiplier)   │
-├────────────────────────┼──────────────────────────────┤
-│ Team Experience        │ medium (1.0)                 │
-│ Requirements Maturity  │ high (1.0)                   │
-│ Technical Complexity   │ low (1.0)                    │
-│ Team Distribution      │ colocated (1.0)              │
-│ Integration Complexity │ low (1.0)                    │
-└────────────────────────┴──────────────────────────────┘
-
 Calendar Time Statistical Summary:
-┌──────────────────────────┬───────────────────────────────┐
-│ Metric                   │ Value                         │
-├──────────────────────────┼───────────────────────────────┤
-│ Mean                     │ 79.98 hours (10 working days) │
-│ Median (P50)             │ 79.44 hours                   │
-│ Std Dev                  │ 11.65 hours                   │
-│ Minimum                  │ 47.31 hours                   │
-│ Maximum                  │ 121.18 hours                  │
-│ Coefficient of Variation │ 0.1457                        │
-│ Skewness                 │ 0.1707                        │
-│ Excess Kurtosis          │ -0.2974                       │
-└──────────────────────────┴───────────────────────────────┘
+┌──────────────┬───────────────────────────────┐
+│ Metric       │ Value                         │
+├──────────────┼───────────────────────────────┤
+│ Mean         │ 79.98 hours (10 working days) │
+│ Median (P50) │ 79.44 hours                   │
+│ Std Dev      │ 11.65 hours                   │
+│ Minimum      │ 47.31 hours                   │
+│ Maximum      │ 121.18 hours                  │
+└──────────────┴───────────────────────────────┘
 
 Project Effort Statistical Summary:
-┌──────────────────────────┬─────────────────────────────────────┐
-│ Metric                   │ Value                               │
-├──────────────────────────┼─────────────────────────────────────┤
-│ Mean                     │ 79.98 person-hours (10 person-days) │
-│ Median (P50)             │ 79.44 person-hours                  │
-│ Std Dev                  │ 11.65 person-hours                  │
-│ Minimum                  │ 47.31 person-hours                  │
-│ Maximum                  │ 121.18 person-hours                 │
-│ Coefficient of Variation │ 0.1457                              │
-│ Skewness                 │ 0.1707                              │
-│ Excess Kurtosis          │ -0.2974                             │
-└──────────────────────────┴─────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────┐
+│ Metric       │ Value                               │
+├──────────────┼─────────────────────────────────────┤
+│ Mean         │ 79.98 person-hours (10 person-days) │
+│ Median (P50) │ 79.44 person-hours                  │
+│ Std Dev      │ 11.65 person-hours                  │
+│ Minimum      │ 47.31 person-hours                  │
+│ Maximum      │ 121.18 person-hours                 │
+└──────────────┴─────────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
 ┌──────────────┬─────────┬────────────────┬────────────┐
@@ -599,22 +556,12 @@ Project Overview:
   Max Parallel Tasks: 2
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 580.89 hours (73 working days)
   Median (P50): 574.73 hours
   Std Dev: 78.46 hours
   Minimum: 365.50 hours
   Maximum: 924.02 hours
-  Coefficient of Variation: 0.1351
-  Skewness: 0.4798
-  Excess Kurtosis: 0.1518
 
 Project Effort Statistical Summary:
   Mean: 686.35 person-hours (86 person-days)
@@ -622,9 +569,6 @@ Project Effort Statistical Summary:
   Std Dev: 61.54 person-hours
   Minimum: 487.94 person-hours
   Maximum: 902.14 person-hours
-  Coefficient of Variation: 0.0897
-  Skewness: 0.1210
-  Excess Kurtosis: -0.1140
 
 Calendar Time Confidence Intervals:
   P25: 524.00 hours (66 working days)  (2026-02-02)
@@ -707,22 +651,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: resource_constrained
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 335.59 hours (42 working days)
   Median (P50): 338.16 hours
   Std Dev: 46.63 hours
   Minimum: 196.00 hours
   Maximum: 486.77 hours
-  Coefficient of Variation: 0.1389
-  Skewness: 0.0483
-  Excess Kurtosis: 1.5845
 
 Project Effort Statistical Summary:
   Mean: 82.69 person-hours (11 person-days)
@@ -730,9 +664,6 @@ Project Effort Statistical Summary:
   Std Dev: 11.85 person-hours
   Minimum: 52.00 person-hours
   Maximum: 118.77 person-hours
-  Coefficient of Variation: 0.1433
-  Skewness: 0.1368
-  Excess Kurtosis: -0.5265
 
 Calendar Time Confidence Intervals:
   P10: 291.31 hours (37 working days)  (2026-05-22)
@@ -765,22 +696,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 82.66 hours (11 working days)
   Median (P50): 82.16 hours
   Std Dev: 11.94 hours
   Minimum: 49.42 hours
   Maximum: 116.52 hours
-  Coefficient of Variation: 0.1445
-  Skewness: 0.1120
-  Excess Kurtosis: -0.5163
 
 Project Effort Statistical Summary:
   Mean: 82.66 person-hours (11 person-days)
@@ -788,9 +709,6 @@ Project Effort Statistical Summary:
   Std Dev: 11.94 person-hours
   Minimum: 49.42 person-hours
   Maximum: 116.52 person-hours
-  Coefficient of Variation: 0.1445
-  Skewness: 0.1120
-  Excess Kurtosis: -0.5163
 
 Calendar Time Confidence Intervals:
   P10: 66.98 hours (9 working days)  (2026-04-14)
@@ -886,22 +804,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: resource_constrained
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 377.05 hours (48 working days)
   Median (P50): 363.68 hours
   Std Dev: 50.00 hours
   Minimum: 288.97 hours
   Maximum: 531.94 hours
-  Coefficient of Variation: 0.1326
-  Skewness: 1.0826
-  Excess Kurtosis: 0.3376
 
 Project Effort Statistical Summary:
   Mean: 108.80 person-hours (14 person-days)
@@ -909,9 +817,6 @@ Project Effort Statistical Summary:
   Std Dev: 12.31 person-hours
   Minimum: 74.53 person-hours
   Maximum: 137.90 person-hours
-  Coefficient of Variation: 0.1131
-  Skewness: 0.0787
-  Excess Kurtosis: -0.4372
 
 Calendar Time Confidence Intervals:
   P50: 363.68 hours (46 working days)  (2026-06-04)
@@ -974,22 +879,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 1052.49 hours (132 working days)
   Median (P50): 1042.54 hours
   Std Dev: 132.88 hours
   Minimum: 736.96 hours
   Maximum: 1533.41 hours
-  Coefficient of Variation: 0.1263
-  Skewness: 0.3511
-  Excess Kurtosis: -0.2986
 
 Project Effort Statistical Summary:
   Mean: 1052.49 person-hours (132 person-days)
@@ -997,9 +892,6 @@ Project Effort Statistical Summary:
   Std Dev: 132.88 person-hours
   Minimum: 736.96 person-hours
   Maximum: 1533.41 person-hours
-  Coefficient of Variation: 0.1263
-  Skewness: 0.3511
-  Excess Kurtosis: -0.2986
 
 Calendar Time Confidence Intervals:
   P50: 1042.54 hours (131 working days)  (2026-12-02)
@@ -1088,22 +980,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: resource_constrained
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 840.04 hours (106 working days)
   Median (P50): 819.88 hours
   Std Dev: 90.25 hours
   Minimum: 630.72 hours
   Maximum: 1272.02 hours
-  Coefficient of Variation: 0.1074
-  Skewness: 1.1354
-  Excess Kurtosis: 2.8696
 
 Project Effort Statistical Summary:
   Mean: 264.61 person-hours (34 person-days)
@@ -1111,9 +993,6 @@ Project Effort Statistical Summary:
   Std Dev: 24.51 person-hours
   Minimum: 206.48 person-hours
   Maximum: 326.63 person-hours
-  Coefficient of Variation: 0.0926
-  Skewness: 0.1880
-  Excess Kurtosis: -0.3326
 
 Calendar Time Confidence Intervals:
   P50: 819.88 hours (103 working days)  (2026-09-23)
@@ -1206,22 +1085,12 @@ Project Overview:
   Max Parallel Tasks: 5
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 74.92 hours (10 working days)
   Median (P50): 72.58 hours
   Std Dev: 16.38 hours
   Minimum: 41.37 hours
   Maximum: 119.56 hours
-  Coefficient of Variation: 0.2186
-  Skewness: 0.4313
-  Excess Kurtosis: -0.5763
 
 Project Effort Statistical Summary:
   Mean: 210.51 person-hours (27 person-days)
@@ -1229,9 +1098,6 @@ Project Effort Statistical Summary:
   Std Dev: 21.91 person-hours
   Minimum: 146.41 person-hours
   Maximum: 290.15 person-hours
-  Coefficient of Variation: 0.1041
-  Skewness: 0.2056
-  Excess Kurtosis: -0.1693
 
 Calendar Time Confidence Intervals:
   P50: 72.58 hours (10 working days)  (2026-05-18)
@@ -1371,44 +1237,27 @@ Project Overview:
 │ Schedule Mode                  │ dependency_only          │
 └────────────────────────────────┴──────────────────────────┘
 
-Default Uncertainty Factors:
-┌────────────────────────┬──────────────────────────────┐
-│ Factor                 │ Default Level (Multiplier)   │
-├────────────────────────┼──────────────────────────────┤
-│ Team Experience        │ medium (1.0)                 │
-│ Requirements Maturity  │ high (1.0)                   │
-│ Technical Complexity   │ low (1.0)                    │
-│ Team Distribution      │ colocated (1.0)              │
-│ Integration Complexity │ low (1.0)                    │
-└────────────────────────┴──────────────────────────────┘
-
 Calendar Time Statistical Summary:
-┌──────────────────────────┬───────────────────────────────┐
-│ Metric                   │ Value                         │
-├──────────────────────────┼───────────────────────────────┤
-│ Mean                     │ 86.31 hours (11 working days) │
-│ Median (P50)             │ 85.93 hours                   │
-│ Std Dev                  │ 14.55 hours                   │
-│ Minimum                  │ 53.43 hours                   │
-│ Maximum                  │ 118.88 hours                  │
-│ Coefficient of Variation │ 0.1686                        │
-│ Skewness                 │ 0.0783                        │
-│ Excess Kurtosis          │ -0.8139                       │
-└──────────────────────────┴───────────────────────────────┘
+┌──────────────┬───────────────────────────────┐
+│ Metric       │ Value                         │
+├──────────────┼───────────────────────────────┤
+│ Mean         │ 86.31 hours (11 working days) │
+│ Median (P50) │ 85.93 hours                   │
+│ Std Dev      │ 14.55 hours                   │
+│ Minimum      │ 53.43 hours                   │
+│ Maximum      │ 118.88 hours                  │
+└──────────────┴───────────────────────────────┘
 
 Project Effort Statistical Summary:
-┌──────────────────────────┬──────────────────────────────────────┐
-│ Metric                   │ Value                                │
-├──────────────────────────┼──────────────────────────────────────┤
-│ Mean                     │ 287.15 person-hours (36 person-days) │
-│ Median (P50)             │ 287.50 person-hours                  │
-│ Std Dev                  │ 27.30 person-hours                   │
-│ Minimum                  │ 227.60 person-hours                  │
-│ Maximum                  │ 369.30 person-hours                  │
-│ Coefficient of Variation │ 0.0951                               │
-│ Skewness                 │ 0.0635                               │
-│ Excess Kurtosis          │ -0.2823                              │
-└──────────────────────────┴──────────────────────────────────────┘
+┌──────────────┬──────────────────────────────────────┐
+│ Metric       │ Value                                │
+├──────────────┼──────────────────────────────────────┤
+│ Mean         │ 287.15 person-hours (36 person-days) │
+│ Median (P50) │ 287.50 person-hours                  │
+│ Std Dev      │ 27.30 person-hours                   │
+│ Minimum      │ 227.60 person-hours                  │
+│ Maximum      │ 369.30 person-hours                  │
+└──────────────┴──────────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
 ┌──────────────┬─────────┬────────────────┬────────────┐
@@ -1547,22 +1396,12 @@ Project Overview:
   Max Parallel Tasks: 6
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 7.03 hours (1 working days)
   Median (P50): 7.06 hours
   Std Dev: 0.46 hours
   Minimum: 5.35 hours
   Maximum: 7.99 hours
-  Coefficient of Variation: 0.0656
-  Skewness: -0.3072
-  Excess Kurtosis: -0.4514
 
 Project Effort Statistical Summary:
   Mean: 35.99 person-hours (5 person-days)
@@ -1570,9 +1409,6 @@ Project Effort Statistical Summary:
   Std Dev: 1.98 person-hours
   Minimum: 27.99 person-hours
   Maximum: 43.33 person-hours
-  Coefficient of Variation: 0.0551
-  Skewness: -0.0057
-  Excess Kurtosis: -0.0762
 
 Calendar Time Confidence Intervals:
   P50: 7.06 hours (1 working days)  (2026-05-05)
@@ -1799,22 +1635,12 @@ Project Overview:
   Max Parallel Tasks: 3
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 74.67 hours (10 working days)
   Median (P50): 72.60 hours
   Std Dev: 16.50 hours
   Minimum: 40.24 hours
   Maximum: 118.79 hours
-  Coefficient of Variation: 0.2210
-  Skewness: 0.4093
-  Excess Kurtosis: -0.5588
 
 Project Effort Statistical Summary:
   Mean: 142.54 person-hours (18 person-days)
@@ -1822,9 +1648,6 @@ Project Effort Statistical Summary:
   Std Dev: 19.49 person-hours
   Minimum: 90.20 person-hours
   Maximum: 212.98 person-hours
-  Coefficient of Variation: 0.1368
-  Skewness: 0.2634
-  Excess Kurtosis: -0.3135
 
 Calendar Time Confidence Intervals:
   P50: 72.60 hours (10 working days)  (2026-05-18)

@@ -1,0 +1,21 @@
+project:
+  name: "Project File YAML Trial"
+  start_date: "2026-05-20"
+
+tasks:
+  - id: "task_001"
+    name: "Data model"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days"
+
+  - id: "task_002"
+    name: "API"
+    estimate:
+      low: 3
+      expected: 5
+      high: 8
+      unit: "days"
+    dependencies: ["task_001"]

@@ -1,0 +1,57 @@
+project:
+  name: "Auth Service Rewrite"
+  description: "Replace legacy auth with OAuth2/OIDC"
+  start_date: "2026-08-01"
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "task_001"
+    name: "Evaluate identity providers"
+    estimate:
+      low: 2
+      expected: 3
+      high: 4
+      unit: "days"
+    dependencies: []
+
+  - id: "task_002"
+    name: "Design token flow and session management"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "Implement OAuth2 authorization server"
+    estimate:
+      t_shirt_size: "XL"
+    dependencies: ["task_002"]
+
+  - id: "task_004"
+    name: "Migrate user database"
+    estimate:
+      t_shirt_size: "L"
+    dependencies: ["task_002"]
+
+  - id: "task_005"
+    name: "Integration testing"
+    estimate:
+      t_shirt_size: "L"
+    dependencies: ["task_003", "task_004"]
+
+  - id: "task_006"
+    name: "Security audit"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: ["task_005"]
+
+  - id: "task_007"
+    name: "Staged rollout"
+    estimate:
+      t_shirt_size: "S"
+    dependencies: ["task_006"]
+
+  - id: "task_008"
+    name: "Wrapup"
+    estimate:
+      t_shirt_size: "S"
+    dependencies: ["task_007"]

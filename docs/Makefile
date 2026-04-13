@@ -204,21 +204,22 @@ $(eval $(call DEFINE_API_REF_VARS,API_REF_DARK_B5))
 # Keep this list markdown-only; non-markdown assets are tracked separately
 # via USER_GUIDE_PDF_DEPS so they trigger rebuilds without polluting content.
 USER_GUIDE_MD_SOURCES := \
-	$(DOCS_DIR)/user_guide/getting_started.md \
-	$(DOCS_DIR)/user_guide/introduction.md \
-	$(DOCS_DIR)/user_guide/your_first_project.md  \
-	$(DOCS_DIR)/user_guide/uncertainty_factors.md  \
-	$(DOCS_DIR)/user_guide/task_estimation.md  \
-	$(DOCS_DIR)/user_guide/risks.md  \
-	$(DOCS_DIR)/user_guide/project_files.md  \
-	$(DOCS_DIR)/user_guide/sprint_planning.md  \
-	$(DOCS_DIR)/user_guide/constrained.md  \
-	$(DOCS_DIR)/user_guide/multi_phase_simulation.md  \
-	$(DOCS_DIR)/user_guide/running_simulations.md  \
-	$(DOCS_DIR)/user_guide/interpreting_results.md  \
-	$(DOCS_DIR)/user_guide/configuration.md  \
-	$(DOCS_DIR)/user_guide/nl_processing.md  \
-	$(DOCS_DIR)/user_guide/mcp-server.md \
+	$(DOCS_DIR)/user_guide/01_getting_started.md \
+	$(DOCS_DIR)/user_guide/02_introduction.md \
+	$(DOCS_DIR)/user_guide/03_your_first_project.md  \
+	$(DOCS_DIR)/user_guide/04_uncertainty_factors.md  \
+	$(DOCS_DIR)/user_guide/05_task_estimation.md  \
+	$(DOCS_DIR)/user_guide/06_risks.md  \
+	$(DOCS_DIR)/user_guide/07_cost_handling.md  \
+	$(DOCS_DIR)/user_guide/08_project_files.md  \
+	$(DOCS_DIR)/user_guide/09_sprint_planning.md  \
+	$(DOCS_DIR)/user_guide/10_constrained.md  \
+	$(DOCS_DIR)/user_guide/11_multi_phase_simulation.md  \
+	$(DOCS_DIR)/user_guide/12_running_simulations.md  \
+	$(DOCS_DIR)/user_guide/13_interpreting_results.md  \
+	$(DOCS_DIR)/user_guide/14_configuration.md  \
+	$(DOCS_DIR)/user_guide/15_nl_processing.md  \
+	$(DOCS_DIR)/user_guide/16_mcp-server.md \
 	$(DOCS_DIR)/examples.md
 
 # Non-markdown assets that should still trigger a rebuild when changed.

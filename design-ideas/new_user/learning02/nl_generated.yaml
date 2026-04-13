@@ -1,0 +1,45 @@
+project:
+  name: "E-commerce Platform Rebuild"
+  start_date: "2026-05-01"
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "task_001"
+    name: "Requirements gathering"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: []
+
+  - id: "task_002"
+    name: "Database schema design (), depends on requirements"
+    estimate:
+      low: 0.7
+      expected: 1
+      high: 1.8
+      unit: "weeks"
+    dependencies: []
+
+  - id: "task_003"
+    name: "Backend API development, size XL"
+    dependencies: ["task_002"]
+
+  - id: "task_004"
+    name: "Frontend development (), depends on requirements"
+    estimate:
+      low: 2
+      expected: 3
+      high: 4
+      unit: "weeks"
+    dependencies: []
+
+  - id: "task_005"
+    name: "Integration testing"
+    estimate:
+      t_shirt_size: "L"
+    dependencies: ["task_003", "task_004"]
+
+  - id: "task_006"
+    name: "Deployment and monitoring ()"
+    estimate:
+      t_shirt_size: "S"
+    dependencies: ["task_005"]

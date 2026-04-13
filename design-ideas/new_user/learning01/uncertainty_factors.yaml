@@ -1,0 +1,26 @@
+project:
+  name: "Uncertainty Factor Trial"
+  start_date: "2026-05-12"
+
+tasks:
+  - id: "task_001"
+    name: "Service integration"
+    estimate:
+      low: 2
+      expected: 4
+      high: 7
+      unit: "days"
+    uncertainty_factors:
+      team_experience: low
+      requirements_maturity: low
+      technical_complexity: high
+      integration_complexity: high
+
+  - id: "task_002"
+    name: "Regression test"
+    estimate:
+      low: 1
+      expected: 2
+      high: 4
+      unit: "days"
+    dependencies: ["task_001"]

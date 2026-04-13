@@ -1,0 +1,12 @@
+Project name: Website Refresh
+Description: Small example project
+Start date: 2026-04-01
+
+Task 1:
+- Design updates
+- Size: S
+
+Task 2:
+- Frontend changes
+- Depends on Task 1
+- Size: M

@@ -1,0 +1,43 @@
+# Experiment: Two-pass simulation (multi-phase)
+project:
+  name: "Two-Pass Demo"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "A1"
+    name: "Spec review"
+    estimate: { low: 9, expected: 10, high: 12 }
+    resources: ["dev-senior"]
+
+  - id: "A2"
+    name: "Core implementation"
+    estimate: { low: 13, expected: 15, high: 18 }
+    dependencies: ["A1"]
+    resources: ["dev-senior"]
+
+  - id: "B1"
+    name: "API design"
+    estimate: { low: 6, expected: 8, high: 11 }
+    resources: ["dev-senior"]
+
+  - id: "B2"
+    name: "API implementation"
+    estimate: { low: 20, expected: 25, high: 35 }
+    dependencies: ["B1"]
+    resources: ["dev-senior", "dev-junior"]
+    max_resources: 2
+
+  - id: "C1"
+    name: "UI prototype"
+    estimate: { low: 8, expected: 12, high: 18 }
+    resources: ["dev-junior"]
+
+resources:
+  - name: "dev-senior"
+    experience_level: 3
+    productivity_level: 1.0
+  - name: "dev-junior"
+    experience_level: 1
+    productivity_level: 0.8

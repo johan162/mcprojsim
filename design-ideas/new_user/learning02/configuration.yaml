@@ -1,0 +1,29 @@
+# Experiment: Configuration - project using custom config
+project:
+  name: "Custom Config Experiment"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Research"
+    estimate:
+      t_shirt_size: "S"
+    uncertainty_factors:
+      team_experience: "high"
+      technical_complexity: "medium"
+
+  - id: "task_002"
+    name: "Development"
+    estimate:
+      t_shirt_size: "L"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "high"
+
+  - id: "task_003"
+    name: "Testing"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: ["task_002"]

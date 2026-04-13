@@ -1,0 +1,44 @@
+# Experiment: Uncertainty factors compounding effect
+# Test: compare no factors vs all adverse factors
+project:
+  name: "Uncertainty Factor Experiment"
+  description: "Testing how uncertainty factors compound"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Task with no explicit factors (uses defaults)"
+    estimate:
+      low: 3
+      expected: 5
+      high: 10
+      unit: "days"
+
+  - id: "task_002"
+    name: "Task with all neutral factors"
+    estimate:
+      low: 3
+      expected: 5
+      high: 10
+      unit: "days"
+    uncertainty_factors:
+      team_experience: "medium"
+      requirements_maturity: "high"
+      technical_complexity: "low"
+      team_distribution: "colocated"
+      integration_complexity: "low"
+
+  - id: "task_003"
+    name: "Task with all adverse factors"
+    estimate:
+      low: 3
+      expected: 5
+      high: 10
+      unit: "days"
+    uncertainty_factors:
+      team_experience: "low"
+      requirements_maturity: "low"
+      technical_complexity: "high"
+      team_distribution: "distributed"
+      integration_complexity: "high"

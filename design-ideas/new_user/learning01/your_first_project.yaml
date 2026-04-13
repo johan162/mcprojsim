@@ -1,0 +1,41 @@
+project:
+  name: "First Realistic Project"
+  description: "A slightly richer project file"
+  start_date: "2026-05-10"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Requirements workshop"
+    estimate:
+      low: 1
+      expected: 2
+      high: 4
+      unit: "days"
+
+  - id: "task_002"
+    name: "API implementation"
+    estimate:
+      low: 4
+      expected: 6
+      high: 10
+      unit: "days"
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "UI implementation"
+    estimate:
+      low: 3
+      expected: 5
+      high: 9
+      unit: "days"
+    dependencies: ["task_001"]
+
+  - id: "task_004"
+    name: "System test"
+    estimate:
+      low: 2
+      expected: 3
+      high: 6
+      unit: "days"
+    dependencies: ["task_002", "task_003"]

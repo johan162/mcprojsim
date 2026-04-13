@@ -95,14 +95,14 @@ Current state:
 
 Current state:
 
-- config supports `output.formats`, `include_histogram`, and `histogram_bins`
+- config supports `output.formats`, `include_histogram`, and `number_bins`
 - CLI can print those settings
 
 What is missing:
 
 - CLI export behavior is driven by `--output-format`, not `config.output.formats`
 - exporters always generate histograms instead of honoring `config.output.include_histogram`
-- all three exporters hardcode 50 bins instead of using `config.output.histogram_bins`
+- all three exporters hardcode 50 bins instead of using `config.output.number_bins`
 
 
 ### 2. Logging is only partially configurable (NFR-010)

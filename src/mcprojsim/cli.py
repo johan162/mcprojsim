@@ -1206,7 +1206,7 @@ def simulate(
         if number_bins is not None:
             if number_bins <= 0:
                 raise ValueError("--number-bins must be greater than 0")
-            cfg.output.histogram_bins = number_bins
+            cfg.output.number_bins = number_bins
             logger.info("Overriding histogram bins to %d", number_bins)
 
         formats: list[str] = []
@@ -1444,27 +1444,28 @@ def simulate(
                 )
 
                 # Default Uncertainty Factors table
-                uncertainty_rows = []
-                for (
-                    factor_name,
-                    default_level,
-                ) in effective_default_uncertainty_levels.items():
-                    multiplier = cfg.get_uncertainty_multiplier(
-                        factor_name, default_level
+                if not minimal:
+                    uncertainty_rows = []
+                    for (
+                        factor_name,
+                        default_level,
+                    ) in effective_default_uncertainty_levels.items():
+                        multiplier = cfg.get_uncertainty_multiplier(
+                            factor_name, default_level
+                        )
+                        factor_display = factor_name.replace("_", " ").title()
+                        uncertainty_rows.append(
+                            [factor_display, f"{default_level} ({multiplier})"]
+                        )
+                    click.echo("\nDefault Uncertainty Factors:")
+                    click.echo(
+                        _tabulate(
+                            uncertainty_rows,
+                            headers=["Factor", "Default Level (Multiplier)"],
+                            tablefmt="simple_outline",
+                            disable_numparse=True,
+                        )
                     )
-                    factor_display = factor_name.replace("_", " ").title()
-                    uncertainty_rows.append(
-                        [factor_display, f"{default_level} ({multiplier})"]
-                    )
-                click.echo("\nDefault Uncertainty Factors:")
-                click.echo(
-                    _tabulate(
-                        uncertainty_rows,
-                        headers=["Factor", "Default Level (Multiplier)"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
-                )
 
                 calendar_summary_rows = [
                     ["Mean", f"{results.mean:.2f} hours ({mean_wd} working days)"],
@@ -1472,10 +1473,13 @@ def simulate(
                     ["Std Dev", f"{results.std_dev:.2f} hours"],
                     ["Minimum", f"{min_duration:.2f} hours"],
                     ["Maximum", f"{max_duration:.2f} hours"],
-                    ["Coefficient of Variation", f"{cv:.4f}"],
-                    ["Skewness", f"{results.skewness:.4f}"],
-                    ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
                 ]
+                if not minimal:
+                    calendar_summary_rows += [
+                        ["Coefficient of Variation", f"{cv:.4f}"],
+                        ["Skewness", f"{results.skewness:.4f}"],
+                        ["Excess Kurtosis", f"{results.kurtosis:.4f}"],
+                    ]
                 effort_summary_rows = [
                     [
                         "Mean",
@@ -1488,10 +1492,13 @@ def simulate(
                     ["Std Dev", f"{effort_stats['std_dev']:.2f} person-hours"],
                     ["Minimum", f"{effort_stats['min']:.2f} person-hours"],
                     ["Maximum", f"{effort_stats['max']:.2f} person-hours"],
-                    ["Coefficient of Variation", f"{effort_stats['cv']:.4f}"],
-                    ["Skewness", f"{effort_stats['skewness']:.4f}"],
-                    ["Excess Kurtosis", f"{effort_stats['kurtosis']:.4f}"],
                 ]
+                if not minimal:
+                    effort_summary_rows += [
+                        ["Coefficient of Variation", f"{effort_stats['cv']:.4f}"],
+                        ["Skewness", f"{effort_stats['skewness']:.4f}"],
+                        ["Excess Kurtosis", f"{effort_stats['kurtosis']:.4f}"],
+                    ]
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(
                     _tabulate(
@@ -1531,16 +1538,19 @@ def simulate(
                 click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")
                 click.echo(f"  Schedule Mode: {schedule_mode}")
 
-                click.echo("\nDefault Uncertainty Factors:")
-                for (
-                    factor_name,
-                    default_level,
-                ) in effective_default_uncertainty_levels.items():
-                    multiplier = cfg.get_uncertainty_multiplier(
-                        factor_name, default_level
-                    )
-                    factor_display = factor_name.replace("_", " ").title()
-                    click.echo(f"  {factor_display}: {default_level} ({multiplier})")
+                if not minimal:
+                    click.echo("\nDefault Uncertainty Factors:")
+                    for (
+                        factor_name,
+                        default_level,
+                    ) in effective_default_uncertainty_levels.items():
+                        multiplier = cfg.get_uncertainty_multiplier(
+                            factor_name, default_level
+                        )
+                        factor_display = factor_name.replace("_", " ").title()
+                        click.echo(
+                            f"  {factor_display}: {default_level} ({multiplier})"
+                        )
 
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(f"  Mean: {results.mean:.2f} hours ({mean_wd} working days)")
@@ -1548,9 +1558,10 @@ def simulate(
                 click.echo(f"  Std Dev: {results.std_dev:.2f} hours")
                 click.echo(f"  Minimum: {min_duration:.2f} hours")
                 click.echo(f"  Maximum: {max_duration:.2f} hours")
-                click.echo(f"  Coefficient of Variation: {cv:.4f}")
-                click.echo(f"  Skewness: {results.skewness:.4f}")
-                click.echo(f"  Excess Kurtosis: {results.kurtosis:.4f}")
+                if not minimal:
+                    click.echo(f"  Coefficient of Variation: {cv:.4f}")
+                    click.echo(f"  Skewness: {results.skewness:.4f}")
+                    click.echo(f"  Excess Kurtosis: {results.kurtosis:.4f}")
 
                 click.echo("\nProject Effort Statistical Summary:")
                 click.echo(
@@ -1562,9 +1573,10 @@ def simulate(
                 click.echo(f"  Std Dev: {effort_stats['std_dev']:.2f} person-hours")
                 click.echo(f"  Minimum: {effort_stats['min']:.2f} person-hours")
                 click.echo(f"  Maximum: {effort_stats['max']:.2f} person-hours")
-                click.echo(f"  Coefficient of Variation: {effort_stats['cv']:.4f}")
-                click.echo(f"  Skewness: {effort_stats['skewness']:.4f}")
-                click.echo(f"  Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
+                if not minimal:
+                    click.echo(f"  Coefficient of Variation: {effort_stats['cv']:.4f}")
+                    click.echo(f"  Skewness: {effort_stats['skewness']:.4f}")
+                    click.echo(f"  Excess Kurtosis: {effort_stats['kurtosis']:.4f}")
 
             if table:
                 # Confidence Intervals table
@@ -2243,7 +2255,7 @@ def config(config_file: Optional[str], generate: bool) -> None:
     click.echo("\nOutput:")
     click.echo(f"  Formats: {', '.join(cfg.output.formats)}")
     click.echo(f"  Include histogram: {cfg.output.include_histogram}")
-    click.echo(f"  Histogram bins: {cfg.output.histogram_bins}")
+    click.echo(f"  Histogram bins: {cfg.output.number_bins}")
     click.echo(
         "  Critical path report limit: " f"{cfg.output.critical_path_report_limit}"
     )

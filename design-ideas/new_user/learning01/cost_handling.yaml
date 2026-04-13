@@ -1,0 +1,96 @@
+# cost_simple.yaml — Demonstrates monetary cost estimation WITHOUT named resources
+#
+# Key cost features used:
+#   - project.default_hourly_rate: blended €150/hr applied to all tasks
+#   - project.overhead_rate: 15% markup on total labor cost
+#   - project.currency: "EUR" — label used in cost output
+#   - task.fixed_cost: one-time cloud infrastructure fee on a single task
+#   - risk.cost_impact > 0: emergency vendor support fee (in addition to schedule impact)
+#   - risk.cost_impact < 0: early-completion bonus / cost saving (negative = credit)
+#
+# What to look for in the output:
+#   - "Cost" section showing P50/P80/P90/P95 cost distribution in EUR
+#   - Labor cost driven by sampled hours × €150/hr across all tasks
+#   - The €3,500 cloud infra fixed cost added to every iteration for "Infrastructure Setup"
+#   - When the "Flaky Third-Party API" risk triggers (~30% of iterations), an extra €4,000
+#     vendor support fee appears in cost; when "Early Sign-off" triggers (~20%), a €1,500
+#     credit reduces the total
+#   - Overhead of 15% applied on top of labor costs
+
+project:
+  name: "API Rewrite"
+  description: "Migrate legacy REST API to OpenAPI 3.1 with async event streaming"
+  start_date: "2026-06-01"
+  hours_per_day: 8
+  default_hourly_rate: 150.0
+  overhead_rate: 0.15
+  currency: "EUR"
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "design"
+    name: "API Design & OpenAPI Spec"
+    description: "Define resource model, endpoints, and write the OpenAPI 3.1 specification"
+    estimate:
+      low: 20
+      expected: 36
+      high: 60
+      unit: "hours"
+
+  - id: "infra"
+    name: "Infrastructure Setup"
+    description: "Provision cloud sandbox, CI/CD pipelines, and staging environment"
+    estimate:
+      low: 16
+      expected: 24
+      high: 40
+      unit: "hours"
+    dependencies: ["design"]
+    fixed_cost: 3500.0  # one-time cloud infrastructure provisioning fee
+
+  - id: "implement"
+    name: "Core Implementation"
+    description: "Build all API endpoints, event streaming layer, and database migrations"
+    estimate:
+      low: 80
+      expected: 140
+      high: 240
+      unit: "hours"
+    dependencies: ["infra"]
+
+  - id: "integration"
+    name: "Third-Party Integration"
+    description: "Connect to payment gateway, identity provider, and notification service"
+    estimate:
+      low: 24
+      expected: 48
+      high: 96
+      unit: "hours"
+    dependencies: ["implement"]
+    risks:
+      - id: "flaky-api"
+        name: "Flaky Third-Party API"
+        description: "External API instability forces emergency vendor escalation"
+        probability: 0.30
+        impact:
+          type: "absolute"
+          value: 16
+          unit: "hours"
+        cost_impact: 4000.0  # emergency vendor support fee when risk triggers
+
+  - id: "testing"
+    name: "End-to-End Testing & Performance Tuning"
+    description: "Full integration test suite and load testing to confirm SLA targets"
+    estimate:
+      low: 32
+      expected: 56
+      high: 100
+      unit: "hours"
+    dependencies: ["integration"]
+    risks:
+      - id: "early-signoff"
+        name: "Early Stakeholder Sign-Off"
+        description: "Stakeholder approves scope reduction, granting a delivery bonus"
+        probability: 0.20
+        impact: 0  # no schedule effect — cost-only risk
+        cost_impact: -1500.0  # early-completion bonus / cost saving (negative = credit)

@@ -4,6 +4,16 @@ This chapter shows how to model and run **resource- and calendar-constrained** s
 
 Constrained scheduling is activated automatically when the validated project has resources available for assignment—either from a top-level `resources` section or from `project.team_size > 0` (which auto-generates default resources up to that size).
 
+!!! note
+    ⚠️  Constrained schedules are often much longer than dependency-only estimates!
+   
+    **Example:** A 3-person team working on 10 tasks in parallel (dependency-only) 
+    might complete in 100 hours. The same team with resource constraints might 
+    need 400 hours because resources unavailability creates wait time.
+  
+    This is NOT a bug; it's a more realistic picture of how work actually gets done.
+    
+
 ## What constrained scheduling changes
 
 In dependency-only mode, tasks start as soon as dependencies are complete.
@@ -819,7 +829,7 @@ simulation:
 
 output:
   critical_path_report_limit: 5
-  histogram_bins: 80
+  number_bins: 80
 
 staffing:
   effort_percentile: 80
