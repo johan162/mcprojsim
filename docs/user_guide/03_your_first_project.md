@@ -115,9 +115,6 @@ mcprojsim simulate first-project-step-1.yaml --iterations 5000 --seed 42 --minim
 Example result summary:
 
 ```text
-mcprojsim, version 0.13.0
-Progress: 100.0% (5000/5000)
-
 === Simulation Results ===
 
 Project Overview:
@@ -130,32 +127,19 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 26.61 hours (4 working days)
   Median (P50): 26.14 hours
   Std Dev: 4.99 hours
   Minimum: 16.05 hours
   Maximum: 39.67 hours
-  Coefficient of Variation: 0.1877
-  Skewness: 0.3055
-  Excess Kurtosis: -0.6103
 
 Project Effort Statistical Summary:
   Mean: 26.61 person-hours (4 person-days)
   Median (P50): 26.14 person-hours
-  Std Dev: 4.99 person-hours
+  Std Dev: 4.99 person-hourstwo sections
   Minimum: 16.05 person-hours
   Maximum: 39.67 person-hours
-  Coefficient of Variation: 0.1877
-  Skewness: 0.3055
-  Excess Kurtosis: -0.6103
 
 Calendar Time Confidence Intervals:
   P50: 26.14 hours (4 working days)  (2026-03-05)
@@ -203,15 +187,12 @@ The new information is in the `dependencies` field. It says that deployment cann
 Run it:
 
 ```bash
-mcprojsim simulate first-project-step-2.yaml --iterations 5000 --seed 42
+mcprojsim simulate first-project-step-2.yaml --iterations 5000 --seed 42 
 ```
 
 Example result summary:
 
 ```text
-mcprojsim, version 0.13.0
-Progress: 100.0% (5000/5000)
-
 === Simulation Results ===
 
 Project Overview:
@@ -224,40 +205,11 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
+  < --- SKIP --- >
 
-Calendar Time Statistical Summary:
-  Mean: 45.13 hours (6 working days)
-  Median (P50): 44.88 hours
-  Std Dev: 6.91 hours
-  Minimum: 26.24 hours
-  Maximum: 66.85 hours
-  Coefficient of Variation: 0.1531
-  Skewness: 0.1895
-  Excess Kurtosis: -0.3088
-
-Project Effort Statistical Summary:
-  Mean: 45.13 person-hours (6 person-days)
-  Median (P50): 44.88 person-hours
-  Std Dev: 6.91 person-hours
-  Minimum: 26.24 person-hours
-  Maximum: 66.85 person-hours
-  Coefficient of Variation: 0.1531
-  Skewness: 0.1895
-  Excess Kurtosis: -0.3088
-
-Calendar Time Confidence Intervals:
-  P50: 44.88 hours (6 working days)  (2026-03-09)
-  P80: 51.04 hours (7 working days)  (2026-03-10)
-  P90: 54.18 hours (7 working days)  (2026-03-10)
-  .
-  .
-  .
+Sensitivity Analysis (top contributors):
+  task_002: +0.6901
+  task_001: +0.6775
 
 Schedule Slack:
   task_001: 0.00 hours (Critical)
@@ -268,8 +220,8 @@ Most Frequent Critical Paths:
 
 Staffing (based on mean effort): 1 people recommended (mixed team), 7 working days
   Total effort: 45 person-hours (6 person-days) | Parallelism ratio: 1.0
-```
 
+```
 
 Compared with the first example, the schedule is now longer because the project contains more work. More importantly, the dependency means the tasks form a chain rather than happening independently. This is the beginning of a project network.
 
@@ -287,7 +239,7 @@ That means the tool now shows:
 For this small example there is only one dependency chain, so the reported path is always:
 
 ```text
-task_001 -> task_002
+task_001 -> task_002 (5000/5000, 100.0%)
 ```
 
 In larger projects, several different paths may become critical across the Monte Carlo iterations. The simulator aggregates those paths and shows the most common ones.
@@ -376,9 +328,6 @@ mcprojsim simulate first-project-step-3.yaml --seed 42 --minimal
 Example result summary:
 
 ```text
-mcprojsim, version 0.14.0
-Progress: 100.0% (10000/10000)
-
 === Simulation Results ===
 
 Project Overview:
@@ -391,22 +340,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 49.98 hours (7 working days)
   Median (P50): 49.67 hours
   Std Dev: 7.88 hours
   Minimum: 27.41 hours
   Maximum: 76.84 hours
-  Coefficient of Variation: 0.1576
-  Skewness: 0.1904
-  Excess Kurtosis: -0.3297
 
 Project Effort Statistical Summary:
   Mean: 49.98 person-hours (7 person-days)
@@ -414,9 +353,6 @@ Project Effort Statistical Summary:
   Std Dev: 7.88 person-hours
   Minimum: 27.41 person-hours
   Maximum: 76.84 person-hours
-  Coefficient of Variation: 0.1576
-  Skewness: 0.1904
-  Excess Kurtosis: -0.3297
 
 Calendar Time Confidence Intervals:
   P50: 49.67 hours (7 working days)  (2026-03-10)
@@ -496,16 +432,13 @@ mcprojsim simulate first-project-step-3.yaml --seed 42 --minimal --config first-
 We do not repeat the full output but show only the summary as
 
 ```txt
-...
+<-- SKIP -->
 Calendar Time Statistical Summary:
   Mean: 57.19 hours (8 working days)
   Median (P50): 56.85 hours
   Std Dev: 8.87 hours
   Minimum: 31.76 hours
   Maximum: 87.52 hours
-  Coefficient of Variation: 0.1551
-  Skewness: 0.1880
-  Excess Kurtosis: -0.3256
 
 Project Effort Statistical Summary:
   Mean: 57.19 person-hours (8 person-days)
@@ -513,9 +446,6 @@ Project Effort Statistical Summary:
   Std Dev: 8.87 person-hours
   Minimum: 31.76 person-hours
   Maximum: 87.52 person-hours
-  Coefficient of Variation: 0.1551
-  Skewness: 0.1880
-  Excess Kurtosis: -0.3256
 ```
 
 As expected the simulation shows slightly hgher effort and longer calendar time.
@@ -598,22 +528,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.1)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 60.52 hours (8 working days)
   Median (P50): 59.64 hours
   Std Dev: 10.99 hours
   Minimum: 32.85 hours
   Maximum: 103.52 hours
-  Coefficient of Variation: 0.1815
-  Skewness: 0.4240
-  Excess Kurtosis: -0.1327
 
 Project Effort Statistical Summary:
   Mean: 57.35 person-hours (8 person-days)
@@ -621,16 +541,13 @@ Project Effort Statistical Summary:
   Std Dev: 8.87 person-hours
   Minimum: 31.76 person-hours
   Maximum: 87.52 person-hours
-  Coefficient of Variation: 0.1547
-  Skewness: 0.2138
-  Excess Kurtosis: -0.3409
 
 Calendar Time Confidence Intervals:
   P50: 59.64 hours (8 working days)  (2026-03-11)
   P80: 69.95 hours (9 working days)  (2026-03-12)
   P90: 75.46 hours (10 working days)  (2026-03-13)
 
-  ..
+  <-- SKIP -->
 
   Risk Impact Analysis:
     task_002: mean=0.23h, triggers=15.0%, mean_when_triggered=1.50h
@@ -778,22 +695,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.0)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 9.67 hours (2 working days)
   Median (P50): 9.59 hours
   Std Dev: 1.39 hours
   Minimum: 5.83 hours
   Maximum: 14.45 hours
-  Coefficient of Variation: 0.1437
-  Skewness: 0.1701
-  Excess Kurtosis: -0.3573
 
 Project Effort Statistical Summary:
   Mean: 9.67 person-hours (2 person-days)
@@ -801,9 +708,6 @@ Project Effort Statistical Summary:
   Std Dev: 1.39 person-hours
   Minimum: 5.83 person-hours
   Maximum: 14.45 person-hours
-  Coefficient of Variation: 0.1437
-  Skewness: 0.1701
-  Excess Kurtosis: -0.3573
 
 Calendar Time Confidence Intervals:
   P50: 9.59 hours (2 working days)  (2026-03-03)
@@ -936,22 +840,12 @@ Project Overview:
   Max Parallel Tasks: 1
   Schedule Mode: dependency_only
 
-Default Uncertainty Factors:
-  Team Experience: medium (1.1)
-  Requirements Maturity: high (1.0)
-  Technical Complexity: low (1.0)
-  Team Distribution: colocated (1.0)
-  Integration Complexity: low (1.0)
-
 Calendar Time Statistical Summary:
   Mean: 80.64 hours (11 working days)
   Median (P50): 80.12 hours
   Std Dev: 11.58 hours
   Minimum: 47.68 hours
   Maximum: 123.43 hours
-  Coefficient of Variation: 0.1436
-  Skewness: 0.1680
-  Excess Kurtosis: -0.2193
 
 Project Effort Statistical Summary:
   Mean: 80.64 person-hours (11 person-days)
@@ -959,9 +853,6 @@ Project Effort Statistical Summary:
   Std Dev: 11.58 person-hours
   Minimum: 47.68 person-hours
   Maximum: 123.43 person-hours
-  Coefficient of Variation: 0.1436
-  Skewness: 0.1680
-  Excess Kurtosis: -0.2193
 
 Calendar Time Confidence Intervals:
   P50: 80.12 hours (11 working days)  (2026-03-16)
