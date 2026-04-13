@@ -353,6 +353,7 @@ If we assume the $\ln(F_i)$ are independent and identically distributed, then by
 
 \newpage
 
+
 ## T-shirt size estimates
 
 T-shirt sizing is a relative estimation technique where tasks are classified into sizes such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`, scoped by named categories (`bug`, `story`, `epic`, `business`, `initiative`). This is useful when teams need different calibration levels across planning horizons.
