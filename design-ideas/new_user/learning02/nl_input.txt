@@ -1,0 +1,10 @@
+# Experiment: NL processing - testing generate from natural language
+Project: E-commerce Platform Rebuild
+Start date: 2026-05-01
+
+1. Requirements gathering [M]
+2. Database schema design (about 1 week), depends on requirements
+3. Backend API development, size XL, depends on database schema
+4. Frontend development (2-4 weeks), depends on requirements
+5. Integration testing [L], depends on backend and frontend
+6. Deployment and monitoring (a few days), depends on integration testing

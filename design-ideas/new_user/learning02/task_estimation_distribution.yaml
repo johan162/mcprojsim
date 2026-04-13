@@ -1,0 +1,35 @@
+# Experiment: Project-wide lognormal with per-task override
+project:
+  name: "Project-Wide Lognormal"
+  description: "Testing distribution precedence"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90, 95]
+  distribution: "lognormal"
+
+tasks:
+  - id: "task_001"
+    name: "Research phase (inherits lognormal)"
+    estimate:
+      low: 2
+      expected: 5
+      high: 15
+      unit: "days"
+
+  - id: "task_002"
+    name: "CI setup (override to triangular)"
+    estimate:
+      distribution: "triangular"
+      low: 0.5
+      expected: 1
+      high: 2
+      unit: "days"
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "Implementation (inherits lognormal)"
+    estimate:
+      low: 5
+      expected: 10
+      high: 30
+      unit: "days"
+    dependencies: ["task_002"]

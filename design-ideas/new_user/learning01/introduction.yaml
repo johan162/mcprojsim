@@ -1,0 +1,39 @@
+project:
+  name: "Intro Dependency Trial"
+  start_date: "2026-05-05"
+
+tasks:
+  - id: "task_001"
+    name: "Design"
+    estimate:
+      low: 2
+      expected: 4
+      high: 8
+      unit: "days"
+
+  - id: "task_002"
+    name: "Backend"
+    estimate:
+      low: 3
+      expected: 5
+      high: 9
+      unit: "days"
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "Frontend"
+    estimate:
+      low: 2
+      expected: 4
+      high: 7
+      unit: "days"
+    dependencies: ["task_001"]
+
+  - id: "task_004"
+    name: "Integration"
+    estimate:
+      low: 2
+      expected: 3
+      high: 6
+      unit: "days"
+    dependencies: ["task_002", "task_003"]

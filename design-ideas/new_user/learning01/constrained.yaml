@@ -1,0 +1,48 @@
+project:
+  name: "Onboarding Portal"
+  description: "Constrained scheduling example with explicit resources and calendars"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "task_001"
+    name: "Requirements"
+    estimate: { low: 8, expected: 16, high: 24 }
+
+  - id: "task_002"
+    name: "Implementation"
+    estimate: { low: 40, expected: 64, high: 96 }
+    dependencies: ["task_001"]
+    resources: ["alice", "bob"]
+    max_resources: 2
+    min_experience_level: 2
+
+  - id: "task_003"
+    name: "Testing"
+    estimate: { low: 16, expected: 24, high: 40 }
+    dependencies: ["task_002"]
+
+resources:
+  - name: "alice"
+    experience_level: 3
+    productivity_level: 1.1
+    sickness_prob: 0.02
+    planned_absence: ["2026-04-22"]
+
+  - name: "bob"
+    calendar: "part_time"
+    experience_level: 2
+    productivity_level: 0.9
+    availability: 0.8
+    sickness_prob: 0.04
+
+calendars:
+  - id: "default"
+    work_hours_per_day: 8
+    work_days: [1, 2, 3, 4, 5]
+    holidays: ["2026-04-10"]
+
+  - id: "part_time"
+    work_hours_per_day: 6
+    work_days: [1, 2, 3, 4]

@@ -1,0 +1,279 @@
+## Cost handling experiment
+Validating new_user/cost_handling.yaml...
+✓ Project file is valid!
+mcprojsim, version 0.13.0
+Progress: 10.0% (100/1000)
+Progress: 20.0% (200/1000)
+Progress: 30.0% (300/1000)
+Progress: 40.0% (400/1000)
+Progress: 50.0% (500/1000)
+Progress: 60.0% (600/1000)
+Progress: 70.0% (700/1000)
+Progress: 80.0% (800/1000)
+Progress: 90.0% (900/1000)
+Progress: 100.0% (1000/1000)
+Simulation time: 0.03 seconds
+Peak simulation memory: 320.00 KiB
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬─────────────────┐
+│ Field                          │ Value           │
+├────────────────────────────────┼─────────────────┤
+│ Project                        │ API Rewrite     │
+│ Start Date                     │ 2026-06-01      │
+│ Number of Tasks                │ 5               │
+│ Effective Default Distribution │ triangular      │
+│ T-Shirt Category Used          │ story           │
+│ Hours per Day                  │ 8.0             │
+│ Max Parallel Tasks             │ 1               │
+│ Schedule Mode                  │ dependency_only │
+└────────────────────────────────┴─────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 340.48 hours (43 working days) │
+│ Median (P50)             │ 338.40 hours                   │
+│ Std Dev                  │ 41.19 hours                    │
+│ Minimum                  │ 235.76 hours                   │
+│ Maximum                  │ 472.38 hours                   │
+│ Coefficient of Variation │ 0.1210                         │
+│ Skewness                 │ 0.2134                         │
+│ Excess Kurtosis          │ -0.1992                        │
+└──────────────────────────┴────────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 340.48 person-hours (43 person-days) │
+│ Median (P50)             │ 338.40 person-hours                  │
+│ Std Dev                  │ 41.19 person-hours                   │
+│ Minimum                  │ 235.76 person-hours                  │
+│ Maximum                  │ 472.38 person-hours                  │
+│ Coefficient of Variation │ 0.1210                               │
+│ Skewness                 │ 0.2134                               │
+│ Excess Kurtosis          │ -0.1992                              │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │  338.4  │             43 │ 2026-07-30 │
+│ P80          │  374.12 │             47 │ 2026-08-05 │
+│ P90          │  396.22 │             50 │ 2026-08-10 │
+│ P95          │  411.66 │             52 │ 2026-08-12 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Effort Confidence Intervals:
+┌──────────────┬────────────────┬───────────────┐
+│ Percentile   │   Person-Hours │   Person-Days │
+├──────────────┼────────────────┼───────────────┤
+│ P50          │         338.4  │            43 │
+│ P80          │         374.12 │            47 │
+│ P90          │         396.22 │            50 │
+│ P95          │         411.66 │            52 │
+└──────────────┴────────────────┴───────────────┘
+
+Cost Statistical Summary (EUR):
+┌──────────────┬─────────┐
+│ Metric       │ Value   │
+├──────────────┼─────────┤
+│ Mean         │ €63,168 │
+│ Median (P50) │ €62,636 │
+│ Std Dev      │ €7,740  │
+│ Minimum      │ €43,288 │
+│ Maximum      │ €87,467 │
+│ CV           │ 12.3%   │
+└──────────────┴─────────┘
+
+Cost Confidence Intervals:
+┌──────────────┬──────────┐
+│ Percentile   │ Amount   │
+├──────────────┼──────────┤
+│ P50          │ €62,636  │
+│ P80          │ €69,459  │
+│ P90          │ €73,778  │
+│ P95          │ €76,947  │
+└──────────────┴──────────┘
+
+Cost Sensitivity Analysis:
+┌─────────────┬───────────────┐
+│ Task        │ Correlation   │
+├─────────────┼───────────────┤
+│ implement   │ +0.7381       │
+│ integration │ +0.5300       │
+│ testing     │ +0.3090       │
+│ design      │ +0.1920       │
+│ infra       │ +0.0789       │
+└─────────────┴───────────────┘
+
+Budget Analysis (target: €45,000):
+┌───────────────────────────┬─────────────────────────────┐
+│ Metric                    │ Value                       │
+├───────────────────────────┼─────────────────────────────┤
+│ Probability within budget │ 0.4%  (95% CI: 0.2% – 1.0%) │
+│ Budget for P50 confidence │ €62,636                     │
+│ Budget for P80 confidence │ €69,459                     │
+│ Budget for P90 confidence │ €73,778                     │
+└───────────────────────────┴─────────────────────────────┘
+
+Sensitivity Analysis (top contributors):
+┌─────────────┬───────────────┐
+│ Task        │ Correlation   │
+├─────────────┼───────────────┤
+│ implement   │ +0.8017       │
+│ integration │ +0.4055       │
+│ testing     │ +0.3341       │
+│ design      │ +0.2059       │
+│ infra       │ +0.0962       │
+└─────────────┴───────────────┘
+
+Schedule Slack:
+┌─────────────┬─────────────────┬──────────┐
+│ Task        │ Slack (hours)   │ Status   │
+├─────────────┼─────────────────┼──────────┤
+│ testing     │ 0.00            │ Critical │
+│ integration │ 0.00            │ Critical │
+│ implement   │ 0.00            │ Critical │
+│ design      │ 0.00            │ Critical │
+│ infra       │ 0.00            │ Critical │
+└─────────────┴─────────────────┴──────────┘
+
+Risk Impact Analysis:
+┌─────────────┬────────────────┬────────────────┬───────────────────────────────┐
+│ Task        │   Mean (hours) │ Trigger Rate   │   Mean When Triggered (hours) │
+├─────────────┼────────────────┼────────────────┼───────────────────────────────┤
+│ integration │           4.91 │ 30.7%          │                            16 │
+└─────────────┴────────────────┴────────────────┴───────────────────────────────┘
+
+Most Frequent Critical Paths:
+  1. design -> infra -> implement -> integration -> testing (1000/1000, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 51 working days
+  Total effort: 340 person-hours (43 person-days) | Parallelism ratio: 1.0
+
+
+No export formats specified. Use -f to export results to files.
+mcprojsim, version 0.13.0
+Progress: 10.0% (100/1000)
+Progress: 20.0% (200/1000)
+Progress: 30.0% (300/1000)
+Progress: 40.0% (400/1000)
+Progress: 50.0% (500/1000)
+Progress: 60.0% (600/1000)
+Progress: 70.0% (700/1000)
+Progress: 80.0% (800/1000)
+Progress: 90.0% (900/1000)
+Progress: 100.0% (1000/1000)
+Simulation time: 0.03 seconds
+Peak simulation memory: 576.00 KiB
+
+=== Simulation Results ===
+
+Project Overview:
+  Project: API Rewrite
+  Start Date: 2026-06-01
+  Number of Tasks: 5
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
+
+Calendar Time Statistical Summary:
+  Mean: 340.48 hours (43 working days)
+  Median (P50): 338.40 hours
+  Std Dev: 41.19 hours
+  Minimum: 235.76 hours
+  Maximum: 472.38 hours
+  Coefficient of Variation: 0.1210
+  Skewness: 0.2134
+  Excess Kurtosis: -0.1992
+
+Project Effort Statistical Summary:
+  Mean: 340.48 person-hours (43 person-days)
+  Median (P50): 338.40 person-hours
+  Std Dev: 41.19 person-hours
+  Minimum: 235.76 person-hours
+  Maximum: 472.38 person-hours
+  Coefficient of Variation: 0.1210
+  Skewness: 0.2134
+  Excess Kurtosis: -0.1992
+
+Calendar Time Confidence Intervals:
+  P50: 338.40 hours (43 working days)  (2026-07-30)
+  P80: 374.12 hours (47 working days)  (2026-08-05)
+  P90: 396.22 hours (50 working days)  (2026-08-10)
+  P95: 411.66 hours (52 working days)  (2026-08-12)
+
+Effort Confidence Intervals:
+  P50: 338.40 person-hours (43 person-days)
+  P80: 374.12 person-hours (47 person-days)
+  P90: 396.22 person-hours (50 person-days)
+  P95: 411.66 person-hours (52 person-days)
+
+Cost Statistical Summary (EUR):
+  Mean:    €63,168
+  Median:  €62,636
+  Std Dev: €7,740
+  Min:     €43,288
+  Max:     €87,467
+  CV:      12.3%
+
+Cost Confidence Intervals:
+  P50: €62,636  |  P80: €69,459  |  P90: €73,778  |  P95: €76,947
+
+Cost Sensitivity Analysis:
+  implement: +0.7381
+  integration: +0.5300
+  testing: +0.3090
+  design: +0.1920
+  infra: +0.0789
+
+Sensitivity Analysis (top contributors):
+  implement: +0.8017
+  integration: +0.4055
+  testing: +0.3341
+  design: +0.2059
+  infra: +0.0962
+
+Schedule Slack:
+  testing: 0.00 hours (Critical)
+  integration: 0.00 hours (Critical)
+  implement: 0.00 hours (Critical)
+  design: 0.00 hours (Critical)
+  infra: 0.00 hours (Critical)
+
+Risk Impact Analysis:
+  integration: mean=4.91h, triggers=30.7%, mean_when_triggered=16.00h
+
+Most Frequent Critical Paths:
+  1. design -> infra -> implement -> integration -> testing (1000/1000, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 51 working days
+  Total effort: 340 person-hours (43 person-days) | Parallelism ratio: 1.0
+
+Results exported to new_user/cost_handling.json

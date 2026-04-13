@@ -1,0 +1,239 @@
+=== TARGET DATE ===
+mcprojsim, version 0.13.0
+Simulation time: 0.16 seconds
+Peak simulation memory: 5.97 MiB
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬────────────────────────────────┐
+│ Field                          │ Value                          │
+├────────────────────────────────┼────────────────────────────────┤
+│ Project                        │ Running Simulations Experiment │
+│ Start Date                     │ 2026-04-01                     │
+│ Number of Tasks                │ 4                              │
+│ Effective Default Distribution │ triangular                     │
+│ T-Shirt Category Used          │ story                          │
+│ Hours per Day                  │ 8.0                            │
+│ Max Parallel Tasks             │ 1                              │
+│ Schedule Mode                  │ dependency_only                │
+└────────────────────────────────┴────────────────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 242.36 hours (31 working days) │
+│ Median (P50)             │ 240.69 hours                   │
+│ Std Dev                  │ 29.20 hours                    │
+│ Minimum                  │ 156.26 hours                   │
+│ Maximum                  │ 339.19 hours                   │
+│ Coefficient of Variation │ 0.1205                         │
+│ Skewness                 │ 0.2390                         │
+│ Excess Kurtosis          │ -0.3425                        │
+└──────────────────────────┴────────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 242.36 person-hours (31 person-days) │
+│ Median (P50)             │ 240.69 person-hours                  │
+│ Std Dev                  │ 29.20 person-hours                   │
+│ Minimum                  │ 156.26 person-hours                  │
+│ Maximum                  │ 339.19 person-hours                  │
+│ Coefficient of Variation │ 0.1205                               │
+│ Skewness                 │ 0.2390                               │
+│ Excess Kurtosis          │ -0.3425                              │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P25          │  221.23 │             28 │ 2026-05-11 │
+│ P50          │  240.69 │             31 │ 2026-05-14 │
+│ P75          │  261.89 │             33 │ 2026-05-18 │
+│ P80          │  267.49 │             34 │ 2026-05-19 │
+│ P85          │  274.22 │             35 │ 2026-05-20 │
+│ P90          │  282.57 │             36 │ 2026-05-21 │
+│ P95          │  293.13 │             37 │ 2026-05-22 │
+│ P99          │  312.16 │             40 │ 2026-05-27 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Effort Confidence Intervals:
+┌──────────────┬────────────────┬───────────────┐
+│ Percentile   │   Person-Hours │   Person-Days │
+├──────────────┼────────────────┼───────────────┤
+│ P25          │         221.23 │            28 │
+│ P50          │         240.69 │            31 │
+│ P75          │         261.89 │            33 │
+│ P80          │         267.49 │            34 │
+│ P85          │         274.22 │            35 │
+│ P90          │         282.57 │            36 │
+│ P95          │         293.13 │            37 │
+│ P99          │         312.16 │            40 │
+└──────────────┴────────────────┴───────────────┘
+
+Sensitivity Analysis (top contributors):
+┌──────────┬───────────────┐
+│ Task     │ Correlation   │
+├──────────┼───────────────┤
+│ task_002 │ +0.8519       │
+│ task_001 │ +0.3838       │
+│ task_003 │ +0.2708       │
+│ task_004 │ +0.1554       │
+└──────────┴───────────────┘
+
+Schedule Slack:
+┌──────────┬─────────────────┬──────────┐
+│ Task     │ Slack (hours)   │ Status   │
+├──────────┼─────────────────┼──────────┤
+│ task_004 │ 0.00            │ Critical │
+│ task_003 │ 0.00            │ Critical │
+│ task_001 │ 0.00            │ Critical │
+│ task_002 │ 0.00            │ Critical │
+└──────────┴─────────────────┴──────────┘
+
+Probability of completing by 2026-06-01: 100.0% (43 working days, 344 hours)
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_002 -> task_003 -> task_004 (10000/10000, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 36 working days
+  Total effort: 242 person-hours (31 person-days) | Parallelism ratio: 1.0
+
+
+No export formats specified. Use -f to export results to files.
+
+=== MINIMAL OUTPUT ===
+mcprojsim, version 0.13.0
+
+=== Simulation Results ===
+
+Project Overview:
+  Project: Running Simulations Experiment
+  Start Date: 2026-04-01
+  Number of Tasks: 4
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
+
+Calendar Time Statistical Summary:
+  Mean: 242.36 hours (31 working days)
+  Median (P50): 240.69 hours
+  Std Dev: 29.20 hours
+  Minimum: 156.26 hours
+  Maximum: 339.19 hours
+  Coefficient of Variation: 0.1205
+  Skewness: 0.2390
+  Excess Kurtosis: -0.3425
+
+Project Effort Statistical Summary:
+  Mean: 242.36 person-hours (31 person-days)
+  Median (P50): 240.69 person-hours
+  Std Dev: 29.20 person-hours
+  Minimum: 156.26 person-hours
+  Maximum: 339.19 person-hours
+  Coefficient of Variation: 0.1205
+  Skewness: 0.2390
+  Excess Kurtosis: -0.3425
+
+Calendar Time Confidence Intervals:
+  P25: 221.23 hours (28 working days)  (2026-05-11)
+  P50: 240.69 hours (31 working days)  (2026-05-14)
+  P75: 261.89 hours (33 working days)  (2026-05-18)
+  P80: 267.49 hours (34 working days)  (2026-05-19)
+  P85: 274.22 hours (35 working days)  (2026-05-20)
+  P90: 282.57 hours (36 working days)  (2026-05-21)
+  P95: 293.13 hours (37 working days)  (2026-05-22)
+  P99: 312.16 hours (40 working days)  (2026-05-27)
+
+=== VERBOSE OUTPUT ===
+mcprojsim, version 0.13.0
+2026-04-13 11:32:19,074 - mcprojsim - INFO - Using built-in default configuration
+2026-04-13 11:32:19,074 - mcprojsim - INFO - Loading project from running_simulations.yaml
+2026-04-13 11:32:19,077 - mcprojsim - INFO - Loaded project: Running Simulations Experiment
+2026-04-13 11:32:19,077 - mcprojsim - INFO - Running simulation with 10000 iterations
+Simulation time: 0.16 seconds
+Peak simulation memory: 5.94 MiB
+
+=== Simulation Results ===
+
+Project Overview:
+  Project: Running Simulations Experiment
+  Start Date: 2026-04-01
+  Number of Tasks: 4
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
+
+Calendar Time Statistical Summary:
+  Mean: 242.36 hours (31 working days)
+  Median (P50): 240.69 hours
+
+=== JSON EXPORT ===
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 36 working days
+  Total effort: 242 person-hours (31 person-days) | Parallelism ratio: 1.0
+
+Results exported to running_sim_results.json
+=== STAFFING FLAG ===
+Staffing (based on mean effort): 1 people recommended (mixed team), 36 working days
+  Total effort: 242 person-hours (31 person-days) | Parallelism ratio: 1.0
+
+Staffing Analysis (junior team, overhead=8%/person, productivity=65%):
+  Effort basis: mean (242 person-hours, 242 critical-path hours)
+┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
+├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+│ 1 *         │ 0.65            │ 47             │ 2026-06-05      │ 100.0%       │
+└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+
+Staffing Analysis (mixed team, overhead=6%/person, productivity=85%):
+  Effort basis: mean (242 person-hours, 242 critical-path hours)
+┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
+├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+│ 1 *         │ 0.85            │ 36             │ 2026-05-21      │ 100.0%       │
+└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+
+Staffing Analysis (senior team, overhead=4%/person, productivity=100%):
+  Effort basis: mean (242 person-hours, 242 critical-path hours)
+┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
+├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+│ 1 *         │ 1.00            │ 31             │ 2026-05-14      │ 100.0%       │
+└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+
+
+No export formats specified. Use -f to export results to files.

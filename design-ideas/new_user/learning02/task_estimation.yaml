@@ -1,0 +1,37 @@
+# Experiment: Task estimation methods - lognormal vs triangular
+project:
+  name: "Distribution Comparison"
+  description: "Comparing triangular vs lognormal distributions"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "triangular_task"
+    name: "Research (triangular)"
+    estimate:
+      distribution: "triangular"
+      low: 3
+      expected: 8
+      high: 20
+      unit: "days"
+
+  - id: "lognormal_task"
+    name: "Research (lognormal)"
+    estimate:
+      distribution: "lognormal"
+      low: 3
+      expected: 8
+      high: 20
+      unit: "days"
+
+  - id: "mixed_tshirt"
+    name: "Design (T-shirt)"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: ["triangular_task"]
+
+  - id: "mixed_storypoints"
+    name: "Implementation (story points)"
+    estimate:
+      story_points: 8
+    dependencies: ["mixed_tshirt"]

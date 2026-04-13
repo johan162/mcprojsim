@@ -1,0 +1,43 @@
+# Experiment: Monetary cost estimation
+project:
+  name: "Cost Estimation Experiment"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+  confidence_levels: [50, 80, 90]
+  default_hourly_rate: 120.0
+  overhead_rate: 0.15
+  currency: "EUR"
+
+tasks:
+  - id: "task_001"
+    name: "Design phase"
+    estimate:
+      low: 3
+      expected: 5
+      high: 10
+      unit: "days"
+
+  - id: "task_002"
+    name: "Implementation"
+    estimate:
+      low: 8
+      expected: 15
+      high: 25
+      unit: "days"
+    dependencies: ["task_001"]
+    fixed_cost: 2000
+
+  - id: "task_003"
+    name: "QA and testing"
+    estimate:
+      low: 3
+      expected: 5
+      high: 10
+      unit: "days"
+    dependencies: ["task_002"]
+    risks:
+      - id: "qa_risk"
+        name: "Extra testing needed"
+        probability: 0.3
+        impact: 16
+        cost_impact: 3000

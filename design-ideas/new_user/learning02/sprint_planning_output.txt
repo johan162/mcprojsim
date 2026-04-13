@@ -1,0 +1,188 @@
+mcprojsim, version 0.13.0
+Simulation time: 0.19 seconds
+Peak simulation memory: 7.95 MiB
+Sprint planning time: 0.42 seconds
+Peak sprint-planning memory: 0.00 B
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬────────────────────────────┐
+│ Field                          │ Value                      │
+├────────────────────────────────┼────────────────────────────┤
+│ Project                        │ Sprint Planning Experiment │
+│ Start Date                     │ 2026-05-04                 │
+│ Number of Tasks                │ 5                          │
+│ Effective Default Distribution │ triangular                 │
+│ T-Shirt Category Used          │ story                      │
+│ Hours per Day                  │ 8.0                        │
+│ Max Parallel Tasks             │ 3                          │
+│ Schedule Mode                  │ dependency_only            │
+└────────────────────────────────┴────────────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 142.89 hours (18 working days) │
+│ Median (P50)             │ 141.56 hours                   │
+│ Std Dev                  │ 19.29 hours                    │
+│ Minimum                  │ 92.44 hours                    │
+│ Maximum                  │ 208.17 hours                   │
+│ Coefficient of Variation │ 0.1350                         │
+│ Skewness                 │ 0.2653                         │
+│ Excess Kurtosis          │ -0.3343                        │
+└──────────────────────────┴────────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 210.51 person-hours (27 person-days) │
+│ Median (P50)             │ 209.49 person-hours                  │
+│ Std Dev                  │ 21.91 person-hours                   │
+│ Minimum                  │ 146.41 person-hours                  │
+│ Maximum                  │ 290.15 person-hours                  │
+│ Coefficient of Variation │ 0.1041                               │
+│ Skewness                 │ 0.2056                               │
+│ Excess Kurtosis          │ -0.1693                              │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │  141.56 │             18 │ 2026-05-28 │
+│ P80          │  160    │             20 │ 2026-06-01 │
+│ P90          │  169.22 │             22 │ 2026-06-03 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Effort Confidence Intervals:
+┌──────────────┬────────────────┬───────────────┐
+│ Percentile   │   Person-Hours │   Person-Days │
+├──────────────┼────────────────┼───────────────┤
+│ P50          │         209.49 │            27 │
+│ P80          │         229.08 │            29 │
+│ P90          │         239.41 │            30 │
+└──────────────┴────────────────┴───────────────┘
+
+Sensitivity Analysis (top contributors):
+┌──────────┬───────────────┐
+│ Task     │ Correlation   │
+├──────────┼───────────────┤
+│ task_003 │ +0.8457       │
+│ task_004 │ +0.4071       │
+│ task_001 │ +0.2808       │
+│ task_002 │ +0.0074       │
+│ task_005 │ +0.0063       │
+└──────────┴───────────────┘
+
+Schedule Slack:
+┌──────────┬─────────────────┬───────────────┐
+│ Task     │ Slack (hours)   │ Status        │
+├──────────┼─────────────────┼───────────────┤
+│ task_004 │ 0.00            │ Critical      │
+│ task_001 │ 0.00            │ Critical      │
+│ task_003 │ 0.13            │ 0.1h buffer   │
+│ task_002 │ 32.30           │ 32.3h buffer  │
+│ task_005 │ 117.61          │ 117.6h buffer │
+└──────────┴─────────────────┴───────────────┘
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_003 -> task_004 (9696/10000, 97.0%)
+  2. task_001 -> task_002 -> task_004 (304/10000, 3.0%)
+
+Sprint Planning Summary:
+┌───────────────────────────────┬─────────────────────────────────┐
+│ Field                         │ Value                           │
+├───────────────────────────────┼─────────────────────────────────┤
+│ Sprint Length                 │ 2 weeks                         │
+│ Planning Confidence Level     │ 80%                             │
+│ Removed Work Treatment        │ RemovedWorkTreatment.CHURN_ONLY │
+│ Velocity Model                │ empirical                       │
+│ Planned Commitment Guidance   │ 8.48                            │
+│ Historical Sampling Mode      │ matching_cadence                │
+│ Historical Observations       │ 4                               │
+│ Carryover Mean                │ 0.00                            │
+│ Aggregate Spillover Rate      │ 0.0000                          │
+│ Observed Disruption Frequency │ 0.0000                          │
+└───────────────────────────────┴─────────────────────────────────┘
+
+Sprint Count Statistical Summary:
+┌──────────────────────────┬──────────────┐
+│ Metric                   │ Value        │
+├──────────────────────────┼──────────────┤
+│ Mean                     │ 3.75 sprints │
+│ Median (P50)             │ 4.00 sprints │
+│ Std Dev                  │ 0.43 sprints │
+│ Minimum                  │ 3.00 sprints │
+│ Maximum                  │ 4.00 sprints │
+│ Coefficient of Variation │ 0.1150       │
+└──────────────────────────┴──────────────┘
+
+Sprint Count Confidence Intervals:
+┌──────────────┬───────────┬───────────────────────────┐
+│ Percentile   │ Sprints   │ Projected Delivery Date   │
+├──────────────┼───────────┼───────────────────────────┤
+│ P50          │ 4.00      │ 2026-06-15                │
+│ P80          │ 4.00      │ 2026-06-15                │
+│ P90          │ 4.00      │ 2026-06-15                │
+└──────────────┴───────────┴───────────────────────────┘
+
+Historical Sprint Series:
+┌─────────────────┬────────┬──────────┬───────────┬───────┬───────┐
+│ Series          │ Mean   │ Median   │ Std Dev   │ Min   │ Max   │
+├─────────────────┼────────┼──────────┼───────────┼───────┼───────┤
+│ added_units     │ 0.25   │ 0.00     │ 0.43      │ 0.00  │ 1.00  │
+│ completed_units │ 10.75  │ 10.50    │ 1.48      │ 9.00  │ 13.00 │
+│ removed_units   │ 0.25   │ 0.00     │ 0.43      │ 0.00  │ 1.00  │
+│ spillover_units │ 1.25   │ 1.00     │ 0.43      │ 1.00  │ 2.00  │
+└─────────────────┴────────┴──────────┴───────────┴───────┴───────┘
+
+Historical Ratio Summaries:
+┌──────────────────────┬────────┬──────────┬───────────┬────────┬────────┬────────┐
+│ Ratio                │ Mean   │ Median   │ Std Dev   │ P50    │ P80    │ P90    │
+├──────────────────────┼────────┼──────────┼───────────┼────────┼────────┼────────┤
+│ scope_addition_ratio │ 0.0250 │ 0.0000   │ 0.0433    │ 0.0000 │ 0.0400 │ 0.0700 │
+│ scope_removal_ratio  │ 0.0192 │ 0.0000   │ 0.0333    │ 0.0000 │ 0.0308 │ 0.0538 │
+│ spillover_ratio      │ 0.1069 │ 0.0871   │ 0.0438    │ 0.0871 │ 0.1273 │ 0.1545 │
+└──────────────────────┴────────┴──────────┴───────────┴────────┴────────┴────────┘
+
+Historical Correlations:
+┌─────────────────────────────────┬───────────────────────┐
+│ Series Pair                     │ Pearson Correlation   │
+├─────────────────────────────────┼───────────────────────┤
+│ added_units|removed_units       │ -0.3333               │
+│ completed_units|added_units     │ -0.6831               │
+│ completed_units|removed_units   │ 0.0976                │
+│ completed_units|spillover_units │ -0.6831               │
+│ spillover_units|added_units     │ 1.0000                │
+│ spillover_units|removed_units   │ -0.3333               │
+└─────────────────────────────────┴───────────────────────┘
+
+Burn-up Percentiles:
+┌──────────┬───────┬───────┬───────┐
+│ Sprint   │ P50   │ P80   │ P90   │
+├──────────┼───────┼───────┼───────┤
+│ 1        │ 6.00  │ 7.00  │ 7.00  │
+│ 2        │ 12.00 │ 19.00 │ 19.00 │
+│ 3        │ 20.00 │ 24.00 │ 25.00 │
+│ 4        │ 25.00 │ 26.00 │ 26.00 │
+└──────────┴───────┴───────┴───────┘
+
+Staffing (based on mean effort): 2 people recommended (mixed team), 18 working days
+  Total effort: 211 person-hours (27 person-days) | Parallelism ratio: 1.5
+
+
+No export formats specified. Use -f to export results to files.

@@ -1,0 +1,152 @@
+## Interpreting results experiment
+Validating new_user/interpreting_results.yaml...
+✓ Project file is valid!
+mcprojsim, version 0.13.0
+Progress: 10.0% (120/1200)
+Progress: 20.0% (240/1200)
+Progress: 30.0% (360/1200)
+Progress: 40.0% (480/1200)
+Progress: 50.0% (600/1200)
+Progress: 60.0% (720/1200)
+Progress: 70.0% (840/1200)
+Progress: 80.0% (960/1200)
+Progress: 90.0% (1080/1200)
+Progress: 100.0% (1200/1200)
+Simulation time: 0.02 seconds
+Peak simulation memory: 0.00 B
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬──────────────────────┐
+│ Field                          │ Value                │
+├────────────────────────────────┼──────────────────────┤
+│ Project                        │ Interpretation Trial │
+│ Start Date                     │ 2026-05-25           │
+│ Number of Tasks                │ 3                    │
+│ Effective Default Distribution │ triangular           │
+│ T-Shirt Category Used          │ story                │
+│ Hours per Day                  │ 8.0                  │
+│ Max Parallel Tasks             │ 1                    │
+│ Schedule Mode                  │ dependency_only      │
+└────────────────────────────────┴──────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 187.20 hours (24 working days) │
+│ Median (P50)             │ 164.72 hours                   │
+│ Std Dev                  │ 80.37 hours                    │
+│ Minimum                  │ 84.88 hours                    │
+│ Maximum                  │ 720.31 hours                   │
+│ Coefficient of Variation │ 0.4293                         │
+│ Skewness                 │ 2.3355                         │
+│ Excess Kurtosis          │ 7.8467                         │
+└──────────────────────────┴────────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 187.20 person-hours (24 person-days) │
+│ Median (P50)             │ 164.72 person-hours                  │
+│ Std Dev                  │ 80.37 person-hours                   │
+│ Minimum                  │ 84.88 person-hours                   │
+│ Maximum                  │ 720.31 person-hours                  │
+│ Coefficient of Variation │ 0.4293                               │
+│ Skewness                 │ 2.3355                               │
+│ Excess Kurtosis          │ 7.8467                               │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P10          │  119.17 │             15 │ 2026-06-15 │
+│ P25          │  136.43 │             18 │ 2026-06-18 │
+│ P50          │  164.72 │             21 │ 2026-06-23 │
+│ P75          │  211.09 │             27 │ 2026-07-01 │
+│ P80          │  225.48 │             29 │ 2026-07-03 │
+│ P85          │  250.43 │             32 │ 2026-07-08 │
+│ P90          │  280.72 │             36 │ 2026-07-14 │
+│ P95          │  343.03 │             43 │ 2026-07-23 │
+│ P99          │  500.39 │             63 │ 2026-08-20 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Effort Confidence Intervals:
+┌──────────────┬────────────────┬───────────────┐
+│ Percentile   │   Person-Hours │   Person-Days │
+├──────────────┼────────────────┼───────────────┤
+│ P10          │         119.17 │            15 │
+│ P25          │         136.43 │            18 │
+│ P50          │         164.72 │            21 │
+│ P75          │         211.09 │            27 │
+│ P80          │         225.48 │            29 │
+│ P85          │         250.43 │            32 │
+│ P90          │         280.72 │            36 │
+│ P95          │         343.03 │            43 │
+│ P99          │         500.39 │            63 │
+└──────────────┴────────────────┴───────────────┘
+
+Sensitivity Analysis (top contributors):
+┌──────────┬───────────────┐
+│ Task     │ Correlation   │
+├──────────┼───────────────┤
+│ task_001 │ +0.9061       │
+│ task_002 │ +0.3337       │
+│ task_003 │ +0.2246       │
+└──────────┴───────────────┘
+
+Schedule Slack:
+┌──────────┬─────────────────┬──────────┐
+│ Task     │ Slack (hours)   │ Status   │
+├──────────┼─────────────────┼──────────┤
+│ task_003 │ 0.00            │ Critical │
+│ task_001 │ 0.00            │ Critical │
+│ task_002 │ 0.00            │ Critical │
+└──────────┴─────────────────┴──────────┘
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_002 -> task_003 (1200/1200, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 28 working days
+  Total effort: 187 person-hours (24 person-days) | Parallelism ratio: 1.0
+
+Staffing Analysis (junior team, overhead=8%/person, productivity=65%):
+  Effort basis: mean (187 person-hours, 187 critical-path hours)
+┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
+├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+│ 1 *         │ 0.65            │ 37             │ 2026-07-15      │ 100.0%       │
+└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+
+Staffing Analysis (mixed team, overhead=6%/person, productivity=85%):
+  Effort basis: mean (187 person-hours, 187 critical-path hours)
+┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
+├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+│ 1 *         │ 0.85            │ 28             │ 2026-07-02      │ 100.0%       │
+└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+
+Staffing Analysis (senior team, overhead=4%/person, productivity=100%):
+  Effort basis: mean (187 person-hours, 187 critical-path hours)
+┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
+├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+│ 1 *         │ 1.00            │ 24             │ 2026-06-26      │ 100.0%       │
+└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+
+
+No export formats specified. Use -f to export results to files.

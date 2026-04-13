@@ -1,0 +1,18 @@
+simulation:
+  default_iterations: 1200
+
+output:
+  histogram_bins: 30
+
+t_shirt_size_unit: "hours"
+t_shirt_size_default_category: story
+t_shirt_sizes:
+  story:
+    S:
+      low: 4
+      expected: 10
+      high: 30
+    M:
+      low: 25
+      expected: 45
+      high: 90

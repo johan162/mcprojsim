@@ -1,0 +1,40 @@
+# Experiment: Configuration - custom config overrides
+# Custom T-shirt sizes for our team + custom uncertainty factors
+uncertainty_factors:
+  team_experience:
+    high: 0.85
+    medium: 1.0
+    low: 1.35
+  technical_complexity:
+    low: 1.0
+    medium: 1.25
+    high: 1.60
+
+t_shirt_size_default_category: story
+t_shirt_size_unit: "hours"
+
+t_shirt_sizes:
+  story:
+    XS:
+      low: 2
+      expected: 4
+      high: 8
+    S:
+      low: 4
+      expected: 8
+      high: 16
+    M:
+      low: 16
+      expected: 24
+      high: 40
+    L:
+      low: 40
+      expected: 60
+      high: 100
+
+simulation:
+  default_iterations: 10000
+
+output:
+  include_histogram: true
+  histogram_bins: 40

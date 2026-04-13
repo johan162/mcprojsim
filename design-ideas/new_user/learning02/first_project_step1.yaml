@@ -1,0 +1,15 @@
+# Step 1: one task, one estimate
+project:
+  name: "Tiny Landing Page"
+  description: "The smallest possible example"
+  start_date: "2026-03-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Create landing page"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days"

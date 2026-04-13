@@ -1,0 +1,38 @@
+# Experiment: Running simulations - target date, formats, verbose
+project:
+  name: "Running Simulations Experiment"
+  start_date: "2026-04-01"
+  confidence_levels: [25, 50, 75, 80, 85, 90, 95, 99]
+
+tasks:
+  - id: "task_001"
+    name: "Design"
+    estimate:
+      low: 3
+      expected: 5
+      high: 10
+      unit: "days"
+  - id: "task_002"
+    name: "Implement"
+    estimate:
+      low: 10
+      expected: 15
+      high: 25
+      unit: "days"
+    dependencies: ["task_001"]
+  - id: "task_003"
+    name: "Test"
+    estimate:
+      low: 3
+      expected: 5
+      high: 8
+      unit: "days"
+    dependencies: ["task_002"]
+  - id: "task_004"
+    name: "Deploy"
+    estimate:
+      low: 1
+      expected: 2
+      high: 4
+      unit: "days"
+    dependencies: ["task_003"]

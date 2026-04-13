@@ -1,0 +1,25 @@
+# Config file for step 3+
+uncertainty_factors:
+  team_experience:
+    high: 0.90
+    medium: 1.0
+    low: 1.25
+
+  requirements_maturity:
+    high: 1.0
+    medium: 1.10
+    low: 1.30
+
+  technical_complexity:
+    low: 1.0
+    medium: 1.15
+    high: 1.40
+
+simulation:
+  default_iterations: 10000
+  random_seed: null
+
+output:
+  formats: ["json"]
+  include_histogram: true
+  histogram_bins: 30

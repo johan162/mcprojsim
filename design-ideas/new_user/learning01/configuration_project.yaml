@@ -1,0 +1,15 @@
+project:
+  name: "Configuration Override Trial"
+  start_date: "2026-05-29"
+
+tasks:
+  - id: "task_001"
+    name: "Configured S task"
+    estimate:
+      t_shirt_size: "S"
+
+  - id: "task_002"
+    name: "Configured M task"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: ["task_001"]
