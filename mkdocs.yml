@@ -47,36 +47,36 @@ nav:
   - Home: index.md
   - Quick Start: quickstart.md
   - User Guide:
-      - Getting Started: user_guide/getting_started.md
-      - Introduction: user_guide/introduction.md
-      - Your first project: user_guide/your_first_project.md
-      - Uncertainty Factors: user_guide/uncertainty_factors.md
-      - Task Estimation: user_guide/task_estimation.md
-      - Project Risks: user_guide/risks.md
-      - Project Files: user_guide/project_files.md
-      - Sprint Planning: user_guide/sprint_planning.md
-      - Resource and Calendar Constrained Scheduling: user_guide/constrained.md
-      - Multi-Phase (Two-Pass) Simulation: user_guide/multi_phase_simulation.md
-      - Running Simulations: user_guide/running_simulations.md
-      - Interpreting Results: user_guide/interpreting_results.md
-      - Configuration: user_guide/configuration.md
-      - Monetary Cost Estimation: user_guide/cost_handling.md
-      - Natural Language Input: user_guide/nl_processing.md      
-      - MCP Server: user_guide/mcp-server.md
-      - Examples: examples.md
+      - Getting Started:         user_guide/01_getting_started.md
+      - Introduction:            user_guide/02_introduction.md
+      - Your first project:      user_guide/03_your_first_project.md
+      - Uncertainty Factors:     user_guide/04_uncertainty_factors.md
+      - Task Estimation:         user_guide/05_task_estimation.md
+      - Project Risks:           user_guide/06_risks.md
+      - Cost Estimation:         user_guide/07_cost_handling.md
+      - Project Files:           user_guide/08_project_files.md
+      - Sprint Planning:         user_guide/09_sprint_planning.md
+      - Constrained Scheduling:  user_guide/10_constrained.md
+      - Two-Pass Simulation:     user_guide/11_multi_phase_simulation.md
+      - Running Simulations:     user_guide/12_running_simulations.md
+      - Interpreting Results:    user_guide/13_interpreting_results.md
+      - Configuration:           user_guide/14_configuration.md
+      - Natural Language Input:  user_guide/15_nl_processing.md      
+      - MCP Server:              user_guide/16_mcp-server.md
+      - Examples:                          17_examples.md
   - API Reference:
-      - API Reference: api_reference/01_intro.md
-      - Core API: api_reference/02_core.md
-      - Project model: api_reference/03_project_model.md
-      - Simulation: api_reference/04_simulation_results.md
-      - Parsers: api_reference/05_parsers.md
-      - Configuration: api_reference/06_configuration.md
-      - Exporters: api_reference/07_exporters.md
-      - Analysis helpers: api_reference/08_analysis_helpers.md
-      - Validation utilities: api_reference/09_validation_utilities.md
+      - API Reference:           api_reference/01_intro.md
+      - Core API:                api_reference/02_core.md
+      - Project model:           api_reference/03_project_model.md
+      - Simulation:              api_reference/04_simulation_results.md
+      - Parsers:                 api_reference/05_parsers.md
+      - Configuration:           api_reference/06_configuration.md
+      - Exporters:               api_reference/07_exporters.md
+      - Analysis helpers:        api_reference/08_analysis_helpers.md
+      - Validation utilities:    api_reference/09_validation_utilities.md
       - Natural language parser: api_reference/10_nl_parser.md
-      - API Examples: api_reference/11_api_examples.md
-  - Dev Guide: development.md
+      - API Examples:            api_reference/11_api_examples.md
+  - Dev Guide:    development.md
   - EBNF Grammar: grammar.md
 
 plugins:
