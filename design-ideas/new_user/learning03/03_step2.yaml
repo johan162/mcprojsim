@@ -1,0 +1,23 @@
+project:
+  name: "Tiny Landing Page"
+  description: "Step 2 - adding a dependency"
+  start_date: "2026-03-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Create landing page"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days"
+
+  - id: "task_002"
+    name: "Deploy site"
+    estimate:
+      low: 1
+      expected: 2
+      high: 4
+      unit: "days"
+    dependencies: ["task_001"]

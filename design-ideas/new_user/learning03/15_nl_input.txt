@@ -1,0 +1,10 @@
+Project: New feature launch
+Start date: next Monday
+
+1. Design database schema (about a week)
+2. Implement backend REST API (probably 2–4 days, depends on the DB work)
+3. UI design , about ~ 2 weeks
+4. Frontend integration testing (around 3 weeks)
+5. Deployment and smoke tests (a few days), depends on UI and backend being ready
+6. Post-launch monitoring (a sprint),  after deployment
+7. Delivery report , about 2-3 days

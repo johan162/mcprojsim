@@ -1,0 +1,23 @@
+uncertainty_factors:
+  team_distribution:
+    colocated: 1.0
+    distributed: 1.40   # Override: 40% overhead instead of default 25%
+
+t_shirt_sizes:
+  story:
+    XS:
+      low: 2
+      expected: 4
+      high: 10
+    M:
+      low: 30
+      expected: 50
+      high: 100
+
+t_shirt_size_default_category: "story"
+
+simulation:
+  default_iterations: 10000
+
+lognormal:
+  high_percentile: 90

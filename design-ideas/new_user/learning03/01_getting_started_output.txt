@@ -1,0 +1,79 @@
+mcprojsim, version 0.13.0
+Progress: 10.0% (1000/10000)
+Progress: 20.0% (2000/10000)
+Progress: 30.0% (3000/10000)
+Progress: 40.0% (4000/10000)
+Progress: 50.0% (5000/10000)
+Progress: 60.0% (6000/10000)
+Progress: 70.0% (7000/10000)
+Progress: 80.0% (8000/10000)
+Progress: 90.0% (9000/10000)
+Progress: 100.0% (10000/10000)
+Simulation time: 0.10 seconds
+Peak simulation memory: 3.36 MiB
+
+=== Simulation Results ===
+
+Project Overview:
+  Project: Website Refresh
+  Start Date: 2026-04-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
+
+Calendar Time Statistical Summary:
+  Mean: 90.65 hours (12 working days)
+  Median (P50): 89.68 hours
+  Std Dev: 12.97 hours
+  Minimum: 55.92 hours
+  Maximum: 131.62 hours
+  Coefficient of Variation: 0.1430
+  Skewness: 0.2419
+  Excess Kurtosis: -0.4576
+
+Project Effort Statistical Summary:
+  Mean: 90.65 person-hours (12 person-days)
+  Median (P50): 89.68 person-hours
+  Std Dev: 12.97 person-hours
+  Minimum: 55.92 person-hours
+  Maximum: 131.62 person-hours
+  Coefficient of Variation: 0.1430
+  Skewness: 0.2419
+  Excess Kurtosis: -0.4576
+
+Calendar Time Confidence Intervals:
+  P50: 89.68 hours (12 working days)  (2026-04-17)
+  P80: 102.25 hours (13 working days)  (2026-04-20)
+  P90: 108.53 hours (14 working days)  (2026-04-21)
+
+Effort Confidence Intervals:
+  P50: 89.68 person-hours (12 person-days)
+  P80: 102.25 person-hours (13 person-days)
+  P90: 108.53 person-hours (14 person-days)
+
+Sensitivity Analysis (top contributors):
+  task_002: +0.9207
+  task_001: +0.3625
+
+Schedule Slack:
+  task_001: 0.00 hours (Critical)
+  task_002: 0.00 hours (Critical)
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_002 (10000/10000, 100.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 14 working days
+  Total effort: 91 person-hours (12 person-days) | Parallelism ratio: 1.0
+
+
+No export formats specified. Use -f to export results to files.

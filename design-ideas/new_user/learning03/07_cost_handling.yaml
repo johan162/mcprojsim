@@ -1,0 +1,60 @@
+project:
+  name: "Cost Estimation Demo"
+  description: "Testing cost features from ch07"
+  start_date: "2026-05-01"
+  confidence_levels: [50, 80, 90]
+  default_hourly_rate: 150    # EUR/hour fallback rate
+  overhead_rate: 0.15         # 15% management overhead
+  currency: EUR
+
+project_risks:
+  - id: "proj_risk_001"
+    name: "Scope expansion"
+    probability: 0.20
+    impact:
+      type: "percentage"
+      value: 10
+    cost_impact: 5000        # monetary cost if triggered
+
+tasks:
+  - id: "task_001"
+    name: "Backend development"
+    estimate:
+      low: 5
+      expected: 8
+      high: 14
+      unit: "days"
+
+  - id: "task_002"
+    name: "Cloud infrastructure setup"
+    estimate:
+      low: 2
+      expected: 3
+      high: 6
+      unit: "days"
+    fixed_cost: 3500          # flat infrastructure fee
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "Integration testing"
+    estimate:
+      low: 2
+      expected: 4
+      high: 8
+      unit: "days"
+    dependencies: ["task_001"]
+    risks:
+      - id: "risk_001"
+        name: "Vendor support escalation"
+        probability: 0.25
+        impact: 5
+        cost_impact: 4000     # extra cost when triggered
+
+  - id: "task_004"
+    name: "Deployment"
+    estimate:
+      low: 1
+      expected: 2
+      high: 4
+      unit: "days"
+    dependencies: ["task_002", "task_003"]

@@ -1,0 +1,66 @@
+project:
+  name: "Onboarding Portal"
+  description: "Constrained scheduling from ch10 - 3-person team"
+  start_date: "2026-04-01"
+  hours_per_day: 8
+  confidence_levels: [50, 80, 90]
+
+resources:
+  - name: "alice"
+    experience_level: 3
+    productivity_level: 1.0
+    hourly_rate: 200
+  - name: "bob"
+    experience_level: 2
+    productivity_level: 0.85
+    hourly_rate: 150
+  - name: "carol"
+    experience_level: 1
+    productivity_level: 0.7
+    hourly_rate: 100
+
+tasks:
+  - id: "task_001"
+    name: "Requirements"
+    estimate:
+      low: 8
+      expected: 16
+      high: 24
+    resources: ["alice"]
+
+  - id: "task_002"
+    name: "Database schema"
+    estimate:
+      low: 16
+      expected: 24
+      high: 40
+    dependencies: ["task_001"]
+    resources: ["alice"]
+
+  - id: "task_003"
+    name: "Backend API"
+    estimate:
+      low: 40
+      expected: 64
+      high: 96
+    dependencies: ["task_002"]
+    resources: ["bob"]
+    max_resources: 2
+
+  - id: "task_004"
+    name: "Frontend"
+    estimate:
+      low: 24
+      expected: 40
+      high: 64
+    dependencies: ["task_002"]
+    resources: ["carol"]
+
+  - id: "task_005"
+    name: "Integration testing"
+    estimate:
+      low: 16
+      expected: 24
+      high: 40
+    dependencies: ["task_003", "task_004"]
+    resources: ["alice", "bob"]

@@ -1,0 +1,110 @@
+mcprojsim, version 0.13.0
+Progress: 10.0% (1000/10000)
+Progress: 20.0% (2000/10000)
+Progress: 30.0% (3000/10000)
+Progress: 40.0% (4000/10000)
+Progress: 50.0% (5000/10000)
+Progress: 60.0% (6000/10000)
+Progress: 70.0% (7000/10000)
+Progress: 80.0% (8000/10000)
+Progress: 90.0% (9000/10000)
+Progress: 100.0% (10000/10000)
+Simulation time: 0.20 seconds
+Peak simulation memory: 10.86 MiB
+
+=== Simulation Results ===
+
+Project Overview:
+  Project: Cost Estimation Demo
+  Start Date: 2026-05-01
+  Number of Tasks: 4
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 2
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
+
+Calendar Time Statistical Summary:
+  Mean: 133.41 hours (17 working days)
+  Median (P50): 132.39 hours
+  Std Dev: 19.35 hours
+  Minimum: 82.71 hours
+  Maximum: 201.24 hours
+  Coefficient of Variation: 0.1450
+  Skewness: 0.2608
+  Excess Kurtosis: -0.2191
+
+Project Effort Statistical Summary:
+  Mean: 158.48 person-hours (20 person-days)
+  Median (P50): 157.84 person-hours
+  Std Dev: 19.90 person-hours
+  Minimum: 100.54 person-hours
+  Maximum: 232.45 person-hours
+  Coefficient of Variation: 0.1256
+  Skewness: 0.1725
+  Excess Kurtosis: -0.2585
+
+Calendar Time Confidence Intervals:
+  P50: 132.39 hours (17 working days)  (2026-05-26)
+  P80: 149.93 hours (19 working days)  (2026-05-28)
+  P90: 159.12 hours (20 working days)  (2026-05-29)
+
+Effort Confidence Intervals:
+  P50: 157.84 person-hours (20 person-days)
+  P80: 175.59 person-hours (22 person-days)
+  P90: 185.05 person-hours (24 person-days)
+
+Cost Statistical Summary (EUR):
+  Mean:    €32,851
+  Median:  €32,547
+  Std Dev: €4,552
+  Min:     €20,844
+  Max:     €48,919
+  CV:      13.9%
+
+Cost Confidence Intervals:
+  P50: €32,547  |  P80: €36,686  |  P90: €38,961
+
+Cost Sensitivity Analysis:
+  task_003: +0.5830
+  task_001: +0.5622
+  task_002: +0.2664
+  task_004: +0.1959
+
+Budget Analysis (target: €50,000):
+  Probability within budget:  100.0%  (95% CI: 100.0% – 100.0%)
+  Budget for P50 confidence:  €32,547
+  Budget for P80 confidence:  €36,686
+  Budget for P90 confidence:  €38,961
+
+Sensitivity Analysis (top contributors):
+  task_001: +0.7829
+  task_003: +0.4254
+  task_004: +0.2678
+  task_002: +0.0957
+
+Schedule Slack:
+  task_004: 0.00 hours (Critical)
+  task_001: 0.00 hours (Critical)
+  task_003: 1.52 hours (1.5h buffer)
+  task_002: 10.80 hours (10.8h buffer)
+
+Risk Impact Analysis:
+  task_003: mean=1.24h, triggers=24.7%, mean_when_triggered=5.00h
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_003 -> task_004 (7692/10000, 76.9%)
+  2. task_001 -> task_002 -> task_004 (2308/10000, 23.1%)
+
+Staffing (based on mean effort): 2 people recommended (mixed team), 17 working days
+  Total effort: 158 person-hours (20 person-days) | Parallelism ratio: 1.2
+
+
+No export formats specified. Use -f to export results to files.

@@ -1,0 +1,137 @@
+mcprojsim, version 0.13.0
+Progress: 10.0% (1000/10000)
+Progress: 20.0% (2000/10000)
+Progress: 30.0% (3000/10000)
+Progress: 40.0% (4000/10000)
+Progress: 50.0% (5000/10000)
+Progress: 60.0% (6000/10000)
+Progress: 70.0% (7000/10000)
+Progress: 80.0% (8000/10000)
+Progress: 90.0% (9000/10000)
+Progress: 100.0% (10000/10000)
+Simulation time: 0.17 seconds
+Peak simulation memory: 8.78 MiB
+Sprint planning time: 0.34 seconds
+Peak sprint-planning memory: 0.00 B
+
+=== Simulation Results ===
+
+Project Overview:
+  Project: Sprint Planning Demo
+  Start Date: 2026-05-04
+  Number of Tasks: 5
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 5
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
+
+Calendar Time Statistical Summary:
+  Mean: 74.92 hours (10 working days)
+  Median (P50): 72.58 hours
+  Std Dev: 16.38 hours
+  Minimum: 41.37 hours
+  Maximum: 119.56 hours
+  Coefficient of Variation: 0.2186
+  Skewness: 0.4313
+  Excess Kurtosis: -0.5763
+
+Project Effort Statistical Summary:
+  Mean: 210.51 person-hours (27 person-days)
+  Median (P50): 209.49 person-hours
+  Std Dev: 21.91 person-hours
+  Minimum: 146.41 person-hours
+  Maximum: 290.15 person-hours
+  Coefficient of Variation: 0.1041
+  Skewness: 0.2056
+  Excess Kurtosis: -0.1693
+
+Calendar Time Confidence Intervals:
+  P50: 72.58 hours (10 working days)  (2026-05-18)
+  P80: 89.98 hours (12 working days)  (2026-05-20)
+  P90: 98.82 hours (13 working days)  (2026-05-21)
+
+Effort Confidence Intervals:
+  P50: 209.49 person-hours (27 person-days)
+  P80: 229.08 person-hours (29 person-days)
+  P90: 239.41 person-hours (30 person-days)
+
+Sensitivity Analysis (top contributors):
+  task_003: +0.9980
+  task_002: +0.0101
+  task_005: +0.0092
+  task_001: -0.0084
+  task_004: +0.0037
+
+Schedule Slack:
+  task_003: 0.27 hours (0.3h buffer)
+  task_004: 32.17 hours (32.2h buffer)
+  task_002: 32.44 hours (32.4h buffer)
+  task_001: 49.55 hours (49.5h buffer)
+  task_005: 49.64 hours (49.6h buffer)
+
+Most Frequent Critical Paths:
+  1. task_003 (9458/10000, 94.6%)
+  2. task_004 (281/10000, 2.8%)
+
+Sprint Planning Summary:
+Sprint Length: 2 weeks
+Planning Confidence Level: 80%
+Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Velocity Model: empirical
+Planned Commitment Guidance: 8.48
+Historical Sampling Mode: matching_cadence
+Historical Observations: 4
+Carryover Mean: 0.00
+Aggregate Spillover Rate: 0.0000
+Observed Disruption Frequency: 0.0000
+
+Sprint Count Statistical Summary:
+Mean: 2.82 sprints
+Median (P50): 3.00 sprints
+Std Dev: 0.39 sprints
+Minimum: 2.00 sprints
+Maximum: 3.00 sprints
+Coefficient of Variation: 0.1378
+
+Sprint Count Confidence Intervals:
+  P50: 3 sprints  (2026-06-01)
+  P80: 3 sprints  (2026-06-01)
+  P90: 3 sprints  (2026-06-01)
+
+Historical Sprint Series:
+  added_units: mean=0.25, median=0.00, std=0.43, min=0.00, max=1.00
+  completed_units: mean=10.75, median=10.50, std=1.48, min=9.00, max=13.00
+  removed_units: mean=0.25, median=0.00, std=0.43, min=0.00, max=1.00
+  spillover_units: mean=1.25, median=1.00, std=0.43, min=1.00, max=2.00
+
+Historical Ratio Summaries:
+  scope_addition_ratio: mean=0.0250, median=0.0000, std=0.0433, P50=0.0000, P80=0.0400, P90=0.0700
+  scope_removal_ratio: mean=0.0192, median=0.0000, std=0.0333, P50=0.0000, P80=0.0308, P90=0.0538
+  spillover_ratio: mean=0.1069, median=0.0871, std=0.0438, P50=0.0871, P80=0.1273, P90=0.1545
+
+Historical Correlations:
+  added_units|removed_units: -0.3333
+  completed_units|added_units: -0.6831
+  completed_units|removed_units: 0.0976
+  completed_units|spillover_units: -0.6831
+  spillover_units|added_units: 1.0000
+  spillover_units|removed_units: -0.3333
+
+Burn-up Percentiles:
+  Sprint 1: P50=9.00, P80=13.00, P90=13.00
+  Sprint 2: P50=20.00, P80=22.00, P90=24.00
+  Sprint 3: P50=25.00, P80=25.00, P90=26.00
+
+Staffing (based on mean effort): 5 people recommended (mixed team), 10 working days
+  Total effort: 211 person-hours (27 person-days) | Parallelism ratio: 2.8
+
+
+No export formats specified. Use -f to export results to files.
