@@ -1,0 +1,25 @@
+project:
+  name: "Auth Service Rewrite"
+  start_date: "2026-11-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "design"
+    name: "API design & tech spike"
+    estimate: { low: 2, expected: 4, high: 8, unit: "days" }
+
+  - id: "qa_planning"
+    name: "QA planning for how to verify the new service"
+    estimate: { low: 3, expected: 4, high: 6, unit: "days" }
+
+  - id: "implement"
+    name: "Core implementation"
+    estimate: { low: 8, expected: 14, high: 25, unit: "days" }
+    dependencies: ["design"]
+    uncertainty_factors:
+      technical_complexity: "high"
+
+  - id: "qa"
+    name: "Integration testing"
+    estimate: { low: 3, expected: 5, high: 10, unit: "days" }
+    dependencies: ["implement","qa_planning"]
