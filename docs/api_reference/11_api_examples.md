@@ -15,6 +15,8 @@ For parameter details, consult the API reference pages for [`SimulationEngine`](
 | 4 — Sprint Planning with Forecast | Run `SprintSimulationEngine` on a sprint-enabled project and build a sprint-by-sprint delivery forecast |
 | 5 — Batch Processing Multiple Projects | Scan a directory of YAML files, simulate each project, and aggregate results into a pandas DataFrame |
 | 6 — Configuration-Driven Customization | Load a `Config` from file and apply programmatic overrides before running a simulation |
+| 7 — Progress Callback and Cancellation | Use `progress_callback` to receive live progress updates and `cancel()` to abort a running simulation from another thread |
+| 8 — Cost Estimation and Budget Analysis | Enable cost tracking, query budget confidence, and identify cost drivers |
 
 ---
 
@@ -362,5 +364,256 @@ results = simulate_with_custom_config(
         'iterations': 20000,
     }
 )
+```
+
+## Example 7: Progress Callback and Cancellation
+
+This example demonstrates two features added to `SimulationEngine`:
+
+1. **`progress_callback`** — receive live `(completed, total)` updates during a simulation instead of progress being printed to stdout.
+2. **`cancel()`** — abort a running simulation from any thread, causing `run()` to raise `SimulationCancelled`.
+
+### 7a — Progress callback (basic usage)
+
+```python
+from datetime import date
+from mcprojsim import SimulationEngine
+from mcprojsim.models.project import Project, ProjectMetadata, Task, TaskEstimate
+
+
+def on_progress(completed: int, total: int) -> None:
+    pct = 100 * completed / total
+    print(f"\r  Simulating… {pct:5.1f}%  ({completed}/{total})", end="", flush=True)
+
+
+project = Project(
+    project=ProjectMetadata(name="Callback Demo", start_date=date(2026, 5, 1)),
+    tasks=[
+        Task(id="t1", name="Design",  estimate=TaskEstimate(low=2, expected=5, high=10)),
+        Task(id="t2", name="Build",   estimate=TaskEstimate(low=5, expected=10, high=20),
+             dependencies=["t1"]),
+        Task(id="t3", name="Test",    estimate=TaskEstimate(low=3, expected=6, high=12),
+             dependencies=["t2"]),
+    ],
+)
+
+engine = SimulationEngine(
+    iterations=10000,
+    random_seed=42,
+    show_progress=True,          # would normally print to stdout …
+    progress_callback=on_progress,  # … but the callback takes over instead
+)
+results = engine.run(project)
+print(f"\nDone — P80: {results.percentile(80):.1f} hours")
+```
+
+When `progress_callback` is set, all stdout progress output is suppressed. The callback
+fires at the same cadence as the built-in reporter (every 10 % plus a final 100 % call),
+so it is lightweight even for large iteration counts.
+
+!!! note
+    When `show_progress=False` the progress-reporting code path is skipped entirely
+    and the callback is **not** invoked.  Set `show_progress=True` (the default) if
+    you want callbacks.
+
+### 7b — Cancellation from another thread
+
+```python
+import threading
+from datetime import date
+from mcprojsim import SimulationEngine
+from mcprojsim.simulation.engine import SimulationCancelled
+from mcprojsim.models.project import Project, ProjectMetadata, Task, TaskEstimate
+
+project = Project(
+    project=ProjectMetadata(name="Cancel Demo", start_date=date(2026, 5, 1)),
+    tasks=[
+        Task(id="t1", name="Design",  estimate=TaskEstimate(low=2, expected=5, high=10)),
+        Task(id="t2", name="Build",   estimate=TaskEstimate(low=5, expected=10, high=20),
+             dependencies=["t1"]),
+        Task(id="t3", name="Test",    estimate=TaskEstimate(low=3, expected=6, high=12),
+             dependencies=["t2"]),
+    ],
+)
+
+engine = SimulationEngine(iterations=500_000, random_seed=42, show_progress=False)
+
+
+def run_in_background():
+    try:
+        results = engine.run(project)
+        print(f"Finished: mean = {results.mean:.1f} hours")
+    except SimulationCancelled:
+        print("Simulation was cancelled.")
+
+
+worker = threading.Thread(target=run_in_background)
+worker.start()
+
+# Cancel after a brief delay (e.g. user clicks "Stop")
+import time
+time.sleep(0.1)
+engine.cancel()
+
+worker.join(timeout=5.0)
+assert not worker.is_alive(), "Worker should have stopped"
+```
+
+The `cancel()` method sets an internal flag that is checked at the top of every
+iteration.  Because the check happens per-iteration, the engine finishes the
+current iteration before raising `SimulationCancelled`.
+
+### 7c — Combining callback with cancellation (GUI pattern)
+
+A common GUI integration pattern is to use the callback for progress bar updates
+and cancel from a UI button:
+
+```python
+import threading
+from datetime import date
+from mcprojsim import SimulationEngine
+from mcprojsim.simulation.engine import SimulationCancelled
+from mcprojsim.models.project import Project, ProjectMetadata, Task, TaskEstimate
+
+project = Project(
+    project=ProjectMetadata(name="GUI Pattern", start_date=date(2026, 5, 1)),
+    tasks=[
+        Task(id="t1", name="Design",  estimate=TaskEstimate(low=2, expected=5, high=10)),
+        Task(id="t2", name="Build",   estimate=TaskEstimate(low=5, expected=10, high=20),
+             dependencies=["t1"]),
+        Task(id="t3", name="Test",    estimate=TaskEstimate(low=3, expected=6, high=12),
+             dependencies=["t2"]),
+    ],
+)
+
+
+# --- Simulate a GUI progress bar ---
+progress_pct = 0
+
+
+def update_progress_bar(completed: int, total: int) -> None:
+    global progress_pct
+    progress_pct = int(100 * completed / total)
+
+
+engine = SimulationEngine(
+    iterations=200_000,
+    random_seed=42,
+    show_progress=True,
+    progress_callback=update_progress_bar,
+)
+
+
+def worker_fn():
+    try:
+        results = engine.run(project)
+        print(f"Done — mean {results.mean:.1f} h, P80 {results.percentile(80):.1f} h")
+    except SimulationCancelled:
+        print(f"Cancelled at {progress_pct}%")
+
+
+worker = threading.Thread(target=worker_fn)
+worker.start()
+
+# Simulate the user pressing "Cancel" after a short delay
+import time
+time.sleep(0.05)
+engine.cancel()
+
+worker.join(timeout=5.0)
+print(f"Last reported progress: {progress_pct}%")
+```
+
+---
+
+## Example 8 — Cost Estimation and Budget Analysis
+
+Enable cost tracking by setting `default_hourly_rate` on the project metadata. The engine computes per-iteration costs (effort × rate + fixed costs + risk cost impacts), and `SimulationResults` exposes budget-analysis helpers.
+
+```python
+from mcprojsim.models.project import Project, ProjectMetadata, Task, Risk, ResourceSpec
+from mcprojsim.simulation.engine import SimulationEngine
+
+project = Project(
+    metadata=ProjectMetadata(
+        name="Payment Gateway",
+        default_hourly_rate=120.0,
+        overhead_rate=0.15,
+        currency="USD",
+    ),
+    tasks=[
+        Task(
+            id="design",
+            name="API Design",
+            low=16,
+            expected=24,
+            high=40,
+            unit="hours",
+            fixed_cost=2000.0,  # licensing fee
+        ),
+        Task(
+            id="impl",
+            name="Implementation",
+            low=80,
+            expected=120,
+            high=200,
+            unit="hours",
+            depends_on=["design"],
+            risks=[
+                Risk(
+                    id="impl_vendor",
+                    name="Vendor API instability",
+                    probability=0.25,
+                    impact_low=20,
+                    impact_high=60,
+                    unit="hours",
+                    cost_impact=8000.0,
+                ),
+            ],
+        ),
+        Task(
+            id="qa",
+            name="QA & Certification",
+            low=40,
+            expected=60,
+            high=100,
+            unit="hours",
+            depends_on=["impl"],
+        ),
+    ],
+    resources=[
+        ResourceSpec(id="alice", name="Alice", hourly_rate=150.0),
+        ResourceSpec(id="bob", name="Bob"),  # uses default_hourly_rate
+    ],
+)
+
+engine = SimulationEngine(iterations=10_000, random_seed=42)
+results = engine.run(project)
+
+# --- Budget queries ---
+print(f"Mean cost: ${results.cost_mean:,.0f} {results.currency}")
+print(f"P80 cost:  ${results.cost_percentile(80):,.0f}")
+print(f"P95 cost:  ${results.cost_percentile(95):,.0f}")
+
+# What budget covers the project 90% of the time?
+budget_90 = results.budget_for_confidence(0.90)
+print(f"Budget for 90% confidence: ${budget_90:,.0f}")
+
+# Probability of finishing within a $50k budget
+prob = results.probability_within_budget(50_000)
+print(f"Probability within $50k: {prob*100:.1f}%")
+
+# Joint probability: within budget AND on schedule
+joint = results.joint_probability(budget=50_000, schedule_hours=250)
+print(f"Joint probability ($50k & 250h): {joint*100:.1f}%")
+
+# --- Cost drivers ---
+if results.cost_analysis:
+    ca = results.cost_analysis
+    print(f"\nCost–duration correlation: {ca.duration_correlation:.3f}")
+    for task_id, sens in sorted(
+        ca.sensitivity.items(), key=lambda x: abs(x[1]), reverse=True
+    ):
+        print(f"  {task_id}: cost sensitivity = {sens:.3f}")
 ```
 

@@ -41,6 +41,7 @@ Application-wide configuration for simulation settings, output formatting, uncer
 | `staffing` | `StaffingConfig` | Staffing analysis configuration |
 | `constrained_scheduling` | `ConstrainedSchedulingConfig` | Resource-constrained scheduling settings |
 | `sprint_defaults` | `SprintDefaultsConfig` | Sprint planning defaults |
+| `cost` | `CostConfig` | Cost estimation defaults |
 
 **Key methods:**
 
@@ -208,3 +209,23 @@ Company-wide defaults for sprint sickness modelling. Nested inside `SprintDefaul
 | `probability_per_person_per_week` | `float` | `0.058` | Probability that a team member falls sick in any given week. |
 | `duration_log_mu` | `float` | `0.693` | Log-mean of the log-normal sickness duration distribution. |
 | `duration_log_sigma` | `float` | `0.75` | Log-standard-deviation of the sickness duration distribution. |
+
+### `CostConfig`
+
+Defaults for cost estimation. Nested inside `Config.cost`.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `default_hourly_rate` | `float \| None` | `None` | Default hourly rate when not specified on the project or resource. |
+| `overhead_rate` | `float` | `0.0` | Default overhead multiplier (0.0–3.0). |
+| `currency` | `str` | `"EUR"` | Default currency code (ISO 4217). |
+| `include_in_output` | `bool` | `True` | Whether cost data is included in export output. |
+
+**Example:**
+
+```python
+config = Config.get_default()
+print(f"Default cost currency: {config.cost.currency}")
+print(f"Default overhead rate: {config.cost.overhead_rate}")
+print(f"Include cost in output: {config.cost.include_in_output}")
+```

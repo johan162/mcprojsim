@@ -21,6 +21,7 @@
 **Imports:**
 ```python
 from mcprojsim import SimulationEngine
+from mcprojsim.simulation.engine import SimulationCancelled
 from mcprojsim.models.simulation import SimulationResults
 ```
 
@@ -51,10 +52,29 @@ results = engine.run(project)
 | `show_progress` | `bool` | `True` | Print progress updates during long runs. |
 | `two_pass` | `bool` | `False` | Enable criticality-two-pass scheduling. Only has effect when resource-constrained scheduling is active. Overrides `config.constrained_scheduling.assignment_mode`. |
 | `pass1_iterations` | `int \| None` | `None` | Number of pass-1 iterations for criticality ranking. Overrides `config.constrained_scheduling.pass1_iterations` when provided. Capped to `iterations`. |
+| `progress_callback` | `Callable[[int, int], None] \| None` | `None` | Optional callback invoked with `(completed_iterations, total_iterations)` during the run. When provided, stdout progress output is suppressed regardless of the `show_progress` flag. The callback is invoked at each 10 % bucket boundary, matching the same cadence as the built-in stdout progress. See [Example 7](./11_api_examples.md#example-7-progress-callback-and-cancellation) for usage. |
 
-**Key method:**
+**Key methods:**
 
-- `run(project: Project) -> SimulationResults` — Run the Monte Carlo simulation and return aggregated results. When two-pass mode is active and resource constraints are present, the engine first runs `pass1_iterations` with greedy scheduling to build criticality indices, then reruns the full simulation with criticality-prioritised dispatch.
+- `run(project: Project) -> SimulationResults` — Run the Monte Carlo simulation and return aggregated results. When two-pass mode is active and resource constraints are present, the engine first runs `pass1_iterations` with greedy scheduling to build criticality indices, then reruns the full simulation with criticality-prioritised dispatch. Raises `SimulationCancelled` if `cancel()` was called before or during the run.
+- `cancel() -> None` — Request cancellation of a running simulation. The engine checks an internal flag at the top of each iteration; when set, the current `run()` call raises `SimulationCancelled`. This method is thread-safe: call it from any thread to stop a simulation running in another.
+
+## `SimulationCancelled`
+
+Exception raised when a running simulation is cancelled via `SimulationEngine.cancel()`.
+
+```python
+from mcprojsim.simulation.engine import SimulationCancelled
+```
+
+`SimulationCancelled` is a plain `Exception` subclass with no additional attributes. Catch it to distinguish user-initiated cancellation from other errors:
+
+```python
+try:
+    results = engine.run(project)
+except SimulationCancelled:
+    print("Simulation was cancelled by the user.")
+```
 
 ## `SimulationResults`
 

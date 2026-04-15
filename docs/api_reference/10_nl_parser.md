@@ -67,6 +67,9 @@ These lines can appear before the first task or between sections:
 | `Description:` | `Description: Q3 infrastructure work` | |
 | `Hours per day:` | `Hours per day: 7.5` | Default `8.0` |
 | `Confidence levels:` | `Confidence levels: 50, 80, 90, 95` | Comma-separated percentiles |
+| `Rate:` / `Hourly rate:` / `Default rate:` / `Blended rate:` | `Rate: $150/hour` | Default hourly rate (cost estimation) |
+| `Overhead:` / `Overhead rate:` | `Overhead: 15%` | Overhead multiplier applied to all costs |
+| `Currency:` | `Currency: USD` | Three-letter ISO 4217 currency code |
 
 ---
 
@@ -114,6 +117,18 @@ The parser extracts inline properties and strips them from the task name.
 | `Resources:` | `- Resources: Alice, Bob` | Names must match a `Resource N:` header |
 | `Max resources:` | `- Max resources: 2` | Concurrent resource cap |
 | `Min experience:` / `Min experience level:` | `- Min experience: 2` | 1–3 |
+| `Fixed cost:` / `One-time cost:` | `- Fixed cost: 5000` | One-time cost added regardless of duration |
+| `Risk:` / `Risks:` | `- Risk: Integration failure` | Opens a risk sub-section under this task (see below) |
+
+**Risk bullet properties** (nested under a `Risk:` line within a task section):
+
+| Bullet keyword | Example | Notes |
+|----------------|---------|-------|
+| `Probability:` | `- Probability: 20%` | 0–100 |
+| `Impact:` | `- Impact: 5 days` | Schedule impact; optional unit |
+| `Cost impact:` | `- Cost impact: $10000` | Monetary impact if the risk occurs |
+
+Risks can also be described in **prose form** inside a task: *"there is a 15% chance of a 3-day delay"* or *"a 10% risk of $5000 penalty"*.
 
 **Estimate units** for explicit estimates: `hours` / `hour` / `h`, `days` / `day` / `d`, `weeks` / `week` / `w`.
 
@@ -141,6 +156,7 @@ A resource section starts with `Resource N: Name`. Bullet properties:
 | `Availability:` | `- Availability: 0.8` | Fraction of full-time, 0–1 |
 | `Calendar:` | `- Calendar: part_time` | References a `Calendar:` section ID |
 | `Sickness prob:` / `Sickness:` | `- Sickness: 0.02` | Per-day probability |
+| `Rate:` / `Hourly rate:` / `Cost:` | `- Rate: $120/hour` | Per-resource hourly rate (cost estimation) |
 | `Absence:` / `Planned absence:` | `- Absence: 2026-05-15, 2026-06-01` | Comma-separated ISO dates or date ranges (`2026-05-20 to 2026-05-22`) |
 
 ---
@@ -244,6 +260,9 @@ Top-level container for all data extracted from a natural language description.
 | `resources` | `list[ParsedResource]` | `[]` | Extracted team members/resources. |
 | `calendars` | `list[ParsedCalendar]` | `[]` | Extracted working calendars. |
 | `sprint_planning` | `ParsedSprintPlanning \| None` | `None` | Sprint planning configuration, if present. |
+| `default_hourly_rate` | `float \| None` | `None` | Default hourly rate for cost estimation. |
+| `overhead_rate` | `float \| None` | `None` | Overhead multiplier applied to all costs. |
+| `currency` | `str \| None` | `None` | Three-letter ISO 4217 currency code. |
 
 ### `ParsedTask`
 
@@ -264,6 +283,8 @@ A single task extracted from the description.
 | `resources` | `list[str]` | `[]` | Resource names assigned to the task. |
 | `max_resources` | `int` | `1` | Maximum number of resources that can work the task concurrently. |
 | `min_experience_level` | `int` | `1` | Minimum experience level required for an assigned resource. |
+| `fixed_cost` | `float \| None` | `None` | One-time fixed cost added to this task regardless of duration. |
+| `risks` | `list[ParsedRisk]` | `[]` | Risks associated with this task. |
 
 ### `ParsedResource`
 
@@ -279,6 +300,19 @@ A team member or resource extracted from the description.
 | `calendar` | `str` | `"default"` | Calendar ID used by this resource. |
 | `sickness_prob` | `float` | `0.0` | Per-day sickness probability. |
 | `planned_absence` | `list[str]` | `[]` | List of planned absence date strings. |
+| `hourly_rate` | `float \| None` | `None` | Per-resource hourly rate for cost estimation. |
+
+### `ParsedRisk`
+
+A risk associated with a task, extracted from the description.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `str` | `""` | Risk name. |
+| `probability` | `float` | `0.0` | Probability of occurrence (0.0–1.0 or percentage divided by 100). |
+| `impact_value` | `float \| None` | `None` | Schedule impact amount. |
+| `impact_unit` | `str \| None` | `None` | Unit for the schedule impact (`"days"`, `"hours"`, etc.). |
+| `cost_impact` | `float \| None` | `None` | Monetary impact if the risk occurs. |
 
 ### `ParsedCalendar`
 

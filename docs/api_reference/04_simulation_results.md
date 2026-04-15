@@ -107,6 +107,13 @@ Holds the complete output of a Monte Carlo simulation run, including all percent
 | `project_risk_impacts` | `np.ndarray` | `[]` | Per-iteration project-level risk impacts in hours |
 | `effort_durations` | `np.ndarray` | `[]` | Per-iteration total person-effort (sum of all task durations); differs from `durations` which is elapsed time |
 | `two_pass_trace` | `TwoPassDelta \| None` | `None` | Traceability data when two-pass scheduling was used |
+| `costs` | `np.ndarray \| None` | `None` | Per-iteration total project cost. Populated only when cost inputs are present (e.g. `default_hourly_rate`, `fixed_cost`, resource `hourly_rate`). |
+| `task_costs` | `dict[str, np.ndarray] \| None` | `None` | Per-task cost arrays (task ID → per-iteration values). |
+| `cost_mean` | `float \| None` | `None` | Mean total project cost (populated by `calculate_cost_statistics()`). |
+| `cost_std_dev` | `float \| None` | `None` | Standard deviation of total project cost. |
+| `cost_percentiles` | `dict[int, float] \| None` | `None` | Cached cost percentiles (populated by `calculate_cost_statistics()`). |
+| `currency` | `str \| None` | `None` | ISO 4217 currency code from `ProjectMetadata.currency`. |
+| `cost_analysis` | `CostAnalysis \| None` | `None` | Post-processing cost analysis from `CostAnalyzer` (sensitivity and duration correlation). Populated automatically when cost data is available. |
 | `mean` | `float` | `0.0` | Mean elapsed project duration (hours) |
 | `median` | `float` | `0.0` | Median elapsed project duration (hours) |
 | `std_dev` | `float` | `0.0` | Standard deviation of elapsed duration |
@@ -134,6 +141,15 @@ Holds the complete output of a Monte Carlo simulation run, including all percent
 - **`get_risk_impact_summary() -> dict[str, dict[str, float]]`** — Per-task risk triggering and impact statistics (`mean_impact`, `trigger_rate`, `mean_when_triggered`)
 - **`total_effort_hours() -> float`** — Sum of per-task mean durations (total person-hours)
 - **`to_dict() -> dict[str, Any]`** — Serialize results to a dictionary
+
+**Cost methods** (available only when cost data is populated — i.e. when any cost input is present in the project):
+
+- **`calculate_cost_statistics() -> None`** — Populate `cost_mean`, `cost_std_dev`, and `cost_percentiles` from the `costs` array. Called automatically by `SimulationEngine` after the run.
+- **`cost_percentile(p: int) -> float`** — Cost value at percentile *p*.
+- **`probability_within_budget(target_budget: float) -> float`** — Fraction of iterations where total cost was ≤ `target_budget`.
+- **`budget_confidence_interval(target_budget: float, confidence_level: float = 0.95) -> tuple[float, float, float]`** — Returns `(lower_bound, upper_bound, probability_within_budget)` for a given target budget at the specified confidence level.
+- **`budget_for_confidence(confidence: float) -> float`** — The budget amount needed to achieve a given confidence level (e.g. `0.80` for 80 % certainty of staying within budget).
+- **`joint_probability(target_hours: float, target_budget: float) -> float`** — Probability that the project completes within *both* the target duration and the target budget simultaneously.
 
 **Example: Complete Results Query**
 
@@ -198,5 +214,41 @@ if results.two_pass_trace and results.two_pass_trace.enabled:
     print(f"  Pass 1 iterations: {results.two_pass_trace.pass1_iterations}")
     print(f"  Pass 2 iterations: {results.two_pass_trace.pass2_iterations}")
     print(f"  P50 delta: {results.two_pass_trace.delta_p50_hours:+.1f} hours")
+```
+
+**Example: Querying Cost Results**
+
+Cost tracking activates automatically when any cost input is present in the project
+(`default_hourly_rate`, `Task.fixed_cost`, `ResourceSpec.hourly_rate`, or `Risk.cost_impact`).
+
+```python
+if results.costs is not None:
+    # Cost percentiles
+    print(f"Mean cost: {results.currency} {results.cost_mean:,.0f}")
+    print(f"P50 cost: {results.currency} {results.cost_percentile(50):,.0f}")
+    print(f"P80 cost: {results.currency} {results.cost_percentile(80):,.0f}")
+    print(f"P95 cost: {results.currency} {results.cost_percentile(95):,.0f}")
+
+    # Budget analysis
+    budget = 250_000
+    prob = results.probability_within_budget(budget)
+    print(f"\nProbability within {results.currency} {budget:,}: {prob*100:.1f}%")
+
+    # What budget gives 80% confidence?
+    budget_80 = results.budget_for_confidence(0.80)
+    print(f"Budget for 80% confidence: {results.currency} {budget_80:,.0f}")
+
+    # Joint probability: finish within both time AND budget
+    jp = results.joint_probability(target_hours=500, target_budget=budget)
+    print(f"P(within 500h AND within {results.currency} {budget:,}): {jp*100:.1f}%")
+
+    # Cost sensitivity (which tasks drive cost variance)
+    if results.cost_analysis:
+        for task_id, corr in sorted(
+            results.cost_analysis.sensitivity.items(),
+            key=lambda x: abs(x[1]),
+            reverse=True,
+        )[:5]:
+            print(f"  {task_id}: cost sensitivity = {corr:.3f}")
 ```
 

@@ -3,7 +3,7 @@
 
 ## Overview
 
-The `analysis` package provides four post-processing analyzers that extract deeper insights from a completed `SimulationResults` object. `StatisticalAnalyzer` computes descriptive statistics and confidence intervals; `SensitivityAnalyzer` ranks tasks by their Spearman rank correlation with total project duration; `CriticalPathAnalyzer` surfaces task criticality indices and the most frequent end-to-end critical sequences; and `StaffingAnalyzer` recommends team sizes using a Brooks's Law–inspired communication-overhead model.
+The `analysis` package provides five post-processing analyzers that extract deeper insights from a completed `SimulationResults` object. `StatisticalAnalyzer` computes descriptive statistics and confidence intervals; `SensitivityAnalyzer` ranks tasks by their Spearman rank correlation with total project duration; `CriticalPathAnalyzer` surfaces task criticality indices and the most frequent end-to-end critical sequences; `StaffingAnalyzer` recommends team sizes using a Brooks's Law–inspired communication-overhead model; and `CostAnalyzer` computes per-task cost sensitivity and the correlation between cost and schedule duration.
 
 **When to use this module:** Use these analyzers when you need custom thresholds, deeper statistical breakdowns, or want to integrate simulation insights into your own tooling beyond what the CLI output provides.
 
@@ -15,6 +15,7 @@ The `analysis` package provides four post-processing analyzers that extract deep
 | Sensitivity ranking | Spearman rank correlation of each task's duration against total project duration |
 | Critical-path analysis | Per-task criticality index (0–1) and most frequent full path sequences |
 | Staffing recommendations | Team-size vs. delivery-date trade-offs across senior/mixed/junior profiles |
+| Cost sensitivity analysis | Per-task Spearman rank correlation of task cost against total project cost, and Pearson correlation between total cost and total duration |
 
 **Background: Spearman rank correlation** — `SensitivityAnalyzer` converts each task's sampled durations and the total project durations to ranks before computing the correlation coefficient, making it robust to non-normal distributions and outliers. A coefficient near 1.0 means that task's duration strongly drives the overall schedule.
 
@@ -26,6 +27,7 @@ from mcprojsim.analysis.statistics import StatisticalAnalyzer
 from mcprojsim.analysis.sensitivity import SensitivityAnalyzer
 from mcprojsim.analysis.critical_path import CriticalPathAnalyzer
 from mcprojsim.analysis.staffing import StaffingAnalyzer
+from mcprojsim.analysis.cost import CostAnalyzer, CostAnalysis
 ```
 
 These specialized analysis modules provide focused statistical, sensitivity, and staffing analysis capabilities beyond what `SimulationResults` provides directly.
@@ -165,5 +167,39 @@ recommendations = analyzer.recommend_team_size(results, config)
 for rec in recommendations:
     print(f"{rec.profile}: recommend {rec.recommended_team_size} people "
           f"({rec.efficiency*100:.0f}% efficiency)")
+```
+
+## `CostAnalyzer`
+
+Analyzes cost drivers and the relationship between cost and schedule duration. Only useful when the simulation produced cost data (`results.costs is not None`).
+
+Import:
+
+```python
+from mcprojsim.analysis.cost import CostAnalyzer, CostAnalysis
+```
+
+**Methods:**
+
+- **`analyze(results: SimulationResults) -> CostAnalysis`** — Run cost sensitivity analysis and return a `CostAnalysis` data object. This is called automatically by the engine when cost data is present, and the result is stored in `results.cost_analysis`.
+
+**`CostAnalysis` fields** (dataclass):
+
+| Field | Type | Description |
+|---|---|---|
+| `sensitivity` | `dict[str, float]` | Per-task Spearman rank correlation of that task's cost against total project cost. Higher absolute values indicate tasks whose cost variance most drives total cost variance. |
+| `duration_correlation` | `float` | Pearson correlation between total project cost and total project duration. Values near 1.0 mean cost and schedule are tightly coupled; lower values suggest fixed costs or risks decouple them. |
+
+**Example:**
+
+```python
+if results.cost_analysis:
+    ca = results.cost_analysis
+    print(f"Cost–duration correlation: {ca.duration_correlation:.3f}")
+
+    # Top cost drivers
+    top_drivers = sorted(ca.sensitivity.items(), key=lambda x: abs(x[1]), reverse=True)[:5]
+    for task_id, corr in top_drivers:
+        print(f"  {task_id}: cost sensitivity = {corr:.3f}")
 ```
 
