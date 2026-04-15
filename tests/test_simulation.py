@@ -11,7 +11,7 @@ from mcprojsim.simulation.distributions import (
 )
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
 from mcprojsim.simulation.scheduler import TaskScheduler
-from mcprojsim.simulation.engine import SimulationEngine
+from mcprojsim.simulation.engine import SimulationCancelled, SimulationEngine
 from mcprojsim.models.project import (
     Project,
     ProjectMetadata,
@@ -2045,3 +2045,211 @@ class TestSimulationEngine:
 
         # Mean should be higher due to risk
         assert results.mean > 2.0
+
+
+class TestProgressCallback:
+    """Tests for the progress_callback parameter (P1-01)."""
+
+    @pytest.fixture
+    def three_task_project(self):
+        return Project(
+            project=ProjectMetadata(name="Progress Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(low=2, expected=3, high=6),
+                    dependencies=["task_001"],
+                ),
+                Task(
+                    id="task_003",
+                    name="Task 3",
+                    estimate=TaskEstimate(low=1, expected=2, high=4),
+                    dependencies=["task_002"],
+                ),
+            ],
+        )
+
+    def test_callback_invoked_with_correct_totals(self, three_task_project):
+        """progress_callback should be called with (completed, total) at least once,
+        and the last invocation should have completed == total."""
+        calls: list[tuple[int, int]] = []
+
+        def recorder(completed: int, total: int) -> None:
+            calls.append((completed, total))
+
+        engine = SimulationEngine(
+            iterations=50,
+            random_seed=42,
+            show_progress=True,
+            progress_callback=recorder,
+        )
+        engine.run(three_task_project)
+
+        assert len(calls) > 0, "callback was never invoked"
+        # Every call should report the correct total
+        assert all(total == 50 for _, total in calls)
+        # Final call should have completed == total
+        assert calls[-1][0] == 50
+
+    def test_callback_completed_increases_monotonically(self, three_task_project):
+        """Completed count should never decrease between calls."""
+        calls: list[tuple[int, int]] = []
+
+        engine = SimulationEngine(
+            iterations=50,
+            random_seed=42,
+            show_progress=True,
+            progress_callback=lambda c, t: calls.append((c, t)),
+        )
+        engine.run(three_task_project)
+
+        completed_values = [c for c, _ in calls]
+        assert completed_values == sorted(completed_values)
+
+    def test_callback_suppresses_stdout(self, three_task_project, capsys):
+        """When a callback is provided, nothing should be written to stdout."""
+        engine = SimulationEngine(
+            iterations=50,
+            random_seed=42,
+            show_progress=True,
+            progress_callback=lambda c, t: None,
+        )
+        engine.run(three_task_project)
+
+        captured = capsys.readouterr()
+        assert "Progress:" not in captured.out
+
+    def test_no_callback_is_default(self):
+        """Without progress_callback, engine should behave exactly as before."""
+        engine = SimulationEngine(iterations=10, random_seed=42)
+        assert engine._progress_callback is None
+
+    def test_callback_with_show_progress_false(self, three_task_project):
+        """With show_progress=False and no callback, no callback is invoked."""
+        calls: list[tuple[int, int]] = []
+
+        engine = SimulationEngine(
+            iterations=50,
+            random_seed=42,
+            show_progress=False,
+            progress_callback=lambda c, t: calls.append((c, t)),
+        )
+        engine.run(three_task_project)
+
+        # show_progress=False suppresses the progress-reporting code path,
+        # so the callback should not be invoked.
+        assert len(calls) == 0
+
+    def test_results_unchanged_with_callback(self, three_task_project):
+        """Results should be identical whether or not a callback is used."""
+        engine_no_cb = SimulationEngine(
+            iterations=100, random_seed=42, show_progress=False
+        )
+        results_no_cb = engine_no_cb.run(three_task_project)
+
+        engine_cb = SimulationEngine(
+            iterations=100,
+            random_seed=42,
+            show_progress=True,
+            progress_callback=lambda c, t: None,
+        )
+        results_cb = engine_cb.run(three_task_project)
+
+        assert results_no_cb.mean == pytest.approx(results_cb.mean)
+        assert results_no_cb.median == pytest.approx(results_cb.median)
+        np.testing.assert_array_almost_equal(
+            results_no_cb.durations, results_cb.durations
+        )
+
+
+class TestSimulationCancellation:
+    """Tests for the cancellation flag (P1-02)."""
+
+    @pytest.fixture
+    def three_task_project(self):
+        return Project(
+            project=ProjectMetadata(name="Cancel Test", start_date=date(2025, 1, 1)),
+            tasks=[
+                Task(
+                    id="task_001",
+                    name="Task 1",
+                    estimate=TaskEstimate(low=1, expected=2, high=5),
+                ),
+                Task(
+                    id="task_002",
+                    name="Task 2",
+                    estimate=TaskEstimate(low=2, expected=3, high=6),
+                    dependencies=["task_001"],
+                ),
+                Task(
+                    id="task_003",
+                    name="Task 3",
+                    estimate=TaskEstimate(low=1, expected=2, high=4),
+                    dependencies=["task_002"],
+                ),
+            ],
+        )
+
+    def test_cancel_before_run_raises(self, three_task_project):
+        """Calling cancel() before run() should raise on the very first iteration."""
+        engine = SimulationEngine(iterations=10000, random_seed=42, show_progress=False)
+        engine.cancel()
+
+        with pytest.raises(SimulationCancelled):
+            engine.run(three_task_project)
+
+    def test_cancel_from_callback_raises(self, three_task_project):
+        """Cancelling from inside a progress callback should stop the simulation."""
+        engine = SimulationEngine(
+            iterations=10000,
+            random_seed=42,
+            show_progress=True,
+            progress_callback=lambda c, t: engine.cancel() if c >= 10 else None,
+        )
+
+        with pytest.raises(SimulationCancelled):
+            engine.run(three_task_project)
+
+    def test_cancel_from_thread(self, three_task_project):
+        """Cancelling from another thread should stop a long-running simulation."""
+        import threading
+
+        engine = SimulationEngine(
+            iterations=100_000, random_seed=42, show_progress=False
+        )
+
+        exc_holder: list[BaseException | None] = [None]
+
+        def run_engine():
+            try:
+                engine.run(three_task_project)
+            except SimulationCancelled as e:
+                exc_holder[0] = e
+
+        t = threading.Thread(target=run_engine)
+        t.start()
+
+        # Give the simulation a moment to start iterating, then cancel.
+        import time
+
+        time.sleep(0.05)
+        engine.cancel()
+        t.join(timeout=5.0)
+
+        assert not t.is_alive(), "Simulation thread did not stop in time"
+        assert isinstance(exc_holder[0], SimulationCancelled)
+
+    def test_cancellation_is_not_set_by_default(self):
+        """A freshly created engine should not be cancelled."""
+        engine = SimulationEngine(iterations=10, random_seed=42, show_progress=False)
+        assert engine._cancelled is False
+
+    def test_exception_is_simulation_cancelled(self):
+        """SimulationCancelled should be a subclass of Exception."""
+        assert issubclass(SimulationCancelled, Exception)

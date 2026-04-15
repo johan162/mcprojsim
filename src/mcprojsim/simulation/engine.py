@@ -4,7 +4,7 @@ from collections import Counter
 from dataclasses import dataclass
 import logging
 import sys
-from typing import Any, Dict, Optional, TextIO
+from typing import Any, Callable, Dict, Optional, TextIO
 
 import numpy as np
 
@@ -105,6 +105,10 @@ class CostImpactCache:
         return iteration_idx in self._cache
 
 
+class SimulationCancelled(Exception):
+    """Raised when a running simulation is cancelled via :meth:`SimulationEngine.cancel`."""
+
+
 class SimulationEngine:
     """Monte Carlo simulation engine for project estimation."""
 
@@ -116,6 +120,7 @@ class SimulationEngine:
         show_progress: bool = True,
         two_pass: bool = False,
         pass1_iterations: Optional[int] = None,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
     ):
         """Initialize simulation engine.
 
@@ -128,13 +133,19 @@ class SimulationEngine:
                 Only has effect when resource-constrained scheduling is active.
             pass1_iterations: Number of pass-1 iterations for criticality ranking.
                 Overrides config value when provided.  Capped to ``iterations``.
+            progress_callback: Optional callback invoked with
+                ``(completed_iterations, total_iterations)`` during the run.
+                When provided, stdout progress output is suppressed regardless
+                of the *show_progress* flag.
         """
         self.iterations = iterations
         self.random_seed = random_seed
         self.config = config or Config.get_default()
         self.show_progress = show_progress
+        self._progress_callback = progress_callback
         self.progress_stream: TextIO = sys.stdout
         self._progress_is_tty = self.progress_stream.isatty()
+        self._cancelled: bool = False
 
         # Two-pass CLI override takes precedence over config.
         if two_pass:
@@ -152,6 +163,14 @@ class SimulationEngine:
             self.random_state, self.config.get_lognormal_high_z_value()
         )
         self.risk_evaluator = RiskEvaluator(self.random_state)
+
+    def cancel(self) -> None:
+        """Request cancellation of a running simulation.
+
+        The engine checks this flag at the top of each iteration.  When set,
+        the current ``run()`` call raises :class:`SimulationCancelled`.
+        """
+        self._cancelled = True
 
     def run(self, project: Project) -> SimulationResults:
         """Run Monte Carlo simulation for project.
@@ -224,6 +243,9 @@ class SimulationEngine:
         task_costs_all: Dict[str, list[float]] = {task.id: [] for task in project.tasks}
 
         for iteration in range(self.iterations):
+            if self._cancelled:
+                raise SimulationCancelled()
+
             (
                 duration,
                 task_durations,
@@ -345,6 +367,9 @@ class SimulationEngine:
 
         last_reported_p1 = -1
         for iteration in range(effective_p1_iters):
+            if self._cancelled:
+                raise SimulationCancelled()
+
             (
                 duration,
                 task_durations,
@@ -439,6 +464,9 @@ class SimulationEngine:
 
         last_reported_p2 = -1
         for iteration in range(self.iterations):
+            if self._cancelled:
+                raise SimulationCancelled()
+
             # For pass-1 iterations, replay cached durations (paired replay).
             # For remaining iterations, sample fresh.
             if iteration < effective_p1_iters:
@@ -736,13 +764,20 @@ class SimulationEngine:
     def _report_progress(self, progress: int, completed_iterations: int) -> None:
         """Report simulation progress.
 
-        When writing to a terminal, update a single line in place.
-        When output is redirected, emit one line per progress update.
+        When a *progress_callback* was supplied at construction time, it is
+        invoked with ``(completed_iterations, total_iterations)`` and stdout
+        output is skipped.  Otherwise the original stdout behaviour is used:
+        when writing to a terminal, update a single line in place; when output
+        is redirected, emit one line per progress update.
 
         Args:
             progress: Progress percentage to report
             completed_iterations: Number of completed iterations
         """
+        if self._progress_callback is not None:
+            self._progress_callback(completed_iterations, self.iterations)
+            return
+
         message = (
             f"Progress: {progress:.1f}% " f"({completed_iterations}/{self.iterations})"
         )
