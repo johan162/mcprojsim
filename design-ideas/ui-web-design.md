@@ -160,27 +160,27 @@ The layout is a three-zone shell that does not change as the user navigates sect
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  HEADER BAR                                                  │
+│  HEADER BAR                                                 │
 │  logo  project-name  [breadcrumb]  [⌘K Command Palette]     │
-│  [New] [Open] [Save]  ·  [✓ Validate] [▶ Run Simulation]   │
-│                                              [🌙 Dark Mode]  │
+│  [New] [Open] [Save]  ·  [✓ Validate] [▶ Run Simulation]    │
+│                                             [🌙 Dark Mode]  │
 ├──────────────┬──────────────────────────────────────────────┤
 │  LEFT NAV    │  MAIN EDITOR AREA                            │
 │  (240 px)    │  (scrollable, sections stack vertically)     │
 │              │                                              │
-│  Section     │  PROJECT BASICS ─────────────────────────── │
+│  Section     │  PROJECT BASICS ───────────────────────────  │
 │  Navigator   │                                              │
-│              │  TASKS ──────────────────────────────────── │
+│              │  TASKS ────────────────────────────────────  │
 │  ▶ Project   │                                              │
-│    Basics    │  RISKS (collapsed) ─────────────────────── │
+│    Basics    │  RISKS (collapsed) ───────────────────────   │
 │              │                                              │
-│  ▶ Tasks(8)  │  COST (collapsed) ──────────────────────── │
+│  ▶ Tasks(8)  │  COST (collapsed) ────────────────────────   │
 │              │                                              │
-│  ▷ Risks(2)  │  ...                                        │
+│  ▷ Risks(2)  │  ...                                         │
 │              │                                              │
 │  ▷ Cost      │                                              │
 │              ├──────────────────────────────────────────────┤
-│  ▷ Team      │  BOTTOM DRAWER (resizable, 30% default)     │
+│  ▷ Team      │  BOTTOM DRAWER (resizable, 30% default)      │
 │              │  [YAML Preview]  [Simulation Results]        │
 │  ▷ Sprint    │                                              │
 │              │                                              │
@@ -200,24 +200,24 @@ On viewports narrower than 900 px the left nav becomes a top tab bar and the bot
 
 ```
 ╔═════════════════════════════════════════════════════════════════════╗
-║  ◆ mcprojsim   Customer Portal Redesign ▸ Tasks         [⌘K ...]   ║
-║  [+ New]  [↑ Open]  [↓ Save]  ·  [✓ Validate]  [▶ Run Simulation] ║
+║  ◆ mcprojsim   Customer Portal Redesign ▸ Tasks         [⌘K ...]    ║
+║  [+ New]  [↑ Open]  [↓ Save]  ·  [✓ Validate]  [▶ Run Simulation]   ║
 ╠═══════════════╦═════════════════════════════════════════════════════╣
-║  SECTIONS     ║  PROJECT BASICS                               ╌╌╌╌ ║
+║  SECTIONS     ║  PROJECT BASICS                               ╌ ╌╌╌ ║
 ║               ║                                                     ║
 ║  ▶ Project    ║  Name *      ┌────────────────────────────────────┐ ║
 ║    Basics     ║              │ Customer Portal Redesign           │ ║
 ║               ║              └────────────────────────────────────┘ ║
-║  ▶ Tasks(8)   ║  Start Date  ┌───────────┐  Hours/Day  ┌─────────┐ ║
+║  ▶ Tasks(8)   ║  Start Date  ┌───────────┐  Hours/Day   ┌─────────┐ ║
 ║               ║              │ 2026-05-01│              │   8.0   │ ║
 ║  ▷ Risks(2)   ║              └───────────┘              └─────────┘ ║
-║               ║  Working Days/Week ┌───┐  Distribution  ┌────────┐ ║
+║               ║  Working Days/Week ┌───┐  Distribution   ┌────────┐ ║
 ║  ▷ Cost       ║                    │ 5 │                 │Triangl.│ ║
 ║               ║                    └───┘                 └────────┘ ║
 ║  ▷ Team       ╠═════════════════════════════════════════════════════╣
-║               ║  TASKS                                        ╌╌╌╌ ║
+║               ║  TASKS                                         ╌╌╌╌ ║
 ║  ▷ Sprint     ║                                                     ║
-║               ║  [+ Add Task]  [⇄ Graph View]  [⤓ Import CSV]      ║
+║               ║  [+ Add Task]  [⇄ Graph View]  [⤓ Import CSV]       ║
 ║  ▷ Advanced   ║                                                     ║
 ║               ║  ┌────┬───────────────────────────┬──────────┬────┐ ║
 ║               ║  │ ⠿  │ Task                      │ Estimate │Dep │ ║
@@ -227,8 +227,8 @@ On viewports narrower than 900 px the left nav becomes a top tab bar and the bot
 ║               ║  │ ⠿  │ Frontend components       │ 7–10–18d │ —  │ ║
 ║               ║  └────┴───────────────────────────┴──────────┴────┘ ║
 ╠═══════════════╩═════════════════════════════════════════════════════╣
-║  [YAML Preview ▼]  [Simulation Results]            [─ ─  □  ✕]     ║
-║ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ║
+║  [YAML Preview ▼]  [Simulation Results]            [─ ─  □  ✕]      ║
+║ ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄    ║
 ║  project:                                                [Copy YAML]║
 ║    name: "Customer Portal Redesign"                                 ║
 ║    start_date: "2026-05-01"                                         ║
@@ -246,50 +246,50 @@ Double-clicking a task row slides in a panel from the right (600 px wide, overla
 
 ```
 ╔════════════════════════════════════════════════════════╗
-║  Edit Task: "API endpoint implementation"      [×]    ║
-║  ──────────────────────────────────────────────────── ║
-║  ● Basics   ○ Uncertainty   ○ Risks                   ║
+║  Edit Task: "API endpoint implementation"      [×]     ║
+║  ────────────────────────────────────────────────────  ║
+║  ● Basics   ○ Uncertainty   ○ Risks                    ║
 ║                                                        ║
-║  Task ID       ┌─────────────────────────────────┐   ║
-║                │ task_002                        │   ║
-║                └─────────────────────────────────┘   ║
-║  Name *        ┌─────────────────────────────────┐   ║
-║                │ API endpoint implementation     │   ║
-║                └─────────────────────────────────┘   ║
-║  Description   ┌─────────────────────────────────┐   ║
-║                │                                 │   ║
-║                └─────────────────────────────────┘   ║
+║  Task ID       ┌─────────────────────────────────┐     ║
+║                │ task_002                        │     ║
+║                └─────────────────────────────────┘     ║
+║  Name *        ┌─────────────────────────────────┐     ║
+║                │ API endpoint implementation     │     ║
+║                └─────────────────────────────────┘     ║
+║  Description   ┌─────────────────────────────────┐     ║
+║                │                                 │     ║
+║                └─────────────────────────────────┘     ║
 ║                                                        ║
-║  Estimate ─────────────────────────────────────────── ║
-║  ○ Three-Point (days / hours)                         ║
-║  ● Story Points                                       ║
-║  ○ T-Shirt Size                                       ║
+║  Estimate ───────────────────────────────────────────  ║
+║  ○ Three-Point (days / hours)                          ║
+║  ● Story Points                                        ║
+║  ○ T-Shirt Size                                        ║
 ║                                                        ║
-║  ┌─ Three-Point ─────────────────────────────────┐   ║
-║  │ Optimistic   ┌────────┐  days                 │   ║
-║  │              │   5    │                       │   ║
-║  │ Most Likely  ┌────────┐                       │   ║
-║  │              │   8    │   ╭────────╮          │   ║
-║  │ Pessimistic  ┌────────┐   │ 5─8─15 │ (spark)  │   ║
-║  │              │  15    │   ╰────────╯          │   ║
-║  │ Unit         ┌────────┐                       │   ║
-║  │              │ days ▼ │                       │   ║
-║  └───────────────────────────────────────────────┘   ║
+║  ┌─ Three-Point ─────────────────────────────────┐     ║
+║  │ Optimistic   ┌────────┐  days                 │     ║
+║  │              │   5    │                       │     ║
+║  │ Most Likely  ┌────────┐                       │     ║
+║  │              │   8    │   ╭────────╮          │     ║
+║  │ Pessimistic  ┌────────┐   │ 5─8─15 │ (spark)  │     ║
+║  │              │  15    │   ╰────────╯          │     ║
+║  │ Unit         ┌────────┐                       │     ║
+║  │              │ days ▼ │                       │     ║
+║  └───────────────────────────────────────────────┘     ║
 ║                                                        ║
-║  Dependencies ─────────────────────────────────────── ║
-║  ┌────────────────────────────────────────────────┐  ║
-║  │ [✓] Database schema design (task_001)          │  ║
-║  │ [ ] Frontend components (task_003)             │  ║
-║  │ [ ] Auth & Authorization (task_004)            │  ║
-║  └────────────────────────────────────────────────┘  ║
+║  Dependencies ───────────────────────────────────────  ║
+║  ┌────────────────────────────────────────────────┐    ║
+║  │ [✓] Database schema design (task_001)          │    ║
+║  │ [ ] Frontend components (task_003)             │    ║
+║  │ [ ] Auth & Authorization (task_004)            │    ║
+║  └────────────────────────────────────────────────┘    ║
 ║                                                        ║
-║                         [Discard]  [Save Task ↵]     ║
+║                         [Discard]  [Save Task ↵]       ║
 ╚════════════════════════════════════════════════════════╝
 ```
 
 The small spark chart on the right of the Three-Point block updates live as the three values change, giving a visual sense of the distribution shape.
 
----
+--- 
 
 ### 6.3 — Dependency Graph View
 
@@ -297,34 +297,34 @@ The **[⇄ Graph View]** toggle replaces the table with an interactive SVG DAG r
 
 ```
 ╔═════════════════════════════════════════════════════════════════╗
-║  TASKS   [○ Table]  [● Graph]     [+ Add Task]  [⤓ Import CSV] ║
-║ ───────────────────────────────────────────────────────────── ║
+║  TASKS   [○ Table]  [● Graph]     [+ Add Task]  [⤓ Import CSV]  ║
+║ ─────────────────────────────────────────────────────────────   ║
 ║                                                                 ║
 ║   ┌────────────────────┐                                        ║
 ║   │ #1 DB Schema       │                                        ║
-║   │ 3 – 5 – 10 d       │──────────────────────┐                ║
+║   │ 3 – 5 – 10 d       │──────────────────────┐                 ║
 ║   └────────────────────┘                       │                ║
 ║                                                ▼                ║
-║   ┌────────────────────┐          ┌────────────────────┐        ║
+║   ┌────────────────────┐           ┌────────────────────┐       ║
 ║   │ #3 Frontend         │─────────▶ #2 API Endpoints    │──┐    ║
 ║   │ 7 – 10 – 18 d       │          │ 5 – 8 – 15 d       │  │    ║
-║   └────────────────────┘          └────────────────────┘  │    ║
-║                                            │                │    ║
-║                                            ▼                │    ║
+║   └────────────────────┘           └────────────────────┘  │    ║
+║                                            │               │    ║
+║                                            ▼               │    ║
 ║                                   ┌────────────────────┐   │    ║
-║                              ┌───▶ #4 Auth & Authz      │   │    ║
-║                              │    │ 4 – 6 – 12 d        │   │    ║
+║                              ┌───▶ #4 Auth & Authz     │   │    ║
+║                              │    │ 4 – 6 – 12 d       │   │    ║
 ║                              │    └────────────────────┘   │    ║
-║                              │             │                │    ║
-║                              │             ▼                ▼    ║
-║                              │    ┌──────────────────────────┐   ║
-║                              │    │ #5 Integration Tests      │   ║
-║                              │    │ 3 – 5 – 8 d               │   ║
-║                              │    └──────────────────────────┘   ║
-║                              └───────────────────────────────────┘║
+║                              │             │               │    ║
+║                              │             ▼               ▼    ║
+║                              │    ┌──────────────────────────┐  ║
+║                              │    │ #5 Integration Tests     │  ║
+║                              │    │ 3 – 5 – 8 d              │  ║
+║                              │    └──────────────────────────┘  ║
+║                              └────────────────────────────┘.    ║
 ║                                                                 ║
 ║  Drag a node to reposition. Drag from a node's edge to another  ║
-║  node to add a dependency.                                       ║
+║  node to add a dependency.                                      ║
 ╚═════════════════════════════════════════════════════════════════╝
 ```
 
@@ -348,15 +348,15 @@ Clicking **▶ Run Simulation** opens a centred modal (max-width 520 px):
 ║                  └────────────────┘                 ║
 ║                                                     ║
 ║  Output Files                                       ║
-║  ☐ JSON   ☐ CSV   ☑ HTML report                    ║
-║  Save to  ┌──────────────────────────┐ [Browse…]   ║
-║           │ ~/Desktop/results        │             ║
-║           └──────────────────────────┘             ║
+║  ☐ JSON   ☐ CSV   ☑ HTML report                     ║
+║  Save to  ┌──────────────────────────┐ [Browse…]    ║
+║           │ ~/Desktop/results        │              ║
+║           └──────────────────────────┘              ║
 ║                                                     ║
 ║  ─────────────────────────────────────────────────  ║
 ║  ☑ Validate project first (recommended)             ║
 ║                                                     ║
-║                      [Cancel]  [▶ Run ↵]           ║
+║                      [Cancel]  [▶ Run ↵]            ║
 ╚═════════════════════════════════════════════════════╝
 ```
 
@@ -365,25 +365,25 @@ After **▶ Run**, the modal closes and the bottom drawer switches to the **Simu
 ```
 ╔══════════════════════════════════════════════════════════════════╗
 ║  [YAML Preview]  [● Simulation Results]                          ║
-║ ─────────────────────────────────────────────────────────────── ║
-║  Running…  ████████████████░░░░░░░░  68%  (6,800 / 10,000)     ║
+║ ───────────────────────────────────────────────────────────────  ║
+║  Running…  ████████████████░░░░░░░░  68%  (6,800 / 10,000)       ║
 ║                                                                  ║
-║  ┌─── Calendar Time ───────────────────────────────────────┐   ║
-║  │  Mean    578 h  (72 days)                                │   ║
-║  │  Median  571 h  (71 days)                                │   ║
-║  │  P80     642 h  (80 days)   → 2026-07-30                 │   ║
-║  │  P90     682 h  (86 days)   → 2026-08-06                 │   ║
-║  └──────────────────────────────────────────────────────────┘   ║
+║  ┌─── Calendar Time ────────────────────────────────────────┐    ║
+║  │  Mean    578 h  (72 days)                                │    ║
+║  │  Median  571 h  (71 days)                                │    ║
+║  │  P80     642 h  (80 days)   → 2026-07-30                 │    ║
+║  │  P90     682 h  (86 days)   → 2026-08-06                 │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
 ║                                                                  ║
-║  ┌─── Effort ──────────────────────────────────────────────┐   ║
-║  │  Mean    1 240 person-h  (155 person-days)               │   ║
-║  └──────────────────────────────────────────────────────────┘   ║
+║  ┌─── Effort ───────────────────────────────────────────────┐    ║
+║  │  Mean    1 240 person-h  (155 person-days)               │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
 ║                                                                  ║
-║  ┌─── Critical Path (most frequent) ──────────────────────┐   ║
-║  │  #1 → #2 → #4 → #5 → #6 → #8  (61%)                  │   ║
-║  └──────────────────────────────────────────────────────────┘   ║
+║  ┌─── Critical Path (most frequent) ────────────────────────┐    ║
+║  │  #1 → #2 → #4 → #5 → #6 → #8  (61%)                      │    ║
+║  └──────────────────────────────────────────────────────────┘    ║
 ║                                                                  ║
-║  [Open HTML Report ↗]   [Save JSON]   [Save CSV]                ║
+║  [Open HTML Report ↗]   [Save JSON]   [Save CSV]                 ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -395,19 +395,19 @@ Results fill in as soon as the simulation completes (partial rows are not shown 
 
 ```
 ╔═══════════════════════════════════════════════════════════════════╗
-║  RISKS                                                    ╌╌╌╌▲  ║
-║  Project-wide risks (apply to entire project duration)           ║
+║  RISKS                                                    ╌╌╌╌▲   ║
+║  Project-wide risks (apply to entire project duration)            ║
 ║                                                                   ║
 ║  [+ Add Project Risk]                                             ║
 ║                                                                   ║
-║  ┌────┬──────────────────────────────┬──────┬────────────────┐  ║
-║  │ ID │ Risk Name                    │ Prob │ Impact         │  ║
-║  ├────┼──────────────────────────────┼──────┼────────────────┤  ║
-║  │ R1 │ Key developer leaves         │ 15%  │ +20% duration  │  ║
-║  │ R2 │ Requirements change          │ 30%  │ +10 d (abs.)   │  ║
-║  └────┴──────────────────────────────┴──────┴────────────────┘  ║
+║  ┌────┬──────────────────────────────┬──────┬────────────────┐    ║
+║  │ ID │ Risk Name                    │ Prob │ Impact         │    ║
+║  ├────┼──────────────────────────────┼──────┼────────────────┤    ║
+║  │ R1 │ Key developer leaves         │ 15%  │ +20% duration  │    ║
+║  │ R2 │ Requirements change          │ 30%  │ +10 d (abs.)   │    ║
+║  └────┴──────────────────────────────┴──────┴────────────────┘    ║
 ║                                                                   ║
-║  ℹ  Task-level risks are added in the task editor (Risks tab).  ║
+║  ℹ  Task-level risks are added in the task editor (Risks tab).    ║
 ╚═══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -415,20 +415,20 @@ Clicking **+ Add Project Risk** or a row expands an inline form immediately belo
 
 ```
   ┌─ Add Risk ───────────────────────────────────────────────────────┐
-  │  Name *         ┌──────────────────────────────────────────┐    │
-  │                 │ Key developer leaves                     │    │
-  │                 └──────────────────────────────────────────┘    │
-  │  Probability    ┌────┐ %                                        │
-  │                 │ 15 │                                          │
-  │                 └────┘                                          │
-  │  Impact Type    ○ Fixed hours  ● Percentage  ○ Absolute days    │
-  │  Impact Value   ┌────┐ % of project duration                   │
-  │                 │ 20 │                                          │
-  │                 └────┘                                          │
-  │  Cost Impact    ┌───────────────────┐  (optional)              │
-  │                 │                   │                           │
-  │                 └───────────────────┘                           │
-  │                               [Discard]  [Add Risk ↵]          │
+  │  Name *         ┌──────────────────────────────────────────┐     │
+  │                 │ Key developer leaves                     │     │
+  │                 └──────────────────────────────────────────┘     │
+  │  Probability    ┌────┐ %                                         │
+  │                 │ 15 │                                           │
+  │                 └────┘                                           │
+  │  Impact Type    ○ Fixed hours  ● Percentage  ○ Absolute days     │
+  │  Impact Value   ┌────┐ % of project duration                     │
+  │                 │ 20 │                                           │
+  │                 └────┘                                           │
+  │  Cost Impact    ┌───────────────────┐  (optional)                │
+  │                 │                   │                            │
+  │                 └───────────────────┘                            │
+  │                               [Discard]  [Add Risk ↵]            │
   └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -445,11 +445,11 @@ Clicking **+ Add Project Risk** or a row expands an inline form immediately belo
 ║  ┌─────────────────────────────────────────────────────────┐
 ║  │  Factor                  Level                          │
 ║  │  ─────────────────────── ─────────────────────────────  │
-║  │  Team Experience          ○ VL  ○ L  ● M  ○ H  ○ VH   │
-║  │  Requirements Maturity    ○ VL  ○ L  ○ M  ● H  ○ VH   │
-║  │  Technical Complexity     ○ VL  ○ L  ● M  ○ H  ○ VH   │
-║  │  Team Distribution        ● Colocated  ○ Distributed   │
-║  │  Integration Complexity   ○ VL  ○ L  ● M  ○ H  ○ VH   │
+║  │  Team Experience          ○ VL  ○ L  ● M  ○ H  ○ VH     │
+║  │  Requirements Maturity    ○ VL  ○ L  ○ M  ● H  ○ VH     │
+║  │  Technical Complexity     ○ VL  ○ L  ● M  ○ H  ○ VH     │
+║  │  Team Distribution        ● Colocated  ○ Distributed    │
+║  │  Integration Complexity   ○ VL  ○ L  ● M  ○ H  ○ VH     │
 ║  └─────────────────────────────────────────────────────────┘
 ║
 ║  Combined multiplier: ~1.05×
