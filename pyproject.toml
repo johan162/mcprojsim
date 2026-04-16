@@ -67,9 +67,16 @@ optional = true
 [tool.poetry.group.mcp.dependencies]
 mcp = {version = ">=1.0.0", extras = ["cli"]}
 
+[tool.poetry.group.ui]
+optional = true
+
+[tool.poetry.group.ui.dependencies]
+PySide6 = {version = ">=6.6", python = ">=3.13,<3.15"}
+
 [tool.poetry.scripts]
 mcprojsim = "mcprojsim.cli:cli"
 mcprojsim-mcp = "mcprojsim.mcp_server:main"
+mcprojsim-ui = "mcprojsim.ui.main:main"
 
 [tool.black]
 line-length = 88

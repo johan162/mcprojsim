@@ -957,6 +957,7 @@ Convention: work items are numbered `P1-NN` (Phase 1) and `P2-NN` (Phase 2). Dep
 ---
 
 #### P1-01 — Engine: Add `progress_callback` Parameter
+**STATUS:** DONE. This is now implemented.
 
 > Prerequisite for everything that follows. Ref: §A.1.
 
@@ -972,6 +973,7 @@ Convention: work items are numbered `P1-NN` (Phase 1) and `P2-NN` (Phase 2). Dep
 ---
 
 #### P1-02 — Engine: Add Cancellation Flag
+**STATUS:** DONE. This is now implemented.
 
 > Ref: §A.3. Small change, best done alongside P1-01.
 
