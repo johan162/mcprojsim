@@ -1113,7 +1113,7 @@ class SimulationEngine:
         """Precompute project-static task inputs for one simulation run."""
         task_data: list[TaskRunStaticData] = []
         task_ids: list[str] = []
-        hours_per_day = project.project.hours_per_day
+        # hours_per_day = project.project.hours_per_day
 
         for task in project.tasks:
             resolved_estimate = self._resolve_estimate(
