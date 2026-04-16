@@ -815,7 +815,7 @@ class TestErrorReportingFormatting:
         from mcprojsim.models.project import Project
 
         try:
-            Project(**{"project": {"name": "X"}, "tasks": "not_a_list"})  # type: ignore[arg-type]
+            Project(**{"project": {"name": "X"}, "tasks": "not_a_list"})
         except Exception as exc:
             formatted = format_validation_error(exc, {}, {}, "test.yaml")
             assert isinstance(formatted, str)
@@ -867,7 +867,7 @@ class TestHTMLExporterCostVisualization:
             effort_durations=durations * 8.0,
             effort_percentiles={50: 160.0, 80: 240.0, 90: 280.0},
             sensitivity={"t1": 0.8},
-            critical_path_frequency={"t1": 0.95},
+            critical_path_frequency={"t1": 1},
             critical_path_sequences=[],
             task_slack={"t1": 0.0},
             hours_per_day=8.0,
@@ -1445,7 +1445,9 @@ class TestTaskEstimateValidation:
         from mcprojsim.models.project import TaskEstimate
 
         with pytest.raises(ValueError, match="Expected non-empty string"):
-            TaskEstimate(t_shirt_size=123)  # type: ignore[arg-type]
+            TaskEstimate(
+                t_shirt_size=123
+            )  # noqa: passing int intentionally to test runtime validation
 
     def test_tshirt_empty_string_rejected(self) -> None:
         """Empty string t_shirt_size raises ValueError."""
@@ -1484,14 +1486,16 @@ class TestTaskEstimateValidation:
 
     def test_tshirt_with_unit_rejected(self) -> None:
         """T-shirt size with explicit unit raises ValueError."""
-        from mcprojsim.models.project import TaskEstimate, EffortUnit
+        from mcprojsim.config import EffortUnit
+        from mcprojsim.models.project import TaskEstimate
 
         with pytest.raises(ValueError, match="not specify 'unit'"):
             TaskEstimate(t_shirt_size="M", unit=EffortUnit.HOURS)
 
     def test_story_points_with_unit_rejected(self) -> None:
         """Story points with explicit unit raises ValueError."""
-        from mcprojsim.models.project import TaskEstimate, EffortUnit
+        from mcprojsim.config import EffortUnit
+        from mcprojsim.models.project import TaskEstimate
 
         with pytest.raises(ValueError, match="not specify 'unit'"):
             TaskEstimate(story_points=5, unit=EffortUnit.HOURS)
@@ -1603,7 +1607,9 @@ class TestProjectModelEdgeCases:
         from mcprojsim.models.project import ProjectMetadata
 
         with pytest.raises(ValueError):
-            ProjectMetadata(name="Test", start_date=12345)  # type: ignore[arg-type]
+            ProjectMetadata(
+                name="Test", start_date=12345
+            )  # noqa: passing int intentionally to test runtime validation
 
     def test_red_threshold_gte_green_rejected(self) -> None:
         """Red threshold >= green threshold raises ValueError."""
@@ -1652,7 +1658,9 @@ class TestProjectModelEdgeCases:
         from mcprojsim.models.project import Risk
 
         with pytest.raises(ValueError, match="Invalid impact"):
-            Risk(id="r1", name="R1", probability=0.2, impact="bad")  # type: ignore[arg-type]
+            Risk(
+                id="r1", name="R1", probability=0.2, impact="bad"
+            )  # noqa: passing str intentionally to test runtime validation
 
     def test_duplicate_calendar_ids_rejected(self) -> None:
         """Duplicate calendar IDs raise ValueError."""
@@ -1890,7 +1898,7 @@ class TestProjectModelEdgeCases:
             ],
         )
         assert project.tasks[0].uncertainty_factors is not None
-        assert project.tasks[0].uncertainty_factors.team_experience == "high"  # type: ignore[union-attr]
+        assert project.tasks[0].uncertainty_factors.team_experience == "high"
 
     def test_uncertainty_factors_task_overrides_project(self) -> None:
         """Task-level uncertainty_factors override project-level ones."""

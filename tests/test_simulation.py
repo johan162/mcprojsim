@@ -2206,7 +2206,7 @@ class TestSimulationCancellation:
 
     def test_cancel_from_callback_raises(self, three_task_project):
         """Cancelling from inside a progress callback should stop the simulation."""
-        engine = SimulationEngine(
+        engine: SimulationEngine = SimulationEngine(
             iterations=10000,
             random_seed=42,
             show_progress=True,

@@ -301,6 +301,7 @@ class TestCSVExporterCostOutput:
         out = tmp_path / "out.csv"
 
         provider = MagicMock()
+        assert results.costs is not None
         provider.convert_array.return_value = results.costs * 10.5
         CSVExporter.export(results, str(out), project=project, fx_provider=provider)
         content = out.read_text()
@@ -368,9 +369,11 @@ class TestHistoricBaseBuilder:
         build_historic_base checks the history list directly, so we construct
         the object bypassing model validation to isolate the function under test.
         """
+        from datetime import date
+
         project = Project.model_construct(
             project=ProjectMetadata.model_construct(
-                name="Empty History", start_date="2026-01-01"
+                name="Empty History", start_date=date(2026, 1, 1)
             ),
             tasks=[
                 Task(
@@ -1319,8 +1322,10 @@ class TestExchangeRateCacheEdgeCases:
         monkeypatch.setattr(fx_mod, "CACHE_DIR", cache_dir)
         monkeypatch.setattr(fx_mod, "CACHE_FILE", cache_file)
 
+        import urllib.request as _urllib_req
+
         monkeypatch.setattr(
-            fx_mod.urllib.request,
+            _urllib_req,
             "urlopen",
             MagicMock(side_effect=OSError("Network down")),
         )
@@ -1341,8 +1346,10 @@ class TestExchangeRateCacheEdgeCases:
         monkeypatch.setattr(fx_mod, "CACHE_DIR", cache_dir)
         monkeypatch.setattr(fx_mod, "CACHE_FILE", cache_file)
 
+        import urllib.request as _urllib_req
+
         monkeypatch.setattr(
-            fx_mod.urllib.request,
+            _urllib_req,
             "urlopen",
             MagicMock(side_effect=OSError("offline")),
         )
