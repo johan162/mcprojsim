@@ -1,6 +1,11 @@
+Version: 1.0.0
+
+Date: 2026-04-16
+
+Status: Design and Research Proposal
+
 # mcprojsim Desktop UI — Design Document
 
-**Status:** Proposal  
 **Scope:** A desktop GUI that lets a new user create, edit, validate, and simulate mcprojsim YAML project files without knowing the YAML format.
 
 ---

@@ -9,6 +9,7 @@
 
 # Make behavior
 .DEFAULT_GOAL := pdf-design-docs
+MAKEFLAGS += -j10
 
 # Get full path to bash
 SHELL := $(shell which bash)
@@ -180,6 +181,9 @@ $(eval $(call DEFINE_DESIGN_DOC_VARS,PLUGGABLE_DISTRIBUTIONS,pluggable-distribut
 $(eval $(call DEFINE_DESIGN_DOC_VARS,NL_MCP_IMPROVEMENTS,nl_mcp_improvements,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,HANDLING_COST,handling-cost,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,PROBABILISTIC_TESTING,probabilistic-testing,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,UI_DESIGN,ui-design,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,UI_WEB_DESIGN,ui-web-design,,))
+
 
 # ============================================================================================
 # Makefile Targets
@@ -193,10 +197,11 @@ $(eval $(call DESIGN_DOC_PDF_RULE,PLUGGABLE_DISTRIBUTIONS,pluggable distribution
 $(eval $(call DESIGN_DOC_PDF_RULE,NL_MCP_IMPROVEMENTS,non-linear MCP improvements))
 $(eval $(call DESIGN_DOC_PDF_RULE,HANDLING_COST,handling cost))
 $(eval $(call DESIGN_DOC_PDF_RULE,PROBABILISTIC_TESTING,probabilistic testing))
-
+$(eval $(call DESIGN_DOC_PDF_RULE,UI_DESIGN,UI design))
+$(eval $(call DESIGN_DOC_PDF_RULE,UI_WEB_DESIGN,UI web design))
 PDF_DESIGN_DOCS := $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) \
 $(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) $(NL_MCP_IMPROVEMENTS_PDF) \
-$(HANDLING_COST_PDF) $(PROBABILISTIC_TESTING_PDF)
+$(HANDLING_COST_PDF) $(PROBABILISTIC_TESTING_PDF) $(UI_DESIGN_PDF) $(UI_WEB_DESIGN_PDF)
 
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
