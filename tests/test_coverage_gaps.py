@@ -35,7 +35,6 @@ from mcprojsim.parsers.sprint_history_parser import (
     load_external_sprint_history,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -177,9 +176,7 @@ class TestJSONExporterCostOutput:
             "source": "mock",
             "fetched_at": "2026-01-01T00:00:00+00:00",
         }
-        JSONExporter.export(
-            results, str(out), project=project, fx_provider=provider
-        )
+        JSONExporter.export(results, str(out), project=project, fx_provider=provider)
         data = json.loads(out.read_text())
         sec = data["cost"]["secondary_currencies"]
         assert len(sec) == 1
@@ -195,9 +192,7 @@ class TestJSONExporterCostOutput:
         provider = MagicMock()
         provider.requested_targets = ["JPY"]
         provider.rate_info.return_value = None
-        JSONExporter.export(
-            results, str(out), project=project, fx_provider=provider
-        )
+        JSONExporter.export(results, str(out), project=project, fx_provider=provider)
         data = json.loads(out.read_text())
         sec = data["cost"]["secondary_currencies"]
         assert sec[0]["error"] == "rate_unavailable"
@@ -307,9 +302,7 @@ class TestCSVExporterCostOutput:
 
         provider = MagicMock()
         provider.convert_array.return_value = results.costs * 10.5
-        CSVExporter.export(
-            results, str(out), project=project, fx_provider=provider
-        )
+        CSVExporter.export(results, str(out), project=project, fx_provider=provider)
         content = out.read_text()
         assert "SEK" in content
         assert "secondary_currency_costs" in content
@@ -322,9 +315,7 @@ class TestCSVExporterCostOutput:
 
         provider = MagicMock()
         provider.convert_array.return_value = None
-        CSVExporter.export(
-            results, str(out), project=project, fx_provider=provider
-        )
+        CSVExporter.export(results, str(out), project=project, fx_provider=provider)
         content = out.read_text()
         assert "rate_unavailable" in content
 
@@ -364,7 +355,9 @@ class TestHistoricBaseBuilder:
         project = Project(
             project=ProjectMetadata(name="No Sprint", start_date="2026-01-01"),
             tasks=[
-                Task(id="t1", name="T1", estimate=TaskEstimate(low=1, expected=2, high=3))
+                Task(
+                    id="t1", name="T1", estimate=TaskEstimate(low=1, expected=2, high=3)
+                )
             ],
         )
         assert build_historic_base(project) is None
@@ -376,9 +369,13 @@ class TestHistoricBaseBuilder:
         the object bypassing model validation to isolate the function under test.
         """
         project = Project.model_construct(
-            project=ProjectMetadata.model_construct(name="Empty History", start_date="2026-01-01"),
+            project=ProjectMetadata.model_construct(
+                name="Empty History", start_date="2026-01-01"
+            ),
             tasks=[
-                Task(id="t1", name="T1", estimate=TaskEstimate(low=1, expected=2, high=3))
+                Task(
+                    id="t1", name="T1", estimate=TaskEstimate(low=1, expected=2, high=3)
+                )
             ],
             sprint_planning=SprintPlanningSpec.model_construct(
                 enabled=True,
@@ -395,7 +392,8 @@ class TestHistoricBaseBuilder:
             project=ProjectMetadata(name="SP Mode", start_date="2026-01-01"),
             tasks=[
                 Task(
-                    id="t1", name="T1",
+                    id="t1",
+                    name="T1",
                     estimate=TaskEstimate(t_shirt_size="M"),
                     planning_story_points=5,
                 )
@@ -438,9 +436,7 @@ class TestHistoricBaseBuilder:
         """Task-capacity mode with multiple sprints computes summary stats."""
         project = Project(
             project=ProjectMetadata(name="Task Mode", start_date="2026-01-01"),
-            tasks=[
-                Task(id="t1", name="T1", estimate=TaskEstimate(t_shirt_size="M"))
-            ],
+            tasks=[Task(id="t1", name="T1", estimate=TaskEstimate(t_shirt_size="M"))],
             sprint_planning=SprintPlanningSpec(
                 enabled=True,
                 sprint_length_weeks=2,
@@ -609,11 +605,7 @@ class TestNLParserProseRisks:
 
     def test_prose_risk_probability_only_no_impact(self) -> None:
         """Prose risk with only probability and no cost/schedule is discarded."""
-        text = (
-            "Task 1: Work\n"
-            "- Size: M\n"
-            "- There is a 10% risk of something bad\n"
-        )
+        text = "Task 1: Work\n" "- Size: M\n" "- There is a 10% risk of something bad\n"
         parser = NLProjectParser()
         project = parser.parse(text)
         assert len(project.tasks[0].risks) == 0
@@ -643,11 +635,7 @@ class TestNLParserAutoTaskRisks:
 
     def test_auto_task_with_fixed_cost(self) -> None:
         """Auto-detected task with fixed cost bullet."""
-        text = (
-            "1. License setup\n"
-            "   - Fixed cost: $3000\n"
-            "   - Size: S\n"
-        )
+        text = "1. License setup\n" "   - Fixed cost: $3000\n" "   - Size: S\n"
         parser = NLProjectParser()
         project = parser.parse(text)
         assert project.tasks[0].fixed_cost == pytest.approx(3000.0)
@@ -701,11 +689,7 @@ class TestNLParserYAMLGeneration:
 
     def test_yaml_includes_fixed_cost(self) -> None:
         """Generated YAML includes task fixed_cost."""
-        text = (
-            "Task 1: License setup\n"
-            "- Size: S\n"
-            "- Fixed cost: 5000\n"
-        )
+        text = "Task 1: License setup\n" "- Size: S\n" "- Fixed cost: 5000\n"
         parser = NLProjectParser()
         yaml_str = parser.parse_and_generate(text)
         assert "fixed_cost:" in yaml_str
@@ -772,12 +756,16 @@ class TestNLParserProjectLevelRisks:
 class TestSprintHistoryLoading:
     """Exercise sprint_history_parser.py loading and validation."""
 
-    def _make_base_data(
-        self, *, history: Any
-    ) -> dict[str, Any]:
+    def _make_base_data(self, *, history: Any) -> dict[str, Any]:
         return {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T1", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T1",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {"history": history},
         }
 
@@ -792,7 +780,9 @@ class TestSprintHistoryLoading:
         ]
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(rows))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         result = load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
         loaded = result["sprint_planning"]["history"]
         assert isinstance(loaded, list)
@@ -811,7 +801,9 @@ class TestSprintHistoryLoading:
         }
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(payload))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         result = load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
         assert len(result["sprint_planning"]["history"]) == 1
 
@@ -819,7 +811,9 @@ class TestSprintHistoryLoading:
         """JSON object without 'sprints' key raises ValueError."""
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps({"data": []}))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match="'sprints'"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
@@ -827,7 +821,9 @@ class TestSprintHistoryLoading:
         """Non-dict items in JSON array raise ValueError."""
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(["not_a_dict"]))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match="object/mapping"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
@@ -839,7 +835,9 @@ class TestSprintHistoryLoading:
             "S1,20,3\n"
             "S2,18,1\n"
         )
-        data = self._make_base_data(history={"format": "csv", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "csv", "path": str(history_file)}
+        )
         result = load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
         assert len(result["sprint_planning"]["history"]) == 2
 
@@ -847,7 +845,9 @@ class TestSprintHistoryLoading:
         """Empty CSV file raises ValueError about header."""
         history_file = tmp_path / "history.csv"
         history_file.write_text("")
-        data = self._make_base_data(history={"format": "csv", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "csv", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match="header"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
@@ -856,7 +856,9 @@ class TestSprintHistoryLoading:
         rows = [{"sprintUniqueID": "S1", "committed_StoryPoints": 20}]
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(rows))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match="completed_StoryPoints"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
@@ -874,7 +876,9 @@ class TestSprintHistoryLoading:
         ]
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(rows))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         result = load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
         row = result["sprint_planning"]["history"][0]
         assert row["sprint_id"] == "S1"
@@ -891,7 +895,9 @@ class TestSprintHistoryLoading:
         ]
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(rows))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match="numeric"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
@@ -906,27 +912,37 @@ class TestSprintHistoryLoading:
         ]
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(rows))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match=">= 0"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
     def test_duplicate_sprint_ids_rejected(self, tmp_path: Path) -> None:
         """Duplicate sprint IDs raise ValueError."""
         rows = [
-            {"sprint_id": "S1", "completed_story_points": 20, "spillover_story_points": 1},
-            {"sprint_id": "S1", "completed_story_points": 18, "spillover_story_points": 2},
+            {
+                "sprint_id": "S1",
+                "completed_story_points": 20,
+                "spillover_story_points": 1,
+            },
+            {
+                "sprint_id": "S1",
+                "completed_story_points": 18,
+                "spillover_story_points": 2,
+            },
         ]
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(rows))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match="duplicate"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
     def test_unsupported_format_rejected(self, tmp_path: Path) -> None:
         """Unsupported format name raises ValueError."""
-        data = self._make_base_data(
-            history={"format": "xml", "path": "/dev/null"}
-        )
+        data = self._make_base_data(history={"format": "xml", "path": "/dev/null"})
         with pytest.raises(ValueError, match="xml"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
@@ -957,7 +973,9 @@ class TestSprintHistoryLoading:
         ]
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps(rows))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         result = load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
         row = result["sprint_planning"]["history"][0]
         assert row["completed_story_points"] == pytest.approx(20.0)
@@ -966,7 +984,9 @@ class TestSprintHistoryLoading:
         """Object format where 'sprints' is not an array raises ValueError."""
         history_file = tmp_path / "history.json"
         history_file.write_text(json.dumps({"sprints": "not_a_list"}))
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match="array"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
@@ -974,7 +994,9 @@ class TestSprintHistoryLoading:
         """JSON that is neither array nor object raises ValueError."""
         history_file = tmp_path / "history.json"
         history_file.write_text('"just_a_string"')
-        data = self._make_base_data(history={"format": "json", "path": str(history_file)})
+        data = self._make_base_data(
+            history={"format": "json", "path": str(history_file)}
+        )
         with pytest.raises(ValueError, match="array of rows or an object"):
             load_external_sprint_history(data, file_path=tmp_path / "project.yaml")
 
@@ -994,8 +1016,18 @@ class TestErrorReportingCircularDeps:
         data = {
             "project": {"name": "Test"},
             "tasks": [
-                {"id": "a", "name": "A", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": ["b"]},
-                {"id": "b", "name": "B", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": ["a"]},
+                {
+                    "id": "a",
+                    "name": "A",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": ["b"],
+                },
+                {
+                    "id": "b",
+                    "name": "B",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": ["a"],
+                },
             ],
         }
         issues = validate_project_payload(data)
@@ -1009,9 +1041,24 @@ class TestErrorReportingCircularDeps:
         data = {
             "project": {"name": "Test"},
             "tasks": [
-                {"id": "a", "name": "A", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": ["c"]},
-                {"id": "b", "name": "B", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": ["a"]},
-                {"id": "c", "name": "C", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": ["b"]},
+                {
+                    "id": "a",
+                    "name": "A",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": ["c"],
+                },
+                {
+                    "id": "b",
+                    "name": "B",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": ["a"],
+                },
+                {
+                    "id": "c",
+                    "name": "C",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": ["b"],
+                },
             ],
         }
         issues = validate_project_payload(data)
@@ -1025,9 +1072,24 @@ class TestErrorReportingCircularDeps:
         data = {
             "project": {"name": "Test"},
             "tasks": [
-                {"id": "a", "name": "A", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": []},
-                {"id": "b", "name": "B", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": ["a"]},
-                {"id": "c", "name": "C", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": ["a", "b"]},
+                {
+                    "id": "a",
+                    "name": "A",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": [],
+                },
+                {
+                    "id": "b",
+                    "name": "B",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": ["a"],
+                },
+                {
+                    "id": "c",
+                    "name": "C",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": ["a", "b"],
+                },
             ],
         }
         issues = validate_project_payload(data)
@@ -1043,7 +1105,13 @@ class TestErrorReportingFutureSprintOverrides:
 
         data = {
             "project": {"name": "Test", "start_date": "2026-01-05"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "sprint_length_weeks": 2,
                 "history": [{"sprint_id": "S1", "completed_story_points": 10}],
@@ -1053,7 +1121,11 @@ class TestErrorReportingFutureSprintOverrides:
             },
         }
         issues = validate_project_payload(data)
-        sp_issues = [i for i in issues if "sprint_number" in i.message.lower() and "positive" in i.message.lower()]
+        sp_issues = [
+            i
+            for i in issues
+            if "sprint_number" in i.message.lower() and "positive" in i.message.lower()
+        ]
         assert len(sp_issues) >= 1
 
     def test_missing_locator_rejected(self) -> None:
@@ -1062,13 +1134,17 @@ class TestErrorReportingFutureSprintOverrides:
 
         data = {
             "project": {"name": "Test", "start_date": "2026-01-05"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "sprint_length_weeks": 2,
                 "history": [{"sprint_id": "S1", "completed_story_points": 10}],
-                "future_sprint_overrides": [
-                    {"holiday_factor": 0.8}
-                ],
+                "future_sprint_overrides": [{"holiday_factor": 0.8}],
             },
         }
         issues = validate_project_payload(data)
@@ -1081,13 +1157,17 @@ class TestErrorReportingFutureSprintOverrides:
 
         data = {
             "project": {"name": "Test", "start_date": "2026-01-05"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "sprint_length_weeks": 2,
                 "history": [{"sprint_id": "S1", "completed_story_points": 10}],
-                "future_sprint_overrides": [
-                    {"sprint_number": 5, "holiday_factor": 0}
-                ],
+                "future_sprint_overrides": [{"sprint_number": 5, "holiday_factor": 0}],
             },
         }
         issues = validate_project_payload(data)
@@ -1100,7 +1180,13 @@ class TestErrorReportingFutureSprintOverrides:
 
         data = {
             "project": {"name": "Test", "start_date": "2026-01-05"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "sprint_length_weeks": 2,
                 "history": [{"sprint_id": "S1", "completed_story_points": 10}],
@@ -1119,7 +1205,13 @@ class TestErrorReportingFutureSprintOverrides:
 
         data = {
             "project": {"name": "Test", "start_date": "2026-01-05"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "sprint_length_weeks": 2,
                 "history": [{"sprint_id": "S1", "completed_story_points": 10}],
@@ -1140,8 +1232,18 @@ class TestErrorReportingDependencySuggestion:
         data = {
             "project": {"name": "Test"},
             "tasks": [
-                {"id": "task_001", "name": "A", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": []},
-                {"id": "task_002", "name": "B", "estimate": {"low": 1, "expected": 2, "high": 3}, "dependencies": ["task_01"]},
+                {
+                    "id": "task_001",
+                    "name": "A",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": [],
+                },
+                {
+                    "id": "task_002",
+                    "name": "B",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                    "dependencies": ["task_01"],
+                },
             ],
         }
         issues = validate_project_payload(data)
@@ -1159,7 +1261,9 @@ class TestErrorReportingDependencySuggestion:
 class TestExchangeRateCacheEdgeCases:
     """Test FX provider disk cache edge cases."""
 
-    def test_stale_cache_not_loaded(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_stale_cache_not_loaded(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Cache entries older than TTL are skipped."""
         import mcprojsim.exchange_rates as fx_mod
         from mcprojsim.exchange_rates import ExchangeRateProvider, CACHE_TTL_HOURS
@@ -1175,18 +1279,18 @@ class TestExchangeRateCacheEdgeCases:
         stale_time = (
             datetime.now(timezone.utc) - timedelta(hours=CACHE_TTL_HOURS + 1)
         ).isoformat()
-        cache_data = {
-            "EUR": {
-                "SEK": {"rate": 10.5, "fetched_at": stale_time}
-            }
-        }
+        cache_data = {"EUR": {"SEK": {"rate": 10.5, "fetched_at": stale_time}}}
         cache_file.write_text(json.dumps(cache_data))
 
         provider = ExchangeRateProvider(base_currency="EUR")
         # Stale entry should not be loaded into memory
-        assert provider.get_adjusted_rate("SEK") is None or True  # may fallback to fetch
+        assert (
+            provider.get_adjusted_rate("SEK") is None or True
+        )  # may fallback to fetch
 
-    def test_corrupt_cache_silently_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_corrupt_cache_silently_ignored(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Corrupt cache file doesn't raise — silently ignored."""
         import mcprojsim.exchange_rates as fx_mod
         from mcprojsim.exchange_rates import ExchangeRateProvider
@@ -1202,7 +1306,9 @@ class TestExchangeRateCacheEdgeCases:
         provider = ExchangeRateProvider(base_currency="EUR")
         assert provider is not None
 
-    def test_network_failure_returns_none(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_network_failure_returns_none(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Network error returns None for rate, not an exception."""
         import mcprojsim.exchange_rates as fx_mod
         from mcprojsim.exchange_rates import ExchangeRateProvider
@@ -1222,7 +1328,9 @@ class TestExchangeRateCacheEdgeCases:
         rate = provider.get_adjusted_rate("SEK")
         assert rate is None
 
-    def test_requested_targets_property(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_requested_targets_property(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """requested_targets returns ordered list after fetch_rates."""
         import mcprojsim.exchange_rates as fx_mod
         from mcprojsim.exchange_rates import ExchangeRateProvider
@@ -1266,7 +1374,9 @@ class TestProjectModelValidation:
         project = Project(
             project=ProjectMetadata(name="Test", start_date="2026-01-01"),
             tasks=[
-                Task(id="t1", name="T1", estimate=TaskEstimate(low=1, expected=2, high=3))
+                Task(
+                    id="t1", name="T1", estimate=TaskEstimate(low=1, expected=2, high=3)
+                )
             ],
             resources=[
                 ResourceSpec(id="r1", name="Alice", calendar="default"),

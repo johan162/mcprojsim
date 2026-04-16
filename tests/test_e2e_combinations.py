@@ -35,7 +35,6 @@ from mcprojsim.models.project import (
     Project,
     Risk,
     STANDARD_HOURS_PER_DAY,
-    STANDARD_HOURS_PER_DAY,
     Task,
     convert_to_hours,
 )
@@ -526,11 +525,6 @@ def _resolve_estimate_range(
     hi = est.low + math.exp(mu + LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER * sigma)
     return (
         convert_to_hours(lo, unit, STANDARD_HOURS_PER_DAY),
-        convert_to_hours(hi, unit, STANDARD_HOURS_PER_DAY
-    lo = est.low
-    hi = est.low + math.exp(mu + LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER * sigma)
-    return (
-        convert_to_hours(lo, unit, STANDARD_HOURS_PER_DAY),
         convert_to_hours(hi, unit, STANDARD_HOURS_PER_DAY),
     )
 
@@ -553,14 +547,21 @@ def _uncertainty_multiplier(task: Task, config: Config) -> float:
     return multiplier
 
 
-def _max_risk_impact(
+# def __max_risk_impact(
+#     risks: list[Risk],
+#     base_duration_hours: float,
+#     hours_per_day: float,
+# ) -> float:
+#     """Worst-case (all risks fire) cumulative impact in hours."""
+#     total = 0.0
+#     for risk in risks:
+#         total += risk.get_impact_value(base_duration_hours, hours_per_day)
+#     return total
 
-    Uses STANDARD_HOURS_PER_DAY for absolute day/week unit conversion to
-    mirror the engine fix.
-    """
-    total = 0.0
-    for risk in risks:
-        total += risk.get_impact_value(base_duration_hours, STANDARD_HOURS_PER_DAY
+
+def _max_risk_impact(
+    risks: list[Risk],
+    base_duration_hours: float,
 ) -> float:
     """Worst-case (all risks fire) cumulative impact in hours.
 
@@ -604,7 +605,7 @@ def compute_project_bounds(
         task_hi = hi * uf
 
         # Worst case: all task-level risks fire on top of max base duration
-        task_hi += _max_risk_impact(task.risks, task_hi, hours_per_day)
+        task_hi += _max_risk_impact(task.risks, task_hi)
 
         task_min_hours[task.id] = task_lo
         task_max_hours[task.id] = task_hi
@@ -618,7 +619,7 @@ def compute_project_bounds(
     project_hi = max(info["end"] for info in schedule_hi.values())
 
     # Project-level risks (worst case: all fire on top of max duration)
-    project_hi += _max_risk_impact(project.project_risks, project_hi, hours_per_day)
+    project_hi += _max_risk_impact(project.project_risks, project_hi)
 
     return project_lo, project_hi
 
@@ -863,7 +864,12 @@ class TestUnitConversionConsistency:
                     {
                         "id": "t1",
                         "name": "Task",
-                        "estimate": {"low": 2, "expected": 5, "high": 10, "unit": "days"},
+                        "estimate": {
+                            "low": 2,
+                            "expected": 5,
+                            "high": 10,
+                            "unit": "days",
+                        },
                     }
                 ],
             }

@@ -16,7 +16,6 @@ from mcprojsim.config import Config, _build_default_config_data
 from mcprojsim.models.simulation import SimulationResults
 from mcprojsim.nl_parser import NLProjectParser
 
-
 # =====================================================================
 # CLI — validate command
 # =====================================================================
@@ -34,7 +33,11 @@ class TestCLIValidate:
                 {
                     "project": {"name": "Valid", "start_date": "2026-01-01"},
                     "tasks": [
-                        {"id": "t1", "name": "T1", "estimate": {"low": 1, "expected": 2, "high": 3}},
+                        {
+                            "id": "t1",
+                            "name": "T1",
+                            "estimate": {"low": 1, "expected": 2, "high": 3},
+                        },
                     ],
                 }
             )
@@ -60,7 +63,11 @@ class TestCLIValidate:
                 {
                     "project": {"name": "V", "start_date": "2026-01-01"},
                     "tasks": [
-                        {"id": "t1", "name": "T1", "estimate": {"low": 1, "expected": 2, "high": 3}},
+                        {
+                            "id": "t1",
+                            "name": "T1",
+                            "estimate": {"low": 1, "expected": 2, "high": 3},
+                        },
                     ],
                 }
             )
@@ -92,16 +99,22 @@ class TestCLIConfig:
         """Config command loads file when provided."""
         runner = CliRunner()
         config_file = tmp_path / "config.yaml"
-        config_file.write_text(yaml.safe_dump({"simulation": {"default_iterations": 500}}))
+        config_file.write_text(
+            yaml.safe_dump({"simulation": {"default_iterations": 500}})
+        )
         result = runner.invoke(cli, ["config", "-c", str(config_file)])
         assert result.exit_code == 0
         assert "Configuration from" in result.output
 
-    def test_config_generate(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_config_generate(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Config --generate creates a config file."""
         runner = CliRunner()
         gen_path = tmp_path / ".mcprojsim" / "config.yaml"
-        monkeypatch.setattr("mcprojsim.cli._get_generated_default_config_path", lambda: gen_path)
+        monkeypatch.setattr(
+            "mcprojsim.cli._get_generated_default_config_path", lambda: gen_path
+        )
         result = runner.invoke(cli, ["config", "--generate"])
         assert result.exit_code == 0
         assert gen_path.exists()
@@ -149,9 +162,7 @@ class TestCLIGenerate:
         input_file.write_text(
             "Project: Valid Gen\nTask 1: Build\n- Estimate: 3/5/10 days\n"
         )
-        result = runner.invoke(
-            cli, ["generate", str(input_file), "--validate-only"]
-        )
+        result = runner.invoke(cli, ["generate", str(input_file), "--validate-only"])
         assert result.exit_code == 0
         assert "Valid" in result.output or "valid" in result.output.lower()
 
@@ -161,9 +172,7 @@ class TestCLIGenerate:
         input_file = tmp_path / "input.txt"
         # No estimates → should flag missing estimate
         input_file.write_text("Task 1: Build\n")
-        result = runner.invoke(
-            cli, ["generate", str(input_file), "--validate-only"]
-        )
+        result = runner.invoke(cli, ["generate", str(input_file), "--validate-only"])
         assert result.exit_code == 0
         assert "issue" in result.output.lower() or "⚠" in result.output
 
@@ -184,7 +193,11 @@ class TestCLISimulate:
                 {
                     "project": {"name": "Sim Test", "start_date": "2026-01-01"},
                     "tasks": [
-                        {"id": "t1", "name": "T1", "estimate": {"low": 1, "expected": 2, "high": 3}},
+                        {
+                            "id": "t1",
+                            "name": "T1",
+                            "estimate": {"low": 1, "expected": 2, "high": 3},
+                        },
                     ],
                 }
             )
@@ -199,9 +212,17 @@ class TestCLISimulate:
         result = runner.invoke(
             cli,
             [
-                "simulate", str(pf), "--quiet",
-                "--iterations", "50", "--seed", "42",
-                "--output-format", "json", "-o", str(out),
+                "simulate",
+                str(pf),
+                "--quiet",
+                "--iterations",
+                "50",
+                "--seed",
+                "42",
+                "--output-format",
+                "json",
+                "-o",
+                str(out),
             ],
         )
         assert result.exit_code == 0
@@ -218,9 +239,17 @@ class TestCLISimulate:
         result = runner.invoke(
             cli,
             [
-                "simulate", str(pf), "--quiet",
-                "--iterations", "50", "--seed", "42",
-                "--output-format", "csv", "-o", str(out),
+                "simulate",
+                str(pf),
+                "--quiet",
+                "--iterations",
+                "50",
+                "--seed",
+                "42",
+                "--output-format",
+                "csv",
+                "-o",
+                str(out),
             ],
         )
         assert result.exit_code == 0
@@ -235,9 +264,17 @@ class TestCLISimulate:
         result = runner.invoke(
             cli,
             [
-                "simulate", str(pf), "--quiet",
-                "--iterations", "50", "--seed", "42",
-                "--output-format", "html", "-o", str(out),
+                "simulate",
+                str(pf),
+                "--quiet",
+                "--iterations",
+                "50",
+                "--seed",
+                "42",
+                "--output-format",
+                "html",
+                "-o",
+                str(out),
             ],
         )
         assert result.exit_code == 0
@@ -251,8 +288,13 @@ class TestCLISimulate:
         result = runner.invoke(
             cli,
             [
-                "simulate", str(pf), "--quiet",
-                "--iterations", "50", "--seed", "42",
+                "simulate",
+                str(pf),
+                "--quiet",
+                "--iterations",
+                "50",
+                "--seed",
+                "42",
             ],
         )
         assert result.exit_code == 0
@@ -266,8 +308,14 @@ class TestCLISimulate:
         result = runner.invoke(
             cli,
             [
-                "simulate", str(pf), "--quiet", "--table",
-                "--iterations", "50", "--seed", "42",
+                "simulate",
+                str(pf),
+                "--quiet",
+                "--table",
+                "--iterations",
+                "50",
+                "--seed",
+                "42",
             ],
         )
         assert result.exit_code == 0
@@ -277,13 +325,21 @@ class TestCLISimulate:
         runner = CliRunner()
         pf = self._make_project_file(tmp_path)
         config_file = tmp_path / "config.yaml"
-        config_file.write_text(yaml.safe_dump({"simulation": {"default_iterations": 10}}))
+        config_file.write_text(
+            yaml.safe_dump({"simulation": {"default_iterations": 10}})
+        )
         result = runner.invoke(
             cli,
             [
-                "simulate", str(pf), "--quiet",
-                "--config", str(config_file),
-                "--iterations", "20", "--seed", "1",
+                "simulate",
+                str(pf),
+                "--quiet",
+                "--config",
+                str(config_file),
+                "--iterations",
+                "20",
+                "--seed",
+                "1",
             ],
         )
         assert result.exit_code == 0
@@ -300,8 +356,13 @@ class TestCLISimulate:
         result = runner.invoke(
             cli,
             [
-                "simulate", str(toml_file), "--quiet",
-                "--iterations", "50", "--seed", "42",
+                "simulate",
+                str(toml_file),
+                "--quiet",
+                "--iterations",
+                "50",
+                "--seed",
+                "42",
             ],
         )
         assert result.exit_code == 0
@@ -320,7 +381,8 @@ class TestCLISimulate:
                     },
                     "tasks": [
                         {
-                            "id": "t1", "name": "T1",
+                            "id": "t1",
+                            "name": "T1",
                             "estimate": {"low": 8, "expected": 16, "high": 32},
                         },
                     ],
@@ -330,8 +392,13 @@ class TestCLISimulate:
         result = runner.invoke(
             cli,
             [
-                "simulate", str(project_file), "--quiet",
-                "--iterations", "50", "--seed", "42",
+                "simulate",
+                str(project_file),
+                "--quiet",
+                "--iterations",
+                "50",
+                "--seed",
+                "42",
             ],
         )
         assert result.exit_code == 0
@@ -363,32 +430,21 @@ class TestNLParserYAMLResourceGen:
 
     def test_yaml_task_max_resources(self) -> None:
         """Task with max_resources appears in YAML."""
-        text = (
-            "Task 1: Build\n"
-            "- Estimate: 5/10/20 days\n"
-            "- Max Resources: 3\n"
-        )
+        text = "Task 1: Build\n" "- Estimate: 5/10/20 days\n" "- Max Resources: 3\n"
         parser = NLProjectParser()
         yaml_str = parser.parse_and_generate(text)
         assert "max_resources:" in yaml_str
 
     def test_yaml_task_min_experience(self) -> None:
         """Task with min_experience_level appears in YAML."""
-        text = (
-            "Task 1: Build\n"
-            "- Estimate: 5/10/20 days\n"
-            "- Min Experience: 2\n"
-        )
+        text = "Task 1: Build\n" "- Estimate: 5/10/20 days\n" "- Min Experience: 2\n"
         parser = NLProjectParser()
         yaml_str = parser.parse_and_generate(text)
         assert "min_experience_level:" in yaml_str
 
     def test_yaml_story_points(self) -> None:
         """Task with story points appears in YAML."""
-        text = (
-            "Task 1: Build\n"
-            "- Story Points: 8\n"
-        )
+        text = "Task 1: Build\n" "- Story Points: 8\n"
         parser = NLProjectParser()
         yaml_str = parser.parse_and_generate(text)
         assert "story_points:" in yaml_str
@@ -451,7 +507,9 @@ class TestNLParserResourceBullets:
         parser = NLProjectParser()
         project = parser.parse(text)
         assert len(project.resources) == 1
-        assert project.resources[0].sickness_prob == pytest.approx(5.0)  # stored as percentage
+        assert project.resources[0].sickness_prob == pytest.approx(
+            5.0
+        )  # stored as percentage
 
     def test_resource_productivity(self) -> None:
         """Resource with productivity level is parsed."""
@@ -472,15 +530,16 @@ class TestNLParserApproximateEstimates:
 
     def test_about_n_days(self) -> None:
         """'about 5 days' produces triangular estimate."""
-        text = (
-            "Task 1: Work\n"
-            "- Estimate: about 5 days\n"
-        )
+        text = "Task 1: Work\n" "- Estimate: about 5 days\n"
         parser = NLProjectParser()
         project = parser.parse(text)
         assert len(project.tasks) == 1
         task = project.tasks[0]
-        assert task.low_estimate is not None or task.expected_estimate is not None or task.t_shirt_size is not None
+        assert (
+            task.low_estimate is not None
+            or task.expected_estimate is not None
+            or task.t_shirt_size is not None
+        )
 
 
 # =====================================================================
@@ -497,7 +556,13 @@ class TestErrorReportingSprintUnitMixing:
 
         data = {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "history": [
                     {
@@ -518,7 +583,13 @@ class TestErrorReportingSprintUnitMixing:
 
         data = {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "history": [
                     {"sprint_id": "S1", "spillover_story_points": 2},
@@ -535,7 +606,13 @@ class TestErrorReportingSprintUnitMixing:
 
         data = {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "history": [
                     {
@@ -556,7 +633,13 @@ class TestErrorReportingSprintUnitMixing:
 
         data = {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "history": [
                     {
@@ -577,7 +660,13 @@ class TestErrorReportingSprintUnitMixing:
 
         data = {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "capacity_mode": "story_points",
                 "history": [
@@ -595,7 +684,13 @@ class TestErrorReportingSprintUnitMixing:
 
         data = {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "capacity_mode": "tasks",
                 "history": [
@@ -621,7 +716,13 @@ class TestErrorReportingSpilloverBrackets:
 
         data = {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "spillover": {
                     "size_brackets": [
@@ -632,7 +733,13 @@ class TestErrorReportingSpilloverBrackets:
             },
         }
         issues = validate_project_payload(data)
-        bracket_issues = [i for i in issues if "monotonic" in i.message.lower() or "order" in i.message.lower() or "bracket" in i.message.lower()]
+        bracket_issues = [
+            i
+            for i in issues
+            if "monotonic" in i.message.lower()
+            or "order" in i.message.lower()
+            or "bracket" in i.message.lower()
+        ]
         assert len(bracket_issues) >= 1
 
     def test_valid_monotonic_brackets_accepted(self) -> None:
@@ -640,7 +747,13 @@ class TestErrorReportingSpilloverBrackets:
 
         data = {
             "project": {"name": "Test"},
-            "tasks": [{"id": "t1", "name": "T", "estimate": {"low": 1, "expected": 2, "high": 3}}],
+            "tasks": [
+                {
+                    "id": "t1",
+                    "name": "T",
+                    "estimate": {"low": 1, "expected": 2, "high": 3},
+                }
+            ],
             "sprint_planning": {
                 "spillover": {
                     "size_brackets": [
@@ -764,7 +877,10 @@ class TestHTMLExporterCostVisualization:
             cost_percentiles={50: 2000.0, 80: 3000.0, 90: 3500.0, 95: 3800.0},
             cost_mean=float(np.mean(costs)),
             cost_std_dev=float(np.std(costs)),
-            cost_statistics={"mean": float(np.mean(costs)), "median": float(np.median(costs))},
+            cost_statistics={
+                "mean": float(np.mean(costs)),
+                "median": float(np.median(costs)),
+            },
             task_costs={"t1": costs},
             cost_sensitivity={"t1": 0.9},
             duration_cost_correlation=0.85,
@@ -945,14 +1061,27 @@ class TestNLParserToYAMLDirect:
     def test_yaml_resources_with_sickness_and_absence(self) -> None:
         """Resources with sickness_prob and planned_absence emit all fields."""
         from mcprojsim.nl_parser import (
-            NLProjectParser, ParsedProject, ParsedTask, ParsedResource,
+            NLProjectParser,
+            ParsedProject,
+            ParsedTask,
+            ParsedResource,
         )
+
         project = ParsedProject(
             name="ResTest",
-            tasks=[ParsedTask(number=1, name="T1", low_estimate=1, expected_estimate=2, high_estimate=3)],
+            tasks=[
+                ParsedTask(
+                    number=1,
+                    name="T1",
+                    low_estimate=1,
+                    expected_estimate=2,
+                    high_estimate=3,
+                )
+            ],
             resources=[
                 ParsedResource(
-                    number=1, name="Alice",
+                    number=1,
+                    name="Alice",
                     experience_level=4,
                     productivity_level=0.9,
                     sickness_prob=5.0,
@@ -975,11 +1104,23 @@ class TestNLParserToYAMLDirect:
     def test_yaml_calendars_with_holidays(self) -> None:
         """Calendars with holidays appear in YAML output."""
         from mcprojsim.nl_parser import (
-            NLProjectParser, ParsedProject, ParsedTask, ParsedCalendar,
+            NLProjectParser,
+            ParsedProject,
+            ParsedTask,
+            ParsedCalendar,
         )
+
         project = ParsedProject(
             name="CalTest",
-            tasks=[ParsedTask(number=1, name="T1", low_estimate=1, expected_estimate=2, high_estimate=3)],
+            tasks=[
+                ParsedTask(
+                    number=1,
+                    name="T1",
+                    low_estimate=1,
+                    expected_estimate=2,
+                    high_estimate=3,
+                )
+            ],
             calendars=[
                 ParsedCalendar(
                     id="team_cal",
@@ -1000,12 +1141,24 @@ class TestNLParserToYAMLDirect:
     def test_yaml_sprint_planning_full(self) -> None:
         """Sprint planning with history, sickness, and velocity model."""
         from mcprojsim.nl_parser import (
-            NLProjectParser, ParsedProject, ParsedTask,
-            ParsedSprintPlanning, ParsedSprintHistoryEntry,
+            NLProjectParser,
+            ParsedProject,
+            ParsedTask,
+            ParsedSprintPlanning,
+            ParsedSprintHistoryEntry,
         )
+
         project = ParsedProject(
             name="SprintTest",
-            tasks=[ParsedTask(number=1, name="T1", low_estimate=1, expected_estimate=2, high_estimate=3)],
+            tasks=[
+                ParsedTask(
+                    number=1,
+                    name="T1",
+                    low_estimate=1,
+                    expected_estimate=2,
+                    high_estimate=3,
+                )
+            ],
             sprint_planning=ParsedSprintPlanning(
                 enabled=True,
                 sprint_length_weeks=2,
@@ -1052,12 +1205,24 @@ class TestNLParserToYAMLDirect:
     def test_yaml_sprint_with_future_overrides(self) -> None:
         """Sprint planning with future overrides produces YAML."""
         from mcprojsim.nl_parser import (
-            NLProjectParser, ParsedProject, ParsedTask,
-            ParsedSprintPlanning, ParsedFutureSprintOverride,
+            NLProjectParser,
+            ParsedProject,
+            ParsedTask,
+            ParsedSprintPlanning,
+            ParsedFutureSprintOverride,
         )
+
         project = ParsedProject(
             name="OverrideTest",
-            tasks=[ParsedTask(number=1, name="T1", low_estimate=1, expected_estimate=2, high_estimate=3)],
+            tasks=[
+                ParsedTask(
+                    number=1,
+                    name="T1",
+                    low_estimate=1,
+                    expected_estimate=2,
+                    high_estimate=3,
+                )
+            ],
             sprint_planning=ParsedSprintPlanning(
                 enabled=True,
                 sprint_length_weeks=2,
@@ -1088,12 +1253,24 @@ class TestNLParserToYAMLDirect:
     def test_yaml_sprint_tasks_mode_history(self) -> None:
         """Sprint planning with task-based history entries."""
         from mcprojsim.nl_parser import (
-            NLProjectParser, ParsedProject, ParsedTask,
-            ParsedSprintPlanning, ParsedSprintHistoryEntry,
+            NLProjectParser,
+            ParsedProject,
+            ParsedTask,
+            ParsedSprintPlanning,
+            ParsedSprintHistoryEntry,
         )
+
         project = ParsedProject(
             name="TaskMode",
-            tasks=[ParsedTask(number=1, name="T1", low_estimate=1, expected_estimate=2, high_estimate=3)],
+            tasks=[
+                ParsedTask(
+                    number=1,
+                    name="T1",
+                    low_estimate=1,
+                    expected_estimate=2,
+                    high_estimate=3,
+                )
+            ],
             sprint_planning=ParsedSprintPlanning(
                 enabled=True,
                 sprint_length_weeks=2,
@@ -1119,11 +1296,23 @@ class TestNLParserToYAMLDirect:
     def test_yaml_project_level_risks(self) -> None:
         """Project-level risks appear in YAML output."""
         from mcprojsim.nl_parser import (
-            NLProjectParser, ParsedProject, ParsedTask, ParsedRisk,
+            NLProjectParser,
+            ParsedProject,
+            ParsedTask,
+            ParsedRisk,
         )
+
         project = ParsedProject(
             name="RiskTest",
-            tasks=[ParsedTask(number=1, name="T1", low_estimate=1, expected_estimate=2, high_estimate=3)],
+            tasks=[
+                ParsedTask(
+                    number=1,
+                    name="T1",
+                    low_estimate=1,
+                    expected_estimate=2,
+                    high_estimate=3,
+                )
+            ],
             project_risks=[
                 ParsedRisk(
                     name="Market risk",
@@ -1149,11 +1338,22 @@ class TestNLParserToYAMLDirect:
     def test_yaml_project_cost_metadata(self) -> None:
         """Project cost metadata fields appear in YAML output."""
         from mcprojsim.nl_parser import (
-            NLProjectParser, ParsedProject, ParsedTask,
+            NLProjectParser,
+            ParsedProject,
+            ParsedTask,
         )
+
         project = ParsedProject(
             name="CostTest",
-            tasks=[ParsedTask(number=1, name="T1", low_estimate=1, expected_estimate=2, high_estimate=3)],
+            tasks=[
+                ParsedTask(
+                    number=1,
+                    name="T1",
+                    low_estimate=1,
+                    expected_estimate=2,
+                    high_estimate=3,
+                )
+            ],
             default_hourly_rate=120.0,
             overhead_rate=0.15,
             currency="EUR",
@@ -1183,12 +1383,14 @@ class TestCLISimulateWithSprints:
                     "project": {"name": "Sprint CLI", "start_date": "2026-01-05"},
                     "tasks": [
                         {
-                            "id": "t1", "name": "T1",
+                            "id": "t1",
+                            "name": "T1",
                             "estimate": {"low": 8, "expected": 16, "high": 32},
                             "planning_story_points": 5,
                         },
                         {
-                            "id": "t2", "name": "T2",
+                            "id": "t2",
+                            "name": "T2",
                             "estimate": {"low": 16, "expected": 32, "high": 64},
                             "planning_story_points": 8,
                         },
@@ -1216,8 +1418,14 @@ class TestCLISimulateWithSprints:
         result = runner.invoke(
             cli,
             [
-                "simulate", str(project_file), "--quiet", "--table",
-                "--iterations", "50", "--seed", "42",
+                "simulate",
+                str(project_file),
+                "--quiet",
+                "--table",
+                "--iterations",
+                "50",
+                "--seed",
+                "42",
             ],
         )
         assert result.exit_code == 0
@@ -1432,7 +1640,9 @@ class TestProjectModelEdgeCases:
         from mcprojsim.models.project import Risk
 
         risk = Risk(
-            id="r1", name="R1", probability=0.2,
+            id="r1",
+            name="R1",
+            probability=0.2,
             impact={"type": "absolute", "value": 5.0, "unit": "days"},
         )
         assert hasattr(risk.impact, "type")
@@ -1447,13 +1657,23 @@ class TestProjectModelEdgeCases:
     def test_duplicate_calendar_ids_rejected(self) -> None:
         """Duplicate calendar IDs raise ValueError."""
         from mcprojsim.models.project import (
-            Project, ProjectMetadata, Task, TaskEstimate, CalendarSpec,
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
+            CalendarSpec,
         )
 
         with pytest.raises(ValueError, match="unique"):
             Project(
                 project=ProjectMetadata(name="Test", start_date="2026-01-01"),
-                tasks=[Task(id="t1", name="T", estimate=TaskEstimate(low=1, expected=2, high=3))],
+                tasks=[
+                    Task(
+                        id="t1",
+                        name="T",
+                        estimate=TaskEstimate(low=1, expected=2, high=3),
+                    )
+                ],
                 calendars=[
                     CalendarSpec(id="cal1"),
                     CalendarSpec(id="cal1"),
@@ -1463,13 +1683,24 @@ class TestProjectModelEdgeCases:
     def test_resource_unknown_calendar_rejected(self) -> None:
         """Resource referencing non-existent calendar raises ValueError."""
         from mcprojsim.models.project import (
-            Project, ProjectMetadata, Task, TaskEstimate, ResourceSpec, CalendarSpec,
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
+            ResourceSpec,
+            CalendarSpec,
         )
 
         with pytest.raises(ValueError, match="unknown calendar"):
             Project(
                 project=ProjectMetadata(name="Test", start_date="2026-01-01"),
-                tasks=[Task(id="t1", name="T", estimate=TaskEstimate(low=1, expected=2, high=3))],
+                tasks=[
+                    Task(
+                        id="t1",
+                        name="T",
+                        estimate=TaskEstimate(low=1, expected=2, high=3),
+                    )
+                ],
                 resources=[ResourceSpec(id="r1", name="Alice", calendar="nonexistent")],
                 calendars=[CalendarSpec(id="team_cal")],
             )
@@ -1477,7 +1708,10 @@ class TestProjectModelEdgeCases:
     def test_task_references_unknown_resource_rejected(self) -> None:
         """Task referencing non-existent resource raises ValueError."""
         from mcprojsim.models.project import (
-            Project, ProjectMetadata, Task, TaskEstimate,
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
         )
 
         with pytest.raises(ValueError, match="unknown resource"):
@@ -1485,7 +1719,8 @@ class TestProjectModelEdgeCases:
                 project=ProjectMetadata(name="Test", start_date="2026-01-01"),
                 tasks=[
                     Task(
-                        id="t1", name="T",
+                        id="t1",
+                        name="T",
                         estimate=TaskEstimate(low=1, expected=2, high=3),
                         resources=["Alice"],
                     ),
@@ -1494,7 +1729,10 @@ class TestProjectModelEdgeCases:
 
     def test_spillover_non_monotonic_brackets_rejected(self) -> None:
         """Spillover brackets with non-ascending max_points rejected."""
-        from mcprojsim.models.project import SprintSpilloverSpec, SprintSpilloverBracketSpec
+        from mcprojsim.models.project import (
+            SprintSpilloverSpec,
+            SprintSpilloverBracketSpec,
+        )
 
         with pytest.raises(ValueError, match="ascending"):
             SprintSpilloverSpec(
@@ -1506,7 +1744,10 @@ class TestProjectModelEdgeCases:
 
     def test_spillover_unbounded_not_last_rejected(self) -> None:
         """Unbounded bracket not at end is rejected."""
-        from mcprojsim.models.project import SprintSpilloverSpec, SprintSpilloverBracketSpec
+        from mcprojsim.models.project import (
+            SprintSpilloverSpec,
+            SprintSpilloverBracketSpec,
+        )
 
         with pytest.raises(ValueError, match="unbounded.*last"):
             SprintSpilloverSpec(
@@ -1522,7 +1763,8 @@ class TestProjectModelEdgeCases:
 
         with pytest.raises(ValueError, match="non-empty"):
             ProjectMetadata(
-                name="Test", start_date="2026-01-01",
+                name="Test",
+                start_date="2026-01-01",
                 t_shirt_size_default_category="   ",
             )
 
@@ -1531,7 +1773,8 @@ class TestProjectModelEdgeCases:
         from mcprojsim.models.project import ProjectMetadata
 
         meta = ProjectMetadata(
-            name="Test", start_date="2026-01-01",
+            name="Test",
+            start_date="2026-01-01",
             t_shirt_size_default_category="Story",
         )
         assert meta.t_shirt_size_default_category == "story"
@@ -1541,7 +1784,8 @@ class TestProjectModelEdgeCases:
         from mcprojsim.models.project import ProjectMetadata
 
         meta = ProjectMetadata(
-            name="Test", start_date="2026-01-01",
+            name="Test",
+            start_date="2026-01-01",
             t_shirt_size_default_category="Feature",
         )
         assert meta.t_shirt_size_default_category == "feature"
@@ -1549,13 +1793,24 @@ class TestProjectModelEdgeCases:
     def test_team_size_auto_fill_resources(self) -> None:
         """Project with team_size > resource count auto-fills resources."""
         from mcprojsim.models.project import (
-            Project, ProjectMetadata, Task, TaskEstimate, ResourceSpec,
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
+            ResourceSpec,
         )
+
         project = Project(
             project=ProjectMetadata(
-                name="Test", start_date="2026-01-01", team_size=3,
+                name="Test",
+                start_date="2026-01-01",
+                team_size=3,
             ),
-            tasks=[Task(id="t1", name="T", estimate=TaskEstimate(low=1, expected=2, high=3))],
+            tasks=[
+                Task(
+                    id="t1", name="T", estimate=TaskEstimate(low=1, expected=2, high=3)
+                )
+            ],
             resources=[ResourceSpec(id="r1", name="Alice")],
         )
         assert len(project.resources) == 3
@@ -1563,13 +1818,24 @@ class TestProjectModelEdgeCases:
     def test_team_size_exact_no_fill(self) -> None:
         """team_size == resource count doesn't add extra resources."""
         from mcprojsim.models.project import (
-            Project, ProjectMetadata, Task, TaskEstimate, ResourceSpec,
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
+            ResourceSpec,
         )
+
         project = Project(
             project=ProjectMetadata(
-                name="Test", start_date="2026-01-01", team_size=1,
+                name="Test",
+                start_date="2026-01-01",
+                team_size=1,
             ),
-            tasks=[Task(id="t1", name="T", estimate=TaskEstimate(low=1, expected=2, high=3))],
+            tasks=[
+                Task(
+                    id="t1", name="T", estimate=TaskEstimate(low=1, expected=2, high=3)
+                )
+            ],
             resources=[ResourceSpec(id="r1", name="Alice")],
         )
         assert len(project.resources) == 1
@@ -1577,13 +1843,21 @@ class TestProjectModelEdgeCases:
     def test_get_task_by_id(self) -> None:
         """get_task_by_id returns the correct task."""
         from mcprojsim.models.project import (
-            Project, ProjectMetadata, Task, TaskEstimate,
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
         )
+
         project = Project(
             project=ProjectMetadata(name="Test", start_date="2026-01-01"),
             tasks=[
-                Task(id="t1", name="T1", estimate=TaskEstimate(low=1, expected=2, high=3)),
-                Task(id="t2", name="T2", estimate=TaskEstimate(low=2, expected=4, high=6)),
+                Task(
+                    id="t1", name="T1", estimate=TaskEstimate(low=1, expected=2, high=3)
+                ),
+                Task(
+                    id="t2", name="T2", estimate=TaskEstimate(low=2, expected=4, high=6)
+                ),
             ],
         )
         assert project.get_task_by_id("t2") is not None
@@ -1593,16 +1867,23 @@ class TestProjectModelEdgeCases:
     def test_uncertainty_factors_propagated_to_task_without_factors(self) -> None:
         """Project-level uncertainty_factors propagate to tasks with None factors."""
         from mcprojsim.models.project import (
-            Project, ProjectMetadata, Task, TaskEstimate, UncertaintyFactors,
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
+            UncertaintyFactors,
         )
+
         project = Project(
             project=ProjectMetadata(
-                name="Test", start_date="2026-01-01",
+                name="Test",
+                start_date="2026-01-01",
                 uncertainty_factors=UncertaintyFactors(team_experience="high"),
             ),
             tasks=[
                 Task(
-                    id="t1", name="T1",
+                    id="t1",
+                    name="T1",
                     estimate=TaskEstimate(low=1, expected=2, high=3),
                     uncertainty_factors=None,
                 ),
@@ -1614,11 +1895,17 @@ class TestProjectModelEdgeCases:
     def test_uncertainty_factors_task_overrides_project(self) -> None:
         """Task-level uncertainty_factors override project-level ones."""
         from mcprojsim.models.project import (
-            Project, ProjectMetadata, Task, TaskEstimate, UncertaintyFactors,
+            Project,
+            ProjectMetadata,
+            Task,
+            TaskEstimate,
+            UncertaintyFactors,
         )
+
         project = Project(
             project=ProjectMetadata(
-                name="Test", start_date="2026-01-01",
+                name="Test",
+                start_date="2026-01-01",
                 uncertainty_factors=UncertaintyFactors(
                     team_experience="high",
                     technical_complexity="high",
@@ -1626,7 +1913,8 @@ class TestProjectModelEdgeCases:
             ),
             tasks=[
                 Task(
-                    id="t1", name="T1",
+                    id="t1",
+                    name="T1",
                     estimate=TaskEstimate(low=1, expected=2, high=3),
                     uncertainty_factors=UncertaintyFactors(team_experience="low"),
                 ),
