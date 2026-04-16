@@ -7,14 +7,10 @@ and model validation corners.
 
 from __future__ import annotations
 
-import csv
 import json
-import math
-from datetime import date
-from io import StringIO
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -25,7 +21,6 @@ from mcprojsim.exporters.historic_base import build_historic_base
 from mcprojsim.models.project import (
     Project,
     ProjectMetadata,
-    Risk,
     ResourceSpec,
     SprintCapacityMode,
     SprintHistoryEntry,

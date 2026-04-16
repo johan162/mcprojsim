@@ -116,7 +116,10 @@ reportMissingParameterType = false
 reportUntypedFunctionDecorator = false
 reportUntypedBaseClass = false
 reportUnknownLambdaType = false
-exclude = ["tests"]
+executionEnvironments = [
+    { root = "tests", reportPrivateUsage = false, reportUnusedVariable = false, reportUnusedFunction = false, reportUnusedImport = false, reportMissingTypeArgument = false, reportArgumentType = false, reportOptionalOperand = false, reportOperatorIssue = false, reportAttributeAccessIssue = false, reportReturnType = false },
+    { root = "src" },
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
