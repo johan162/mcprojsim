@@ -98,7 +98,7 @@ mcprojsim-web --port 8080 --host 0.0.0.0   # team server
 Identical to the desktop design — the web surface does not change the UX contract.
 
 1. **One primary action per screen** — do not overwhelm with options.
-2. **Smart defaults** — pre-fill start date to today, default estimate unit to `days`, default uncertainty level to `medium`.
+2. **Smart defaults** — pre-fill start date to today, default estimate unit to `hours`, default uncertainty level to `medium`.
 3. **Inline validation** — show error state and helper text on bad values immediately; do not wait for a save action.
 4. **YAML preview is read-write** — an advanced user can edit YAML directly and the form reflects the change.
 5. **Section tabs are additive** — the user only needs the "Tasks" section to get a working project; every other section adds optional capability.
@@ -421,7 +421,7 @@ Clicking **+ Add Project Risk** or a row expands an inline form immediately belo
   │  Probability    ┌────┐ %                                         │
   │                 │ 15 │                                           │
   │                 └────┘                                           │
-  │  Impact Type    ○ Fixed hours  ● Percentage  ○ Absolute days     │
+  │  Impact Type    ○ Raw hours  ● Percentage  ○ Absolute            │
   │  Impact Value   ┌────┐ % of project duration                     │
   │                 │ 20 │                                           │
   │                 └────┘                                           │
@@ -445,11 +445,11 @@ Clicking **+ Add Project Risk** or a row expands an inline form immediately belo
 ║  ┌─────────────────────────────────────────────────────────┐
 ║  │  Factor                  Level                          │
 ║  │  ─────────────────────── ─────────────────────────────  │
-║  │  Team Experience          ○ VL  ○ L  ● M  ○ H  ○ VH     │
-║  │  Requirements Maturity    ○ VL  ○ L  ○ M  ● H  ○ VH     │
-║  │  Technical Complexity     ○ VL  ○ L  ● M  ○ H  ○ VH     │
+║  │  Team Experience          ○ Low  ● Medium  ○ High        │
+║  │  Requirements Maturity    ○ Low  ○ Medium  ● High        │
+║  │  Technical Complexity     ○ Low  ● Medium  ○ High        │
 ║  │  Team Distribution        ● Colocated  ○ Distributed    │
-║  │  Integration Complexity   ○ VL  ○ L  ● M  ○ H  ○ VH     │
+║  │  Integration Complexity   ○ Low  ● Medium  ○ High        │
 ║  └─────────────────────────────────────────────────────────┘
 ║
 ║  Combined multiplier: ~1.05×
@@ -695,7 +695,7 @@ A button **[✨ Describe project…]** in the toolbar opens a full-width text ar
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-After generation, the form and YAML preview populate normally. The user can review and edit before running a simulation. This calls `nl_parser.parse_text()` in-process — no LLM, no network call.
+After generation, the form and YAML preview populate normally. The user can review and edit before running a simulation. This calls `NLProjectParser().parse()` in-process — no LLM, no network call.
 
 ---
 
@@ -1149,7 +1149,7 @@ Convention: work items are numbered `W1-NN` (Phase 1 — MVP) and `W2-NN` (Phase
 3. `handle_upload(e: UploadEventArguments)`:
    a. Read file content from `e.content`.
    b. Detect format by extension.
-   c. Call `YAMLParser().parse_text(content)` or `TOMLParser().parse_text(content)`.
+   c. Call `YAMLParser().parse_file(path)` or `TOMLParser().parse_file(path)` (or `parse_dict()` on pre-loaded content).
    d. On success: set `state.project_dict = parsed.model_dump(...)`, call `populate_all_sections(state)` (repopulates every form widget), call `regenerate_yaml(state)`, close dialog.
    e. On error: `ui.notify(str(e), type='negative')` — dialog stays open.
 4. `populate_all_sections(state)` calls the `populate()` function of each section (project basics, task table, and later risks/cost/etc.).
@@ -1281,7 +1281,7 @@ Convention: work items are numbered `W1-NN` (Phase 1 — MVP) and `W2-NN` (Phase
 
 1. In `task_editor.py`, enable the "T-Shirt Size" and "Story Points" radio options.
 2. **T-Shirt mode**: show a `ui.radio` row: `XS S M L XL XXL`. Below it, a `ui.select` for category (populated from `Config.get_default()`). Hide the three-point numeric fields.
-3. **Story Points mode**: show a single `ui.select` or `ui.number` for the point value (Fibonacci choices: 1, 2, 3, 5, 8, 13, 21, 40, 100). Hide the three-point fields.
+3. **Story Points mode**: show a single `ui.select` or `ui.number` for the point value (Fibonacci choices: 1, 2, 3, 5, 8, 13, 21). Hide the three-point fields.
 4. When estimate type changes, swap the visible sub-panel (use `ui.conditional` or `show`/`hide` helpers).
 5. `to_dict()` emits `{t_shirt_size, category}`, `{story_points}`, or `{low, expected, high, unit}` depending on the selected mode.
 6. `populate()` detects which keys are present in the task dict and selects the correct mode.
@@ -1297,7 +1297,7 @@ Convention: work items are numbered `W1-NN` (Phase 1 — MVP) and `W2-NN` (Phase
 > Ref: §6.6.
 
 1. In `task_editor.py`, enable the "Uncertainty" tab.
-2. Build a table of 5 factor rows. Each row: factor label + 5 `ui.radio` buttons (VL / L / M / H / VH), except Team Distribution (2 options: Colocated / Distributed).
+2. Build a table of 5 factor rows. Each row: factor label + 3 `ui.radio` buttons (Low / Medium / High), except Team Distribution (2 options: Colocated / Distributed).
 3. Below the table: a `ui.label` showing "Combined multiplier: ~X.XX×". Compute from `Config.get_default().uncertainty_multipliers` on each change. Apply a colour: green (≤ 1.05), amber (1.05–1.3), red (> 1.3).
 4. `to_dict()` emits `uncertainty_factors: {...}` only for factors that differ from medium/colocated defaults. If all default → key omitted.
 5. `populate()` reads task dict factors and sets radio buttons; missing keys → default (medium/colocated).
@@ -1329,14 +1329,14 @@ Convention: work items are numbered `W1-NN` (Phase 1 — MVP) and `W2-NN` (Phase
 2. Add to editor area below the Tasks section. Left nav entry "▷ Risks (N)" collapsed by default.
 3. "PROJECT-WIDE RISKS" card with `[+ Add Project Risk]` and a `ui.table` (ID, Name, Probability, Impact).
 4. Clicking `[+ Add Project Risk]` or a row expands an inline form immediately below the button (no separate dialog) using `ui.expansion` or `show`/`hide`:
-   - Name, Probability (%), Impact Type (Fixed hours / Percentage / Absolute), Impact Value, optional Cost Impact.
+   - Name, Probability (%), Impact Type (Raw hours / Percentage / Absolute), Impact Value, optional Cost Impact.
    - `[Discard]` / `[Add Risk ↵]` buttons.
 5. Double-click a row → same inline form, pre-filled for editing.
 6. Right-click or row action → "Delete" with `ui.notify` confirm.
-7. Project risks serialise to a top-level `risks:` list in the project dict.
+7. Project risks serialise to a top-level `project_risks:` list in the project dict.
 8. Left nav badge "Risks (N)" updates after every add/delete.
 
-**Verify:** Add two risks. YAML shows top-level `risks:`. Delete one → YAML updates, badge shows "(1)". Inline form: submit without a name → field turns red, submit blocked.
+**Verify:** Add two risks. YAML shows top-level `project_risks:`. Delete one → YAML updates, badge shows "(1)". Inline form: submit without a name → field turns red, submit blocked.
 
 ---
 
@@ -1372,7 +1372,7 @@ Convention: work items are numbered `W1-NN` (Phase 1 — MVP) and `W2-NN` (Phase
 2. Left nav "▷ Team Members" collapsed by default.
 3. Card contents:
    - `[+ Add Team Member]` button.
-   - `ui.table`: Name, Experience (1–5 stars display), Availability (%), Hourly Rate.
+   - `ui.table`: Name, Experience (1–3 stars display), Availability (%), Hourly Rate.
    - **Scheduling Mode** — `ui.radio(['Dependency only', 'Resource-constrained'], value='Dependency only')`.
    - **Two-pass criticality** — `ui.checkbox`. When checked, show `ui.number` for pass-1 iterations.
 4. Double-click a row → open team member editor slide-over (W2-07).
@@ -1389,12 +1389,12 @@ Convention: work items are numbered `W1-NN` (Phase 1 — MVP) and `W2-NN` (Phase
 
 1. Create `src/mcprojsim/web/components/team_member_editor.py` with `open_team_member_editor(state, member_index)`.
 2. Use a `ui.right_drawer` or `ui.dialog` with fields:
-   - Name, Experience (1–5 `ui.radio`), Productivity (`ui.number`, default 1.0), Availability (%), Calendar (`ui.select` listing defined calendars + "default"), Hourly Rate.
+   - Name, Experience (1–3 `ui.radio`), Productivity (`ui.number`, default 1.0), Availability (%), Calendar (`ui.select` listing defined calendars + "default"), Hourly Rate.
    - **Absence** section (`ui.expansion`): Sickness probability (%), Planned absence date ranges (mini table with From/To date pickers + `[+ Add]` / `[×]` per row).
 3. Assign to tasks: in the task editor Basics tab, add a `ui.select` listing defined resource names (shown only if `state.project_dict.get('resources')` is non-empty).
 4. `[Save]` / `[Discard]` buttons.
 
-**Verify:** Add a member with a sickness probability, absence date, and calendar. YAML shows full resource entry. Assign the member to a task → `assigned_to` appears in that task's YAML.
+**Verify:** Add a member with a sickness probability, absence date, and calendar. YAML shows full resource entry. Assign the member to a task → `resources: [member_name]` appears in that task's YAML.
 
 ---
 
@@ -1421,12 +1421,12 @@ Convention: work items are numbered `W1-NN` (Phase 1 — MVP) and `W2-NN` (Phase
 3. Card fields:
    - **Enable sprint planning** — `ui.switch`.
    - **Sprint Length** — `ui.number` (weeks).
-   - **Capacity Mode** — `ui.radio(['Story Points', 'Hours'])`.
+   - **Capacity Mode** — `ui.radio(['Story Points', 'Tasks'])`.
    - **Velocity Model** — `ui.radio(['Empirical', 'Neg-Binomial'])`.
    - Sprint history table: `ui.table` with Sprint ID (auto), Completed, Spillover, Team Size columns. Editable rows.
    - `[+ Add Sprint]` and `[⤓ Import from CSV]` (W2-10).
 4. Info label with the 2-row minimum and story-points requirement.
-5. Validation: if enabled with < 2 rows → inline warning. If tasks use hours but capacity mode is "Story Points" → warning.
+5. Validation: if enabled with < 2 rows → inline warning. If capacity mode is "Story Points" but tasks lack resolvable planning story points → warning.
 
 **Verify:** Enable, add 3 sprints. YAML shows `sprint_planning:` section. Disable → key absent. Import from CSV (W2-10) → table populates.
 
@@ -1576,7 +1576,7 @@ Convention: work items are numbered `W1-NN` (Phase 1 — MVP) and `W2-NN` (Phase
 1. Add a `[✨ Describe project…]` button in the header (between Validate and Run).
 2. Clicking opens a full-width `ui.dialog` with a `ui.textarea` (10 rows, placeholder as shown in §12) and `[Cancel]` / `[✨ Generate Project ↵]` buttons.
 3. On generate:
-   a. Call `from mcprojsim.nl_parser import parse_text; result = parse_text(text)` in `asyncio.to_thread`.
+   a. Call `from mcprojsim.nl_parser import NLProjectParser; result = NLProjectParser().parse(text)` in `asyncio.to_thread`.
    b. On success: set `state.project_dict` from the parsed project, call `populate_all_sections`, `regenerate_yaml`, close dialog.
    c. On failure: `ui.notify(str(e), type='negative')`.
 4. Show a spinner while processing.
