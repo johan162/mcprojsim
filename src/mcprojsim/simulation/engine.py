@@ -18,6 +18,7 @@ from mcprojsim.config import (
 from mcprojsim.models.project import (
     DistributionType,
     Project,
+    STANDARD_HOURS_PER_DAY,
     Task,
     TaskEstimate,
     convert_to_hours,
@@ -1003,7 +1004,7 @@ class SimulationEngine:
                     base_duration_hours * task_static_data.uncertainty_multiplier
                 )
                 risk_impact, risk_cost_impact = risk_evaluator.evaluate_risks_with_cost(
-                    task.risks, adjusted_duration, hours_per_day
+                    task.risks, adjusted_duration, STANDARD_HOURS_PER_DAY
                 )
                 final_duration = adjusted_duration + risk_impact
                 task_durations[task.id] = final_duration
@@ -1034,7 +1035,7 @@ class SimulationEngine:
         # Apply project-level risks (impacts converted to hours)
         project_risk_impact, project_risk_cost_impact = (
             risk_evaluator.evaluate_risks_with_cost(
-                project.project_risks, project_duration, hours_per_day
+                project.project_risks, project_duration, STANDARD_HOURS_PER_DAY
             )
         )
         project_duration += project_risk_impact
@@ -1118,10 +1119,16 @@ class SimulationEngine:
             resolved_estimate = self._resolve_estimate(
                 task, project.project.distribution
             )
+            # Use STANDARD_HOURS_PER_DAY (8h) as the reference for converting
+            # days/weeks estimates to effort-hours.  The project hours_per_day
+            # controls *scheduling rate* (calendar days = hours / hours_per_day)
+            # and must NOT participate in the estimate conversion, otherwise the
+            # two uses of hours_per_day cancel and calendar duration becomes
+            # independent of hours_per_day.
             hours_multiplier = convert_to_hours(
                 1.0,
                 resolved_estimate.unit or EffortUnit.HOURS,
-                hours_per_day,
+                STANDARD_HOURS_PER_DAY,
             )
             task_data.append(
                 TaskRunStaticData(

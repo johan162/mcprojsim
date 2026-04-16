@@ -40,6 +40,12 @@ from mcprojsim.config import (
     EffortUnit,
 )
 
+# The reference hours-per-day used when converting estimate units (days, weeks)
+# to effort-hours.  This is intentionally decoupled from the project's
+# hours_per_day field so that changing the scheduling rate does not silently
+# alter the amount of work implied by a task estimate.
+STANDARD_HOURS_PER_DAY: float = 8.0
+
 
 class DistributionType(str, Enum):
     """Types of probability distributions."""

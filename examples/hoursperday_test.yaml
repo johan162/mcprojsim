@@ -1,0 +1,27 @@
+project:
+  name: "Hours Per Day Test"
+  start_date: "2026-04-16"
+  hours_per_day: 5.0
+tasks:
+  - id: "T001"
+    name: "Design the system architecture"
+    estimate:
+      expected: 5.0
+      high: 15.0
+      low: 3.0
+      unit: "days"
+  - id: "T002"
+    name: "Implement the core modules"
+    estimate:
+      expected: 5.0
+      high: 15.0
+      low: 3.0
+      unit: "days"
+  - id: "T003"
+    name: "Integrate and test the system"
+    estimate:
+      expected: 5.0
+      high: 15.0
+      low: 3.0
+      unit: "days"
+
