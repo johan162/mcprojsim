@@ -163,7 +163,7 @@ The layout is a three-zone shell that does not change as the user navigates sect
 │  HEADER BAR                                                 │
 │  logo  project-name  [breadcrumb]  [⌘K Command Palette]     │
 │  [New] [Open] [Save]  ·  [✓ Validate] [▶ Run Simulation]    │
-│                                             [🌙 Dark Mode]  │
+│                                              [🌙 Dark Mode]  │
 ├──────────────┬──────────────────────────────────────────────┤
 │  LEFT NAV    │  MAIN EDITOR AREA                            │
 │  (240 px)    │  (scrollable, sections stack vertically)     │
@@ -445,11 +445,11 @@ Clicking **+ Add Project Risk** or a row expands an inline form immediately belo
 ║  ┌─────────────────────────────────────────────────────────┐
 ║  │  Factor                  Level                          │
 ║  │  ─────────────────────── ─────────────────────────────  │
-║  │  Team Experience          ○ Low  ● Medium  ○ High        │
-║  │  Requirements Maturity    ○ Low  ○ Medium  ● High        │
-║  │  Technical Complexity     ○ Low  ● Medium  ○ High        │
+║  │  Team Experience          ○ Low  ● Medium  ○ High       │
+║  │  Requirements Maturity    ○ Low  ○ Medium  ● High       │
+║  │  Technical Complexity     ○ Low  ● Medium  ○ High       │
 ║  │  Team Distribution        ● Colocated  ○ Distributed    │
-║  │  Integration Complexity   ○ Low  ● Medium  ○ High        │
+║  │  Integration Complexity   ○ Low  ● Medium  ○ High       │
 ║  └─────────────────────────────────────────────────────────┘
 ║
 ║  Combined multiplier: ~1.05×
