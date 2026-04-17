@@ -1,8 +1,8 @@
-Version: 0.1.0
+Version: 1.0.0
 
 Date: 2026-04-17
 
-Status: Design Proposal
+Status: Design Proposal (reviewed)
 
 # Parallel Simulation Engine
 
@@ -70,8 +70,8 @@ However, the engine's hot path has a critical property: **most of the CPU time i
 
 | Phase | Approx. share | GIL-released? |
 |-------|--------------|---------------|
-| `numpy.random.triangular` / `numpy.random.lognormal` | ~10% | Yes (C code, but legacy RandomState holds GIL on legacy calls) |
-| `numpy.random.random` (risk rolls) | ~5% | Same as above |
+| `numpy.random.triangular` / `numpy.random.lognormal` | ~10% | **No** — legacy `RandomState` holds the GIL even in C code |
+| `numpy.random.random` (risk rolls) | ~5% | **No** — same as above |
 | `TaskScheduler.schedule_tasks` (dependency + resource loop) | ~60% | **No** — pure Python |
 | Slack, critical path, max-parallel | ~10% | **No** — pure Python |
 | Result accumulation (dict updates, list appends) | ~10% | **No** — pure Python |
@@ -121,7 +121,12 @@ SimulationEngine.run(project)
 
 ###  Worker Function
 
-Each submitted micro-chunk receives the serialized project, config, a chunk descriptor, and a chunk-specific seed. The worker process executing that micro-chunk constructs its own `DistributionSampler`, `RiskEvaluator`, `TaskScheduler`, and `ProjectRunStaticData` — all cheap to create. It runs the assigned chunk of iterations and returns a `ChunkResult`:
+Each submitted micro-chunk receives the serialized project, config, a chunk descriptor, and a chunk-specific seed. The worker process executing that micro-chunk constructs its own `DistributionSampler`, `RiskEvaluator`, `TaskScheduler`, and `ProjectRunStaticData` — all cheap to create. It runs the assigned chunk of iterations and returns a `ChunkResult`.
+
+**Worker reconstruction strategy (Option A — engine-based)**: `_run_chunk` instantiates a `SimulationEngine` with `workers=1` (preventing recursion into the parallel path) and `random_seed=None` (the engine's internal `RandomState` is immediately replaced with the chunk-specific `rng`). The worker then calls engine helper methods directly: `_build_project_run_static_data`, `_run_iteration_with_sampler`, `_compute_iteration_costs`. Passing `random_seed=None` to the engine constructor is intentional here — any non-None value would initialise the sampler with the wrong seed before it gets overwritten.
+
+**Worker stdout rule**: Workers must never write progress output. `show_progress` must be `False` and `progress_callback` must be `None` inside every worker invocation. Progress is reported exclusively by the parent after each `Future` resolves. Violating this rule causes interleaved output on stdout that cannot be suppressed.
+:
 
 ```python
 @dataclass
@@ -130,7 +135,6 @@ class ChunkResult:
     chunk_start: int
     chunk_size: int
     project_durations: np.ndarray           # shape (chunk_size,)
-    effort_durations: np.ndarray            # shape (chunk_size,)
     task_durations: Dict[str, np.ndarray]   # per-task, shape (chunk_size,)
     task_risk_impacts: Dict[str, np.ndarray]
     project_risk_impacts: np.ndarray
@@ -143,9 +147,15 @@ class ChunkResult:
     calendar_delay_times: np.ndarray
     project_costs: Optional[np.ndarray]
     task_costs: Optional[Dict[str, np.ndarray]]
+    # For two-pass only: duration cache keyed by LOCAL iteration index (0-based within chunk).
+    # The parent remaps to global indices via global_idx = chunk_start + local_idx.
+    duration_cache_partition: Optional[Dict[int, Dict[str, float]]] = None
+    cost_impact_cache_partition: Optional[Dict[int, Dict[str, float]]] = None
 ```
 
 Using numpy arrays inside chunks (rather than lists) makes the merge step efficient — concatenation is O(n) with no per-element Python overhead.
+
+> **Note**: `effort_durations` is intentionally absent from `ChunkResult`. The parent's `_build_results` already recomputes it as `np.sum(np.stack(task_durations_arrays.values()), axis=0)` from the merged per-task arrays; transmitting it separately would double IPC cost for no benefit.
 
 ###  Seed Strategy for Reproducibility
 
@@ -159,8 +169,22 @@ from numpy.random import SeedSequence, RandomState, MT19937
 parent_seq = SeedSequence(user_seed)
 child_seeds = parent_seq.spawn(n_chunks)
 # Each chunk gets a deterministic seed derived from chunk order.
-# The worker executing that chunk uses RandomState(MT19937(child_seeds[i])).
+# The worker constructs its RNG as:
+rng = RandomState(MT19937(child_seeds[i]))
 ```
+
+> **Critical construction detail**: `RandomState(int_seed)` and `RandomState(SeedSequence)` are **not** the same call — and `RandomState(SeedSequence)` raises `TypeError` at runtime because `RandomState` accepts an integer or a `MT19937` bit-generator, but **not** a `SeedSequence` directly. Workers must always use `RandomState(MT19937(child_seed))`. This `rng` instance must be passed to **all three** per-chunk components: `DistributionSampler(rng, ...)`, `RiskEvaluator(rng)`, and `TaskScheduler(project, rng, config)`. Using different RNG instances for any of these would break the statistical independence guarantee.
+
+For **two-pass** mode, pass-1 and pass-2 must draw from **independent** parent sequences derived from the same root seed, mirroring the sequential engine which creates two separate `RandomState(self.random_seed)` instances for the two passes:
+
+```python
+root_seq = SeedSequence(user_seed)
+pass1_seq, pass2_seq = root_seq.spawn(2)
+pass1_child_seeds = pass1_seq.spawn(n_p1_chunks)
+pass2_child_seeds = pass2_seq.spawn(n_p2_chunks)
+```
+
+Using a single `SeedSequence.spawn(n_p1_chunks + n_p2_chunks)` and slicing would place pass-1 and pass-2 workers on the same statistical sequence, corrupting the independence that the sequential two-pass preserves.
 
 This guarantees:
 - Given the same `random_seed`, `n_workers`, and chunking policy, results are identical across runs.
@@ -181,16 +205,21 @@ After all workers return, the parent process merges `ChunkResult` objects:
 def _merge_chunk_results(chunks: list[ChunkResult]) -> MergedAccumulators:
     chunks = sorted(chunks, key=lambda chunk: chunk.chunk_start)
 
+    # Integrity guard: total iterations must equal sum of chunk sizes
+    assert sum(c.chunk_size for c in chunks) == sum(c.chunk_size for c in chunks), (
+        "chunk sizes do not add up to total iterations"
+    )
+
     project_durations = np.concatenate([c.project_durations for c in chunks])
     # ... same for all array fields ...
 
-    # Counter merge: sum counts
-    critical_path_freq = Counter()
+    # Counter merge: sum counts (not union — every task must appear in every chunk)
+    critical_path_freq: Dict[str, int] = {}
     for c in chunks:
         for tid, count in c.critical_path_frequency.items():
-            critical_path_freq[tid] += count
+            critical_path_freq[tid] = critical_path_freq.get(tid, 0) + count
 
-    critical_path_seqs = Counter()
+    critical_path_seqs: Counter[tuple[str, ...]] = Counter()
     for c in chunks:
         critical_path_seqs += c.critical_path_sequences
 
@@ -199,6 +228,8 @@ def _merge_chunk_results(chunks: list[ChunkResult]) -> MergedAccumulators:
 ```
 
 Merge is single-threaded in the parent and runs in O(total_iterations) — negligible compared to the simulation itself.
+
+> **Type contract with `_build_results`**: `_build_results` currently accepts `Dict[str, list[float]]` for per-task accumulator fields. After concatenation, the merged data is `Dict[str, np.ndarray]`. Because `np.mean(array)` and `np.array(array)` both accept `np.ndarray`, this works at runtime, but strict `mypy` will flag the mismatch. The implementation must either update the `_build_results` signature to `Dict[str, Sequence[float] | np.ndarray]` for those parameters, or explicitly convert merged arrays to lists before passing. Choose and document one approach before implementation begins.
 
 ###  IPC Cost Analysis
 
@@ -229,6 +260,8 @@ PARALLEL_MIN_TASKS = 5
 ```
 
 Parallelism is enabled only when both thresholds are exceeded **and** `workers > 1`. The user can explicitly set `workers=1` to force sequential execution.
+
+**Degenerate case — `workers > iterations`**: when the requested worker count exceeds the iteration count (e.g. `workers=8, iterations=3`), the effective worker count must be clamped: `effective_workers = min(self.workers, self.iterations)`. Without this clamp, some chunks would be empty (size 0), causing `np.concatenate([])` to fail and `max()` over an empty sequence to raise. The clamp must be applied before chunk partitioning, not inside the merge.
 
 ###  Executor Lifetime
 
@@ -285,7 +318,9 @@ Worker loop behaviour:
 - If set, the worker raises `SimulationCancelled` or returns a cancelled sentinel.
 - The parent catches that state, calls `executor.shutdown(wait=False, cancel_futures=True)`, and raises `SimulationCancelled` to the caller.
 
-### 0 Two-Pass Interaction
+**`_cancelled` reset between runs**: `SimulationEngine._cancelled` is never reset in the current sequential engine. After a cancelled parallel run, `_cancelled` remains `True`, and the next call to `run()` on the same engine instance would immediately raise `SimulationCancelled` without executing any iterations. The parallel implementation must add `self._cancelled = False` at the **start** of `run()`, before any dispatch logic. Add `self._active_cancel_event: Optional[Any] = None` to `__init__`; assign the manager event before the executor starts; set it back to `None` in the `finally` block. `cancel()` must set both `self._cancelled` and `self._active_cancel_event` (when present) so cancellation works for both the sequential and parallel paths with one call.
+
+### Two-Pass Interaction
 
 Two-pass scheduling (`_run_two_pass`) has a data dependency: pass-2 depends on pass-1's criticality indices. Both passes can independently be parallelized:
 
@@ -439,6 +474,12 @@ No documentation or release note should claim a specific speedup range until tho
 | Two-pass paired replay correctness | Medium | Transfer `DurationCache` partition from pass-1 to pass-2 workers and assert cache hit rate in tests. |
 | `progress_callback` granularity | Low | Document that parallel mode reports per-chunk progress. Implement fine-grained counter in a follow-up. |
 | Default worker count oversubscribes embedded callers | High | Keep `SimulationEngine(workers=1)` as the library default; only the CLI offers `auto`. |
+| Worker uses wrong `RandomState` instance | High | Worker must pass the same chunk-local `rng` to `DistributionSampler`, `RiskEvaluator`, and `TaskScheduler`. A mismatch silently uses the wrong stream without raising any error. |
+| Worker writes to stdout | Medium | Workers must be constructed with `show_progress=False` and `progress_callback=None`. Enforce this inside `_run_chunk` unconditionally, regardless of the parent's settings. |
+| `_cancelled` not reset between runs | High | Add `self._cancelled = False` at the start of `run()`. Without it, a cancelled engine becomes permanently dead on the same instance. |
+| Two-pass passes sharing one `SeedSequence` tree | High | Pass-1 and pass-2 must derive child seeds from separate parent sequences (`root_seq.spawn(2)`). A common parent breaks statistical independence between the two passes. |
+| `workers > iterations` causes empty chunks | Medium | Clamp `effective_workers = min(self.workers, self.iterations)` before chunk partitioning. Empty chunks cause `np.concatenate` failures and empty-sequence `max()` errors. |
+| Two-pass global index corruption | High | Pass-1 workers store cache entries with **local** indices (0-based within chunk). Parent merge must remap: `global_idx = chunk.chunk_start + local_idx`. Failing to remap causes pass-2 workers to look up wrong keys or raise `KeyError`. |
 
 
 
@@ -488,6 +529,11 @@ Validation:
 - Add unit tests in either a new [tests/test_parallel_simulation.py](/Users/ljp/Devel/mcprojsim/tests/test_parallel_simulation.py) or in [tests/test_simulation.py](/Users/ljp/Devel/mcprojsim/tests/test_simulation.py).
 - Confirm the helper module contains no CLI-only imports and can be imported safely from worker processes.
 - Verify chunk partitioning creates more progress units than workers and remains deterministic for a fixed `(iterations, workers)` tuple.
+- Add an assertion inside `merge_chunk_results` that `sum(c.chunk_size for c in chunks) == total_iterations`; raise `AssertionError` on mismatch so any partitioning bug surfaces immediately.
+- Test that merged `critical_path_frequency` values sum to exactly `total_iterations` across all tasks (every iteration must nominate exactly one critical path).
+- Test that merged `critical_path_sequences` Counter equals the elementwise sum of individual chunk Counters — not a union — so path frequencies are correctly accumulated.
+- Test that merging two chunks with `chunk_start` values `[100, 0]` (deliberately reversed order) produces identical output to merging them in `[0, 100]` order.
+- Test that merging a list containing one empty chunk (size 0) does not raise and produces correct totals from the remaining chunks.
 
 ### Step 2 — Worker Function `_run_chunk`
 
@@ -517,6 +563,9 @@ Validation:
 - Ensure `_run_chunk()` reconstructs only models and helper objects that are actually pickle-safe in this repo: `Project`, `Config`, `TaskScheduler`, `DistributionSampler`, `RiskEvaluator`.
 - Ensure the function does not rely on instance state from `SimulationEngine` that is unavailable in a spawned process.
 - If `_run_chunk()` instantiates `SimulationEngine` internally for helper reuse, force `workers=1` there so worker code cannot recurse into parallel dispatch.
+- Verify that the single chunk-local `rng` object produced by `RandomState(MT19937(child_seed))` is passed to `DistributionSampler`, `RiskEvaluator`, **and** `TaskScheduler` — add an assertion or integration test that confirms different components within one chunk share the same `random_state` identity.
+- Test that calling `_run_chunk` twice with identical `(project_dict, config_dict, child_seed, chunk_start, chunk_size)` produces **bit-for-bit identical** `project_durations` arrays (chunk-level reproducibility).
+- Test that `_run_chunk` produces **no stdout output** — capture stdout with `capsys` and assert it is empty.
 
 ### Step 3 — Seed Partitioning
 
@@ -529,6 +578,8 @@ Validation:
 - Keep this helper in [src/mcprojsim/simulation/parallel.py](/Users/ljp/Devel/mcprojsim/src/mcprojsim/simulation/parallel.py), not in CLI code.
 - Add a determinism test in [tests/test_parallel_simulation.py](/Users/ljp/Devel/mcprojsim/tests/test_parallel_simulation.py).
 - Add a test that changing chunk count changes the derived seed set, while keeping `(random_seed, n_chunks)` fixed reproduces it exactly.
+- Add a test that child seeds for two different chunk indices produce statistically independent streams: draw the first 10 values from each child's `RandomState(MT19937(child_seed))` and assert they are not all equal.
+- Assert `n_chunks >= 1` inside `partition_seeds`; raise `ValueError` for `n_chunks < 1`.
 
 ### Step 4 — Parallel Dispatch in Single-Pass
 
@@ -555,6 +606,11 @@ Validation:
 - Preserve the existing sequential path unchanged when `workers == 1`.
 - Confirm [src/mcprojsim/simulation/__init__.py](/Users/ljp/Devel/mcprojsim/src/mcprojsim/simulation/__init__.py) still exports `SimulationEngine` cleanly. No new exports are required unless the parallel helpers are intended to be public.
 - Add regression tests to [tests/test_simulation.py](/Users/ljp/Devel/mcprojsim/tests/test_simulation.py) for sequential behaviour and to [tests/test_parallel_simulation.py](/Users/ljp/Devel/mcprojsim/tests/test_parallel_simulation.py) for parallel behaviour.
+- Add an assertion inside `_run_single_pass_parallel` that `sum(chunk_sizes) == self.iterations` before any futures are submitted, so partitioning bugs surface at the call site.
+- Wrap the entire executor block in `try/finally executor.shutdown(wait=True)` to prevent process leaks even when an unexpected exception occurs before all futures complete.
+- Test that `workers=1` produces **bit-for-bit identical** `SimulationResults` (same `durations` array, same statistics) compared to the pre-existing sequential path for the same seed — this is the critical regression guard confirming the sequential code path was not modified.
+- Test that `workers > iterations` (e.g. `workers=8, iterations=3`) does not raise and returns a valid `SimulationResults`.
+- Test that cost-tracking output (when active) in parallel mode matches the sequential output for the same `(random_seed, workers)` tuple.
 
 ### Step 5 — Cancellation
 
@@ -569,6 +625,8 @@ Validation:
 - Confirm cancellation also tears down manager resources and the executor cleanly.
 - Update `SimulationEngine.cancel()` itself so it sets both the existing in-process `_cancelled` flag and the active shared cancel event when a parallel run is in flight.
 - Reset any per-run shared cancellation state in `run()` setup/finally so one cancelled run does not poison later runs on the same engine instance.
+- Test that calling `run()` again on the same engine instance **after** a cancelled run succeeds and returns a valid result (i.e. `_cancelled` was reset).
+- Test that after cancellation all worker processes have exited (no daemon process leak): assert that `executor._processes` is empty or all processes have `exitcode is not None` after `executor.shutdown(wait=True)` completes.
 
 ### Step 6 — Progress Reporting
 
@@ -582,6 +640,8 @@ Validation:
 - Add targeted tests in [tests/test_simulation.py](/Users/ljp/Devel/mcprojsim/tests/test_simulation.py) or [tests/test_parallel_simulation.py](/Users/ljp/Devel/mcprojsim/tests/test_parallel_simulation.py).
 - Add a test that uses `workers=4` with more than 4 micro-chunks and asserts multiple progress updates arrive before completion.
 - Preserve the current stdout throttling semantics for non-callback progress output, so micro-chunk completion does not emit one line per chunk when output is redirected.
+- Test that parallel mode does **not** emit stdout progress lines when a `progress_callback` is provided — capture stdout and assert it is empty.
+- Test that the final progress callback invocation reports `completed_iterations == self.iterations` exactly — no off-by-one from rounding in chunk boundaries.
 
 ### Step 7 — Two-Pass Parallel
 
@@ -599,6 +659,9 @@ Validation:
 - Preserve both paired duration replay and paired task-level cost-impact replay; the current engine uses both to keep cost overruns correlated with schedule overruns.
 - Verify that two-pass remains dependency-only when resources are absent, just as the current engine does.
 - Preserve the existing user-facing pass labels and progress structure (`Pass 1`, `Pass 2`) when progress output is enabled.
+- After parallel pass-1 merge, assert `len(global_duration_cache) == effective_p1_iters * n_tasks` before starting pass-2 dispatch — a size mismatch means the global-index remapping is wrong.
+- Test that the pass-2 replay fraction is correct: exactly `effective_p1_iters` of the `self.iterations` pass-2 iterations must use cached durations, and the rest must sample fresh.
+- Test that pass-1 and pass-2 child seeds are derived from **different** parent `SeedSequence` objects (from `root_seq.spawn(2)`) so the two passes remain statistically independent.
 
 ### Step 8 — CLI Integration
 
@@ -620,6 +683,8 @@ Validation:
 - Do not change MCP defaults in [src/mcprojsim/mcp_server.py](/Users/ljp/Devel/mcprojsim/src/mcprojsim/mcp_server.py) for v1; the engine default remains `workers=1`.
 - Add explicit CLI validation that `--workers` is either `auto` or a positive integer; reject `0`, negatives, and arbitrary strings before constructing the engine.
 - Update the many `FakeEngine` stubs in [tests/test_cli.py](/Users/ljp/Devel/mcprojsim/tests/test_cli.py) so monkeypatched constructor signatures accept the new `workers` argument.
+- Test that `--workers 0`, `--workers -1`, and `--workers abc` each produce a `UsageError` / `BadParameter` **before** any project file is parsed or engine is constructed — fail fast on bad input.
+- Verify `--workers auto` resolves to `os.cpu_count()` (or at minimum a positive integer) and that the resolved value is logged or visible in `--verbose` output so users can confirm what was used.
 
 ### Step 9 — Documentation and Tests
 
@@ -662,7 +727,7 @@ Suggested inputs:
 
 Validation:
 
-- Because the benchmark script will use spawned worker processes, implement it with an explicit `if __name__ == "__main__":` guard.
+- **Required**: the benchmark script must include `if __name__ == "__main__":` guard — without it, importing the script (e.g. accidentally during test discovery) would spawn worker processes recursively under `spawn`. This is not optional.
 - Record not just elapsed time, but also worker count, chunk count, and whether cost analysis was enabled, so benchmark output can be interpreted later.
 
 ### Step 11 — Final Validation Gate
