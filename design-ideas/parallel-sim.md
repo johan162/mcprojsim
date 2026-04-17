@@ -1,24 +1,23 @@
-# Parallel Simulation Engine
-
 Version: 0.1.0
 
 Date: 2026-04-17
 
 Status: Design Proposal
 
----
+# Parallel Simulation Engine
 
-## 1. Problem Statement
+
+##  Problem Statement
 
 The Monte Carlo simulation engine (`SimulationEngine`) runs all iterations sequentially in a single thread. For large projects (50+ tasks, 10 000+ iterations, resource-constrained scheduling), a single `run()` call can take several seconds. Since each simulation iteration is independent — it samples task durations, evaluates risks, schedules tasks, and produces one scalar project duration — iterations are embarrassingly parallel and should benefit from concurrent execution.
 
 This proposal analyses whether threading will actually deliver speedup given CPython's GIL, evaluates alternative concurrency models, proposes a concrete design, and provides an implementation plan.
 
----
 
-## 2. Current Architecture
 
-### 2.1 Iteration Pipeline (single iteration)
+##  Current Architecture
+
+###  Iteration Pipeline (single iteration)
 
 ```
 _run_iteration_with_sampler()
@@ -32,7 +31,7 @@ _run_iteration_with_sampler()
   └── identify critical paths       (TaskScheduler.get_critical_paths)
 ```
 
-### 2.2 Per-Iteration State
+###  Per-Iteration State
 
 Each iteration touches:
 
@@ -44,7 +43,7 @@ Each iteration touches:
 | `static_data` | `ProjectRunStaticData` (frozen dataclass) | Read-only — safe |
 | `project` | `Project` (Pydantic model) | Read-only during `run()` — safe |
 
-### 2.3 Result Accumulation
+###  Result Accumulation
 
 After each iteration the loop appends results into shared accumulators:
 
@@ -57,17 +56,17 @@ After each iteration the loop appends results into shared accumulators:
 - `project_costs_all`, `task_costs_all`: optional lists, appended if cost tracking is active.
 - Scalar accumulators: `max_parallel_overall`, resource wait/utilization/calendar delay lists.
 
----
 
-## 3. Will Threading Actually Help?
 
-### 3.1 The GIL Problem
+##  Will Threading Actually Help?
+
+###  The GIL Problem
 
 CPython's Global Interpreter Lock (GIL) prevents true parallel execution of Python bytecodes. A naive threading approach would serialize all the pure-Python scheduling logic and provide no speedup at all — in fact, it would add overhead from context switching and lock contention.
 
 However, the engine's hot path has a critical property: **most of the CPU time is spent inside NumPy C extensions** (random sampling, array operations) and in the scheduler's tight dependency-resolution loops.
 
-### 3.2 Where Time Is Spent (estimated breakdown for a 30-task constrained project)
+###  Where Time Is Spent (estimated breakdown for a 30-task constrained project)
 
 | Phase | Approx. share | GIL-released? |
 |-------|--------------|---------------|
@@ -80,27 +79,27 @@ However, the engine's hot path has a critical property: **most of the CPU time i
 
 **The dominant cost (~60%) is the scheduling loop**, which is pure Python and runs under the GIL. Threading will **not** parallelize this work in CPython.
 
-### 3.3 Threading Verdict
+###  Threading Verdict
 
 > **Threading cannot deliver meaningful speedup for the simulation engine under CPython.** The scheduling loop that dominates runtime is pure Python and fully GIL-bound. Thread-based parallelism would add synchronization overhead with zero scheduling parallelism.
 
-### 3.4 What Would Work: `multiprocessing` / Process-Based Parallelism
+###  What Would Work: `multiprocessing` / Process-Based Parallelism
 
 Since each iteration is independent and shares no mutable state, **process-based parallelism** sidesteps the GIL entirely. Each worker process gets its own Python interpreter, its own `numpy.random.RandomState`, its own `TaskScheduler`, and accumulates results locally. Only the final merge requires data transfer.
 
-### 3.5 What Would Work Even Better: `concurrent.futures.ProcessPoolExecutor` with Chunked Batches
+###  What Would Work Even Better: `concurrent.futures.ProcessPoolExecutor` with Chunked Batches
 
 Forking one process per iteration (10 000 processes) would be dominated by IPC overhead. Instead, partition iterations into deterministic micro-chunks and have worker processes execute those chunks from a shared queue. This amortizes process creation and IPC costs while still allowing smooth progress reporting and load balancing.
 
-### 3.6 Hybrid Approach: Threading + NumPy Vectorization (Future)
+###  Hybrid Approach: Threading + NumPy Vectorization (Future)
 
 A hypothetical alternative is to vectorize the entire iteration — sample all task durations as `(N_iter, N_tasks)` arrays in one NumPy call (GIL-released), then schedule all iterations in C. This requires rewriting the scheduler in C/Cython/Rust, which is out of scope for this proposal but noted as the theoretical optimal path.
 
----
 
-## 4. Proposed Design: Chunked Process Pool
 
-### 4.1 High-Level Flow
+##  Proposed Design: Chunked Process Pool
+
+###  High-Level Flow
 
 ```
 SimulationEngine.run(project)
@@ -108,19 +107,19 @@ SimulationEngine.run(project)
   ├── _build_project_run_static_data(project)     # once, in parent
   │
   ├── if parallel and iterations >= threshold:
-    │     ├── partition iterations into stable, ordered micro-chunks
-    │     ├── create a short-lived ProcessPoolExecutor for this run
-    │     │     each worker calls _run_chunk(project, chunk_range, seed_offset, config)
+  │     ├── partition iterations into stable, ordered micro-chunks
+  │     ├── create a short-lived ProcessPoolExecutor for this run
+  │     │     each worker calls _run_chunk(project, chunk_range, seed_offset, config)
   │     │     and returns a ChunkResult (partial accumulators)
-    │     ├── sort ChunkResults by chunk_start
-    │     ├── merge ChunkResults into full accumulators
+  │     ├── sort ChunkResults by chunk_start
+  │     ├── merge ChunkResults into full accumulators
   │     └── _build_results(...)
   │
   └── else:
         └── _run_single_pass(...)   # existing sequential path (unchanged)
 ```
 
-### 4.2 Worker Function
+###  Worker Function
 
 Each submitted micro-chunk receives the serialized project, config, a chunk descriptor, and a chunk-specific seed. The worker process executing that micro-chunk constructs its own `DistributionSampler`, `RiskEvaluator`, `TaskScheduler`, and `ProjectRunStaticData` — all cheap to create. It runs the assigned chunk of iterations and returns a `ChunkResult`:
 
@@ -148,7 +147,7 @@ class ChunkResult:
 
 Using numpy arrays inside chunks (rather than lists) makes the merge step efficient — concatenation is O(n) with no per-element Python overhead.
 
-### 4.3 Seed Strategy for Reproducibility
+###  Seed Strategy for Reproducibility
 
 Reproducibility is a core invariant of the engine (`random_seed` contract). Parallel execution must produce deterministically reproducible results, though they need not be identical to the sequential output for the same seed (since iteration order changes the RandomState trajectory).
 
@@ -174,7 +173,7 @@ To make the first guarantee true in practice, the implementation must:
 2. Assign child seeds deterministically from the chunk order.
 3. Merge chunk results in `chunk_start` order rather than completion order.
 
-### 4.4 Merge Algorithm
+###  Merge Algorithm
 
 After all workers return, the parent process merges `ChunkResult` objects:
 
@@ -201,7 +200,7 @@ def _merge_chunk_results(chunks: list[ChunkResult]) -> MergedAccumulators:
 
 Merge is single-threaded in the parent and runs in O(total_iterations) — negligible compared to the simulation itself.
 
-### 4.5 IPC Cost Analysis
+###  IPC Cost Analysis
 
 Each completed micro-chunk transfers its `ChunkResult` back via pickle. Under the proposed `max(workers * 8, 32)` chunking policy, a 10 000-iteration run on 8 workers would use 32 chunks of about 313 iterations each. For a 30-task micro-chunk of that size:
 
@@ -218,7 +217,7 @@ Each completed micro-chunk transfers its `ChunkResult` back via pickle. Under th
 
 Across the full run, total transferred result data scales primarily with total iterations and stored per-iteration arrays, not directly with worker count. The extra cost of using more micro-chunks is additional pickle framing overhead, which should remain small relative to simulation time for non-trivial workloads.
 
-### 4.6 When to Parallelize
+###  When to Parallelize
 
 Parallel dispatch has fixed overhead: process pool startup, argument serialization, result deserialization, and merge. For small workloads this overhead dominates.
 
@@ -231,7 +230,7 @@ PARALLEL_MIN_TASKS = 5
 
 Parallelism is enabled only when both thresholds are exceeded **and** `workers > 1`. The user can explicitly set `workers=1` to force sequential execution.
 
-### 4.7 Executor Lifetime
+###  Executor Lifetime
 
 This design assumes a **short-lived executor per simulation run**.
 
@@ -240,7 +239,7 @@ This design assumes a **short-lived executor per simulation run**.
 
 This avoids hidden global state, simplifies cleanup, and keeps the implementation compatible with both one-shot CLI usage and embedded/library usage.
 
-### 4.8 Progress Reporting
+###  Progress Reporting
 
 The naive design of using **one chunk per worker** is a progress-reporting flaw. If the workload is balanced, all workers finish at roughly the same time, so chunk-completion progress collapses into one visible jump near the end.
 
@@ -269,7 +268,7 @@ With this design, an 8-worker run might use 32 or 64 micro-chunks, so the user s
 
 If even smoother progress is needed later, a second-stage enhancement can add worker heartbeats via a manager-backed queue or shared counter, but that is not required for v1.
 
-### 4.9 Cancellation
+###  Cancellation
 
 Do **not** pass a raw `multiprocessing.Event` directly as a task argument on macOS/`spawn`; that pattern fails because the underlying synchronization primitives are not picklable in that form.
 
@@ -286,7 +285,7 @@ Worker loop behaviour:
 - If set, the worker raises `SimulationCancelled` or returns a cancelled sentinel.
 - The parent catches that state, calls `executor.shutdown(wait=False, cancel_futures=True)`, and raises `SimulationCancelled` to the caller.
 
-### 4.10 Two-Pass Interaction
+### 0 Two-Pass Interaction
 
 Two-pass scheduling (`_run_two_pass`) has a data dependency: pass-2 depends on pass-1's criticality indices. Both passes can independently be parallelized:
 
@@ -300,11 +299,11 @@ Cached duration replay (pass-2 iterations < `pass1_iterations` reuse pass-1 dura
 
 Proposed: **Option B** — preserve paired replay semantics. Pass-1 workers return their `DurationCache` partition and the corresponding per-iteration task risk cost impacts; the parent distributes the relevant slices to pass-2 workers.
 
----
 
-## 5. API Design
 
-### 5.1 New `SimulationEngine` Parameter
+##  API Design
+
+###  New `SimulationEngine` Parameter
 
 ```python
 class SimulationEngine:
@@ -332,7 +331,7 @@ class SimulationEngine:
     - CLI `--workers 1`: force sequential.
     - Library callers that want auto-detection can opt into it explicitly before creating the engine.
 
-### 5.2 CLI Flag
+###  CLI Flag
 
 ```
 mcprojsim simulate project.yaml --workers 4
@@ -340,17 +339,17 @@ mcprojsim simulate project.yaml --workers 1    # force sequential
 mcprojsim simulate project.yaml --workers auto
 ```
 
-### 5.3 Reproducibility Contract
+###  Reproducibility Contract
 
 The docstring and user guide will state:
 
 > When `workers > 1`, results are deterministic for a given `(random_seed, workers, chunking policy)` tuple. Changing the number of workers changes the random stream partitioning and therefore the exact results. To reproduce results from a parallel run, use the same `random_seed`, `workers`, and implementation-defined chunking policy. Setting `workers=1` reproduces legacy sequential behaviour exactly.
 
----
 
-## 6. Expected Speedup
 
-### 6.1 Amdahl's Law Analysis
+##  Expected Speedup
+
+###  Amdahl's Law Analysis
 
 Let $p$ be the fraction of work that is parallelizable (the per-iteration simulation), and $s = 1 - p$ be the serial fraction (argument setup, result merge, `_build_results`).
 
@@ -386,7 +385,7 @@ Representative bounds for 8 workers:
 | 15%                 | 3.90× |
 | 20%                 | 3.33× |
 
-### 6.2 Practical Overhead Deductions
+###  Practical Overhead Deductions
 
 Real-world factors that reduce the theoretical maximum:
 
@@ -406,14 +405,14 @@ Real-world factors that reduce the theoretical maximum:
 
 The design should therefore position parallel execution as a substantial improvement for heavier runs, not as near-linear scaling.
 
-### 6.3 Comparison: Threading vs Multiprocessing
+###  Comparison: Threading vs Multiprocessing
 
 | Approach | GIL-bound scheduler | IPC overhead | Reproducibility | Speedup (8 cores) |
 |----------|:-------------------:|:------------:|:---------------:|:-----------------:|
 | Threading | serialized | none | easy (shared state) | ~1.0× (no gain) |
 | Multiprocessing (chunked) | bypassed | low but non-zero | SeedSequence | ~2× to 5× depending on workload |
 
-### 6.4 Validation Requirement for Performance Claims
+###  Validation Requirement for Performance Claims
 
 The exact speedup claim must be validated on this repository after implementation. The design is only complete if it includes a benchmark pass that compares:
 
@@ -424,9 +423,9 @@ The exact speedup claim must be validated on this repository after implementatio
 
 No documentation or release note should claim a specific speedup range until those benchmark numbers exist.
 
----
 
-## 7. Risks and Mitigations
+
+##  Risks and Mitigations
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
@@ -441,15 +440,15 @@ No documentation or release note should claim a specific speedup range until tho
 | `progress_callback` granularity | Low | Document that parallel mode reports per-chunk progress. Implement fine-grained counter in a follow-up. |
 | Default worker count oversubscribes embedded callers | High | Keep `SimulationEngine(workers=1)` as the library default; only the CLI offers `auto`. |
 
----
 
-## 8. Alternatives Considered
 
-### 8.1 `threading` with GIL-releasing C Extensions
+##  Alternatives Considered
+
+###  `threading` with GIL-releasing C Extensions
 
 Rejected. The scheduler is pure Python and accounts for ~60% of iteration time. Threading would achieve at most ~1.0× speedup on the overall simulation (see §3.2).
 
-### 8.2 Cython/Rust Scheduler + Threading
+###  Cython/Rust Scheduler + Threading
 
 Rewriting the scheduler in a GIL-releasing language would allow true threading parallelism. However:
 - The scheduler is ~500 lines of non-trivial dependency/resource logic.
@@ -458,17 +457,17 @@ Rewriting the scheduler in a GIL-releasing language would allow true threading p
 
 This remains the long-term optimal path and is noted in §3.6.
 
-### 8.3 `asyncio`
+###  `asyncio`
 
 `asyncio` is cooperative multitasking on a single thread. It provides zero CPU parallelism. Useful for I/O-bound work (e.g., web server), not for compute-bound simulation.
 
-### 8.4 `joblib` / `dask`
+###  `joblib` / `dask`
 
 External dependencies that wrap multiprocessing with additional features (memoisation, distributed scheduling). Overkill for this use case. The standard library `concurrent.futures.ProcessPoolExecutor` is sufficient and adds no dependencies.
 
----
 
-## 9. Implementation Plan
+
+##  Implementation Plan
 
 ### Step 1 — Add Parallel Support Module
 
