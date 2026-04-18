@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+import io
 from pathlib import Path
 from typing import Any
 
@@ -539,6 +540,26 @@ class TestParallelSimulationIntegration:
         assert len(calls) > 0
         # Final call must report exactly iterations completed
         assert calls[-1][0] == 20_000
+
+    def test_progress_written_to_stream_without_callback(self) -> None:
+        """Parallel single-pass writes progress output when no callback is supplied."""
+        from mcprojsim.simulation.engine import SimulationEngine
+
+        project = _load_contention()
+        engine = SimulationEngine(
+            iterations=20_000,
+            random_seed=42,
+            show_progress=True,
+            workers=2,
+        )
+        engine.progress_stream = io.StringIO()
+        engine._progress_is_tty = False
+
+        engine.run(project)
+
+        output = engine.progress_stream.getvalue()
+        assert "Progress:" in output
+        assert "(20000/20000)" in output
 
     def test_cancelled_engine_can_be_reused(self) -> None:
         """After a cancelled run, the next run() on the same engine must succeed."""

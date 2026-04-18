@@ -2377,3 +2377,129 @@ tasks:
         assert sprint.sickness.probability_per_person_per_week == 0.08
         assert sprint.sickness.duration_log_mu == 0.6
         assert sprint.sickness.duration_log_sigma == 0.5
+
+    @pytest.mark.parametrize(
+        "workers_value,expected_message",
+        [
+            ("0", "--workers must be a positive integer"),
+            ("-1", "--workers must be a positive integer"),
+            ("abc", "is not a valid worker count"),
+        ],
+    )
+    def test_simulate_rejects_invalid_workers_before_io(
+        self,
+        monkeypatch,
+        workers_value: str,
+        expected_message: str,
+    ) -> None:
+        """Worker validation should fail before config loading or project parsing."""
+        runner = CliRunner()
+
+        def _fail_load(*args, **kwargs):
+            raise AssertionError("config load should not be reached")
+
+        def _fail_parse(*args, **kwargs):
+            raise AssertionError("project parsing should not be reached")
+
+        monkeypatch.setattr("mcprojsim.cli._load_config_with_user_default", _fail_load)
+        monkeypatch.setattr("mcprojsim.cli.YAMLParser.parse_file", _fail_parse)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                ["simulate", str(project_file), "--workers", workers_value],
+            )
+
+        assert result.exit_code != 0
+        assert expected_message in result.output
+
+    def test_simulate_workers_auto_uses_cpu_count(self, monkeypatch) -> None:
+        """The CLI resolves --workers auto before constructing the engine."""
+        runner = CliRunner()
+        captured: dict[str, Any] = {}
+
+        class FakeEngine:
+            def __init__(
+                self,
+                iterations,
+                random_seed,
+                config,
+                show_progress,
+                two_pass=False,
+                pass1_iterations=None,
+                workers: int = 1,
+            ) -> None:
+                captured["workers"] = workers
+
+            def run(self, project):
+                class FakeResults:
+                    project_name = project.project.name
+                    mean = 1.0
+                    median = 1.0
+                    std_dev = 0.0
+                    skewness = 0.0
+                    kurtosis = 0.0
+                    sensitivity = {}
+                    task_slack = {}
+                    percentiles = {50: 1.0}
+                    effort_percentiles: dict[int, float] = {}
+                    hours_per_day = 8.0
+                    max_parallel_tasks = 0
+
+                    def total_effort_hours(self):
+                        return 1.0
+
+                    def get_critical_path_sequences(self, top_n=None):
+                        return []
+
+                    def delivery_date(self, hours):
+                        return None
+
+                    def get_risk_impact_summary(self):
+                        return {}
+
+                return FakeResults()
+
+        monkeypatch.setattr("mcprojsim.cli.SimulationEngine", FakeEngine)
+        monkeypatch.setattr("os.cpu_count", lambda: 6)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                ["simulate", str(project_file), "--workers", "auto", "--quiet"],
+            )
+
+        assert result.exit_code == 0
+        assert captured["workers"] == 6

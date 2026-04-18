@@ -408,13 +408,14 @@ print(f"\nDone — P80: {results.percentile(80):.1f} hours")
 ```
 
 When `progress_callback` is set, all stdout progress output is suppressed. The callback
-fires at the same cadence as the built-in reporter (every 10 % plus a final 100 % call),
-so it is lightweight even for large iteration counts.
+receives `(completed_iterations, total_iterations)` updates from the engine. Sequential
+runs report at the built-in 10 % cadence, while parallel runs report as chunks complete,
+so update frequency can be higher on larger worker counts.
 
 !!! note
-    When `show_progress=False` the progress-reporting code path is skipped entirely
-    and the callback is **not** invoked.  Set `show_progress=True` (the default) if
-    you want callbacks.
+    For consistent callback behaviour across sequential and parallel execution modes,
+    keep `show_progress=True`. Sequential runs skip progress reporting entirely when
+    `show_progress=False`.
 
 ### 7b — Cancellation from another thread
 

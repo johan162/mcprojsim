@@ -377,6 +377,8 @@ When `--workers N` is set and both the iteration count and task count exceed the
 
 For smaller workloads the engine falls back to the sequential path automatically, so `--workers 4` on a tiny project has no overhead cost.
 
+Progress reporting still works in parallel mode. When stdout progress is enabled, updates are emitted as chunks complete. If you use `progress_callback`, it receives the same `(completed_iterations, total_iterations)` values and may therefore be called more frequently in parallel mode than in sequential mode.
+
 ### Reproducibility
 
 Results are deterministic for a fixed `(--seed, --workers)` combination. Changing the number of workers changes how the random seed is partitioned across chunks, so the exact duration values will differ between a 1-worker run and a 4-worker run even with the same seed. To reproduce results exactly, use the same `--workers` value as the original run.

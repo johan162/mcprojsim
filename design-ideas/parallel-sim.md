@@ -741,6 +741,129 @@ Before the feature is considered complete:
 5. Confirm documentation avoids claiming a specific speedup until benchmark data exists.
 
 
+##  Implementation Review (2026-04-18)
+
+### Overall Assessment
+
+The implemented architecture is broadly aligned with this design. The important concurrency decisions are correct: the engine uses `spawn`, a manager-backed cancellation event, deterministic chunk sorting during merge, `SeedSequence` partitioning, separate parent sequences for two-pass mode, and correct local-to-global remapping for pass-1 replay caches.
+
+The remaining issues are not in the core multiprocessing design. They are in edge-path correctness, user-visible progress behaviour, and missing coverage around the most failure-prone combinations.
+
+### Status Update
+
+Update later on 2026-04-18: the implementation has since been patched to address the concrete issues identified in findings 1-3 below. Specifically:
+
+- parallel two-pass cost runs no longer fail in `_build_results()`,
+- single-pass parallel again emits stdout progress when no callback is supplied,
+- regression coverage was added for parallel two-pass reproducibility, parallel two-pass cost tracking, and CLI `--workers` validation.
+
+The remaining open follow-up items from this review are the benchmark-matrix alignment work and consolidating the duplicated parallel-threshold constants.
+
+### Findings
+
+#### 1. High — Parallel two-pass cost runs can crash in `_build_results`
+
+Files:
+
+- `src/mcprojsim/simulation/engine.py`
+
+In `_run_two_pass_parallel()`, merged pass-2 cost arrays are passed to `_build_results()` as numpy arrays. Inside `_build_results()`, cost activation is checked with `if project_costs_all:`. That is safe for lists, but not for multi-element `np.ndarray`; numpy raises `ValueError: The truth value of an array with more than one element is ambiguous`.
+
+This is a real runtime bug, not a theoretical concern. It reproduces on a constrained two-pass parallel run when cost tracking is active, for example by adding a default hourly rate to `tests/fixtures/test_fixture_contention.yaml` and running with `workers > 1`.
+
+Impact:
+
+- single-pass parallel cost runs are safe because that path converts arrays back to lists before calling `_build_results()`,
+- sequential two-pass cost runs are safe because they also pass lists,
+- parallel two-pass cost runs fail at result assembly.
+
+Recommended fix:
+
+- change the cost gate in `_build_results()` from truthiness to an explicit `is not None` / length check,
+- add one end-to-end test that exercises `two_pass=True`, `workers>1`, and active cost estimation.
+
+#### 2. Medium — Single-pass parallel suppresses stdout progress entirely
+
+Files:
+
+- `src/mcprojsim/simulation/engine.py`
+
+In `_run_single_pass_parallel()`, completed chunks update progress only when `_progress_callback` is present. There is no `elif self.show_progress:` branch, so the eligible single-pass parallel path produces no stdout progress output at all.
+
+This is user-visible and easy to verify: a large parallel-eligible single-pass run with `show_progress=True` writes nothing to `progress_stream`, while the sequential path and the two-pass parallel path both report progress.
+
+This is also a deviation from the implementation plan in Step 6, which called for chunk-completion progress updates in the normal stdout path as well as in callback mode.
+
+Recommended fix:
+
+- mirror the `_run_two_pass_parallel()` behaviour in `_run_single_pass_parallel()`,
+- add a test that captures `progress_stream` for a parallel-eligible single-pass run and asserts that progress text is emitted when no callback is supplied.
+
+#### 3. Medium — The highest-risk parallel path is not covered by tests
+
+Files:
+
+- `tests/test_parallel_simulation.py`
+- `tests/test_two_pass_simulation.py`
+- `tests/test_cli.py`
+
+The new test file covers chunk partitioning, merge determinism, direct `_run_chunk()` calls, heuristic gating, and single-pass integration. What is still missing is the path most likely to break:
+
+- `workers > 1` combined with `two_pass=True`,
+- parallel two-pass with active cost estimation,
+- CLI validation for `--workers 0`, `--workers -1`, `--workers abc`, and `--workers auto`.
+
+The first finding escaped because this exact two-pass-parallel-cost combination is not exercised anywhere in the current suite.
+
+Recommended fix:
+
+- extend `tests/test_two_pass_simulation.py` or add a dedicated section in `tests/test_parallel_simulation.py` for parallel two-pass,
+- include at least one cost-active case,
+- add CLI tests for worker parsing and fail-fast validation.
+
+#### 4. Low — Benchmark implementation is only partially aligned with the plan
+
+Files:
+
+- `benchmarks/bench_parallel.py`
+
+The benchmark script exists and has the required `if __name__ == "__main__":` guard, which is good. But it does not yet implement the benchmark matrix described in Step 10:
+
+- the `cost_active` parameter is currently unused,
+- there is no `auto` worker case,
+- there is no two-pass benchmark,
+- output does not include chunk count or other metadata that would help interpret results.
+
+This is not a correctness issue, but it means the implementation is ahead of the validation story promised by the plan.
+
+#### 5. Low — Parallel threshold constants are duplicated and drifting
+
+Files:
+
+- `src/mcprojsim/simulation/parallel.py`
+- `src/mcprojsim/simulation/engine.py`
+
+`PARALLEL_MIN_ITERATIONS` and `PARALLEL_MIN_TASKS` are defined in `parallel.py`, but the actual gating logic in `_parallel_expected_payoff_positive()` hardcodes `500` and `5` directly and does not use those constants.
+
+This is not breaking today, but it is an avoidable maintainability problem. The public docs, helper module, and engine heuristic can now drift independently.
+
+### Notable Deviations From The Plan
+
+The implementation also differs from the step-by-step plan in a few smaller ways:
+
+- `_run_single_pass_parallel()` submits all chunks up front instead of incrementally refilling the executor queue. That is simpler and acceptable for the current chunk counts, but it is not what Step 4 described.
+- `run()` resets `_cancelled` in the `finally` block instead of at the start of the method. This differs from the text in the design, but the current behaviour is defensible because it preserves the ability for `cancel()` called before `run()` to abort the next run immediately. The current test coverage around engine reuse after cancellation is good.
+
+### Recommended Updates
+
+1. Fix the `_build_results()` cost-array truthiness bug first. It is the only confirmed correctness issue that can crash a valid supported run.
+2. Restore stdout progress reporting in `_run_single_pass_parallel()` so single-pass parallel UX matches the rest of the engine.
+3. Add integration tests for `two_pass=True` with `workers>1`, including one cost-active case and one reproducibility case.
+4. Add CLI tests for `--workers` parsing and early validation.
+5. Bring `benchmarks/bench_parallel.py` up to the promised matrix or scale back the benchmark claims in the design and docs.
+6. Consolidate the minimum-threshold constants into one source of truth.
+
+
 ## Post-Implementation Analysis (2026-04-18): Why Dependency-Only Scales Less
 
 ### Observed Benchmark Shape

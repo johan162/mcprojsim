@@ -228,7 +228,7 @@ def merge_chunk_results(
         if chunks[0].task_costs is not None:
             task_costs_all = {
                 tid: np.concatenate(
-                    [c.task_costs[tid] for c in chunks if c.task_costs is not None]  # type: ignore[index]
+                    [c.task_costs[tid] for c in chunks if c.task_costs is not None]
                 )
                 for tid in task_ids
             }
@@ -337,11 +337,12 @@ def _run_chunk(  # pyright: ignore[reportUnusedFunction]
     engine.random_state = rng
     engine.sampler = DistributionSampler(rng, config.get_lognormal_high_z_value())
     engine.risk_evaluator = RiskEvaluator(rng)
+    engine_helpers: Any = engine
 
     # Scheduler uses the same rng for reproducibility within the chunk.
     scheduler = TaskScheduler(project, rng, config)
     hours_per_day = project.project.hours_per_day
-    static_data = engine._build_project_run_static_data(project)  # pyright: ignore[reportPrivateUsage]
+    static_data = engine_helpers._build_project_run_static_data(project)
 
     # Accumulator setup
     task_ids = [t.id for t in project.tasks]
@@ -357,7 +358,7 @@ def _run_chunk(  # pyright: ignore[reportUnusedFunction]
     resource_utilizations: list[float] = []
     calendar_delay_times: list[float] = []
 
-    cost_active = engine._cost_estimation_active(project)  # pyright: ignore[reportPrivateUsage]
+    cost_active = engine_helpers._cost_estimation_active(project)
     project_costs_acc: list[float] = []
     task_costs_acc: Dict[str, list[float]] = {tid: [] for tid in task_ids}
 

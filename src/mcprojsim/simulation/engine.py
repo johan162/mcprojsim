@@ -490,6 +490,9 @@ class SimulationEngine:
                             self._progress_callback(
                                 completed_iterations, self.iterations
                             )
+                        elif self.show_progress:
+                            progress = (completed_iterations * 100) // self.iterations
+                            self._report_progress(progress, completed_iterations)
                 except SimulationCancelled:
                     executor.shutdown(wait=False, cancel_futures=True)
                     raise
@@ -1143,7 +1146,7 @@ class SimulationEngine:
         costs_arr: Optional[np.ndarray] = None
         task_costs_arrays: Optional[Dict[str, np.ndarray]] = None
         resolved_currency: Optional[str] = None
-        if project_costs_all:
+        if project_costs_all is not None:
             costs_arr = np.array(project_costs_all)
             task_costs_arrays = (
                 {tid: np.array(v) for tid, v in task_costs_all.items()}
