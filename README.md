@@ -171,28 +171,12 @@ Output can also be generated in other formats. Typical outputs (see the `--help`
 - `*_results.html` for a browsable report with graphs and tables
 
 
-### Example figures from the HTML report:
 
-<details>
-<summary>Example percentile chart showing P10–P99 confidence intervals</summary>
-
-![Example percentile chart showing P10–P99 confidence intervals](assets/readme_example_percentiles.png)
-
-</details>
-
-<details>
-<summary>Example histogram of schedule distribution</summary>
-
-![Example histogram of schedule distribution](assets/readme_example_cal_distribution.png)
-
-</details>
-
-<details>
-<summary>Example sensitivity (Tornado) chart showing task impact on schedule variance</summary>
-
-![Example sensitivity (Tornado) chart showing task impact on schedule variance](assets/readme_example_sensitivity.png)
-
-</details>
+| Example figures from the HTML report |
+|-------------------|
+| ![Confidence intervals](assets/readme_example_percentiles_small.png)<br>***Fig 1: Confidence intervals***<br><details><summary>*Click to view full size...*</summary>![Example percentile chart showing P10–P99 confidence intervals](assets/readme_example_percentiles.png)</details><br>  | 
+| ![Histogram](assets/readme_example_cal_distribution_small.png)<br>***Fig 2: Schedule Histogram***<br><details><summary>*Click to view full size...*</summary>![Example histogram of schedule distribution](assets/readme_example_cal_distribution.png)</details><br> | 
+| ![Example sensitivity (Tornado) chart showing task impact on schedule variance](assets/readme_example_sensitivity_small.png)<br>***Fig 3: Tornado Chart (Spearman Rank Correlation)***<br><details><summary>*Click to view full size...*</summary> ![Example sensitivity (Tornado) chart showing task impact on schedule variance](assets/readme_example_sensitivity.png)</details><br>  |
 
 ## Documentation map
 
