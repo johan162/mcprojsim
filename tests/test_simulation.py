@@ -2131,7 +2131,7 @@ class TestProgressCallback:
         assert engine._progress_callback is None
 
     def test_callback_with_show_progress_false(self, three_task_project):
-        """With show_progress=False and no callback, no callback is invoked."""
+        """Callbacks run even when stdout progress is disabled."""
         calls: list[tuple[int, int]] = []
 
         engine = SimulationEngine(
@@ -2142,9 +2142,9 @@ class TestProgressCallback:
         )
         engine.run(three_task_project)
 
-        # show_progress=False suppresses the progress-reporting code path,
-        # so the callback should not be invoked.
-        assert len(calls) == 0
+        assert len(calls) > 0
+        assert all(total == 50 for _, total in calls)
+        assert calls[-1][0] == 50
 
     def test_results_unchanged_with_callback(self, three_task_project):
         """Results should be identical whether or not a callback is used."""

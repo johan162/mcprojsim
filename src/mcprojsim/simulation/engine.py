@@ -30,6 +30,10 @@ from mcprojsim.models.simulation import (
     SimulationResults,
     TwoPassDelta,
 )
+from mcprojsim.simulation.parallel import (
+    PARALLEL_MIN_ITERATIONS,
+    PARALLEL_MIN_TASKS,
+)
 from mcprojsim.simulation.distributions import DistributionSampler
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
 from mcprojsim.simulation.scheduler import TaskScheduler
@@ -283,11 +287,11 @@ class SimulationEngine:
             return False
 
         # Very small graphs rarely amortize multiprocessing overhead.
-        if n_tasks < 5:
+        if n_tasks < PARALLEL_MIN_TASKS:
             return False
 
         # Absolute floor: below this, spawn/IPC overhead is almost always dominant.
-        if self.iterations < 500:
+        if self.iterations < PARALLEL_MIN_ITERATIONS:
             return False
 
         pass_multiplier = 2 if two_pass else 1
@@ -400,12 +404,16 @@ class SimulationEngine:
 
             critical_path_sequences.update(critical_paths)
 
-            if self.show_progress:
+            if self.show_progress or self._progress_callback is not None:
                 last_reported_progress = self._maybe_report_progress(
                     iteration, self.iterations, last_reported_progress
                 )
 
-        if self.show_progress and self._progress_is_tty:
+        if (
+            self.show_progress
+            and self._progress_callback is None
+            and self._progress_is_tty
+        ):
             self.progress_stream.write("\n")
             self.progress_stream.flush()
 
@@ -486,13 +494,13 @@ class SimulationEngine:
                         result = future.result()
                         chunk_results.append(result)
                         completed_iterations += result.chunk_size
-                        if self._progress_callback is not None:
-                            self._progress_callback(
-                                completed_iterations, self.iterations
-                            )
-                        elif self.show_progress:
+                        if self.show_progress or self._progress_callback is not None:
                             progress = (completed_iterations * 100) // self.iterations
-                            self._report_progress(progress, completed_iterations)
+                            self._report_progress(
+                                progress,
+                                completed_iterations,
+                                total_iterations=self.iterations,
+                            )
                 except SimulationCancelled:
                     executor.shutdown(wait=False, cancel_futures=True)
                     raise
@@ -541,6 +549,8 @@ class SimulationEngine:
         if self._parallel_expected_payoff_positive(project, two_pass=True):
             return self._run_two_pass_parallel(project, static_data, effective_p1_iters)
 
+        total_progress_iterations = effective_p1_iters + self.iterations
+
         if effective_p1_iters < 100 and self.iterations >= 100:
             logger.warning(
                 "two-pass: pass1_iterations=%d is less than 100; "
@@ -565,7 +575,7 @@ class SimulationEngine:
         duration_cache = DurationCache()
         cost_impact_cache = CostImpactCache()
 
-        if self.show_progress:
+        if self.show_progress and self._progress_callback is None:
             self.progress_stream.write("Pass 1: computing criticality indices\n")
             self.progress_stream.flush()
 
@@ -614,7 +624,7 @@ class SimulationEngine:
                 duration_cache.store(iteration, task_id, dur)
             cost_impact_cache.store(iteration, task_risk_cost_impacts_p1)
 
-            if self.show_progress:
+            if self.show_progress or self._progress_callback is not None:
                 completed = iteration + 1
                 current_progress = (completed * 100) // effective_p1_iters
                 bucket = (current_progress // 10) * 10
@@ -622,10 +632,20 @@ class SimulationEngine:
                     completed == effective_p1_iters and last_reported_p1 < 100
                 ):
                     rep = 100 if completed == effective_p1_iters else bucket
-                    self._report_progress(rep, completed)
+                    self._report_progress(
+                        rep,
+                        completed,
+                        total_iterations=effective_p1_iters,
+                        callback_completed=completed,
+                        callback_total=total_progress_iterations,
+                    )
                     last_reported_p1 = rep
 
-        if self.show_progress and self._progress_is_tty:
+        if (
+            self.show_progress
+            and self._progress_callback is None
+            and self._progress_is_tty
+        ):
             self.progress_stream.write("\n")
             self.progress_stream.flush()
 
@@ -662,7 +682,7 @@ class SimulationEngine:
         project_costs_all: list[float] = []
         task_costs_all: Dict[str, list[float]] = {task.id: [] for task in project.tasks}
 
-        if self.show_progress:
+        if self.show_progress and self._progress_callback is None:
             self.progress_stream.write("Pass 2: priority-ordered scheduling\n")
             self.progress_stream.flush()
 
@@ -748,7 +768,7 @@ class SimulationEngine:
                 critical_path_frequency[task_id] += 1
             critical_path_sequences.update(critical_paths)
 
-            if self.show_progress:
+            if self.show_progress or self._progress_callback is not None:
                 completed = iteration + 1
                 current_progress = (completed * 100) // self.iterations
                 bucket = (current_progress // 10) * 10
@@ -756,10 +776,20 @@ class SimulationEngine:
                     completed == self.iterations and last_reported_p2 < 100
                 ):
                     rep = 100 if completed == self.iterations else bucket
-                    self._report_progress(rep, completed)
+                    self._report_progress(
+                        rep,
+                        completed,
+                        total_iterations=self.iterations,
+                        callback_completed=effective_p1_iters + completed,
+                        callback_total=total_progress_iterations,
+                    )
                     last_reported_p2 = rep
 
-        if self.show_progress and self._progress_is_tty:
+        if (
+            self.show_progress
+            and self._progress_callback is None
+            and self._progress_is_tty
+        ):
             self.progress_stream.write("\n")
             self.progress_stream.flush()
 
@@ -857,6 +887,7 @@ class SimulationEngine:
         config_dict = self.config.model_dump(mode="python", exclude_none=True)
         root_seq = SeedSequence(self.random_seed)
         pass1_seq, pass2_seq = root_seq.spawn(2)
+        total_progress_iterations = effective_p1_iters + self.iterations
 
         ctx = multiprocessing.get_context("spawn")
         manager = ctx.Manager()
@@ -878,7 +909,7 @@ class SimulationEngine:
                 parent_seq=pass1_seq,
             )
 
-            if self.show_progress:
+            if self.show_progress and self._progress_callback is None:
                 self.progress_stream.write("Pass 1: computing criticality indices\n")
                 self.progress_stream.flush()
 
@@ -911,14 +942,24 @@ class SimulationEngine:
                         result = future.result()
                         p1_results.append(result)
                         p1_completed += result.chunk_size
-                        if self.show_progress and self._progress_callback is None:
+                        if self.show_progress or self._progress_callback is not None:
                             progress = (p1_completed * 100) // effective_p1_iters
-                            self._report_progress(progress, p1_completed)
+                            self._report_progress(
+                                progress,
+                                p1_completed,
+                                total_iterations=effective_p1_iters,
+                                callback_completed=p1_completed,
+                                callback_total=total_progress_iterations,
+                            )
                 except SimulationCancelled:
                     executor.shutdown(wait=False, cancel_futures=True)
                     raise
 
-            if self.show_progress and self._progress_is_tty:
+            if (
+                self.show_progress
+                and self._progress_callback is None
+                and self._progress_is_tty
+            ):
                 self.progress_stream.write("\n")
                 self.progress_stream.flush()
 
@@ -934,6 +975,9 @@ class SimulationEngine:
             assert (
                 len(global_duration_cache) == effective_p1_iters
             ), "Pass-1 duration cache size mismatch; global remap is broken"
+            assert (
+                len(global_cost_impact_cache) == effective_p1_iters
+            ), "Pass-1 cost impact cache size mismatch; global remap is broken"
 
             task_ci: Dict[str, float] = {}
             for task_id, count in p1_critical_path_freq.items():
@@ -955,7 +999,7 @@ class SimulationEngine:
                 parent_seq=pass2_seq,
             )
 
-            if self.show_progress:
+            if self.show_progress and self._progress_callback is None:
                 self.progress_stream.write("Pass 2: priority-ordered scheduling\n")
                 self.progress_stream.flush()
 
@@ -971,12 +1015,10 @@ class SimulationEngine:
                         cached_durations_slice = {
                             gidx: global_duration_cache[gidx]
                             for gidx in range(start, replay_end)
-                            if gidx in global_duration_cache
                         }
                         cached_cost_impacts_slice = {
                             gidx: global_cost_impact_cache[gidx]
                             for gidx in range(start, replay_end)
-                            if gidx in global_cost_impact_cache
                         }
                     else:
                         cached_durations_slice = None
@@ -1005,16 +1047,24 @@ class SimulationEngine:
                         result = future.result()
                         p2_results.append(result)
                         p2_completed += result.chunk_size
-                        if self._progress_callback is not None:
-                            self._progress_callback(p2_completed, self.iterations)
-                        elif self.show_progress:
+                        if self.show_progress or self._progress_callback is not None:
                             progress = (p2_completed * 100) // self.iterations
-                            self._report_progress(progress, p2_completed)
+                            self._report_progress(
+                                progress,
+                                p2_completed,
+                                total_iterations=self.iterations,
+                                callback_completed=effective_p1_iters + p2_completed,
+                                callback_total=total_progress_iterations,
+                            )
                 except SimulationCancelled:
                     executor.shutdown(wait=False, cancel_futures=True)
                     raise
 
-            if self.show_progress and self._progress_is_tty:
+            if (
+                self.show_progress
+                and self._progress_callback is None
+                and self._progress_is_tty
+            ):
                 self.progress_stream.write("\n")
                 self.progress_stream.flush()
 
@@ -1210,7 +1260,12 @@ class SimulationEngine:
         return results
 
     def _maybe_report_progress(
-        self, iteration: int, total: int, last_reported: int
+        self,
+        iteration: int,
+        total: int,
+        last_reported: int,
+        callback_completed: Optional[int] = None,
+        callback_total: Optional[int] = None,
     ) -> int:
         """Update progress display if a 10% bucket boundary has been crossed."""
         completed = iteration + 1
@@ -1220,11 +1275,24 @@ class SimulationEngine:
             completed == total and last_reported < 100
         ):
             rep = 100 if completed == total else bucket
-            self._report_progress(rep, completed)
+            self._report_progress(
+                rep,
+                completed,
+                total_iterations=total,
+                callback_completed=callback_completed,
+                callback_total=callback_total,
+            )
             return rep
         return last_reported
 
-    def _report_progress(self, progress: int, completed_iterations: int) -> None:
+    def _report_progress(
+        self,
+        progress: int,
+        completed_iterations: int,
+        total_iterations: Optional[int] = None,
+        callback_completed: Optional[int] = None,
+        callback_total: Optional[int] = None,
+    ) -> None:
         """Report simulation progress.
 
         When a *progress_callback* was supplied at construction time, it is
@@ -1237,12 +1305,23 @@ class SimulationEngine:
             progress: Progress percentage to report
             completed_iterations: Number of completed iterations
         """
+        resolved_total = (
+            total_iterations if total_iterations is not None else self.iterations
+        )
+
         if self._progress_callback is not None:
-            self._progress_callback(completed_iterations, self.iterations)
+            self._progress_callback(
+                (
+                    callback_completed
+                    if callback_completed is not None
+                    else completed_iterations
+                ),
+                callback_total if callback_total is not None else resolved_total,
+            )
             return
 
         message = (
-            f"Progress: {progress:.1f}% " f"({completed_iterations}/{self.iterations})"
+            f"Progress: {progress:.1f}% " f"({completed_iterations}/{resolved_total})"
         )
 
         if self._progress_is_tty:

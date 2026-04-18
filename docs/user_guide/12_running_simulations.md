@@ -377,7 +377,7 @@ When `--workers N` is set and both the iteration count and task count exceed the
 
 For smaller workloads the engine falls back to the sequential path automatically, so `--workers 4` on a tiny project has no overhead cost.
 
-Progress reporting still works in parallel mode. When stdout progress is enabled, updates are emitted as chunks complete. If you use `progress_callback`, it receives the same `(completed_iterations, total_iterations)` values and may therefore be called more frequently in parallel mode than in sequential mode.
+Progress reporting still works in parallel mode. When stdout progress is enabled, updates are emitted as chunks complete. If you use `progress_callback`, it remains active even when stdout progress is disabled. Single-pass runs report `iterations` as the total; two-pass runs report `pass1_iterations + iterations` as the total so callback progress stays monotonic across both phases. Parallel mode may therefore call the callback more frequently than sequential mode.
 
 ### Reproducibility
 
