@@ -739,3 +739,100 @@ Before the feature is considered complete:
 3. Run the benchmark script and capture results in a developer note or PR description.
 4. Confirm there is no behavioural change for current MCP callers because the engine default remains sequential.
 5. Confirm documentation avoids claiming a specific speedup until benchmark data exists.
+
+
+## Post-Implementation Analysis (2026-04-18): Why Dependency-Only Scales Less
+
+### Observed Benchmark Shape
+
+Recent benchmark runs over `20k`, `50k`, `80k`, and `200k` iterations show:
+
+- **Resource-constrained contention fixture** scales strongly, reaching about **5.18x** at 8 workers for 200k iterations.
+- **Large dependency-only fixture (100 tasks)** scales well but lower, reaching about **4.20x** at 8 workers for 200k iterations.
+- **Tiny dependency-only fixture (3 tasks)** is intentionally gated to remain sequential via the payoff heuristic (parallel overhead dominates).
+
+So the dependency-only large workload is **not failing to scale**; it is scaling materially, but less than the constrained case.
+
+### Independence Is Necessary, Not Sufficient
+
+Per-iteration independence allows parallel execution, but it does **not** remove all serial and overhead costs.
+
+Total wall clock still includes:
+
+1. Process startup and pool coordination.
+2. Serialization/deserialization of chunk arguments and results.
+3. Parent-side merge of arrays and counters.
+4. Serial post-processing (`_build_results`, percentiles, sensitivity, optional cost analysis).
+
+By Amdahl's law, even with perfectly independent iterations, speedup is bounded by the non-parallel tail.
+
+For 8 workers, using measured speedups:
+
+- Dependency-only large fixture: $S \approx 4.20$  $\Rightarrow$ implied serial fraction $s \approx 0.13$.
+- Constrained contention fixture: $S \approx 5.18$ $\Rightarrow$ implied serial fraction $s \approx 0.078$.
+
+That difference in effective serial fraction explains most of the gap.
+
+### Why the Dependency-Only 100-Task Case Has a Larger Effective Serial Fraction
+
+#### 1. Lower compute intensity per iteration than constrained scheduling
+
+Dependency-only scheduling is algorithmically cheaper than resource-constrained scheduling because it does not resolve resource assignment conflicts and waiting windows. This means each iteration does less useful CPU work to amortize fixed multiprocessing overhead.
+
+In short: constrained mode has **more work per iteration**, so it benefits more from process-level parallelism.
+
+#### 2. Much higher IPC volume for 100-task chunks
+
+At 200k iterations with 8 workers, current chunking uses 64 chunks of 3125 iterations each.
+
+Per chunk for the 100-task dependency-only case (float64 arrays):
+
+- `project_durations`: ~25 KB
+- `task_durations`: ~2.5 MB
+- `task_risk_impacts`: ~2.5 MB
+- `task_slack`: ~2.5 MB
+- scalar diagnostic arrays + maps: additional overhead
+
+Total returned payload is on the order of **~7.5 MB per chunk** before pickle/container overhead, i.e. roughly **~480 MB** transferred from workers to parent over the run.
+
+For the 7-task contention fixture, equivalent payload is roughly an order of magnitude smaller. The heavier IPC burden in the 100-task dependency-only case directly reduces net speedup.
+
+#### 3. Serial post-processing cost grows with task count
+
+After merge, analysis still runs in the parent:
+
+- statistics over large arrays,
+- percentile caching,
+- sensitivity correlations per task.
+
+With 100 tasks this post phase is materially larger than with 7 tasks, further increasing the serial tail.
+
+#### 4. Chunk boundary overhead remains fixed by policy
+
+The chunk policy (`max(workers * 8, 32)`) is chosen for progress smoothness and load balance. It also implies a fixed number of chunk submissions/results per run, each with framing and coordination overhead. If per-chunk payload is large (100-task case), this overhead is more visible.
+
+### Is This an Implementation Bug?
+
+Current evidence says **no**.
+
+- The scaling direction is correct (speedup grows with iteration count).
+- Determinism and correctness tests pass.
+- The relative gap matches expected overhead structure (IPC + serial analysis + lighter per-iteration compute in dependency-only mode).
+
+So this is primarily a **performance-shape characteristic**, not a correctness defect.
+
+### Practical Interpretation
+
+- For heavy constrained workloads, parallel mode provides strong payoff.
+- For heavy dependency-only workloads, parallel mode still helps significantly, but less than constrained mode.
+- For tiny graphs / low iteration counts, sequential remains best and is now enforced by heuristic gating.
+
+### Follow-Up Optimizations (if higher dependency-only speedup is desired)
+
+1. **Reduce IPC payload**: optional "summary-only" mode that does not return all per-task arrays when caller/export path does not need them.
+2. **Adaptive chunk sizing**: larger chunks for high-task-count dependency-only runs to reduce per-chunk framing cost.
+3. **Cheaper cancellation polling**: avoid manager-proxy checks every single iteration (poll every k iterations).
+4. **Post-processing parallelization/vectorization**: especially sensitivity for high task counts.
+5. **Worker state reuse via initializer**: reduce per-chunk reconstruction overhead where safe.
+
+These are optimisation opportunities; they are not blockers for functional correctness.
