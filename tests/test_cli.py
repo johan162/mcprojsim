@@ -2503,3 +2503,54 @@ tasks:
 
         assert result.exit_code == 0
         assert captured["workers"] == 6
+
+    @pytest.mark.parametrize(
+        "option_name,option_value,expected_hint",
+        [
+            ("--iterations", "0", "--iterations"),
+            ("--pass1-iterations", "0", "--pass1-iterations"),
+        ],
+    )
+    def test_simulate_rejects_invalid_iteration_options_before_io(
+        self,
+        monkeypatch,
+        option_name: str,
+        option_value: str,
+        expected_hint: str,
+    ) -> None:
+        """Numeric iteration options must fail at CLI parsing before any I/O."""
+        runner = CliRunner()
+
+        def _fail_load(*args, **kwargs):
+            raise AssertionError("config load should not be reached")
+
+        def _fail_parse(*args, **kwargs):
+            raise AssertionError("project parsing should not be reached")
+
+        monkeypatch.setattr("mcprojsim.cli._load_config_with_user_default", _fail_load)
+        monkeypatch.setattr("mcprojsim.cli.YAMLParser.parse_file", _fail_parse)
+
+        with runner.isolated_filesystem():
+            project_file = Path("project.yaml")
+            project_file.write_text(
+                yaml.safe_dump(
+                    {
+                        "project": {"name": "CLI Test", "start_date": "2025-01-01"},
+                        "tasks": [
+                            {
+                                "id": "task_001",
+                                "name": "Task",
+                                "estimate": {"low": 1, "expected": 2, "high": 3},
+                            }
+                        ],
+                    }
+                )
+            )
+
+            result = runner.invoke(
+                cli,
+                ["simulate", str(project_file), option_name, option_value],
+            )
+
+        assert result.exit_code != 0
+        assert f"Invalid value for '{expected_hint}'" in result.output

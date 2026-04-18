@@ -1018,7 +1018,7 @@ def _output_cost_text(
 @click.option(
     "--iterations",
     "-n",
-    type=int,
+    type=click.IntRange(min=1),
     default=DEFAULT_SIMULATION_ITERATIONS,
     help="Number of simulation iterations",
 )
@@ -1116,7 +1116,7 @@ def _output_cost_text(
 )
 @click.option(
     "--pass1-iterations",
-    type=int,
+    type=click.IntRange(min=1),
     default=None,
     help=(
         "Number of pass-1 iterations for criticality ranking when --two-pass is used. "

@@ -151,6 +151,15 @@ class SimulationEngine:
                 ``auto`` is resolved by the CLI layer before constructing
                 the engine; accept only integers here.
         """
+        if iterations < 1:
+            raise ValueError(f"iterations must be >= 1, got {iterations}")
+        if pass1_iterations is not None and pass1_iterations < 1:
+            raise ValueError(
+                f"pass1_iterations must be >= 1 when provided, got {pass1_iterations}"
+            )
+        if workers < 1:
+            raise ValueError(f"workers must be >= 1, got {workers}")
+
         self.iterations = iterations
         self.random_seed = random_seed
         self.config = config or Config.get_default()

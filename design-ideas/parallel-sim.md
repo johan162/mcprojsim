@@ -206,7 +206,7 @@ def _merge_chunk_results(chunks: list[ChunkResult]) -> MergedAccumulators:
     chunks = sorted(chunks, key=lambda chunk: chunk.chunk_start)
 
     # Integrity guard: total iterations must equal sum of chunk sizes
-    assert sum(c.chunk_size for c in chunks) == sum(c.chunk_size for c in chunks), (
+    assert sum(c.chunk_size for c in chunks) == total_iterations, (
         "chunk sizes do not add up to total iterations"
     )
 
@@ -252,14 +252,17 @@ Across the full run, total transferred result data scales primarily with total i
 
 Parallel dispatch has fixed overhead: process pool startup, argument serialization, result deserialization, and merge. For small workloads this overhead dominates.
 
-Default policy:
+Current implementation policy:
 
-```python
-PARALLEL_MIN_ITERATIONS = 500
-PARALLEL_MIN_TASKS = 5
-```
+- hard floors: do not parallelize when `workers <= 1`, `len(tasks) < 5`, or `iterations < 500`
+- workload proxy: `work_units = iterations * n_tasks * pass_multiplier` where `pass_multiplier=2` in two-pass mode
+- dependency-only (`resources == 0`): require at least `1_000_000` work units
+- constrained mode thresholds by contention index:
+    - contention `>= 0.5` -> `work_units >= 120_000`
+    - contention `>= 0.2` -> `work_units >= 250_000`
+    - otherwise -> `work_units >= 500_000`
 
-Parallelism is enabled only when both thresholds are exceeded **and** `workers > 1`. The user can explicitly set `workers=1` to force sequential execution.
+This heuristic replaces the earlier fixed-threshold-only proposal and better matches measured payoff across fixture sizes.
 
 **Degenerate case — `workers > iterations`**: when the requested worker count exceeds the iteration count (e.g. `workers=8, iterations=3`), the effective worker count must be clamped: `effective_workers = min(self.workers, self.iterations)`. Without this clamp, some chunks would be empty (size 0), causing `np.concatenate([])` to fail and `max()` over an empty sequence to raise. The clamp must be applied before chunk partitioning, not inside the merge.
 
@@ -821,31 +824,29 @@ Recommended fix:
 - include at least one cost-active case,
 - add CLI tests for worker parsing and fail-fast validation.
 
-#### 4. Low — Benchmark implementation is only partially aligned with the plan
+#### 4. Low — Benchmark implementation alignment (resolved)
 
 Files:
 
 - `benchmarks/bench_parallel.py`
 
-The benchmark script exists and has the required `if __name__ == "__main__":` guard, which is good. But it does not yet implement the benchmark matrix described in Step 10:
+The benchmark script now exercises the planned matrix dimensions, including:
 
-- the `cost_active` parameter is currently unused,
-- there is no `auto` worker case,
-- there is no two-pass benchmark,
-- output does not include chunk count or other metadata that would help interpret results.
+- `cost_active` on/off,
+- worker counts including `auto`,
+- single-pass and two-pass modes,
+- chunk-count metadata in output rows.
 
-This is not a correctness issue, but it means the implementation is ahead of the validation story promised by the plan.
+The original gap is closed.
 
-#### 5. Low — Parallel threshold constants are duplicated and drifting
+#### 5. Low — Parallel threshold constants (resolved)
 
 Files:
 
 - `src/mcprojsim/simulation/parallel.py`
 - `src/mcprojsim/simulation/engine.py`
 
-`PARALLEL_MIN_ITERATIONS` and `PARALLEL_MIN_TASKS` are defined in `parallel.py`, but the actual gating logic in `_parallel_expected_payoff_positive()` hardcodes `500` and `5` directly and does not use those constants.
-
-This is not breaking today, but it is an avoidable maintainability problem. The public docs, helper module, and engine heuristic can now drift independently.
+`PARALLEL_MIN_ITERATIONS` and `PARALLEL_MIN_TASKS` are now imported and used by `_parallel_expected_payoff_positive()`, so the minimum floors are centralized in one place.
 
 ### Notable Deviations From The Plan
 
