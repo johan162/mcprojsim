@@ -51,6 +51,7 @@ class TestCli:
                 show_progress: bool,
                 two_pass: bool = False,
                 pass1_iterations: int | None = None,
+                workers: int = 1,
             ) -> None:
                 captured["iterations"] = iterations
                 captured["random_seed"] = random_seed
@@ -125,6 +126,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 captured["engine_config"] = config
 
@@ -239,6 +241,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 captured["config"] = config
 
@@ -426,6 +429,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 captured["config"] = config
 
@@ -515,6 +519,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 captured["config"] = config
 
@@ -603,6 +608,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 captured["config"] = config
 
@@ -679,6 +685,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 captured["config"] = config
 
@@ -765,6 +772,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -850,6 +858,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -990,6 +999,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -1135,6 +1145,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -1279,6 +1290,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -1392,6 +1404,7 @@ class TestCli:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -1585,6 +1598,7 @@ class TestCli:
                 show_progress: bool,
                 two_pass: bool = False,
                 pass1_iterations: int | None = None,
+                workers: int = 1,
             ) -> None:
                 captured["show_progress"] = show_progress
 
@@ -1832,6 +1846,7 @@ tasks:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -1988,6 +2003,7 @@ tasks:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -2103,6 +2119,7 @@ tasks:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 
@@ -2228,6 +2245,7 @@ tasks:
                 show_progress,
                 two_pass=False,
                 pass1_iterations=None,
+                workers: int = 1,
             ) -> None:
                 pass
 

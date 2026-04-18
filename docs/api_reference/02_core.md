@@ -53,6 +53,7 @@ results = engine.run(project)
 | `two_pass` | `bool` | `False` | Enable criticality-two-pass scheduling. Only has effect when resource-constrained scheduling is active. Overrides `config.constrained_scheduling.assignment_mode`. |
 | `pass1_iterations` | `int \| None` | `None` | Number of pass-1 iterations for criticality ranking. Overrides `config.constrained_scheduling.pass1_iterations` when provided. Capped to `iterations`. |
 | `progress_callback` | `Callable[[int, int], None] \| None` | `None` | Optional callback invoked with `(completed_iterations, total_iterations)` during the run. When provided, stdout progress output is suppressed regardless of the `show_progress` flag. The callback is invoked at each 10 % bucket boundary, matching the same cadence as the built-in stdout progress. See [Example 7](./11_api_examples.md#example-7-progress-callback-and-cancellation) for usage. |
+| `workers` | `int` | `1` | Number of worker processes for parallel simulation. `1` uses the sequential path (default and recommended for library/MCP callers). Values > 1 distribute iterations across a short-lived `ProcessPoolExecutor` using the `spawn` start method. The engine falls back to the sequential path when `iterations < 500` or `len(project.tasks) < 5`. |
 
 **Key methods:**
 
