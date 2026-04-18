@@ -836,3 +836,61 @@ So this is primarily a **performance-shape characteristic**, not a correctness d
 5. **Worker state reuse via initializer**: reduce per-chunk reconstruction overhead where safe.
 
 These are optimisation opportunities; they are not blockers for functional correctness.
+
+
+## Chunk-Size Experiment (2026-04-18): Halved Chunk Count + Min 6000 Iterations
+
+### Experiment Setup
+
+To test whether IPC overhead is the dominant limiter, we ran an experiment with two temporary partitioning changes:
+
+1. halve target chunk count from `max(workers * 8, 32)` to `max(workers * 4, 16)`
+2. enforce `chunk_size >= 6000`
+
+Same benchmark matrix as before:
+
+- fixtures: `abundant_resources`, `contention`, `large_100_tasks`
+- workers: `1, 2, 4, 8`
+- iterations: `20k, 50k, 80k, 200k`
+
+### Results vs Baseline
+
+Key comparison at 8 workers (`speedup` relative to 1 worker):
+
+| Fixture | 20k | 50k | 80k | 200k |
+|--------|----:|----:|----:|-----:|
+| contention (baseline) | 2.90x | 4.03x | 4.47x | 5.18x |
+| contention (min 6000) | 1.94x | 3.78x | 4.20x | 5.42x |
+| delta | -0.96x | -0.25x | -0.27x | +0.24x |
+| large_100_tasks (baseline) | 2.80x | 3.55x | 3.79x | 4.20x |
+| large_100_tasks (min 6000) | 1.89x | 3.42x | 3.62x | 4.45x |
+| delta | -0.91x | -0.13x | -0.17x | +0.25x |
+
+Observations:
+
+- At **20k–80k**, forcing a 6000 minimum chunk size clearly hurts speedup.
+- At **200k**, it helps modestly (better amortisation of IPC/framing overhead).
+- `abundant_resources` remains near 1.0x either way (no meaningful gain from parallelism for this tiny graph).
+
+### Interpretation
+
+A large fixed minimum chunk size trades off two effects:
+
+1. **Pro**: fewer, larger payload transfers and less per-chunk framing overhead.
+2. **Con**: coarser load balancing, fewer progress events, and weaker queue refill dynamics.
+
+For medium workloads (20k–80k), the balancing downside dominates. For very large workloads (200k), IPC amortisation starts to dominate.
+
+### Recommendation: Minimum Chunk Size Policy
+
+Do **not** use a global hard minimum of 6000. It is too aggressive for medium-size runs.
+
+Recommended policy:
+
+1. Keep the current baseline chunking (`max(workers * 8, 32)`) as default.
+2. If introducing a minimum chunk size, make it **adaptive**, not fixed:
+    - `iterations < 100_000`: no minimum (or <= 2000)
+    - `100_000 <= iterations < 200_000`: minimum around 3000
+    - `iterations >= 200_000`: minimum around 5000–6000
+
+If a single static value must be chosen, the safest value from this experiment is **~3000**, not 6000, because it is less likely to penalise 20k–80k workloads while still reducing chunk count for larger runs.
