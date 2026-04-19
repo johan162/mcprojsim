@@ -187,7 +187,7 @@ Use the entry point that matches your goal:
 |------------------|-------|
 | [Quickstart Guide](https://johan162.github.io/mcprojsim/quickstart/) | Fastest terminal-based first run |
 | [User Documentation](https://johan162.github.io/mcprojsim/) | The full documentation site |
-| [User Guide](https://johan162.github.io/mcprojsim/user_guide/getting_started/) | The User Guide section |
+| [User Guide](https://johan162.github.io/mcprojsim/user_guide/01_getting_started/) | The User Guide section |
 | [Development Guide](https://johan162.github.io/mcprojsim/development/) | contributor and source-checkout workflows |
 
 
