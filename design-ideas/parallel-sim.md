@@ -1,4 +1,4 @@
-Version: 1.0.0
+Version: 1.1.0
 
 Date: 2026-04-17
 
@@ -206,7 +206,7 @@ def _merge_chunk_results(chunks: list[ChunkResult]) -> MergedAccumulators:
     chunks = sorted(chunks, key=lambda chunk: chunk.chunk_start)
 
     # Integrity guard: total iterations must equal sum of chunk sizes
-    assert sum(c.chunk_size for c in chunks) == sum(c.chunk_size for c in chunks), (
+    assert sum(c.chunk_size for c in chunks) == total_iterations, (
         "chunk sizes do not add up to total iterations"
     )
 
@@ -252,14 +252,17 @@ Across the full run, total transferred result data scales primarily with total i
 
 Parallel dispatch has fixed overhead: process pool startup, argument serialization, result deserialization, and merge. For small workloads this overhead dominates.
 
-Default policy:
+Current implementation policy:
 
-```python
-PARALLEL_MIN_ITERATIONS = 500
-PARALLEL_MIN_TASKS = 5
-```
+- hard floors: do not parallelize when `workers <= 1`, `len(tasks) < 5`, or `iterations < 500`
+- workload proxy: `work_units = iterations * n_tasks * pass_multiplier` where `pass_multiplier=2` in two-pass mode
+- dependency-only (`resources == 0`): require at least `1_000_000` work units
+- constrained mode thresholds by contention index:
+    - contention `>= 0.5` -> `work_units >= 120_000`
+    - contention `>= 0.2` -> `work_units >= 250_000`
+    - otherwise -> `work_units >= 500_000`
 
-Parallelism is enabled only when both thresholds are exceeded **and** `workers > 1`. The user can explicitly set `workers=1` to force sequential execution.
+This heuristic replaces the earlier fixed-threshold-only proposal and better matches measured payoff across fixture sizes.
 
 **Degenerate case — `workers > iterations`**: when the requested worker count exceeds the iteration count (e.g. `workers=8, iterations=3`), the effective worker count must be clamped: `effective_workers = min(self.workers, self.iterations)`. Without this clamp, some chunks would be empty (size 0), causing `np.concatenate([])` to fail and `max()` over an empty sequence to raise. The clamp must be applied before chunk partitioning, not inside the merge.
 
@@ -739,3 +742,279 @@ Before the feature is considered complete:
 3. Run the benchmark script and capture results in a developer note or PR description.
 4. Confirm there is no behavioural change for current MCP callers because the engine default remains sequential.
 5. Confirm documentation avoids claiming a specific speedup until benchmark data exists.
+
+
+##  Implementation Review (2026-04-18)
+
+### Overall Assessment
+
+The implemented architecture is broadly aligned with this design. The important concurrency decisions are correct: the engine uses `spawn`, a manager-backed cancellation event, deterministic chunk sorting during merge, `SeedSequence` partitioning, separate parent sequences for two-pass mode, and correct local-to-global remapping for pass-1 replay caches.
+
+The remaining issues are not in the core multiprocessing design. They are in edge-path correctness, user-visible progress behaviour, and missing coverage around the most failure-prone combinations.
+
+### Status Update
+
+Update later on 2026-04-18: the implementation has since been patched to address the concrete issues identified in findings 1-3 below. Specifically:
+
+- parallel two-pass cost runs no longer fail in `_build_results()`,
+- single-pass parallel again emits stdout progress when no callback is supplied,
+- regression coverage was added for parallel two-pass reproducibility, parallel two-pass cost tracking, and CLI `--workers` validation.
+
+The remaining open follow-up items from this review are the benchmark-matrix alignment work and consolidating the duplicated parallel-threshold constants.
+
+### Findings
+
+#### 1. High — Parallel two-pass cost runs can crash in `_build_results`
+
+Files:
+
+- `src/mcprojsim/simulation/engine.py`
+
+In `_run_two_pass_parallel()`, merged pass-2 cost arrays are passed to `_build_results()` as numpy arrays. Inside `_build_results()`, cost activation is checked with `if project_costs_all:`. That is safe for lists, but not for multi-element `np.ndarray`; numpy raises `ValueError: The truth value of an array with more than one element is ambiguous`.
+
+This is a real runtime bug, not a theoretical concern. It reproduces on a constrained two-pass parallel run when cost tracking is active, for example by adding a default hourly rate to `tests/fixtures/test_fixture_contention.yaml` and running with `workers > 1`.
+
+Impact:
+
+- single-pass parallel cost runs are safe because that path converts arrays back to lists before calling `_build_results()`,
+- sequential two-pass cost runs are safe because they also pass lists,
+- parallel two-pass cost runs fail at result assembly.
+
+Recommended fix:
+
+- change the cost gate in `_build_results()` from truthiness to an explicit `is not None` / length check,
+- add one end-to-end test that exercises `two_pass=True`, `workers>1`, and active cost estimation.
+
+#### 2. Medium — Single-pass parallel suppresses stdout progress entirely
+
+Files:
+
+- `src/mcprojsim/simulation/engine.py`
+
+In `_run_single_pass_parallel()`, completed chunks update progress only when `_progress_callback` is present. There is no `elif self.show_progress:` branch, so the eligible single-pass parallel path produces no stdout progress output at all.
+
+This is user-visible and easy to verify: a large parallel-eligible single-pass run with `show_progress=True` writes nothing to `progress_stream`, while the sequential path and the two-pass parallel path both report progress.
+
+This is also a deviation from the implementation plan in Step 6, which called for chunk-completion progress updates in the normal stdout path as well as in callback mode.
+
+Recommended fix:
+
+- mirror the `_run_two_pass_parallel()` behaviour in `_run_single_pass_parallel()`,
+- add a test that captures `progress_stream` for a parallel-eligible single-pass run and asserts that progress text is emitted when no callback is supplied.
+
+#### 3. Medium — The highest-risk parallel path is not covered by tests
+
+Files:
+
+- `tests/test_parallel_simulation.py`
+- `tests/test_two_pass_simulation.py`
+- `tests/test_cli.py`
+
+The new test file covers chunk partitioning, merge determinism, direct `_run_chunk()` calls, heuristic gating, and single-pass integration. What is still missing is the path most likely to break:
+
+- `workers > 1` combined with `two_pass=True`,
+- parallel two-pass with active cost estimation,
+- CLI validation for `--workers 0`, `--workers -1`, `--workers abc`, and `--workers auto`.
+
+The first finding escaped because this exact two-pass-parallel-cost combination is not exercised anywhere in the current suite.
+
+Recommended fix:
+
+- extend `tests/test_two_pass_simulation.py` or add a dedicated section in `tests/test_parallel_simulation.py` for parallel two-pass,
+- include at least one cost-active case,
+- add CLI tests for worker parsing and fail-fast validation.
+
+#### 4. Low — Benchmark implementation alignment (resolved)
+
+Files:
+
+- `benchmarks/bench_parallel.py`
+
+The benchmark script now exercises the planned matrix dimensions, including:
+
+- `cost_active` on/off,
+- worker counts including `auto`,
+- single-pass and two-pass modes,
+- chunk-count metadata in output rows.
+
+The original gap is closed.
+
+#### 5. Low — Parallel threshold constants (resolved)
+
+Files:
+
+- `src/mcprojsim/simulation/parallel.py`
+- `src/mcprojsim/simulation/engine.py`
+
+`PARALLEL_MIN_ITERATIONS` and `PARALLEL_MIN_TASKS` are now imported and used by `_parallel_expected_payoff_positive()`, so the minimum floors are centralized in one place.
+
+### Notable Deviations From The Plan
+
+The implementation also differs from the step-by-step plan in a few smaller ways:
+
+- `_run_single_pass_parallel()` submits all chunks up front instead of incrementally refilling the executor queue. That is simpler and acceptable for the current chunk counts, but it is not what Step 4 described.
+- `run()` resets `_cancelled` in the `finally` block instead of at the start of the method. This differs from the text in the design, but the current behaviour is defensible because it preserves the ability for `cancel()` called before `run()` to abort the next run immediately. The current test coverage around engine reuse after cancellation is good.
+
+### Recommended Updates
+
+1. Fix the `_build_results()` cost-array truthiness bug first. It is the only confirmed correctness issue that can crash a valid supported run.
+2. Restore stdout progress reporting in `_run_single_pass_parallel()` so single-pass parallel UX matches the rest of the engine.
+3. Add integration tests for `two_pass=True` with `workers>1`, including one cost-active case and one reproducibility case.
+4. Add CLI tests for `--workers` parsing and early validation.
+5. Bring `benchmarks/bench_parallel.py` up to the promised matrix or scale back the benchmark claims in the design and docs.
+6. Consolidate the minimum-threshold constants into one source of truth.
+
+
+## Post-Implementation Analysis (2026-04-18): Why Dependency-Only Scales Less
+
+### Observed Benchmark Shape
+
+Recent benchmark runs over `20k`, `50k`, `80k`, and `200k` iterations show:
+
+- **Resource-constrained contention fixture** scales strongly, reaching about **5.18x** at 8 workers for 200k iterations.
+- **Large dependency-only fixture (100 tasks)** scales well but lower, reaching about **4.20x** at 8 workers for 200k iterations.
+- **Tiny dependency-only fixture (3 tasks)** is intentionally gated to remain sequential via the payoff heuristic (parallel overhead dominates).
+
+So the dependency-only large workload is **not failing to scale**; it is scaling materially, but less than the constrained case.
+
+### Independence Is Necessary, Not Sufficient
+
+Per-iteration independence allows parallel execution, but it does **not** remove all serial and overhead costs.
+
+Total wall clock still includes:
+
+1. Process startup and pool coordination.
+2. Serialization/deserialization of chunk arguments and results.
+3. Parent-side merge of arrays and counters.
+4. Serial post-processing (`_build_results`, percentiles, sensitivity, optional cost analysis).
+
+By Amdahl's law, even with perfectly independent iterations, speedup is bounded by the non-parallel tail.
+
+For 8 workers, using measured speedups:
+
+- Dependency-only large fixture: $S \approx 4.20$  $\Rightarrow$ implied serial fraction $s \approx 0.13$.
+- Constrained contention fixture: $S \approx 5.18$ $\Rightarrow$ implied serial fraction $s \approx 0.078$.
+
+That difference in effective serial fraction explains most of the gap.
+
+### Why the Dependency-Only 100-Task Case Has a Larger Effective Serial Fraction
+
+#### 1. Lower compute intensity per iteration than constrained scheduling
+
+Dependency-only scheduling is algorithmically cheaper than resource-constrained scheduling because it does not resolve resource assignment conflicts and waiting windows. This means each iteration does less useful CPU work to amortize fixed multiprocessing overhead.
+
+In short: constrained mode has **more work per iteration**, so it benefits more from process-level parallelism.
+
+#### 2. Much higher IPC volume for 100-task chunks
+
+At 200k iterations with 8 workers, current chunking uses 64 chunks of 3125 iterations each.
+
+Per chunk for the 100-task dependency-only case (float64 arrays):
+
+- `project_durations`: ~25 KB
+- `task_durations`: ~2.5 MB
+- `task_risk_impacts`: ~2.5 MB
+- `task_slack`: ~2.5 MB
+- scalar diagnostic arrays + maps: additional overhead
+
+Total returned payload is on the order of **~7.5 MB per chunk** before pickle/container overhead, i.e. roughly **~480 MB** transferred from workers to parent over the run.
+
+For the 7-task contention fixture, equivalent payload is roughly an order of magnitude smaller. The heavier IPC burden in the 100-task dependency-only case directly reduces net speedup.
+
+#### 3. Serial post-processing cost grows with task count
+
+After merge, analysis still runs in the parent:
+
+- statistics over large arrays,
+- percentile caching,
+- sensitivity correlations per task.
+
+With 100 tasks this post phase is materially larger than with 7 tasks, further increasing the serial tail.
+
+#### 4. Chunk boundary overhead remains fixed by policy
+
+The chunk policy (`max(workers * 8, 32)`) is chosen for progress smoothness and load balance. It also implies a fixed number of chunk submissions/results per run, each with framing and coordination overhead. If per-chunk payload is large (100-task case), this overhead is more visible.
+
+### Is This an Implementation Bug?
+
+Current evidence says **no**.
+
+- The scaling direction is correct (speedup grows with iteration count).
+- Determinism and correctness tests pass.
+- The relative gap matches expected overhead structure (IPC + serial analysis + lighter per-iteration compute in dependency-only mode).
+
+So this is primarily a **performance-shape characteristic**, not a correctness defect.
+
+### Practical Interpretation
+
+- For heavy constrained workloads, parallel mode provides strong payoff.
+- For heavy dependency-only workloads, parallel mode still helps significantly, but less than constrained mode.
+- For tiny graphs / low iteration counts, sequential remains best and is now enforced by heuristic gating.
+
+### Follow-Up Optimizations (if higher dependency-only speedup is desired)
+
+1. **Reduce IPC payload**: optional "summary-only" mode that does not return all per-task arrays when caller/export path does not need them.
+2. **Adaptive chunk sizing**: larger chunks for high-task-count dependency-only runs to reduce per-chunk framing cost.
+3. **Cheaper cancellation polling**: avoid manager-proxy checks every single iteration (poll every k iterations).
+4. **Post-processing parallelization/vectorization**: especially sensitivity for high task counts.
+5. **Worker state reuse via initializer**: reduce per-chunk reconstruction overhead where safe.
+
+These are optimisation opportunities; they are not blockers for functional correctness.
+
+
+## Chunk-Size Experiment (2026-04-18): Halved Chunk Count + Min 6000 Iterations
+
+### Experiment Setup
+
+To test whether IPC overhead is the dominant limiter, we ran an experiment with two temporary partitioning changes:
+
+1. halve target chunk count from `max(workers * 8, 32)` to `max(workers * 4, 16)`
+2. enforce `chunk_size >= 6000`
+
+Same benchmark matrix as before:
+
+- fixtures: `abundant_resources`, `contention`, `large_100_tasks`
+- workers: `1, 2, 4, 8`
+- iterations: `20k, 50k, 80k, 200k`
+
+### Results vs Baseline
+
+Key comparison at 8 workers (`speedup` relative to 1 worker):
+
+| Fixture | 20k | 50k | 80k | 200k |
+|--------|----:|----:|----:|-----:|
+| contention (baseline) | 2.90x | 4.03x | 4.47x | 5.18x |
+| contention (min 6000) | 1.94x | 3.78x | 4.20x | 5.42x |
+| delta | -0.96x | -0.25x | -0.27x | +0.24x |
+| large_100_tasks (baseline) | 2.80x | 3.55x | 3.79x | 4.20x |
+| large_100_tasks (min 6000) | 1.89x | 3.42x | 3.62x | 4.45x |
+| delta | -0.91x | -0.13x | -0.17x | +0.25x |
+
+Observations:
+
+- At **20k–80k**, forcing a 6000 minimum chunk size clearly hurts speedup.
+- At **200k**, it helps modestly (better amortisation of IPC/framing overhead).
+- `abundant_resources` remains near 1.0x either way (no meaningful gain from parallelism for this tiny graph).
+
+### Interpretation
+
+A large fixed minimum chunk size trades off two effects:
+
+1. **Pro**: fewer, larger payload transfers and less per-chunk framing overhead.
+2. **Con**: coarser load balancing, fewer progress events, and weaker queue refill dynamics.
+
+For medium workloads (20k–80k), the balancing downside dominates. For very large workloads (200k), IPC amortisation starts to dominate.
+
+### Recommendation: Minimum Chunk Size Policy
+
+Do **not** use a global hard minimum of 6000. It is too aggressive for medium-size runs.
+
+Recommended policy:
+
+1. Keep the current baseline chunking (`max(workers * 8, 32)`) as default.
+2. If introducing a minimum chunk size, make it **adaptive**, not fixed:
+    - `iterations < 100_000`: no minimum (or <= 2000)
+    - `100_000 <= iterations < 200_000`: minimum around 3000
+    - `iterations >= 200_000`: minimum around 5000–6000
+
+If a single static value must be chosen, the safest value from this experiment is **~3000**, not 6000, because it is less likely to penalise 20k–80k workloads while still reducing chunk count for larger runs.

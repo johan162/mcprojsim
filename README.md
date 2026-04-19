@@ -27,6 +27,7 @@ Use it when you need answers like:
 ## Key features
 
 - Monte Carlo schedule simulation with configurable iterations, P10–P99 confidence percentiles, and reproducible seeds
+- **Parallel simulation** with `--workers N` to distribute iterations across multiple CPU cores for faster results on large projects
 - Flexible task estimates: explicit low/expected/high ranges, T-shirt sizes, story points, and multi-category symbolic sizing
 - Two-pass criticality-aware resource scheduling for optimised assignment under resource contention
 - Dependency-only scheduling alongside resource- and calendar-constrained scheduling

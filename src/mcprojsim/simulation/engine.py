@@ -1,10 +1,12 @@
 """Monte Carlo simulation engine."""
 
 from collections import Counter
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
 import logging
+import multiprocessing
 import sys
-from typing import Any, Callable, Dict, Optional, TextIO
+from typing import Any, Callable, Dict, Optional, TextIO, Union
 
 import numpy as np
 
@@ -27,6 +29,10 @@ from mcprojsim.models.simulation import (
     CriticalPathRecord,
     SimulationResults,
     TwoPassDelta,
+)
+from mcprojsim.simulation.parallel import (
+    PARALLEL_MIN_ITERATIONS,
+    PARALLEL_MIN_TASKS,
 )
 from mcprojsim.simulation.distributions import DistributionSampler
 from mcprojsim.simulation.risk_evaluator import RiskEvaluator
@@ -122,6 +128,7 @@ class SimulationEngine:
         two_pass: bool = False,
         pass1_iterations: Optional[int] = None,
         progress_callback: Optional[Callable[[int, int], None]] = None,
+        workers: int = 1,
     ):
         """Initialize simulation engine.
 
@@ -138,7 +145,21 @@ class SimulationEngine:
                 ``(completed_iterations, total_iterations)`` during the run.
                 When provided, stdout progress output is suppressed regardless
                 of the *show_progress* flag.
+            workers: Number of worker processes for parallel execution.
+                ``1`` (default) forces sequential execution.  Values > 1
+                enable a ``ProcessPoolExecutor`` with that many workers.
+                ``auto`` is resolved by the CLI layer before constructing
+                the engine; accept only integers here.
         """
+        if iterations < 1:
+            raise ValueError(f"iterations must be >= 1, got {iterations}")
+        if pass1_iterations is not None and pass1_iterations < 1:
+            raise ValueError(
+                f"pass1_iterations must be >= 1 when provided, got {pass1_iterations}"
+            )
+        if workers < 1:
+            raise ValueError(f"workers must be >= 1, got {workers}")
+
         self.iterations = iterations
         self.random_seed = random_seed
         self.config = config or Config.get_default()
@@ -147,6 +168,9 @@ class SimulationEngine:
         self.progress_stream: TextIO = sys.stdout
         self._progress_is_tty = self.progress_stream.isatty()
         self._cancelled: bool = False
+        self.workers: int = workers
+        # Set to a manager-backed Event proxy during a parallel run; None otherwise.
+        self._active_cancel_event: Optional[Any] = None
 
         # Two-pass CLI override takes precedence over config.
         if two_pass:
@@ -170,8 +194,12 @@ class SimulationEngine:
 
         The engine checks this flag at the top of each iteration.  When set,
         the current ``run()`` call raises :class:`SimulationCancelled`.
+        For parallel runs the active manager-backed cancel event is also set
+        so that worker processes learn about cancellation promptly.
         """
         self._cancelled = True
+        if self._active_cancel_event is not None:
+            self._active_cancel_event.set()
 
     def run(self, project: Project) -> SimulationResults:
         """Run Monte Carlo simulation for project.
@@ -195,20 +223,102 @@ class SimulationEngine:
         Returns:
             Simulation results
         """
-        static_data = self._build_project_run_static_data(project)
-        use_two_pass = (
-            self.config.constrained_scheduling.assignment_mode
-            == ConstrainedSchedulingAssignmentMode.CRITICALITY_TWO_PASS
-            and len(project.resources) > 0
-        )
+        # Reset cancellation state at the end so a previously cancelled engine
+        # can be reused, while still allowing cancel() called before run() to raise.
+        try:
+            static_data = self._build_project_run_static_data(project)
+            use_two_pass = (
+                self.config.constrained_scheduling.assignment_mode
+                == ConstrainedSchedulingAssignmentMode.CRITICALITY_TWO_PASS
+                and len(project.resources) > 0
+            )
 
-        if use_two_pass:
-            return self._run_two_pass(project, static_data)
-        return self._run_single_pass(project, static_data)
+            if use_two_pass:
+                return self._run_two_pass(project, static_data)
+            return self._run_single_pass(project, static_data)
+        finally:
+            self._cancelled = False
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _resource_contention_index(self, project: Project) -> float:
+        """Estimate how strongly tasks compete for shared named resources.
+
+        Returns a value in [0, 1], where 0 means no measurable sharing and
+        1 means every resource assignment targets a resource that is shared by
+        at least one other task.
+        """
+        if not project.resources:
+            return 0.0
+
+        assignment_counts: Dict[str, int] = {}
+        total_assignments = 0
+        for task in project.tasks:
+            for res_name in task.resources:
+                total_assignments += 1
+                assignment_counts[res_name] = assignment_counts.get(res_name, 0) + 1
+
+        if total_assignments == 0:
+            return 0.0
+
+        shared_assignments = 0
+        for task in project.tasks:
+            for res_name in task.resources:
+                if assignment_counts.get(res_name, 0) > 1:
+                    shared_assignments += 1
+
+        return shared_assignments / total_assignments
+
+    def _parallel_expected_payoff_positive(
+        self,
+        project: Project,
+        two_pass: bool = False,
+    ) -> bool:
+        """Return True when expected parallel payoff is positive for this run.
+
+        The heuristic combines overall work size with scheduling complexity:
+
+        - Work proxy: ``iterations * n_tasks``
+        - Two-pass multiplier: pass-1 + pass-2 work roughly doubles scheduler cost
+        - Resource contention: lower threshold when assignments are highly shared
+
+        This keeps parallel mode off for tiny runs where process overhead
+        dominates, while enabling it for large constrained workloads where
+        scheduling work is expensive.
+        """
+        if self.workers <= 1:
+            return False
+
+        n_tasks = len(project.tasks)
+        if n_tasks == 0:
+            return False
+
+        # Very small graphs rarely amortize multiprocessing overhead.
+        if n_tasks < PARALLEL_MIN_TASKS:
+            return False
+
+        # Absolute floor: below this, spawn/IPC overhead is almost always dominant.
+        if self.iterations < PARALLEL_MIN_ITERATIONS:
+            return False
+
+        pass_multiplier = 2 if two_pass else 1
+        work_units = self.iterations * n_tasks * pass_multiplier
+
+        # Dependency-only (or unconstrained) scheduling generally needs more work
+        # before process-level parallelism pays off.
+        if len(project.resources) == 0:
+            return work_units >= 1_000_000
+
+        contention_index = self._resource_contention_index(project)
+
+        # Strongly contended resource assignments benefit earlier.
+        if contention_index >= 0.5:
+            return work_units >= 120_000
+        if contention_index >= 0.2:
+            return work_units >= 250_000
+        return work_units >= 500_000
 
     def _run_single_pass(
         self,
@@ -216,6 +326,9 @@ class SimulationEngine:
         static_data: ProjectRunStaticData,
     ) -> SimulationResults:
         """Run the standard (single-pass greedy) simulation."""
+        if self._parallel_expected_payoff_positive(project, two_pass=False):
+            return self._run_single_pass_parallel(project, static_data)
+
         scheduler = TaskScheduler(project, self.random_state, self.config)
         hours_per_day = project.project.hours_per_day
 
@@ -300,12 +413,16 @@ class SimulationEngine:
 
             critical_path_sequences.update(critical_paths)
 
-            if self.show_progress:
+            if self.show_progress or self._progress_callback is not None:
                 last_reported_progress = self._maybe_report_progress(
                     iteration, self.iterations, last_reported_progress
                 )
 
-        if self.show_progress and self._progress_is_tty:
+        if (
+            self.show_progress
+            and self._progress_callback is None
+            and self._progress_is_tty
+        ):
             self.progress_stream.write("\n")
             self.progress_stream.flush()
 
@@ -326,6 +443,113 @@ class SimulationEngine:
             task_costs_all=task_costs_all if cost_active else None,
         )
 
+    def _run_single_pass_parallel(
+        self,
+        project: Project,
+        static_data: ProjectRunStaticData,
+    ) -> SimulationResults:
+        """Parallel variant of the single-pass simulation using ProcessPoolExecutor."""
+        from mcprojsim.simulation.parallel import (
+            _run_chunk,  # pyright: ignore[reportPrivateUsage]
+            merge_chunk_results,
+            partition_chunks,
+            partition_seeds,
+        )
+
+        effective_workers = min(self.workers, self.iterations)
+        chunks = partition_chunks(self.iterations, effective_workers)
+
+        assert (
+            sum(size for _, size in chunks) == self.iterations
+        ), "Partition sizes do not sum to total iterations"
+
+        child_seeds = partition_seeds(self.random_seed, len(chunks))
+        project_dict = project.model_dump(mode="python", exclude_none=True)
+        config_dict = self.config.model_dump(mode="python", exclude_none=True)
+
+        completed_iterations = 0
+        chunk_results = []
+
+        ctx = multiprocessing.get_context("spawn")
+        manager = ctx.Manager()
+        cancel_event = manager.Event()
+        self._active_cancel_event = cancel_event
+
+        try:
+            with ProcessPoolExecutor(
+                max_workers=effective_workers, mp_context=ctx
+            ) as executor:
+                future_to_chunk = {
+                    executor.submit(
+                        _run_chunk,
+                        project_dict,
+                        config_dict,
+                        start,
+                        size,
+                        child_seeds[i],
+                        None,  # task_priority
+                        None,  # cached_durations_slice
+                        None,  # cached_cost_impacts_slice
+                        cancel_event,
+                        False,  # store_duration_cache
+                    ): (start, size)
+                    for i, (start, size) in enumerate(chunks)
+                }
+
+                try:
+                    for future in as_completed(future_to_chunk):
+                        if self._cancelled:
+                            raise SimulationCancelled()
+                        result = future.result()
+                        chunk_results.append(result)
+                        completed_iterations += result.chunk_size
+                        if self.show_progress or self._progress_callback is not None:
+                            progress = (completed_iterations * 100) // self.iterations
+                            self._report_progress(
+                                progress,
+                                completed_iterations,
+                                total_iterations=self.iterations,
+                            )
+                except SimulationCancelled:
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    raise
+        finally:
+            self._active_cancel_event = None
+            manager.shutdown()
+
+        if (
+            self.show_progress
+            and self._progress_callback is None
+            and sys.stderr.isatty()
+        ):
+            sys.stderr.write("\n")
+            sys.stderr.flush()
+        merged = merge_chunk_results(chunk_results, self.iterations)
+        return self._build_results(
+            project,
+            merged.project_durations,
+            merged.task_durations_all,
+            merged.task_risk_impacts_all,
+            list(merged.project_risk_impacts_all),
+            merged.task_slack_accum,
+            merged.critical_path_frequency,
+            merged.critical_path_sequences,
+            merged.max_parallel_overall,
+            list(merged.resource_wait_time_all),
+            list(merged.resource_utilization_all),
+            list(merged.calendar_delay_time_all),
+            project_costs_all=(
+                list(merged.project_costs_all)
+                if merged.project_costs_all is not None
+                else None
+            ),
+            task_costs_all=(
+                {tid: list(v) for tid, v in merged.task_costs_all.items()}
+                if merged.task_costs_all is not None
+                else None
+            ),
+        )
+
     def _run_two_pass(
         self,
         project: Project,
@@ -337,6 +561,11 @@ class SimulationEngine:
             self.config.constrained_scheduling.pass1_iterations,
             self.iterations,
         )
+
+        if self._parallel_expected_payoff_positive(project, two_pass=True):
+            return self._run_two_pass_parallel(project, static_data, effective_p1_iters)
+
+        total_progress_iterations = effective_p1_iters + self.iterations
 
         if effective_p1_iters < 100 and self.iterations >= 100:
             logger.warning(
@@ -362,7 +591,7 @@ class SimulationEngine:
         duration_cache = DurationCache()
         cost_impact_cache = CostImpactCache()
 
-        if self.show_progress:
+        if self.show_progress and self._progress_callback is None:
             self.progress_stream.write("Pass 1: computing criticality indices\n")
             self.progress_stream.flush()
 
@@ -411,7 +640,7 @@ class SimulationEngine:
                 duration_cache.store(iteration, task_id, dur)
             cost_impact_cache.store(iteration, task_risk_cost_impacts_p1)
 
-            if self.show_progress:
+            if self.show_progress or self._progress_callback is not None:
                 completed = iteration + 1
                 current_progress = (completed * 100) // effective_p1_iters
                 bucket = (current_progress // 10) * 10
@@ -419,10 +648,20 @@ class SimulationEngine:
                     completed == effective_p1_iters and last_reported_p1 < 100
                 ):
                     rep = 100 if completed == effective_p1_iters else bucket
-                    self._report_progress(rep, completed)
+                    self._report_progress(
+                        rep,
+                        completed,
+                        total_iterations=effective_p1_iters,
+                        callback_completed=completed,
+                        callback_total=total_progress_iterations,
+                    )
                     last_reported_p1 = rep
 
-        if self.show_progress and self._progress_is_tty:
+        if (
+            self.show_progress
+            and self._progress_callback is None
+            and self._progress_is_tty
+        ):
             self.progress_stream.write("\n")
             self.progress_stream.flush()
 
@@ -459,7 +698,7 @@ class SimulationEngine:
         project_costs_all: list[float] = []
         task_costs_all: Dict[str, list[float]] = {task.id: [] for task in project.tasks}
 
-        if self.show_progress:
+        if self.show_progress and self._progress_callback is None:
             self.progress_stream.write("Pass 2: priority-ordered scheduling\n")
             self.progress_stream.flush()
 
@@ -545,7 +784,7 @@ class SimulationEngine:
                 critical_path_frequency[task_id] += 1
             critical_path_sequences.update(critical_paths)
 
-            if self.show_progress:
+            if self.show_progress or self._progress_callback is not None:
                 completed = iteration + 1
                 current_progress = (completed * 100) // self.iterations
                 bucket = (current_progress // 10) * 10
@@ -553,10 +792,20 @@ class SimulationEngine:
                     completed == self.iterations and last_reported_p2 < 100
                 ):
                     rep = 100 if completed == self.iterations else bucket
-                    self._report_progress(rep, completed)
+                    self._report_progress(
+                        rep,
+                        completed,
+                        total_iterations=self.iterations,
+                        callback_completed=effective_p1_iters + completed,
+                        callback_total=total_progress_iterations,
+                    )
                     last_reported_p2 = rep
 
-        if self.show_progress and self._progress_is_tty:
+        if (
+            self.show_progress
+            and self._progress_callback is None
+            and self._progress_is_tty
+        ):
             self.progress_stream.write("\n")
             self.progress_stream.flush()
 
@@ -631,22 +880,301 @@ class SimulationEngine:
 
         return results
 
+    def _run_two_pass_parallel(
+        self,
+        project: Project,
+        static_data: ProjectRunStaticData,
+        effective_p1_iters: int,
+    ) -> SimulationResults:
+        """Parallel two-pass execution with pass-1 replay into pass-2."""
+        from numpy.random import SeedSequence
+
+        from mcprojsim.simulation.parallel import (
+            _run_chunk,  # pyright: ignore[reportPrivateUsage]
+            merge_chunk_results,
+            partition_chunks,
+            partition_seeds,
+        )
+
+        if self._cancelled:
+            raise SimulationCancelled()
+
+        project_dict = project.model_dump(mode="python", exclude_none=True)
+        config_dict = self.config.model_dump(mode="python", exclude_none=True)
+        root_seq = SeedSequence(self.random_seed)
+        pass1_seq, pass2_seq = root_seq.spawn(2)
+        total_progress_iterations = effective_p1_iters + self.iterations
+
+        ctx = multiprocessing.get_context("spawn")
+        manager = ctx.Manager()
+        cancel_event = manager.Event()
+        self._active_cancel_event = cancel_event
+
+        try:
+            # -------------------------------
+            # Pass 1: parallel greedy baseline
+            # -------------------------------
+            p1_workers = min(self.workers, effective_p1_iters)
+            p1_chunks = partition_chunks(effective_p1_iters, p1_workers)
+            assert (
+                sum(size for _, size in p1_chunks) == effective_p1_iters
+            ), "Pass-1 chunk sizes do not sum to pass1_iterations"
+            p1_child_seeds = partition_seeds(
+                random_seed=None,
+                n_chunks=len(p1_chunks),
+                parent_seq=pass1_seq,
+            )
+
+            if self.show_progress and self._progress_callback is None:
+                self.progress_stream.write("Pass 1: computing criticality indices\n")
+                self.progress_stream.flush()
+
+            p1_results = []
+            p1_completed = 0
+            with ProcessPoolExecutor(
+                max_workers=p1_workers, mp_context=ctx
+            ) as executor:
+                futures = [
+                    executor.submit(
+                        _run_chunk,
+                        project_dict,
+                        config_dict,
+                        start,
+                        size,
+                        p1_child_seeds[i],
+                        None,
+                        None,
+                        None,
+                        cancel_event,
+                        True,
+                    )
+                    for i, (start, size) in enumerate(p1_chunks)
+                ]
+
+                try:
+                    for future in as_completed(futures):
+                        if self._cancelled:
+                            raise SimulationCancelled()
+                        result = future.result()
+                        p1_results.append(result)
+                        p1_completed += result.chunk_size
+                        if self.show_progress or self._progress_callback is not None:
+                            progress = (p1_completed * 100) // effective_p1_iters
+                            self._report_progress(
+                                progress,
+                                p1_completed,
+                                total_iterations=effective_p1_iters,
+                                callback_completed=p1_completed,
+                                callback_total=total_progress_iterations,
+                            )
+                except SimulationCancelled:
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    raise
+
+            if (
+                self.show_progress
+                and self._progress_callback is None
+                and self._progress_is_tty
+            ):
+                self.progress_stream.write("\n")
+                self.progress_stream.flush()
+
+            merged_p1 = merge_chunk_results(p1_results, effective_p1_iters)
+            p1_critical_path_freq = merged_p1.critical_path_frequency
+            p1_durations_arr = merged_p1.project_durations
+            p1_resource_wait = merged_p1.resource_wait_time_all
+            p1_resource_util = merged_p1.resource_utilization_all
+            p1_calendar_delay = merged_p1.calendar_delay_time_all
+
+            global_duration_cache = merged_p1.global_duration_cache or {}
+            global_cost_impact_cache = merged_p1.global_cost_impact_cache or {}
+            assert (
+                len(global_duration_cache) == effective_p1_iters
+            ), "Pass-1 duration cache size mismatch; global remap is broken"
+            assert (
+                len(global_cost_impact_cache) == effective_p1_iters
+            ), "Pass-1 cost impact cache size mismatch; global remap is broken"
+
+            task_ci: Dict[str, float] = {}
+            for task_id, count in p1_critical_path_freq.items():
+                ci = count / effective_p1_iters
+                assert 0.0 <= ci <= 1.0, f"CI out of range for {task_id}: {ci}"
+                task_ci[task_id] = ci
+
+            # -------------------------------
+            # Pass 2: parallel prioritised run
+            # -------------------------------
+            p2_workers = min(self.workers, self.iterations)
+            p2_chunks = partition_chunks(self.iterations, p2_workers)
+            assert (
+                sum(size for _, size in p2_chunks) == self.iterations
+            ), "Pass-2 chunk sizes do not sum to total iterations"
+            p2_child_seeds = partition_seeds(
+                random_seed=None,
+                n_chunks=len(p2_chunks),
+                parent_seq=pass2_seq,
+            )
+
+            if self.show_progress and self._progress_callback is None:
+                self.progress_stream.write("Pass 2: priority-ordered scheduling\n")
+                self.progress_stream.flush()
+
+            p2_results = []
+            p2_completed = 0
+            with ProcessPoolExecutor(
+                max_workers=p2_workers, mp_context=ctx
+            ) as executor:
+                futures = []
+                for i, (start, size) in enumerate(p2_chunks):
+                    replay_end = min(start + size, effective_p1_iters)
+                    if start < replay_end:
+                        cached_durations_slice = {
+                            gidx: global_duration_cache[gidx]
+                            for gidx in range(start, replay_end)
+                        }
+                        cached_cost_impacts_slice = {
+                            gidx: global_cost_impact_cache[gidx]
+                            for gidx in range(start, replay_end)
+                        }
+                    else:
+                        cached_durations_slice = None
+                        cached_cost_impacts_slice = None
+
+                    futures.append(
+                        executor.submit(
+                            _run_chunk,
+                            project_dict,
+                            config_dict,
+                            start,
+                            size,
+                            p2_child_seeds[i],
+                            task_ci,
+                            cached_durations_slice,
+                            cached_cost_impacts_slice,
+                            cancel_event,
+                            False,
+                        )
+                    )
+
+                try:
+                    for future in as_completed(futures):
+                        if self._cancelled:
+                            raise SimulationCancelled()
+                        result = future.result()
+                        p2_results.append(result)
+                        p2_completed += result.chunk_size
+                        if self.show_progress or self._progress_callback is not None:
+                            progress = (p2_completed * 100) // self.iterations
+                            self._report_progress(
+                                progress,
+                                p2_completed,
+                                total_iterations=self.iterations,
+                                callback_completed=effective_p1_iters + p2_completed,
+                                callback_total=total_progress_iterations,
+                            )
+                except SimulationCancelled:
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    raise
+
+            if (
+                self.show_progress
+                and self._progress_callback is None
+                and self._progress_is_tty
+            ):
+                self.progress_stream.write("\n")
+                self.progress_stream.flush()
+
+            merged_p2 = merge_chunk_results(p2_results, self.iterations)
+            results = self._build_results(
+                project,
+                merged_p2.project_durations,
+                merged_p2.task_durations_all,
+                merged_p2.task_risk_impacts_all,
+                merged_p2.project_risk_impacts_all,
+                merged_p2.task_slack_accum,
+                merged_p2.critical_path_frequency,
+                merged_p2.critical_path_sequences,
+                merged_p2.max_parallel_overall,
+                merged_p2.resource_wait_time_all,
+                merged_p2.resource_utilization_all,
+                merged_p2.calendar_delay_time_all,
+                project_costs_all=merged_p2.project_costs_all,
+                task_costs_all=merged_p2.task_costs_all,
+            )
+
+            p1_mean = float(np.mean(p1_durations_arr))
+            p1_p50 = float(np.percentile(p1_durations_arr, 50))
+            p1_p80 = float(np.percentile(p1_durations_arr, 80))
+            p1_p90 = float(np.percentile(p1_durations_arr, 90))
+            p1_p95 = float(np.percentile(p1_durations_arr, 95))
+            p1_rw = float(np.mean(p1_resource_wait))
+            p1_ru = float(np.mean(p1_resource_util))
+            p1_cd = float(np.mean(p1_calendar_delay))
+
+            p2_mean = results.mean
+            p2_p50 = results.percentile(50)
+            p2_p80 = results.percentile(80)
+            p2_p90 = results.percentile(90)
+            p2_p95 = results.percentile(95)
+            p2_rw = results.resource_wait_time_hours
+            p2_ru = results.resource_utilization
+            p2_cd = results.calendar_delay_time_hours
+
+            results.two_pass_trace = TwoPassDelta(
+                enabled=True,
+                pass1_iterations=effective_p1_iters,
+                pass2_iterations=self.iterations,
+                ranking_method="criticality_index",
+                pass1_mean_hours=p1_mean,
+                pass1_p50_hours=p1_p50,
+                pass1_p80_hours=p1_p80,
+                pass1_p90_hours=p1_p90,
+                pass1_p95_hours=p1_p95,
+                pass1_resource_wait_hours=p1_rw,
+                pass1_resource_utilization=p1_ru,
+                pass1_calendar_delay_hours=p1_cd,
+                pass2_mean_hours=p2_mean,
+                pass2_p50_hours=p2_p50,
+                pass2_p80_hours=p2_p80,
+                pass2_p90_hours=p2_p90,
+                pass2_p95_hours=p2_p95,
+                pass2_resource_wait_hours=p2_rw,
+                pass2_resource_utilization=p2_ru,
+                pass2_calendar_delay_hours=p2_cd,
+                delta_mean_hours=p2_mean - p1_mean,
+                delta_p50_hours=p2_p50 - p1_p50,
+                delta_p80_hours=p2_p80 - p1_p80,
+                delta_p90_hours=p2_p90 - p1_p90,
+                delta_p95_hours=p2_p95 - p1_p95,
+                delta_resource_wait_hours=p2_rw - p1_rw,
+                delta_resource_utilization=p2_ru - p1_ru,
+                delta_calendar_delay_hours=p2_cd - p1_cd,
+                task_criticality_index=task_ci,
+            )
+
+            return results
+        finally:
+            self._active_cancel_event = None
+            manager.shutdown()
+
     def _build_results(
         self,
         project: Project,
         project_durations: np.ndarray,
-        task_durations_all: Dict[str, list[float]],
-        task_risk_impacts_all: Dict[str, list[float]],
-        project_risk_impacts_all: list[float],
-        task_slack_accum: Dict[str, list[float]],
+        task_durations_all: Union[Dict[str, list[float]], Dict[str, np.ndarray]],
+        task_risk_impacts_all: Union[Dict[str, list[float]], Dict[str, np.ndarray]],
+        project_risk_impacts_all: Union[list[float], np.ndarray],
+        task_slack_accum: Union[Dict[str, list[float]], Dict[str, np.ndarray]],
         critical_path_frequency: Dict[str, int],
         critical_path_sequences: "Counter[tuple[str, ...]]",
         max_parallel_overall: int,
-        resource_wait_time_all: list[float],
-        resource_utilization_all: list[float],
-        calendar_delay_time_all: list[float],
-        project_costs_all: Optional[list[float]] = None,
-        task_costs_all: Optional[Dict[str, list[float]]] = None,
+        resource_wait_time_all: Union[list[float], np.ndarray],
+        resource_utilization_all: Union[list[float], np.ndarray],
+        calendar_delay_time_all: Union[list[float], np.ndarray],
+        project_costs_all: Optional[Union[list[float], np.ndarray]] = None,
+        task_costs_all: Optional[
+            Union[Dict[str, list[float]], Dict[str, np.ndarray]]
+        ] = None,
     ) -> SimulationResults:
         """Assemble a :class:`SimulationResults` from accumulated per-iteration data."""
         n_iterations = len(project_durations)
@@ -684,7 +1212,7 @@ class SimulationEngine:
         costs_arr: Optional[np.ndarray] = None
         task_costs_arrays: Optional[Dict[str, np.ndarray]] = None
         resolved_currency: Optional[str] = None
-        if project_costs_all:
+        if project_costs_all is not None:
             costs_arr = np.array(project_costs_all)
             task_costs_arrays = (
                 {tid: np.array(v) for tid, v in task_costs_all.items()}
@@ -748,7 +1276,12 @@ class SimulationEngine:
         return results
 
     def _maybe_report_progress(
-        self, iteration: int, total: int, last_reported: int
+        self,
+        iteration: int,
+        total: int,
+        last_reported: int,
+        callback_completed: Optional[int] = None,
+        callback_total: Optional[int] = None,
     ) -> int:
         """Update progress display if a 10% bucket boundary has been crossed."""
         completed = iteration + 1
@@ -758,11 +1291,24 @@ class SimulationEngine:
             completed == total and last_reported < 100
         ):
             rep = 100 if completed == total else bucket
-            self._report_progress(rep, completed)
+            self._report_progress(
+                rep,
+                completed,
+                total_iterations=total,
+                callback_completed=callback_completed,
+                callback_total=callback_total,
+            )
             return rep
         return last_reported
 
-    def _report_progress(self, progress: int, completed_iterations: int) -> None:
+    def _report_progress(
+        self,
+        progress: int,
+        completed_iterations: int,
+        total_iterations: Optional[int] = None,
+        callback_completed: Optional[int] = None,
+        callback_total: Optional[int] = None,
+    ) -> None:
         """Report simulation progress.
 
         When a *progress_callback* was supplied at construction time, it is
@@ -775,12 +1321,23 @@ class SimulationEngine:
             progress: Progress percentage to report
             completed_iterations: Number of completed iterations
         """
+        resolved_total = (
+            total_iterations if total_iterations is not None else self.iterations
+        )
+
         if self._progress_callback is not None:
-            self._progress_callback(completed_iterations, self.iterations)
+            self._progress_callback(
+                (
+                    callback_completed
+                    if callback_completed is not None
+                    else completed_iterations
+                ),
+                callback_total if callback_total is not None else resolved_total,
+            )
             return
 
         message = (
-            f"Progress: {progress:.1f}% " f"({completed_iterations}/{self.iterations})"
+            f"Progress: {progress:.1f}% " f"({completed_iterations}/{resolved_total})"
         )
 
         if self._progress_is_tty:

@@ -423,6 +423,104 @@ class TestTwoPassEngine:
             r2.two_pass_trace.pass1_mean_hours, rel=1e-6
         )
 
+    def test_parallel_two_pass_results_reproducible(self):
+        """Same seed produces identical durations in parallel two-pass mode."""
+        project = _load_fixture("test_fixture_contention.yaml")
+        cfg = _make_config(pass1_iterations=150)
+        engine1 = SimulationEngine(
+            iterations=8600,
+            random_seed=2026,
+            config=cfg,
+            show_progress=False,
+            workers=2,
+        )
+        assert engine1._parallel_expected_payoff_positive(project, two_pass=True)
+        r1 = engine1.run(project)
+
+        cfg2 = _make_config(pass1_iterations=150)
+        engine2 = SimulationEngine(
+            iterations=8600,
+            random_seed=2026,
+            config=cfg2,
+            show_progress=False,
+            workers=2,
+        )
+        r2 = engine2.run(project)
+
+        np.testing.assert_array_equal(r1.durations, r2.durations)
+        assert r1.two_pass_trace is not None
+        assert r2.two_pass_trace is not None
+        assert r1.two_pass_trace.pass1_mean_hours == pytest.approx(
+            r2.two_pass_trace.pass1_mean_hours, rel=1e-6
+        )
+
+    def test_parallel_two_pass_with_cost_tracking_populates_cost_metrics(self):
+        """Parallel two-pass supports cost tracking without failing during result build."""
+        project = _load_fixture("test_fixture_contention.yaml")
+        project.project.default_hourly_rate = 100.0
+        cfg = _make_config(pass1_iterations=150)
+        engine = SimulationEngine(
+            iterations=8600,
+            random_seed=4242,
+            config=cfg,
+            show_progress=False,
+            workers=2,
+        )
+
+        assert engine._parallel_expected_payoff_positive(project, two_pass=True)
+        results = engine.run(project)
+
+        assert results.two_pass_trace is not None
+        assert results.costs is not None
+        assert len(results.costs) == 8600
+        assert results.cost_mean is not None
+        assert results.cost_std_dev is not None
+        assert results.cost_percentile(80) > 0
+
+    def test_two_pass_callback_reports_both_phases_without_stdout(self):
+        """Two-pass callbacks report overall work even when stdout progress is disabled."""
+        project = _load_fixture("test_fixture_contention.yaml")
+        cfg = _make_config(pass1_iterations=40)
+        calls: list[tuple[int, int]] = []
+
+        engine = SimulationEngine(
+            iterations=80,
+            random_seed=42,
+            config=cfg,
+            show_progress=False,
+            progress_callback=lambda c, t: calls.append((c, t)),
+        )
+        results = engine.run(project)
+
+        assert results.two_pass_trace is not None
+        assert len(calls) > 0
+        assert all(total == 120 for _, total in calls)
+        assert any(completed <= 40 for completed, _ in calls)
+        assert calls[-1] == (120, 120)
+
+    def test_parallel_two_pass_callback_reports_both_phases_without_stdout(self):
+        """Parallel two-pass callbacks include pass-1 work in the overall total."""
+        project = _load_fixture("test_fixture_contention.yaml")
+        cfg = _make_config(pass1_iterations=150)
+        calls: list[tuple[int, int]] = []
+
+        engine = SimulationEngine(
+            iterations=8600,
+            random_seed=111,
+            config=cfg,
+            show_progress=False,
+            workers=2,
+            progress_callback=lambda c, t: calls.append((c, t)),
+        )
+
+        results = engine.run(project)
+
+        assert results.two_pass_trace is not None
+        assert len(calls) > 0
+        assert all(total == 8750 for _, total in calls)
+        assert any(completed <= 150 for completed, _ in calls)
+        assert calls[-1] == (8750, 8750)
+
     def test_two_pass_to_dict_includes_traceability(self):
         """SimulationResults.to_dict() includes the two_pass_traceability block."""
         project = _load_fixture("test_fixture_contention.yaml")
