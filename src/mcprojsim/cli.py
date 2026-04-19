@@ -1326,7 +1326,7 @@ def simulate(
             pass1_iterations=pass1_iterations,
             workers=effective_workers,
         )
-        logger.info("Using %d worker process(es)", effective_workers)
+        logger.info("Requested %d worker process(es)", effective_workers)
         results, elapsed_seconds, peak_memory_bytes = _run_simulation_with_metrics(
             engine, project
         )
