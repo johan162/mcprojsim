@@ -108,7 +108,7 @@ See `examples/quickstart_example.yaml` in the repository.
 
 ## T-Shirt Sizing
 
-For quick estimation using relative sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`). T-shirt sizes map to default effort ranges that are configurable via the [configuration file](user_guide/task_estimation.md#t-shirt-size-estimates).
+For quick estimation using relative sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`). T-shirt sizes map to default effort ranges that are configurable via the [configuration file](user_guide/05_task_estimation.md#t-shirt-size-estimates).
 
 ```yaml
 project:
@@ -241,7 +241,7 @@ See `examples/tshirt_sizing_project.yaml` in the repository.
 
 ## Story Points
 
-For agile-style relative estimation using calibrated story point mappings. Default mappings are configurable via the [configuration file](user_guide/task_estimation.md#story-point-estimates).
+For agile-style relative estimation using calibrated story point mappings. Default mappings are configurable via the [configuration file](user_guide/05_task_estimation.md#story-point-estimates).
 
 ```yaml
 project:
@@ -835,7 +835,7 @@ Key observations:
 - Bob's `part_time` calendar (6 hours/day, Mon–Thu) reduces his available capacity.
 - Calendar time (78 working days) is much larger than effort (22 person-days) due to calendar constraints, weekends, holidays, and sickness.
 
-For a full constrained walkthrough with incremental complexity, see the [Constrained Scheduling Guide](user_guide/constrained.md).
+For a full constrained walkthrough with incremental complexity, see the [Constrained Scheduling Guide](user_guide/10_constrained.md).
 
 
 

@@ -51,7 +51,7 @@ mcprojsim --version
 
 ### 2. Describe your project
 
-Create a file `project.yaml` (or let MCProjSim [generate one from plain text](user_guide/getting_started.md)):
+Create a file `project.yaml` (or let MCProjSim [generate one from plain text](user_guide/01_getting_started.md)):
 
 ```yaml
 project:
@@ -129,7 +129,7 @@ Calendar Time Confidence Intervals:
 ```
 
 The full output also includes sensitivity analysis, schedule slack, risk impact, and critical path information.
-See [Interpreting Results](user_guide/interpreting_results.md) for a detailed walkthrough of every output section.
+See [Interpreting Results](user_guide/13_interpreting_results.md) for a detailed walkthrough of every output section.
 
 ## Key features
 
@@ -145,7 +145,7 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 | **Analysis** | Sensitivity (Spearman ρ), staffing recommendations, skewness, kurtosis, CV, probability-of-date |
 | **Output** | CLI (plain or `--table`), JSON, CSV, HTML reports |
 | **Input formats** | YAML and TOML project files, or generate from natural-language descriptions with `mcprojsim generate` |
-| **AI integration** | Built-in [MCP server](user_guide/mcp-server.md) for use with GitHub Copilot, Claude Desktop, and other MCP clients |
+| **AI integration** | Built-in [MCP server](user_guide/16_mcp-server.md) for use with GitHub Copilot, Claude Desktop, and other MCP clients |
 
 ## Where to go next
 
@@ -155,13 +155,13 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 
     Install MCProjSim, create your first project file, and run a simulation in under 10 minutes.
 
-    [:octicons-arrow-right-24: Getting Started](user_guide/getting_started.md)
+    [:octicons-arrow-right-24: Getting Started](user_guide/01_getting_started.md)
 
 -   **:material-book-open-variant: User Guide**
 
     Everything from task estimation and risk modeling to interpreting output and configuring uncertainty factors.
 
-    [:octicons-arrow-right-24: Your First Project](user_guide/your_first_project.md)
+    [:octicons-arrow-right-24: Your First Project](user_guide/03_your_first_project.md)
 
 -   **:material-file-document-outline: Examples**
 
@@ -173,7 +173,7 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 
     Customize uncertainty factors, T-shirt size mappings, story point scales, and output settings.
 
-    [:octicons-arrow-right-24: Configuration](user_guide/configuration.md)
+    [:octicons-arrow-right-24: Configuration](user_guide/14_configuration.md)
 
 </div>
 
@@ -184,7 +184,7 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 | [PDF Documentation Bundles](https://github.com/johan162/mcprojsim/releases/latest) | Both **Print** and **Tablet** friendly versions |
 | [Quick Start](https://johan162.github.io/mcprojsim/quickstart/) | Your first 10 min with MCProjSim |
 | [On Line Documentation](https://johan162.github.io/mcprojsim/) | Full documentation landing page |
-| [MCP Server](user_guide/mcp-server.md) | Use MCProjSim as a tool from your AI assistant |
+| [MCP Server](user_guide/16_mcp-server.md) | Use MCProjSim as a tool from your AI assistant |
 | [Development](development.md) | Set up a dev environment, run tests, build docs, and use containers |
 | [Changelog](CHANGELOG.md) | Release history and migration notes |
 

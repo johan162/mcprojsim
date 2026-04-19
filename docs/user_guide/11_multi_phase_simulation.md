@@ -513,8 +513,8 @@ ownership would reduce schedule risk.
 
 ## Related chapters
 
-- [Resource and Calendar Constrained Scheduling](constrained.md) for resource setup, calendar configuration, and the full constrained scheduling walkthrough
-- [Running Simulations](running_simulations.md) for the complete CLI reference
-- [Interpreting Results](interpreting_results.md) for understanding constrained diagnostics
+- [Resource and Calendar Constrained Scheduling](10_constrained.md) for resource setup, calendar configuration, and the full constrained scheduling walkthrough
+- [Running Simulations](12_running_simulations.md) for the complete CLI reference
+- [Interpreting Results](13_interpreting_results.md) for understanding constrained diagnostics
 
 \newpage

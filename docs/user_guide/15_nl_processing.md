@@ -494,7 +494,7 @@ Starting in 2 weeks
 
 ## Resources, calendars, and sprint planning
 
-These sections use the same structured format regardless of whether tasks use explicit headers or auto-detection. See the [MCP Server](mcp-server.md#natural-language-input-format) page and the [API reference](../api_reference/10_nl_parser.md) for full details on resource, calendar, and sprint planning input patterns.
+These sections use the same structured format regardless of whether tasks use explicit headers or auto-detection. See the [MCP Server](16_mcp-server.md#natural-language-input-format) page and the [API reference](../api_reference/10_nl_parser.md) for full details on resource, calendar, and sprint planning input patterns.
 
 ---
 

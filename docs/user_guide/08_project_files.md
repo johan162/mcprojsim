@@ -86,7 +86,7 @@ Generate the YAML project file:
 mcprojsim generate description.txt -o project.yaml
 ```
 
-See [Running Simulations — `mcprojsim generate`](running_simulations.md#mcprojsim-generate) for the full command reference and all options. The [MCP Server](mcp-server.md) page covers the complete input format and more examples.
+See [Running Simulations — `mcprojsim generate`](12_running_simulations.md#mcprojsim-generate) for the full command reference and all options. The [MCP Server](16_mcp-server.md) page covers the complete input format and more examples.
 
 !!! note
     The `generate` command creates a minimal but valid project file. After generating, you can manually add uncertainty factors, risks, resources, and other fields documented in this chapter.
@@ -1158,7 +1158,7 @@ Use sprint planning when the team works in fixed-length iterations and tracks ve
 !!! note
     Sprint planning requires at least two usable historical sprint entries (entries with a positive delivery signal). The `capacity_mode` field controls whether the unit of delivery is story points or task counts, and **must be consistent** across all history entries and task backlogs.
 
-For a comprehensive walkthrough of sprint planning features, configuration options, and interpretation of results, see [Sprint Planning](sprint_planning.md).
+For a comprehensive walkthrough of sprint planning features, configuration options, and interpretation of results, see [Sprint Planning](09_sprint_planning.md).
 
 ### Top-level sprint planning fields
 
@@ -1317,7 +1317,7 @@ Supported formats:
 | `json` | A JSON file containing either a top-level array of sprint objects, or an object with a `sprints` key whose value is that array |
 | `csv` | A CSV file with a header row; column names must match the field names in the table above |
 
-The external file must use the same field names as the inline entries. See [Sprint Planning](sprint_planning.md) for complete JSON and CSV shape examples.
+The external file must use the same field names as the inline entries. See [Sprint Planning](09_sprint_planning.md) for complete JSON and CSV shape examples.
 
 ### `future_sprint_overrides`
 

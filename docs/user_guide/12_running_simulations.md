@@ -54,7 +54,7 @@ mcprojsim generate description.txt -o project.yaml && mcprojsim simulate project
 
 ### Input format
 
-The input file is a semi-structured text description. See [MCP Server & Natural Language Project Input](mcp-server.md) for the full input format reference, supported fields, and examples.
+The input file is a semi-structured text description. See [MCP Server & Natural Language Project Input](16_mcp-server.md) for the full input format reference, supported fields, and examples.
 
 A minimal example:
 
@@ -132,6 +132,9 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-f`, `--output-format FORMATS` | Comma-separated export formats: `json`, `csv`, `html` | none |
 | `--critical-paths N` | Number of critical paths to display | config default: 2 |
 | `--number-bins N` | Number of histogram bins for distribution charts in JSON, CSV, and HTML exports. Overrides the config file setting if specified. | 50 |
+| `--target-budget AMOUNT` | Report probability of staying within the provided budget amount | none |
+| `--full-cost-detail` | Include per-iteration task-cost arrays in JSON output | off |
+| `--no-fx` | Disable exchange-rate fetches for secondary currency reporting | off |
 | `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
 | `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
@@ -166,6 +169,15 @@ mcprojsim simulate project.yaml -f json,csv,html -o results/my_project
 
 # Custom histogram bins for more granular distribution charts
 mcprojsim simulate project.yaml -f json,csv,html --number-bins 100 -o results/my_project
+
+# Budget probability analysis
+mcprojsim simulate project.yaml --target-budget 45000
+
+# Include full task-cost arrays in JSON export
+mcprojsim simulate project.yaml -f json --full-cost-detail
+
+# Disable FX lookups (offline/CI mode)
+mcprojsim simulate project.yaml --no-fx
 
 # Quiet mode (suppress progress bars)
 mcprojsim simulate project.yaml --quiet
@@ -277,7 +289,7 @@ Staffing Analysis (senior team, overhead=4%/person, productivity=100%):
 └─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
 ```
 
-The `*` suffix in the "Team Size" column marks the recommended team size for that profile. Without `--table`, the same information appears in plain indented text with `<-- recommended` annotations. See [Interpreting Results — Staffing recommendations](interpreting_results.md#staffing-recommendations) for a detailed explanation of the model and columns.
+The `*` suffix in the "Team Size" column marks the recommended team size for that profile. Without `--table`, the same information appears in plain indented text with `<-- recommended` annotations. See [Interpreting Results — Staffing recommendations](13_interpreting_results.md#staffing-recommendations) for a detailed explanation of the model and columns.
 
 Without `--table`, the same data is printed as indented text:
 

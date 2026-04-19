@@ -155,7 +155,7 @@ Uncertainty factors are known characteristics of the working environment that sy
 
 These factors are multiplicative. When a task specifies several of them, the multipliers are combined by multiplication. This means adverse factors compound — even moderate individual adjustments can produce a significant combined effect.
 
-The numeric multipliers are defined in a separate configuration file, not in the project file. This allows teams to calibrate the meaning of labels like "high complexity" or "low maturity" to match their own experience, without changing the project definition. See [Uncertainty Factors](uncertainty_factors.md) for the full list of default multiplier values and guidance on calibration.
+The numeric multipliers are defined in a separate configuration file, not in the project file. This allows teams to calibrate the meaning of labels like "high complexity" or "low maturity" to match their own experience, without changing the project definition. See [Uncertainty Factors](04_uncertainty_factors.md) for the full list of default multiplier values and guidance on calibration.
 
 ### Risks
 

@@ -851,9 +851,9 @@ sprint_defaults:
 
 ## Related chapters
 
-- [Project Files](project_files.md) for full schema reference
-- [Running Simulations](running_simulations.md) for command reference
-- [Interpreting Results](interpreting_results.md) for diagnostics interpretation
-- [Multi-Phase (Two-Pass) Simulation](multi_phase_simulation.md) for criticality-prioritized scheduling
+- [Project Files](08_project_files.md) for full schema reference
+- [Running Simulations](12_running_simulations.md) for command reference
+- [Interpreting Results](13_interpreting_results.md) for diagnostics interpretation
+- [Multi-Phase (Two-Pass) Simulation](11_multi_phase_simulation.md) for criticality-prioritized scheduling
 
 \newpage

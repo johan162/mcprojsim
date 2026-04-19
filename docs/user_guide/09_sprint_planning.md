@@ -146,7 +146,7 @@ Important export rule:
 - `--include-historic-base` only works when `--output-format` includes `json` or `html`
 - unsupported `--output-format` values now fail fast instead of being ignored
 
-See [Running Simulations](running_simulations.md) for the full command reference.
+See [Running Simulations](12_running_simulations.md) for the full command reference.
 
 ## Build up the file gradually
 

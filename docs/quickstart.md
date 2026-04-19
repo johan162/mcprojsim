@@ -2,7 +2,7 @@
 
 This guide is for end users who want to get from installation to a first simulation as quickly as possible.
 
-It intentionally follows one tactical happy path: one install method, one tiny example, one simulation command, and one report export. For broader install options, deeper explanations, and extended workflows, continue with the User Guide chapter at `docs/user_guide/getting_started.md`.
+It intentionally follows one tactical happy path: one install method, one tiny example, one simulation command, and one report export. For broader install options, deeper explanations, and extended workflows, continue with the User Guide chapter at `docs/user_guide/01_getting_started.md`.
 
 In the next few minutes you will:
 
@@ -67,7 +67,7 @@ Generate the project file:
 mcprojsim generate description.txt -o quickstart_project.yaml
 ```
 
-That is it — the generated `quickstart_project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), including qualified forms like `epic.M`, story points, or explicit `low/expected/high` estimates. Bare T-shirt values resolve via the configured default category. See the [MCP Server & Natural Language Input](user_guide/mcp-server.md) guide for the full input format.
+That is it — the generated `quickstart_project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), including qualified forms like `epic.M`, story points, or explicit `low/expected/high` estimates. Bare T-shirt values resolve via the configured default category. See the [MCP Server & Natural Language Input](user_guide/16_mcp-server.md) guide for the full input format.
 
 ??? tip "Alternative: write the YAML by hand"
 
@@ -99,7 +99,7 @@ That is it — the generated `quickstart_project.yaml` is ready for validation a
         dependencies: ["task_001"]
     ```
 
-See the [project file reference](user_guide/project_files.md) for all available fields.
+See the [project file reference](user_guide/08_project_files.md) for all available fields.
 
 This example is intentionally small — two tasks, one dependency, but that is enough for a meaningful first simulation!
 
@@ -304,11 +304,11 @@ A common practical pattern is:
 
 After this first run, move to the fuller User Guide path below. This Quick Start stays intentionally short and tactical; the chapters below are the long-form, maintained references:
 
-- [Getting Started](user_guide/getting_started.md) — a fuller walkthrough
-- [Introduction](user_guide/introduction.md) — Monte Carlo concepts
-- [Your First Project](user_guide/your_first_project.md) — build richer project files step by step
-- [Project Files](user_guide/project_files.md) — project file reference
-- [Configuration](user_guide/configuration.md) — uncertainty factors and config
+- [Getting Started](user_guide/01_getting_started.md) — a fuller walkthrough
+- [Introduction](user_guide/02_introduction.md) — Monte Carlo concepts
+- [Your First Project](user_guide/03_your_first_project.md) — build richer project files step by step
+- [Project Files](user_guide/08_project_files.md) — project file reference
+- [Configuration](user_guide/14_configuration.md) — uncertainty factors and config
 - [Examples](examples.md) — example projects
 
 ## Need a different installation path?
@@ -317,6 +317,6 @@ This guide intentionally focuses on the fastest end-user path for a first succes
 
 If `pipx` is not the right fit, see:
 
-- [Getting Started](user_guide/getting_started.md) for basic install and first-run material
+- [Getting Started](user_guide/01_getting_started.md) for basic install and first-run material
 
 If you are a developer, see [Development](development.md) for instructions on setting up a local development environment, running tests, and contributing to the project.

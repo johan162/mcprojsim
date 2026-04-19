@@ -63,7 +63,7 @@ nav:
       - Configuration:           user_guide/14_configuration.md
       - Natural Language Input:  user_guide/15_nl_processing.md      
       - MCP Server:              user_guide/16_mcp-server.md
-      - Examples:                          17_examples.md
+      - Examples:                examples.md
   - API Reference:
       - API Reference:           api_reference/01_intro.md
       - Core API:                api_reference/02_core.md

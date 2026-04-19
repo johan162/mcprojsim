@@ -5,6 +5,18 @@
 The goal is to implement all MVP requirements in `docs/mcprojsim_reqs.md` to be able to reach 1.0.0
 
 
+### Next patch release
+
+Release: 0.15.1
+
+Tasks:
+- Repaginate r guide with pagination macros for B5 & A4
+- Review Dev guide so it is up to date
+- Review User Guide to make ure it hasn't drifted
+- Review top-level README
+- Verify basic simulation results with old MC spreadhseet
+
+
 ## Post-MVP (1.0.0) Themes
 
 Ideas on what to focus future development on

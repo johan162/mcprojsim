@@ -106,7 +106,7 @@ Project files describe the project to be simulated and is written in a (fairly) 
 read YAML format. Here we will only touch on the essentials needed to simulate a basic 
 project.
 
-See the [Project Files](project_files.md) reference for all available fields.
+See the [Project Files](08_project_files.md) reference for all available fields.
 
 The project file below defines a basic project `"Website Refresh"` with two tasks where the 
 second task depends on the first one finishing. Most fields should be easy to understand
@@ -172,7 +172,7 @@ Generate the project file:
 mcprojsim generate description.txt -o project.yaml
 ```
 
-That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See [Running Simulations](running_simulations.md) for the full `generate` command reference.
+That is it — the generated `project.yaml` is ready for validation and simulation. You can use T-shirt sizes (`XS`, `S`, `M`, `L`, `XL`, `XXL`), story points, or explicit `low/expected/high` estimates. See [Running Simulations](12_running_simulations.md) for the full `generate` command reference.
 
 !!! tip "Flexible input formats"
     You don't have to use the `Task N:` header format. The parser also accepts plain numbered lists, bullet lists, and even inline sizes — great for copy-paste from meeting notes or planning tools:
@@ -185,7 +185,7 @@ That is it — the generated `project.yaml` is ready for validation and simulati
     2. Frontend changes (M) depends on Task 1
     ```
 
-    See [Natural Language Input](nl_processing.md) for the full range of supported formats.
+    See [Natural Language Input](15_nl_processing.md) for the full range of supported formats.
 
 
 ## Validate the file
@@ -205,7 +205,7 @@ Validating project.yaml...
 
 If validation fails, read the reported field name and fix the YAML file before continuing.
 
-Tip: common validation issues are missing `id` fields on tasks, invalid date formats, or incorrect field names — see [Project Files](project_files.md) for the full field reference and examples.
+Tip: common validation issues are missing `id` fields on tasks, invalid date formats, or incorrect field names — see [Project Files](08_project_files.md) for the full field reference and examples.
 
 
 ## Run your first simulation
@@ -225,7 +225,7 @@ What this does:
 - Uses `--seed 42` so the result is reproducible
 - Prints a summary to the terminal
 
-Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and use `--seed` for reproducible runs; see [Running Simulations](running_simulations.md) for full CLI options.
+Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and use `--seed` for reproducible runs; see [Running Simulations](12_running_simulations.md) for full CLI options.
 
 Depending on the version of `mcprojsim` used the output will look something like the following (numbers will vary by version and platform):
 
@@ -387,14 +387,14 @@ mcprojsim simulate project.yaml --quiet
 
 ## Where to go next
 
-- [Introduction](introduction.md) — the ideas behind Monte Carlo project estimation
-- [Your First Project](your_first_project.md) — build a richer project file step by step
-- [Task Estimation](task_estimation.md) — T-shirt sizes, story points, and explicit ranges
-- [Project Files](project_files.md) — complete project file reference
-- [Configuration](configuration.md) — customize uncertainty factors and mappings
+- [Introduction](02_introduction.md) — the ideas behind Monte Carlo project estimation
+- [Your First Project](03_your_first_project.md) — build a richer project file step by step
+- [Task Estimation](05_task_estimation.md) — T-shirt sizes, story points, and explicit ranges
+- [Project Files](08_project_files.md) — complete project file reference
+- [Configuration](14_configuration.md) — customize uncertainty factors and mappings
 - [Examples](../examples.md) — working example projects
-- [Constrained Scheduling](constrained.md), for modeling resource limits and their impact on schedules
-- [MCP Server](mcp-server.md), for AI-assisted project file generation and integration
+- [Constrained Scheduling](10_constrained.md), for modeling resource limits and their impact on schedules
+- [MCP Server](16_mcp-server.md), for AI-assisted project file generation and integration
 
 ## Try these example projects
 

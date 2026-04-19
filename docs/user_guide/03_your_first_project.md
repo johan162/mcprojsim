@@ -57,7 +57,7 @@ This chapter focuses on building the project file step-by-step, but it helps to 
 | `--pass1-iterations` | Pass-1 iterations used by `--two-pass` |
 | `--include-historic-base` | Add Historic Base section/series in HTML+JSON exports |
 
-For full details, defaults, and examples, see [Running simulations](running_simulations.md).
+For full details, defaults, and examples, see [Running simulations](12_running_simulations.md).
 
 This chapter intentionally uses only a small subset of these flags in each step.
 
@@ -137,7 +137,7 @@ Calendar Time Statistical Summary:
 Project Effort Statistical Summary:
   Mean: 26.61 person-hours (4 person-days)
   Median (P50): 26.14 person-hours
-  Std Dev: 4.99 person-hourstwo sections
+  Std Dev: 4.99 person-hours
   Minimum: 16.05 person-hours
   Maximum: 39.67 person-hours
 
@@ -250,7 +250,7 @@ You can request more than the default two paths in the CLI:
 mcprojsim simulate first-project-step-2.yaml --iterations 5000 --seed 42 --critical-paths 4
 ```
 
-For this small projectn there is really only one critical path so specifying to show more does not really make any difference.
+For this small project there is only one critical path, so specifying a larger report limit does not change the output.
 
 And you can control how many are stored and reported by default through `config.yaml`:
 
@@ -270,7 +270,7 @@ In `mcprojsim`, that sort of shared interpretation belongs in a configuration fi
 
 ### Step 3: add uncertainty factors
 
-Uncertainty factors are a mean to convert knowledge about project challenges into tangible consequences. For example, we might know that the work have very unmature requrements that will change after the work has started or we might now that the team will be located in two different offices in different countries (and time zones) and therefore have more than usual communication overhead and risks of misscommunications.
+Uncertainty factors are a way to convert known project conditions into tangible schedule effects. For example, requirements may be immature and likely to change after work begins, or the team may be distributed across countries and time zones, creating additional communication overhead and a higher risk of misunderstandings.
 
 These types of know risks can be modelled by multiplicative factors. The program supports the following uncertaintly factors
 
@@ -448,7 +448,7 @@ Project Effort Statistical Summary:
   Maximum: 87.52 person-hours
 ```
 
-As expected the simulation shows slightly hgher effort and longer calendar time.
+As expected, the simulation shows slightly higher effort and longer calendar time.
 
 ## Add explicit risk events
 

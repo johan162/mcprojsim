@@ -18,7 +18,7 @@ In each Monte Carlo iteration, the simulator processes every task as follows:
 
 The result is the task's effective duration for that iteration. Over thousands of iterations, the sampled values form a distribution that captures the inherent uncertainty in the estimate.
 
-This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in [Uncertainty Factors](uncertainty_factors.md) and [Risks](risks.md).
+This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in [Uncertainty Factors](04_uncertainty_factors.md) and [Risks](06_risks.md).
 
 
 
@@ -358,13 +358,13 @@ If we assume the $\ln(F_i)$ are independent and identically distributed, then by
 
 T-shirt sizing is a relative estimation technique where tasks are classified into sizes such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`, scoped by named categories (`bug`, `story`, `epic`, `business`, `initiative`). This is useful when teams need different calibration levels across planning horizons.
 
-In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) inside a category in the configuration file. During simulation, a bare value like `M` resolves through `t_shirt_size_default_category` (default: `epic`), while a qualified value like `epic.M` resolves directly.
+In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) inside a category in the configuration file. During simulation, a bare value like `M` resolves through `t_shirt_size_default_category` (default: `story`), while a qualified value like `epic.M` resolves directly.
 
 ### Default T-shirt size mappings
 
 The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_unit` in the configuration file).
 
-The built-in default category is `epic`, so a bare value like `M` resolves as `epic.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
+The built-in default category is `story`, so a bare value like `M` resolves as `story.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
 |---|---|---:|---:|---:|
