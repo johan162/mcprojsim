@@ -517,6 +517,13 @@ class SimulationEngine:
             self._active_cancel_event = None
             manager.shutdown()
 
+        if (
+            self.show_progress
+            and self._progress_callback is None
+            and sys.stderr.isatty()
+        ):
+            sys.stderr.write("\n")
+            sys.stderr.flush()
         merged = merge_chunk_results(chunk_results, self.iterations)
         return self._build_results(
             project,
