@@ -1912,6 +1912,48 @@
 <td>Traceability data when two-pass scheduling was used</td>
 </tr>
 <tr>
+<td><code>costs</code></td>
+<td><code>np.ndarray \| None</code></td>
+<td><code>None</code></td>
+<td>Per-iteration total project cost. Populated only when cost inputs are present (e.g. <code>default_hourly_rate</code>, <code>fixed_cost</code>, resource <code>hourly_rate</code>).</td>
+</tr>
+<tr>
+<td><code>task_costs</code></td>
+<td><code>dict[str, np.ndarray] \| None</code></td>
+<td><code>None</code></td>
+<td>Per-task cost arrays (task ID → per-iteration values).</td>
+</tr>
+<tr>
+<td><code>cost_mean</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Mean total project cost (populated by <code>calculate_cost_statistics()</code>).</td>
+</tr>
+<tr>
+<td><code>cost_std_dev</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Standard deviation of total project cost.</td>
+</tr>
+<tr>
+<td><code>cost_percentiles</code></td>
+<td><code>dict[int, float] \| None</code></td>
+<td><code>None</code></td>
+<td>Cached cost percentiles (populated by <code>calculate_cost_statistics()</code>).</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td><code>str \| None</code></td>
+<td><code>None</code></td>
+<td>ISO 4217 currency code from <code>ProjectMetadata.currency</code>.</td>
+</tr>
+<tr>
+<td><code>cost_analysis</code></td>
+<td><code>CostAnalysis \| None</code></td>
+<td><code>None</code></td>
+<td>Post-processing cost analysis from <code>CostAnalyzer</code> (sensitivity and duration correlation). Populated automatically when cost data is available.</td>
+</tr>
+<tr>
 <td><code>mean</code></td>
 <td><code>float</code></td>
 <td><code>0.0</code></td>
@@ -1986,6 +2028,15 @@
 <li><strong><code>total_effort_hours() -&gt; float</code></strong> — Sum of per-task mean durations (total person-hours)</li>
 <li><strong><code>to_dict() -&gt; dict[str, Any]</code></strong> — Serialize results to a dictionary</li>
 </ul>
+<p><strong>Cost methods</strong> (available only when cost data is populated — i.e. when any cost input is present in the project):</p>
+<ul>
+<li><strong><code>calculate_cost_statistics() -&gt; None</code></strong> — Populate <code>cost_mean</code>, <code>cost_std_dev</code>, and <code>cost_percentiles</code> from the <code>costs</code> array. Called automatically by <code>SimulationEngine</code> after the run.</li>
+<li><strong><code>cost_percentile(p: int) -&gt; float</code></strong> — Cost value at percentile <em>p</em>.</li>
+<li><strong><code>probability_within_budget(target_budget: float) -&gt; float</code></strong> — Fraction of iterations where total cost was ≤ <code>target_budget</code>.</li>
+<li><strong><code>budget_confidence_interval(target_budget: float, confidence_level: float = 0.95) -&gt; tuple[float, float, float]</code></strong> — Returns <code>(lower_bound, upper_bound, probability_within_budget)</code> for a given target budget at the specified confidence level.</li>
+<li><strong><code>budget_for_confidence(confidence: float) -&gt; float</code></strong> — The budget amount needed to achieve a given confidence level (e.g. <code>0.80</code> for 80 % certainty of staying within budget).</li>
+<li><strong><code>joint_probability(target_hours: float, target_budget: float) -&gt; float</code></strong> — Probability that the project completes within <em>both</em> the target duration and the target budget simultaneously.</li>
+</ul>
 <p><strong>Example: Complete Results Query</strong></p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationEngine</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Config</span>
@@ -2047,6 +2098,38 @@
 </span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58" href="#__codelineno-1-58"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Pass 1 iterations: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">pass1_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span><span id="__span-1-59"><a id="__codelineno-1-59" name="__codelineno-1-59" href="#__codelineno-1-59"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Pass 2 iterations: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">pass2_iterations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span><span id="__span-1-60"><a id="__codelineno-1-60" name="__codelineno-1-60" href="#__codelineno-1-60"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  P50 delta: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">two_pass_trace</span><span class="o">.</span><span class="n">delta_p50_hours</span><span class="si">:</span><span class="s2">+.1f</span><span class="si">}</span><span class="s2"> hours&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>Example: Querying Cost Results</strong></p>
+<p>Cost tracking activates automatically when any cost input is present in the project
+(<code>default_hourly_rate</code>, <code>Task.fixed_cost</code>, <code>ResourceSpec.hourly_rate</code>, or <code>Risk.cost_impact</code>).</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">costs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="c1"># Cost percentiles</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mean cost: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">currency</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">cost_mean</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P50 cost: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">currency</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">cost_percentile</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P80 cost: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">currency</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">cost_percentile</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P95 cost: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">currency</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">cost_percentile</span><span class="p">(</span><span class="mi">95</span><span class="p">)</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="c1"># Budget analysis</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">budget</span> <span class="o">=</span> <span class="mi">250_000</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">prob</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">probability_within_budget</span><span class="p">(</span><span class="n">budget</span><span class="p">)</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Probability within </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">currency</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">budget</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">prob</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="c1"># What budget gives 80% confidence?</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="n">budget_80</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">budget_for_confidence</span><span class="p">(</span><span class="mf">0.80</span><span class="p">)</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Budget for 80% confidence: </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">currency</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">budget_80</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="c1"># Joint probability: finish within both time AND budget</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    <span class="n">jp</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">joint_probability</span><span class="p">(</span><span class="n">target_hours</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">target_budget</span><span class="o">=</span><span class="n">budget</span><span class="p">)</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;P(within 500h AND within </span><span class="si">{</span><span class="n">results</span><span class="o">.</span><span class="n">currency</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">budget</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">jp</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    <span class="c1"># Cost sensitivity (which tasks drive cost variance)</span>
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    <span class="k">if</span> <span class="n">results</span><span class="o">.</span><span class="n">cost_analysis</span><span class="p">:</span>
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>        <span class="k">for</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">corr</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>            <span class="n">results</span><span class="o">.</span><span class="n">cost_analysis</span><span class="o">.</span><span class="n">sensitivity</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>            <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>            <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>        <span class="p">)[:</span><span class="mi">5</span><span class="p">]:</span>
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">: cost sensitivity = </span><span class="si">{</span><span class="n">corr</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 
 

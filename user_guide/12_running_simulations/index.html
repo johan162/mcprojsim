@@ -1121,6 +1121,67 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#parallel-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parallel simulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parallel simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproducibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance expectations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1976,6 +2037,67 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#parallel-simulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parallel simulation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parallel simulation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reproducibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance expectations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usage_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2225,6 +2347,11 @@
 <td>Number of pass-1 iterations for criticality ranking when <code>--two-pass</code> is used. Capped to <code>--iterations</code>.</td>
 <td>1000 (from config)</td>
 </tr>
+<tr>
+<td><code>--workers N \| auto</code></td>
+<td>Number of worker processes for parallel simulation. Pass a positive integer or <code>auto</code> to use all available CPUs. Ignored when iterations or task count is below the parallel threshold.</td>
+<td>1 (sequential)</td>
+</tr>
 </tbody>
 </table>
 <h3 id="examples_2">Examples<a class="headerlink" href="#examples_2" title="Permanent link">&para;</a></h3>
@@ -2279,83 +2406,92 @@
 </span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># Include Historic Base in HTML/JSON exports</span>
 </span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>-f<span class="w"> </span>json,html<span class="w"> </span>--include-historic-base
 </span></code></pre></div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Parallel simulation: use 4 worker processes</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--workers<span class="w"> </span><span class="m">4</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Parallel simulation: use all available CPUs</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--workers<span class="w"> </span>auto<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1"># Force sequential execution explicitly</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--workers<span class="w"> </span><span class="m">1</span>
+</span></code></pre></div>
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h3>
 <p>By default, the simulation prints a plain-text summary. With <code>--table</code> (<code>-t</code>), the project overview, statistical summaries, confidence intervals, sensitivity analysis, schedule slack, and risk impact sections are all formatted as ASCII tables with column headers and box-drawing borders:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Calendar Time Confidence Intervals:
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>┌──────────────┬─────────┬────────────────┬────────────┐
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>│ Percentile   │   Hours │   Working Days │ Date       │
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>├──────────────┼─────────┼────────────────┼────────────┤
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>│ P25          │  522.75 │             66 │ 2026-02-02 │
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>│ P50          │  571.84 │             72 │ 2026-02-10 │
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>│ P90          │  682.94 │             86 │ 2026-03-02 │
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>│ P99          │  790.61 │             99 │ 2026-03-19 │
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>└──────────────┴─────────┴────────────────┴────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Calendar Time Confidence Intervals:
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>┌──────────────┬─────────┬────────────────┬────────────┐
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>│ Percentile   │   Hours │   Working Days │ Date       │
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>├──────────────┼─────────┼────────────────┼────────────┤
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>│ P25          │  522.75 │             66 │ 2026-02-02 │
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>│ P50          │  571.84 │             72 │ 2026-02-10 │
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>│ P90          │  682.94 │             86 │ 2026-03-02 │
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>│ P99          │  790.61 │             99 │ 2026-03-19 │
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>└──────────────┴─────────┴────────────────┴────────────┘
 </span></code></pre></div>
 <h4 id="staffing-output">Staffing output<a class="headerlink" href="#staffing-output" title="Permanent link">&para;</a></h4>
 <p>A short staffing advisory is always included at the end of the output (unless <code>--quiet</code> is active):</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
 </span></code></pre></div>
 <p>By default the staffing analysis uses <strong>mean</strong> effort and elapsed time. To base it on a specific confidence level, set <code>staffing.effort_percentile</code> in your configuration file:</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">staffing</span><span class="p">:</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w">  </span><span class="c1"># use P80 effort and elapsed time</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nt">staffing</span><span class="p">:</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="w">  </span><span class="nt">effort_percentile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w">  </span><span class="c1"># use P80 effort and elapsed time</span>
 </span></code></pre></div>
 <p>If <code>staffing.effort_percentile</code> is omitted, mean effort and mean elapsed time are used. The mean effort is calculated as the average total effort across all iterations, and the mean elapsed time is the average project duration. If the distribution is symmetric, the mean and median (P50) will be close, but for skewed distributions they can differ significantly. </p>
 <p>If the percentile is set to a higher value like 80 or 90, the staffing recommendation will be based on a more conservative estimate of effort and elapsed time, which can lead to recommending more staff to mitigate the risk of overruns. A staffing percentile of 90, for example, would recommend a team size that has a 90% chance of completing the project within the estimated effort and time, providing a buffer against uncertainty.</p>
 <p>The reason we say both effort and elapsed time is that the staffing model considers both how much total work there is (effort) and how long the project takes (elapsed time) to determine how many people are needed. A higher effort percentile means the model assumes a higher total workload, while a higher elapsed time percentile means it assumes a longer project duration. Both factors influence the recommended team size to ensure the project can be completed within the desired confidence level.</p>
 <p>The reason they are not separated into <code>staffing.effort_percentile</code> and <code>staffing.elapsed_time_percentile</code> is that they are inherently linked in the staffing model. The number of staff needed depends on both the total effort and the project duration, so it makes sense to use the same confidence level for both to maintain consistency in the risk tolerance. If they were set separately, it could lead to conflicting recommendations (e.g., a high effort percentile but a low elapsed time percentile might recommend more staff than necessary, or vice versa). By using a single <code>effort_percentile</code>, we ensure that the staffing recommendation is based on a coherent risk profile.</p>
 <p>With this setting the output changes to:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>Staffing (based on P80 effort percentile): 3 people recommended (mixed team), 42 working days
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>  Total effort: 1,024 person-hours (128 person-days) | Parallelism ratio: 1.6
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Staffing (based on P80 effort percentile): 3 people recommended (mixed team), 42 working days
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>  Total effort: 1,024 person-hours (128 person-days) | Parallelism ratio: 1.6
 </span></code></pre></div>
 <p>Using a higher percentile produces more conservative staffing (since we want to be more confident in our recommendations because it accounts for higher-effort scenarios).</p>
 <p>Pass <code>--staffing</code> to expand this into a full table for each experience profile (senior, mixed, junior). With <code>--table</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Staffing Analysis (senior team, overhead=4%/person, productivity=100%):
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>  Effort basis: mean (910 person-hours, 571 critical-path hours)
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>│ 1           │ 1.00            │ 114            │ 2026-06-15      │ 100.0%       │
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>│ 2           │ 1.92            │ 60             │ 2026-03-27      │ 96.0%        │
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>│ 3 *         │ 2.76            │ 42             │ 2026-03-02      │ 92.2%        │
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>Staffing Analysis (senior team, overhead=4%/person, productivity=100%):
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>  Effort basis: mean (910 person-hours, 571 critical-path hours)
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>┌─────────────┬─────────────────┬────────────────┬─────────────────┬──────────────┐
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>│ Team Size   │ Eff. Capacity   │ Working Days   │ Delivery Date   │ Efficiency   │
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>├─────────────┼─────────────────┼────────────────┼─────────────────┼──────────────┤
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>│ 1           │ 1.00            │ 114            │ 2026-06-15      │ 100.0%       │
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>│ 2           │ 1.92            │ 60             │ 2026-03-27      │ 96.0%        │
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>│ 3 *         │ 2.76            │ 42             │ 2026-03-02      │ 92.2%        │
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
 </span></code></pre></div>
 <p>The <code>*</code> suffix in the "Team Size" column marks the recommended team size for that profile. Without <code>--table</code>, the same information appears in plain indented text with <code>&lt;-- recommended</code> annotations. See <a href="interpreting_results.md#staffing-recommendations">Interpreting Results — Staffing recommendations</a> for a detailed explanation of the model and columns.</p>
 <p>Without <code>--table</code>, the same data is printed as indented text:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>=== Simulation Results ===
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>Project Overview:
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>Project: Website Refresh
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>Hours per Day: 8.0
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>Max Parallel Tasks: 2
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>Schedule Mode: dependency_only
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>Calendar Time Statistical Summary:
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>Mean: 126.78 hours (16 working days)
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>Median (P50): 125.36 hours
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>Std Dev: 18.01 hours
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>Minimum: 98.40 hours
-</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a>Maximum: 192.30 hours
-</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a>Coefficient of Variation: 0.1421
-</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a>Skewness: 0.4123
-</span><span id="__span-15-17"><a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>Excess Kurtosis: -0.2341
-</span><span id="__span-15-18"><a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a>
-</span><span id="__span-15-19"><a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a>Project Effort Statistical Summary:
-</span><span id="__span-15-20"><a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>Mean: 232.45 person-hours (30 person-days)
-</span><span id="__span-15-21"><a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a>Median (P50): 229.80 person-hours
-</span><span id="__span-15-22"><a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a>Std Dev: 34.22 person-hours
-</span><span id="__span-15-23"><a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>...
-</span><span id="__span-15-24"><a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a>
-</span><span id="__span-15-25"><a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a>Calendar Time Confidence Intervals:
-</span><span id="__span-15-26"><a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a>  P50: 125.36 hours (16 working days)  (2026-04-22)
-</span><span id="__span-15-27"><a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>  P80: 143.08 hours (18 working days)  (2026-04-24)
-</span><span id="__span-15-28"><a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a>  P90: 151.74 hours (19 working days)  (2026-04-27)
-</span><span id="__span-15-29"><a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a>
-</span><span id="__span-15-30"><a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a>Most Frequent Critical Paths:
-</span><span id="__span-15-31"><a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a>  1. task_001 -&gt; task_002 (10000/10000, 100.0%)
-</span><span id="__span-15-32"><a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a>
-</span><span id="__span-15-33"><a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a>Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
-</span><span id="__span-15-34"><a id="__codelineno-15-34" name="__codelineno-15-34" href="#__codelineno-15-34"></a>  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
+<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>=== Simulation Results ===
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>Project Overview:
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>Project: Website Refresh
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>Hours per Day: 8.0
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>Max Parallel Tasks: 2
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>Schedule Mode: dependency_only
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>Calendar Time Statistical Summary:
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>Mean: 126.78 hours (16 working days)
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>Median (P50): 125.36 hours
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>Std Dev: 18.01 hours
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>Minimum: 98.40 hours
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>Maximum: 192.30 hours
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>Coefficient of Variation: 0.1421
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>Skewness: 0.4123
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>Excess Kurtosis: -0.2341
+</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a>
+</span><span id="__span-16-19"><a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a>Project Effort Statistical Summary:
+</span><span id="__span-16-20"><a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a>Mean: 232.45 person-hours (30 person-days)
+</span><span id="__span-16-21"><a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a>Median (P50): 229.80 person-hours
+</span><span id="__span-16-22"><a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a>Std Dev: 34.22 person-hours
+</span><span id="__span-16-23"><a id="__codelineno-16-23" name="__codelineno-16-23" href="#__codelineno-16-23"></a>...
+</span><span id="__span-16-24"><a id="__codelineno-16-24" name="__codelineno-16-24" href="#__codelineno-16-24"></a>
+</span><span id="__span-16-25"><a id="__codelineno-16-25" name="__codelineno-16-25" href="#__codelineno-16-25"></a>Calendar Time Confidence Intervals:
+</span><span id="__span-16-26"><a id="__codelineno-16-26" name="__codelineno-16-26" href="#__codelineno-16-26"></a>  P50: 125.36 hours (16 working days)  (2026-04-22)
+</span><span id="__span-16-27"><a id="__codelineno-16-27" name="__codelineno-16-27" href="#__codelineno-16-27"></a>  P80: 143.08 hours (18 working days)  (2026-04-24)
+</span><span id="__span-16-28"><a id="__codelineno-16-28" name="__codelineno-16-28" href="#__codelineno-16-28"></a>  P90: 151.74 hours (19 working days)  (2026-04-27)
+</span><span id="__span-16-29"><a id="__codelineno-16-29" name="__codelineno-16-29" href="#__codelineno-16-29"></a>
+</span><span id="__span-16-30"><a id="__codelineno-16-30" name="__codelineno-16-30" href="#__codelineno-16-30"></a>Most Frequent Critical Paths:
+</span><span id="__span-16-31"><a id="__codelineno-16-31" name="__codelineno-16-31" href="#__codelineno-16-31"></a>  1. task_001 -&gt; task_002 (10000/10000, 100.0%)
+</span><span id="__span-16-32"><a id="__codelineno-16-32" name="__codelineno-16-32" href="#__codelineno-16-32"></a>
+</span><span id="__span-16-33"><a id="__codelineno-16-33" name="__codelineno-16-33" href="#__codelineno-16-33"></a>Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
+</span><span id="__span-16-34"><a id="__codelineno-16-34" name="__codelineno-16-34" href="#__codelineno-16-34"></a>  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
 </span></code></pre></div>
 <p>When export formats are specified with <code>-f</code>, the following files are created:</p>
 <table>
@@ -2383,7 +2519,7 @@
 <h2 id="mcprojsim-config"><code>mcprojsim config</code><a class="headerlink" href="#mcprojsim-config" title="Permanent link">&para;</a></h2>
 <p>Displays the active configuration (uncertainty factor multipliers, T-shirt size mappings, story point mappings, simulation defaults).</p>
 <h3 id="usage_3">Usage<a class="headerlink" href="#usage_3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>CONFIG_FILE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--generate<span class="o">]</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>CONFIG_FILE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--generate<span class="o">]</span>
 </span></code></pre></div>
 <h3 id="options_3">Options<a class="headerlink" href="#options_3" title="Permanent link">&para;</a></h3>
 <table>
@@ -2409,14 +2545,72 @@
 <p>The auto-loaded user default configuration file (applied automatically when no <code>-c</code> flag is given to any command) lives at <code>~/.mcprojsim/configuration.yaml</code> — note the full name <code>configuration.yaml</code>, not <code>config.yaml</code>. The <code>--generate</code> flag writes to <code>config.yaml</code> as a starting template; rename it to <code>configuration.yaml</code> if you want it to be picked up automatically.</p>
 </div>
 <h3 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Show built-in defaults</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>mcprojsim<span class="w"> </span>config
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># Show a custom configuration merged with defaults</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--config-file<span class="w"> </span>my_config.yaml
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># Generate a default configuration file at ~/.mcprojsim/config.yaml</span>
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--generate
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Show built-in defaults</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>mcprojsim<span class="w"> </span>config
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># Show a custom configuration merged with defaults</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--config-file<span class="w"> </span>my_config.yaml
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="c1"># Generate a default configuration file at ~/.mcprojsim/config.yaml</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--generate
+</span></code></pre></div>
+<h2 id="parallel-simulation">Parallel simulation<a class="headerlink" href="#parallel-simulation" title="Permanent link">&para;</a></h2>
+<p>By default <code>mcprojsim simulate</code> runs iterations sequentially on a single process. For large iteration counts or computationally heavy projects you can distribute the work across multiple CPU cores with <code>--workers</code>.</p>
+<h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
+<p>When <code>--workers N</code> is set and both the iteration count and task count exceed the minimum thresholds (500 iterations and 5 tasks respectively), the engine:</p>
+<ol>
+<li>Partitions the total iterations into many small micro-chunks (more chunks than workers for smooth progress and load balancing).</li>
+<li>Submits chunks to a short-lived <code>ProcessPoolExecutor</code> with <code>N</code> workers, using the <code>spawn</code> start method for safety on all platforms.</li>
+<li>Merges results in deterministic order after all workers finish.</li>
+<li>Runs the normal post-processing (<code>_build_results</code>, statistics, sensitivity analysis) in the parent process.</li>
+</ol>
+<p>For smaller workloads the engine falls back to the sequential path automatically, so <code>--workers 4</code> on a tiny project has no overhead cost.</p>
+<p>Progress reporting still works in parallel mode. When stdout progress is enabled, updates are emitted as chunks complete. If you use <code>progress_callback</code>, it remains active even when stdout progress is disabled. Single-pass runs report <code>iterations</code> as the total; two-pass runs report <code>pass1_iterations + iterations</code> as the total so callback progress stays monotonic across both phases. Parallel mode may therefore call the callback more frequently than sequential mode.</p>
+<h3 id="reproducibility">Reproducibility<a class="headerlink" href="#reproducibility" title="Permanent link">&para;</a></h3>
+<p>Results are deterministic for a fixed <code>(--seed, --workers)</code> combination. Changing the number of workers changes how the random seed is partitioned across chunks, so the exact duration values will differ between a 1-worker run and a 4-worker run even with the same seed. To reproduce results exactly, use the same <code>--workers</code> value as the original run.</p>
+<blockquote>
+<p>The sequential path (<code>--workers 1</code>) is unchanged by this feature. Two runs with <code>--workers 1</code> and the same <code>--seed</code> produce bit-for-bit identical output.</p>
+</blockquote>
+<h3 id="performance-expectations">Performance expectations<a class="headerlink" href="#performance-expectations" title="Permanent link">&para;</a></h3>
+<p>Parallel execution adds fixed overhead:</p>
+<ul>
+<li>Process pool startup and teardown (~50–200 ms per run on typical hardware).</li>
+<li>Argument serialisation and result deserialisation across worker processes.</li>
+<li>Serial post-processing (statistics, sensitivity analysis) after merge.</li>
+</ul>
+<p>Because of this overhead, parallel mode is most beneficial for larger workloads:</p>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th style="text-align: right;">Expected speedup on 8 cores</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; 500 iterations or &lt; 5 tasks</td>
+<td style="text-align: right;">Falls back to sequential</td>
+</tr>
+<tr>
+<td>~10 000 iterations, ~30 tasks</td>
+<td style="text-align: right;">Roughly 2× to 4×</td>
+</tr>
+<tr>
+<td>Heavy workloads with minimal post-processing</td>
+<td style="text-align: right;">Up to ~4× to 5×</td>
+</tr>
+</tbody>
+</table>
+<p>Benchmark your own project with <code>--workers 1</code>, <code>--workers 2</code>, <code>--workers 4</code>, and <code>--workers auto</code> to find the best setting.</p>
+<h3 id="usage_4">Usage<a class="headerlink" href="#usage_4" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Use 4 worker processes</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--workers<span class="w"> </span><span class="m">4</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1"># Use all available CPUs</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--workers<span class="w"> </span>auto<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="c1"># Force sequential (default)</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--workers<span class="w"> </span><span class="m">1</span>
 </span></code></pre></div>
 <p>\newpage</p>
 

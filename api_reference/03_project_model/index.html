@@ -2109,7 +2109,43 @@
 <td><code>currency</code></td>
 <td><code>str \| None</code></td>
 <td><code>"USD"</code></td>
-<td>Currency for cost tracking</td>
+<td>ISO 4217 currency code for cost tracking (e.g. <code>"USD"</code>, <code>"EUR"</code>, <code>"SEK"</code>)</td>
+</tr>
+<tr>
+<td><code>default_hourly_rate</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Default hourly rate applied to all tasks that don't specify a per-task or per-resource rate. Must be ≥ 0.</td>
+</tr>
+<tr>
+<td><code>overhead_rate</code></td>
+<td><code>float</code></td>
+<td><code>0.0</code></td>
+<td>Overhead multiplier applied on top of hourly rates (0.0–3.0). E.g. <code>0.15</code> adds 15 % overhead.</td>
+</tr>
+<tr>
+<td><code>secondary_currencies</code></td>
+<td><code>list[str]</code></td>
+<td><code>[]</code></td>
+<td>Up to 5 additional ISO 4217 currency codes for multi-currency cost output.</td>
+</tr>
+<tr>
+<td><code>fx_conversion_cost</code></td>
+<td><code>float</code></td>
+<td><code>0.0</code></td>
+<td>Flat conversion fee fraction (0.0–0.50) applied when converting to secondary currencies.</td>
+</tr>
+<tr>
+<td><code>fx_overhead_rate</code></td>
+<td><code>float</code></td>
+<td><code>0.0</code></td>
+<td>Additional overhead fraction for FX conversions (0.0–1.0).</td>
+</tr>
+<tr>
+<td><code>fx_rates</code></td>
+<td><code>dict[str, float]</code></td>
+<td><code>{}</code></td>
+<td>Manual FX rate overrides keyed by target currency code. When not set, live rates are fetched.</td>
 </tr>
 <tr>
 <td><code>confidence_levels</code></td>
@@ -2140,6 +2176,18 @@
 <td><code>int \| None</code></td>
 <td><code>None</code></td>
 <td>Total team size; used for coordination overhead and auto-generating resources</td>
+</tr>
+<tr>
+<td><code>t_shirt_size_default_category</code></td>
+<td><code>str \| None</code></td>
+<td><code>None</code></td>
+<td>Default T-shirt size category for this project (overrides config when set)</td>
+</tr>
+<tr>
+<td><code>uncertainty_factors</code></td>
+<td><code>UncertaintyFactors \| None</code></td>
+<td><code>None</code></td>
+<td>Project-level uncertainty factor overrides (applied to all tasks unless overridden per-task)</td>
 </tr>
 </tbody>
 </table>
@@ -2244,6 +2292,12 @@
 <td><code>list[Risk]</code></td>
 <td><code>[]</code></td>
 <td>Task-specific risks</td>
+</tr>
+<tr>
+<td><code>fixed_cost</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>One-time fixed cost for this task (in the project currency). Added to the cost total regardless of duration.</td>
 </tr>
 </tbody>
 </table>
@@ -2394,6 +2448,12 @@
 <td><code>None</code></td>
 <td>Optional description</td>
 </tr>
+<tr>
+<td><code>cost_impact</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Monetary cost impact when this risk triggers (in the project currency). Applied on top of the duration impact.</td>
+</tr>
 </tbody>
 </table>
 <p><strong><code>RiskImpact</code> fields:</strong></p>
@@ -2507,6 +2567,12 @@
 <td><code>list[date]</code></td>
 <td><code>[]</code></td>
 <td>Specific dates this resource is unavailable</td>
+</tr>
+<tr>
+<td><code>hourly_rate</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Per-resource hourly rate (overrides <code>ProjectMetadata.default_hourly_rate</code> for tasks assigned to this resource). Must be ≥ 0.</td>
 </tr>
 </tbody>
 </table>

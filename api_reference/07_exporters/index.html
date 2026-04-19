@@ -1628,7 +1628,7 @@
 <p>All exporters support histogram data, critical-path output, sprint-planning results, and historic-base data (when available). The histogram bin count defaults to 50 but is controlled by <code>config.output.number_bins</code>.</p>
 <h2 id="jsonexporter"><code>JSONExporter</code><a class="headerlink" href="#jsonexporter" title="Permanent link">&para;</a></h2>
 <p>Exports comprehensive results including all percentiles, statistics, histogram data, critical paths, risk summaries, and sprint-planning data to JSON.</p>
-<p><strong>Method:</strong> <code>export(results, output_path, config=None, critical_path_limit=None, sprint_results=None, project=None, include_historic_base=False) -&gt; None</code></p>
+<p><strong>Method:</strong> <code>export(results, output_path, config=None, critical_path_limit=None, sprint_results=None, project=None, include_historic_base=False, full_cost_detail=False, fx_provider=None, target_budget=None, target_hours=None) -&gt; None</code></p>
 <table>
 <thead>
 <tr>
@@ -1681,6 +1681,30 @@
 <td><code>False</code></td>
 <td>Include historic baseline data when available.</td>
 </tr>
+<tr>
+<td><code>full_cost_detail</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>When <code>True</code>, includes per-task cost breakdowns and cost-distribution histograms in the JSON output.</td>
+</tr>
+<tr>
+<td><code>fx_provider</code></td>
+<td><code>Any \| None</code></td>
+<td><code>None</code></td>
+<td>Foreign-exchange rate provider for multi-currency cost output (optional).</td>
+</tr>
+<tr>
+<td><code>target_budget</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Target budget for budget-confidence analysis in the output.</td>
+</tr>
+<tr>
+<td><code>target_hours</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Target duration (hours) for joint probability analysis in the output.</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Example:</strong></p>
@@ -1697,7 +1721,7 @@
 </span></code></pre></div>
 <h2 id="csvexporter"><code>CSVExporter</code><a class="headerlink" href="#csvexporter" title="Permanent link">&para;</a></h2>
 <p>Exports results as a CSV table format: metrics, percentiles, critical paths, histogram data, risk impact, resource diagnostics, and sprint data.</p>
-<p><strong>Method:</strong> <code>export(results, output_path, config=None, critical_path_limit=None, sprint_results=None) -&gt; None</code></p>
+<p><strong>Method:</strong> <code>export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, fx_provider=None) -&gt; None</code></p>
 <table>
 <thead>
 <tr>
@@ -1721,6 +1745,12 @@
 <td>File path for CSV output.</td>
 </tr>
 <tr>
+<td><code>project</code></td>
+<td><code>Project \| None</code></td>
+<td><code>None</code></td>
+<td>Original project definition (optional; enables per-task detail).</td>
+</tr>
+<tr>
 <td><code>config</code></td>
 <td><code>Config \| None</code></td>
 <td><code>None</code></td>
@@ -1738,6 +1768,12 @@
 <td><code>None</code></td>
 <td>Sprint planning results to embed (optional).</td>
 </tr>
+<tr>
+<td><code>fx_provider</code></td>
+<td><code>Any \| None</code></td>
+<td><code>None</code></td>
+<td>Foreign-exchange rate provider for multi-currency cost output (optional).</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Example:</strong></p>
@@ -1747,7 +1783,7 @@
 </span></code></pre></div>
 <h2 id="htmlexporter"><code>HTMLExporter</code><a class="headerlink" href="#htmlexporter" title="Permanent link">&para;</a></h2>
 <p>Exports a formatted, interactive HTML report with thermometers, percentile tables, charts (using matplotlib), critical-path analysis, staffing recommendations, and sprint-planning traceability.</p>
-<p><strong>Method:</strong> <code>export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, include_historic_base=False) -&gt; None</code></p>
+<p><strong>Method:</strong> <code>export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, fx_provider=None) -&gt; None</code></p>
 <table>
 <thead>
 <tr>
@@ -1795,10 +1831,10 @@
 <td>Sprint planning results to embed (optional).</td>
 </tr>
 <tr>
-<td><code>include_historic_base</code></td>
-<td><code>bool</code></td>
-<td><code>False</code></td>
-<td>Include historic baseline data when available.</td>
+<td><code>fx_provider</code></td>
+<td><code>Any \| None</code></td>
+<td><code>None</code></td>
+<td>Foreign-exchange rate provider for multi-currency cost output (optional).</td>
 </tr>
 </tbody>
 </table>

@@ -1373,6 +1373,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#costconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CostConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1747,6 +1758,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#costconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CostConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1884,6 +1906,11 @@
 <td><code>sprint_defaults</code></td>
 <td><code>SprintDefaultsConfig</code></td>
 <td>Sprint planning defaults</td>
+</tr>
+<tr>
+<td><code>cost</code></td>
+<td><code>CostConfig</code></td>
+<td>Cost estimation defaults</td>
 </tr>
 </tbody>
 </table>
@@ -2332,6 +2359,50 @@
 </tr>
 </tbody>
 </table>
+<h3 id="costconfig"><code>CostConfig</code><a class="headerlink" href="#costconfig" title="Permanent link">&para;</a></h3>
+<p>Defaults for cost estimation. Nested inside <code>Config.cost</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default_hourly_rate</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Default hourly rate when not specified on the project or resource.</td>
+</tr>
+<tr>
+<td><code>overhead_rate</code></td>
+<td><code>float</code></td>
+<td><code>0.0</code></td>
+<td>Default overhead multiplier (0.0–3.0).</td>
+</tr>
+<tr>
+<td><code>currency</code></td>
+<td><code>str</code></td>
+<td><code>"EUR"</code></td>
+<td>Default currency code (ISO 4217).</td>
+</tr>
+<tr>
+<td><code>include_in_output</code></td>
+<td><code>bool</code></td>
+<td><code>True</code></td>
+<td>Whether cost data is included in export output.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Default cost currency: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">currency</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Default overhead rate: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">overhead_rate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Include cost in output: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">cost</span><span class="o">.</span><span class="n">include_in_output</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></code></pre></div>
 
 
 
