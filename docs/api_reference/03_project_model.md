@@ -125,12 +125,20 @@ Stores top-level project settings and characteristics.
 | `description` | `str \| None` | `None` | Optional project description |
 | `start_date` | `date` | required | Project start date |
 | `hours_per_day` | `float` | `8.0` | Working hours per day |
-| `currency` | `str \| None` | `"USD"` | Currency for cost tracking |
+| `currency` | `str \| None` | `"USD"` | ISO 4217 currency code for cost tracking (e.g. `"USD"`, `"EUR"`, `"SEK"`) |
+| `default_hourly_rate` | `float \| None` | `None` | Default hourly rate applied to all tasks that don't specify a per-task or per-resource rate. Must be ≥ 0. |
+| `overhead_rate` | `float` | `0.0` | Overhead multiplier applied on top of hourly rates (0.0–3.0). E.g. `0.15` adds 15 % overhead. |
+| `secondary_currencies` | `list[str]` | `[]` | Up to 5 additional ISO 4217 currency codes for multi-currency cost output. |
+| `fx_conversion_cost` | `float` | `0.0` | Flat conversion fee fraction (0.0–0.50) applied when converting to secondary currencies. |
+| `fx_overhead_rate` | `float` | `0.0` | Additional overhead fraction for FX conversions (0.0–1.0). |
+| `fx_rates` | `dict[str, float]` | `{}` | Manual FX rate overrides keyed by target currency code. When not set, live rates are fetched. |
 | `confidence_levels` | `list[int]` | `[10, 25, 50, 75, 80, 85, 90, 95, 99]` | Percentiles to include in reports |
 | `probability_red_threshold` | `float` | `0.5` | Probability below which delivery is shown as red |
 | `probability_green_threshold` | `float` | `0.9` | Probability above which delivery is shown as green |
 | `distribution` | `DistributionType` | `"triangular"` | Default task duration distribution |
 | `team_size` | `int \| None` | `None` | Total team size; used for coordination overhead and auto-generating resources |
+| `t_shirt_size_default_category` | `str \| None` | `None` | Default T-shirt size category for this project (overrides config when set) |
+| `uncertainty_factors` | `UncertaintyFactors \| None` | `None` | Project-level uncertainty factor overrides (applied to all tasks unless overridden per-task) |
 
 **Example:**
 
@@ -167,6 +175,7 @@ Represents a single work item in the project network.
 | `priority` | `int \| None` | `None` | Scheduling priority hint |
 | `spillover_probability_override` | `float \| None` | `None` | Override for sprint spillover probability (0.0–1.0) |
 | `risks` | `list[Risk]` | `[]` | Task-specific risks |
+| `fixed_cost` | `float \| None` | `None` | One-time fixed cost for this task (in the project currency). Added to the cost total regardless of duration. |
 
 **Key methods:**
 
@@ -249,6 +258,7 @@ Represents task-level or project-level risk.
 | `probability` | `float` | required | Probability this risk occurs (0.0–1.0) |
 | `impact` | `float \| RiskImpact` | required | Time penalty in hours (float), or a `RiskImpact` object |
 | `description` | `str \| None` | `None` | Optional description |
+| `cost_impact` | `float \| None` | `None` | Monetary cost impact when this risk triggers (in the project currency). Applied on top of the duration impact. |
 
 **`RiskImpact` fields:**
 
@@ -297,6 +307,7 @@ Defines an individual resource (team member) that can be assigned to tasks.
 | `productivity_level` | `float` | `1.0` | Productivity multiplier (0.1–2.0) |
 | `sickness_prob` | `float` | `0.0` | Probability of absence per scheduling unit (0.0–1.0) |
 | `planned_absence` | `list[date]` | `[]` | Specific dates this resource is unavailable |
+| `hourly_rate` | `float \| None` | `None` | Per-resource hourly rate (overrides `ProjectMetadata.default_hourly_rate` for tasks assigned to this resource). Must be ≥ 0. |
 
 **Example:**
 

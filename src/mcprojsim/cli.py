@@ -1018,7 +1018,7 @@ def _output_cost_text(
 @click.option(
     "--iterations",
     "-n",
-    type=int,
+    type=click.IntRange(min=1),
     default=DEFAULT_SIMULATION_ITERATIONS,
     help="Number of simulation iterations",
 )
@@ -1116,7 +1116,7 @@ def _output_cost_text(
 )
 @click.option(
     "--pass1-iterations",
-    type=int,
+    type=click.IntRange(min=1),
     default=None,
     help=(
         "Number of pass-1 iterations for criticality ranking when --two-pass is used. "
@@ -1150,6 +1150,15 @@ def _output_cost_text(
     default=False,
     help="Disable exchange rate fetches (offline / CI mode).",
 )
+@click.option(
+    "--workers",
+    type=str,
+    default="1",
+    help=(
+        "Number of worker processes for parallel simulation. "
+        "Use a positive integer or 'auto' to use all available CPUs."
+    ),
+)
 def simulate(
     project_file: str,
     iterations: int,
@@ -1174,8 +1183,30 @@ def simulate(
     target_budget: Optional[float],
     full_cost_detail: bool,
     no_fx: bool,
+    workers: str,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
+    import os
+
+    # Resolve --workers early so bad input fails before any file I/O.
+    workers_str = workers.strip().lower()
+    if workers_str == "auto":
+        effective_workers = os.cpu_count() or 1
+    else:
+        try:
+            effective_workers = int(workers_str)
+        except ValueError:
+            raise click.BadParameter(
+                f"'{workers}' is not a valid worker count. "
+                "Use a positive integer or 'auto'.",
+                param_hint="--workers",
+            )
+    if effective_workers < 1:
+        raise click.BadParameter(
+            f"--workers must be a positive integer, got {effective_workers}.",
+            param_hint="--workers",
+        )
+
     if quiet < 2:
         click.echo(f"mcprojsim, version {__version__}")
     logger = setup_logging(level="INFO" if verbose else "WARNING")
@@ -1293,7 +1324,9 @@ def simulate(
             show_progress=quiet == 0,
             two_pass=two_pass,
             pass1_iterations=pass1_iterations,
+            workers=effective_workers,
         )
+        logger.info("Requested %d worker process(es)", effective_workers)
         results, elapsed_seconds, peak_memory_bytes = _run_simulation_with_metrics(
             engine, project
         )

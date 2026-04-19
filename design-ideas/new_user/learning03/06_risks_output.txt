@@ -1,0 +1,92 @@
+mcprojsim, version 0.13.0
+Progress: 10.0% (1000/10000)
+Progress: 20.0% (2000/10000)
+Progress: 30.0% (3000/10000)
+Progress: 40.0% (4000/10000)
+Progress: 50.0% (5000/10000)
+Progress: 60.0% (6000/10000)
+Progress: 70.0% (7000/10000)
+Progress: 80.0% (8000/10000)
+Progress: 90.0% (9000/10000)
+Progress: 100.0% (10000/10000)
+Simulation time: 0.19 seconds
+Peak simulation memory: 7.64 MiB
+
+=== Simulation Results ===
+
+Project Overview:
+  Project: Payment Gateway Integration
+  Start Date: 2026-05-01
+  Number of Tasks: 4
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 2
+  Schedule Mode: dependency_only
+
+Default Uncertainty Factors:
+  Team Experience: medium (1.0)
+  Requirements Maturity: high (1.0)
+  Technical Complexity: low (1.0)
+  Team Distribution: colocated (1.0)
+  Integration Complexity: low (1.0)
+
+Calendar Time Statistical Summary:
+  Mean: 274.86 hours (35 working days)
+  Median (P50): 259.19 hours
+  Std Dev: 58.13 hours
+  Minimum: 165.79 hours
+  Maximum: 498.33 hours
+  Coefficient of Variation: 0.2115
+  Skewness: 0.8916
+  Excess Kurtosis: 0.0514
+
+Project Effort Statistical Summary:
+  Mean: 287.48 person-hours (36 person-days)
+  Median (P50): 286.52 person-hours
+  Std Dev: 30.61 person-hours
+  Minimum: 200.05 person-hours
+  Maximum: 403.73 person-hours
+  Coefficient of Variation: 0.1065
+  Skewness: 0.2152
+  Excess Kurtosis: -0.1253
+
+Calendar Time Confidence Intervals:
+  P50: 259.19 hours (33 working days)  (2026-06-17)
+  P80: 325.90 hours (41 working days)  (2026-06-29)
+  P90: 369.34 hours (47 working days)  (2026-07-07)
+  P95: 391.15 hours (49 working days)  (2026-07-09)
+
+Effort Confidence Intervals:
+  P50: 286.52 person-hours (36 person-days)
+  P80: 313.43 person-hours (40 person-days)
+  P90: 327.55 person-hours (41 person-days)
+  P95: 339.94 person-hours (43 person-days)
+
+Sensitivity Analysis (top contributors):
+  pay_002: +0.4486
+  pay_001: +0.3190
+  pay_004: +0.1995
+  pay_003: +0.0806
+
+Schedule Slack:
+  pay_001: 0.00 hours (Critical)
+  pay_002: 0.00 hours (Critical)
+  pay_004: 3.69 hours (3.7h buffer)
+  pay_003: 11.66 hours (11.7h buffer)
+
+Risk Impact Analysis:
+  pay_001: mean=1.41h, triggers=35.2%, mean_when_triggered=4.00h
+  pay_002: mean=0.92h, triggers=32.9%, mean_when_triggered=2.80h
+  pay_003: mean=1.21h, triggers=40.2%, mean_when_triggered=3.00h
+  pay_004: mean=4.01h, triggers=25.0%, mean_when_triggered=16.05h
+
+Most Frequent Critical Paths:
+  1. pay_001 -> pay_002 -> pay_004 (6709/10000, 67.1%)
+  2. pay_001 -> pay_002 -> pay_003 (3291/10000, 32.9%)
+
+Staffing (based on mean effort): 2 people recommended (mixed team), 35 working days
+  Total effort: 287 person-hours (36 person-days) | Parallelism ratio: 1.0
+
+
+No export formats specified. Use -f to export results to files.

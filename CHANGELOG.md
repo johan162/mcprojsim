@@ -1,3 +1,32 @@
+## [v0.15.0] - 2026-04-19
+
+Release Type: minor
+
+### 📋 Summary
+This release extends the simulation engine with a parallel execution path to reduce runtime on larger workloads while preserving deterministic reproducibility and existing simulation semantics. It also hardens input validation and aligns design and API documentation with implemented behavior. By default a heuristics is used so that parallel path will only happen for sufficient large workloads as to offset the housekeeping and IPC overhead. For large workoads with constrained scheduling (&gt; 50,000 iterations and &gt; 100 tasks) expect up to 3-5x improvements. For smaller or dependecy only scheduling the heuristics will not kick in. 
+
+### ✨ Additions
+- Added process-based parallel execution for simulation iterations with deterministic chunk partitioning and seed partitioning
+- Added parallel support for two-pass simulation flows, including replay-cache index remapping across merged chunk results
+- Added cancellation signaling that works in spawned worker-process environments
+
+### 🐛 Bug Fixes
+- Fixed late runtime failure for zero-iteration simulations by rejecting invalid iteration counts with clear validation errors
+- Fixed a problem with calendar timne calculations
+
+### 📚 Documentation
+- Updated API reference coverage for worker dispatch behavior to match implemented parallel gating logic
+- Updated parallel design documentation to reflect final policy decisions and resolved review findings
+- Added cost handling to the API reference
+- Added rendered PDF version of all design documents (`design-docs/dist/`)
+- Added Thumbnails to top-level `README.md`
+
+### 🛠 Internal
+- Added targeted CLI regression tests for invalid iteration arguments
+- Expanded verification coverage for parallel, two-pass, CLI, and end-to-end combination paths during release validation
+- Internal design-document for both native app and web-based app for help in creating project YAML fikles and run simulations
+
+
 ## [v0.14.1] - 2026-04-13
 
 Release Type: patch

@@ -144,6 +144,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `--include-historic-base` | Add a `Historic Base` section to HTML reports (historic summary + committed/completed bar chart) and include matching historic baseline rows/summary in JSON under `sprint_planning.historic_base`. **Requires `-f` to include `json` or `html`.** | off |
 | `--two-pass` | Enable criticality two-pass scheduling. Only has effect when resource-constrained scheduling is active. Overrides the config file `assignment_mode` setting. | off |
 | `--pass1-iterations N` | Number of pass-1 iterations for criticality ranking when `--two-pass` is used. Capped to `--iterations`. | 1000 (from config) |
+| `--workers N \| auto` | Number of worker processes for parallel simulation. Pass a positive integer or `auto` to use all available CPUs. Ignored when iterations or task count is below the parallel threshold. | 1 (sequential) |
 
 ### Examples
 
@@ -200,6 +201,17 @@ mcprojsim simulate sprint_project.yaml --no-sickness
 
 # Include Historic Base in HTML/JSON exports
 mcprojsim simulate sprint_project.yaml -f json,html --include-historic-base
+```
+
+```bash
+# Parallel simulation: use 4 worker processes
+mcprojsim simulate project.yaml --workers 4 --seed 42
+
+# Parallel simulation: use all available CPUs
+mcprojsim simulate project.yaml --workers auto --seed 42
+
+# Force sequential execution explicitly
+mcprojsim simulate project.yaml --workers 1
 ```
 
 ### Output
@@ -347,6 +359,61 @@ mcprojsim config --config-file my_config.yaml
 
 # Generate a default configuration file at ~/.mcprojsim/config.yaml
 mcprojsim config --generate
+```
+
+
+## Parallel simulation
+
+By default `mcprojsim simulate` runs iterations sequentially on a single process. For large iteration counts or computationally heavy projects you can distribute the work across multiple CPU cores with `--workers`.
+
+### How it works
+
+When `--workers N` is set and both the iteration count and task count exceed the minimum thresholds (500 iterations and 5 tasks respectively), the engine:
+
+1. Partitions the total iterations into many small micro-chunks (more chunks than workers for smooth progress and load balancing).
+2. Submits chunks to a short-lived `ProcessPoolExecutor` with `N` workers, using the `spawn` start method for safety on all platforms.
+3. Merges results in deterministic order after all workers finish.
+4. Runs the normal post-processing (`_build_results`, statistics, sensitivity analysis) in the parent process.
+
+For smaller workloads the engine falls back to the sequential path automatically, so `--workers 4` on a tiny project has no overhead cost.
+
+Progress reporting still works in parallel mode. When stdout progress is enabled, updates are emitted as chunks complete. If you use `progress_callback`, it remains active even when stdout progress is disabled. Single-pass runs report `iterations` as the total; two-pass runs report `pass1_iterations + iterations` as the total so callback progress stays monotonic across both phases. Parallel mode may therefore call the callback more frequently than sequential mode.
+
+### Reproducibility
+
+Results are deterministic for a fixed `(--seed, --workers)` combination. Changing the number of workers changes how the random seed is partitioned across chunks, so the exact duration values will differ between a 1-worker run and a 4-worker run even with the same seed. To reproduce results exactly, use the same `--workers` value as the original run.
+
+> The sequential path (`--workers 1`) is unchanged by this feature. Two runs with `--workers 1` and the same `--seed` produce bit-for-bit identical output.
+
+### Performance expectations
+
+Parallel execution adds fixed overhead:
+
+- Process pool startup and teardown (~50–200 ms per run on typical hardware).
+- Argument serialisation and result deserialisation across worker processes.
+- Serial post-processing (statistics, sensitivity analysis) after merge.
+
+Because of this overhead, parallel mode is most beneficial for larger workloads:
+
+| Workload | Expected speedup on 8 cores |
+|----------|---------------------------:|
+| < 500 iterations or < 5 tasks | Falls back to sequential |
+| ~10 000 iterations, ~30 tasks | Roughly 2× to 4× |
+| Heavy workloads with minimal post-processing | Up to ~4× to 5× |
+
+Benchmark your own project with `--workers 1`, `--workers 2`, `--workers 4`, and `--workers auto` to find the best setting.
+
+### Usage
+
+```bash
+# Use 4 worker processes
+mcprojsim simulate project.yaml --workers 4 --seed 42
+
+# Use all available CPUs
+mcprojsim simulate project.yaml --workers auto --seed 42
+
+# Force sequential (default)
+mcprojsim simulate project.yaml --workers 1
 ```
 
 

@@ -1,0 +1,134 @@
+mcprojsim, version 0.13.0
+Progress: 10.0% (1000/10000)
+Progress: 20.0% (2000/10000)
+Progress: 30.0% (3000/10000)
+Progress: 40.0% (4000/10000)
+Progress: 50.0% (5000/10000)
+Progress: 60.0% (6000/10000)
+Progress: 70.0% (7000/10000)
+Progress: 80.0% (8000/10000)
+Progress: 90.0% (9000/10000)
+Progress: 100.0% (10000/10000)
+Simulation time: 0.23 seconds
+Peak simulation memory: 12.50 MiB
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬─────────────────────────┐
+│ Field                          │ Value                   │
+├────────────────────────────────┼─────────────────────────┤
+│ Project                        │ Task Estimation Methods │
+│ Start Date                     │ 2026-05-01              │
+│ Number of Tasks                │ 7                       │
+│ Effective Default Distribution │ lognormal               │
+│ T-Shirt Category Used          │ story                   │
+│ Hours per Day                  │ 8.0                     │
+│ Max Parallel Tasks             │ 7                       │
+│ Schedule Mode                  │ dependency_only         │
+└────────────────────────────────┴─────────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 275.21 hours (35 working days) │
+│ Median (P50)             │ 262.24 hours                   │
+│ Std Dev                  │ 66.37 hours                    │
+│ Minimum                  │ 153.07 hours                   │
+│ Maximum                  │ 698.90 hours                   │
+│ Coefficient of Variation │ 0.2411                         │
+│ Skewness                 │ 1.2663                         │
+│ Excess Kurtosis          │ 2.4919                         │
+└──────────────────────────┴────────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 582.27 person-hours (73 person-days) │
+│ Median (P50)             │ 571.25 person-hours                  │
+│ Std Dev                  │ 78.20 person-hours                   │
+│ Minimum                  │ 398.37 person-hours                  │
+│ Maximum                  │ 1078.44 person-hours                 │
+│ Coefficient of Variation │ 0.1343                               │
+│ Skewness                 │ 0.9717                               │
+│ Excess Kurtosis          │ 1.7098                               │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P10          │  204.35 │             26 │ 2026-06-08 │
+│ P25          │  227.63 │             29 │ 2026-06-11 │
+│ P50          │  262.24 │             33 │ 2026-06-17 │
+│ P75          │  308.26 │             39 │ 2026-06-25 │
+│ P80          │  321.5  │             41 │ 2026-06-29 │
+│ P85          │  338.53 │             43 │ 2026-07-01 │
+│ P90          │  361.46 │             46 │ 2026-07-06 │
+│ P95          │  402.05 │             51 │ 2026-07-13 │
+│ P99          │  488.31 │             62 │ 2026-07-28 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Effort Confidence Intervals:
+┌──────────────┬────────────────┬───────────────┐
+│ Percentile   │   Person-Hours │   Person-Days │
+├──────────────┼────────────────┼───────────────┤
+│ P10          │         494.07 │            62 │
+│ P25          │         526.87 │            66 │
+│ P50          │         571.25 │            72 │
+│ P75          │         625.54 │            79 │
+│ P80          │         641.42 │            81 │
+│ P85          │         658.97 │            83 │
+│ P90          │         682.86 │            86 │
+│ P95          │         725.94 │            91 │
+│ P99          │         819.16 │           103 │
+└──────────────┴────────────────┴───────────────┘
+
+Sensitivity Analysis (top contributors):
+┌──────────┬───────────────┐
+│ Task     │ Correlation   │
+├──────────┼───────────────┤
+│ task_004 │ +0.9993       │
+│ task_007 │ -0.0316       │
+│ task_006 │ +0.0146       │
+│ task_003 │ +0.0058       │
+│ task_002 │ -0.0052       │
+│ task_001 │ -0.0015       │
+│ task_005 │ -0.0010       │
+└──────────┴───────────────┘
+
+Schedule Slack:
+┌──────────┬─────────────────┬───────────────┐
+│ Task     │ Slack (hours)   │ Status        │
+├──────────┼─────────────────┼───────────────┤
+│ task_004 │ 0.08            │ 0.1h buffer   │
+│ task_003 │ 200.01          │ 200.0h buffer │
+│ task_002 │ 216.49          │ 216.5h buffer │
+│ task_001 │ 227.03          │ 227.0h buffer │
+│ task_005 │ 229.78          │ 229.8h buffer │
+│ task_006 │ 235.20          │ 235.2h buffer │
+│ task_007 │ 235.58          │ 235.6h buffer │
+└──────────┴─────────────────┴───────────────┘
+
+Most Frequent Critical Paths:
+  1. task_004 (9973/10000, 99.7%)
+  2. task_002 (20/10000, 0.2%)
+
+Staffing (based on mean effort): 3 people recommended (mixed team), 35 working days
+  Total effort: 582 person-hours (73 person-days) | Parallelism ratio: 2.1
+
+
+No export formats specified. Use -f to export results to files.

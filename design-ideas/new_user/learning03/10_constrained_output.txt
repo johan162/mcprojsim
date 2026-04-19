@@ -1,0 +1,159 @@
+mcprojsim, version 0.13.0
+Progress: 10.0% (1000/10000)
+Progress: 20.0% (2000/10000)
+Progress: 30.0% (3000/10000)
+Progress: 40.0% (4000/10000)
+Progress: 50.0% (5000/10000)
+Progress: 60.0% (6000/10000)
+Progress: 70.0% (7000/10000)
+Progress: 80.0% (8000/10000)
+Progress: 90.0% (9000/10000)
+Progress: 100.0% (10000/10000)
+Simulation time: 4.56 seconds
+Peak simulation memory: 13.22 MiB
+
+=== Simulation Results ===
+
+Project Overview:
+┌────────────────────────────────┬──────────────────────┐
+│ Field                          │ Value                │
+├────────────────────────────────┼──────────────────────┤
+│ Project                        │ Onboarding Portal    │
+│ Start Date                     │ 2026-04-01           │
+│ Number of Tasks                │ 5                    │
+│ Effective Default Distribution │ triangular           │
+│ T-Shirt Category Used          │ story                │
+│ Hours per Day                  │ 8.0                  │
+│ Max Parallel Tasks             │ 2                    │
+│ Schedule Mode                  │ resource_constrained │
+└────────────────────────────────┴──────────────────────┘
+
+Default Uncertainty Factors:
+┌────────────────────────┬──────────────────────────────┐
+│ Factor                 │ Default Level (Multiplier)   │
+├────────────────────────┼──────────────────────────────┤
+│ Team Experience        │ medium (1.0)                 │
+│ Requirements Maturity  │ high (1.0)                   │
+│ Technical Complexity   │ low (1.0)                    │
+│ Team Distribution      │ colocated (1.0)              │
+│ Integration Complexity │ low (1.0)                    │
+└────────────────────────┴──────────────────────────────┘
+
+Calendar Time Statistical Summary:
+┌──────────────────────────┬────────────────────────────────┐
+│ Metric                   │ Value                          │
+├──────────────────────────┼────────────────────────────────┤
+│ Mean                     │ 613.53 hours (77 working days) │
+│ Median (P50)             │ 628.36 hours                   │
+│ Std Dev                  │ 65.31 hours                    │
+│ Minimum                  │ 390.71 hours                   │
+│ Maximum                  │ 822.96 hours                   │
+│ Coefficient of Variation │ 0.1065                         │
+│ Skewness                 │ -0.0467                        │
+│ Excess Kurtosis          │ -0.7442                        │
+└──────────────────────────┴────────────────────────────────┘
+
+Project Effort Statistical Summary:
+┌──────────────────────────┬──────────────────────────────────────┐
+│ Metric                   │ Value                                │
+├──────────────────────────┼──────────────────────────────────────┤
+│ Mean                     │ 178.44 person-hours (23 person-days) │
+│ Median (P50)             │ 178.02 person-hours                  │
+│ Std Dev                  │ 16.21 person-hours                   │
+│ Minimum                  │ 127.29 person-hours                  │
+│ Maximum                  │ 231.78 person-hours                  │
+│ Coefficient of Variation │ 0.0909                               │
+│ Skewness                 │ 0.1290                               │
+│ Excess Kurtosis          │ -0.1849                              │
+└──────────────────────────┴──────────────────────────────────────┘
+
+Calendar Time Confidence Intervals:
+┌──────────────┬─────────┬────────────────┬────────────┐
+│ Percentile   │   Hours │   Working Days │ Date       │
+├──────────────┼─────────┼────────────────┼────────────┤
+│ P50          │  628.36 │             79 │ 2026-07-21 │
+│ P80          │  673.61 │             85 │ 2026-07-29 │
+│ P90          │  696.64 │             88 │ 2026-08-03 │
+└──────────────┴─────────┴────────────────┴────────────┘
+
+Effort Confidence Intervals:
+┌──────────────┬────────────────┬───────────────┐
+│ Percentile   │   Person-Hours │   Person-Days │
+├──────────────┼────────────────┼───────────────┤
+│ P50          │         178.02 │            23 │
+│ P80          │         192.03 │            25 │
+│ P90          │         199.84 │            25 │
+└──────────────┴────────────────┴───────────────┘
+
+Cost Statistical Summary (EUR):
+┌──────────────┬─────────┐
+│ Metric       │ Value   │
+├──────────────┼─────────┤
+│ Mean         │ €28,096 │
+│ Median (P50) │ €28,021 │
+│ Std Dev      │ €2,474  │
+│ Minimum      │ €20,190 │
+│ Maximum      │ €36,462 │
+│ CV           │ 8.8%    │
+└──────────────┴─────────┘
+
+Cost Confidence Intervals:
+┌──────────────┬──────────┐
+│ Percentile   │ Amount   │
+├──────────────┼──────────┤
+│ P50          │ €28,021  │
+│ P80          │ €30,171  │
+│ P90          │ €31,334  │
+└──────────────┴──────────┘
+
+Cost Sensitivity Analysis:
+┌──────────┬───────────────┐
+│ Task     │ Correlation   │
+├──────────┼───────────────┤
+│ task_003 │ +0.6956       │
+│ task_002 │ +0.3995       │
+│ task_005 │ +0.3902       │
+│ task_004 │ +0.3270       │
+│ task_001 │ +0.2471       │
+└──────────┴───────────────┘
+
+Sensitivity Analysis (top contributors):
+┌──────────┬───────────────┐
+│ Task     │ Correlation   │
+├──────────┼───────────────┤
+│ task_003 │ +0.7896       │
+│ task_002 │ +0.3394       │
+│ task_005 │ +0.3282       │
+│ task_001 │ +0.2143       │
+│ task_004 │ +0.1405       │
+└──────────┴───────────────┘
+
+Schedule Slack:
+┌──────────┬─────────────────┬──────────────┐
+│ Task     │ Slack (hours)   │ Status       │
+├──────────┼─────────────────┼──────────────┤
+│ task_005 │ 0.00            │ Critical     │
+│ task_001 │ 0.00            │ Critical     │
+│ task_002 │ 0.00            │ Critical     │
+│ task_003 │ 6.62            │ 6.6h buffer  │
+│ task_004 │ 81.36           │ 81.4h buffer │
+└──────────┴─────────────────┴──────────────┘
+
+Constrained Schedule Diagnostics:
+┌─────────────────────────────────────┬─────────┐
+│ Metric                              │ Value   │
+├─────────────────────────────────────┼─────────┤
+│ Average Resource Wait (hours)       │ 0.00    │
+│ Effective Resource Utilization      │ 47.0%   │
+│ Calendar Delay Contribution (hours) │ 651.95  │
+└─────────────────────────────────────┴─────────┘
+
+Most Frequent Critical Paths:
+  1. task_001 -> task_002 -> task_003 -> task_005 (8297/10000, 83.0%)
+  2. task_001 -> task_002 -> task_004 -> task_005 (1703/10000, 17.0%)
+
+Staffing (based on mean effort): 1 people recommended (mixed team), 77 working days
+  Total effort: 178 person-hours (23 person-days) | Parallelism ratio: 0.3
+
+
+No export formats specified. Use -f to export results to files.

@@ -779,6 +779,7 @@ class _FakeStaffingEngine:
         show_progress,
         two_pass=False,
         pass1_iterations=None,
+        workers: int = 1,
     ):
         pass
 

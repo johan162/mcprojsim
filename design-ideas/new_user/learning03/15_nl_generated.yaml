@@ -1,0 +1,60 @@
+project:
+  name: "New feature launch"
+  start_date: "2026-04-20"
+  confidence_levels: [50, 80, 90, 95]
+
+tasks:
+  - id: "task_001"
+    name: "Design database schema ()"
+    estimate:
+      t_shirt_size: "M"
+    dependencies: []
+
+  - id: "task_002"
+    name: "Implement backend REST API (probably"
+    estimate:
+      low: 2
+      expected: 3
+      high: 4
+      unit: "days"
+    dependencies: ["task_001"]
+
+  - id: "task_003"
+    name: "UI design"
+    estimate:
+      low: 1.5
+      expected: 2
+      high: 5
+      unit: "weeks"
+    dependencies: []
+
+  - id: "task_004"
+    name: "Frontend integration testing ()"
+    estimate:
+      low: 2.1
+      expected: 3
+      high: 5.4
+      unit: "weeks"
+    dependencies: []
+
+  - id: "task_005"
+    name: "Deployment and smoke tests ()"
+    estimate:
+      t_shirt_size: "S"
+    dependencies: ["task_002", "task_003", "task_004"]
+
+  - id: "task_006"
+    name: "Post-launch monitoring ()"
+    estimate:
+      t_shirt_size: "L"
+    dependencies: ["task_005"]
+
+  - id: "task_007"
+    name: "Delivery report"
+    estimate:
+      low: 2
+      expected: 2.5
+      high: 3
+      unit: "days"
+    dependencies: []
+

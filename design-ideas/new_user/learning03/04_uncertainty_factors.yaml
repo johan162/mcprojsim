@@ -1,0 +1,64 @@
+project:
+  name: "Uncertainty Factors Test"
+  description: "Testing all uncertainty factor combinations from ch04"
+  start_date: "2026-05-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  # Task 1: all defaults (no factors specified) - should give 1.0x compound
+  - id: "task_001"
+    name: "Default factors (baseline)"
+    estimate:
+      low: 8
+      expected: 16
+      high: 30
+      unit: "hours"
+
+  # Task 2: all adverse factors - should be heavily stretched
+  - id: "task_002"
+    name: "All adverse factors"
+    estimate:
+      low: 8
+      expected: 16
+      high: 30
+      unit: "hours"
+    uncertainty_factors:
+      team_experience: "low"          # 1.30
+      requirements_maturity: "low"    # 1.40
+      technical_complexity: "high"    # 1.50
+      team_distribution: "distributed" # 1.25
+      integration_complexity: "high"  # 1.35
+    # Combined: 1.30 * 1.40 * 1.50 * 1.25 * 1.35 = 4.63 approximately
+
+  # Task 3: experienced team with good conditions - should be compressed
+  - id: "task_003"
+    name: "Experienced team, clear requirements"
+    estimate:
+      low: 8
+      expected: 16
+      high: 30
+      unit: "hours"
+    uncertainty_factors:
+      team_experience: "high"           # 0.90
+      requirements_maturity: "high"     # 1.00
+      technical_complexity: "low"       # 1.00
+      team_distribution: "colocated"    # 1.00
+      integration_complexity: "low"     # 1.00
+    # Combined: 0.90 * 1.0 * 1.0 * 1.0 * 1.0 = 0.90
+
+  # Task 4: the exact example from the docs - combined ~3.0188
+  - id: "task_004"
+    name: "Docs example (compound 3.02x)"
+    estimate:
+      low: 5
+      expected: 5
+      high: 5.1
+      unit: "days"     # narrow so we can see exactly what multiplier does
+    uncertainty_factors:
+      team_experience: "medium"         # 1.00
+      requirements_maturity: "low"      # 1.40
+      technical_complexity: "high"      # 1.50
+      team_distribution: "distributed"  # 1.25
+      integration_complexity: "medium"  # 1.15
+    # Combined: 1.0 * 1.4 * 1.5 * 1.25 * 1.15 = 3.0188
+    # near-deterministic 5 days input should produce ~15.1 days mean

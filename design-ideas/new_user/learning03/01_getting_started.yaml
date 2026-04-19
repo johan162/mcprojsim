@@ -1,0 +1,26 @@
+project:
+  name: "Website Refresh"
+  description: "Small example project - from 01_getting_started.md"
+  start_date: "2026-04-01"
+  confidence_levels: [50, 80, 90]
+
+tasks:
+  - id: "task_001"
+    name: "Design updates"
+    estimate:
+      low: 2
+      expected: 3
+      high: 5
+      unit: "days"
+
+  - id: "task_002"
+    name: "Frontend changes"
+    estimate:
+      low: 4
+      expected: 6
+      high: 10
+      unit: "days"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"

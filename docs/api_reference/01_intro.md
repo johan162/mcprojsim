@@ -19,7 +19,7 @@ The most stable entry points are:
 
 ## Key Concepts
 
-Before diving into the API, it helps to understand four concepts that mcprojsim distinguishes:
+Before diving into the API, it helps to understand five concepts that mcprojsim distinguishes:
 
 **Elapsed duration vs total effort.** *Elapsed duration* is the calendar time from project start to finish — what a Gantt chart shows. *Total effort* is the sum of all person-hours across every task, regardless of parallelism. A 100-hour project done by two people in parallel has ~50 hours elapsed duration but 100 hours of effort. `SimulationResults.mean` and `.percentile()` report elapsed duration; `.total_effort_hours()`, `.effort_percentile()`, and `.effort_durations` report effort.
 
@@ -28,6 +28,8 @@ Before diving into the API, it helps to understand four concepts that mcprojsim 
 **Two-pass scheduling.** An optional extension of constrained scheduling. Pass 1 runs a smaller batch of iterations with simple greedy dispatch to rank tasks by criticality index. Pass 2 re-runs the full simulation using those ranks as scheduling priorities. Enable via `SimulationEngine(two_pass=True)` or `config.constrained_scheduling.assignment_mode = "criticality_two_pass"`. Results include a `two_pass_trace` with pass-1 vs pass-2 comparison data.
 
 **Coordination overhead / team size.** When `project.project.team_size` is set, mcprojsim applies Brooks's Law–inspired communication overhead: larger teams lose a fraction of capacity to coordination. The staffing analyzer models this via `communication_overhead` and `min_individual_productivity` parameters per experience profile.
+
+**Cost estimation.** When a project sets `default_hourly_rate` (on project metadata or via config), the engine computes per-iteration costs alongside schedule durations. Cost = (task effort × hourly rate) + fixed costs + risk cost impacts, with an optional overhead multiplier. `SimulationResults` then provides cost percentiles, budget confidence queries, and joint schedule-and-budget analysis. See the [SimulationResults cost fields](./04_simulation_results.md) and [Example 8](./11_api_examples.md#example-8-cost-estimation-and-budget-analysis).
 
 ## Root Package
 
@@ -75,6 +77,11 @@ results = engine.run(project)
 print(results.mean)
 print(results.percentile(90))
 print(results.get_critical_path())
+
+# Cost queries (when default_hourly_rate is set on the project)
+if results.costs is not None:
+    print(results.cost_percentile(90))
+    print(results.budget_for_confidence(0.90))
 
 JSONExporter.export(results, "results.json", config=config, project=project)
 HTMLExporter.export(results, "results.html", project=project, config=config)

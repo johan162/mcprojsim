@@ -1,0 +1,63 @@
+project:
+  name: "Task Estimation Methods"
+  description: "Testing all estimation methods from ch05"
+  start_date: "2026-05-01"
+  distribution: "lognormal"    # project-wide default; task_003 will override
+
+tasks:
+  # Triangular explicit range
+  - id: "task_001"
+    name: "Explicit triangular"
+    estimate:
+      distribution: "triangular"   # overrides project default
+      low: 3
+      expected: 5
+      high: 10
+      unit: "days"
+
+  # Lognormal explicit range (inherits project default)
+  - id: "task_002"
+    name: "Lognormal (inherited)"
+    estimate:
+      low: 3
+      expected: 5
+      high: 14
+      unit: "days"
+
+  # T-shirt size (default story category)
+  - id: "task_003"
+    name: "T-shirt M (story)"
+    estimate:
+      t_shirt_size: "M"
+
+  # T-shirt size qualified category
+  - id: "task_004"
+    name: "T-shirt M (epic category)"
+    estimate:
+      t_shirt_size: "epic.M"
+
+  # Story points
+  - id: "task_005"
+    name: "Story points 5"
+    estimate:
+      story_points: 5
+
+  # Near-deterministic
+  - id: "task_006"
+    name: "Near-deterministic 5 days"
+    estimate:
+      distribution: "triangular"
+      low: 4.9
+      expected: 5.0
+      high: 5.1
+      unit: "days"
+
+  # Field aliases (min/most_likely/max) -- NOTE: these are documented as valid
+  # but REJECTED by the validator! Using low/expected/high instead.
+  - id: "task_007"
+    name: "Would-be aliases (using canonical)"
+    estimate:
+      low: 2
+      expected: 4
+      high: 8
+      unit: "days"

@@ -1,6 +1,6 @@
 # Makefile for Design Documentation in MCProjSim project
 
-.PHONY: pdf-design-docs help clean really-clean dark
+.PHONY: pdf-design-docs help clean really-clean dark 
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -9,6 +9,7 @@
 
 # Make behavior
 .DEFAULT_GOAL := pdf-design-docs
+MAKEFLAGS += -j12
 
 # Get full path to bash
 SHELL := $(shell which bash)
@@ -28,7 +29,7 @@ BLUE := \033[0;34m
 MAGENTA := \033[0;35m
 CYAN := \033[0;36m
 WHITE := \033[1;37m
-
+ 
 # Variations
 DARKGRAY := \033[1;30m
 BRIGHTRED := \033[1;31m
@@ -121,6 +122,7 @@ $$($1_PDF): $$($1_STAMP)
 
 $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_DIR) $$(STAMP_DIR) $$(DIST_DIR)
 	@echo -e "\n$$(DARKYELLOW)- Building $2 PDF via LaTeX report pipeline...$$(NC)"
+	@rm -rf $$($1_BUILD_DIR); 
 	@mkdir -p $$($1_BUILD_DIR)
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $$($1_PANDOC_OPTS) $$($1_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
@@ -163,7 +165,6 @@ $$($1_STAMP): $$($1_MD) $$(DESIGN_LATEX_TEMPLATE) $$($1_EXTRA_DEPS) | $$(BUILD_D
 	fi; \
 	cp $$($1_PDF_BUILT) $$(DIST_DIR)/$$($1_BASENAME)$$(THEME_SUFFIX)-$$$$VERSION_FROM_MD.pdf; \
 	touch $$($1_STAMP); \
-#	rm -rf $$($1_BUILD_DIR);
 	echo -e "$$(GREEN)✓ Version: $$$$VERSION_FROM_MD of \"$2\" PDF built: $$(DARKGRAY)$$(DIST_DIR)/$$($1_BASENAME)$$(THEME_SUFFIX)-$$$$VERSION_FROM_MD.pdf$$(NC)"
 endef
 
@@ -180,6 +181,10 @@ $(eval $(call DEFINE_DESIGN_DOC_VARS,PLUGGABLE_DISTRIBUTIONS,pluggable-distribut
 $(eval $(call DEFINE_DESIGN_DOC_VARS,NL_MCP_IMPROVEMENTS,nl_mcp_improvements,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,HANDLING_COST,handling-cost,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,PROBABILISTIC_TESTING,probabilistic-testing,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,UI_DESIGN,ui-design,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,UI_WEB_DESIGN,ui-web-design,,))
+$(eval $(call DEFINE_DESIGN_DOC_VARS,PARALLEL_SIM,parallel-sim,,))
+
 
 # ============================================================================================
 # Makefile Targets
@@ -193,10 +198,13 @@ $(eval $(call DESIGN_DOC_PDF_RULE,PLUGGABLE_DISTRIBUTIONS,pluggable distribution
 $(eval $(call DESIGN_DOC_PDF_RULE,NL_MCP_IMPROVEMENTS,non-linear MCP improvements))
 $(eval $(call DESIGN_DOC_PDF_RULE,HANDLING_COST,handling cost))
 $(eval $(call DESIGN_DOC_PDF_RULE,PROBABILISTIC_TESTING,probabilistic testing))
+$(eval $(call DESIGN_DOC_PDF_RULE,UI_DESIGN,UI design))
+$(eval $(call DESIGN_DOC_PDF_RULE,UI_WEB_DESIGN,UI web design))
+$(eval $(call DESIGN_DOC_PDF_RULE,PARALLEL_SIM,parallel simulation))
 
 PDF_DESIGN_DOCS := $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) \
 $(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) $(NL_MCP_IMPROVEMENTS_PDF) \
-$(HANDLING_COST_PDF) $(PROBABILISTIC_TESTING_PDF)
+$(HANDLING_COST_PDF) $(PROBABILISTIC_TESTING_PDF) $(UI_DESIGN_PDF) $(UI_WEB_DESIGN_PDF) $(PARALLEL_SIM_PDF)
 
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"

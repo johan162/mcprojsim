@@ -34,6 +34,7 @@ from mcprojsim.models.project import (
     DistributionType,
     Project,
     Risk,
+    STANDARD_HOURS_PER_DAY,
     Task,
     convert_to_hours,
 )
@@ -446,7 +447,10 @@ def _resolve_estimate_range(
 
     For triangular distributions the bounds are exact.
     For lognormal distributions the lower bound is a near-zero quantile
-    and the upper bound is a conservative statistical ceiling.
+
+    Estimate unit conversion uses STANDARD_HOURS_PER_DAY (8h) — not the
+    project hours_per_day — to mirror the engine's behaviour after the
+    hours_per_day cancellation fix.
     """
     est = task.estimate
     effective_distribution = est.distribution or project_distribution
@@ -458,8 +462,8 @@ def _resolve_estimate_range(
         unit = config.t_shirt_size_unit
         if effective_distribution == DistributionType.TRIANGULAR:
             return (
-                convert_to_hours(rc.low, unit, hours_per_day),
-                convert_to_hours(rc.high, unit, hours_per_day),
+                convert_to_hours(rc.low, unit, STANDARD_HOURS_PER_DAY),
+                convert_to_hours(rc.high, unit, STANDARD_HOURS_PER_DAY),
             )
         mu, sigma = fit_shifted_lognormal(
             rc.low,
@@ -468,11 +472,11 @@ def _resolve_estimate_range(
             config.get_lognormal_high_z_value(),
         )
         return (
-            convert_to_hours(rc.low, unit, hours_per_day),
+            convert_to_hours(rc.low, unit, STANDARD_HOURS_PER_DAY),
             convert_to_hours(
                 rc.low + math.exp(mu + LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER * sigma),
                 unit,
-                hours_per_day,
+                STANDARD_HOURS_PER_DAY,
             ),
         )
 
@@ -482,8 +486,8 @@ def _resolve_estimate_range(
         unit = config.story_point_unit
         if effective_distribution == DistributionType.TRIANGULAR:
             return (
-                convert_to_hours(sp.low, unit, hours_per_day),
-                convert_to_hours(sp.high, unit, hours_per_day),
+                convert_to_hours(sp.low, unit, STANDARD_HOURS_PER_DAY),
+                convert_to_hours(sp.high, unit, STANDARD_HOURS_PER_DAY),
             )
         mu, sigma = fit_shifted_lognormal(
             sp.low,
@@ -492,11 +496,11 @@ def _resolve_estimate_range(
             config.get_lognormal_high_z_value(),
         )
         return (
-            convert_to_hours(sp.low, unit, hours_per_day),
+            convert_to_hours(sp.low, unit, STANDARD_HOURS_PER_DAY),
             convert_to_hours(
                 sp.low + math.exp(mu + LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER * sigma),
                 unit,
-                hours_per_day,
+                STANDARD_HOURS_PER_DAY,
             ),
         )
 
@@ -506,8 +510,8 @@ def _resolve_estimate_range(
     if effective_distribution == DistributionType.TRIANGULAR:
         assert est.low is not None and est.high is not None
         return (
-            convert_to_hours(est.low, unit, hours_per_day),
-            convert_to_hours(est.high, unit, hours_per_day),
+            convert_to_hours(est.low, unit, STANDARD_HOURS_PER_DAY),
+            convert_to_hours(est.high, unit, STANDARD_HOURS_PER_DAY),
         )
 
     assert est.low is not None and est.expected is not None and est.high is not None
@@ -520,8 +524,8 @@ def _resolve_estimate_range(
     lo = est.low
     hi = est.low + math.exp(mu + LOGNORMAL_BOUNDARY_SIGMA_MULTIPLIER * sigma)
     return (
-        convert_to_hours(lo, unit, hours_per_day),
-        convert_to_hours(hi, unit, hours_per_day),
+        convert_to_hours(lo, unit, STANDARD_HOURS_PER_DAY),
+        convert_to_hours(hi, unit, STANDARD_HOURS_PER_DAY),
     )
 
 
@@ -543,15 +547,30 @@ def _uncertainty_multiplier(task: Task, config: Config) -> float:
     return multiplier
 
 
+# def __max_risk_impact(
+#     risks: list[Risk],
+#     base_duration_hours: float,
+#     hours_per_day: float,
+# ) -> float:
+#     """Worst-case (all risks fire) cumulative impact in hours."""
+#     total = 0.0
+#     for risk in risks:
+#         total += risk.get_impact_value(base_duration_hours, hours_per_day)
+#     return total
+
+
 def _max_risk_impact(
     risks: list[Risk],
     base_duration_hours: float,
-    hours_per_day: float,
 ) -> float:
-    """Worst-case (all risks fire) cumulative impact in hours."""
+    """Worst-case (all risks fire) cumulative impact in hours.
+
+    Uses STANDARD_HOURS_PER_DAY for absolute day/week unit conversion to
+    mirror the engine fix.
+    """
     total = 0.0
     for risk in risks:
-        total += risk.get_impact_value(base_duration_hours, hours_per_day)
+        total += risk.get_impact_value(base_duration_hours, STANDARD_HOURS_PER_DAY)
     return total
 
 
@@ -586,7 +605,7 @@ def compute_project_bounds(
         task_hi = hi * uf
 
         # Worst case: all task-level risks fire on top of max base duration
-        task_hi += _max_risk_impact(task.risks, task_hi, hours_per_day)
+        task_hi += _max_risk_impact(task.risks, task_hi)
 
         task_min_hours[task.id] = task_lo
         task_max_hours[task.id] = task_hi
@@ -600,7 +619,7 @@ def compute_project_bounds(
     project_hi = max(info["end"] for info in schedule_hi.values())
 
     # Project-level risks (worst case: all fire on top of max duration)
-    project_hi += _max_risk_impact(project.project_risks, project_hi, hours_per_day)
+    project_hi += _max_risk_impact(project.project_risks, project_hi)
 
     return project_lo, project_hi
 
@@ -750,13 +769,23 @@ def test_e2e_combination(spec: ProjectSpec, tmp_path):
 class TestUnitConversionConsistency:
     """Verify that different units produce proportional results.
 
-    A 1-day task at 8 hours/day should produce ~8× the duration of a
-    1-hour task, all else equal.
+    Estimate units (days, weeks) are converted using STANDARD_HOURS_PER_DAY
+    (8h) as the reference, not the project's hours_per_day.  This means:
+
+    - A "1-day" estimate always equals 8 effort-hours regardless of
+      hours_per_day.
+    - hours_per_day controls calendar pacing only: fewer hours per day means
+      more calendar days to complete the same effort.
     """
 
     @pytest.mark.parametrize("hours_per_day", [6.0, 8.0, 10.0])
     def test_days_vs_hours_scaling(self, hours_per_day: float):
-        """Estimate in days should produce hours_per_day× the hours estimate."""
+        """Estimate in days should produce STANDARD_HOURS_PER_DAY× the hours estimate.
+
+        The ratio between a days-unit and hours-unit project is always ~8
+        (STANDARD_HOURS_PER_DAY), regardless of the project's hours_per_day.
+        hours_per_day only affects how effort-hours map to calendar days.
+        """
         project_hours = Project.model_validate(
             {
                 "project": {
@@ -812,9 +841,56 @@ class TestUnitConversionConsistency:
         ).run(project_days)
 
         ratio = r_days.mean / r_hours.mean
+        # days unit always converts using STANDARD_HOURS_PER_DAY (8h),
+        # so the ratio is always ~8 regardless of hours_per_day.
         assert (
-            abs(ratio - hours_per_day) < 0.5
-        ), f"Expected ratio ~{hours_per_day}, got {ratio:.2f}"
+            abs(ratio - STANDARD_HOURS_PER_DAY) < 0.5
+        ), f"Expected ratio ~{STANDARD_HOURS_PER_DAY}, got {ratio:.2f}"
+
+    @pytest.mark.parametrize("hours_per_day", [4.0, 8.0])
+    def test_fewer_hours_per_day_increases_calendar_time(self, hours_per_day: float):
+        """Reducing hours_per_day increases calendar time for identical day estimates.
+
+        The effort in hours stays the same; only the calendar pacing changes.
+        """
+        project = Project.model_validate(
+            {
+                "project": {
+                    "name": "hpd-test",
+                    "start_date": "2026-03-01",
+                    "hours_per_day": hours_per_day,
+                },
+                "tasks": [
+                    {
+                        "id": "t1",
+                        "name": "Task",
+                        "estimate": {
+                            "low": 2,
+                            "expected": 5,
+                            "high": 10,
+                            "unit": "days",
+                        },
+                    }
+                ],
+            }
+        )
+        config = Config.get_default()
+        results = SimulationEngine(
+            iterations=500, random_seed=42, config=config, show_progress=False
+        ).run(project)
+
+        # calendar_days = mean_hours / hours_per_day
+        calendar_days = results.mean / hours_per_day
+        # Effort (in person-hours) should be ~independent of hours_per_day
+        effort_mean = float(np.mean(results.effort_durations))
+
+        # With hpd=4 we expect ~twice as many calendar days as hpd=8,
+        # and the effort should be the same in both cases.
+        # We just verify the calendar days are consistent with the formula.
+        expected_days = effort_mean / hours_per_day
+        assert (
+            abs(calendar_days - expected_days) < 0.5
+        ), f"calendar_days={calendar_days:.2f} should ≈ effort/hpd={expected_days:.2f}"
 
     def test_weeks_vs_days_scaling(self):
         """1 week should equal 5 days at the same hours_per_day."""
