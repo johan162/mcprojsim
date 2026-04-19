@@ -10,9 +10,10 @@ The goal is to implement all MVP requirements in `docs/mcprojsim_reqs.md` to be 
 Release: 0.15.1
 
 Tasks:
-- Repaginate r guide with pagination macros for B5 & A4
+- Repaginate user guide with pagination macros for B5 & A4
 - Review Dev guide so it is up to date
-- Review User Guide to make ure it hasn't drifted
+- Review User Guide (and fix broken links) to make sure it hasn't drifted
+- Review EBNF Grammar
 - Review top-level README
 - Verify basic simulation results with old MC spreadhseet
 
