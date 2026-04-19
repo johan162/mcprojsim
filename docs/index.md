@@ -181,6 +181,7 @@ See [Interpreting Results](user_guide/interpreting_results.md) for a detailed wa
 
 | Resource | Description |
 |---|---|
+| [PDF Documentation Bundles](https://github.com/johan162/mcprojsim/releases/latest) | Both **Print** and **Tablet** friendly versions |
 | [Quick Start](https://johan162.github.io/mcprojsim/quickstart/) | Your first 10 min with MCProjSim |
 | [On Line Documentation](https://johan162.github.io/mcprojsim/) | Full documentation landing page |
 | [MCP Server](user_guide/mcp-server.md) | Use MCProjSim as a tool from your AI assistant |
