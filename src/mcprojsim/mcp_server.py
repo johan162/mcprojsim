@@ -22,25 +22,58 @@ Configure in your MCP client (e.g. Claude Desktop, VS Code) as:
 
 from __future__ import annotations
 
+import importlib
 import math
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Optional, Protocol, TypeVar, cast
 
 if TYPE_CHECKING:
     from mcprojsim.config import Config
     from mcprojsim.models.project import Project
     from mcprojsim.models.simulation import SimulationResults
 
-try:
-    from mcp.server.fastmcp import FastMCP
-except ImportError as e:
-    raise ImportError(
-        "MCP server requires the 'mcp' package. "
-        "Install with: poetry install --with mcp"
-    ) from e
-
 from mcprojsim.nl_parser import NLProjectParser
+
+ToolFunc = TypeVar("ToolFunc", bound=Callable[..., object])
+
+
+class _FastMCPServer(Protocol):
+    """Minimal protocol used from FastMCP for local type checking."""
+
+    def tool(self) -> object: ...
+
+    def run(self) -> None: ...
+
+
+def _create_mcp_server() -> _FastMCPServer:
+    """Create the MCP server, failing with a clear message if dependency is absent."""
+    try:
+        fastmcp_module = importlib.import_module("mcp.server.fastmcp")
+    except ImportError as e:
+        raise ImportError(
+            "MCP server requires the 'mcp' package. "
+            "Install with: poetry install --with mcp"
+        ) from e
+
+    fastmcp_cls = getattr(fastmcp_module, "FastMCP")
+
+    return cast(
+        _FastMCPServer,
+        fastmcp_cls(
+            "mcprojsim",
+            instructions=(
+                "Generate syntactically correct mcprojsim project specification "
+                "files from natural language descriptions and run Monte Carlo "
+                "project simulations."
+            ),
+        ),
+    )
+
+
+def _mcp_tool() -> Callable[[ToolFunc], ToolFunc]:
+    """Return a typed wrapper around FastMCP's untyped tool decorator."""
+    return cast(Callable[[ToolFunc], ToolFunc], mcp.tool())
 
 
 def _load_config_from_yaml(config_yaml: str | None) -> "Config":
@@ -260,17 +293,10 @@ def _format_simulation_output(
     return "\n".join(lines)
 
 
-mcp = FastMCP(
-    "mcprojsim",
-    instructions=(
-        "Generate syntactically correct mcprojsim project specification "
-        "files from natural language descriptions and run Monte Carlo "
-        "project simulations."
-    ),
-)
+mcp = _create_mcp_server()
 
 
-@mcp.tool()
+@_mcp_tool()
 def generate_project_file(description: str) -> str:
     """Generate a mcprojsim YAML project file from a natural language description.
 
@@ -330,7 +356,7 @@ def generate_project_file(description: str) -> str:
     return parser.parse_and_generate(description)
 
 
-@mcp.tool()
+@_mcp_tool()
 def validate_project_description(description: str) -> str:
     """Check whether a project description can be parsed, reporting issues.
 
@@ -391,7 +417,7 @@ def validate_project_description(description: str) -> str:
     return f"Valid: '{project.name}' with {len(project.tasks)} task(s)."
 
 
-@mcp.tool()
+@_mcp_tool()
 def validate_generated_project_yaml(
     description: str,
     config_yaml: str | None = None,
@@ -442,7 +468,7 @@ def validate_generated_project_yaml(
     return "\n".join(lines)
 
 
-@mcp.tool()
+@_mcp_tool()
 def validate_project_yaml(
     project_yaml: str,
     config_yaml: str | None = None,
@@ -487,7 +513,7 @@ def validate_project_yaml(
     return "\n".join(lines)
 
 
-@mcp.tool()
+@_mcp_tool()
 def simulate_project(
     description: str,
     iterations: int = 10000,
@@ -563,7 +589,7 @@ def simulate_project(
     )
 
 
-@mcp.tool()
+@_mcp_tool()
 def simulate_project_yaml(
     project_yaml: str,
     iterations: int = 10000,
@@ -627,7 +653,7 @@ def simulate_project_yaml(
     )
 
 
-@mcp.tool()
+@_mcp_tool()
 def update_project_yaml(
     existing_yaml: str,
     update_description: str,
