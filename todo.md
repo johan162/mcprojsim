@@ -19,6 +19,8 @@ Completed Tasks:
 - Review User Guide (and fix broken links) to make sure it hasn't drifted
 - Review EBNF Grammar
 - Review top-level README
+- Support `--list` flag for `config` command verb
+
 
 ## Post-MVP (1.0.0) Themes
 
