@@ -380,7 +380,11 @@ By default `mcprojsim simulate` runs iterations sequentially on a single process
 
 ### How it works
 
-When `--workers N` is set and both the iteration count and task count exceed the minimum thresholds (500 iterations and 5 tasks respectively), the engine:
+When `--workers N` is set and both the iteration count and task count both exceed an absolute minimum thresholds (500 iterations and 5 tasks respectively) but also exceeds heuristic limits that takes how heavy
+the execution are into account. For example, a dependency-only simulation (no resource constrains) will almost never benefit from parallel execution as each iteration is trivial and most time will be spent 
+in the parallel overhead. Hence, only one worker will be deployed in all but the most extreme dependency-only simulations.
+
+If the heuristics finds that several workers are beneficial the engine will:
 
 1. Partitions the total iterations into many small micro-chunks (more chunks than workers for smooth progress and load balancing).
 2. Submits chunks to a short-lived `ProcessPoolExecutor` with `N` workers, using the `spawn` start method for safety on all platforms.

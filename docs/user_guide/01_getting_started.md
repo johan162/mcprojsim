@@ -145,9 +145,10 @@ tasks:
 ```
 
 
-## Generating a project file
+## Generating a YAML project file 
 
-An alternative way than get all project files details right is to describe your project in plain text and let `mcprojsim generate` command produce the detailed YAML project specification from a less strict textual description of a project.
+An alternative way than get all project file details correct is to have `mcprojsim` generate the YAML projec file for you with the `generate` command verb. Describe your project in a structured 
+plain text and let `mcprojsim generate` command produce the detailed YAML project specification from a less strict textual description of a project.
 
 Create a file named `description.txt` and write the following (indentation and blank rows has no meaning)
 
@@ -216,78 +217,53 @@ specific changes in the project (such as adding risks) alters the result of the 
 while keeping everything else the same. If no seed is specified an automatic random seed is used.
 
 ```bash
-mcprojsim simulate project.yaml --seed 42
+mcprojsim simulate project.yaml --seed 42 --minimal
 ```
 
 What this does:
 
 - Runs the default 10 000 Monte Carlo iterations
 - Uses `--seed 42` so the result is reproducible
-- Prints a summary to the terminal
+- Uses `--minimal` prints only the most important results to the terminal (try without to get a more extensive output)
 
 Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and use `--seed` for reproducible runs; see [Running Simulations](12_running_simulations.md) for full CLI options.
 
 Depending on the version of `mcprojsim` used the output will look something like the following (numbers will vary by version and platform):
 
 ```text
-mcprojsim, version 0.12.0
+mcprojsim, version 0.15.0
 Progress: 100.0% (10000/10000)
-Simulation time: 0.62 seconds
-Peak simulation memory: 1.48 MiB
 
 === Simulation Results ===
 
 Project Overview:
-Project: Website Refresh
-Hours per Day: 8.0
-Max Parallel Tasks: 1
-Schedule Mode: dependency_only
+  Project: Website Refresh
+  Start Date: 2026-04-01
+  Number of Tasks: 2
+  Effective Default Distribution: triangular
+  T-Shirt Category Used: story
+  Hours per Day: 8.0
+  Max Parallel Tasks: 1
+  Schedule Mode: dependency_only
 
 Calendar Time Statistical Summary:
-Mean: 126.93 hours (16 working days)
-Median (P50): 125.74 hours
-Std Dev: 17.68 hours
-Minimum: 78.43 hours
-Maximum: 184.27 hours
-Coefficient of Variation: 0.1393
-Skewness: 0.2267
-Excess Kurtosis: -0.4206
+  Mean: 90.65 hours (12 working days)
+  Median (P50): 89.68 hours
+  Std Dev: 12.97 hours
+  Minimum: 55.92 hours
+  Maximum: 131.62 hours
 
 Project Effort Statistical Summary:
-Mean: 126.93 person-hours (16 person-days)
-Median (P50): 125.74 person-hours
-Std Dev: 17.68 person-hours
-Minimum: 78.43 person-hours
-Maximum: 184.27 person-hours
-Coefficient of Variation: 0.1393
-Skewness: 0.2267
-Excess Kurtosis: -0.4206
+  Mean: 90.65 person-hours (12 person-days)
+  Median (P50): 89.68 person-hours
+  Std Dev: 12.97 person-hours
+  Minimum: 55.92 person-hours
+  Maximum: 131.62 person-hours
 
 Calendar Time Confidence Intervals:
-  P50: 125.74 hours (16 working days)  (2026-04-23)
-  P80: 142.59 hours (18 working days)  (2026-04-27)
-  P90: 151.18 hours (19 working days)  (2026-04-28)
-
-Effort Confidence Intervals:
-  P50: 125.74 person-hours (16 person-days)
-  P80: 142.59 person-hours (18 person-days)
-  P90: 151.18 person-hours (19 person-days)
-
-Sensitivity Analysis (top contributors):
-  task_002: +0.8911
-  task_001: +0.4236
-
-Schedule Slack:
-  task_001: 0.00 hours (Critical)
-  task_002: 0.00 hours (Critical)
-
-Most Frequent Critical Paths:
-  1. task_001 -> task_002 (10000/10000, 100.0%)
-
-Staffing (based on mean effort): 1 people recommended (mixed team), 19 working days
-  Total effort: 127 person-hours (16 person-days) | Parallelism ratio: 1.0
-
-No export formats specified. Use -f to export results to files.
+  P50: 89.68 hours (12 working days)  (2026-04-17)
+  P80: 102.25 hours (13 working days)  (2026-04-20)
+  P90: 108.53 hours (14 working days)  (2026-04-21)
 ```
 
 ## Export results
