@@ -11,12 +11,14 @@ Release: 0.15.1
 
 Tasks:
 - Repaginate user guide with pagination macros for B5 & A4
+- Verify basic simulation results with old MC spreadhseet
+
+Completed Tasks:
+- Fix table formatting
 - Review Dev guide so it is up to date
 - Review User Guide (and fix broken links) to make sure it hasn't drifted
 - Review EBNF Grammar
 - Review top-level README
-- Verify basic simulation results with old MC spreadhseet
-
 
 ## Post-MVP (1.0.0) Themes
 
