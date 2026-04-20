@@ -266,3 +266,5 @@ Inspired by the work of:
 - Douglas Hubbard - *How to Measure Anything in Cybersecurity Risk*
 - Kahneman, Sibony, Sunstein - *Noise: A Flaw in Human Judgment*
 - William Poundstone - *Doomsday Calculation*
+- Daniel S. Vacanti - *When Will it Be Done?*
+- Lawrence Weinstein - *guesstimation 2.0*
