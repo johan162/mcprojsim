@@ -97,6 +97,7 @@ This is the point at which simulation becomes valuable for management decisions.
 | **P80**    | 80% of runs finish earlier | Common management target |
 | **P90**    | 90% of runs finish earlier | Conservative; appropriate when lateness is costly |
 | **P95**    | 95% of runs finish earlier | High confidence; useful for contractual commitments |
+| **P99**    | 99% of runs finish earlier | Very high confidence, useful for mission critical commiments |
 
 The important point is not that one percentile is always correct. The simulation allows stakeholders to choose a confidence level deliberately rather than inheriting one implicitly from an optimistic single-point estimate.
 
@@ -227,7 +228,8 @@ The combined effect of resource constraints, calendars, and absences is often su
 
 This is not a failure of estimation. It is a more honest picture of when work actually completes. The gap between effort-based estimates and calendar-based schedules is where many real-world planning surprises originate. By modeling resources, calendars, and absences explicitly, the simulation surfaces these effects before the project starts rather than after commitments have been made.
 
-
+::: pagebreak-b5
+:::
 
 ## What the simulation computes, step by step
 

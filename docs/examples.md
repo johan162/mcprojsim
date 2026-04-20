@@ -284,49 +284,49 @@ mcprojsim simulate examples/story_points_walkthrough_project.yaml --minimal --ta
 === Simulation Results ===
 
 Project Overview:
-┌────────────────────────────────┬───────────────────┐
-│ Field                          │ Value             │
-├────────────────────────────────┼───────────────────┤
-│ Project                        │ Tiny Landing Page │
-│ Start Date                     │ 2026-03-01        │
-│ Number of Tasks                │ 3                 │
-│ Effective Default Distribution │ triangular        │
-│ T-Shirt Category Used          │ story             │
-│ Hours per Day                  │ 8.0               │
-│ Max Parallel Tasks             │ 1                 │
-│ Schedule Mode                  │ dependency_only   │
-└────────────────────────────────┴───────────────────┘
+┌────────────────────────────────┬───────────────────────────────────┐
+│ Field                          │ Value                             │
+├────────────────────────────────┼───────────────────────────────────┤
+│ Project                        │ Tiny Landing Page                 │
+│ Start Date                     │ 2026-03-01                        │
+│ Number of Tasks                │ 3                                 │
+│ Effective Default Distribution │ triangular                        │
+│ T-Shirt Category Used          │ story                             │
+│ Hours per Day                  │ 8.0                               │
+│ Max Parallel Tasks             │ 1                                 │
+│ Schedule Mode                  │ dependency_only                   │
+└────────────────────────────────┴───────────────────────────────────┘
 
 Calendar Time Statistical Summary:
-┌──────────────┬───────────────────────────────┐
-│ Metric       │ Value                         │
-├──────────────┼───────────────────────────────┤
-│ Mean         │ 79.98 hours (10 working days) │
-│ Median (P50) │ 79.44 hours                   │
-│ Std Dev      │ 11.65 hours                   │
-│ Minimum      │ 47.31 hours                   │
-│ Maximum      │ 121.18 hours                  │
-└──────────────┴───────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────────────┐
+│ Metric       │ Value                                               │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Mean         │ 79.98 hours (10 working days)                       │
+│ Median (P50) │ 79.44 hours                                         │
+│ Std Dev      │ 11.65 hours                                         │
+│ Minimum      │ 47.31 hours                                         │
+│ Maximum      │ 121.18 hours                                        │
+└──────────────┴─────────────────────────────────────────────────────┘
 
 Project Effort Statistical Summary:
-┌──────────────┬─────────────────────────────────────┐
-│ Metric       │ Value                               │
-├──────────────┼─────────────────────────────────────┤
-│ Mean         │ 79.98 person-hours (10 person-days) │
-│ Median (P50) │ 79.44 person-hours                  │
-│ Std Dev      │ 11.65 person-hours                  │
-│ Minimum      │ 47.31 person-hours                  │
-│ Maximum      │ 121.18 person-hours                 │
-└──────────────┴─────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────────────┐
+│ Metric       │ Value                                               │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Mean         │ 79.98 person-hours (10 person-days)                 │
+│ Median (P50) │ 79.44 person-hours                                  │
+│ Std Dev      │ 11.65 person-hours                                  │
+│ Minimum      │ 47.31 person-hours                                  │
+│ Maximum      │ 121.18 person-hours                                 │
+└──────────────┴─────────────────────────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
-┌──────────────┬─────────┬────────────────┬────────────┐
-│ Percentile   │   Hours │   Working Days │ Date       │
-├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │   79.44 │             10 │ 2026-03-13 │
-│ P80          │   90.19 │             12 │ 2026-03-17 │
-│ P90          │   95.57 │             12 │ 2026-03-17 │
-└──────────────┴─────────┴────────────────┴────────────┘
+┌──────────────┬─────────┬────────────────┬──────────────────────────┐
+│ Percentile   │   Hours │   Working Days │ Date                     │
+├──────────────┼─────────┼────────────────┼──────────────────────────┤
+│ P50          │   79.44 │             10 │ 2026-03-13               │
+│ P80          │   90.19 │             12 │ 2026-03-17               │
+│ P90          │   95.57 │             12 │ 2026-03-17               │
+└──────────────┴─────────┴────────────────┴──────────────────────────┘
 ```
 
 Key observations: small project with low uncertainty — the CV is only 0.15 and P50 to P90 spans just 3 working days.
@@ -1224,49 +1224,49 @@ mcprojsim simulate examples/sprint_planning_advanced.yaml --minimal --table --se
 === Simulation Results ===
 
 Project Overview:
-┌────────────────────────────────┬──────────────────────────┐
-│ Field                          │ Value                    │
-├────────────────────────────────┼──────────────────────────┤
-│ Project                        │ Sprint Planning Advanced │
-│ Start Date                     │ 2026-05-04               │
-│ Number of Tasks                │ 6                        │
-│ Effective Default Distribution │ triangular               │
-│ T-Shirt Category Used          │ story                    │
-│ Hours per Day                  │ 8.0                      │
-│ Max Parallel Tasks             │ 6                        │
-│ Schedule Mode                  │ dependency_only          │
-└────────────────────────────────┴──────────────────────────┘
+┌────────────────────────────────┬───────────────────────────────────┐
+│ Field                          │ Value                             │
+├────────────────────────────────┼───────────────────────────────────┤
+│ Project                        │ Sprint Planning Advanced          │
+│ Start Date                     │ 2026-05-04                        │
+│ Number of Tasks                │ 6                                 │
+│ Effective Default Distribution │ triangular                        │
+│ T-Shirt Category Used          │ story                             │
+│ Hours per Day                  │ 8.0                               │
+│ Max Parallel Tasks             │ 6                                 │
+│ Schedule Mode                  │ dependency_only                   │
+└────────────────────────────────┴───────────────────────────────────┘
 
 Calendar Time Statistical Summary:
-┌──────────────┬───────────────────────────────┐
-│ Metric       │ Value                         │
-├──────────────┼───────────────────────────────┤
-│ Mean         │ 86.31 hours (11 working days) │
-│ Median (P50) │ 85.93 hours                   │
-│ Std Dev      │ 14.55 hours                   │
-│ Minimum      │ 53.43 hours                   │
-│ Maximum      │ 118.88 hours                  │
-└──────────────┴───────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────────────┐
+│ Metric       │ Value                                               │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Mean         │ 86.31 hours (11 working days)                       │
+│ Median (P50) │ 85.93 hours                                         │
+│ Std Dev      │ 14.55 hours                                         │
+│ Minimum      │ 53.43 hours                                         │
+│ Maximum      │ 118.88 hours                                        │
+└──────────────┴─────────────────────────────────────────────────────┘
 
 Project Effort Statistical Summary:
-┌──────────────┬──────────────────────────────────────┐
-│ Metric       │ Value                                │
-├──────────────┼──────────────────────────────────────┤
-│ Mean         │ 287.15 person-hours (36 person-days) │
-│ Median (P50) │ 287.50 person-hours                  │
-│ Std Dev      │ 27.30 person-hours                   │
-│ Minimum      │ 227.60 person-hours                  │
-│ Maximum      │ 369.30 person-hours                  │
-└──────────────┴──────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────────────┐
+│ Metric       │ Value                                               │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Mean         │ 287.15 person-hours (36 person-days)                │
+│ Median (P50) │ 287.50 person-hours                                 │
+│ Std Dev      │ 27.30 person-hours                                  │
+│ Minimum      │ 227.60 person-hours                                 │
+│ Maximum      │ 369.30 person-hours                                 │
+└──────────────┴─────────────────────────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
-┌──────────────┬─────────┬────────────────┬────────────┐
-│ Percentile   │   Hours │   Working Days │ Date       │
-├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │   85.93 │             11 │ 2026-05-19 │
-│ P80          │   99.93 │             13 │ 2026-05-21 │
-│ P90          │  106.82 │             14 │ 2026-05-22 │
-└──────────────┴─────────┴────────────────┴────────────┘
+┌──────────────┬─────────┬────────────────┬──────────────────────────┐
+│ Percentile   │   Hours │   Working Days │ Date                     │
+├──────────────┼─────────┼────────────────┼──────────────────────────┤
+│ P50          │   85.93 │             11 │ 2026-05-19               │
+│ P80          │   99.93 │             13 │ 2026-05-21               │
+│ P90          │  106.82 │             14 │ 2026-05-22               │
+└──────────────┴─────────┴────────────────┴──────────────────────────┘
 
 Sprint Planning Summary:
 ┌───────────────────────────────┬─────────────────────────────────────┐
@@ -1285,25 +1285,25 @@ Sprint Planning Summary:
 └───────────────────────────────┴─────────────────────────────────────┘
 
 Sprint Count Statistical Summary:
-┌──────────────────────────┬───────────────┐
-│ Metric                   │ Value         │
-├──────────────────────────┼───────────────┤
-│ Mean                     │ 4.93 sprints  │
-│ Median (P50)             │ 4.00 sprints  │
-│ Std Dev                  │ 1.63 sprints  │
-│ Minimum                  │ 3.00 sprints  │
-│ Maximum                  │ 18.00 sprints │
-│ Coefficient of Variation │ 0.3305        │
-└──────────────────────────┴───────────────┘
+┌──────────────────────────┬─────────────────────────────────────────┐
+│ Metric                   │ Value                                   │
+├──────────────────────────┼─────────────────────────────────────────┤
+│ Mean                     │ 4.93 sprints                            │
+│ Median (P50)             │ 4.00 sprints                            │
+│ Std Dev                  │ 1.63 sprints                            │
+│ Minimum                  │ 3.00 sprints                            │
+│ Maximum                  │ 18.00 sprints                           │
+│ Coefficient of Variation │ 0.3305                                  │
+└──────────────────────────┴─────────────────────────────────────────┘
 
 Sprint Count Confidence Intervals:
-┌──────────────┬───────────┬───────────────────────────┐
-│ Percentile   │ Sprints   │ Projected Delivery Date   │
-├──────────────┼───────────┼───────────────────────────┤
-│ P50          │ 4.00      │ 2026-06-15                │
-│ P80          │ 5.00      │ 2026-06-29                │
-│ P90          │ 7.00      │ 2026-07-27                │
-└──────────────┴───────────┴───────────────────────────┘
+┌──────────────┬───────────┬─────────────────────────────────────────┐
+│ Percentile   │ Sprints   │ Projected Delivery Date                 │
+├──────────────┼───────────┼─────────────────────────────────────────┤
+│ P50          │ 4.00      │ 2026-06-15                              │
+│ P80          │ 5.00      │ 2026-06-29                              │
+│ P90          │ 7.00      │ 2026-07-27                              │
+└──────────────┴───────────┴─────────────────────────────────────────┘
 ```
 
 Key observations:

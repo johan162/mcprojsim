@@ -35,20 +35,6 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 
 All four methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
 
-### Accepted field aliases
-
-For explicit ranges, the estimate model accepts these equivalent field names:
-
-| Canonical field | Accepted alias |
-|----------------|----------------|
-| `low` | `min` |
-| `expected` | `most_likely` |
-| `high` | `max` |
-
-You can use either form in YAML or TOML. They are interpreted identically.
-
-
-
 ## Explicit range estimates
 
 The most direct way to estimate a task is to provide three values that describe the range of plausible effort:
@@ -102,8 +88,6 @@ estimate:
 ```
 
 Here, the best-case savings is 2 days (5 minus 3), but the worst-case overrun is 10 days (15 minus 5). This kind of asymmetry is realistic and the triangular distribution handles it naturally.
-
-
 
 ## Near-deterministic estimates
 
@@ -276,7 +260,7 @@ $$\mu = \ln(\text{expected} - \text{low}) + \sigma^2$$
 **When not to use it:**
 
 - When you have clear, defensible bounds on the task duration — in that case, a triangular distribution is more appropriate
-- When stakeholders need guarantees that the sampled value will not exceed a certain threshold — the log-normal can produce extreme outliers
+- When stakeholders need guarantees that the sampled value will not exceed a certain threshold - the log-normal can produce extreme outliers
 - When the team is not comfortable with unbounded estimates
 
 **Specification:**
@@ -325,6 +309,10 @@ tasks:
 
 Here, the most likely duration is 10 days, but the long right tail means that in some iterations the sampled value could be 20 or 30 days — reflecting the genuine uncertainty in exploratory work.
 
+
+::: pagebreak-b5  
+:::
+
 ### Comparing the two distributions
 
 | Aspect | Triangular | Log-normal |
@@ -366,6 +354,8 @@ The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_
 
 The built-in default category is `story`, so a bare value like `M` resolves as `story.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
 
+***Table: Bug - category***
+
 | Category | Size | low (hours) | expected (hours) | high (hours) |
 |---|---|---:|---:|---:|
 | `bug` | `XS` | 0.5 | 1 | 4 |
@@ -374,30 +364,55 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `bug` | `L` | 8 | 20 | 60 |
 | `bug` | `XL` | 20 | 40 | 100 |
 | `bug` | `XXL` | 40 | 80 | 200 |
+
+***Table: Story - category***
+
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
 | `story` | `XS` | 3 | 5 | 15 |
 | `story` | `S` | 5 | 16 | 40 |
 | `story` | `M` | 40 | 60 | 120 |
 | `story` | `L` | 160 | 240 | 500 |
 | `story` | `XL` | 320 | 400 | 750 |
 | `story` | `XXL` | 400 | 500 | 1200 |
+
+::: pagebreak-b5   
+:::
+
+***Table: Epic - category***
+
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
 | `epic` | `XS` | 20 | 40 | 60 |
 | `epic` | `S` | 60 | 120 | 170 |
 | `epic` | `M` | 120 | 240 | 400 |
 | `epic` | `L` | 290 | 480 | 700 |
 | `epic` | `XL` | 600 | 1000 | 1500 |
 | `epic` | `XXL` | 1200 | 2000 | 3200 |
+
+***Table: Business/Program - category***
+
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
 | `business` | `XS` | 400 | 800 | 2000 |
 | `business` | `S` | 800 | 2000 | 5000 |
 | `business` | `M` | 2000 | 4000 | 10000 |
 | `business` | `L` | 4000 | 8000 | 20000 |
 | `business` | `XL` | 8000 | 16000 | 40000 |
 | `business` | `XXL` | 16000 | 32000 | 80000 |
+
+***Table: Initiative - category***
+
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
 | `initiative` | `XS` | 2000 | 4000 | 10000 |
 | `initiative` | `S` | 4000 | 10000 | 25000 |
 | `initiative` | `M` | 10000 | 20000 | 50000 |
 | `initiative` | `L` | 20000 | 40000 | 100000 |
 | `initiative` | `XL` | 40000 | 80000 | 200000 |
 | `initiative` | `XXL` | 80000 | 160000 | 400000 |
+
+
 
 These category-specific defaults let you keep the same symbolic size scale while tuning absolute magnitude for different planning scopes.
 
@@ -488,8 +503,6 @@ tasks:
 ```
 
 Note that no `unit` field appears on any task — the unit is taken from the configuration.
-
-\newpage
 
 ### Customizing T-shirt sizes in the configuration file
 
@@ -633,9 +646,7 @@ tasks:
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "medium"
-```
-
-```yaml
+!!! yaml-cbreak-b5
   - id: "task_003"
     name: "Deploy page"
     estimate:
@@ -668,16 +679,12 @@ story_points:
 
 You only need to include the story point values you want to override. Any values not specified in your configuration will use the built-in defaults. Note that you can only use values from the allowed set (1, 2, 3, 5, 8, 13, 21) — the allowed values are defined in the code, not in configuration.
 
-\newpage
-
 ### Choosing the unit for story points
 
 The numeric ranges in the story point mappings are interpreted in the unit specified by `story_point_unit` in the configuration file. The default is `"days"`:
 
 ```yaml
-# config.yaml — story points in days (the default)
 story_point_unit: "days"
-
 story_points:
   1:
     low: 0.5
@@ -692,9 +699,7 @@ story_points:
 If your team calibrates story points directly in hours, set `story_point_unit` to `"hours"`:
 
 ```yaml
-# config.yaml — story points in hours
 story_point_unit: "hours"
-
 story_points:
   1:
     low: 1
@@ -709,8 +714,6 @@ story_points:
 As with T-shirt sizes, the unit setting applies to **all** story point mappings in the configuration. The project file never specifies a unit for story point estimates — the unit is always determined by `story_point_unit`.
 
 > **Note:** The `t_shirt_size_unit` and `story_point_unit` settings are independent. It is perfectly valid to have T-shirt sizes in hours and story points in days (the defaults), or any other combination.
-
-
 
 ## Mixing estimation methods
 
@@ -733,7 +736,7 @@ tasks:
     estimate:
       t_shirt_size: "L"
     dependencies: ["research"]
-
+ !!! text-cbreak-b5  
   - id: "implementation"
     name: "Core implementation"
     estimate:
@@ -773,6 +776,9 @@ The `unit` field accepts exactly three values:
 | `"weeks"` | Working weeks        | Multiplied by `hours_per_day × 5` (default 40)   |
 
 Any other value is a validation error.
+
+::: pagebreak-b5  
+:::
 
 ### Defaults by estimate type
 
@@ -815,7 +821,7 @@ tasks:
       expected: 4
       high: 8
       unit: "hours"    # Small task estimated in hours
-
+ !!! text-cbreak-b5 
   - id: "major_feature"
     estimate:
       low: 2
@@ -863,6 +869,8 @@ The resolved values are then converted to hours using the same conversion logic.
 | `t_shirt_size` category and size must exist in active config | T-shirt size | Yes — unknown category/size fails resolution |
 
 
+::: pagebreak-b5 
+:::
 
 ## Summary
 

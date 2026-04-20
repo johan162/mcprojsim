@@ -485,6 +485,7 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "medium"
+!!! yaml-cbreak-b5
 
   - id: "task_002"
     name: "Deploy site"
@@ -509,8 +510,7 @@ Again, run this as:
 ```bash
 mcprojsim simulate first-project-step-4.yaml \
   --config first-project-step-3-config.yaml \
-  --iterations 5000 \
-  --seed 42 --minimal
+  --iterations 5000 --seed 42 --minimal
 ```
 
 Example result summary:
@@ -534,7 +534,7 @@ Calendar Time Statistical Summary:
   Std Dev: 10.99 hours
   Minimum: 32.85 hours
   Maximum: 103.52 hours
-
+!!! text-cbreak-b5
 Project Effort Statistical Summary:
   Mean: 57.35 person-hours (8 person-days)
   Median (P50): 57.01 person-hours
@@ -625,10 +625,10 @@ The built-in categories cover the common levels of planning granularity in softw
 
 | Category | Typical use | Example `M` expected (hours) |
 |---|---|---:|
-| `bug` | Individual defects and small fixes | 8 |
+| `bug` | Individual defects and small fixes | 40 |
 | `story` | User-facing features and tasks (default) | 60 |
 | `epic` | Groups of related stories | 240 |
-| `business` | Larger business capabilities or programmes | 4 000 |
+| `business/program` | Larger business capabilities or programmes | 4 000 |
 | `initiative` | Strategic initiatives spanning multiple programmes | 20 000 |
 
 The default category is `story`. When a task specifies a bare size like `t_shirt_size: "M"`, it is resolved against the `story` category unless you override `t_shirt_size_default_category` in the configuration file.
@@ -701,6 +701,7 @@ Calendar Time Statistical Summary:
   Std Dev: 1.39 hours
   Minimum: 5.83 hours
   Maximum: 14.45 hours
+!!! yaml-cbreak-b5
 
 Project Effort Statistical Summary:
   Mean: 9.67 person-hours (2 person-days)
@@ -728,6 +729,9 @@ Some teams prefer to estimate backlog items in Story Points rather than T-shirt 
 **Important:** Story point estimates must not include a `unit` field in the project file. The unit is determined by the configuration file's `story_point_unit` setting (default: `"days"`).
 
 Story points was originally conceived as a way to model actual working time where 1 SP was eqal to 1 uninterrupted day of work (something that rarely happens in real life). Now, SP is an estimat calibrated to a specific team and story points are only valid within the same and stable team as their own "currency" were each team have different exchange rates between SP <--> days. The program have *one* exchange rate by default but that can easily be adjusted by supplying a different exchange rate in a config file as shown below
+
+::: pagebreak-b5
+:::
 
 ### Step 6: use `story_points`
 
@@ -776,6 +780,7 @@ Story Points (unit: days):
     low: 1.5, expected: 3.0, high: 5.0
   5:
     low: 3.0, expected: 5.0, high: 8.0
+  !!! text-cbreak-b5 
   8:
     low: 5.0, expected: 8.0, high: 15.0
   13:
