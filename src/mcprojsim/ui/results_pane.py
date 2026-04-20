@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from PySide6.QtCore import Qt  # type: ignore[import-untyped]
-from PySide6.QtWidgets import (  # type: ignore[import-untyped]
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -122,7 +122,7 @@ class ResultsPane(QWidget):
         self._layout.addWidget(cal_outer)
 
         # ── Effort Summary ────────────────────────────────────────────────────
-        if results.effort_durations is not None and len(results.effort_durations) > 0:
+        if len(results.effort_durations) > 0:
             import numpy as np
             eff_mean = float(np.mean(results.effort_durations))
             eff_median = float(np.median(results.effort_durations))
@@ -158,7 +158,7 @@ class ResultsPane(QWidget):
             self._layout.addWidget(eci_outer)
 
         # ── Cost (if available) ───────────────────────────────────────────────
-        if results.costs is not None and results.cost_percentiles:
+        if results.cost_percentiles:
             cost_outer, cost_layout = _section("Estimated Cost")
             currency = results.currency or "$"
             if results.cost_mean is not None:

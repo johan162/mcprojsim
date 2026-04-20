@@ -5,9 +5,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from PySide6.QtCore import Qt, Signal  # type: ignore[import-untyped]
-from PySide6.QtGui import QDoubleValidator  # type: ignore[import-untyped]
-from PySide6.QtWidgets import (  # type: ignore[import-untyped]
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QDoubleValidator
+from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,

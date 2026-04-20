@@ -5,10 +5,10 @@ from __future__ import annotations
 import datetime
 from typing import Any
 
-from PySide6.QtCore import Qt, Signal  # type: ignore[import-untyped]
-from PySide6.QtGui import QRegularExpressionValidator  # type: ignore[import-untyped]
-from PySide6.QtCore import QRegularExpression  # type: ignore[import-untyped]
-from PySide6.QtWidgets import (  # type: ignore[import-untyped]
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QRegularExpressionValidator
+from PySide6.QtCore import QRegularExpression
+from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QLabel,

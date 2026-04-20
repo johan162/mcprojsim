@@ -8,7 +8,7 @@ import sys
 def main() -> None:
     """Launch the mcprojsim desktop GUI."""
     try:
-        from PySide6.QtWidgets import QApplication  # type: ignore[import-untyped]
+        from PySide6.QtWidgets import QApplication
     except ImportError:
         print(
             "PySide6 is required to run the mcprojsim desktop UI.\n"

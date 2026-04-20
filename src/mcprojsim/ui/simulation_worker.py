@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtCore import QThread, Signal  # type: ignore[import-untyped]
+from PySide6.QtCore import QThread, Signal
 
 from mcprojsim.config import Config
 from mcprojsim.parsers.yaml_parser import YAMLParser

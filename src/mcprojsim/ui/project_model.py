@@ -11,7 +11,7 @@ import datetime
 from typing import Any
 
 import yaml
-from PySide6.QtCore import QObject, Signal  # type: ignore[import-untyped]
+from PySide6.QtCore import QObject, Signal
 
 
 # ---------------------------------------------------------------------------

@@ -6,9 +6,9 @@ import datetime
 from pathlib import Path
 from typing import Any
 
-from PySide6.QtCore import Qt, QTimer  # type: ignore[import-untyped]
-from PySide6.QtGui import QAction, QCloseEvent, QKeySequence  # type: ignore[import-untyped]
-from PySide6.QtWidgets import (  # type: ignore[import-untyped]
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
+from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (  # type: ignore[import-untyped]
     QVBoxLayout,
     QWidget,
 )
-from PySide6.QtCore import QSettings, QSize  # type: ignore[import-untyped]
+from PySide6.QtCore import QSettings, QSize
 
 import mcprojsim
 from mcprojsim.config import Config

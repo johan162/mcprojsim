@@ -51,7 +51,7 @@ class TestUIProjectModel:
         model.delete_task(0)
         assert len(model.get_tasks()) == 0
 
-    def test_changed_signal(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_changed_signal(self, qtbot) -> None:
         model = UIProjectModel()
         with qtbot.waitSignal(model.changed, timeout=1000):
             model.add_task({"id": "t1", "name": "T1", "estimate": 3.0})
@@ -72,12 +72,12 @@ class TestUIProjectModel:
 
 
 class TestProjectBasicsWidget:
-    def test_create(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_create(self, qtbot) -> None:
         w = ProjectBasicsWidget()
         qtbot.addWidget(w)
         assert w is not None
 
-    def test_to_dict_from_dict_round_trip(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_to_dict_from_dict_round_trip(self, qtbot) -> None:
         w = ProjectBasicsWidget()
         qtbot.addWidget(w)
         data = {
@@ -93,13 +93,13 @@ class TestProjectBasicsWidget:
         assert out["hours_per_day"] == 7.5
         assert out["days_per_week"] == 4
 
-    def test_is_valid_empty_name(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_is_valid_empty_name(self, qtbot) -> None:
         w = ProjectBasicsWidget()
         qtbot.addWidget(w)
         w.from_dict({"name": ""})
         assert not w.is_valid()
 
-    def test_is_valid_with_name(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_is_valid_with_name(self, qtbot) -> None:
         w = ProjectBasicsWidget()
         qtbot.addWidget(w)
         w.from_dict({"name": "My Project"})
@@ -112,12 +112,12 @@ class TestProjectBasicsWidget:
 
 
 class TestTaskTableWidget:
-    def test_create(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_create(self, qtbot) -> None:
         w = TaskTableWidget()
         qtbot.addWidget(w)
         assert w is not None
 
-    def test_set_and_get_tasks(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_set_and_get_tasks(self, qtbot) -> None:
         w = TaskTableWidget()
         qtbot.addWidget(w)
         tasks = [
@@ -127,7 +127,7 @@ class TestTaskTableWidget:
         w.set_tasks(tasks)
         assert len(w.all_tasks()) == 2
 
-    def test_apply_new_task(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_apply_new_task(self, qtbot) -> None:
         w = TaskTableWidget()
         qtbot.addWidget(w)
         w.apply_task_edit(-1, {"id": "t3", "name": "New Task", "estimate": 2.0})
@@ -140,12 +140,12 @@ class TestTaskTableWidget:
 
 
 class TestTaskEditorDialog:
-    def test_create_new(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_create_new(self, qtbot) -> None:
         d = TaskEditorDialog()
         qtbot.addWidget(d)
         assert d.windowTitle() == "New Task"
 
-    def test_create_edit(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_create_edit(self, qtbot) -> None:
         task = {"id": "t1", "name": "Existing", "estimate": 4.0}
         d = TaskEditorDialog(task=task)
         qtbot.addWidget(d)
@@ -158,12 +158,12 @@ class TestTaskEditorDialog:
 
 
 class TestRunSimulationDialog:
-    def test_create(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_create(self, qtbot) -> None:
         d = RunSimulationDialog()
         qtbot.addWidget(d)
         assert d is not None
 
-    def test_get_config_defaults(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_get_config_defaults(self, qtbot) -> None:
         d = RunSimulationDialog()
         qtbot.addWidget(d)
         cfg = d.get_config()
@@ -177,30 +177,30 @@ class TestRunSimulationDialog:
 
 
 class TestMainWindow:
-    def test_creates_without_crash(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_creates_without_crash(self, qtbot) -> None:
         w = MainWindow()
         qtbot.addWidget(w)
         assert w.windowTitle().startswith("Untitled") or "mcprojsim" in w.windowTitle()
 
-    def test_theme_applied(self, qapp) -> None:  # type: ignore[no-untyped-def]
+    def test_theme_applied(self, qapp) -> None:
         assert APP_STYLESHEET  # non-empty string
         # Apply and verify no crash
         qapp.setStyleSheet(APP_STYLESHEET)
 
-    def test_nav_switches_pages(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_nav_switches_pages(self, qtbot) -> None:
         w = MainWindow()
         qtbot.addWidget(w)
         w._nav.setCurrentRow(1)  # Tasks section
         assert w._stack.currentIndex() == 1
 
-    def test_new_resets_model(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_new_resets_model(self, qtbot) -> None:
         w = MainWindow()
         qtbot.addWidget(w)
         w._model.set_project_basics({"name": "Old Name"})
         w._on_new()
         assert w._model.get_project_basics().get("name") == "My Project"
 
-    def test_yaml_preview_updates(self, qtbot) -> None:  # type: ignore[no-untyped-def]
+    def test_yaml_preview_updates(self, qtbot) -> None:
         w = MainWindow()
         qtbot.addWidget(w)
         w._model.set_project_basics({"name": "YAML Test Project"})

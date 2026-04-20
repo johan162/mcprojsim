@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtCore import (  # type: ignore[import-untyped]
+from PySide6.QtCore import (
     QAbstractTableModel,
     QModelIndex,
     QPersistentModelIndex,
     Qt,
     Signal,
 )
-from PySide6.QtWidgets import (  # type: ignore[import-untyped]
+from PySide6.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QPushButton,

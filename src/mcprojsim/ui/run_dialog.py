@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from PySide6.QtCore import Qt  # type: ignore[import-untyped]
-from PySide6.QtWidgets import (  # type: ignore[import-untyped]
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (  # type: ignore[import-untyped]
     QVBoxLayout,
     QWidget,
 )
-from PySide6.QtCore import QSettings  # type: ignore[import-untyped]
+from PySide6.QtCore import QSettings
 
 
 class RunSimulationDialog(QDialog):

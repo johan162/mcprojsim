@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Callable
 
-from PySide6.QtCore import QObject, QTimer  # type: ignore[import-untyped]
+from PySide6.QtCore import QObject, QTimer
 
 
 _AUTOSAVE_PATH = Path.home() / ".mcprojsim" / "autosave.yaml"
@@ -16,12 +17,12 @@ class AutoSave(QObject):
 
     def __init__(self, interval_ms: int = _AUTOSAVE_INTERVAL_MS, parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self._get_yaml_callback = None
+        self._get_yaml_callback: Callable[[], str] | None = None
         self._timer = QTimer(self)
         self._timer.setInterval(interval_ms)
         self._timer.timeout.connect(self._do_save)
 
-    def start(self, get_yaml_fn):  # type: ignore[no-untyped-def]
+    def start(self, get_yaml_fn: Callable[[], str]) -> None:
         """Start auto-save; *get_yaml_fn* is a zero-arg callable returning YAML str."""
         self._get_yaml_callback = get_yaml_fn
         self._timer.start()
