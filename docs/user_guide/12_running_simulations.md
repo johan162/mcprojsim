@@ -347,7 +347,7 @@ Displays the active configuration (uncertainty factor multipliers, T-shirt size 
 ### Usage
 
 ```bash
-mcprojsim config [-c CONFIG_FILE] [--generate]
+mcprojsim config [-c CONFIG_FILE] [--list] [--generate]
 ```
 
 ### Options
@@ -355,6 +355,7 @@ mcprojsim config [-c CONFIG_FILE] [--generate]
 | Option | Description |
 |--------|-------------|
 | `-c`, `--config-file FILE` | Show configuration merged with a custom YAML file |
+| `--list`, `--show` | List current configuration settings. Alias `--show` is identical. When omitted, the same output is produced by default for backward compatibility. |
 | `--generate` | Write the built-in default configuration to `~/.mcprojsim/config.yaml` |
 
 !!! note
@@ -363,11 +364,14 @@ mcprojsim config [-c CONFIG_FILE] [--generate]
 ### Examples
 
 ```bash
-# Show built-in defaults
+# Show built-in defaults (all three forms are equivalent)
 mcprojsim config
+mcprojsim config --list
+mcprojsim config --show
 
 # Show a custom configuration merged with defaults
 mcprojsim config --config-file my_config.yaml
+mcprojsim config --list --config-file my_config.yaml
 
 # Generate a default configuration file at ~/.mcprojsim/config.yaml
 mcprojsim config --generate

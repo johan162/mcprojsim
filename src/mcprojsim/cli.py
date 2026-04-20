@@ -2242,7 +2242,15 @@ def validate(project_file: str, verbose: bool) -> None:
     is_flag=True,
     help="Generate a default configuration file at ~/.mcprojsim/config.yaml.",
 )
-def config(config_file: Optional[str], generate: bool) -> None:
+@click.option(
+    "--list",
+    "--show",
+    "show_config",
+    is_flag=True,
+    default=False,
+    help="List current configuration settings (alias: --show).",
+)
+def config(config_file: Optional[str], generate: bool, show_config: bool) -> None:
     """Show current configuration and optionally generate a default config file."""
     if generate:
         generated_config_path = _get_generated_default_config_path()
@@ -2257,6 +2265,11 @@ def config(config_file: Optional[str], generate: bool) -> None:
             encoding="utf-8",
         )
         click.echo(f"Generated default configuration: {generated_config_path}")
+
+    # Show settings when --list/--show is passed, or when invoked with no action
+    # flags (backward-compatible default: bare `mcprojsim config` still lists).
+    if not (show_config or not generate):
+        return
 
     cfg, loaded_config_path = _load_config_with_user_default(config_file)
     if loaded_config_path is not None:
