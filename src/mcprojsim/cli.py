@@ -41,6 +41,7 @@ from mcprojsim.simulation.distributions import fit_shifted_lognormal
 from mcprojsim.utils import Validator, setup_logging
 
 ALLOWED_OUTPUT_FORMATS = {"json", "csv", "html"}
+_MIN_TABLE_WIDTH = 70
 
 _CURRENCY_SYMBOLS = {
     "EUR": "€",
@@ -84,6 +85,46 @@ def _parse_output_formats(output_format: str) -> list[str]:
             f"{unknown_values}. Supported formats: {allowed}"
         )
     return formats
+
+
+def _table_display_width(table_text: str) -> int:
+    """Return rendered table width as the longest visible line length."""
+    lines = table_text.splitlines()
+    if not lines:
+        return 0
+    return max(len(line) for line in lines)
+
+
+def _enforce_table_min_width(table_text: str, min_width: Optional[int]) -> str:
+    """Pad a rendered tabulate table to at least ``min_width`` characters."""
+    if min_width is None:
+        return table_text
+
+    current_width = _table_display_width(table_text)
+    if current_width >= min_width:
+        return table_text
+
+    delta = min_width - current_width
+    widened_lines: list[str] = []
+    for line in table_text.splitlines():
+        if not line:
+            widened_lines.append(line)
+            continue
+
+        if "│" in line:
+            first = line.find("│")
+            last = line.rfind("│")
+            if first != last:
+                widened_lines.append(line[:last] + (" " * delta) + line[last:])
+                continue
+
+        if line.endswith(("┐", "┤", "┘")):
+            widened_lines.append(line[:-1] + ("─" * delta) + line[-1])
+            continue
+
+        widened_lines.append(line + (" " * delta))
+
+    return "\n".join(widened_lines)
 
 
 def _get_user_default_config_path() -> Path:
@@ -203,12 +244,27 @@ def _echo_sprint_results(
     sprint_results: SprintPlanningResults,
     table: bool,
     minimal: bool,
+    min_table_width: Optional[int] = None,
 ) -> None:
     """Print sprint-planning results to the CLI."""
     import math
 
     if table:
         from tabulate import tabulate as _tabulate
+
+        def _echo_table(
+            rows: list[list[Any]],
+            headers: list[str],
+            *,
+            disable_numparse: bool = True,
+        ) -> None:
+            table_text = _tabulate(
+                rows,
+                headers=headers,
+                tablefmt="simple_outline",
+                disable_numparse=disable_numparse,
+            )
+            click.echo(_enforce_table_min_width(table_text, min_table_width))
 
         summary_rows = [
             ["Sprint Length", f"{sprint_results.sprint_length_weeks} weeks"],
@@ -286,31 +342,13 @@ def _echo_sprint_results(
         ]
 
         click.echo("\nSprint Planning Summary:")
-        click.echo(
-            _tabulate(
-                summary_rows,
-                headers=["Field", "Value"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(summary_rows, ["Field", "Value"])
         click.echo("\nSprint Count Statistical Summary:")
-        click.echo(
-            _tabulate(
-                stat_rows,
-                headers=["Metric", "Value"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(stat_rows, ["Metric", "Value"])
         click.echo("\nSprint Count Confidence Intervals:")
-        click.echo(
-            _tabulate(
-                percentile_rows,
-                headers=["Percentile", "Sprints", "Projected Delivery Date"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
+        _echo_table(
+            percentile_rows,
+            ["Percentile", "Sprints", "Projected Delivery Date"],
         )
 
         if not minimal:
@@ -331,13 +369,9 @@ def _echo_sprint_results(
                     for series_name, stats in sorted(series_statistics.items())
                 ]
                 click.echo("\nHistorical Sprint Series:")
-                click.echo(
-                    _tabulate(
-                        history_rows,
-                        headers=["Series", "Mean", "Median", "Std Dev", "Min", "Max"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
+                _echo_table(
+                    history_rows,
+                    ["Series", "Mean", "Median", "Std Dev", "Min", "Max"],
                 )
 
             ratio_summaries = sprint_results.historical_diagnostics.get(
@@ -358,21 +392,9 @@ def _echo_sprint_results(
                     for ratio_name, stats in sorted(ratio_summaries.items())
                 ]
                 click.echo("\nHistorical Ratio Summaries:")
-                click.echo(
-                    _tabulate(
-                        ratio_rows,
-                        headers=[
-                            "Ratio",
-                            "Mean",
-                            "Median",
-                            "Std Dev",
-                            "P50",
-                            "P80",
-                            "P90",
-                        ],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
+                _echo_table(
+                    ratio_rows,
+                    ["Ratio", "Mean", "Median", "Std Dev", "P50", "P80", "P90"],
                 )
 
             correlations = sprint_results.historical_diagnostics.get(
@@ -385,14 +407,7 @@ def _echo_sprint_results(
                     for pair_name, value in sorted(correlations.items())
                 ]
                 click.echo("\nHistorical Correlations:")
-                click.echo(
-                    _tabulate(
-                        correlation_rows,
-                        headers=["Series Pair", "Pearson Correlation"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
-                )
+                _echo_table(correlation_rows, ["Series Pair", "Pearson Correlation"])
 
             if sprint_results.burnup_percentiles:
                 burnup_rows = [
@@ -405,14 +420,7 @@ def _echo_sprint_results(
                     for point in sprint_results.burnup_percentiles
                 ]
                 click.echo("\nBurn-up Percentiles:")
-                click.echo(
-                    _tabulate(
-                        burnup_rows,
-                        headers=["Sprint", "P50", "P80", "P90"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
-                )
+                _echo_table(burnup_rows, ["Sprint", "P50", "P80", "P90"])
     else:
         click.echo("\nSprint Planning Summary:")
         click.echo(f"Sprint Length: {sprint_results.sprint_length_weeks} weeks")
@@ -732,10 +740,25 @@ def _output_cost_table(
     target_date: Optional[str],
     hours_per_day: float,
     fx_provider: "Any" = None,
+    min_table_width: Optional[int] = None,
 ) -> None:
     """Output cost analysis in table mode."""
     import numpy as np
     from tabulate import tabulate as _tabulate
+
+    def _echo_table(
+        rows: list[list[Any]],
+        headers: list[str],
+        *,
+        disable_numparse: bool = True,
+    ) -> None:
+        table_text = _tabulate(
+            rows,
+            headers=headers,
+            tablefmt="simple_outline",
+            disable_numparse=disable_numparse,
+        )
+        click.echo(_enforce_table_min_width(table_text, min_table_width))
 
     _costs = getattr(results, "costs", None)
     if _costs is None or not include_in_output:
@@ -763,25 +786,11 @@ def _output_cost_table(
         else "\nCost Statistical Summary:"
     )
     click.echo(header)
-    click.echo(
-        _tabulate(
-            cost_stat_rows,
-            headers=["Metric", "Value"],
-            tablefmt="simple_outline",
-            disable_numparse=True,
-        )
-    )
+    _echo_table(cost_stat_rows, ["Metric", "Value"])
     if _cost_pcts:
         ci_rows = [[f"P{p}", _fmt_cost(v, _sym)] for p, v in sorted(_cost_pcts.items())]
         click.echo("\nCost Confidence Intervals:")
-        click.echo(
-            _tabulate(
-                ci_rows,
-                headers=["Percentile", "Amount"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(ci_rows, ["Percentile", "Amount"])
     _cost_analysis_t = getattr(results, "cost_analysis", None)
     if _cost_analysis_t is not None and _cost_analysis_t.sensitivity:
         top_sens = sorted(
@@ -791,14 +800,7 @@ def _output_cost_table(
         )[:10]
         sens_rows = [[tid, f"{corr:+.4f}"] for tid, corr in top_sens]
         click.echo("\nCost Sensitivity Analysis:")
-        click.echo(
-            _tabulate(
-                sens_rows,
-                headers=["Task", "Correlation"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(sens_rows, ["Task", "Correlation"])
     if target_budget is not None:
         _prob = results.probability_within_budget(target_budget)
         _, _ci_lo, _ci_hi = results.budget_confidence_interval(target_budget)
@@ -815,14 +817,7 @@ def _output_cost_table(
             ["Budget for P90 confidence", _fmt_cost(_p90_budget, _sym)],
         ]
         click.echo(f"\nBudget Analysis (target: {_fmt_cost(target_budget, _sym)}):")
-        click.echo(
-            _tabulate(
-                budget_rows,
-                headers=["Metric", "Value"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(budget_rows, ["Metric", "Value"])
         if target_date and results.start_date:
             try:
                 from datetime import date as _date_t, timedelta as _td
@@ -1446,6 +1441,7 @@ def simulate(
 
             # Build FX provider once — used for both console output and exporters
             _fx_provider = _build_fx_provider(results, project, no_fx)
+            table_min_width: Optional[int] = None
 
             if table:
                 start_date_str = (
@@ -1467,14 +1463,17 @@ def simulate(
                     ["Schedule Mode", schedule_mode],
                 ]
                 click.echo("\nProject Overview:")
-                click.echo(
-                    _tabulate(
-                        common_rows,
-                        headers=["Field", "Value"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
+                project_overview_table = _tabulate(
+                    common_rows,
+                    headers=["Field", "Value"],
+                    tablefmt="simple_outline",
+                    disable_numparse=True,
                 )
+                table_min_width = max(
+                    _MIN_TABLE_WIDTH,
+                    _table_display_width(project_overview_table),
+                )
+                click.echo(_enforce_table_min_width(project_overview_table, table_min_width))
 
                 # Default Uncertainty Factors table
                 if not minimal:
@@ -1492,11 +1491,14 @@ def simulate(
                         )
                     click.echo("\nDefault Uncertainty Factors:")
                     click.echo(
-                        _tabulate(
-                            uncertainty_rows,
-                            headers=["Factor", "Default Level (Multiplier)"],
-                            tablefmt="simple_outline",
-                            disable_numparse=True,
+                        _enforce_table_min_width(
+                            _tabulate(
+                                uncertainty_rows,
+                                headers=["Factor", "Default Level (Multiplier)"],
+                                tablefmt="simple_outline",
+                                disable_numparse=True,
+                            ),
+                            table_min_width,
                         )
                     )
 
@@ -1534,20 +1536,26 @@ def simulate(
                     ]
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(
-                    _tabulate(
-                        calendar_summary_rows,
-                        headers=["Metric", "Value"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
+                    _enforce_table_min_width(
+                        _tabulate(
+                            calendar_summary_rows,
+                            headers=["Metric", "Value"],
+                            tablefmt="simple_outline",
+                            disable_numparse=True,
+                        ),
+                        table_min_width,
                     )
                 )
                 click.echo("\nProject Effort Statistical Summary:")
                 click.echo(
-                    _tabulate(
-                        effort_summary_rows,
-                        headers=["Metric", "Value"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
+                    _enforce_table_min_width(
+                        _tabulate(
+                            effort_summary_rows,
+                            headers=["Metric", "Value"],
+                            tablefmt="simple_outline",
+                            disable_numparse=True,
+                        ),
+                        table_min_width,
                     )
                 )
             else:
@@ -1622,10 +1630,13 @@ def simulate(
                     ci_rows.append([f"P{p}", f"{hours:.2f}", wd, date_str])
                 click.echo("\nCalendar Time Confidence Intervals:")
                 click.echo(
-                    _tabulate(
-                        ci_rows,
-                        headers=["Percentile", "Hours", "Working Days", "Date"],
-                        tablefmt="simple_outline",
+                    _enforce_table_min_width(
+                        _tabulate(
+                            ci_rows,
+                            headers=["Percentile", "Hours", "Working Days", "Date"],
+                            tablefmt="simple_outline",
+                        ),
+                        table_min_width,
                     )
                 )
 
@@ -1639,10 +1650,13 @@ def simulate(
                             effort_rows.append([f"P{p}", f"{eh:.2f}", epd])
                         click.echo("\nEffort Confidence Intervals:")
                         click.echo(
-                            _tabulate(
-                                effort_rows,
-                                headers=["Percentile", "Person-Hours", "Person-Days"],
-                                tablefmt="simple_outline",
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    effort_rows,
+                                    headers=["Percentile", "Person-Hours", "Person-Days"],
+                                    tablefmt="simple_outline",
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1654,6 +1668,7 @@ def simulate(
                         target_date,
                         hours_per_day,
                         _fx_provider,
+                        table_min_width,
                     )
                     if results.sensitivity:
                         sorted_sens = sorted(
@@ -1666,11 +1681,14 @@ def simulate(
                         ]
                         click.echo("\nSensitivity Analysis (top contributors):")
                         click.echo(
-                            _tabulate(
-                                sens_rows,
-                                headers=["Task", "Correlation"],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    sens_rows,
+                                    headers=["Task", "Correlation"],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1688,11 +1706,14 @@ def simulate(
                             slack_rows.append([task_id, f"{slack_val:.2f}", status])
                         click.echo("\nSchedule Slack:")
                         click.echo(
-                            _tabulate(
-                                slack_rows,
-                                headers=["Task", "Slack (hours)", "Status"],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    slack_rows,
+                                    headers=["Task", "Slack (hours)", "Status"],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1715,15 +1736,18 @@ def simulate(
                                 )
                         click.echo("\nRisk Impact Analysis:")
                         click.echo(
-                            _tabulate(
-                                risk_rows,
-                                headers=[
-                                    "Task",
-                                    "Mean (hours)",
-                                    "Trigger Rate",
-                                    "Mean When Triggered (hours)",
-                                ],
-                                tablefmt="simple_outline",
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    risk_rows,
+                                    headers=[
+                                        "Task",
+                                        "Mean (hours)",
+                                        "Trigger Rate",
+                                        "Mean When Triggered (hours)",
+                                    ],
+                                    tablefmt="simple_outline",
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1744,11 +1768,14 @@ def simulate(
                         ]
                         click.echo("\nConstrained Schedule Diagnostics:")
                         click.echo(
-                            _tabulate(
-                                diagnostics_rows,
-                                headers=["Metric", "Value"],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    diagnostics_rows,
+                                    headers=["Metric", "Value"],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1777,16 +1804,19 @@ def simulate(
                         ]
                         click.echo("\nTwo-Pass Scheduling Traceability:")
                         click.echo(
-                            _tabulate(
-                                tp_rows,
-                                headers=[
-                                    "Metric",
-                                    f"Pass-1 iter: {tp.pass1_iterations}",
-                                    f"Pass-2 iter: {tp.pass2_iterations}",
-                                    "Delta",
-                                ],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    tp_rows,
+                                    headers=[
+                                        "Metric",
+                                        f"Pass-1 iter: {tp.pass1_iterations}",
+                                        f"Pass-2 iter: {tp.pass2_iterations}",
+                                        "Delta",
+                                    ],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                ),
+                                table_min_width,
                             )
                         )
                         click.echo(
@@ -1950,7 +1980,12 @@ def simulate(
                         )
 
             if sprint_results is not None:
-                _echo_sprint_results(sprint_results, table=table, minimal=minimal)
+                _echo_sprint_results(
+                    sprint_results,
+                    table=table,
+                    minimal=minimal,
+                    min_table_width=table_min_width,
+                )
 
             # --- Staffing advisory (always shown) and full table (--staffing) ---
             if not minimal:
@@ -2025,17 +2060,20 @@ def simulate(
                                     ]
                                 )
                             click.echo(
-                                _tabulate(
-                                    st_rows,
-                                    headers=[
-                                        "Team Size",
-                                        "Eff. Capacity",
-                                        "Working Days",
-                                        "Delivery Date",
-                                        "Efficiency",
-                                    ],
-                                    tablefmt="simple_outline",
-                                    disable_numparse=True,
+                                _enforce_table_min_width(
+                                    _tabulate(
+                                        st_rows,
+                                        headers=[
+                                            "Team Size",
+                                            "Eff. Capacity",
+                                            "Working Days",
+                                            "Delivery Date",
+                                            "Efficiency",
+                                        ],
+                                        tablefmt="simple_outline",
+                                        disable_numparse=True,
+                                    ),
+                                    table_min_width,
                                 )
                             )
                         else:
