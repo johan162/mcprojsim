@@ -171,9 +171,9 @@ $(1)_TEX       := $$(USER_GUIDE_BUILD_DIR)/user_guide_report$(shell printf '%s' 
 $(1)_PDF_BUILT := $$(USER_GUIDE_BUILD_DIR)/user_guide_report$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').pdf
 endef
 
-$(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE))
+$(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_A4))
 $(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_B5))
-$(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK))
+$(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK_A4))
 $(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK_B5))
 
 # ============================================================================================
@@ -195,8 +195,8 @@ $(1)_TEX       := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(pat
 $(1)_PDF_BUILT := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').pdf
 endef
 
-$(eval $(call DEFINE_API_REF_VARS,API_REF))
-$(eval $(call DEFINE_API_REF_VARS,API_REF_DARK))
+$(eval $(call DEFINE_API_REF_VARS,API_REF_A4))
+$(eval $(call DEFINE_API_REF_VARS,API_REF_DARK_A4))
 $(eval $(call DEFINE_API_REF_VARS,API_REF_B5))
 $(eval $(call DEFINE_API_REF_VARS,API_REF_DARK_B5))
 
@@ -225,8 +225,8 @@ USER_GUIDE_MD_SOURCES := \
 # Non-markdown assets that should still trigger a rebuild when changed.
 USER_GUIDE_PDF_DEPS := \
 	$(DOCS_DIR)/user_guide/pagebreaks.lua \
-	$(DOCS_DIR)/user_guide/report_template.tex \
-	$(DOCS_DIR)/user_guide/report_template_dark.tex \
+	$(DOCS_DIR)/user_guide/report_template_a4.tex \
+	$(DOCS_DIR)/user_guide/report_template_dark_a4.tex \
 	$(DOCS_DIR)/user_guide/report_template_b5.tex \
 	$(DOCS_DIR)/user_guide/report_template_dark_b5.tex \
 	$(DOCS_DIR)/examples_template.md
@@ -299,12 +299,12 @@ pdfs: pdf-docs pdf-api-ref ## Build all PDF documentation variants in parallel
 	@:
 
 pdf-docs:  ## Build the user guide in all PDF variants (A4 light/dark, B5 light/dark) in parallel
-	@$(MAKE) -j4 $(USER_GUIDE_PDF) $(USER_GUIDE_DARK_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
+	@$(MAKE) -j4 $(USER_GUIDE_A4_PDF) $(USER_GUIDE_DARK_A4_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
 
 pdf-api-ref:  ## Build the API reference in all PDF variants (A4 light/dark, B5 light/dark) in parallel
-	@$(MAKE) -j4 $(API_REF_PDF) $(API_REF_DARK_PDF) $(API_REF_B5_PDF) $(API_REF_DARK_B5_PDF)
+	@$(MAKE) -j4 $(API_REF_A4_PDF) $(API_REF_DARK_A4_PDF) $(API_REF_B5_PDF) $(API_REF_DARK_B5_PDF)
 
-gen-examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
+examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
 	@:
 
 $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES) 
@@ -354,7 +354,7 @@ endef
 # ============================================================================================
 # Macro: BUILD_API_REF_PDF
 # Shared recipe for every API Reference PDF variant. Call via $(eval $(call BUILD_API_REF_PDF,...)).
-# $(1) = variable name prefix (e.g. API_REF, API_REF_B5)
+# $(1) = variable name prefix (e.g. API_REF_A4, API_REF_B5)
 # $(2) = paper format: a4 or b5  (passed to the pandoc Lua filter)
 # Note: Make variables used inside recipe lines are escaped as $$(VAR) so they survive 
 # $(call) expansion and are resolved at recipe-execution time.
@@ -395,18 +395,18 @@ endef
 # ============================================================================================
 # User Guide PDF targets — A4 light, A4 dark, B5 light, B5 dark
 # ============================================================================================
-$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE,a4))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_A4,a4))
 $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_B5,b5))
-$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK,a4))
+$(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK_A4,a4))
 $(eval $(call BUILD_USER_GUIDE_PDF,USER_GUIDE_DARK_B5,b5))
 
 
 # ============================================================================================
 #  API Reference PDF targets — A4 light, A4 dark, B5 light, B5 dark
 # ============================================================================================
-$(eval $(call BUILD_API_REF_PDF,API_REF,a4))
+$(eval $(call BUILD_API_REF_PDF,API_REF_A4,a4))
 $(eval $(call BUILD_API_REF_PDF,API_REF_B5,b5))
-$(eval $(call BUILD_API_REF_PDF,API_REF_DARK,a4))
+$(eval $(call BUILD_API_REF_PDF,API_REF_DARK_A4,a4))
 $(eval $(call BUILD_API_REF_PDF,API_REF_DARK_B5,b5))
 
 # Echo all API REF Variables for debugging Makefile variable generation. 
