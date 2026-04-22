@@ -1391,8 +1391,10 @@ class TestCli:
             "Warning: Sprint planning is using 'tasks' capacity mode" in result.output
         )
 
-    def test_simulate_reports_time_and_memory(self, monkeypatch) -> None:
-        """The simulate command should print elapsed time and memory usage."""
+    def test_simulate_reports_time_and_memory_with_simtime_flag(
+        self, monkeypatch
+    ) -> None:
+        """The simulate command should print metrics when --simtime is enabled."""
         runner = CliRunner()
 
         class FakeEngine:
@@ -1460,7 +1462,9 @@ class TestCli:
                 )
             )
 
-            result = runner.invoke(cli, ["simulate", str(project_file), "--quiet"])
+            result = runner.invoke(
+                cli, ["simulate", str(project_file), "--quiet", "--simtime"]
+            )
 
         assert result.exit_code == 0
         assert "Simulation time: 12.34 seconds" in result.output

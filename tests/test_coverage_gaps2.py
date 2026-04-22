@@ -1421,6 +1421,7 @@ class TestCLISimulateWithSprints:
                 "simulate",
                 str(project_file),
                 "--quiet",
+                "--simtime",
                 "--table",
                 "--iterations",
                 "50",
