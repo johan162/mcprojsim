@@ -20,6 +20,11 @@ Completed Tasks:
 - Review EBNF Grammar
 - Review top-level README
 - Support `--list` flag for `config` command verb
+- Hide progressbar behind `-p` flag
+- Hide simulation time and  mem usage begind glag `--simtime`
+- Add script to make it possible to run the actual mcprojsim for each output in the user-guide
+- Tidy up structure of user-guide build
+- Fix default name for config file
 
 
 ## Post-MVP (1.0.0) Themes
