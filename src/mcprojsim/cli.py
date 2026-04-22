@@ -129,11 +129,6 @@ def _enforce_table_min_width(table_text: str, min_width: Optional[int]) -> str:
 
 def _get_user_default_config_path() -> Path:
     """Return the default user-level configuration file path."""
-    return Path.home() / ".mcprojsim" / "configuration.yaml"
-
-
-def _get_generated_default_config_path() -> Path:
-    """Return the output path for generated default configuration."""
     return Path.home() / ".mcprojsim" / "config.yaml"
 
 
@@ -1473,7 +1468,9 @@ def simulate(
                     _MIN_TABLE_WIDTH,
                     _table_display_width(project_overview_table),
                 )
-                click.echo(_enforce_table_min_width(project_overview_table, table_min_width))
+                click.echo(
+                    _enforce_table_min_width(project_overview_table, table_min_width)
+                )
 
                 # Default Uncertainty Factors table
                 if not minimal:
@@ -1653,7 +1650,11 @@ def simulate(
                             _enforce_table_min_width(
                                 _tabulate(
                                     effort_rows,
-                                    headers=["Percentile", "Person-Hours", "Person-Days"],
+                                    headers=[
+                                        "Percentile",
+                                        "Person-Hours",
+                                        "Person-Days",
+                                    ],
                                     tablefmt="simple_outline",
                                 ),
                                 table_min_width,
@@ -2253,7 +2254,7 @@ def validate(project_file: str, verbose: bool) -> None:
 def config(config_file: Optional[str], generate: bool, show_config: bool) -> None:
     """Show current configuration and optionally generate a default config file."""
     if generate:
-        generated_config_path = _get_generated_default_config_path()
+        generated_config_path = _get_user_default_config_path()
         generated_config_path.parent.mkdir(parents=True, exist_ok=True)
 
         default_cfg = Config.get_default()
