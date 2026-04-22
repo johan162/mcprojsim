@@ -99,6 +99,7 @@ dmypy.json
 
 # Generated reports
 **/*.html
+!assets/*.html
 **/*.json
 **/*.csv
 
