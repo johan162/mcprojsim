@@ -339,8 +339,108 @@ $$\ln(X) = \ln(X_0) + \ln(F_1) + \ln(F_2) + ... + \ln(F_n)$$
 
 If we assume the $\ln(F_i)$ are independent and identically distributed, then by the Central Limit Theorem, $\ln(X)$ will tend to be normally distributed, which means that $X$ is log-normally distributed.
 
-\newpage
+::: pagebreak-b5 
+:::
 
+### Determining log-normal parameters
+
+An example will clarify this.
+
+Assume we want to make a log normal distribution from the three point
+estimate
+
+| low | expected | high |
+|---|---|---|
+| 5 | 9 | 16 |
+
+
+To use a log-normal distribution based on a three-point estimate we need a way to fit those three point to the log-normal distribution. 
+
+Since log-normal doesn't have a natural "minimum," the standard approach is to shift the distribution by your minimum, then fit μ and σ to the remaining two constraints.
+
+For the high estimate we also need to define which confidence level of the log-normal distribution it should correspond to. A common value is to use the 90%- or 95%- percentile. To make this relative to the distribution we use the $z$-value, i.e. the fraction number of standard deviation from the mean value.
+
+| Confidence level | z-score |
+|---|---|
+| 80th percentile | 0.842 |
+| 85th percentile | 1.036 |
+| 90th percentile | 1.282 |
+| 95th percentile | 1.645 |
+| 97.5th percentile | 1.960 |
+| 99th percentile | 2.326 |
+
+Great practical question. Since log-normal doesn't have a natural "minimum," the standard approach is to **shift the distribution** by your minimum, then fit μ and σ to the remaining two constraints.
+
+#### Derivation
+
+Define the shifted variable:
+
+$Y = X − 5$ (where $X$ is actual duration, $Y$ is the excess above minimum)
+
+$Y$ follows a standard log-normal, so $\texttt{ln}(Y) \sim \texttt{Normal}(\mu, \sigma^2)$
+
+The constraints become:
+- Mode of $X = 9 \implies$ mode of $Y = 4 \;\implies\; e^{(\mu − \sigma^2)} = 4$
+- 95th percentile of $X = 16 \;\implies\;$ 95th percentile of $Y = 11 \;\implies\; e^{(\mu + 1.645\sigma)} = 11$
+
+
+#### Solving
+
+From the two equations:
+
+$$
+\mu - \sigma^2 = \texttt{ln}(4) \approx 1.386 \;\;\;\;\;\;\;\;(1)
+$$
+
+$$
+\mu + 1.645\sigma = \texttt{ln}(11) \approx 2.398 \;\;\;\;\;\;\;\;(2)
+$$
+
+Subtract (1) from (2):
+
+$$
+\sigma^2  + 1.645\sigma - 1.012 = 0
+$$
+Solving the quadratic gives
+
+$$
+\sigma \approx 0.472
+$$
+
+Then from equation (1):
+
+$$
+\mu = \texttt{ln}(4) + \sigma^2 \approx 1.386 + 0.223 \approx 1.609
+$$
+
+
+#### Resulting Parameters
+
+| Parameter | Value |
+|---|---|
+| Shift (minimum) | 5 days |
+| $\mu$ (log-mean of Y) | **1.609** |
+| $\sigma$ (log-std of Y) | **0.472** |
+
+
+#### Sanity Check
+
+With these parameters, the distribution of X gives:
+
+| Statistic | Value |
+|---|---|
+| Minimum (hard floor) | 5 days |
+| Mode | $\sim 9$ days  |
+| Median | $5 + e^\mu = 5 + 5.0 \approx 10\, \texttt{days}$ |
+| Mean | $5 + e^{(\mu + \sigma^2/2)} ≈ 5 + 5.6 \approx 10.6\, \texttt{days}$ |
+| 95th percentile | $\sim 16$ days  |
+
+The median and mean both sitting above the mode is the classic log-normal skew in action — reinforcing that even with a "9 day" estimate, you should plan for closer to **10.5–11 days** on average.
+
+![Log-normal task duration (5,9,16)](../assets/lognormal01.jpg){ width=80% }
+  
+ 
+***Figure:*** *Log-normal task duration (5,9,16)*
 
 ## T-shirt size estimates
 
@@ -353,6 +453,9 @@ In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected
 The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_unit` in the configuration file).
 
 The built-in default category is `story`, so a bare value like `M` resolves as `story.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
+
+::: pagebreak-b5
+:::
 
 ***Table: Bug - category***
 
@@ -376,8 +479,6 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `story` | `XL` | 320 | 400 | 750 |
 | `story` | `XXL` | 400 | 500 | 1200 |
 
-::: pagebreak-b5   
-:::
 
 ***Table: Epic - category***
 
@@ -389,6 +490,9 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `epic` | `L` | 290 | 480 | 700 |
 | `epic` | `XL` | 600 | 1000 | 1500 |
 | `epic` | `XXL` | 1200 | 2000 | 3200 |
+
+::: pagebreak-b5   
+:::
 
 ***Table: Business/Program - category***
 
@@ -485,6 +589,8 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "high"
+
+!!! yaml-cbreak-b5 
 
   - id: "task_002"
     name: "Build page"
@@ -646,7 +752,6 @@ tasks:
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "medium"
-!!! yaml-cbreak-b5
   - id: "task_003"
     name: "Deploy page"
     estimate:
@@ -736,7 +841,6 @@ tasks:
     estimate:
       t_shirt_size: "L"
     dependencies: ["research"]
- !!! text-cbreak-b5  
   - id: "implementation"
     name: "Core implementation"
     estimate:
@@ -745,7 +849,6 @@ tasks:
       high: 25
       unit: "days"
     dependencies: ["design"]
-
   - id: "testing"
     name: "Integration testing"
     estimate:
@@ -777,8 +880,6 @@ The `unit` field accepts exactly three values:
 
 Any other value is a validation error.
 
-::: pagebreak-b5  
-:::
 
 ### Defaults by estimate type
 
@@ -821,7 +922,6 @@ tasks:
       expected: 4
       high: 8
       unit: "hours"    # Small task estimated in hours
- !!! text-cbreak-b5 
   - id: "major_feature"
     estimate:
       low: 2
@@ -868,9 +968,6 @@ The resolved values are then converted to hours using the same conversion logic.
 | `t_shirt_size` token shape must be `<size>` or `<category>.<size>` | T-shirt size | Yes — invalid token formats fail validation |
 | `t_shirt_size` category and size must exist in active config | T-shirt size | Yes — unknown category/size fails resolution |
 
-
-::: pagebreak-b5 
-:::
 
 ## Summary
 
