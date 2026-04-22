@@ -58,7 +58,7 @@ def _fence(lines: list[str]) -> str:
     return "```\n" + "\n".join(lines) + "\n```"
 
 
-def _expand_match(match: re.Match, cwd: Path) -> str:
+def _expand_match(match: re.Match, cwd: Path) -> str: # type: ignore
     """Return the replacement text for a single placeholder match."""
     cmd = match.group(1).strip()
     head_str = match.group(2)
