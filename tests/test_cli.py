@@ -1515,7 +1515,7 @@ class TestCli:
         generated_path = tmp_path / ".mcprojsim" / "config.yaml"
 
         monkeypatch.setattr(
-            "mcprojsim.cli._get_generated_default_config_path",
+            "mcprojsim.cli._get_user_default_config_path",
             lambda: generated_path,
         )
 
@@ -1539,7 +1539,7 @@ class TestCli:
         assert not generated_dir.exists()
 
         monkeypatch.setattr(
-            "mcprojsim.cli._get_generated_default_config_path",
+            "mcprojsim.cli._get_user_default_config_path",
             lambda: generated_path,
         )
 
