@@ -331,6 +331,7 @@ $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$
 	@poetry run python $$(SCRIPTS_DIR)/expand-shell-outputs.py \
 		--output-dir $$(USER_GUIDE_BUILD_DIR)/expanded \
 		--cwd $$(SCRIPTS_DIR)/.. \
+		--format $(2) \
 		$$(USER_GUIDE_MD_SOURCES)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
 	@cat $$(foreach f,$$(USER_GUIDE_MD_SOURCES),$$(USER_GUIDE_BUILD_DIR)/expanded/$$(notdir $$f)) > $$($1_CONCAT_MD)
@@ -371,6 +372,7 @@ $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_R
 	@poetry run python $$(SCRIPTS_DIR)/expand-shell-outputs.py \
 		--output-dir $$(API_REF_BUILD_DIR)/expanded \
 		--cwd $$(SCRIPTS_DIR)/.. \
+		--format $(2) \
 		$$(API_REF_MD_SOURCES)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
 	@cat $$(foreach f,$$(API_REF_MD_SOURCES),$$(API_REF_BUILD_DIR)/expanded/$$(notdir $$f)) > $$($1_CONCAT_MD)
