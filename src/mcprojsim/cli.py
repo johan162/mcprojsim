@@ -1,5 +1,6 @@
 """Command-line interface for Monte Carlo Project Simulator."""
 
+import datetime
 from pathlib import Path
 import sys
 import time
@@ -1214,7 +1215,8 @@ def simulate(
         )
 
     if quiet < 2:
-        click.echo(f"mcprojsim, version {__version__}")
+        ## click.echo("==== Simulation Results ====")
+        click.echo(f"mcprojsim, version {__version__}, {datetime.datetime.now().date()}")
     logger = setup_logging(level="INFO" if verbose else "WARNING")
 
     try:
@@ -1430,7 +1432,7 @@ def simulate(
                     "mean_person_days": math.ceil(effort_mean_fallback / hours_per_day),
                 }
 
-            click.echo("\n=== Simulation Results ===")
+            ## click.echo("\n=== Simulation Results ===")
 
             project_uncertainty_factors = project.project.uncertainty_factors
             if project_uncertainty_factors is not None:
