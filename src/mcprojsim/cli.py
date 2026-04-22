@@ -1141,6 +1141,20 @@ def _output_cost_text(
     help="Disable exchange rate fetches (offline / CI mode).",
 )
 @click.option(
+    "--progress",
+    "-p",
+    is_flag=True,
+    default=False,
+    help="Show a progress bar during simulation.",
+)
+@click.option(
+    "--simtime",
+    "-S",
+    is_flag=True,
+    default=False,
+    help="Show simulation elapsed time and peak memory after each run.",
+)
+@click.option(
     "--workers",
     type=str,
     default="1",
@@ -1173,6 +1187,8 @@ def simulate(
     target_budget: Optional[float],
     full_cost_detail: bool,
     no_fx: bool,
+    progress: bool,
+    simtime: bool,
     workers: str,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
@@ -1311,7 +1327,7 @@ def simulate(
             iterations=iterations,
             random_seed=seed,
             config=cfg,
-            show_progress=quiet == 0,
+            show_progress=progress,
             two_pass=two_pass,
             pass1_iterations=pass1_iterations,
             workers=effective_workers,
@@ -1335,7 +1351,7 @@ def simulate(
             ) = _run_sprint_simulation_with_metrics(sprint_engine, project)
         critical_path_limit = critical_paths or cfg.output.critical_path_report_limit
 
-        if quiet < 2 and not minimal:
+        if simtime and quiet < 2 and not minimal:
             click.echo(f"Simulation time: {elapsed_seconds:.2f} seconds")
             click.echo(
                 "Peak simulation memory: " f"{_format_memory_size(peak_memory_bytes)}"
