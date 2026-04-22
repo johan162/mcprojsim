@@ -163,7 +163,7 @@ API_REF_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
 #   file_sfx — lowercase with hyphens    (-b5, -dark, -dark-b5)   for all other file names
 # ============================================================================================
 define DEFINE_USER_GUIDE_VARS
-$(1)_TEMPLATE  := $$(DOCS_DIR)/user_guide/report_template$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
+$(1)_TEMPLATE  := $$(DOCS_DIR)/user_guide/userguide_template$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
 $(1)_PDF       := $$(DIST_DIR)/$$(PROJECT)_user_guide$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
 $(1)_CONCAT_MD := $$(USER_GUIDE_BUILD_DIR)/user_guide_concat$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').md
 $(1)_BODY_TEX  := $$(USER_GUIDE_BUILD_DIR)/user_guide_body$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
@@ -225,10 +225,10 @@ USER_GUIDE_MD_SOURCES := \
 # Non-markdown assets that should still trigger a rebuild when changed.
 USER_GUIDE_PDF_DEPS := \
 	$(DOCS_DIR)/user_guide/pagebreaks.lua \
-	$(DOCS_DIR)/user_guide/report_template_a4.tex \
-	$(DOCS_DIR)/user_guide/report_template_dark_a4.tex \
-	$(DOCS_DIR)/user_guide/report_template_b5.tex \
-	$(DOCS_DIR)/user_guide/report_template_dark_b5.tex \
+	$(DOCS_DIR)/user_guide/userguide_template_a4.tex \
+	$(DOCS_DIR)/user_guide/userguide_template_dark_a4.tex \
+	$(DOCS_DIR)/user_guide/userguide_template_b5.tex \
+	$(DOCS_DIR)/user_guide/userguide_template_dark_b5.tex \
 	$(DOCS_DIR)/examples_template.md
 
 API_REF_MD_SOURCES := \
