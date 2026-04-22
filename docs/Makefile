@@ -326,8 +326,14 @@ $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$
 	@rm -f $$($1_TEMPLATE).bak
 	@echo -e "$$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$(USER_GUIDE_BUILD_DIR)
+	@echo -e "$$(DARKYELLOW)  - Expanding shell command outputs in markdown sources...$$(NC)"
+	@mkdir -p $$(USER_GUIDE_BUILD_DIR)/expanded
+	@poetry run python $$(SCRIPTS_DIR)/expand-shell-outputs.py \
+		--output-dir $$(USER_GUIDE_BUILD_DIR)/expanded \
+		--cwd $$(SCRIPTS_DIR)/.. \
+		$$(USER_GUIDE_MD_SOURCES)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
-	@cat $$(USER_GUIDE_MD_SOURCES) > $$($1_CONCAT_MD)
+	@cat $$(foreach f,$$(USER_GUIDE_MD_SOURCES),$$(USER_GUIDE_BUILD_DIR)/expanded/$$(notdir $$f)) > $$($1_CONCAT_MD)
 	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
@@ -360,8 +366,14 @@ $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_R
 	@rm -f $$($1_TEMPLATE).bak
 	@echo -e "$$(DARKYELLOW)- Building API reference PDF via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$(API_REF_BUILD_DIR)
+	@echo -e "$$(DARKYELLOW)  - Expanding shell command outputs in markdown sources...$$(NC)"
+	@mkdir -p $$(API_REF_BUILD_DIR)/expanded
+	@poetry run python $$(SCRIPTS_DIR)/expand-shell-outputs.py \
+		--output-dir $$(API_REF_BUILD_DIR)/expanded \
+		--cwd $$(SCRIPTS_DIR)/.. \
+		$$(API_REF_MD_SOURCES)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
-	@cat $$(API_REF_MD_SOURCES) > $$($1_CONCAT_MD)
+	@cat $$(foreach f,$$(API_REF_MD_SOURCES),$$(API_REF_BUILD_DIR)/expanded/$$(notdir $$f)) > $$($1_CONCAT_MD)
 	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(API_REF_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
