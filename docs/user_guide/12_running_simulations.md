@@ -155,11 +155,11 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 # Default simulation
 mcprojsim simulate project.yaml
 
-# Reproducible run with a seed
-mcprojsim simulate project.yaml --seed 42
+# Reproducible run with a seed and progress bar
+mcprojsim simulate project.yaml --seed 42 -p
 
-# More iterations for higher precision
-mcprojsim simulate project.yaml --iterations 50000 --seed 42
+# More iterations for higher precision, show simulation timne and memory usage
+mcprojsim simulate project.yaml --iterations 50000 --seed 42 --simtime
 
 # Custom configuration
 mcprojsim simulate project.yaml --config my_config.yaml
@@ -179,7 +179,7 @@ mcprojsim simulate project.yaml -f json --full-cost-detail
 # Disable FX lookups (offline/CI mode)
 mcprojsim simulate project.yaml --no-fx
 
-# Quiet mode (suppress progress bars)
+# Quiet mode (suppress detailed simulation results output)
 mcprojsim simulate project.yaml --quiet
 
 # Fully quiet mode (suppress all normal CLI output)
@@ -354,12 +354,12 @@ mcprojsim config [-c CONFIG_FILE] [--list] [--generate]
 
 | Option | Description |
 |--------|-------------|
-| `-c`, `--config-file FILE` | Show configuration merged with a custom YAML file |
+| `-c`, `--config FILE` | Show configuration merged with a custom YAML file |
 | `--list`, `--show` | List current configuration settings. Alias `--show` is identical. When omitted, the same output is produced by default for backward compatibility. |
 | `--generate` | Write the built-in default configuration to `~/.mcprojsim/config.yaml` |
 
 !!! note
-    The auto-loaded user default configuration file (applied automatically when no `-c` flag is given to any command) lives at `~/.mcprojsim/configuration.yaml` — note the full name `configuration.yaml`, not `config.yaml`. The `--generate` flag writes to `config.yaml` as a starting template; rename it to `configuration.yaml` if you want it to be picked up automatically.
+    The auto-loaded user default configuration file (applied automatically when no `-c` flag is given to any command) lives at `~/.mcprojsim/config.yaml`. Use `--generate` to create a starter template at that path.
 
 ### Examples
 
@@ -370,8 +370,8 @@ mcprojsim config --list
 mcprojsim config --show
 
 # Show a custom configuration merged with defaults
-mcprojsim config --config-file my_config.yaml
-mcprojsim config --list --config-file my_config.yaml
+mcprojsim config --config my_config.yaml
+mcprojsim config --list --config my_config.yaml
 
 # Generate a default configuration file at ~/.mcprojsim/config.yaml
 mcprojsim config --generate

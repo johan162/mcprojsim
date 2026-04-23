@@ -209,6 +209,9 @@ In this example, if the first risk triggers in an iteration where the scheduled 
 
 Project-level risks are applied after the schedule is computed. This means they increase the final project duration but do not change which tasks are identified as being on the critical path for that iteration. The critical path is determined purely by task durations, uncertainty factors, task-level risks, and dependency structure.
 
+!!! warning "Total duration can exceed the longest critical chain"
+    Because project-level risks add time that is not tied to any specific task, the total project duration shown in the confidence interval table can be longer than the sum of durations along the identified critical path. The difference represents accumulated project-level risk impact — for example, an organisation-wide event such as an unplanned freeze or a key person becoming unavailable — which cannot be attributed to a specific task sequence.
+
 
 
 ## Combining Risks at Both Levels

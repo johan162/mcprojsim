@@ -91,8 +91,8 @@ tasks:
     dependencies: []
 ```
 
-
-## Input modes
+!!! tip "Review generated task names"
+    Task names ending with `()` — such as `"Design database schema ()"` — are parser artifacts that occur when the input contains unmatched or empty parentheses. They are harmless but untidy. Always review the generated YAML and remove or correct these fragments before using the file in a simulation.
 
 The parser supports two task-definition modes. They cannot be mixed in the same description.
 

@@ -677,16 +677,15 @@ Several of these settings change simulation behavior directly, not just reportin
 mcprojsim config
 
 # Show configuration from a specific file
-mcprojsim config --config-file config.yaml
+mcprojsim config --config config.yaml
 
 # Generate a default configuration file at ~/.mcprojsim/config.yaml
 mcprojsim config --generate
 ```
 
-When no `--config-file` is given, `mcprojsim` automatically loads
-`~/.mcprojsim/configuration.yaml` if it exists. Use `--generate` to produce a
-starter config file at `~/.mcprojsim/config.yaml` that you can then customise
-and rename to `configuration.yaml`.
+When no `--config` is given, `mcprojsim` automatically loads
+`~/.mcprojsim/config.yaml` if it exists. Use `--generate` to produce a
+starter config file at that location that you can then customise.
 
 The `config` output includes the most relevant effective settings, including:
 
@@ -697,6 +696,9 @@ The `config` output includes the most relevant effective settings, including:
 - critical path report limit,
 - staffing settings,
 - sprint defaults.
+
+!!! note "Derived lognormal parameters in config output"
+    For each T-shirt size and story point value, `mcprojsim config` also shows computed `lognormal params` (`mu`, `sigma`, `z-score`). These are derived from the configured `low`/`expected`/`high` values and are displayed for verification purposes only. They are not configurable fields — changing the underlying size values automatically recomputes them.
 
 ## Sprint planning precedence
 

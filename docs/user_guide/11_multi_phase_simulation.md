@@ -17,7 +17,9 @@ Two-pass simulation solves this problem with two consecutive simulation runs.
 !!! info "Only active with resource-constrained scheduling"
     Two-pass mode requires at least one named `resource` in your project file.
     If no resources are defined the engine falls back to the standard single-pass mode
-    automatically.
+    automatically. **This fallback is silent** — no warning is printed even with `--verbose`.
+    If you use `--two-pass` and the output does not show a "Pass 1" / "Pass 2" progress
+    line, it means no resources were found and single-pass was used instead.
 
 
 ## How It Works
@@ -153,19 +155,19 @@ Calendar Time Statistical Summary:
 ┌──────────────────────────┬────────────────────────────────┐
 │ Metric                   │ Value                          │
 ├──────────────────────────┼────────────────────────────────┤
-│ Mean                     │ 567.49 hours (71 working days) │
-│ Median (P50)             │ 559.94 hours                   │
-│ Std Dev                  │ 13.64 hours                    │
+│ Mean                     │ 360.44 hours (46 working days) │
+│ Median (P50)             │ 384.62 hours                   │
+│ Std Dev                  │ 32.78 hours                    │
 └──────────────────────────┴────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
 ┌──────────────┬─────────┬────────────────┬────────────┐
 │ Percentile   │   Hours │   Working Days │ Date       │
 ├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │  559.94 │             70 │ 2025-06-06 │
-│ P80          │  578.91 │             73 │ 2025-06-11 │
-│ P90          │  580.6  │             73 │ 2025-06-11 │
-│ P95          │  581.68 │             73 │ 2025-06-11 │
+│ P50          │  384.62 │             49 │ 2025-05-08 │
+│ P80          │  386.51 │             49 │ 2025-05-08 │
+│ P90          │  387.45 │             49 │ 2025-05-08 │
+│ P95          │  388.43 │             49 │ 2025-05-08 │
 └──────────────┴─────────┴────────────────┴────────────┘
 ```
 \newpage
@@ -192,34 +194,34 @@ Calendar Time Statistical Summary:
 ┌──────────────────────────┬────────────────────────────────┐
 │ Metric                   │ Value                          │
 ├──────────────────────────┼────────────────────────────────┤
-│ Mean                     │ 470.91 hours (59 working days) │
-│ Median (P50)             │ 463.49 hours                   │
-│ Std Dev                  │ 13.28 hours                    │
+│ Mean                     │ 298.42 hours (38 working days) │
+│ Median (P50)             │ 294.43 hours                   │
+│ Std Dev                  │ 8.60 hours                     │
 └──────────────────────────┴────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
 ┌──────────────┬─────────┬────────────────┬────────────┐
 │ Percentile   │   Hours │   Working Days │ Date       │
 ├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │  463.49 │             58 │ 2025-05-21 │
-│ P80          │  482.47 │             61 │ 2025-05-26 │
-│ P90          │  484.08 │             61 │ 2025-05-26 │
-│ P95          │  485.34 │             61 │ 2025-05-26 │
+│ P50          │  294.43 │             37 │ 2025-04-22 │
+│ P80          │  312.31 │             40 │ 2025-04-25 │
+│ P90          │  313.21 │             40 │ 2025-04-25 │
+│ P95          │  313.83 │             40 │ 2025-04-25 │
 └──────────────┴─────────┴────────────────┴────────────┘
 
 Two-Pass Scheduling Traceability:
 ┌──────────┬────────────────────┬─────────────────────┬─────────┐
 │ Metric   │ Pass-1 iter: 500   │ Pass-2 iter: 1000   │ Delta   │
 ├──────────┼────────────────────┼─────────────────────┼─────────┤
-│ Mean     │ 567.4h             │ 470.9h              │ -96.5h  │
-│ P80      │ 578.9h             │ 482.5h              │ -96.4h  │
-│ P95      │ 582.0h             │ 485.3h              │ -96.6h  │
+│ Mean     │ 361.2h             │ 298.4h              │ -62.7h  │
+│ P80      │ 386.4h             │ 312.3h              │ -74.1h  │
+│ P95      │ 388.7h             │ 313.8h              │ -74.9h  │
 └──────────┴────────────────────┴─────────────────────┴─────────┘
 
-Resource wait delta: -121.1h
+Resource wait delta: -47.5h
 ```
 
-The two-pass run reduces the mean project duration from **~567 h to ~471 h** (~12 working
+The two-pass run reduces the mean project duration from **~361 h to ~298 h** (~8 working
 days) purely by prioritising the tasks that pass-1 identified as critical
 bottlenecks.
 
