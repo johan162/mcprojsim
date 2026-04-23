@@ -1156,6 +1156,12 @@ def _output_cost_text(
     help="Show simulation elapsed time and peak memory after each run.",
 )
 @click.option(
+    "--minheader",
+    is_flag=True,
+    default=False,
+    help="Show a minimal two-line header (version + separator) instead of the full project block.",
+)
+@click.option(
     "--workers",
     type=str,
     default="1",
@@ -1190,6 +1196,7 @@ def simulate(
     no_fx: bool,
     progress: bool,
     simtime: bool,
+    minheader: bool,
     workers: str,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
@@ -1218,6 +1225,11 @@ def simulate(
     if quiet < 2 and minimal:
         click.echo(f"mcprojsim v{__version__}")
         click.echo(f"Run: {_run_ts}")
+    elif quiet < 2 and minheader:
+        _sep = "\u2500" * 50
+        click.echo(_sep)
+        click.echo(f"mcprojsim v{__version__}   Monte Carlo Simulator")
+        click.echo(_sep)
     logger = setup_logging(level="INFO" if verbose else "WARNING")
 
     try:
@@ -1276,7 +1288,7 @@ def simulate(
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
-        if quiet < 2 and not minimal:
+        if quiet < 2 and not minimal and not minheader:
             _sep = "─" * 50
             click.echo(_sep)
             click.echo(f" mcprojsim v{__version__}   Monte Carlo Simulator")
@@ -1500,7 +1512,7 @@ def simulate(
                 )
 
                 # Default Uncertainty Factors table
-                if not minimal:
+                if not minimal and verbose:
                     uncertainty_rows = []
                     for (
                         factor_name,
@@ -1603,7 +1615,7 @@ def simulate(
                 click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")
                 click.echo(f"  Schedule Mode: {schedule_mode}")
 
-                if not minimal:
+                if not minimal and verbose:
                     click.echo("\nDefault Uncertainty Factors:")
                     for (
                         factor_name,
@@ -1698,7 +1710,7 @@ def simulate(
                         _fx_provider,
                         table_min_width,
                     )
-                    if results.sensitivity:
+                    if results.sensitivity and verbose:
                         sorted_sens = sorted(
                             results.sensitivity.items(),
                             key=lambda x: abs(x[1]),
@@ -1885,7 +1897,7 @@ def simulate(
                     )
 
                     # Sensitivity analysis
-                    if results.sensitivity:
+                    if results.sensitivity and verbose:
                         click.echo("\nSensitivity Analysis (top contributors):")
                         sorted_sens = sorted(
                             results.sensitivity.items(),
@@ -2225,12 +2237,6 @@ def simulate(
                         )
                     if quiet == 0 and not minimal:
                         click.echo(f"\nResults exported to {output_file}")
-        else:
-            if quiet == 0 and not minimal:
-                click.echo(
-                    "\n\nNo export formats specified. Use -f to export results to files."
-                )
-
     except Exception as e:
         logger.error(f"Error during simulation: {e}")
         click.echo(f"Error: {e}", err=True)

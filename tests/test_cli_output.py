@@ -156,7 +156,7 @@ class TestSimulatePlainOutput:
         runner = CliRunner()
         with runner.isolated_filesystem():
             pf = _write_project(None)
-            result = runner.invoke(cli, ["simulate", pf])
+            result = runner.invoke(cli, ["simulate", pf, "--verbose"])
         assert "Sensitivity Analysis" in result.output
         assert "task_001" in result.output
         assert "+0.8500" in result.output
@@ -222,7 +222,7 @@ class TestSimulateTableOutput:
         runner = CliRunner()
         with runner.isolated_filesystem():
             pf = _write_project(None)
-            result = runner.invoke(cli, ["simulate", pf, "--table"])
+            result = runner.invoke(cli, ["simulate", pf, "--table", "--verbose"])
         assert "Correlation" in result.output
         assert "+0.8500" in result.output
 

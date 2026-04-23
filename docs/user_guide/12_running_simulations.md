@@ -136,7 +136,10 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `--full-cost-detail` | Include per-iteration task-cost arrays in JSON output | off |
 | `--no-fx` | Disable exchange-rate fetches for secondary currency reporting | off |
 | `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
-| `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
+| `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) and additional output sections: Default Uncertainty Factors and Sensitivity Analysis | off |
+| `-p`, `--progress` | Show a progress bar while the simulation is running | off |
+| `-S`, `--simtime` | Print elapsed simulation time and peak memory usage after each run | off |
+| `--minheader` | Show a compact two-line header (separator + version line) instead of the full project block | off |
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
 | `-m`, `--minimal` | Show minimal console output: version, project overview, calendar/effort statistical summaries, and calendar confidence intervals only | off |
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
