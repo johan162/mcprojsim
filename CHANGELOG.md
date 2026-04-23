@@ -1,3 +1,31 @@
+## [v0.15.1] - 2026-04-23
+
+Release Type: patch
+
+### 📋 Summary
+This release tightens the CLI and documentation workflow around the 0.15 series with clearer console-output controls, corrected config-command behavior, and more robust documentation builds. It also refreshes the User Guide and examples so the published docs match current output and flags.
+
+### 🚀 Improvements
+- Added finer console-output controls with `--noheader`, `--minheader`, `--progress`, and `--simtime` for more compact or more diagnostic CLI runs
+- Improved console output formatting with wider table layouts, cleaner program headers, explicit date display, and readable enum values
+- Added support for `--list` on the `config` command and renamed the config subcommand flag from `--config-file` to `--config` for a cleaner interface
+
+### 🐛 Bug Fixes
+- Fixed the `config` command to use the correct default config filename and resolve config paths correctly
+- Fixed a race condition when building User Guide and API Reference variants in parallel
+- Fixed MCP server import lint issues and remaining type, lint, and formatting regressions
+
+### 📚 Documentation
+- Updated the User Guide, examples, and command-output snippets to match the latest CLI flags and console output
+- Added documentation for the new output-control flags and expanded shell-command coverage in the docs
+- Added new guide imagery and supporting assets for the rendered documentation set
+
+### 🛠 Internal
+- Added scripts and assets for generating documentation images from HTML-backed sources
+- Hardened Makefile format checks and refreshed release housekeeping, badges, and todo tracking for 0.15.1
+- Added new target `figs` that will render all figures from their HTML source in parallel
+
+
 ## [v0.15.0] - 2026-04-19
 
 Release Type: minor
@@ -56,23 +84,12 @@ Release Type: minor
 This release sees two major features:
 1. The addition of cost estimation feature based on efforts and risk. 
 This also supports a budget confidence analysis that determines how likely it is to
-meet a given budget.
-The reports includes cost data. The HTML report now also include a cost histogram, cost tornado chart, and per-task cost breakdown table. 
-The cost feature also supports secondary-currency display with automatic exchange
 rates fetched from https://frankfurter.dev/
 
-2. Resource-constrained scheduling has been significantly optimised, reducing simulation time by 2–3× on projects with a `resources:` block.
-
-### ✨ Additions
 - Added cost analysis and estimation
 - Added `--target-budget` CLI flag to report the probability of staying within a given budget and the budgets required for each confidence level
-- Added NL parser support for cost-related patterns (`Alice costs $180/hour`, `fixed cost: $5000`, `overhead: 20%`)
-- New chapter in User Guide describing cost analysis.
-
 ### 🚀 Improvements
 - Improved resource-constrained scheduling performance by 3–5× on projects with a `resources:` block: eliminated per-step Pydantic `CalendarSpec` allocations, inlined working-day checks in the capacity integration hot path, pre-computed topological sort once per simulation pass, and replaced day-by-day capacity probing with an iteration-local cached availability window.
-- Suppressed the Staffing Analysis section in HTML reports when the project defines an explicit `resources:` block, since team-size recommendations are not meaningful when staffing is already specified.
-
 ### 🛠 Internal
 - Added detailed design document for cost estimate.
 
