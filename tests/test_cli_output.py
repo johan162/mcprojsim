@@ -136,7 +136,7 @@ class TestSimulatePlainOutput:
             pf = _write_project(None)
             result = runner.invoke(cli, ["simulate", pf])
         assert result.exit_code == 0
-        assert "Simulation Results" in result.output
+        assert "Project Overview:" in result.output
         assert "Project: CLI Output Test" in result.output
         assert "Mean: 40.00 hours" in result.output
         assert "Skewness: 0.5000" in result.output
@@ -439,4 +439,4 @@ class TestSimulateConfigLoading:
                 cli, ["simulate", pf, "--config", "cfg.yaml", "--verbose"]
             )
         assert result.exit_code == 0
-        assert "Simulation Results" in result.output
+        assert "Project Overview:" in result.output
