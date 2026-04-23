@@ -439,6 +439,9 @@ Look for:
   - **Effective Resource Utilization** — ratio of total task effort to total available resource capacity over the project duration, capped at 1.0 (100%).  Near 1.0 means the resource pool is fully loaded; near 0 means resources were idle most of the time.
   - **Calendar Delay Contribution** — total hours lost to non-working periods (weekends, holidays, planned absences, sickness) while resources were carrying work.
 
+!!! note "Zero resource wait alongside large calendar delay is not a contradiction"
+    A project can show **Average Resource Wait: 0.00h** and a large **Calendar Delay Contribution** at the same time. This simply means resources were always available when tasks needed them (no queuing), but the project spanned many non-working periods — evenings, weekends, holidays, or absences — during which work was paused. Calendar delay measures elapsed clock time lost to non-working hours, not resource contention.
+
 \newpage
 
 ## Example 3: Add working calendars
@@ -851,9 +854,9 @@ sprint_defaults:
 
 ## Related chapters
 
-- [Project Files](project_files.md) for full schema reference
-- [Running Simulations](running_simulations.md) for command reference
-- [Interpreting Results](interpreting_results.md) for diagnostics interpretation
-- [Multi-Phase (Two-Pass) Simulation](multi_phase_simulation.md) for criticality-prioritized scheduling
+- [Project Files](08_project_files.md) for full schema reference
+- [Running Simulations](12_running_simulations.md) for command reference
+- [Interpreting Results](13_interpreting_results.md) for diagnostics interpretation
+- [Multi-Phase (Two-Pass) Simulation](11_multi_phase_simulation.md) for criticality-prioritized scheduling
 
 \newpage

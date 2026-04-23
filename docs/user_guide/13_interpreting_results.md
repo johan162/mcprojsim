@@ -6,103 +6,15 @@ After running a simulation, `mcprojsim` produces a set of statistics, percentile
 
 ## The output at a glance
 
-A typical CLI run (using `examples/sample_project.yaml`) produces output like this:
+A typical CLI run 
 
-```text
-mcprojsim, version 0.3.0
-Progress: 100.0% (10000/10000)
-Simulation time: 3.42 seconds
-Peak simulation memory: 18.72 MiB
-
-=== Simulation Results ===
-
-Project Overview:
-Project: Customer Portal Redesign
-Hours per Day: 8.0
-Max Parallel Tasks: 3
-Schedule Mode: dependency_only
-
-Calendar Time Statistical Summary:
-Mean: 578.47 hours (73 working days)
-Median (P50): 571.84 hours
-Std Dev: 78.27 hours
-Minimum: 391.20 hours
-Maximum: 934.15 hours
-Coefficient of Variation: 0.1353
-Skewness: 0.4865
-Excess Kurtosis: 0.2469
-
-Project Effort Statistical Summary:
-Mean: 910.15 person-hours (114 person-days)
-Median (P50): 902.33 person-hours
-Std Dev: 125.41 person-hours
-Minimum: 576.44 person-hours
-Maximum: 1452.30 person-hours
-Coefficient of Variation: 0.1378
-Skewness: 0.5117
-Excess Kurtosis: 0.3201
-
-Calendar Time Confidence Intervals:
-  P25: 522.75 hours (66 working days)  (2026-02-02)
-  P50: 571.84 hours (72 working days)  (2026-02-10)
-  P75: 627.77 hours (79 working days)  (2026-02-19)
-  P80: 642.81 hours (81 working days)  (2026-02-23)
+```bash
+mcprojsim simulate --seed 42 examples/sample_project.yaml
 ```
 
-```text
-  P85: 660.11 hours (83 working days)  (2026-02-25)
-  P90: 682.94 hours (86 working days)  (2026-03-02)
-  P95: 715.57 hours (90 working days)  (2026-03-06)
-  P99: 790.61 hours (99 working days)  (2026-03-19)
+produces the full output seen below. The sections are explained in detail in the following parts of this chapter.
 
-Effort Confidence Intervals:
-  P25: 854.12 person-hours (107 person-days)
-  P50: 910.15 person-hours (114 person-days)
-  P75: 972.47 person-hours (122 person-days)
-  P80: 992.18 person-hours (125 person-days)
-  P85: 1015.33 person-hours (127 person-days)
-  P90: 1046.80 person-hours (131 person-days)
-  P95: 1091.24 person-hours (137 person-days)
-  P99: 1182.57 person-hours (148 person-days)
-
-Sensitivity Analysis (top contributors):
-  task_004: +0.4322
-  task_008: +0.3244
-  task_002: +0.3110
-  task_006: +0.2730
-  task_001: +0.1760
-  task_005: +0.1658
-  task_007: +0.0062
-  task_003: -0.0049
-
-Schedule Slack:
-  task_008: 0.00 hours (Critical)
-  task_006: 0.00 hours (Critical)
-  task_005: 0.00 hours (Critical)
-  task_004: 0.00 hours (Critical)
-  task_001: 0.00 hours (Critical)
-  task_002: 0.00 hours (Critical)
-  task_003: 165.16 hours (165.2h buffer)
-  task_007: 355.57 hours (355.6h buffer)
-
-Risk Impact Analysis:
-  task_001: mean=3.18h, triggers=19.9%, mean_when_triggered=16.00h
-  task_003: mean=5.84h, triggers=24.3%, mean_when_triggered=24.00h
-  task_004: mean=11.74h, triggers=29.3%, mean_when_triggered=40.00h
-  task_006: mean=11.13h, triggers=34.8%, mean_when_triggered=32.00h
-  task_008: mean=4.89h, triggers=20.4%, mean_when_triggered=24.00h
-```
-
-```text
-Most Frequent Critical Paths:
-  1. task_001 -> task_002 -> task_004 -> task_005 -> task_006 -> task_008
-     (10000/10000, 100.0%)
-
-Staffing (based on mean effort): 3 people recommended (mixed team), 38 working days
-  Total effort: 910 person-hours (114 person-days) | Parallelism ratio: 1.6
-
-No export formats specified. Use -f to export results to files.
-```
+{{!mcprojsim simulate --seed 42 --noheader examples/sample_project.yaml@B5:19:41*,A4:20*,L}}
 
 Every number here comes from simulating your project thousands of times with different random samples. The results describe the *distribution* of outcomes, not a single prediction.
 
@@ -116,7 +28,8 @@ Several `simulate` flags change which sections are printed:
 |------|------------------|
 | `--minimal` | Shows only core overview and confidence intervals; omits detailed analyses (sensitivity, slack, risk impact, etc.) |
 | `--table` | Renders sections as ASCII tables instead of plain text lines |
-| `--quiet`, `-q`, `-qq` | Reduces or suppresses normal console output |
+| `--quiet`, `-q` | Reduces or suppresses most normal console output |
+| `-qq` | Suppresses all console output except errors |
 | `--staffing` | Adds full per-profile staffing tables (`senior`, `mixed`, `junior`, plus custom profiles) |
 | `--critical-paths N` | Changes how many full critical path sequences are listed |
 | `--target-date YYYY-MM-DD` | Adds probability of finishing by that date |

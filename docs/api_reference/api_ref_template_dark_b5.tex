@@ -56,6 +56,9 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 
+% Pandoc 3.x may wrap images with \pandocbounded{...}.
+\providecommand{\pandocbounded}[1]{#1}
+
 \definecolor{brandblue}{HTML}{0E5AAD}
 \definecolor{brandgray}{HTML}{6B7583}
 \definecolor{lightorange}{HTML}{FFA500}
@@ -80,7 +83,7 @@
   \vspace*{2.0cm}
   {\Huge\bfseries\color{lightorange}API Reference\par}
   \vspace{1.2cm}
-  {\Large \texttt{mcprojsim}, v0.15.0\par}
+  {\Large \texttt{mcprojsim}, v0.15.1\par}
   \vspace{1.2cm}
   {\Large Monte Carlo Project Simulation\par}
   \vfill

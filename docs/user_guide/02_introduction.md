@@ -97,6 +97,7 @@ This is the point at which simulation becomes valuable for management decisions.
 | **P80**    | 80% of runs finish earlier | Common management target |
 | **P90**    | 90% of runs finish earlier | Conservative; appropriate when lateness is costly |
 | **P95**    | 95% of runs finish earlier | High confidence; useful for contractual commitments |
+| **P99**    | 99% of runs finish earlier | Very high confidence, useful for mission critical commiments |
 
 The important point is not that one percentile is always correct. The simulation allows stakeholders to choose a confidence level deliberately rather than inheriting one implicitly from an optimistic single-point estimate.
 
@@ -155,7 +156,7 @@ Uncertainty factors are known characteristics of the working environment that sy
 
 These factors are multiplicative. When a task specifies several of them, the multipliers are combined by multiplication. This means adverse factors compound — even moderate individual adjustments can produce a significant combined effect.
 
-The numeric multipliers are defined in a separate configuration file, not in the project file. This allows teams to calibrate the meaning of labels like "high complexity" or "low maturity" to match their own experience, without changing the project definition. See [Uncertainty Factors](uncertainty_factors.md) for the full list of default multiplier values and guidance on calibration.
+The numeric multipliers are defined in a separate configuration file, not in the project file. This allows teams to calibrate the meaning of labels like "high complexity" or "low maturity" to match their own experience, without changing the project definition. See [Uncertainty Factors](04_uncertainty_factors.md) for the full list of default multiplier values and guidance on calibration.
 
 ### Risks
 
@@ -227,7 +228,7 @@ The combined effect of resource constraints, calendars, and absences is often su
 
 This is not a failure of estimation. It is a more honest picture of when work actually completes. The gap between effort-based estimates and calendar-based schedules is where many real-world planning surprises originate. By modeling resources, calendars, and absences explicitly, the simulation surfaces these effects before the project starts rather than after commitments have been made.
 
-
+<!-- pagebreak:b5 -->
 
 ## What the simulation computes, step by step
 

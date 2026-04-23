@@ -132,20 +132,15 @@ other.  Rather than maintaining two copies of the source, a **pandoc Lua
 filter** (`user_guide/pagebreaks.lua`) handles this transparently.
 
 The filter is activated via `--metadata paper_format=a4` or `=b5` at pandoc
-invocation time (set automatically by the Makefile).  Two marker syntaxes are
+invocation time (set automatically by the Makefile). Two marker syntaxes are
 available in the Markdown source:
 
-**Between blocks** — fenced div, closing `:::` required:
+**Between blocks** — HTML comments, safe for both MkDocs and Pandoc:
 
 ```markdown
-::: pagebreak
-:::
-
-::: pagebreak-b5
-:::
-
-::: pagebreak-a4
-:::
+<!-- pagebreak:any -->
+<!-- pagebreak:b5 -->
+<!-- pagebreak:a4 -->
 ```
 
 **Inside a verbatim/code block** — inline marker line:

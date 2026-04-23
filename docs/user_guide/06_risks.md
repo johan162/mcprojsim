@@ -1,6 +1,6 @@
 # Risks
 
-This chapter explains how `mcprojsim` models schedule variation due to **risks**. (The other source of schedule variation comes from **uncertainty factors** — see [Uncertainty Factors](uncertainty_factors.md).) Both influence the simulated project duration, but they represent fundamentally different ideas and are handled differently by the simulation engine.
+This chapter explains how `mcprojsim` models schedule variation due to **risks**. (The other source of schedule variation comes from **uncertainty factors** — see [Uncertainty Factors](04_uncertainty_factors.md).) Both influence the simulated project duration, but they represent fundamentally different ideas and are handled differently by the simulation engine.
 
 **Risks** are discrete events that may or may not happen. A failed security audit, the departure of a key developer, or a sudden change in requirements are all risks. Each risk has a probability of occurring and an impact if it does.
 
@@ -209,6 +209,9 @@ In this example, if the first risk triggers in an iteration where the scheduled 
 
 Project-level risks are applied after the schedule is computed. This means they increase the final project duration but do not change which tasks are identified as being on the critical path for that iteration. The critical path is determined purely by task durations, uncertainty factors, task-level risks, and dependency structure.
 
+!!! warning "Total duration can exceed the longest critical chain"
+    Because project-level risks add time that is not tied to any specific task, the total project duration shown in the confidence interval table can be longer than the sum of durations along the identified critical path. The difference represents accumulated project-level risk impact — for example, an organisation-wide event such as an unplanned freeze or a key person becoming unavailable — which cannot be attributed to a specific task sequence.
+
 
 
 ## Combining Risks at Both Levels
@@ -393,7 +396,7 @@ In this project, the only source of variation across iterations is the random sa
 
 ### Example 2: Same Project With Uncertainty Factors and Risks
 
-The same project, enriched with [uncertainty factors](uncertainty_factors.md) and risks to capture additional real-world conditions.
+The same project, enriched with [uncertainty factors](04_uncertainty_factors.md) and risks to capture additional real-world conditions.
 
 ```yaml
 project:

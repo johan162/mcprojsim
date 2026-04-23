@@ -9,7 +9,7 @@
 |**Documentation**|[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://johan162.github.io/mcprojsim/)|
 |**License**|[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)|
 |**Release**|[![GitHub release](https://img.shields.io/github/v/release/johan162/mcprojsim?include_prereleases)](https://github.com/johan162/mcprojsim/releases)|
-|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen.svg)](coverage.svg)|
+|**CI/CD**|[![CI](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/ci.yml) [![Doc build](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml/badge.svg)](https://github.com/johan162/mcprojsim/actions/workflows/docs.yml) [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)](coverage.svg)|
 |**Code Quality**|[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black) [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/) [![Linting: flake8](https://img.shields.io/badge/linting-flake8-yellowgreen)](https://flake8.pycqa.org/)|
 |Repo URL|[![GitHub](https://img.shields.io/badge/GitHub-100000?style=flat-square&logo=github&logoColor=white)](https://github.com/johan162/mcprojsim)|
 
@@ -187,7 +187,7 @@ Use the entry point that matches your goal:
 |------------------|-------|
 | [Quickstart Guide](https://johan162.github.io/mcprojsim/quickstart/) | Fastest terminal-based first run |
 | [User Documentation](https://johan162.github.io/mcprojsim/) | The full documentation site |
-| [User Guide](https://johan162.github.io/mcprojsim/user_guide/getting_started/) | The User Guide section |
+| [User Guide](https://johan162.github.io/mcprojsim/user_guide/01_getting_started/) | The User Guide section |
 | [Development Guide](https://johan162.github.io/mcprojsim/development/) | contributor and source-checkout workflows |
 
 
@@ -249,7 +249,7 @@ If you use this tool in research or project planning, please cite:
   author = {Johan Persson},
   year = {2026},
   url = {https://github.com/johan162/mcprojsim},
-  version = {0.15.0}
+  version = {0.15.1}
 }
 ```
 
@@ -266,3 +266,5 @@ Inspired by the work of:
 - Douglas Hubbard - *How to Measure Anything in Cybersecurity Risk*
 - Kahneman, Sibony, Sunstein - *Noise: A Flaw in Human Judgment*
 - William Poundstone - *Doomsday Calculation*
+- Daniel S. Vacanti - *When Will it Be Done?*
+- Lawrence Weinstein - *guesstimation 2.0*

@@ -68,6 +68,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 <team_size> ::= "team_size:" <non_negative_integer>
 
 <distribution_type> ::= "triangular" | "lognormal"
+<percentile_list> ::= <positive_integer> { "," <positive_integer> }
 
 # Tasks
 <tasks_section> ::= "tasks:" <task_list>
@@ -89,14 +90,14 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                       [<task_risks>]
                       [<task_fixed_cost>]
 
-<task_id> ::= "id:" <identifier>
+<task_id> ::= "id:" <string_like_token>
 <task_name> ::= "name:" <string>
 <task_description> ::= "description:" <string>
 <dependencies> ::= "dependencies:" <dependency_list>
-<dependency_list> ::= "[]" | "[" <identifier_list> "]"
+<dependency_list> ::= "[]" | "[" <string_like_token_list> "]"
 
-<task_resources> ::= "resources:" <identifier_list_bracketed>
-<identifier_list_bracketed> ::= "[]" | "[" <identifier_list> "]"
+<task_resources> ::= "resources:" <string_like_token_list_bracketed>
+<string_like_token_list_bracketed> ::= "[]" | "[" <string_like_token_list> "]"
 <task_max_resources> ::= "max_resources:" <positive_integer>
 <task_min_experience_level> ::= "min_experience_level:" <experience_level>
 <task_planning_story_points> ::= "planning_story_points:" <positive_integer>
@@ -118,19 +119,17 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 
 <estimate_distribution> ::= "distribution:" <distribution_type>
 
-# Accepted aliases in project files:
-# low/min, expected/most_likely, high/max
-<low_key> ::= ("low:" | "min:") <positive_number>
-<expected_key> ::= ("expected:" | "most_likely:") <positive_number>
-<high_key> ::= ("high:" | "max:") <positive_number>
+# Note: while the Pydantic model defines aliases (min/most_likely/max),
+# current raw-parser pre-validation only accepts canonical keys below.
+<low_key> ::= "low:" <non_negative_number>
+<expected_key> ::= "expected:" <positive_number>
+<high_key> ::= "high:" <non_negative_number>
 
 <tshirt_estimate> ::= "t_shirt_size:" <tshirt_size>
 <tshirt_size> ::= <bare_tshirt_size> | <qualified_tshirt_size>
 <bare_tshirt_size> ::= <tshirt_size_token>
 <qualified_tshirt_size> ::= <category_name> "." <tshirt_size_token>
-<tshirt_size_token> ::= "XS" | "S" | "M" | "L" | "XL" | "XXL"
-                      | "EXTRA_SMALL" | "SMALL" | "MEDIUM"
-                      | "LARGE" | "EXTRA_LARGE" | "EXTRA_EXTRA_LARGE"
+<tshirt_size_token> ::= <alpha_token>
 
 <story_point_estimate> ::= "story_points:" <story_point_value>
 <story_point_value> ::= "1" | "2" | "3" | "5" | "8" | "13" | "21"
@@ -142,7 +141,11 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 <uncertainty_factors> ::= "uncertainty_factors:" <factor_map>
 <factor_map> ::= { <factor> }
 <factor> ::= <factor_name> ":" <factor_level>
-<factor_name> ::= <identifier>
+<factor_name> ::= "team_experience"
+                | "requirements_maturity"
+                | "technical_complexity"
+                | "team_distribution"
+                | "integration_complexity"
 <factor_level> ::= <identifier>
 
 # Risks
@@ -157,7 +160,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                      [<risk_description>]
                      [<risk_cost_impact>]
 
-<risk_id> ::= "id:" <identifier>
+<risk_id> ::= "id:" <string_like_token>
 <risk_name> ::= "name:" <string>
 <risk_probability> ::= "probability:" <probability>
 <risk_description> ::= "description:" <string>
@@ -190,10 +193,10 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                          [<resource_planned_absence>]
                          [<resource_hourly_rate>]
 
-<resource_name> ::= "name:" <identifier>
-<legacy_resource_id> ::= "id:" <identifier>
+<resource_name> ::= "name:" <string_like_token>
+<legacy_resource_id> ::= "id:" <string_like_token>
 <resource_availability> ::= "availability:" <probability>
-<resource_calendar> ::= "calendar:" <identifier>
+<resource_calendar> ::= "calendar:" <string_like_token>
 <resource_experience_level> ::= "experience_level:" <experience_level>
 <resource_productivity_level> ::= "productivity_level:" <positive_number>
 <resource_sickness_prob> ::= "sickness_prob:" <probability>
@@ -208,7 +211,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
                          [<calendar_work_days>]
                          [<calendar_holidays>]
 
-<calendar_id> ::= "id:" <identifier>
+<calendar_id> ::= "id:" <string_like_token>
 <calendar_work_hours_per_day> ::= "work_hours_per_day:" <positive_number>
 <calendar_work_days> ::= "work_days:" <weekday_int_list>
 <weekday_int_list> ::= "[]" | "[" <weekday_int_values> "]"
@@ -292,7 +295,11 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 
 # Shared primitives
 <identifier> ::= <letter> { <letter> | <digit> | "_" }
+<category_name> ::= <letter_or_underscore> { <letter_or_underscore> }
+<alpha_token> ::= <letter> { <letter> | "_" | "-" | " " }
 <identifier_list> ::= <identifier> { "," <identifier> }
+<string_like_token> ::= <identifier> | <string>
+<string_like_token_list> ::= <string_like_token> { "," <string_like_token> }
 <date_list> ::= "[]" | "[" <date_string_list> "]"
 <date_string_list> ::= <date_string> { "," <date_string> }
 <date_string> ::= <year> "-" <month> "-" <day>
@@ -327,6 +334,7 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 <digit> ::= "0" | <non_zero_digit>
 <non_zero_digit> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 <letter> ::= "a".."z" | "A".."Z"
+<letter_or_underscore> ::= <letter> | "_"
 <year> ::= <digit> <digit> <digit> <digit>
 <month> ::= "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12"
 <day> ::= "01".."31"
@@ -355,21 +363,24 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 
 <uncertainty_factors_config> ::= "uncertainty_factors:" <map>
 <t_shirt_sizes_config> ::= "t_shirt_sizes:" <map>
-<t_shirt_size_default_category_config> ::= "t_shirt_size_default_category:" <identifier>
+                         | "t_shirt_size_categories:" <map>
+<t_shirt_size_default_category_config> ::= "t_shirt_size_default_category:" <string>
 <t_shirt_size_unit_config> ::= "t_shirt_size_unit:" <time_unit>
 <story_points_config> ::= "story_points:" <map>
 <story_point_unit_config> ::= "story_point_unit:" <time_unit>
 
 <simulation_config> ::= "simulation:"
-                        ["iterations:" <positive_integer>]
+                        ["default_iterations:" <positive_integer>]
+                        ["random_seed:" (<signed_integer> | "null")]
+                        ["max_stored_critical_paths:" <positive_integer>]
 
 <lognormal_config> ::= "lognormal:"
                        ["high_percentile:" <integer>]
 
 <output_config> ::= "output:"
                     ["formats:" <string_list>]
+                    ["include_histogram:" <boolean>]
                     ["number_bins:" <positive_integer>]
-                    ["max_stored_critical_paths:" <positive_integer>]
                     ["critical_path_report_limit:" <positive_integer>]
 
 <staffing_config> ::= "staffing:" <map>
@@ -420,18 +431,20 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 ### Project-level
 
 1. `start_date` must be a valid ISO date in `YYYY-MM-DD` format.
-2. `probability_red_threshold` must be strictly less than `probability_green_threshold`.
-3. Default confidence levels are `[10, 25, 50, 75, 80, 85, 90, 95, 99]`.
-4. Default thresholds are:
+2. The raw parser applies a strict unknown-field allowlist for most project sections before model validation.
+  (Notable exception: unknown keys under `project.uncertainty_factors` are currently ignored by model parsing.)
+3. `probability_red_threshold` must be strictly less than `probability_green_threshold`.
+4. Default confidence levels are `[10, 25, 50, 75, 80, 85, 90, 95, 99]`.
+5. Default thresholds are:
    - `probability_red_threshold`: `0.50`
    - `probability_green_threshold`: `0.90`
-5. If `team_size` is omitted or `0`, only explicitly listed resources are used.
-6. If `team_size > explicit_resources`, unnamed default resources are generated up to `team_size`.
-7. If `team_size < explicit_resources`, validation fails.
-8. `t_shirt_size_default_category`, when present, overrides the built-in program default but is itself overridden by a loaded config file or the `--tshirt-category` CLI flag.
-9. `project.uncertainty_factors`, when present, overrides built-in task-factor defaults.
-10. Config-file `uncertainty_factors` multipliers override project-file uncertainty factor assumptions.
-11. Cost-related project fields:
+6. If `team_size` is omitted or `0`, only explicitly listed resources are used.
+7. If `team_size > explicit_resources`, unnamed default resources are generated up to `team_size`.
+8. If `team_size < explicit_resources`, validation fails.
+9. `t_shirt_size_default_category`, when present, overrides the built-in program default but is itself overridden by a loaded config file or the `--tshirt-category` CLI flag.
+10. `project.uncertainty_factors`, when present, overrides built-in task-factor defaults.
+11. Config-file `uncertainty_factors` multipliers override project-file uncertainty factor assumptions.
+12. Cost-related project fields:
    - `default_hourly_rate` must be `>= 0`
    - `overhead_rate` must be in `[0.0, 3.0]`
    - `secondary_currencies` may contain at most 5 entries
@@ -449,24 +462,36 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
    - `low <= expected <= high`
    - if effective distribution is `lognormal`, then `low < expected < high`
    - `unit` is optional; when omitted it defaults to `hours`
-6. Accepted explicit estimate aliases are:
-   - `low` or `min`
-   - `expected` or `most_likely`
-   - `high` or `max`
+6. Explicit estimate keys currently accepted by the parser are canonical keys only:
+  - `low`
+  - `expected`
+  - `high`
+  (The model defines aliases `min` / `most_likely` / `max`, but raw pre-validation currently rejects those keys as unknown.)
 7. Symbolic estimate rules:
    - exactly one of `t_shirt_size` or `story_points` may be set
    - `unit` must not be set when using symbolic estimates
-8. `max_resources >= 1`.
-9. `min_experience_level` must be `1`, `2`, or `3`.
-10. `spillover_probability_override` must be in `[0.0, 1.0]`.
-11. `fixed_cost`, when present, is interpreted in project currency units and may be positive or negative.
+8. Explicit estimate numeric bounds:
+  - `expected > 0`
+  - `low >= 0`
+  - `high >= 0`
+9. `t_shirt_size` parser acceptance is syntax-based (`<size>` or `<category>.<size>` with alphabetic/underscore/hyphen/space tokens). Category/size validity against configured mappings is resolved later when the estimate is interpreted.
+10. `max_resources >= 1`.
+11. `min_experience_level` must be `1`, `2`, or `3`.
+12. `spillover_probability_override` must be in `[0.0, 1.0]`.
+13. `fixed_cost`, when present, is interpreted in project currency units and may be positive or negative.
 
 ### Uncertainty factors
 
-1. Factor names are open-ended strings.
+1. Task-level uncertainty factor keys are constrained to:
+  - `team_experience`
+  - `requirements_maturity`
+  - `technical_complexity`
+  - `team_distribution`
+  - `integration_complexity`
 2. Factor levels are open-ended strings.
 3. At task resolution time, precedence is: built-in defaults < project-level `uncertainty_factors` < task-level `uncertainty_factors`.
 4. Missing factors or levels fall back to multiplier `1.0` at runtime.
+5. Project-level `project.uncertainty_factors` unknown keys are currently ignored (not hard-failed) by model parsing.
 
 ### Resources and calendars
 
@@ -502,6 +527,11 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 9. Sprint sickness constraints:
    - `probability_per_person_per_week` in `(0.0, 1.0)`
    - `duration_log_sigma > 0`
+10. External sprint history loading:
+  - `history.format` must be `json` or `csv`
+  - `history.path` must be non-empty and resolve to an existing file
+  - JSON input may be either an array of history rows or an object containing a `sprints` array
+  - CSV input must include a header row
 
 ### Risks
 
@@ -525,6 +555,11 @@ It is written in Extended Backus-Naur Form (EBNF) plus semantic constraints that
 8. `cost.overhead_rate` must be in `[0.0, 3.0]`.
 9. `cost.currency` defaults to `"EUR"`.
 10. `cost.include_in_output` defaults to `true`; when `false`, cost sections are suppressed in output but cost calculations still run.
+11. `simulation.default_iterations` is the iterations field in config (not `simulation.iterations`).
+12. `simulation.max_stored_critical_paths` belongs under `simulation` (not `output`).
+13. `output.include_histogram` is supported.
+14. `lognormal.high_percentile` must be one of `{70, 75, 80, 85, 90, 95, 99}`.
+15. Config loading currently uses YAML input.
 
 ## Example Validation
 
@@ -544,9 +579,9 @@ tasks:
   - id: "task_001"
     name: "Backend Development"
     estimate:
-      min: 5
-      most_likely: 8
-      max: 15
+      low: 5
+      expected: 8
+      high: 15
     risks:
       - id: "tech_debt"
         name: "Technical debt discovered"
@@ -654,10 +689,12 @@ sprint_planning:
 
 ## Format Support
 
-This grammar is implemented for both YAML and TOML:
+Project-file grammar is implemented for both YAML and TOML:
 
 - YAML (`.yaml`, `.yml`)
 - TOML (`.toml`)
+
+Config-file grammar is currently implemented for YAML config files.
 
 ## Parser Implementation
 
@@ -665,5 +702,95 @@ Core implementation components:
 
 - Pydantic v2 model validation
 - PyYAML parsing
-- `tomllib` (Python built-in, 3.11+) for TOML reading; `tomli-w` for TOML writing
+- `tomllib` (Python built-in, 3.11+) for TOML project-file reading
+
+## Parser Drift Checklist
+
+Use this checklist when reviewing whether this document still matches current parser behavior.
+
+### 1. Project parser entry points
+
+- Verify YAML/TOML project parsing flow:
+  - `src/mcprojsim/parsers/yaml_parser.py`
+  - `src/mcprojsim/parsers/toml_parser.py`
+- Confirm both paths still run:
+  1. external sprint-history loading (`load_external_sprint_history`)
+  2. raw payload validation (`validate_project_payload`)
+  3. model validation (`Project(**data)`)
+
+### 2. Raw unknown-field allowlists
+
+- Re-check allowlisted keys in:
+  - `src/mcprojsim/parsers/error_reporting.py` (`_allowed_fields_for_path`)
+- If any key is added/removed there, update EBNF keys and semantic constraints here.
+
+### 3. Project model constraints
+
+- Re-check model fields and validators in:
+  - `src/mcprojsim/models/project.py`
+- Confirm this document still matches:
+  - task estimate rules (`TaskEstimate`)
+  - risk impact shape (`Risk`, `RiskImpact`)
+  - resource/calendar rules (`ResourceSpec`, `CalendarSpec`)
+  - sprint planning rules (`SprintPlanningSpec` and related specs)
+  - project-level integrity checks (`Project.validate_project`)
+
+### 4. Config schema and defaults
+
+- Re-check config schema in:
+  - `src/mcprojsim/config.py`
+- Confirm field locations and names still match this doc, especially:
+  - `simulation.*`
+  - `output.*`
+  - `constrained_scheduling.*`
+  - `sprint_defaults.*`
+  - `cost.*`
+  - `lognormal.high_percentile` allowed values
+
+### 5. External sprint history behavior
+
+- Re-check external history descriptors and normalization in:
+  - `src/mcprojsim/parsers/sprint_history_parser.py`
+- Confirm supported formats, required fields, and normalization assumptions documented here remain accurate.
+
+### 6. Alias and pre-validation edge cases
+
+- Explicitly test estimate alias behavior against current raw pre-validation (for example `min/most_likely/max` vs `low/expected/high`).
+- If parser behavior changes, update both:
+  - EBNF estimate productions
+  - semantic constraints text
+
+### 7. CLI-level validation sanity checks
+
+Run quick checks against real CLI validation behavior:
+
+```bash
+# Should pass
+poetry run mcprojsim validate examples/quickstart_project.yaml
+
+# Should fail on unknown estimate alias keys (unless parser behavior changed)
+cat >/tmp/grammar_alias_check.yaml <<'YAML'
+project:
+  name: "Alias check"
+  start_date: "2026-01-01"
+tasks:
+  - id: "t1"
+    name: "Task"
+    estimate:
+      min: 1
+      most_likely: 2
+      max: 3
+YAML
+poetry run mcprojsim validate /tmp/grammar_alias_check.yaml
+```
+
+### 8. Documentation build sanity check
+
+After grammar updates, run:
+
+```bash
+poetry run mkdocs build
+```
+
+If build passes, this file is structurally valid in the docs site.
 

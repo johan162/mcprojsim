@@ -54,7 +54,7 @@ mcprojsim generate description.txt -o project.yaml && mcprojsim simulate project
 
 ### Input format
 
-The input file is a semi-structured text description. See [MCP Server & Natural Language Project Input](mcp-server.md) for the full input format reference, supported fields, and examples.
+The input file is a semi-structured text description. See [MCP Server & Natural Language Project Input](16_mcp-server.md) for the full input format reference, supported fields, and examples.
 
 A minimal example:
 
@@ -132,8 +132,15 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-f`, `--output-format FORMATS` | Comma-separated export formats: `json`, `csv`, `html` | none |
 | `--critical-paths N` | Number of critical paths to display | config default: 2 |
 | `--number-bins N` | Number of histogram bins for distribution charts in JSON, CSV, and HTML exports. Overrides the config file setting if specified. | 50 |
+| `--target-budget AMOUNT` | Report probability of staying within the provided budget amount | none |
+| `--full-cost-detail` | Include per-iteration task-cost arrays in JSON output | off |
+| `--no-fx` | Disable exchange-rate fetches for secondary currency reporting | off |
 | `-q`, `-qq`, `--quiet` | Reduce CLI output verbosity. Use `-q` to suppress detailed output, or `-qq` to suppress all normal output | off |
-| `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) | off |
+| `-v`, `--verbose` | Show detailed informational messages (config loaded, project parsed, etc.) and additional output sections: Default Uncertainty Factors and Sensitivity Analysis | off |
+| `-p`, `--progress` | Show a progress bar while the simulation is running | off |
+| `-S`, `--simtime` | Print elapsed simulation time and peak memory usage after each run | off |
+| `--minheader` | Show a compact two-line header (separator + version line) instead of the full project block | off |
+| `--noheader` | Suppress the header block entirely; output starts directly with the Project Overview section | off |
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
 | `-m`, `--minimal` | Show minimal console output: version, project overview, calendar/effort statistical summaries, and calendar confidence intervals only | off |
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
@@ -152,11 +159,11 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 # Default simulation
 mcprojsim simulate project.yaml
 
-# Reproducible run with a seed
-mcprojsim simulate project.yaml --seed 42
+# Reproducible run with a seed and progress bar
+mcprojsim simulate project.yaml --seed 42 -p
 
-# More iterations for higher precision
-mcprojsim simulate project.yaml --iterations 50000 --seed 42
+# More iterations for higher precision, show simulation timne and memory usage
+mcprojsim simulate project.yaml --iterations 50000 --seed 42 --simtime
 
 # Custom configuration
 mcprojsim simulate project.yaml --config my_config.yaml
@@ -167,7 +174,16 @@ mcprojsim simulate project.yaml -f json,csv,html -o results/my_project
 # Custom histogram bins for more granular distribution charts
 mcprojsim simulate project.yaml -f json,csv,html --number-bins 100 -o results/my_project
 
-# Quiet mode (suppress progress bars)
+# Budget probability analysis
+mcprojsim simulate project.yaml --target-budget 45000
+
+# Include full task-cost arrays in JSON export
+mcprojsim simulate project.yaml -f json --full-cost-detail
+
+# Disable FX lookups (offline/CI mode)
+mcprojsim simulate project.yaml --no-fx
+
+# Quiet mode (suppress detailed simulation results output)
 mcprojsim simulate project.yaml --quiet
 
 # Fully quiet mode (suppress all normal CLI output)
@@ -277,7 +293,7 @@ Staffing Analysis (senior team, overhead=4%/person, productivity=100%):
 └─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
 ```
 
-The `*` suffix in the "Team Size" column marks the recommended team size for that profile. Without `--table`, the same information appears in plain indented text with `<-- recommended` annotations. See [Interpreting Results — Staffing recommendations](interpreting_results.md#staffing-recommendations) for a detailed explanation of the model and columns.
+The `*` suffix in the "Team Size" column marks the recommended team size for that profile. Without `--table`, the same information appears in plain indented text with `<-- recommended` annotations. See [Interpreting Results — Staffing recommendations](13_interpreting_results.md#staffing-recommendations) for a detailed explanation of the model and columns.
 
 Without `--table`, the same data is printed as indented text:
 
@@ -335,27 +351,31 @@ Displays the active configuration (uncertainty factor multipliers, T-shirt size 
 ### Usage
 
 ```bash
-mcprojsim config [-c CONFIG_FILE] [--generate]
+mcprojsim config [-c CONFIG_FILE] [--list] [--generate]
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `-c`, `--config-file FILE` | Show configuration merged with a custom YAML file |
+| `-c`, `--config FILE` | Show configuration merged with a custom YAML file |
+| `--list`, `--show` | List current configuration settings. Alias `--show` is identical. When omitted, the same output is produced by default for backward compatibility. |
 | `--generate` | Write the built-in default configuration to `~/.mcprojsim/config.yaml` |
 
 !!! note
-    The auto-loaded user default configuration file (applied automatically when no `-c` flag is given to any command) lives at `~/.mcprojsim/configuration.yaml` — note the full name `configuration.yaml`, not `config.yaml`. The `--generate` flag writes to `config.yaml` as a starting template; rename it to `configuration.yaml` if you want it to be picked up automatically.
+    The auto-loaded user default configuration file (applied automatically when no `-c` flag is given to any command) lives at `~/.mcprojsim/config.yaml`. Use `--generate` to create a starter template at that path.
 
 ### Examples
 
 ```bash
-# Show built-in defaults
+# Show built-in defaults (all three forms are equivalent)
 mcprojsim config
+mcprojsim config --list
+mcprojsim config --show
 
 # Show a custom configuration merged with defaults
-mcprojsim config --config-file my_config.yaml
+mcprojsim config --config my_config.yaml
+mcprojsim config --list --config my_config.yaml
 
 # Generate a default configuration file at ~/.mcprojsim/config.yaml
 mcprojsim config --generate
@@ -368,7 +388,11 @@ By default `mcprojsim simulate` runs iterations sequentially on a single process
 
 ### How it works
 
-When `--workers N` is set and both the iteration count and task count exceed the minimum thresholds (500 iterations and 5 tasks respectively), the engine:
+When `--workers N` is set and both the iteration count and task count both exceed an absolute minimum thresholds (500 iterations and 5 tasks respectively) but also exceeds heuristic limits that takes how heavy
+the execution are into account. For example, a dependency-only simulation (no resource constrains) will almost never benefit from parallel execution as each iteration is trivial and most time will be spent 
+in the parallel overhead. Hence, only one worker will be deployed in all but the most extreme dependency-only simulations.
+
+If the heuristics finds that several workers are beneficial the engine will:
 
 1. Partitions the total iterations into many small micro-chunks (more chunks than workers for smooth progress and load balancing).
 2. Submits chunks to a short-lived `ProcessPoolExecutor` with `N` workers, using the `spawn` start method for safety on all platforms.

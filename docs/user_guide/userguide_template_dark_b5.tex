@@ -1,10 +1,10 @@
-\documentclass[11pt,a4paper,twoside,openright]{report}
+\documentclass[11pt,b5paper]{report}
 
 \usepackage{fontspec}
 %% \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
-\usepackage[a4paper,top=2cm,left=0.8cm,right=1cm,bottom=1.8cm]{geometry}
+\usepackage[b5paper,top=1.6cm,left=0.5cm,right=0.5cm,bottom=1.6cm]{geometry}
 \usepackage{graphicx}
 \usepackage{calc}
 \usepackage{amsmath}
@@ -19,6 +19,7 @@
 \usepackage{parskip}
 \usepackage{fancyvrb}
 \usepackage{xcolor}
+\usepackage{shorttoc}
 \definecolor{codebg}{HTML}{404040}
 \definecolor{codeborder}{HTML}{C0C0C0}
 \fvset{fontsize=\small}
@@ -56,6 +57,9 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 
+% Pandoc 3.x may wrap images with \pandocbounded{...}.
+\providecommand{\pandocbounded}[1]{#1}
+
 \definecolor{brandblue}{HTML}{0E5AAD}
 \definecolor{brandgray}{HTML}{6B7583}
 \definecolor{lightorange}{HTML}{FFA500}
@@ -63,7 +67,7 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\textcolor{brandgray}{MCProjSim API Reference}}
+\fancyhead[L]{\textcolor{brandgray}{MCProjSim User Guide}}
 \fancyhead[R]{\textcolor{brandgray}{\leftmark}}
 \fancyfoot[C]{\thepage}
 \setlength{\headheight}{14pt}
@@ -78,9 +82,9 @@
 \begin{titlepage}
   \centering
   \vspace*{2.0cm}
-  {\Huge\bfseries\color{lightorange}API Reference\par}
+  {\Huge\bfseries\color{lightorange}User Guide\par}
   \vspace{1.2cm}
-  {\Large \texttt{mcprojsim}, v0.15.0\par}
+  {\Large \texttt{mcprojsim}, v0.15.1\par}
   \vspace{1.2cm}
   {\Large Monte Carlo Project Simulation\par}
   \vfill
@@ -88,9 +92,15 @@
   {\large Generated on \today\par}
 \end{titlepage}
 
-\tableofcontents
-\clearpage
+% --- SHORT TOC ---
+% Command: \shorttoc{Title}{Depth}
+% Depth 0 = Chapters, 1 = Chapters + Sections, etc.
+\shorttoc{Chapters}{0} 
+\cleardoublepage
 
-%%__API_REF_CONTENT__%%
+\tableofcontents
+\cleardoublepage
+
+%%__USER_GUIDE_CONTENT__%%
 
 \end{document}

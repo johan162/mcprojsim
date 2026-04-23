@@ -1,5 +1,6 @@
 """Command-line interface for Monte Carlo Project Simulator."""
 
+import datetime
 from pathlib import Path
 import sys
 import time
@@ -41,6 +42,7 @@ from mcprojsim.simulation.distributions import fit_shifted_lognormal
 from mcprojsim.utils import Validator, setup_logging
 
 ALLOWED_OUTPUT_FORMATS = {"json", "csv", "html"}
+_MIN_TABLE_WIDTH = 70
 
 _CURRENCY_SYMBOLS = {
     "EUR": "€",
@@ -86,13 +88,48 @@ def _parse_output_formats(output_format: str) -> list[str]:
     return formats
 
 
+def _table_display_width(table_text: str) -> int:
+    """Return rendered table width as the longest visible line length."""
+    lines = table_text.splitlines()
+    if not lines:
+        return 0
+    return max(len(line) for line in lines)
+
+
+def _enforce_table_min_width(table_text: str, min_width: Optional[int]) -> str:
+    """Pad a rendered tabulate table to at least ``min_width`` characters."""
+    if min_width is None:
+        return table_text
+
+    current_width = _table_display_width(table_text)
+    if current_width >= min_width:
+        return table_text
+
+    delta = min_width - current_width
+    widened_lines: list[str] = []
+    for line in table_text.splitlines():
+        if not line:
+            widened_lines.append(line)
+            continue
+
+        if "│" in line:
+            first = line.find("│")
+            last = line.rfind("│")
+            if first != last:
+                widened_lines.append(line[:last] + (" " * delta) + line[last:])
+                continue
+
+        if line.endswith(("┐", "┤", "┘")):
+            widened_lines.append(line[:-1] + ("─" * delta) + line[-1])
+            continue
+
+        widened_lines.append(line + (" " * delta))
+
+    return "\n".join(widened_lines)
+
+
 def _get_user_default_config_path() -> Path:
     """Return the default user-level configuration file path."""
-    return Path.home() / ".mcprojsim" / "configuration.yaml"
-
-
-def _get_generated_default_config_path() -> Path:
-    """Return the output path for generated default configuration."""
     return Path.home() / ".mcprojsim" / "config.yaml"
 
 
@@ -203,12 +240,27 @@ def _echo_sprint_results(
     sprint_results: SprintPlanningResults,
     table: bool,
     minimal: bool,
+    min_table_width: Optional[int] = None,
 ) -> None:
     """Print sprint-planning results to the CLI."""
     import math
 
     if table:
         from tabulate import tabulate as _tabulate
+
+        def _echo_table(
+            rows: list[list[Any]],
+            headers: list[str],
+            *,
+            disable_numparse: bool = True,
+        ) -> None:
+            table_text = _tabulate(
+                rows,
+                headers=headers,
+                tablefmt="simple_outline",
+                disable_numparse=disable_numparse,
+            )
+            click.echo(_enforce_table_min_width(table_text, min_table_width))
 
         summary_rows = [
             ["Sprint Length", f"{sprint_results.sprint_length_weeks} weeks"],
@@ -286,31 +338,13 @@ def _echo_sprint_results(
         ]
 
         click.echo("\nSprint Planning Summary:")
-        click.echo(
-            _tabulate(
-                summary_rows,
-                headers=["Field", "Value"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(summary_rows, ["Field", "Value"])
         click.echo("\nSprint Count Statistical Summary:")
-        click.echo(
-            _tabulate(
-                stat_rows,
-                headers=["Metric", "Value"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(stat_rows, ["Metric", "Value"])
         click.echo("\nSprint Count Confidence Intervals:")
-        click.echo(
-            _tabulate(
-                percentile_rows,
-                headers=["Percentile", "Sprints", "Projected Delivery Date"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
+        _echo_table(
+            percentile_rows,
+            ["Percentile", "Sprints", "Projected Delivery Date"],
         )
 
         if not minimal:
@@ -331,13 +365,9 @@ def _echo_sprint_results(
                     for series_name, stats in sorted(series_statistics.items())
                 ]
                 click.echo("\nHistorical Sprint Series:")
-                click.echo(
-                    _tabulate(
-                        history_rows,
-                        headers=["Series", "Mean", "Median", "Std Dev", "Min", "Max"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
+                _echo_table(
+                    history_rows,
+                    ["Series", "Mean", "Median", "Std Dev", "Min", "Max"],
                 )
 
             ratio_summaries = sprint_results.historical_diagnostics.get(
@@ -358,21 +388,9 @@ def _echo_sprint_results(
                     for ratio_name, stats in sorted(ratio_summaries.items())
                 ]
                 click.echo("\nHistorical Ratio Summaries:")
-                click.echo(
-                    _tabulate(
-                        ratio_rows,
-                        headers=[
-                            "Ratio",
-                            "Mean",
-                            "Median",
-                            "Std Dev",
-                            "P50",
-                            "P80",
-                            "P90",
-                        ],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
+                _echo_table(
+                    ratio_rows,
+                    ["Ratio", "Mean", "Median", "Std Dev", "P50", "P80", "P90"],
                 )
 
             correlations = sprint_results.historical_diagnostics.get(
@@ -385,14 +403,7 @@ def _echo_sprint_results(
                     for pair_name, value in sorted(correlations.items())
                 ]
                 click.echo("\nHistorical Correlations:")
-                click.echo(
-                    _tabulate(
-                        correlation_rows,
-                        headers=["Series Pair", "Pearson Correlation"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
-                )
+                _echo_table(correlation_rows, ["Series Pair", "Pearson Correlation"])
 
             if sprint_results.burnup_percentiles:
                 burnup_rows = [
@@ -405,14 +416,7 @@ def _echo_sprint_results(
                     for point in sprint_results.burnup_percentiles
                 ]
                 click.echo("\nBurn-up Percentiles:")
-                click.echo(
-                    _tabulate(
-                        burnup_rows,
-                        headers=["Sprint", "P50", "P80", "P90"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
-                )
+                _echo_table(burnup_rows, ["Sprint", "P50", "P80", "P90"])
     else:
         click.echo("\nSprint Planning Summary:")
         click.echo(f"Sprint Length: {sprint_results.sprint_length_weeks} weeks")
@@ -732,10 +736,25 @@ def _output_cost_table(
     target_date: Optional[str],
     hours_per_day: float,
     fx_provider: "Any" = None,
+    min_table_width: Optional[int] = None,
 ) -> None:
     """Output cost analysis in table mode."""
     import numpy as np
     from tabulate import tabulate as _tabulate
+
+    def _echo_table(
+        rows: list[list[Any]],
+        headers: list[str],
+        *,
+        disable_numparse: bool = True,
+    ) -> None:
+        table_text = _tabulate(
+            rows,
+            headers=headers,
+            tablefmt="simple_outline",
+            disable_numparse=disable_numparse,
+        )
+        click.echo(_enforce_table_min_width(table_text, min_table_width))
 
     _costs = getattr(results, "costs", None)
     if _costs is None or not include_in_output:
@@ -763,25 +782,11 @@ def _output_cost_table(
         else "\nCost Statistical Summary:"
     )
     click.echo(header)
-    click.echo(
-        _tabulate(
-            cost_stat_rows,
-            headers=["Metric", "Value"],
-            tablefmt="simple_outline",
-            disable_numparse=True,
-        )
-    )
+    _echo_table(cost_stat_rows, ["Metric", "Value"])
     if _cost_pcts:
         ci_rows = [[f"P{p}", _fmt_cost(v, _sym)] for p, v in sorted(_cost_pcts.items())]
         click.echo("\nCost Confidence Intervals:")
-        click.echo(
-            _tabulate(
-                ci_rows,
-                headers=["Percentile", "Amount"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(ci_rows, ["Percentile", "Amount"])
     _cost_analysis_t = getattr(results, "cost_analysis", None)
     if _cost_analysis_t is not None and _cost_analysis_t.sensitivity:
         top_sens = sorted(
@@ -791,14 +796,7 @@ def _output_cost_table(
         )[:10]
         sens_rows = [[tid, f"{corr:+.4f}"] for tid, corr in top_sens]
         click.echo("\nCost Sensitivity Analysis:")
-        click.echo(
-            _tabulate(
-                sens_rows,
-                headers=["Task", "Correlation"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(sens_rows, ["Task", "Correlation"])
     if target_budget is not None:
         _prob = results.probability_within_budget(target_budget)
         _, _ci_lo, _ci_hi = results.budget_confidence_interval(target_budget)
@@ -815,14 +813,7 @@ def _output_cost_table(
             ["Budget for P90 confidence", _fmt_cost(_p90_budget, _sym)],
         ]
         click.echo(f"\nBudget Analysis (target: {_fmt_cost(target_budget, _sym)}):")
-        click.echo(
-            _tabulate(
-                budget_rows,
-                headers=["Metric", "Value"],
-                tablefmt="simple_outline",
-                disable_numparse=True,
-            )
-        )
+        _echo_table(budget_rows, ["Metric", "Value"])
         if target_date and results.start_date:
             try:
                 from datetime import date as _date_t, timedelta as _td
@@ -1151,6 +1142,32 @@ def _output_cost_text(
     help="Disable exchange rate fetches (offline / CI mode).",
 )
 @click.option(
+    "--progress",
+    "-p",
+    is_flag=True,
+    default=False,
+    help="Show a progress bar during simulation.",
+)
+@click.option(
+    "--simtime",
+    "-S",
+    is_flag=True,
+    default=False,
+    help="Show simulation elapsed time and peak memory after each run.",
+)
+@click.option(
+    "--minheader",
+    is_flag=True,
+    default=False,
+    help="Show a minimal two-line header (version + separator) instead of the full project block.",
+)
+@click.option(
+    "--noheader",
+    is_flag=True,
+    default=False,
+    help="Suppress the header block entirely; output starts directly with Project Overview.",
+)
+@click.option(
     "--workers",
     type=str,
     default="1",
@@ -1183,6 +1200,10 @@ def simulate(
     target_budget: Optional[float],
     full_cost_detail: bool,
     no_fx: bool,
+    progress: bool,
+    simtime: bool,
+    minheader: bool,
+    noheader: bool,
     workers: str,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
@@ -1207,8 +1228,15 @@ def simulate(
             param_hint="--workers",
         )
 
-    if quiet < 2:
-        click.echo(f"mcprojsim, version {__version__}")
+    _run_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if quiet < 2 and minimal:
+        click.echo(f"mcprojsim v{__version__}")
+        click.echo(f"Run: {_run_ts}")
+    elif quiet < 2 and minheader and not noheader:
+        _sep = "\u2500" * 50
+        click.echo(_sep)
+        click.echo(f"mcprojsim v{__version__}   Monte Carlo Simulator")
+        click.echo(_sep)
     logger = setup_logging(level="INFO" if verbose else "WARNING")
 
     try:
@@ -1267,6 +1295,14 @@ def simulate(
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
+        if quiet < 2 and not minimal and not minheader and not noheader:
+            _sep = "─" * 50
+            click.echo(_sep)
+            click.echo(f" mcprojsim v{__version__}   Monte Carlo Simulator")
+            click.echo(f" Project : {project.project.name}")
+            click.echo(f" Run     : {_run_ts}")
+            click.echo(_sep)
+
         if (
             tshirt_category is None
             and loaded_config_path is None
@@ -1321,7 +1357,7 @@ def simulate(
             iterations=iterations,
             random_seed=seed,
             config=cfg,
-            show_progress=quiet == 0,
+            show_progress=progress,
             two_pass=two_pass,
             pass1_iterations=pass1_iterations,
             workers=effective_workers,
@@ -1345,7 +1381,7 @@ def simulate(
             ) = _run_sprint_simulation_with_metrics(sprint_engine, project)
         critical_path_limit = critical_paths or cfg.output.critical_path_report_limit
 
-        if quiet < 2 and not minimal:
+        if simtime and quiet < 2 and not minimal:
             click.echo(f"Simulation time: {elapsed_seconds:.2f} seconds")
             click.echo(
                 "Peak simulation memory: " f"{_format_memory_size(peak_memory_bytes)}"
@@ -1424,7 +1460,7 @@ def simulate(
                     "mean_person_days": math.ceil(effort_mean_fallback / hours_per_day),
                 }
 
-            click.echo("\n=== Simulation Results ===")
+            # click.echo("\n=== Simulation Results ===")
 
             project_uncertainty_factors = project.project.uncertainty_factors
             if project_uncertainty_factors is not None:
@@ -1446,6 +1482,7 @@ def simulate(
 
             # Build FX provider once — used for both console output and exporters
             _fx_provider = _build_fx_provider(results, project, no_fx)
+            table_min_width: Optional[int] = None
 
             if table:
                 start_date_str = (
@@ -1466,18 +1503,24 @@ def simulate(
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
                     ["Schedule Mode", schedule_mode],
                 ]
-                click.echo("\nProject Overview:")
+                click.echo("" if noheader else "\n", nl=False)
+                click.echo("Project Overview:")
+                project_overview_table = _tabulate(
+                    common_rows,
+                    headers=["Field", "Value"],
+                    tablefmt="simple_outline",
+                    disable_numparse=True,
+                )
+                table_min_width = max(
+                    _MIN_TABLE_WIDTH,
+                    _table_display_width(project_overview_table),
+                )
                 click.echo(
-                    _tabulate(
-                        common_rows,
-                        headers=["Field", "Value"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
-                    )
+                    _enforce_table_min_width(project_overview_table, table_min_width)
                 )
 
                 # Default Uncertainty Factors table
-                if not minimal:
+                if not minimal and verbose:
                     uncertainty_rows = []
                     for (
                         factor_name,
@@ -1492,11 +1535,14 @@ def simulate(
                         )
                     click.echo("\nDefault Uncertainty Factors:")
                     click.echo(
-                        _tabulate(
-                            uncertainty_rows,
-                            headers=["Factor", "Default Level (Multiplier)"],
-                            tablefmt="simple_outline",
-                            disable_numparse=True,
+                        _enforce_table_min_width(
+                            _tabulate(
+                                uncertainty_rows,
+                                headers=["Factor", "Default Level (Multiplier)"],
+                                tablefmt="simple_outline",
+                                disable_numparse=True,
+                            ),
+                            table_min_width,
                         )
                     )
 
@@ -1534,20 +1580,26 @@ def simulate(
                     ]
                 click.echo("\nCalendar Time Statistical Summary:")
                 click.echo(
-                    _tabulate(
-                        calendar_summary_rows,
-                        headers=["Metric", "Value"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
+                    _enforce_table_min_width(
+                        _tabulate(
+                            calendar_summary_rows,
+                            headers=["Metric", "Value"],
+                            tablefmt="simple_outline",
+                            disable_numparse=True,
+                        ),
+                        table_min_width,
                     )
                 )
                 click.echo("\nProject Effort Statistical Summary:")
                 click.echo(
-                    _tabulate(
-                        effort_summary_rows,
-                        headers=["Metric", "Value"],
-                        tablefmt="simple_outline",
-                        disable_numparse=True,
+                    _enforce_table_min_width(
+                        _tabulate(
+                            effort_summary_rows,
+                            headers=["Metric", "Value"],
+                            tablefmt="simple_outline",
+                            disable_numparse=True,
+                        ),
+                        table_min_width,
                     )
                 )
             else:
@@ -1556,7 +1608,8 @@ def simulate(
                     if project.project.start_date
                     else "Not specified"
                 )
-                click.echo("\nProject Overview:")
+                click.echo("" if noheader else "\n", nl=False)
+                click.echo("Project Overview:")
                 click.echo(f"  Project: {results.project_name}")
                 click.echo(f"  Start Date: {start_date_str}")
                 click.echo(f"  Number of Tasks: {len(project.tasks)}")
@@ -1571,7 +1624,7 @@ def simulate(
                 click.echo(f"  Max Parallel Tasks: {results.max_parallel_tasks}")
                 click.echo(f"  Schedule Mode: {schedule_mode}")
 
-                if not minimal:
+                if not minimal and verbose:
                     click.echo("\nDefault Uncertainty Factors:")
                     for (
                         factor_name,
@@ -1622,10 +1675,13 @@ def simulate(
                     ci_rows.append([f"P{p}", f"{hours:.2f}", wd, date_str])
                 click.echo("\nCalendar Time Confidence Intervals:")
                 click.echo(
-                    _tabulate(
-                        ci_rows,
-                        headers=["Percentile", "Hours", "Working Days", "Date"],
-                        tablefmt="simple_outline",
+                    _enforce_table_min_width(
+                        _tabulate(
+                            ci_rows,
+                            headers=["Percentile", "Hours", "Working Days", "Date"],
+                            tablefmt="simple_outline",
+                        ),
+                        table_min_width,
                     )
                 )
 
@@ -1639,10 +1695,17 @@ def simulate(
                             effort_rows.append([f"P{p}", f"{eh:.2f}", epd])
                         click.echo("\nEffort Confidence Intervals:")
                         click.echo(
-                            _tabulate(
-                                effort_rows,
-                                headers=["Percentile", "Person-Hours", "Person-Days"],
-                                tablefmt="simple_outline",
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    effort_rows,
+                                    headers=[
+                                        "Percentile",
+                                        "Person-Hours",
+                                        "Person-Days",
+                                    ],
+                                    tablefmt="simple_outline",
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1654,8 +1717,9 @@ def simulate(
                         target_date,
                         hours_per_day,
                         _fx_provider,
+                        table_min_width,
                     )
-                    if results.sensitivity:
+                    if results.sensitivity and verbose:
                         sorted_sens = sorted(
                             results.sensitivity.items(),
                             key=lambda x: abs(x[1]),
@@ -1666,11 +1730,14 @@ def simulate(
                         ]
                         click.echo("\nSensitivity Analysis (top contributors):")
                         click.echo(
-                            _tabulate(
-                                sens_rows,
-                                headers=["Task", "Correlation"],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    sens_rows,
+                                    headers=["Task", "Correlation"],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1688,11 +1755,14 @@ def simulate(
                             slack_rows.append([task_id, f"{slack_val:.2f}", status])
                         click.echo("\nSchedule Slack:")
                         click.echo(
-                            _tabulate(
-                                slack_rows,
-                                headers=["Task", "Slack (hours)", "Status"],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    slack_rows,
+                                    headers=["Task", "Slack (hours)", "Status"],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1715,15 +1785,18 @@ def simulate(
                                 )
                         click.echo("\nRisk Impact Analysis:")
                         click.echo(
-                            _tabulate(
-                                risk_rows,
-                                headers=[
-                                    "Task",
-                                    "Mean (hours)",
-                                    "Trigger Rate",
-                                    "Mean When Triggered (hours)",
-                                ],
-                                tablefmt="simple_outline",
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    risk_rows,
+                                    headers=[
+                                        "Task",
+                                        "Mean (hours)",
+                                        "Trigger Rate",
+                                        "Mean When Triggered (hours)",
+                                    ],
+                                    tablefmt="simple_outline",
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1744,11 +1817,14 @@ def simulate(
                         ]
                         click.echo("\nConstrained Schedule Diagnostics:")
                         click.echo(
-                            _tabulate(
-                                diagnostics_rows,
-                                headers=["Metric", "Value"],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    diagnostics_rows,
+                                    headers=["Metric", "Value"],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                ),
+                                table_min_width,
                             )
                         )
 
@@ -1777,16 +1853,19 @@ def simulate(
                         ]
                         click.echo("\nTwo-Pass Scheduling Traceability:")
                         click.echo(
-                            _tabulate(
-                                tp_rows,
-                                headers=[
-                                    "Metric",
-                                    f"Pass-1 iter: {tp.pass1_iterations}",
-                                    f"Pass-2 iter: {tp.pass2_iterations}",
-                                    "Delta",
-                                ],
-                                tablefmt="simple_outline",
-                                disable_numparse=True,
+                            _enforce_table_min_width(
+                                _tabulate(
+                                    tp_rows,
+                                    headers=[
+                                        "Metric",
+                                        f"Pass-1 iter: {tp.pass1_iterations}",
+                                        f"Pass-2 iter: {tp.pass2_iterations}",
+                                        "Delta",
+                                    ],
+                                    tablefmt="simple_outline",
+                                    disable_numparse=True,
+                                ),
+                                table_min_width,
                             )
                         )
                         click.echo(
@@ -1827,7 +1906,7 @@ def simulate(
                     )
 
                     # Sensitivity analysis
-                    if results.sensitivity:
+                    if results.sensitivity and verbose:
                         click.echo("\nSensitivity Analysis (top contributors):")
                         sorted_sens = sorted(
                             results.sensitivity.items(),
@@ -1950,7 +2029,12 @@ def simulate(
                         )
 
             if sprint_results is not None:
-                _echo_sprint_results(sprint_results, table=table, minimal=minimal)
+                _echo_sprint_results(
+                    sprint_results,
+                    table=table,
+                    minimal=minimal,
+                    min_table_width=table_min_width,
+                )
 
             # --- Staffing advisory (always shown) and full table (--staffing) ---
             if not minimal:
@@ -2025,17 +2109,20 @@ def simulate(
                                     ]
                                 )
                             click.echo(
-                                _tabulate(
-                                    st_rows,
-                                    headers=[
-                                        "Team Size",
-                                        "Eff. Capacity",
-                                        "Working Days",
-                                        "Delivery Date",
-                                        "Efficiency",
-                                    ],
-                                    tablefmt="simple_outline",
-                                    disable_numparse=True,
+                                _enforce_table_min_width(
+                                    _tabulate(
+                                        st_rows,
+                                        headers=[
+                                            "Team Size",
+                                            "Eff. Capacity",
+                                            "Working Days",
+                                            "Delivery Date",
+                                            "Efficiency",
+                                        ],
+                                        tablefmt="simple_outline",
+                                        disable_numparse=True,
+                                    ),
+                                    table_min_width,
                                 )
                             )
                         else:
@@ -2159,12 +2246,6 @@ def simulate(
                         )
                     if quiet == 0 and not minimal:
                         click.echo(f"\nResults exported to {output_file}")
-        else:
-            if quiet == 0 and not minimal:
-                click.echo(
-                    "\n\nNo export formats specified. Use -f to export results to files."
-                )
-
     except Exception as e:
         logger.error(f"Error during simulation: {e}")
         click.echo(f"Error: {e}", err=True)
@@ -2198,16 +2279,31 @@ def validate(project_file: str, verbose: bool) -> None:
 
 
 @cli.command(name="config")
-@click.option("--config-file", "-c", type=click.Path(exists=True), help="Config file")
+@click.option(
+    "--config",
+    "--config-file",
+    "-c",
+    "config_file",
+    type=click.Path(exists=True),
+    help="Config file",
+)
 @click.option(
     "--generate",
     is_flag=True,
     help="Generate a default configuration file at ~/.mcprojsim/config.yaml.",
 )
-def config(config_file: Optional[str], generate: bool) -> None:
+@click.option(
+    "--list",
+    "--show",
+    "show_config",
+    is_flag=True,
+    default=False,
+    help="List current configuration settings (alias: --show).",
+)
+def config(config_file: Optional[str], generate: bool, show_config: bool) -> None:
     """Show current configuration and optionally generate a default config file."""
     if generate:
-        generated_config_path = _get_generated_default_config_path()
+        generated_config_path = _get_user_default_config_path()
         generated_config_path.parent.mkdir(parents=True, exist_ok=True)
 
         default_cfg = Config.get_default()
@@ -2219,6 +2315,11 @@ def config(config_file: Optional[str], generate: bool) -> None:
             encoding="utf-8",
         )
         click.echo(f"Generated default configuration: {generated_config_path}")
+
+    # Show settings when --list/--show is passed, or when invoked with no action
+    # flags (backward-compatible default: bare `mcprojsim config` still lists).
+    if not (show_config or not generate):
+        return
 
     cfg, loaded_config_path = _load_config_with_user_default(config_file)
     if loaded_config_path is not None:

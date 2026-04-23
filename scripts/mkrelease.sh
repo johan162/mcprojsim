@@ -367,21 +367,21 @@ else
     }
 
     echo "  ✓ Checking if these files exist:"
-    echo "./dist/${PROGRAMNAME}_user_guide-${VERSION}.pdf"
-    echo "./dist/${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_user_guide-a4-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_user_guide-dark-a4-${VERSION}.pdf"
     echo "./dist/${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf"
     echo "./dist/${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf"
-    echo "./dist/${PROGRAMNAME}_api_ref-${VERSION}.pdf"
-    echo "./dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_api_ref-a4-${VERSION}.pdf"
+    echo "./dist/${PROGRAMNAME}_api_ref-dark-a4-${VERSION}.pdf"
     echo "./dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf"
     echo "./dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf"
 
-    if [[ ! -f "./dist/${PROGRAMNAME}_user_guide-${VERSION}.pdf" \
-          || ! -f "./dist/${PROGRAMNAME}_user_guide-dark-${VERSION}.pdf" \
+    if [[ ! -f "./dist/${PROGRAMNAME}_user_guide-a4-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_user_guide-dark-a4-${VERSION}.pdf" \
           || ! -f "./dist/${PROGRAMNAME}_user_guide-b5-${VERSION}.pdf" \
           || ! -f "./dist/${PROGRAMNAME}_user_guide-dark-b5-${VERSION}.pdf" \
-          || ! -f "./dist/${PROGRAMNAME}_api_ref-${VERSION}.pdf" \
-          || ! -f "./dist/${PROGRAMNAME}_api_ref-dark-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_api_ref-a4-${VERSION}.pdf" \
+          || ! -f "./dist/${PROGRAMNAME}_api_ref-dark-a4-${VERSION}.pdf" \
           || ! -f "./dist/${PROGRAMNAME}_api_ref-b5-${VERSION}.pdf" \
           || ! -f "./dist/${PROGRAMNAME}_api_ref-dark-b5-${VERSION}.pdf" ]]; then
         print_error_colored "Expected PDF not found at ./dist directory"
@@ -403,7 +403,7 @@ print_step_colored "🎯 PHASE 4: RELEASE EXECUTION"
 print_step_colored ""
 
 # 4.1: Commit version updates
-run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md docs/user_guide/report_template*.tex docs/api_reference/api_ref_template*.tex docs/examples.md" "Staging release files..."
+run_command "git add pyproject.toml poetry.lock CHANGELOG.md README.md docs/user_guide/userguide_template*.tex docs/api_reference/api_ref_template*.tex docs/examples.md" "Staging release files..."
 run_command "git commit -m \"chore(release): prepare $VERSION
 
 - Update version to $VERSION

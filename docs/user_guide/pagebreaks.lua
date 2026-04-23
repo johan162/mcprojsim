@@ -4,11 +4,14 @@
 -- Usage:
 --   pandoc --lua-filter pagebreaks.lua --metadata paper_format=b5 ...
 --
--- Between-block page breaks (fenced divs in markdown):
---   ::: pagebreak            fires for every format
---   ::: pagebreak-a4         fires for A4 builds only
---   ::: pagebreak-b5         fires for B5 builds only
---   :::
+-- Between-block page breaks (HTML comments in markdown):
+--   <!-- pagebreak:any -->   fires for every format
+--   <!-- pagebreak:a4 -->    fires for A4 builds only
+--   <!-- pagebreak:b5 -->    fires for B5 builds only
+--
+-- Legacy fenced-div markers are still supported by the filter for PDF builds,
+-- but should not be used in MkDocs-rendered pages because they collide with
+-- mkdocstrings collection syntax.
 --
 -- Inside code-block breaks:
 --   !!! yaml-cbreak-a4       fires for A4 builds only
@@ -28,8 +31,36 @@ local function newpage()
   return pandoc.RawBlock("latex", "\\newpage")
 end
 
+local PAGEBREAK_COMMENT_ANY = "^%s*<!%-%-%s*pagebreak%s*%-%->%s*$"
+local PAGEBREAK_COMMENT_FMT = "^%s*<!%-%-%s*pagebreak:([%w_]+)%s*%-%->%s*$"
+
+local function is_active_marker(marker_format, paper_format)
+  return marker_format == nil
+      or marker_format == ""
+      or marker_format == "any"
+      or marker_format == paper_format
+end
+
+local function comment_marker_format(raw)
+  if raw:match(PAGEBREAK_COMMENT_ANY) then
+    return "any"
+  end
+  return raw:match(PAGEBREAK_COMMENT_FMT)
+end
+
+local function emit_comment_pagebreak(raw, paper_format)
+  local marker_format = comment_marker_format(raw)
+  if not marker_format then
+    return nil
+  end
+  if FORMAT == "latex" and is_active_marker(marker_format, paper_format) then
+    return newpage()
+  end
+  return {}
+end
+
 -- ──────────────────────────────────────────────────────────────────────────────
--- Between-block page breaks via fenced divs
+-- Between-block page breaks via fenced divs (legacy support)
 --
 -- Required syntax — the closing ::: is mandatory:
 --   ::: pagebreak
@@ -65,6 +96,39 @@ local function make_div_filter(paper_format)
         return emit(false)
       end
     end
+  end
+end
+
+-- ──────────────────────────────────────────────────────────────────────────────
+-- Between-block page breaks via HTML comments
+--
+-- Preferred syntax for source shared between MkDocs HTML and Pandoc PDF builds:
+--   <!-- pagebreak:any -->
+--   <!-- pagebreak:a4 -->
+--   <!-- pagebreak:b5 -->
+--
+-- MkDocs ignores these comments, while Pandoc exposes them as raw HTML blocks
+-- or raw HTML inlines that we can translate to \newpage for LaTeX output.
+-- ──────────────────────────────────────────────────────────────────────────────
+local function make_rawblock_filter(paper_format)
+  return function(el)
+    if el.format ~= "html" then
+      return nil
+    end
+    return emit_comment_pagebreak(el.text, paper_format)
+  end
+end
+
+local function make_paragraph_filter(paper_format)
+  return function(el)
+    if #el.content ~= 1 then
+      return nil
+    end
+    local child = el.content[1]
+    if child.t ~= "RawInline" or child.format ~= "html" then
+      return nil
+    end
+    return emit_comment_pagebreak(child.text, paper_format)
   end
 end
 
@@ -144,6 +208,8 @@ function Pandoc(doc)
   end
 
   return doc:walk({
+    RawBlock  = make_rawblock_filter(paper_format),
+    Para      = make_paragraph_filter(paper_format),
     Div       = make_div_filter(paper_format),
     CodeBlock = make_codeblock_filter(paper_format),
   })

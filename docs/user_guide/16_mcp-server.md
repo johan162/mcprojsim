@@ -383,7 +383,7 @@ The assistant will call `validate_project_description` and report any warnings (
 
 ## Natural language input format
 
-The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes. It also accepts plain numbered lists, bullet lists, and inline properties — see [Natural Language Input](nl_processing.md) for the comprehensive reference.
+The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes. It also accepts plain numbered lists, bullet lists, and inline properties — see [Natural Language Input](15_nl_processing.md) for the comprehensive reference.
 
 The parser also supports sprint-planning phrasing, including sprint history and future sprint capacity override sections.
 
@@ -786,7 +786,7 @@ Start date: 2026-07-01
 [4] Build transformation engine [XL] depends on Task 3
 ```
 
-See [Natural Language Input](nl_processing.md) for the full range of supported list formats and inline properties.
+See [Natural Language Input](15_nl_processing.md) for the full range of supported list formats and inline properties.
 
 
 
@@ -798,7 +798,7 @@ You do not need an MCP client or an AI service to use the natural language parse
 mcprojsim generate description.txt -o my_project.yaml
 ```
 
-See [Running Simulations — `mcprojsim generate`](running_simulations.md#mcprojsim-generate) for the full command reference and all options.
+See [Running Simulations — `mcprojsim generate`](12_running_simulations.md#mcprojsim-generate) for the full command reference and all options.
 
 ## Using the MCP tools directly from Python
 
@@ -916,7 +916,7 @@ Then run the simulation with:
 mcprojsim simulate my_project.yaml --config config.yaml
 ```
 
-See [Configuration](configuration.md) for full details on customizing the mappings.
+See [Configuration](14_configuration.md) for full details on customizing the mappings.
 
 ### Generating files for quick "what-if" scenarios
 
@@ -942,10 +942,10 @@ echo '<paste YAML here>' > project.yaml && mcprojsim simulate project.yaml
 
 The natural language parser is a pattern-based parser, not a full natural language understanding system. Keep these points in mind:
 
-- **Task-level risks** and **uncertainty factors** cannot be specified in the natural language input. Add them to the YAML file after generation.
+- **Uncertainty factors** are not extracted from natural language input. Add them to the YAML file after generation.
 - **Resource definitions** and **calendar constraints** are supported, but only through recognized semi-structured patterns (not arbitrary prose).
 - **Project-level risks** are not extracted from the description. Add them manually.
-- The parser expects either **numbered task headers** (`Task 1:`, `Task 2:`) or **auto-detected lists** (plain numbered, bullet, or bracket lists). The two modes cannot be mixed in the same description. See [Natural Language Input](nl_processing.md) for details.
+- The parser expects either **numbered task headers** (`Task 1:`, `Task 2:`) or **auto-detected lists** (plain numbered, bullet, or bracket lists). The two modes cannot be mixed in the same description. See [Natural Language Input](15_nl_processing.md) for details.
 - **Circular dependencies** are not detected by the parser — they will be caught when you load the file with `mcprojsim validate`.
 - Advanced structures such as full volatility-overlay and spillover calibration blocks are still best edited directly in YAML after generation.
 

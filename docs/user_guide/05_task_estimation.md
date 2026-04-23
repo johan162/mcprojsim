@@ -18,7 +18,7 @@ In each Monte Carlo iteration, the simulator processes every task as follows:
 
 The result is the task's effective duration for that iteration. Over thousands of iterations, the sampled values form a distribution that captures the inherent uncertainty in the estimate.
 
-This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in [Uncertainty Factors](uncertainty_factors.md) and [Risks](risks.md).
+This chapter focuses on steps 1 through 3. Uncertainty factors and risks are covered in [Uncertainty Factors](04_uncertainty_factors.md) and [Risks](06_risks.md).
 
 
 
@@ -34,20 +34,6 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 | **Story points** | `story_points` (e.g., `5`) | Looked up in config → `low`, `expected`, `high` | Teams using story point estimation practices |
 
 All four methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
-
-### Accepted field aliases
-
-For explicit ranges, the estimate model accepts these equivalent field names:
-
-| Canonical field | Accepted alias |
-|----------------|----------------|
-| `low` | `min` |
-| `expected` | `most_likely` |
-| `high` | `max` |
-
-You can use either form in YAML or TOML. They are interpreted identically.
-
-
 
 ## Explicit range estimates
 
@@ -102,8 +88,6 @@ estimate:
 ```
 
 Here, the best-case savings is 2 days (5 minus 3), but the worst-case overrun is 10 days (15 minus 5). This kind of asymmetry is realistic and the triangular distribution handles it naturally.
-
-
 
 ## Near-deterministic estimates
 
@@ -276,7 +260,7 @@ $$\mu = \ln(\text{expected} - \text{low}) + \sigma^2$$
 **When not to use it:**
 
 - When you have clear, defensible bounds on the task duration — in that case, a triangular distribution is more appropriate
-- When stakeholders need guarantees that the sampled value will not exceed a certain threshold — the log-normal can produce extreme outliers
+- When stakeholders need guarantees that the sampled value will not exceed a certain threshold - the log-normal can produce extreme outliers
 - When the team is not comfortable with unbounded estimates
 
 **Specification:**
@@ -325,6 +309,9 @@ tasks:
 
 Here, the most likely duration is 10 days, but the long right tail means that in some iterations the sampled value could be 20 or 30 days — reflecting the genuine uncertainty in exploratory work.
 
+
+<!-- pagebreak:b5 -->
+
 ### Comparing the two distributions
 
 | Aspect | Triangular | Log-normal |
@@ -351,20 +338,123 @@ $$\ln(X) = \ln(X_0) + \ln(F_1) + \ln(F_2) + ... + \ln(F_n)$$
 
 If we assume the $\ln(F_i)$ are independent and identically distributed, then by the Central Limit Theorem, $\ln(X)$ will tend to be normally distributed, which means that $X$ is log-normally distributed.
 
-\newpage
+<!-- pagebreak:b5 -->
 
+### Determining log-normal parameters
+
+An example will clarify this.
+
+Assume we want to make a log normal distribution from the three point
+estimate
+
+| low | expected | high |
+|---|---|---|
+| 5 | 9 | 16 |
+
+
+To use a log-normal distribution based on a three-point estimate we need a way to fit those three point to the log-normal distribution. 
+
+Since log-normal doesn't have a natural "minimum," the standard approach is to shift the distribution by your minimum, then fit μ and σ to the remaining two constraints.
+
+For the high estimate we also need to define which confidence level of the log-normal distribution it should correspond to. A common value is to use the 90%- or 95%- percentile. To make this relative to the distribution we use the $z$-value, i.e. the fraction number of standard deviation from the mean value.
+
+| Confidence level | z-score |
+|---|---|
+| 80th percentile | 0.842 |
+| 85th percentile | 1.036 |
+| 90th percentile | 1.282 |
+| 95th percentile | 1.645 |
+| 97.5th percentile | 1.960 |
+| 99th percentile | 2.326 |
+
+Great practical question. Since log-normal doesn't have a natural "minimum," the standard approach is to **shift the distribution** by your minimum, then fit μ and σ to the remaining two constraints.
+
+#### Derivation
+
+Define the shifted variable:
+
+$Y = X − 5$ (where $X$ is actual duration, $Y$ is the excess above minimum)
+
+$Y$ follows a standard log-normal, so $\texttt{ln}(Y) \sim \texttt{Normal}(\mu, \sigma^2)$
+
+The constraints become:
+- Mode of $X = 9 \implies$ mode of $Y = 4 \;\implies\; e^{(\mu − \sigma^2)} = 4$
+- 95th percentile of $X = 16 \;\implies\;$ 95th percentile of $Y = 11 \;\implies\; e^{(\mu + 1.645\sigma)} = 11$
+
+
+#### Solving
+
+From the two equations:
+
+$$
+\mu - \sigma^2 = \texttt{ln}(4) \approx 1.386 \;\;\;\;\;\;\;\;(1)
+$$
+
+$$
+\mu + 1.645\sigma = \texttt{ln}(11) \approx 2.398 \;\;\;\;\;\;\;\;(2)
+$$
+
+Subtract (1) from (2):
+
+$$
+\sigma^2  + 1.645\sigma - 1.012 = 0
+$$
+Solving the quadratic gives
+
+$$
+\sigma \approx 0.472
+$$
+
+Then from equation (1):
+
+$$
+\mu = \texttt{ln}(4) + \sigma^2 \approx 1.386 + 0.223 \approx 1.609
+$$
+
+
+#### Resulting Parameters
+
+| Parameter | Value |
+|---|---|
+| Shift (minimum) | 5 days |
+| $\mu$ (log-mean of Y) | **1.609** |
+| $\sigma$ (log-std of Y) | **0.472** |
+
+
+#### Sanity Check
+
+With these parameters, the distribution of X gives:
+
+| Statistic | Value |
+|---|---|
+| Minimum (hard floor) | 5 days |
+| Mode | $\sim 9$ days  |
+| Median | $5 + e^\mu = 5 + 5.0 \approx 10\, \texttt{days}$ |
+| Mean | $5 + e^{(\mu + \sigma^2/2)} ≈ 5 + 5.6 \approx 10.6\, \texttt{days}$ |
+| 95th percentile | $\sim 16$ days  |
+
+The median and mean both sitting above the mode is the classic log-normal skew in action — reinforcing that even with a "9 day" estimate, you should plan for closer to **10.5–11 days** on average.
+
+![Log-normal task duration (5,9,16)](../assets/lognormal01.jpg){ width=80% }
+  
+ 
+***Figure:*** *Log-normal task duration (5,9,16)*
 
 ## T-shirt size estimates
 
 T-shirt sizing is a relative estimation technique where tasks are classified into sizes such as `XS`, `S`, `M`, `L`, `XL`, and `XXL`, scoped by named categories (`bug`, `story`, `epic`, `business`, `initiative`). This is useful when teams need different calibration levels across planning horizons.
 
-In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) inside a category in the configuration file. During simulation, a bare value like `M` resolves through `t_shirt_size_default_category` (default: `epic`), while a qualified value like `epic.M` resolves directly.
+In `mcprojsim`, each T-shirt size is mapped to a numeric range (`low`, `expected`, `high`) inside a category in the configuration file. During simulation, a bare value like `M` resolves through `t_shirt_size_default_category` (default: `story`), while a qualified value like `epic.M` resolves directly.
 
 ### Default T-shirt size mappings
 
 The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_unit` in the configuration file).
 
-The built-in default category is `epic`, so a bare value like `M` resolves as `epic.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
+The built-in default category is `story`, so a bare value like `M` resolves as `story.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
+
+<!-- pagebreak:b5 -->
+
+***Table: Bug - category***
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
 |---|---|---:|---:|---:|
@@ -374,30 +464,55 @@ The built-in default category is `epic`, so a bare value like `M` resolves as `e
 | `bug` | `L` | 8 | 20 | 60 |
 | `bug` | `XL` | 20 | 40 | 100 |
 | `bug` | `XXL` | 40 | 80 | 200 |
+
+***Table: Story - category***
+
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
 | `story` | `XS` | 3 | 5 | 15 |
 | `story` | `S` | 5 | 16 | 40 |
 | `story` | `M` | 40 | 60 | 120 |
 | `story` | `L` | 160 | 240 | 500 |
 | `story` | `XL` | 320 | 400 | 750 |
 | `story` | `XXL` | 400 | 500 | 1200 |
+
+
+***Table: Epic - category***
+
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
 | `epic` | `XS` | 20 | 40 | 60 |
 | `epic` | `S` | 60 | 120 | 170 |
 | `epic` | `M` | 120 | 240 | 400 |
 | `epic` | `L` | 290 | 480 | 700 |
 | `epic` | `XL` | 600 | 1000 | 1500 |
 | `epic` | `XXL` | 1200 | 2000 | 3200 |
+
+<!-- pagebreak:b5 -->
+
+***Table: Business/Program - category***
+
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
 | `business` | `XS` | 400 | 800 | 2000 |
 | `business` | `S` | 800 | 2000 | 5000 |
 | `business` | `M` | 2000 | 4000 | 10000 |
 | `business` | `L` | 4000 | 8000 | 20000 |
 | `business` | `XL` | 8000 | 16000 | 40000 |
 | `business` | `XXL` | 16000 | 32000 | 80000 |
+
+***Table: Initiative - category***
+
+| Category | Size | low (hours) | expected (hours) | high (hours) |
+|---|---|---:|---:|---:|
 | `initiative` | `XS` | 2000 | 4000 | 10000 |
 | `initiative` | `S` | 4000 | 10000 | 25000 |
 | `initiative` | `M` | 10000 | 20000 | 50000 |
 | `initiative` | `L` | 20000 | 40000 | 100000 |
 | `initiative` | `XL` | 40000 | 80000 | 200000 |
 | `initiative` | `XXL` | 80000 | 160000 | 400000 |
+
+
 
 These category-specific defaults let you keep the same symbolic size scale while tuning absolute magnitude for different planning scopes.
 
@@ -471,6 +586,8 @@ tasks:
       team_experience: "high"
       requirements_maturity: "high"
 
+!!! yaml-cbreak-b5 
+
   - id: "task_002"
     name: "Build page"
     estimate:
@@ -488,8 +605,6 @@ tasks:
 ```
 
 Note that no `unit` field appears on any task — the unit is taken from the configuration.
-
-\newpage
 
 ### Customizing T-shirt sizes in the configuration file
 
@@ -633,9 +748,6 @@ tasks:
     uncertainty_factors:
       team_experience: "medium"
       technical_complexity: "medium"
-```
-
-```yaml
   - id: "task_003"
     name: "Deploy page"
     estimate:
@@ -668,16 +780,12 @@ story_points:
 
 You only need to include the story point values you want to override. Any values not specified in your configuration will use the built-in defaults. Note that you can only use values from the allowed set (1, 2, 3, 5, 8, 13, 21) — the allowed values are defined in the code, not in configuration.
 
-\newpage
-
 ### Choosing the unit for story points
 
 The numeric ranges in the story point mappings are interpreted in the unit specified by `story_point_unit` in the configuration file. The default is `"days"`:
 
 ```yaml
-# config.yaml — story points in days (the default)
 story_point_unit: "days"
-
 story_points:
   1:
     low: 0.5
@@ -692,9 +800,7 @@ story_points:
 If your team calibrates story points directly in hours, set `story_point_unit` to `"hours"`:
 
 ```yaml
-# config.yaml — story points in hours
 story_point_unit: "hours"
-
 story_points:
   1:
     low: 1
@@ -709,8 +815,6 @@ story_points:
 As with T-shirt sizes, the unit setting applies to **all** story point mappings in the configuration. The project file never specifies a unit for story point estimates — the unit is always determined by `story_point_unit`.
 
 > **Note:** The `t_shirt_size_unit` and `story_point_unit` settings are independent. It is perfectly valid to have T-shirt sizes in hours and story points in days (the defaults), or any other combination.
-
-
 
 ## Mixing estimation methods
 
@@ -733,7 +837,6 @@ tasks:
     estimate:
       t_shirt_size: "L"
     dependencies: ["research"]
-
   - id: "implementation"
     name: "Core implementation"
     estimate:
@@ -742,7 +845,6 @@ tasks:
       high: 25
       unit: "days"
     dependencies: ["design"]
-
   - id: "testing"
     name: "Integration testing"
     estimate:
@@ -773,6 +875,7 @@ The `unit` field accepts exactly three values:
 | `"weeks"` | Working weeks        | Multiplied by `hours_per_day × 5` (default 40)   |
 
 Any other value is a validation error.
+
 
 ### Defaults by estimate type
 
@@ -815,7 +918,6 @@ tasks:
       expected: 4
       high: 8
       unit: "hours"    # Small task estimated in hours
-
   - id: "major_feature"
     estimate:
       low: 2
@@ -861,7 +963,6 @@ The resolved values are then converted to hours using the same conversion logic.
 | No `unit` on symbolic estimates | T-shirt / story point | Yes — unit comes from config |
 | `t_shirt_size` token shape must be `<size>` or `<category>.<size>` | T-shirt size | Yes — invalid token formats fail validation |
 | `t_shirt_size` category and size must exist in active config | T-shirt size | Yes — unknown category/size fails resolution |
-
 
 
 ## Summary

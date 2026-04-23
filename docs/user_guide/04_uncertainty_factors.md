@@ -59,6 +59,8 @@ Reflects whether the team is colocated or distributed.
 
 Distributed teams face communication delays, timezone differences, and coordination overhead. This factor accounts for that systematic slowdown.
 
+<!-- pagebreak:b5 -->
+
 ### Integration Complexity
 
 Measures how much integration work is involved with other systems.
@@ -173,8 +175,6 @@ tasks:
 
 Here, `requirements_maturity`, `team_distribution`, and `integration_complexity` all take their default values.
 
-\newpage
-
 ## Configuring Uncertainty Factor Multipliers
 
 The numeric multipliers for each factor and level are defined in the configuration file (`config.yaml`), not in the project file. This separation means the project file describes the project conditions, while the configuration file defines how the organization interprets those conditions.
@@ -222,6 +222,8 @@ If you provide a factor with only some levels (for example only `distributed` un
 
 If you add additional factor names in configuration that are not referenced by the project task schema, they are effectively unused by the current simulation pipeline.
 
+<!-- pagebreak:b5 -->
+
 ## Recommended Authoring Pattern
 
 - Keep task files focused on the five supported factor fields.
@@ -233,9 +235,7 @@ If you add additional factor names in configuration that are not referenced by t
 
 ## Summary
 
-| Concept                | What It Models                              | When It Applies         | How It Affects Duration           |
-|------------------------|---------------------------------------------|-------------------------|-----------------------------------|
-| **Uncertainty factor** | A persistent working condition              | Per task, every iteration| Multiplies the sampled duration   |
+**Uncertainty factor**  are persistent working conditions affecting the team and specific task involved in the project. 
 
 - Uncertainty factors are **multiplicative**: they scale the sampled base duration before risks are evaluated.
 - Multiple uncertainty factors **compound**: their multipliers are multiplied together, which can produce significant combined effects.

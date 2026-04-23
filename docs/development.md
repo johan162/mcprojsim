@@ -20,6 +20,58 @@ This guide covers:
 - corporate proxy / custom CA handling in both Dockerfiles
 - the GitHub Actions CI/CD workflows in [.github/workflows](https://github.com/johan162/mcprojsim/tree/main/.github/workflows)
 
+## Quick start for new contributors
+
+If you are new to this repository, use this short path first and then come back to the detailed sections.
+
+### 1. Clone and install tools
+
+- Ensure Python 3.13+ is available
+- Ensure Poetry is installed
+- On macOS, install GNU Make 4.3+ if you plan to use Make targets (`brew install make`)
+
+### 2. Create a local dev environment
+
+From the project root:
+
+```bash
+poetry config virtualenvs.in-project true
+poetry install --with dev,docs
+```
+
+### 3. Verify the setup
+
+```bash
+poetry run mcprojsim --version
+poetry run pytest tests/ -m "not heavy" --no-cov -q
+poetry run mkdocs build
+```
+
+Expected outcome:
+
+- CLI prints a version
+- tests pass
+- docs build succeeds and `site/` is generated
+
+### 4. Typical day-one workflow
+
+```bash
+poetry run pytest tests/test_simulation.py --no-cov -q
+poetry run black src/ tests/
+poetry run flake8 src/ tests/
+poetry run mypy src/ tests/
+poetry run mcprojsim simulate examples/sample_project.yaml --iterations 100 --seed 42 --quiet
+```
+
+If you prefer wrappers:
+
+```bash
+make install
+make check
+make test-short
+make docs-serve
+```
+
 ## Development model at a glance
 
 There are four primary ways to work with this repository:
@@ -316,7 +368,7 @@ make docs-container-start
 make docs-container-stop
 make docs-container-status
 make docs-container-logs
-make docs-deploy
+make -C docs docs-deploy
 ```
 
 #### Packaging and release support
@@ -428,7 +480,7 @@ Purpose:
 
 - local release orchestration for maintainers
 - version bumping through Poetry
-- changelog template insertion
+- validation of a pre-existing changelog entry for the target version
 - test and package validation
 - branch merge workflow
 - annotated tag creation
@@ -445,7 +497,7 @@ Purpose:
 - extract release notes from `CHANGELOG.md`
 - upload the artifacts from `dist/`
 
-This is the script that bridges local release preparation with the GitHub Release UI/API step.
+This script bridges local release preparation with the GitHub Release UI/API step.
 
 ## Main application container
 
@@ -527,7 +579,7 @@ docker build \
 make container-build
 ```
 
-This is the preferred wrapper target.
+This is the preferred wrapper.
 It auto-detects whether a proxy-aware build should be used.
 
 Explicit variants:
@@ -577,7 +629,7 @@ There are two supported docs workflows.
 
 ### Fast local docs workflow
 
-This is the best option when editing docs frequently.
+Use this option when editing docs frequently.
 
 ```bash
 poetry install --with docs
@@ -658,6 +710,7 @@ docker build -f Dockerfile.docs -t mcprojsim-docs .
 ```bash
 podman build -f Dockerfile.docs \
   --build-arg USE_PROXY_CA=true \
+  --secret id=proxy_ca,src=CA_proxy_fw_all.pem \
   -t mcprojsim-docs \
   .
 ```
@@ -667,11 +720,12 @@ or:
 ```bash
 docker build -f Dockerfile.docs \
   --build-arg USE_PROXY_CA=true \
+  --secret id=proxy_ca,src=CA_proxy_fw_all.pem \
   -t mcprojsim-docs \
   .
 ```
 
-For the docs image, the CA file is expected in the build context when proxy support is enabled.
+For the docs image, proxy CA material is passed as a build secret (`proxy_ca`) when proxy support is enabled.
 See the certificate section below for the details.
 
 ### Run the docs image with raw commands
@@ -759,8 +813,7 @@ The proxy-specific target validates that the CA file exists and then passes the 
 
 ## Documentation container certificate handling
 
-The docs image in [Dockerfile.docs](https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs) currently uses a different mechanism.
-It expects a CA file in the build context when proxy support is enabled.
+The docs image in [Dockerfile.docs](https://github.com/johan162/mcprojsim/blob/main/Dockerfile.docs) uses the same secret-based approach as the main application image.
 
 ### How it works
 
@@ -768,18 +821,18 @@ The docs Dockerfile defines:
 
 - `ARG USE_PROXY_CA=false`
 - `ARG CA_CERT_FILE=CA_proxy_fw_all.pem`
-- `COPY ${CA_CERT_FILE}* /tmp/certs/`
+- secret mount: `--mount=type=secret,id=proxy_ca,target=/run/secrets/proxy_ca,required=false`
 
 During the build:
 
-1. the file matching `CA_proxy_fw_all.pem` is copied into the build context path `/tmp/certs/`
-2. when `USE_PROXY_CA=true`, the file is appended to the system CA bundle
+1. when `USE_PROXY_CA=true`, the build looks for secret `proxy_ca`
+2. if provided, secret contents are appended to the system CA bundle
 3. `REQUESTS_CA_BUNDLE`, `SSL_CERT_FILE`, and `PIP_CERT` are set to the updated bundle
 
 ### Operational consequence
 
-For the docs image, enabling proxy support means the CA file must be available in the project root at build time.
-This differs from the main container, which uses a build secret.
+For the docs image, enabling proxy support means you must pass the CA file as a build secret source.
+`docs-contctl.sh` handles this automatically when `MCPROJSIM_USE_PROXY_CA=true` and `CA_proxy_fw_all.pem` exists in the project root.
 
 ### `docs-contctl.sh` and proxy support
 
@@ -789,7 +842,7 @@ The docs control script supports:
 MCPROJSIM_USE_PROXY_CA=true ./scripts/docs-contctl.sh build
 ```
 
-However, that script currently passes the build arg and relies on the CA file being present in the build context.
+However, that script currently passes both the build arg and the `proxy_ca` build secret source.
 So if you are behind a corporate firewall, make sure `CA_proxy_fw_all.pem` exists in the project root before invoking the docs image build.
 
 ## Recommended certificate handling workflow
@@ -853,7 +906,7 @@ It:
 - requires a clean `develop` branch
 - runs quality checks and smoke simulations
 - updates the Poetry version
-- prepares a changelog entry template
+- requires a pre-existing `CHANGELOG.md` entry for the target version
 - stages and commits release prep changes
 - squash-merges `develop` into `main`
 - creates an annotated tag `v<version>`
@@ -913,15 +966,13 @@ The script expects:
 
 #### Phase 3: release preparation
 - `poetry version <version>`
-- changelog template insertion into `CHANGELOG.md`
-- maintainer pauses to edit changelog text
+- verify `CHANGELOG.md` already contains `## [v<version>] - YYYY-MM-DD`
 - final smoke test
 
 Before running `mkrelease.sh`, consider using the **`changelog-entry`** Copilot skill to draft the
 `CHANGELOG.md` entry from the commit history.
 Invoke it in a GitHub Copilot chat session with `/changelog-entry`.
-The skill produces a draft in the expected format; review and edit it before `mkrelease.sh` prompts
-you to finalise the changelog.
+The skill produces a draft in the expected format; review and finalise it before running `mkrelease.sh`.
 
 #### Phase 4: release execution
 - commit release preparation on `develop`
@@ -1054,7 +1105,7 @@ Use this checklist before creating a release.
 
 - start with `--dry-run`
 - verify the reported git operations are expected
-- update the generated `CHANGELOG.md` entry with final release notes
+- confirm the existing `CHANGELOG.md` entry for the target version is final
 - confirm the script completes the version, branch, tag, and push steps successfully
 - confirm the CI run triggered by the release completes successfully
 
@@ -1081,7 +1132,7 @@ Use this checklist before creating a release.
 
 ## GitHub Actions and CI/CD workflows
 
-The repository currently contains three workflows:
+The repository contains three workflows:
 
 - [.github/workflows/ci.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/ci.yml)
 - [.github/workflows/docs.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows/docs.yml)
@@ -1100,16 +1151,18 @@ File: [ci.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflows
 
 #### What it does
 
-The `build-and-test` job:
+The workflow currently has three jobs:
 
-- runs on `ubuntu-latest`
-- uses Python `3.13`
-- installs `graphviz`
-- installs Poetry with `pipx`
-- enables in-project virtual environments
-- caches `.venv`
-- runs `poetry install --with dev`
-- executes `./scripts/mkbld.sh`
+- `code-check`:
+  - runs `black --check`, `flake8`, and `mypy`
+- `testing`:
+  - installs system deps (`graphviz`)
+  - runs unit tests with `-m "not heavy"` and coverage
+  - runs CLI smoke tests on example projects
+- `build` (needs `code-check` and `testing`):
+  - runs `poetry build`
+  - runs `twine check dist/*`
+  - uploads build artifacts
 
 #### Artifacts
 
@@ -1134,8 +1187,8 @@ File: [docs.yml](https://github.com/johan162/mcprojsim/blob/main/.github/workflo
 
 #### Triggers
 
-- pushes to `main` or `develop` affecting `docs/**`, `mkdocs.yml`, or the workflow file itself
-- pull requests to `main` or `develop` affecting docs paths
+- pushes to `main` affecting `docs/**`, `mkdocs.yml`, or the workflow file itself
+- pull requests to `main` affecting docs paths
 - manual dispatch via `workflow_dispatch`
 
 #### Build job
@@ -1166,7 +1219,7 @@ It then:
 
 In practice, this means:
 
-- docs changes are validated on both `develop` and `main`
+- docs changes are validated for `main` (pushes and PRs targeting `main`)
 - published documentation is deployed only from `main`
 - `main` is the source of truth for GitHub Pages deployment
 
@@ -1187,7 +1240,7 @@ The workflow:
 
 - checks out the repo
 - sets up Python `3.13`
-- validates the tag format type
+- validates tag format
 - installs Poetry and caches `.venv`
 - installs dev-only tooling without the project root package
 - runs `poetry check`
@@ -1309,7 +1362,7 @@ If so:
 
 - place the CA file at `CA_proxy_fw_all.pem`
 - use `make container-build` or `make container-build-proxy`
-- for docs builds, ensure the file is present before calling the docs image build
+- for docs builds, ensure the file is present before calling `MCPROJSIM_USE_PROXY_CA=true ./scripts/docs-contctl.sh build`
 
 ### `mkghrelease.sh` fails because workflows are still running
 

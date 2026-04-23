@@ -5,6 +5,31 @@
 The goal is to implement all MVP requirements in `docs/mcprojsim_reqs.md` to be able to reach 1.0.0
 
 
+### Next patch release
+
+Release: 0.15.1
+
+Tasks:
+- Repaginate user guide with pagination macros for B5 & A4
+- Verify basic simulation results with old MC spreadhseet
+
+Completed Tasks:
+- Fix table formatting
+- Review Dev guide so it is up to date
+- Review User Guide (and fix broken links) to make sure it hasn't drifted
+- Review EBNF Grammar
+- Review top-level README
+- Support `--list` flag for `config` command verb
+- Hide progressbar behind `-p` flag
+- Hide simulation time and  mem usage behind flag `--simtime`
+- Add script to capture console command output to include in the user-guide with optional line number annotations
+- Tidy up structure of user-guide build
+- Fix default name for config file
+- Improve console output header and control that with `--minheader` and `--noheader` flags
+- Modify `--verbose` flag to show detailed informational messages and additional output sections (default uncertainty factors and sensitivity analysis)
+- Add automatic creation of images for user guide from HTML scripts
+
+
 ## Post-MVP (1.0.0) Themes
 
 Ideas on what to focus future development on

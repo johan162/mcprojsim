@@ -1,0 +1,211 @@
+// Lark grammar POC for mcprojsim project/config schema.
+// This grammar parses a canonical intermediate representation generated
+// from YAML/TOML payloads by lark_poc.py.
+
+start: project_file | config_file
+
+project_file: project_section tasks_section project_risks_section? resources_section? calendars_section? sprint_planning_section?
+
+project_section: "project" block_project
+block_project: "{" project_metadata "}"
+project_metadata: project_name project_description? start_date hours_per_day? currency? default_hourly_rate? overhead_rate? secondary_currencies? fx_conversion_cost? fx_overhead_rate? fx_rates? confidence_levels? probability_thresholds? project_distribution? project_tshirt_default_category? project_uncertainty_factors? team_size?
+
+project_name: "name" ":" STRING ";"
+project_description: "description" ":" STRING ";"
+start_date: "start_date" ":" DATE ";"
+hours_per_day: "hours_per_day" ":" NUMBER ";"
+currency: "currency" ":" STRING ";"
+default_hourly_rate: "default_hourly_rate" ":" NUMBER ";"
+overhead_rate: "overhead_rate" ":" NUMBER ";"
+secondary_currencies: "secondary_currencies" ":" string_list ";"
+fx_conversion_cost: "fx_conversion_cost" ":" NUMBER ";"
+fx_overhead_rate: "fx_overhead_rate" ":" NUMBER ";"
+fx_rates: "fx_rates" ":" string_number_map ";"
+confidence_levels: "confidence_levels" ":" int_list ";"
+probability_thresholds: red_threshold? green_threshold?
+red_threshold: "probability_red_threshold" ":" NUMBER ";"
+green_threshold: "probability_green_threshold" ":" NUMBER ";"
+project_distribution: "distribution" ":" distribution_type ";"
+project_tshirt_default_category: "t_shirt_size_default_category" ":" IDENT ";"
+project_uncertainty_factors: "uncertainty_factors" ":" string_string_map ";"
+team_size: "team_size" ":" INT ";"
+
+tasks_section: "tasks" list_tasks
+task_list: task+
+list_tasks: "[" task_list "]"
+task: "task" "{" task_properties "}"
+
+task_properties: task_id task_name task_description? estimate dependencies? uncertainty_factors? task_resources? task_max_resources? task_min_experience_level? task_planning_story_points? task_priority? task_spillover_probability_override? task_risks? task_fixed_cost?
+
+task_id: "id" ":" string_like ";"
+task_name: "name" ":" STRING ";"
+task_description: "description" ":" STRING ";"
+dependencies: "dependencies" ":" string_list ";"
+
+task_resources: "resources" ":" string_list ";"
+task_max_resources: "max_resources" ":" INT ";"
+task_min_experience_level: "min_experience_level" ":" INT ";"
+task_planning_story_points: "planning_story_points" ":" INT ";"
+task_priority: "priority" ":" SIGNED_INT ";"
+task_spillover_probability_override: "spillover_probability_override" ":" NUMBER ";"
+task_fixed_cost: "fixed_cost" ":" NUMBER ";"
+
+estimate: "estimate" "{" estimate_spec "}"
+estimate_spec: explicit_estimate | tshirt_estimate | story_point_estimate
+
+explicit_estimate: estimate_distribution? low_key expected_key high_key unit?
+estimate_distribution: "distribution" ":" distribution_type ";"
+low_key: "low" ":" NUMBER ";"
+expected_key: "expected" ":" NUMBER ";"
+high_key: "high" ":" NUMBER ";"
+
+tshirt_estimate: "t_shirt_size" ":" STRING ";"
+story_point_estimate: "story_points" ":" INT ";"
+
+unit: "unit" ":" time_unit ";"
+time_unit: "hours" | "days" | "weeks"
+
+uncertainty_factors: "uncertainty_factors" ":" string_string_map ";"
+
+task_risks: "risks" list_risks
+project_risks_section: "project_risks" list_risks
+risk_list: risk*
+list_risks: "[" risk_list "]"
+risk: "risk" "{" risk_properties "}"
+risk_properties: risk_id risk_name risk_probability risk_impact risk_description? risk_cost_impact?
+
+risk_id: "id" ":" string_like ";"
+risk_name: "name" ":" STRING ";"
+risk_probability: "probability" ":" NUMBER ";"
+risk_description: "description" ":" STRING ";"
+risk_cost_impact: "cost_impact" ":" NUMBER ";"
+
+risk_impact: "impact" ":" impact_spec
+impact_spec: fixed_impact | percentage_impact | absolute_impact
+fixed_impact: NUMBER ";"
+percentage_impact: "{" "type" ":" "percentage" ";" "value" ":" NUMBER ";" "}"
+absolute_impact: "{" "type" ":" "absolute" ";" "value" ":" NUMBER ";" ("unit" ":" time_unit ";")? "}"
+
+resources_section: "resources" list_resources
+resource_list: resource*
+list_resources: "[" resource_list "]"
+resource: "resource" "{" resource_properties "}"
+resource_properties: resource_name? legacy_resource_id? resource_availability? resource_calendar? resource_experience_level? resource_productivity_level? resource_sickness_prob? resource_planned_absence? resource_hourly_rate?
+
+resource_name: "name" ":" string_like ";"
+legacy_resource_id: "id" ":" string_like ";"
+resource_availability: "availability" ":" NUMBER ";"
+resource_calendar: "calendar" ":" string_like ";"
+resource_experience_level: "experience_level" ":" INT ";"
+resource_productivity_level: "productivity_level" ":" NUMBER ";"
+resource_sickness_prob: "sickness_prob" ":" NUMBER ";"
+resource_planned_absence: "planned_absence" ":" date_list ";"
+resource_hourly_rate: "hourly_rate" ":" NUMBER ";"
+
+calendars_section: "calendars" list_calendars
+calendar_list: calendar*
+list_calendars: "[" calendar_list "]"
+calendar: "calendar" "{" calendar_properties "}"
+calendar_properties: calendar_id? calendar_work_hours_per_day? calendar_work_days? calendar_holidays?
+
+calendar_id: "id" ":" string_like ";"
+calendar_work_hours_per_day: "work_hours_per_day" ":" NUMBER ";"
+calendar_work_days: "work_days" ":" int_list ";"
+calendar_holidays: "holidays" ":" date_list ";"
+
+sprint_planning_section: "sprint_planning" "{" sprint_planning_properties "}"
+
+sprint_planning_properties: ("enabled" ":" BOOL ";")? "sprint_length_weeks" ":" INT ";" "capacity_mode" ":" capacity_mode ";" ("planning_confidence_level" ":" NUMBER ";")? ("removed_work_treatment" ":" removed_work_treatment ";")? ("velocity_model" ":" velocity_model ";")? history_block? future_sprint_overrides_block? volatility_overlay_block? spillover_block? sickness_block?
+
+capacity_mode: "story_points" | "tasks"
+removed_work_treatment: "churn_only" | "reduce_backlog"
+velocity_model: "empirical" | "neg_binomial"
+
+history_block: "history" ":" (history_inline_list | history_external_descriptor)
+history_inline_list: "[" history_entry+ "]"
+history_external_descriptor: "external" "{" "format" ":" ("json" | "csv") ";" "path" ":" STRING ";" "}"
+
+history_entry: "history_entry" "{" "sprint_id" ":" STRING ";" ("sprint_length_weeks" ":" INT ";")? ("completed_story_points" ":" NUMBER ";")? ("completed_tasks" ":" INT ";")? ("spillover_story_points" ":" NUMBER ";")? ("spillover_tasks" ":" INT ";")? ("added_story_points" ":" NUMBER ";")? ("added_tasks" ":" INT ";")? ("removed_story_points" ":" NUMBER ";")? ("removed_tasks" ":" INT ";")? ("holiday_factor" ":" NUMBER ";")? ("end_date" ":" DATE ";")? ("team_size" ":" INT ";")? ("notes" ":" STRING ";")? "}"
+
+future_sprint_overrides_block: "future_sprint_overrides" ":" "[" future_override* "]"
+future_override: "future_override" "{" ("sprint_number" ":" INT ";")? ("start_date" ":" DATE ";")? ("holiday_factor" ":" NUMBER ";")? ("capacity_multiplier" ":" NUMBER ";")? ("notes" ":" STRING ";")? "}"
+
+volatility_overlay_block: "volatility_overlay" ":" "{" ("enabled" ":" BOOL ";")? ("disruption_probability" ":" NUMBER ";")? ("disruption_multiplier_low" ":" NUMBER ";")? ("disruption_multiplier_expected" ":" NUMBER ";")? ("disruption_multiplier_high" ":" NUMBER ";")? "}"
+
+spillover_block: "spillover" ":" "{" ("enabled" ":" BOOL ";")? ("model" ":" ("table" | "logistic") ";")? ("size_reference_points" ":" NUMBER ";")? ("size_brackets" ":" "[" size_bracket+ "]")? ("consumed_fraction_alpha" ":" NUMBER ";")? ("consumed_fraction_beta" ":" NUMBER ";")? ("logistic_slope" ":" NUMBER ";")? ("logistic_intercept" ":" NUMBER ";")? "}"
+
+size_bracket: "size_bracket" "{" ("max_points" ":" NUMBER ";")? "probability" ":" NUMBER ";" "}"
+
+sickness_block: "sickness" ":" "{" ("enabled" ":" BOOL ";")? ("team_size" ":" INT ";")? ("probability_per_person_per_week" ":" NUMBER ";")? ("duration_log_mu" ":" NUMBER ";")? ("duration_log_sigma" ":" NUMBER ";")? "}"
+
+config_file: config_top_level_entry*
+
+config_top_level_entry: uncertainty_factors_config
+                      | t_shirt_sizes_config
+                      | t_shirt_size_default_category_config
+                      | t_shirt_size_unit_config
+                      | story_points_config
+                      | story_point_unit_config
+                      | simulation_config
+                      | lognormal_config
+                      | output_config
+                      | staffing_config
+                      | constrained_scheduling_config
+                      | sprint_defaults_config
+                      | cost_config
+
+uncertainty_factors_config: "uncertainty_factors" ":" generic_map
+
+t_shirt_sizes_config: "t_shirt_sizes" ":" generic_map
+                   | "t_shirt_size_categories" ":" generic_map
+
+t_shirt_size_default_category_config: "t_shirt_size_default_category" ":" STRING ";"
+t_shirt_size_unit_config: "t_shirt_size_unit" ":" time_unit ";"
+story_points_config: "story_points" ":" generic_map
+story_point_unit_config: "story_point_unit" ":" time_unit ";"
+
+simulation_config: "simulation" ":" "{" ("default_iterations" ":" INT ";")? ("random_seed" ":" (SIGNED_INT | NULL) ";")? ("max_stored_critical_paths" ":" INT ";")? "}"
+
+lognormal_config: "lognormal" ":" "{" ("high_percentile" ":" INT ";")? "}"
+
+output_config: "output" ":" "{" ("formats" ":" string_list ";")? ("include_histogram" ":" BOOL ";")? ("number_bins" ":" INT ";")? ("critical_path_report_limit" ":" INT ";")? "}"
+
+staffing_config: "staffing" ":" generic_map
+
+constrained_scheduling_config: "constrained_scheduling" ":" "{" ("sickness_prob" ":" NUMBER ";")? ("assignment_mode" ":" ("greedy_single_pass" | "criticality_two_pass") ";")? ("pass1_iterations" ":" INT ";")? "}"
+
+sprint_defaults_config: "sprint_defaults" ":" "{" ("planning_confidence_level" ":" NUMBER ";")? ("removed_work_treatment" ":" ("churn_only" | "reduce_backlog") ";")? ("velocity_model" ":" ("empirical" | "neg_binomial") ";")? ("volatility_disruption_probability" ":" NUMBER ";")? ("volatility_disruption_multiplier_low" ":" NUMBER ";")? ("volatility_disruption_multiplier_expected" ":" NUMBER ";")? ("volatility_disruption_multiplier_high" ":" NUMBER ";")? ("spillover_model" ":" ("table" | "logistic") ";")? ("spillover_size_reference_points" ":" NUMBER ";")? ("spillover_size_brackets" ":" generic_list ";")? ("spillover_consumed_fraction_alpha" ":" NUMBER ";")? ("spillover_consumed_fraction_beta" ":" NUMBER ";")? ("spillover_logistic_slope" ":" NUMBER ";")? ("spillover_logistic_intercept" ":" NUMBER ";")? sprint_sickness_defaults_config? "}"
+
+sprint_sickness_defaults_config: "sickness" ":" "{" ("enabled" ":" BOOL ";")? ("probability_per_person_per_week" ":" NUMBER ";")? ("duration_log_mu" ":" NUMBER ";")? ("duration_log_sigma" ":" NUMBER ";")? "}"
+
+cost_config: "cost" ":" "{" ("default_hourly_rate" ":" NUMBER ";")? ("overhead_rate" ":" NUMBER ";")? ("currency" ":" STRING ";")? ("include_in_output" ":" BOOL ";")? "}"
+
+// Generic containers for map/list placeholders in config grammar.
+generic_map: "{" generic_entry* "}"
+generic_entry: (STRING | IDENT | INT) ":" generic_value ";"
+generic_list: "[" [generic_value ("," generic_value)*] "]"
+generic_value: STRING | NUMBER | SIGNED_INT | INT | BOOL | NULL | DATE | generic_map | generic_list
+
+string_list: "[" [STRING ("," STRING)*] "]"
+int_list: "[" [INT ("," INT)*] "]"
+date_list: "[" [DATE ("," DATE)*] "]"
+string_number_map: "{" string_number_entry* "}"
+string_number_entry: STRING ":" NUMBER ";"
+string_string_map: "{" string_string_entry* "}"
+string_string_entry: STRING ":" STRING ";"
+
+string_like: STRING | IDENT
+
+distribution_type: "triangular" | "lognormal"
+
+DATE: /\d{4}-\d{2}-\d{2}/
+BOOL: "true" | "false"
+NULL: "null"
+IDENT: /[A-Za-z_][A-Za-z0-9_]*/
+SIGNED_INT: /-?[0-9]+/
+
+%import common.ESCAPED_STRING -> STRING
+%import common.SIGNED_NUMBER -> NUMBER
+%import common.INT
+%import common.WS
+%ignore WS

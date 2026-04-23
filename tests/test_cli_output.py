@@ -136,7 +136,7 @@ class TestSimulatePlainOutput:
             pf = _write_project(None)
             result = runner.invoke(cli, ["simulate", pf])
         assert result.exit_code == 0
-        assert "Simulation Results" in result.output
+        assert "Project Overview:" in result.output
         assert "Project: CLI Output Test" in result.output
         assert "Mean: 40.00 hours" in result.output
         assert "Skewness: 0.5000" in result.output
@@ -156,7 +156,7 @@ class TestSimulatePlainOutput:
         runner = CliRunner()
         with runner.isolated_filesystem():
             pf = _write_project(None)
-            result = runner.invoke(cli, ["simulate", pf])
+            result = runner.invoke(cli, ["simulate", pf, "--verbose"])
         assert "Sensitivity Analysis" in result.output
         assert "task_001" in result.output
         assert "+0.8500" in result.output
@@ -222,7 +222,7 @@ class TestSimulateTableOutput:
         runner = CliRunner()
         with runner.isolated_filesystem():
             pf = _write_project(None)
-            result = runner.invoke(cli, ["simulate", pf, "--table"])
+            result = runner.invoke(cli, ["simulate", pf, "--table", "--verbose"])
         assert "Correlation" in result.output
         assert "+0.8500" in result.output
 
@@ -318,7 +318,7 @@ class TestSimulateMinimalOutput:
             result = runner.invoke(cli, ["simulate", pf, "--minimal"])
 
         assert result.exit_code == 0
-        assert "mcprojsim, version" in result.output
+        assert "mcprojsim v" in result.output
         assert "Project Overview" in result.output
         assert "Calendar Time Statistical Summary" in result.output
         assert "Project Effort Statistical Summary" in result.output
@@ -439,4 +439,4 @@ class TestSimulateConfigLoading:
                 cli, ["simulate", pf, "--config", "cfg.yaml", "--verbose"]
             )
         assert result.exit_code == 0
-        assert "Simulation Results" in result.output
+        assert "Project Overview:" in result.output

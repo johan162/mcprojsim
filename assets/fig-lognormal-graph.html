@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log-Normal Distribution</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f5f0e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Caveat', cursive;
+  }
+
+  .paper {
+    background: #fefcf6;
+    width: 680px;
+    padding: 40px 40px 50px 40px;
+    border-radius: 3px;
+    box-shadow:
+      2px 3px 0 #d9d3c2,
+      4px 6px 0 #ccc6b4,
+      0 0 40px rgba(0,0,0,0.12);
+    position: relative;
+  }
+
+  /* Subtle ruled lines */
+  .paper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      transparent,
+      transparent 27px,
+      #e8e2d4 27px,
+      #e8e2d4 28px
+    );
+    border-radius: 3px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  h1 {
+    font-size: 22px;
+    color: #3a2e1e;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .params {
+    font-size: 14px;
+    color: #7a6a50;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  canvas {
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+<div class="paper">
+  <h1>Log-Normal Distribution</h1>
+  <div class="params">μ = 1.609 &nbsp;|&nbsp; σ = 0.472 &nbsp;|&nbsp; shift = 5</div>
+  <canvas id="c" width="600" height="380"></canvas>
+</div>
+
+<script>
+// --- Rough/hand-drawn helpers ---
+function jitter(v, amt) {
+  return v + (Math.random() - 0.5) * amt;
+}
+
+// Draw a "wobbly" line between points using small Bezier segments
+function roughLine(ctx, pts, wobble = 1.2) {
+  if (pts.length < 2) return;
+  ctx.beginPath();
+  ctx.moveTo(jitter(pts[0][0], wobble * 0.5), jitter(pts[0][1], wobble * 0.5));
+  for (let i = 1; i < pts.length; i++) {
+    const prev = pts[i - 1];
+    const curr = pts[i];
+    const cx = (prev[0] + curr[0]) / 2 + jitter(0, wobble);
+    const cy = (prev[1] + curr[1]) / 2 + jitter(0, wobble);
+    ctx.quadraticCurveTo(cx, cy, jitter(curr[0], wobble * 0.4), jitter(curr[1], wobble * 0.4));
+  }
+  ctx.stroke();
+}
+
+// Rough straight arrow line
+function roughStraight(ctx, x1, y1, x2, y2, wobble = 1.5) {
+  const steps = 8;
+  const pts = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    pts.push([
+      x1 + (x2 - x1) * t + jitter(0, wobble),
+      y1 + (y2 - y1) * t + jitter(0, wobble)
+    ]);
+  }
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) {
+    ctx.lineTo(pts[i][0], pts[i][1]);
+  }
+  ctx.stroke();
+}
+
+// Arrow head
+function arrowHead(ctx, x, y, dx, dy, size = 8) {
+  const angle = Math.atan2(dy, dx);
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - size * Math.cos(angle - 0.4), y - size * Math.sin(angle - 0.4));
+  ctx.lineTo(x - size * Math.cos(angle + 0.4), y - size * Math.sin(angle + 0.4));
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Wobbly tick mark
+function roughTick(ctx, x1, y1, x2, y2) {
+  roughStraight(ctx, x1 + jitter(0,0.5), y1, x2 + jitter(0,0.5), y2, 0.8);
+}
+
+// --- Log-normal PDF ---
+function lognormPDF(x, mu, sigma) {
+  if (x <= 0) return 0;
+  const lx = Math.log(x);
+  return (1 / (x * sigma * Math.sqrt(2 * Math.PI))) *
+    Math.exp(-0.5 * Math.pow((lx - mu) / sigma, 2));
+}
+
+// --- Main draw ---
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+const mu = 1.609;
+const sigma = 0.472;
+const shift = 5;
+
+// Layout
+const pad = { left: 58, right: 20, top: 20, bottom: 58 };
+const W = canvas.width - pad.left - pad.right;
+const H = canvas.height - pad.top - pad.bottom;
+const ox = pad.left, oy = pad.top + H;
+
+// X range in shifted coords: shift + raw_x
+// raw_x from ~0.01 to ~20 → shifted 5 to 25
+const xShiftMin = 5, xShiftMax = 26;
+const rawMax = xShiftMax - shift;
+
+// Generate PDF points
+const N = 300;
+const pts = [];
+let maxY = 0;
+for (let i = 0; i <= N; i++) {
+  const rawX = 0.001 + (rawMax - 0.001) * i / N;
+  const y = lognormPDF(rawX, mu, sigma);
+  if (y > maxY) maxY = y;
+  pts.push([rawX, y]);
+}
+
+// Axis scales
+function toCanvasX(shiftedX) {
+  return ox + (shiftedX - xShiftMin) / (xShiftMax - xShiftMin) * W;
+}
+function toCanvasY(y) {
+  return oy - (y / (maxY * 1.15)) * H;
+}
+
+// --- Paper texture: faint pencil grain ---
+ctx.save();
+for (let i = 0; i < 600; i++) {
+  ctx.strokeStyle = `rgba(160,140,100,${Math.random() * 0.025})`;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  const rx = Math.random() * canvas.width;
+  const ry = Math.random() * canvas.height;
+  ctx.moveTo(rx, ry);
+  ctx.lineTo(rx + (Math.random()-0.5)*12, ry + (Math.random()-0.5)*3);
+  ctx.stroke();
+}
+ctx.restore();
+
+// --- Draw axes ---
+const axisColor = '#2a2018';
+ctx.strokeStyle = axisColor;
+ctx.fillStyle = axisColor;
+ctx.lineWidth = 2;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+
+// Y-axis
+roughStraight(ctx, ox, oy + 5, ox, pad.top - 5, 1.2);
+arrowHead(ctx, ox, pad.top - 5, 0, -1, 9);
+
+// X-axis
+roughStraight(ctx, ox - 5, oy, pad.left + W + 10, oy, 1.2);
+arrowHead(ctx, pad.left + W + 10, oy, 1, 0, 9);
+
+// --- Tick marks & labels ---
+ctx.font = "15px 'Caveat', cursive";
+ctx.textAlign = 'center';
+ctx.textBaseline = 'top';
+
+const xTicks = [5, 8, 11, 14, 17, 20, 23, 26];
+for (const xt of xTicks) {
+  const cx = toCanvasX(xt);
+  ctx.strokeStyle = axisColor;
+  ctx.lineWidth = 1.5;
+  roughTick(ctx, cx, oy, cx, oy + 7);
+  ctx.fillStyle = '#3a2a14';
+  ctx.fillText(xt, cx + jitter(0, 0.5), oy + 11);
+}
+
+const yTickCount = 5;
+ctx.textAlign = 'right';
+ctx.textBaseline = 'middle';
+for (let i = 1; i <= yTickCount; i++) {
+  const yVal = (maxY * 1.15) * i / (yTickCount + 1);
+  const cy = toCanvasY(yVal);
+  ctx.strokeStyle = axisColor;
+  ctx.lineWidth = 1.5;
+  roughTick(ctx, ox - 7, cy, ox, cy);
+  ctx.fillStyle = '#3a2a14';
+  ctx.fillText(yVal.toFixed(3), ox - 10 + jitter(0,0.5), cy + jitter(0,0.5));
+}
+
+// Faint grid lines (pencil-like)
+ctx.setLineDash([3, 6]);
+ctx.lineWidth = 0.8;
+for (const xt of xTicks) {
+  ctx.strokeStyle = `rgba(150,120,70,0.18)`;
+  const cx = toCanvasX(xt);
+  roughStraight(ctx, cx, oy, cx, pad.top, 0.8);
+}
+for (let i = 1; i <= yTickCount; i++) {
+  const yVal = (maxY * 1.15) * i / (yTickCount + 1);
+  const cy = toCanvasY(yVal);
+  ctx.strokeStyle = `rgba(150,120,70,0.18)`;
+  roughStraight(ctx, ox, cy, ox + W, cy, 0.8);
+}
+ctx.setLineDash([]);
+
+// --- Axis labels ---
+
+
+// --- Shaded area under curve (light warm fill) ---
+const canvasPts = pts.map(([rx, y]) => [toCanvasX(rx + shift), toCanvasY(y)]);
+
+ctx.save();
+ctx.beginPath();
+ctx.moveTo(toCanvasX(shift), oy);
+for (const [cx, cy] of canvasPts) {
+  ctx.lineTo(cx, cy);
+}
+ctx.lineTo(toCanvasX(xShiftMax), oy);
+ctx.closePath();
+ctx.fillStyle = 'rgba(210, 120, 40, 0.10)';
+ctx.fill();
+ctx.restore();
+
+// --- Draw the curve (multiple rough passes for hand-drawn look) ---
+// Pass 1: slightly thicker, offset
+ctx.save();
+ctx.translate(jitter(0,0.8), jitter(0,0.8));
+ctx.strokeStyle = 'rgba(180, 80, 15, 0.25)';
+ctx.lineWidth = 5;
+roughLine(ctx, canvasPts, 1.8);
+ctx.restore();
+
+// Pass 2: main curve
+ctx.save();
+ctx.strokeStyle = '#c45a10';  // dark orange
+ctx.lineWidth = 3.2;
+roughLine(ctx, canvasPts, 1.0);
+ctx.restore();
+
+// Pass 3: thin bright highlight pass
+ctx.save();
+ctx.translate(jitter(0,0.4), jitter(0,0.4));
+ctx.strokeStyle = 'rgba(220, 110, 30, 0.55)';
+ctx.lineWidth = 1.2;
+roughLine(ctx, canvasPts, 0.8);
+ctx.restore();
+
+// --- Annotation: mode / mean markers ---
+const mode_raw = Math.exp(mu - sigma * sigma);
+const mean_raw = Math.exp(mu + 0.5 * sigma * sigma);
+const mode_shifted = mode_raw + shift;
+const mean_shifted = mean_raw + shift;
+
+// Mode dashed drop line
+function dashedDrop(ctx, sx, color) {
+  const cx = toCanvasX(sx);
+  const raw = sx - shift;
+  const peakY = toCanvasY(lognormPDF(raw, mu, sigma));
+  ctx.save();
+  ctx.setLineDash([4, 5]);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.3;
+  roughStraight(ctx, cx, oy, cx, peakY, 0.9);
+  ctx.setLineDash([]);
+  ctx.restore();
+  return [cx, peakY];
+}
+
+const [modeCx, modeCy] = dashedDrop(ctx, mode_shifted, 'rgba(80,50,20,0.45)');
+const [meanCx, meanCy] = dashedDrop(ctx, mean_shifted, 'rgba(80,50,20,0.45)');
+
+// Labels
+ctx.font = "14px 'Caveat', cursive";
+ctx.fillStyle = '#6b3a0e';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'bottom';
+ctx.fillText(`mode ≈ ${mode_shifted.toFixed(1)}`, modeCx - 16, modeCy - 4);
+ctx.fillText(`mean ≈ ${mean_shifted.toFixed(1)}`, meanCx + 22, meanCy - 18);
+
+// Small circle dots at peaks
+for (const [cx, cy] of [[modeCx, modeCy], [meanCx, meanCy]]) {
+  ctx.beginPath();
+  ctx.arc(cx + jitter(0,0.5), cy + jitter(0,0.5), 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#c45a10';
+  ctx.fill();
+}
+
+// --- Parameter box (hand-drawn rectangle) ---
+function roughRect(ctx, x, y, w, h, wobble=1.5) {
+  const corners = [[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]];
+  ctx.beginPath();
+  ctx.moveTo(corners[0][0]+jitter(0,wobble), corners[0][1]+jitter(0,wobble));
+  for(let i=1;i<corners.length;i++) {
+    ctx.lineTo(corners[i][0]+jitter(0,wobble), corners[i][1]+jitter(0,wobble));
+  }
+  ctx.stroke();
+}
+
+const bx = ox + W - 148, by = pad.top + 14;
+ctx.strokeStyle = 'rgba(100,60,20,0.5)';
+ctx.lineWidth = 1.4;
+roughRect(ctx, bx, by, 140, 72, 1.8);
+ctx.fillStyle = 'rgba(254,250,240,0.7)';
+ctx.fillRect(bx+1, by+1, 138, 70);
+
+ctx.fillStyle = '#4a2e0a';
+ctx.font = "14px 'Caveat', cursive";
+ctx.textAlign = 'left';
+ctx.textBaseline = 'top';
+ctx.fillText(`μ = ${mu}`, bx + 12, by + 10);
+ctx.fillText(`σ = ${sigma}`, bx + 12, by + 28);
+ctx.fillText(`shift = ${shift}`, bx + 12, by + 46);
+
+</script>
+</body>
+</html>

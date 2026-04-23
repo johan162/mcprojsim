@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Cover – Monte Carlo Estimation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .cover {
+    position: relative;
+    width: 680px;
+    height: 960px;
+    background: #03060f;
+    overflow: hidden;
+    box-shadow: 0 0 120px rgba(0,180,255,0.15), 0 0 40px rgba(0,0,0,0.8);
+  }
+
+  canvas#bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Overlay vignette */
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(2,5,15,0.75) 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Top scan-line texture */
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.18) 3px,
+      rgba(0,0,0,0.18) 4px
+    );
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  /* Content layer */
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    padding: 52px 48px 44px;
+  }
+
+  /* Top rule line */
+  .top-rule {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #00c8ff88, #00c8ff, #00c8ff88, transparent);
+    margin-bottom: 32px;
+    animation: pulse-line 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-line {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  .series-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: #00c8ffaa;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .title-block {
+    margin-top: auto;
+    margin-bottom: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+  }
+
+  .main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 54px;
+    line-height: 1.05;
+    color: #ffffff;
+    text-shadow:
+      0 0 30px rgba(0,200,255,0.6),
+      0 0 60px rgba(0,200,255,0.25),
+      0 2px 0 rgba(0,0,0,0.8);
+    letter-spacing: 2px;
+    position: relative;
+  }
+
+  .main-title .highlight {
+    color: #00e5ff;
+    text-shadow:
+      0 0 20px rgba(0,229,255,0.9),
+      0 0 60px rgba(0,229,255,0.5),
+      0 0 100px rgba(0,229,255,0.2);
+  }
+
+  .subtitle {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 300;
+    font-size: 19px;
+    letter-spacing: 6px;
+    color: #7ecfdf;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+
+  .divider {
+    width: 160px;
+    height: 1px;
+    background: linear-gradient(90deg, #00c8ff, transparent);
+    margin: 22px 0;
+  }
+
+  .tagline {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 400;
+    font-size: 14.5px;
+    color: #5a8fa0;
+    letter-spacing: 2px;
+    line-height: 1.7;
+    max-width: 340px;
+  }
+
+  /* Math formula floats */
+  .formula-float {
+    position: absolute;
+    font-family: 'Share Tech Mono', monospace;
+    color: rgba(0, 200, 255, 0.22);
+    font-size: 13px;
+    letter-spacing: 1px;
+    pointer-events: none;
+    z-index: 5;
+    animation: drift 12s ease-in-out infinite;
+  }
+  .formula-float:nth-child(odd) { animation-direction: reverse; }
+
+  @keyframes drift {
+    0%, 100% { transform: translateY(0px); opacity: 0.22; }
+    50% { transform: translateY(-10px); opacity: 0.38; }
+  }
+
+  /* Floating sigma symbols */
+  .sigma-big {
+    position: absolute;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    color: rgba(0, 220, 255, 0.07);
+    pointer-events: none;
+    z-index: 4;
+    user-select: none;
+  }
+
+  /* Bottom author bar */
+  .bottom-bar {
+    border-top: 1px solid rgba(0,200,255,0.18);
+    padding-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .author {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 4px;
+    color: #7ecfdf;
+    text-transform: uppercase;
+  }
+
+  .edition-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: #00c8ff66;
+    letter-spacing: 3px;
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* Animated corner brackets */
+  .corner {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    z-index: 11;
+  }
+  .corner::before, .corner::after {
+    content: '';
+    position: absolute;
+    background: #00c8ff;
+    opacity: 0.7;
+  }
+  .corner::before { width: 100%; height: 2px; top: 0; left: 0; }
+  .corner::after  { width: 2px; height: 100%; top: 0; left: 0; }
+  .corner.tl { top: 24px; left: 24px; }
+  .corner.tr { top: 24px; right: 24px; transform: scaleX(-1); }
+  .corner.bl { bottom: 24px; left: 24px; transform: scaleY(-1); }
+  .corner.br { bottom: 24px; right: 24px; transform: scale(-1); }
+
+  /* Glitch flicker on title */
+  @keyframes glitch {
+    0%   { clip-path: inset(0 0 100% 0); }
+    10%  { clip-path: inset(20% 0 60% 0); transform: translateX(-2px); }
+    20%  { clip-path: inset(50% 0 30% 0); transform: translateX(2px); }
+    30%  { clip-path: inset(0 0 100% 0); transform: none; }
+    100% { clip-path: inset(0 0 100% 0); }
+  }
+
+  .main-title::after {
+    content: attr(data-text);
+    position: absolute;
+    left: 0; top: 0;
+    color: #ff4466;
+    animation: glitch 8s 2s infinite;
+    opacity: 0.4;
+  }
+
+  /* MCProjSim program name */
+  .program-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: rgba(0,200,255,0.55);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .program-name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 52px;
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 8px;
+    position: relative;
+    display: inline-block;
+  }
+
+  .program-name .mc {
+    color: #00e5ff;
+    text-shadow:
+      0 0 18px rgba(0,229,255,1),
+      0 0 50px rgba(0,229,255,0.6),
+      0 0 100px rgba(0,229,255,0.25);
+  }
+
+  .program-name .proj {
+    color: #e8f4ff;
+    text-shadow:
+      0 0 14px rgba(255,255,255,0.5),
+      0 0 40px rgba(0,200,255,0.25);
+  }
+
+  .program-name .sim {
+    color: #ff9a3c;
+    text-shadow:
+      0 0 18px rgba(255,154,60,0.95),
+      0 0 50px rgba(255,154,60,0.55),
+      0 0 100px rgba(255,154,60,0.2);
+  }
+
+  .program-underline {
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(90deg, #00e5ff, rgba(255,255,255,0.4), #ff9a3c);
+    margin-bottom: 22px;
+    border-radius: 2px;
+    box-shadow: 0 0 12px rgba(0,229,255,0.45);
+  }
+
+  .book-about {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: rgba(0,200,255,0.4);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+
+  <!-- Background canvas: all distributions + particles -->
+  <canvas id="bg"></canvas>
+
+  <!-- Depth layers -->
+  <div class="vignette"></div>
+  <div class="scanlines"></div>
+
+  <!-- Corner brackets -->
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <!-- Floating math formulas -->
+  <div class="formula-float" style="top:7%;left:62%;">E[X] = ∫x·f(x)dx</div>
+  <div class="formula-float" style="top:14%;left:5%;animation-delay:-3s;">σ² = Var(X)</div>
+  <div class="formula-float" style="top:22%;right:4%;animation-delay:-6s;">p(θ|D) ∝ p(D|θ)·p(θ)</div>
+  <div class="formula-float" style="top:78%;left:8%;animation-delay:-2s;">N → ∞</div>
+  <div class="formula-float" style="top:82%;right:6%;animation-delay:-5s;">CLT: X̄ ~ N(μ, σ²/n)</div>
+  <div class="formula-float" style="top:68%;left:55%;animation-delay:-4s;">f(x;μ,σ)</div>
+
+  <!-- Giant background sigma / summation -->
+  <div class="sigma-big" style="font-size:420px;top:-60px;right:-40px;opacity:0.06;">Σ</div>
+  <div class="sigma-big" style="font-size:200px;bottom:60px;left:-20px;opacity:0.04;">∫</div>
+
+  <!-- Main content -->
+  <div class="content">
+    <div class="top-rule"></div>
+    <div class="series-label">Quantitative Methods Series &nbsp;·&nbsp; Vol. I</div>
+
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 30px 0;">
+
+      <!-- MCProjSim — hero program name -->
+      <div class="program-label">Program Reference &amp; User Guide</div>
+      <div class="program-name">
+        <span class="mc">MC</span><span class="proj">Proj</span><span class="sim">Sim</span>
+      </div>
+      <div class="program-underline"></div>
+
+      <!-- Book title below -->
+      <div class="book-about">A complete guide to</div>
+      <div class="main-title" data-text="MONTE">MONTE</div>
+      <div class="main-title" data-text="CARLO"><span class="highlight">CARLO</span></div>
+      <div class="subtitle">Estimation &amp; Simulation</div>
+      <div class="divider"></div>
+      <div class="tagline">
+        Probabilistic reasoning under uncertainty.<br>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="author">Johan Persson</div>
+      <div class="edition-badge">
+        FIRST EDITION<br>
+        2026
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+canvas.width = 680;
+canvas.height = 960;
+
+// ─── Math helpers ───────────────────────────────────────────────────
+function normalPDF(x, mu=0, sigma=1) {
+  return Math.exp(-0.5*((x-mu)/sigma)**2) / (sigma*Math.sqrt(2*Math.PI));
+}
+function lognormPDF(x, mu=0, sigma=1) {
+  if (x<=0) return 0;
+  return Math.exp(-0.5*((Math.log(x)-mu)/sigma)**2) / (x*sigma*Math.sqrt(2*Math.PI));
+}
+function trianglePDF(x, a, b, c) {
+  if (x<a||x>b) return 0;
+  if (x<c) return 2*(x-a)/((b-a)*(c-a));
+  return 2*(b-x)/((b-a)*(b-c));
+}
+
+// ─── Colour palette ─────────────────────────────────────────────────
+const COL = {
+  normal:   { stroke:'rgba(0,220,255,{a})',   fill:'rgba(0,220,255,{a})' },
+  lognorm:  { stroke:'rgba(255,140,50,{a})',  fill:'rgba(255,140,50,{a})' },
+  triangle: { stroke:'rgba(120,255,160,{a})', fill:'rgba(120,255,160,{a})' },
+  hist:     { fill:'rgba(0,180,255,{a})' },
+};
+
+function col(template, alpha) {
+  return template.replace('{a}', alpha);
+}
+
+// ─── Background deep space ───────────────────────────────────────────
+function drawBackground() {
+  const grad = ctx.createRadialGradient(340,480,0, 340,480,680);
+  grad.addColorStop(0,   '#07111f');
+  grad.addColorStop(0.5, '#040c18');
+  grad.addColorStop(1,   '#020609');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,680,960);
+}
+
+// ─── Star field ──────────────────────────────────────────────────────
+function drawStars() {
+  const rng = mulberry32(42);
+  for (let i=0;i<320;i++) {
+    const x = rng()*680, y = rng()*960;
+    const r = rng()*1.4;
+    const a = 0.15 + rng()*0.6;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(180,220,255,${a})`;
+    ctx.fill();
+  }
+  // a few bright cross-stars
+  for (let i=0;i<12;i++) {
+    const x = rng()*680, y = rng()*960;
+    const sz = 1.5 + rng()*3;
+    const a = 0.4 + rng()*0.5;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.strokeStyle = '#a0d8ef';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.moveTo(x-sz,y); ctx.lineTo(x+sz,y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,y-sz); ctx.lineTo(x,y+sz); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ─── Random histogram bars (normal-ish) ─────────────────────────────
+function drawHistogram() {
+  const nbars = 28;
+  const barW = 560 / nbars;
+  const baseY = 760;
+  const maxH = 340;
+  const rng = mulberry32(77);
+
+  for (let i=0;i<nbars;i++) {
+    const cx = 60 + i*barW + barW/2;
+    const normX = (i/(nbars-1))*6 - 3;
+    const trueH = normalPDF(normX)*maxH*2.5;
+    // add a bit of Monte Carlo noise
+    const noiseH = trueH * (0.82 + rng()*0.36);
+    const x = 60 + i*barW + 1;
+    const w = barW - 2;
+    const h = noiseH;
+
+    // bar body
+    const g = ctx.createLinearGradient(x, baseY-h, x, baseY);
+    g.addColorStop(0,   `rgba(0,180,255,0.55)`);
+    g.addColorStop(0.6, `rgba(0,120,200,0.30)`);
+    g.addColorStop(1,   `rgba(0,80,150,0.10)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(x, baseY-h, w, h);
+
+    // top edge glow
+    ctx.fillStyle = `rgba(0,230,255,0.65)`;
+    ctx.fillRect(x, baseY-h, w, 1.5);
+  }
+
+  // horizontal base rule
+  ctx.strokeStyle = 'rgba(0,200,255,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(55, baseY);
+  ctx.lineTo(625, baseY);
+  ctx.stroke();
+}
+
+// ─── Curve helper ────────────────────────────────────────────────────
+function drawCurve(pts, strokeColor, lineWidth, shadowColor, shadowBlur, fillColor) {
+  if (!pts.length) return;
+
+  if (fillColor) {
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[pts.length-1][1]);
+    for (const [x,y] of pts) ctx.lineTo(x,y);
+    ctx.lineTo(pts[pts.length-1][0], pts[pts.length-1][1]);
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+  }
+
+  ctx.save();
+  ctx.shadowColor = shadowColor || 'transparent';
+  ctx.shadowBlur  = shadowBlur  || 0;
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth   = lineWidth;
+  ctx.lineJoin    = 'round';
+  ctx.lineCap     = 'round';
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ─── Normal distribution curve ────────────────────────────────────────
+function drawNormal() {
+  const baseY = 760, maxH = 340, steps = 300;
+  const pts = [];
+  for (let i=0;i<=steps;i++) {
+    const t = i/steps;
+    const nx = t*6 - 3;
+    const y = normalPDF(nx)*maxH*2.5;
+    const cx = 60 + t*560;
+    pts.push([cx, baseY - y]);
+  }
+  // glow pass
+  drawCurve(pts, 'rgba(0,230,255,0.15)', 14, '#00e5ff', 30);
+  drawCurve(pts, 'rgba(0,230,255,0.5)',  2.5, '#00e5ff', 18);
+  drawCurve(pts, 'rgba(200,245,255,0.9)', 1.2);
+}
+
+// ─── Log-normal (shine through) ──────────────────────────────────────
+function drawLognormal() {
+  const baseY = 760, steps = 300;
+  const xMin = 0.01, xMax = 6;
+  const mu = 0.7, sigma = 0.45;
+  let peak = 0;
+  for (let i=1;i<=200;i++) {
+    const v = lognormPDF(i/200*xMax, mu, sigma);
+    if (v>peak) peak=v;
+  }
+  const scale = 280 / peak;
+  const pts = [];
+  for (let i=0;i<=steps;i++) {
+    const t = i/steps;
+    const rawX = xMin + t*(xMax-xMin);
+    const y = lognormPDF(rawX, mu, sigma)*scale;
+    const cx = 60 + t*480;  // slightly offset
+    pts.push([cx, baseY - y]);
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 0.72;
+  drawCurve(pts, 'rgba(255,140,50,0.12)',  16, '#ff8c00', 25);
+  drawCurve(pts, 'rgba(255,160,60,0.55)',  2.5, '#ff8c00', 14);
+  drawCurve(pts, 'rgba(255,210,130,0.85)', 1.2);
+  ctx.restore();
+}
+
+// ─── Triangle distribution (shine through) ──────────────────────────
+function drawTriangle() {
+  const baseY = 760, steps = 200;
+  const a=0, b=560, c=200;
+  const scale = 260;
+
+  const pts = [];
+  for (let i=0;i<=steps;i++) {
+    const t = i/steps;
+    const rawX = t*560;
+    const y = trianglePDF(rawX, a, b, c) * scale * (b/2);
+    pts.push([60+rawX, baseY - y]);
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 0.60;
+  drawCurve(pts,
+    'rgba(120,255,160,0.10)', 16, '#78ffa0', 22,
+    'rgba(80,200,100,0.04)');
+  drawCurve(pts, 'rgba(120,255,160,0.50)', 2.2, '#78ffa0', 12);
+  drawCurve(pts, 'rgba(200,255,210,0.80)', 1.0);
+  ctx.restore();
+}
+
+// ─── Grid lines (faint) ──────────────────────────────────────────────
+function drawGrid() {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(0,150,220,0.07)';
+  ctx.lineWidth = 1;
+  for (let x=60;x<=640;x+=80) {
+    ctx.beginPath(); ctx.moveTo(x,420); ctx.lineTo(x,770); ctx.stroke();
+  }
+  for (let y=430;y<=760;y+=80) {
+    ctx.beginPath(); ctx.moveTo(55,y); ctx.lineTo(625,y); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ─── Floating random dots (Monte Carlo samples) ──────────────────────
+function drawSamples() {
+  const rng = mulberry32(99);
+  // Box-Muller
+  function randn(rng) {
+    const u1 = rng(), u2 = rng();
+    return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+  }
+  for (let i=0;i<180;i++) {
+    const z = randn(rng);
+    const x = 340 + z * 90;
+    const y = 310 + randn(rng) * 120;
+    const r = 0.8 + rng()*2;
+    const hue = 180 + rng()*60;
+    const a   = 0.15 + rng()*0.5;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fillStyle = `hsla(${hue},100%,70%,${a})`;
+    ctx.fill();
+  }
+  // a few highlighted ones
+  for (let i=0;i<22;i++) {
+    const z = randn(rng);
+    const x = 340 + z*110 + (rng()-0.5)*200;
+    const y = 200 + rng()*500;
+    ctx.beginPath();
+    ctx.arc(x,y,2.5,0,Math.PI*2);
+    ctx.fillStyle = `rgba(0,220,255,${0.3+rng()*0.5})`;
+    ctx.shadowColor = '#00dcff';
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+// ─── Summation symbols scattered ─────────────────────────────────────
+function drawSummations() {
+  const syms = [
+    {x:88,  y:180, sz:36, col:'rgba(0,200,255,0.10)'},
+    {x:540, y:230, sz:28, col:'rgba(255,140,50,0.12)'},
+    {x:160, y:400, sz:22, col:'rgba(120,255,160,0.09)'},
+    {x:490, y:600, sz:18, col:'rgba(0,200,255,0.08)'},
+    {x:300, y:140, sz:44, col:'rgba(0,200,255,0.06)'},
+    {x:590, y:420, sz:20, col:'rgba(255,200,80,0.09)'},
+  ];
+  ctx.save();
+  for (const s of syms) {
+    ctx.font = `bold ${s.sz}px 'Orbitron', serif`;
+    ctx.fillStyle = s.col;
+    ctx.fillText('Σ', s.x, s.y);
+  }
+  // integral signs
+  const ints = [
+    {x:580, y:300, sz:50, col:'rgba(120,255,160,0.08)'},
+    {x:70,  y:550, sz:38, col:'rgba(255,140,50,0.07)'},
+  ];
+  for (const s of ints) {
+    ctx.font = `${s.sz}px Georgia, serif`;
+    ctx.fillStyle = s.col;
+    ctx.fillText('∫', s.x, s.y);
+  }
+  // pi, mu, sigma greek scattered
+  const greek = [
+    {x:430,y:180,sz:20,t:'μ',c:'rgba(0,200,255,0.12)'},
+    {x:110,y:290,sz:18,t:'σ²',c:'rgba(255,140,50,0.11)'},
+    {x:560,y:160,sz:16,t:'π',c:'rgba(120,255,160,0.10)'},
+    {x:230,y:200,sz:22,t:'∞',c:'rgba(0,200,255,0.09)'},
+    {x:470,y:360,sz:16,t:'θ',c:'rgba(255,200,80,0.10)'},
+  ];
+  ctx.font = '16px Share Tech Mono, monospace';
+  for (const g of greek) {
+    ctx.font = `${g.sz}px Share Tech Mono, monospace`;
+    ctx.fillStyle = g.c;
+    ctx.fillText(g.t, g.x, g.y);
+  }
+  ctx.restore();
+}
+
+// ─── Glowing horizontal rule above chart ────────────────────────────
+function drawChartRule() {
+  const g = ctx.createLinearGradient(40,0,640,0);
+  g.addColorStop(0,   'transparent');
+  g.addColorStop(0.2, 'rgba(0,200,255,0.4)');
+  g.addColorStop(0.8, 'rgba(0,200,255,0.4)');
+  g.addColorStop(1,   'transparent');
+  ctx.fillStyle = g;
+  ctx.fillRect(40, 418, 600, 1);
+}
+
+// ─── Legend chips ─────────────────────────────────────────────────────
+function drawLegend() {
+  const items = [
+    {col:'#00dcff', label:'Normal'},
+    {col:'#ff8c32', label:'Log-Normal'},
+    {col:'#78ffa0', label:'Triangle'},
+  ];
+  ctx.save();
+  ctx.font = "11px 'Share Tech Mono', monospace";
+  let lx = 62;
+  for (const it of items) {
+    ctx.fillStyle = it.col + 'cc';
+    ctx.fillRect(lx, 428, 18, 3);
+    ctx.fillStyle = it.col + '99';
+    ctx.fillText(it.label, lx + 22, 431);
+    lx += 110;
+  }
+  ctx.restore();
+}
+
+// ─── Convergence line (hint of CLT) ─────────────────────────────────
+function drawConvergence() {
+  const pts = [];
+  const rng = mulberry32(33);
+  let val = 0;
+  for (let i=1;i<=120;i++) {
+    val = val + (rng()-0.5);
+    const x = 60 + (i/120)*560;
+    const y = 820 + val * 2.5;
+    pts.push([x,y]);
+  }
+  ctx.save();
+  ctx.globalAlpha=0.35;
+  ctx.strokeStyle='rgba(0,200,255,0.6)';
+  ctx.lineWidth=1;
+  ctx.setLineDash([3,5]);
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (const [x,y] of pts) ctx.lineTo(x,y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // converging line
+  ctx.strokeStyle='rgba(255,200,80,0.5)';
+  ctx.lineWidth=1.2;
+  ctx.beginPath();
+  ctx.moveTo(60,820);
+  ctx.lineTo(620,820);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ─── Mulberry32 deterministic RNG ────────────────────────────────────
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// ─── Compose everything ──────────────────────────────────────────────
+function render() {
+  drawBackground();
+  drawStars();
+  drawGrid();
+  drawSummations();
+  drawSamples();
+  drawHistogram();
+  drawChartRule();
+  drawLegend();
+  drawTriangle();
+  drawLognormal();
+  drawNormal();
+  drawConvergence();
+}
+
+render();
+
+// ─── Subtle animation: twinkle stars + particle drift ────────────────
+let frame = 0;
+function animate() {
+  frame++;
+  // Re-render every 90 frames for a subtle living feel
+  if (frame % 90 === 0) {
+    render();
+  }
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>

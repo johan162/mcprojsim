@@ -78,7 +78,7 @@ class SprintSimulationEngine:
             random_seed=self.random_seed,
             start_date=project.project.start_date,
             planning_confidence_level=sprint_planning.planning_confidence_level,
-            removed_work_treatment=str(sprint_planning.removed_work_treatment),
+            removed_work_treatment=sprint_planning.removed_work_treatment.value,
             historical_diagnostics=historical_diagnostics,
             planned_commitment_guidance=self._calculate_planned_commitment(
                 sampler,

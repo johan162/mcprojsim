@@ -64,7 +64,7 @@ total_cost = labor_cost + overhead + fixed_costs + risk_cost_impacts
 An arbitrary string label (e.g. `EUR`, `USD`, `GBP`, `SEK`) displayed next to all
 cost figures.  It is **not** used for conversion — it is purely cosmetic.
 
-- If omitted, falls back to the `currency` setting in your [configuration file](configuration.md)
+- If omitted, falls back to the `currency` setting in your [configuration file](14_configuration.md)
   (default: `EUR`)
 
 ---
@@ -245,10 +245,11 @@ mcprojsim simulate project.yaml -f json --full-cost-detail
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-### Text mode (`--output-format text`)
+### Plain CLI mode
 
-The cost section is printed after the standard duration summary, showing the same
-percentile breakdown plus a brief sensitivity note.
+When no `--table` flag is used, the cost section is printed in plain text after the
+standard duration summary, showing the same percentile breakdown plus a brief
+sensitivity note.
 
 ### Cost sensitivity
 
@@ -336,7 +337,7 @@ The HTML report gains:
 
 ## Configuration defaults
 
-Override cost defaults in a [config file](configuration.md) so you don't have to
+Override cost defaults in a [config file](14_configuration.md) so you don't have to
 repeat them in every project file:
 
 ```yaml
