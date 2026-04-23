@@ -1215,7 +1215,7 @@ def simulate(
         )
 
     if quiet < 2:
-        ## click.echo("==== Simulation Results ====")
+        # click.echo("==== Simulation Results ====")
         click.echo(f"mcprojsim, version {__version__}, {datetime.datetime.now().date()}")
     logger = setup_logging(level="INFO" if verbose else "WARNING")
 
@@ -1432,7 +1432,7 @@ def simulate(
                     "mean_person_days": math.ceil(effort_mean_fallback / hours_per_day),
                 }
 
-            ## click.echo("\n=== Simulation Results ===")
+            # click.echo("\n=== Simulation Results ===")
 
             project_uncertainty_factors = project.project.uncertainty_factors
             if project_uncertainty_factors is not None:
