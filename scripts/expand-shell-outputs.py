@@ -21,6 +21,10 @@ Placeholder syntax
   {{!cmd@A4:10:20:30}}    Triple variant with format spec: first 10 lines,
                           next 20 lines, last 30 lines.
   {{!cmd@B5:20:20}}       Only B5 format has a spec; other formats use full output.
+  {{!cmd@A4:10*}}         Remainder variant: first 10 lines, then all remaining
+                          lines to the end of output.
+  {{!cmd@A4:10:20*}}      First 10 lines, next 20 lines, then all remaining lines.
+                          With *, the second number means "next N" not "last N".
   {{!cmd@L}}              Add zero-padded line numbers at the left edge of every
                           line. The number reflects the actual line position in the
                           command output. Width is the minimum digits needed for the
@@ -86,14 +90,15 @@ def _fence_numbered(lines: list[str], start: int, width: int) -> str:
 
 def _parse_format_specs(
     spec_str: str,
-) -> dict[str, tuple[int | None, int | None, int | None]]:
+) -> dict[str, tuple[int | None, int | None, int | None, bool]]:
     """Parse format specification string like 'A4:25:25,B5:20:20'.
 
-    Returns dict like {'a4': (25, None, 25), 'b5': (20, None, 20), ...}
-    where tuples are (head, mid, tail). Any value can be None.
-    Two-number specs store None for mid; three-number specs populate all three.
+    Returns dict like {'a4': (25, None, 25, False), 'b5': (20, None, 20, False), ...}
+    where tuples are (head, mid, tail, remainder). Any numeric value can be None.
+    Two-number specs without * use head+tail; with * they use head+mid (remainder=True).
+    Three-number specs always use head+mid+tail.
     """
-    specs: dict[str, tuple[int | None, int | None, int | None]] = {}
+    specs: dict[str, tuple[int | None, int | None, int | None, bool]] = {}
     for part in spec_str.split(","):
         part = part.strip()
         if not part:
@@ -102,15 +107,29 @@ def _parse_format_specs(
         if len(pieces) < 1:
             continue
         fmt = pieces[0].strip().lower()
-        head = int(pieces[1]) if len(pieces) > 1 and pieces[1].strip() else None
-        if len(pieces) > 3 and pieces[3].strip():
+        num_pieces = [p.strip() for p in pieces[1:] if p.strip() or p.strip() == ""]
+        # Re-collect to preserve empty slots, then strip for value parsing
+        num_pieces = [p.strip() for p in pieces[1:]]
+        remainder = False
+        if num_pieces and num_pieces[-1].endswith("*"):
+            remainder = True
+            num_pieces[-1] = num_pieces[-1][:-1]
+        head: int | None = None
+        mid: int | None = None
+        tail: int | None = None
+        if len(num_pieces) >= 1 and num_pieces[0]:
+            head = int(num_pieces[0])
+        if len(num_pieces) >= 3:
             # Three-number variant: head:mid:tail
-            mid = int(pieces[2]) if pieces[2].strip() else None
-            tail = int(pieces[3])
-        else:
-            mid = None
-            tail = int(pieces[2]) if len(pieces) > 2 and pieces[2].strip() else None
-        specs[fmt] = (head, mid, tail)
+            mid = int(num_pieces[1]) if num_pieces[1] else None
+            tail = int(num_pieces[2]) if num_pieces[2] else None
+        elif len(num_pieces) == 2 and num_pieces[1]:
+            if remainder:
+                # second number is "next N", then take rest
+                mid = int(num_pieces[1])
+            else:
+                tail = int(num_pieces[1])
+        specs[fmt] = (head, mid, tail, remainder)
     return specs
 
 
@@ -143,39 +162,47 @@ def _expand_match(
         format_specs_str = ",".join(parts) if parts else None
 
     # Parse inline head:tail or head:mid:tail from cmd_part (backward compatibility).
-    # Look for :N, :N:M, or :N:M:P at the very end where N, M, P are digits.
-    inline_match = re.search(r":(\d+)(?::(\d+)(?::(\d+))?)?$", cmd_part)
+    # Look for :N, :N:M, or :N:M:P (optionally followed by *) at the very end.
+    inline_match = re.search(r":(\d+)(?::(\d+)(?::(\d+))?)?(\*)?$", cmd_part)
     inline_head: int | None = None
     inline_mid: int | None = None
     inline_tail: int | None = None
+    inline_remainder: bool = False
     if inline_match:
+        inline_remainder = inline_match.group(4) == "*"
         inline_head = int(inline_match.group(1))
         if inline_match.group(3) is not None:
             # Three-number variant: head:mid:tail
             inline_mid = int(inline_match.group(2))
             inline_tail = int(inline_match.group(3))
         elif inline_match.group(2) is not None:
-            inline_tail = int(inline_match.group(2))
+            if inline_remainder:
+                # second number is "next N", then take rest
+                inline_mid = int(inline_match.group(2))
+            else:
+                inline_tail = int(inline_match.group(2))
         cmd = cmd_part[: inline_match.start()].strip()
     else:
         cmd = cmd_part.strip()
 
     # Parse format-specific specs if present
-    format_specs: dict[str, tuple[int | None, int | None, int | None]] = {}
+    format_specs: dict[str, tuple[int | None, int | None, int | None, bool]] = {}
     if format_specs_str:
         format_specs = _parse_format_specs(format_specs_str)
 
-    # Determine which head/mid/tail to use based on target_format
+    # Determine which head/mid/tail/remainder to use based on target_format
     head: int | None = None
     mid: int | None = None
     tail: int | None = None
+    remainder: bool = False
     if target_format and target_format.lower() in format_specs:
-        head, mid, tail = format_specs[target_format.lower()]
+        head, mid, tail, remainder = format_specs[target_format.lower()]
     else:
         # Use inline specs if available (backward compat), else full output
         head = inline_head
         mid = inline_mid
         tail = inline_tail
+        remainder = inline_remainder
 
     lines = _run_command(cmd, cwd)
     n = len(lines)
@@ -183,6 +210,16 @@ def _expand_match(
     if not line_numbers:
         if head is None:
             return _fence(lines)
+        if remainder:
+            result = _fence(lines[:head])
+            if mid is not None:
+                result += "\n\n" + _fence(lines[head : head + mid])
+                rest = lines[head + mid :]
+            else:
+                rest = lines[head:]
+            if rest:
+                result += "\n\n" + _fence(rest)
+            return result
         if mid is None and tail is None:
             return _fence(lines[:head])
         if mid is None:
@@ -193,9 +230,10 @@ def _expand_match(
         return _fence(lines[:head]) + "\n\n" + _fence(mid_lines) + "\n\n" + _fence(tail_lines)
 
     # --- Line-numbered output ---
-    # Determine the highest actual line number that will appear so we can
-    # compute the zero-padding width.
+    # Width is always based on n when remainder is True (we show to end of output).
     if head is None:
+        max_line_no = n
+    elif remainder:
         max_line_no = n
     else:
         max_line_no = head
@@ -207,6 +245,18 @@ def _expand_match(
 
     if head is None:
         return _fence_numbered(lines, 1, width)
+
+    if remainder:
+        result = _fence_numbered(lines[:head], 1, width)
+        if mid is not None:
+            result += "\n\n" + _fence_numbered(lines[head : head + mid], head + 1, width)
+            rest_start = head + mid
+        else:
+            rest_start = head
+        rest = lines[rest_start:]
+        if rest:
+            result += "\n\n" + _fence_numbered(rest, rest_start + 1, width)
+        return result
 
     if mid is None and tail is None:
         return _fence_numbered(lines[:head], 1, width)
