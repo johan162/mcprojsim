@@ -15,7 +15,6 @@ from mcprojsim.mcp_server import (
     validate_project_description,
 )
 
-
 # The mcp package is an optional dependency – skip all tests when missing.
 mcp = pytest.importorskip("mcp")
 

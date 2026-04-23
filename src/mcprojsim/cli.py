@@ -1216,7 +1216,9 @@ def simulate(
 
     if quiet < 2:
         # click.echo("==== Simulation Results ====")
-        click.echo(f"mcprojsim, version {__version__}, {datetime.datetime.now().date()}")
+        click.echo(
+            f"mcprojsim, version {__version__}, {datetime.datetime.now().date()}"
+        )
     logger = setup_logging(level="INFO" if verbose else "WARNING")
 
     try:
@@ -2255,7 +2257,14 @@ def validate(project_file: str, verbose: bool) -> None:
 
 
 @cli.command(name="config")
-@click.option("--config", "--config-file", "-c", "config_file", type=click.Path(exists=True), help="Config file")
+@click.option(
+    "--config",
+    "--config-file",
+    "-c",
+    "config_file",
+    type=click.Path(exists=True),
+    help="Config file",
+)
 @click.option(
     "--generate",
     is_flag=True,
