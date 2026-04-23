@@ -967,17 +967,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#input-modes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Input modes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#project-level-metadata" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1331,7 +1320,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../17_examples.md" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -1820,17 +1809,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#input-modes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Input modes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#project-level-metadata" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2243,7 +2221,10 @@
 </span><span id="__span-2-58"><a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span><span id="__span-2-59"><a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span></code></pre></div>
-<h2 id="input-modes">Input modes<a class="headerlink" href="#input-modes" title="Permanent link">&para;</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">Review generated task names</p>
+<p>Task names ending with <code>()</code> — such as <code>"Design database schema ()"</code> — are parser artifacts that occur when the input contains unmatched or empty parentheses. They are harmless but untidy. Always review the generated YAML and remove or correct these fragments before using the file in a simulation.</p>
+</div>
 <p>The parser supports two task-definition modes. They cannot be mixed in the same description.</p>
 <table>
 <thead>
@@ -2616,7 +2597,7 @@
 </span></code></pre></div>
 <hr />
 <h2 id="resources-calendars-and-sprint-planning">Resources, calendars, and sprint planning<a class="headerlink" href="#resources-calendars-and-sprint-planning" title="Permanent link">&para;</a></h2>
-<p>These sections use the same structured format regardless of whether tasks use explicit headers or auto-detection. See the <a href="mcp-server.md#natural-language-input-format">MCP Server</a> page and the <a href="../../api_reference/10_nl_parser/">API reference</a> for full details on resource, calendar, and sprint planning input patterns.</p>
+<p>These sections use the same structured format regardless of whether tasks use explicit headers or auto-detection. See the <a href="../16_mcp-server/#natural-language-input-format">MCP Server</a> page and the <a href="../../api_reference/10_nl_parser/">API reference</a> for full details on resource, calendar, and sprint planning input patterns.</p>
 <hr />
 <h2 id="mixing-estimation-methods">Mixing estimation methods<a class="headerlink" href="#mixing-estimation-methods" title="Permanent link">&para;</a></h2>
 <p>Different tasks can use different estimation methods within the same project:</p>

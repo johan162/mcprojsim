@@ -888,10 +888,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#text-mode-output-format-text" class="md-nav__link">
+  <a href="#plain-cli-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Text mode (--output-format text)
+        Plain CLI mode
       
     </span>
   </a>
@@ -1498,7 +1498,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../17_examples.md" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -2132,10 +2132,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#text-mode-output-format-text" class="md-nav__link">
+  <a href="#plain-cli-mode" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Text mode (--output-format text)
+        Plain CLI mode
       
     </span>
   </a>
@@ -2569,7 +2569,7 @@ overhead, tooling, office, etc.</p>
 <p>An arbitrary string label (e.g. <code>EUR</code>, <code>USD</code>, <code>GBP</code>, <code>SEK</code>) displayed next to all
 cost figures.  It is <strong>not</strong> used for conversion — it is purely cosmetic.</p>
 <ul>
-<li>If omitted, falls back to the <code>currency</code> setting in your <a href="configuration.md">configuration file</a>
+<li>If omitted, falls back to the <code>currency</code> setting in your <a href="../14_configuration/">configuration file</a>
   (default: <code>EUR</code>)</li>
 </ul>
 <hr />
@@ -2717,9 +2717,10 @@ apply globally to the whole project:</p>
 </span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>│ 80% confidence interval:   €29,800 – €41,800                      │
 </span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>└───────────────────────────────────────────────────────────────────┘
 </span></code></pre></div>
-<h3 id="text-mode-output-format-text">Text mode (<code>--output-format text</code>)<a class="headerlink" href="#text-mode-output-format-text" title="Permanent link">&para;</a></h3>
-<p>The cost section is printed after the standard duration summary, showing the same
-percentile breakdown plus a brief sensitivity note.</p>
+<h3 id="plain-cli-mode">Plain CLI mode<a class="headerlink" href="#plain-cli-mode" title="Permanent link">&para;</a></h3>
+<p>When no <code>--table</code> flag is used, the cost section is printed in plain text after the
+standard duration summary, showing the same percentile breakdown plus a brief
+sensitivity note.</p>
 <h3 id="cost-sensitivity">Cost sensitivity<a class="headerlink" href="#cost-sensitivity" title="Permanent link">&para;</a></h3>
 <p>When cost estimation is active, <code>mcprojsim</code> computes a <strong>Spearman rank correlation</strong>
 between each task's cost contribution and the total project cost.  High-correlation
@@ -2784,7 +2785,7 @@ percentile plus rows for mean and standard deviation.</p>
 </ul>
 <hr />
 <h2 id="configuration-defaults">Configuration defaults<a class="headerlink" href="#configuration-defaults" title="Permanent link">&para;</a></h2>
-<p>Override cost defaults in a <a href="configuration.md">config file</a> so you don't have to
+<p>Override cost defaults in a <a href="../14_configuration/">config file</a> so you don't have to
 repeat them in every project file:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">cost</span><span class="p">:</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">default_hourly_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">130</span><span class="w">   </span><span class="c1"># applied when project omits default_hourly_rate</span>

@@ -943,7 +943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../17_examples.md" class="md-nav__link">
+      <a href="../examples/" class="md-nav__link">
         
   
   
@@ -1681,14 +1681,14 @@
 <p>Key observations: two sequential tasks, no parallelism (<code>Max Parallel Tasks: 1</code>), <code>dependency_only</code> scheduling.</p>
 <p>See <code>examples/quickstart_example.yaml</code> in the repository.</p>
 <h2 id="t-shirt-sizing">T-Shirt Sizing<a class="headerlink" href="#t-shirt-sizing" title="Permanent link">&para;</a></h2>
-<p>For quick estimation using relative sizes (<code>XS</code>, <code>S</code>, <code>M</code>, <code>L</code>, <code>XL</code>, <code>XXL</code>). T-shirt sizes map to default effort ranges that are configurable via the <a href="user_guide/task_estimation.md#t-shirt-size-estimates">configuration file</a>.</p>
+<p>For quick estimation using relative sizes (<code>XS</code>, <code>S</code>, <code>M</code>, <code>L</code>, <code>XL</code>, <code>XXL</code>). T-shirt sizes map to default effort ranges that are configurable via the <a href="../user_guide/05_task_estimation/#t-shirt-size-estimates">configuration file</a>.</p>
 <p>{{file:examples/tshirt_sizing_project.yaml}}</p>
 <p>{{run:poetry run mcprojsim simulate examples/tshirt_sizing_project.yaml --minimal --seed 42}}</p>
 <p>Key observations: two independent starting tasks yield <code>Max Parallel Tasks: 2</code>. The wide P10–P99 spread (938–1590 working days) reflects the inherent uncertainty of T-shirt sizing for large effort items.</p>
 <p>Note: T-shirt size and story point estimates must <strong>not</strong> include a <code>unit</code> field in the project file. The unit is controlled by the configuration.</p>
 <p>See <code>examples/tshirt_sizing_project.yaml</code> in the repository.</p>
 <h2 id="story-points">Story Points<a class="headerlink" href="#story-points" title="Permanent link">&para;</a></h2>
-<p>For agile-style relative estimation using calibrated story point mappings. Default mappings are configurable via the <a href="user_guide/task_estimation.md#story-point-estimates">configuration file</a>.</p>
+<p>For agile-style relative estimation using calibrated story point mappings. Default mappings are configurable via the <a href="../user_guide/05_task_estimation/#story-point-estimates">configuration file</a>.</p>
 <p>{{file:examples/story_points_walkthrough_project.yaml}}</p>
 <p>{{run:poetry run mcprojsim simulate examples/story_points_walkthrough_project.yaml --minimal --table --seed 42}}</p>
 <p>Key observations: small project with low uncertainty — the CV is only 0.15 and P50 to P90 spans just 3 working days.</p>
@@ -1746,7 +1746,7 @@ bounds.</p>
 <li>Bob's <code>part_time</code> calendar (6 hours/day, Mon–Thu) reduces his available capacity.</li>
 <li>Calendar time (78 working days) is much larger than effort (22 person-days) due to calendar constraints, weekends, holidays, and sickness.</li>
 </ul>
-<p>For a full constrained walkthrough with incremental complexity, see the <a href="user_guide/constrained.md">Constrained Scheduling Guide</a>.</p>
+<p>For a full constrained walkthrough with incremental complexity, see the <a href="../user_guide/10_constrained/">Constrained Scheduling Guide</a>.</p>
 <h2 id="natural-language-project-generation">Natural Language Project Generation<a class="headerlink" href="#natural-language-project-generation" title="Permanent link">&para;</a></h2>
 <p>The <code>generate</code> command converts plain-text project descriptions into valid YAML project files. This lets you sketch a project quickly and iterate.</p>
 <h3 id="basic-text-input-dependency-only">Basic text input (dependency-only)<a class="headerlink" href="#basic-text-input-dependency-only" title="Permanent link">&para;</a></h3>

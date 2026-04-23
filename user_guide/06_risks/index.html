@@ -1266,7 +1266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../17_examples.md" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -2031,7 +2031,7 @@
 
 
 <h1 id="risks">Risks<a class="headerlink" href="#risks" title="Permanent link">&para;</a></h1>
-<p>This chapter explains how <code>mcprojsim</code> models schedule variation due to <strong>risks</strong>. (The other source of schedule variation comes from <strong>uncertainty factors</strong> — see <a href="uncertainty_factors.md">Uncertainty Factors</a>.) Both influence the simulated project duration, but they represent fundamentally different ideas and are handled differently by the simulation engine.</p>
+<p>This chapter explains how <code>mcprojsim</code> models schedule variation due to <strong>risks</strong>. (The other source of schedule variation comes from <strong>uncertainty factors</strong> — see <a href="../04_uncertainty_factors/">Uncertainty Factors</a>.) Both influence the simulated project duration, but they represent fundamentally different ideas and are handled differently by the simulation engine.</p>
 <p><strong>Risks</strong> are discrete events that may or may not happen. A failed security audit, the departure of a key developer, or a sudden change in requirements are all risks. Each risk has a probability of occurring and an impact if it does.</p>
 <h2 id="how-risks-affect-the-simulation">How Risks Affect the Simulation<a class="headerlink" href="#how-risks-affect-the-simulation" title="Permanent link">&para;</a></h2>
 <p>During each Monte Carlo iteration, every risk is independently evaluated. The simulator draws a random number and compares it to the risk's probability. If the risk triggers, its impact is added to the relevant duration. If it does not trigger, no penalty is applied.</p>
@@ -2234,6 +2234,10 @@
 <p>In this example, if the first risk triggers in an iteration where the scheduled project duration is 60 days, it adds 12 days (20% of 60). The second risk, if triggered, always adds a flat 10 days regardless of project length.</p>
 <h3 id="how-project-level-risks-interact-with-the-critical-path">How Project-Level Risks Interact with the Critical Path<a class="headerlink" href="#how-project-level-risks-interact-with-the-critical-path" title="Permanent link">&para;</a></h3>
 <p>Project-level risks are applied after the schedule is computed. This means they increase the final project duration but do not change which tasks are identified as being on the critical path for that iteration. The critical path is determined purely by task durations, uncertainty factors, task-level risks, and dependency structure.</p>
+<div class="admonition warning">
+<p class="admonition-title">Total duration can exceed the longest critical chain</p>
+<p>Because project-level risks add time that is not tied to any specific task, the total project duration shown in the confidence interval table can be longer than the sum of durations along the identified critical path. The difference represents accumulated project-level risk impact — for example, an organisation-wide event such as an unplanned freeze or a key person becoming unavailable — which cannot be attributed to a specific task sequence.</p>
+</div>
 <h2 id="combining-risks-at-both-levels">Combining Risks at Both Levels<a class="headerlink" href="#combining-risks-at-both-levels" title="Permanent link">&para;</a></h2>
 <p>A realistic project model often uses both task-level and project-level risks. There is no conflict between them — they operate at different stages of the simulation pipeline.</p>
 <h3 id="complete-project-example-with-both-risk-types">Complete Project Example with Both Risk Types<a class="headerlink" href="#complete-project-example-with-both-risk-types" title="Permanent link">&para;</a></h3>
@@ -2389,7 +2393,7 @@
 </span></code></pre></div>
 <p>In this project, the only source of variation across iterations is the random sampling from each task's triangular distribution. The simulation will produce a distribution of project durations shaped entirely by the estimate ranges and the dependency structure.</p>
 <h3 id="example-2-same-project-with-uncertainty-factors-and-risks">Example 2: Same Project With Uncertainty Factors and Risks<a class="headerlink" href="#example-2-same-project-with-uncertainty-factors-and-risks" title="Permanent link">&para;</a></h3>
-<p>The same project, enriched with <a href="uncertainty_factors.md">uncertainty factors</a> and risks to capture additional real-world conditions.</p>
+<p>The same project, enriched with <a href="../04_uncertainty_factors/">uncertainty factors</a> and risks to capture additional real-world conditions.</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nt">project</span><span class="p">:</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Internal</span><span class="nv"> </span><span class="s">Dashboard&quot;</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Build</span><span class="nv"> </span><span class="s">an</span><span class="nv"> </span><span class="s">internal</span><span class="nv"> </span><span class="s">reporting</span><span class="nv"> </span><span class="s">dashboard&quot;</span>

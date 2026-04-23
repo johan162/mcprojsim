@@ -1460,7 +1460,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../17_examples.md" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -2842,6 +2842,10 @@ It is a heuristic, not globally optimal schedule optimization.</p>
 <li><strong>Effective Resource Utilization</strong> — ratio of total task effort to total available resource capacity over the project duration, capped at 1.0 (100%).  Near 1.0 means the resource pool is fully loaded; near 0 means resources were idle most of the time.</li>
 <li><strong>Calendar Delay Contribution</strong> — total hours lost to non-working periods (weekends, holidays, planned absences, sickness) while resources were carrying work.</li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Zero resource wait alongside large calendar delay is not a contradiction</p>
+<p>A project can show <strong>Average Resource Wait: 0.00h</strong> and a large <strong>Calendar Delay Contribution</strong> at the same time. This simply means resources were always available when tasks needed them (no queuing), but the project spanned many non-working periods — evenings, weekends, holidays, or absences — during which work was paused. Calendar delay measures elapsed clock time lost to non-working hours, not resource contention.</p>
+</div>
 <p>\newpage</p>
 <h2 id="example-3-add-working-calendars">Example 3: Add working calendars<a class="headerlink" href="#example-3-add-working-calendars" title="Permanent link">&para;</a></h2>
 <p>Attach resources to calendars and define working patterns.</p>
@@ -3270,10 +3274,10 @@ It is a heuristic, not globally optimal schedule optimization.</p>
 <p><code>constrained_scheduling.pass1_iterations</code> controls pass-1 ranking depth when two-pass mode is active.</p>
 <h2 id="related-chapters">Related chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="project_files.md">Project Files</a> for full schema reference</li>
-<li><a href="running_simulations.md">Running Simulations</a> for command reference</li>
-<li><a href="interpreting_results.md">Interpreting Results</a> for diagnostics interpretation</li>
-<li><a href="multi_phase_simulation.md">Multi-Phase (Two-Pass) Simulation</a> for criticality-prioritized scheduling</li>
+<li><a href="../08_project_files/">Project Files</a> for full schema reference</li>
+<li><a href="../12_running_simulations/">Running Simulations</a> for command reference</li>
+<li><a href="../13_interpreting_results/">Interpreting Results</a> for diagnostics interpretation</li>
+<li><a href="../11_multi_phase_simulation/">Multi-Phase (Two-Pass) Simulation</a> for criticality-prioritized scheduling</li>
 </ul>
 <p>\newpage</p>
 

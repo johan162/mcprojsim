@@ -1526,7 +1526,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../17_examples.md" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -2884,10 +2884,10 @@
 </ul>
 <h3 id="t_shirt_size_default_category"><code>t_shirt_size_default_category</code><a class="headerlink" href="#t_shirt_size_default_category" title="Permanent link">&para;</a></h3>
 <p>This field controls how bare T-shirt size tokens are resolved when the project file uses values like <code>M</code> instead of qualified values like <code>story.M</code> or <code>epic.M</code>.</p>
-<p>Default: <code>epic</code></p>
+<p>Default: <code>story</code></p>
 <p>That means:</p>
 <ul>
-<li><code>t_shirt_size: M</code> resolves to <code>epic.M</code> unless you override the default category,</li>
+<li><code>t_shirt_size: M</code> resolves to <code>story.M</code> unless you override the default category,</li>
 <li>legacy flat <code>t_shirt_sizes</code> maps are migrated into <code>t_shirt_sizes.&lt;default_category&gt;</code> during config loading,</li>
 <li>changing this value changes both bare-token resolution and the target category used for legacy flat-map normalization.</li>
 </ul>
@@ -3026,7 +3026,7 @@ the shifted log-normal distribution.</p>
 <p>Default: <code>"days"</code></p>
 <h3 id="important-note">Important note<a class="headerlink" href="#important-note" title="Permanent link">&para;</a></h3>
 <p>Story Point and T-shirt-size estimates in the <strong>project file</strong> must <strong>not</strong> include their own <code>unit</code> field. The unit comes from the configuration via <code>story_point_unit</code> and <code>t_shirt_size_unit</code>.</p>
-<p>See <a href="task_estimation.md#t-shirt-size-estimates">Task Estimation</a> and <a href="task_estimation.md#story-point-estimates">Task Estimation</a> for more guidance.</p>
+<p>See <a href="../05_task_estimation/#t-shirt-size-estimates">Task Estimation</a> and <a href="../05_task_estimation/#story-point-estimates">Task Estimation</a> for more guidance.</p>
 <h2 id="simulation-settings">Simulation settings<a class="headerlink" href="#simulation-settings" title="Permanent link">&para;</a></h2>
 <p>The <code>simulation</code> section controls default run behavior.</p>
 <table>
@@ -3429,15 +3429,14 @@ $$</p>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>mcprojsim<span class="w"> </span>config
 </span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>
 </span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="c1"># Show configuration from a specific file</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--config-file<span class="w"> </span>config.yaml
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--config<span class="w"> </span>config.yaml
 </span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
 </span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="c1"># Generate a default configuration file at ~/.mcprojsim/config.yaml</span>
 </span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--generate
 </span></code></pre></div>
-<p>When no <code>--config-file</code> is given, <code>mcprojsim</code> automatically loads
-<code>~/.mcprojsim/configuration.yaml</code> if it exists. Use <code>--generate</code> to produce a
-starter config file at <code>~/.mcprojsim/config.yaml</code> that you can then customise
-and rename to <code>configuration.yaml</code>.</p>
+<p>When no <code>--config</code> is given, <code>mcprojsim</code> automatically loads
+<code>~/.mcprojsim/config.yaml</code> if it exists. Use <code>--generate</code> to produce a
+starter config file at that location that you can then customise.</p>
 <p>The <code>config</code> output includes the most relevant effective settings, including:</p>
 <ul>
 <li>default iteration count,</li>
@@ -3448,6 +3447,10 @@ and rename to <code>configuration.yaml</code>.</p>
 <li>staffing settings,</li>
 <li>sprint defaults.</li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Derived lognormal parameters in config output</p>
+<p>For each T-shirt size and story point value, <code>mcprojsim config</code> also shows computed <code>lognormal params</code> (<code>mu</code>, <code>sigma</code>, <code>z-score</code>). These are derived from the configured <code>low</code>/<code>expected</code>/<code>high</code> values and are displayed for verification purposes only. They are not configurable fields — changing the underlying size values automatically recomputes them.</p>
+</div>
 <h2 id="sprint-planning-precedence">Sprint planning precedence<a class="headerlink" href="#sprint-planning-precedence" title="Permanent link">&para;</a></h2>
 <p>Sprint-planning values are resolved in this order (highest to lowest priority):</p>
 <ol>
@@ -3457,7 +3460,7 @@ and rename to <code>configuration.yaml</code>.</p>
 <li>Built-in defaults</li>
 </ol>
 <p>This lets you keep company-wide defaults in <code>sprint_defaults</code>, set project-specific behavior in the project file, and still override per run with CLI flags.</p>
-<p>For sprint-planning field details and examples, see <a href="sprint_planning.md">Sprint planning</a>.</p>
+<p>For sprint-planning field details and examples, see <a href="../09_sprint_planning/">Sprint planning</a>.</p>
 <h2 id="constrained-scheduling-defaults">Constrained scheduling defaults<a class="headerlink" href="#constrained-scheduling-defaults" title="Permanent link">&para;</a></h2>
 <p>The <code>constrained_scheduling</code> section controls defaults for resource-constrained scheduling runs.</p>
 <p>These settings affect scheduling behavior directly:</p>
@@ -3575,7 +3578,7 @@ $$</p>
 <p>$$
 p(x=r) = \frac{1}{1 + e^{-b}}
 $$</p>
-<p>For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see <a href="sprint_planning.md#item-spillover">Sprint planning</a>.</p>
+<p>For full spillover workflow details (including Beta-sampled consumed fraction and carryover construction), see <a href="../09_sprint_planning/#item-spillover">Sprint planning</a>.</p>
 <p><code>sprint_defaults.spillover_consumed_fraction_alpha</code> and <code>sprint_defaults.spillover_consumed_fraction_beta</code> are the Beta-distribution shape parameters for the consumed fraction during spillover events. Their expected consumed fraction is:</p>
 <p>$$
 \mathbb{E}[f] = \frac{\alpha}{\alpha + \beta}

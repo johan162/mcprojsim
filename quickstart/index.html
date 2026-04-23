@@ -1106,7 +1106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../17_examples.md" class="md-nav__link">
+      <a href="../examples/" class="md-nav__link">
         
   
   
@@ -1715,7 +1715,7 @@
 
 <h1 id="quick-start-your-first-10-minutes-with-mcprojsim">Quick Start: your first 10 minutes with <code>mcprojsim</code><a class="headerlink" href="#quick-start-your-first-10-minutes-with-mcprojsim" title="Permanent link">&para;</a></h1>
 <p>This guide is for end users who want to get from installation to a first simulation as quickly as possible.</p>
-<p>It intentionally follows one tactical happy path: one install method, one tiny example, one simulation command, and one report export. For broader install options, deeper explanations, and extended workflows, continue with the User Guide chapter at <code>docs/user_guide/getting_started.md</code>.</p>
+<p>It intentionally follows one tactical happy path: one install method, one tiny example, one simulation command, and one report export. For broader install options, deeper explanations, and extended workflows, continue with the User Guide chapter at <code>docs/user_guide/01_getting_started.md</code>.</p>
 <p>In the next few minutes you will:</p>
 <ol>
 <li>install <code>mcprojsim</code></li>
@@ -1761,7 +1761,7 @@
 <p>Generate the project file:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>mcprojsim<span class="w"> </span>generate<span class="w"> </span>description.txt<span class="w"> </span>-o<span class="w"> </span>quickstart_project.yaml
 </span></code></pre></div>
-<p>That is it — the generated <code>quickstart_project.yaml</code> is ready for validation and simulation. You can use T-shirt sizes (<code>XS</code>, <code>S</code>, <code>M</code>, <code>L</code>, <code>XL</code>, <code>XXL</code>), including qualified forms like <code>epic.M</code>, story points, or explicit <code>low/expected/high</code> estimates. Bare T-shirt values resolve via the configured default category. See the <a href="user_guide/mcp-server.md">MCP Server &amp; Natural Language Input</a> guide for the full input format.</p>
+<p>That is it — the generated <code>quickstart_project.yaml</code> is ready for validation and simulation. You can use T-shirt sizes (<code>XS</code>, <code>S</code>, <code>M</code>, <code>L</code>, <code>XL</code>, <code>XXL</code>), including qualified forms like <code>epic.M</code>, story points, or explicit <code>low/expected/high</code> estimates. Bare T-shirt values resolve via the configured default category. See the <a href="../user_guide/16_mcp-server/">MCP Server &amp; Natural Language Input</a> guide for the full input format.</p>
 <details class="tip">
 <summary>Alternative: write the YAML by hand</summary>
 <p>If you prefer full control, create <code>quickstart_project.yaml</code> manually where you can specify all available fields. The minimum required fields are <code>project.name</code>, <code>project.start_date</code>, and at least one task with an estimate. In the previous example we used T-shirt sizes for the estimates, but here is the same project with explicit <code>low/expected/high</code> estimates in days:</p>
@@ -1790,7 +1790,7 @@
 </span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;task_001&quot;</span><span class="p p-Indicator">]</span>
 </span></code></pre></div>
 </details>
-<p>See the <a href="user_guide/project_files.md">project file reference</a> for all available fields.</p>
+<p>See the <a href="../user_guide/08_project_files/">project file reference</a> for all available fields.</p>
 <p>This example is intentionally small — two tasks, one dependency, but that is enough for a meaningful first simulation!</p>
 <h2 id="3-validate-the-file">3. Validate the file<a class="headerlink" href="#3-validate-the-file" title="Permanent link">&para;</a></h2>
 <p>Before simulating, validate the input:</p>
@@ -1954,18 +1954,18 @@ To get the full report with all details, use the <code>-f</code> flag.</p>
 <h2 id="if-you-want-to-go-further">If you want to go further<a class="headerlink" href="#if-you-want-to-go-further" title="Permanent link">&para;</a></h2>
 <p>After this first run, move to the fuller User Guide path below. This Quick Start stays intentionally short and tactical; the chapters below are the long-form, maintained references:</p>
 <ul>
-<li><a href="user_guide/getting_started.md">Getting Started</a> — a fuller walkthrough</li>
-<li><a href="user_guide/introduction.md">Introduction</a> — Monte Carlo concepts</li>
-<li><a href="user_guide/your_first_project.md">Your First Project</a> — build richer project files step by step</li>
-<li><a href="user_guide/project_files.md">Project Files</a> — project file reference</li>
-<li><a href="user_guide/configuration.md">Configuration</a> — uncertainty factors and config</li>
+<li><a href="../user_guide/01_getting_started/">Getting Started</a> — a fuller walkthrough</li>
+<li><a href="../user_guide/02_introduction/">Introduction</a> — Monte Carlo concepts</li>
+<li><a href="../user_guide/03_your_first_project/">Your First Project</a> — build richer project files step by step</li>
+<li><a href="../user_guide/08_project_files/">Project Files</a> — project file reference</li>
+<li><a href="../user_guide/14_configuration/">Configuration</a> — uncertainty factors and config</li>
 <li><a href="../examples/">Examples</a> — example projects</li>
 </ul>
 <h2 id="need-a-different-installation-path">Need a different installation path?<a class="headerlink" href="#need-a-different-installation-path" title="Permanent link">&para;</a></h2>
 <p>This guide intentionally focuses on the fastest end-user path for a first successful run.</p>
 <p>If <code>pipx</code> is not the right fit, see:</p>
 <ul>
-<li><a href="user_guide/getting_started.md">Getting Started</a> for basic install and first-run material</li>
+<li><a href="../user_guide/01_getting_started/">Getting Started</a> for basic install and first-run material</li>
 </ul>
 <p>If you are a developer, see <a href="../development/">Development</a> for instructions on setting up a local development environment, running tests, and contributing to the project.</p>
 

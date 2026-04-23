@@ -18,7 +18,7 @@
         <link rel="prev" href="../15_nl_processing/">
       
       
-        <link rel="next" href="../../api_reference/01_intro/">
+        <link rel="next" href="../../examples/">
       
       
         
@@ -1591,7 +1591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../17_examples.md" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -3214,7 +3214,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </blockquote>
 <p>The assistant will call <code>validate_project_description</code> and report any warnings (missing estimates, undefined dependencies) before you commit to generating the file.</p>
 <h2 id="natural-language-input-format">Natural language input format<a class="headerlink" href="#natural-language-input-format" title="Permanent link">&para;</a></h2>
-<p>The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes. It also accepts plain numbered lists, bullet lists, and inline properties — see <a href="nl_processing.md">Natural Language Input</a> for the comprehensive reference.</p>
+<p>The parser is intentionally tolerant of formatting variations. It understands semi-structured text that follows a simple pattern: project metadata at the top, then numbered tasks with bullet-point attributes. It also accepts plain numbered lists, bullet lists, and inline properties — see <a href="../15_nl_processing/">Natural Language Input</a> for the comprehensive reference.</p>
 <p>The parser also supports sprint-planning phrasing, including sprint history and future sprint capacity override sections.</p>
 <h3 id="project-level-fields">Project-level fields<a class="headerlink" href="#project-level-fields" title="Permanent link">&para;</a></h3>
 <table>
@@ -3692,12 +3692,12 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 </span><span id="__span-29-6"><a id="__codelineno-29-6" name="__codelineno-29-6" href="#__codelineno-29-6"></a>[3] Implement ingestion layer 3–5 days depends on Task 2
 </span><span id="__span-29-7"><a id="__codelineno-29-7" name="__codelineno-29-7" href="#__codelineno-29-7"></a>[4] Build transformation engine [XL] depends on Task 3
 </span></code></pre></div>
-<p>See <a href="nl_processing.md">Natural Language Input</a> for the full range of supported list formats and inline properties.</p>
+<p>See <a href="../15_nl_processing/">Natural Language Input</a> for the full range of supported list formats and inline properties.</p>
 <h2 id="using-the-parser-from-the-command-line">Using the parser from the command line<a class="headerlink" href="#using-the-parser-from-the-command-line" title="Permanent link">&para;</a></h2>
 <p>You do not need an MCP client or an AI service to use the natural language parser. The <code>mcprojsim generate</code> command runs the same parser directly from the terminal:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>mcprojsim<span class="w"> </span>generate<span class="w"> </span>description.txt<span class="w"> </span>-o<span class="w"> </span>my_project.yaml
 </span></code></pre></div>
-<p>See <a href="running_simulations.md#mcprojsim-generate">Running Simulations — <code>mcprojsim generate</code></a> for the full command reference and all options.</p>
+<p>See <a href="../12_running_simulations/#mcprojsim-generate">Running Simulations — <code>mcprojsim generate</code></a> for the full command reference and all options.</p>
 <h2 id="using-the-mcp-tools-directly-from-python">Using the MCP tools directly from Python<a class="headerlink" href="#using-the-mcp-tools-directly-from-python" title="Permanent link">&para;</a></h2>
 <p>While the MCP server is the primary way to use the parser through an AI assistant, you can also call the parser directly from Python code:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">mcprojsim.nl_parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">NLProjectParser</span>
@@ -3789,7 +3789,7 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 <p>Then run the simulation with:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>my_project.yaml<span class="w"> </span>--config<span class="w"> </span>config.yaml
 </span></code></pre></div>
-<p>See <a href="configuration.md">Configuration</a> for full details on customizing the mappings.</p>
+<p>See <a href="../14_configuration/">Configuration</a> for full details on customizing the mappings.</p>
 <h3 id="generating-files-for-quick-what-if-scenarios">Generating files for quick "what-if" scenarios<a class="headerlink" href="#generating-files-for-quick-what-if-scenarios" title="Permanent link">&para;</a></h3>
 <p>The MCP server is particularly useful for rapid scenario comparison. You can ask your AI assistant:</p>
 <blockquote>
@@ -3808,10 +3808,10 @@ Task 2: Build — Depends on Task 1 — Size: XL"</p>
 <h3 id="known-limitations">Known limitations<a class="headerlink" href="#known-limitations" title="Permanent link">&para;</a></h3>
 <p>The natural language parser is a pattern-based parser, not a full natural language understanding system. Keep these points in mind:</p>
 <ul>
-<li><strong>Task-level risks</strong> and <strong>uncertainty factors</strong> cannot be specified in the natural language input. Add them to the YAML file after generation.</li>
+<li><strong>Uncertainty factors</strong> are not extracted from natural language input. Add them to the YAML file after generation.</li>
 <li><strong>Resource definitions</strong> and <strong>calendar constraints</strong> are supported, but only through recognized semi-structured patterns (not arbitrary prose).</li>
 <li><strong>Project-level risks</strong> are not extracted from the description. Add them manually.</li>
-<li>The parser expects either <strong>numbered task headers</strong> (<code>Task 1:</code>, <code>Task 2:</code>) or <strong>auto-detected lists</strong> (plain numbered, bullet, or bracket lists). The two modes cannot be mixed in the same description. See <a href="nl_processing.md">Natural Language Input</a> for details.</li>
+<li>The parser expects either <strong>numbered task headers</strong> (<code>Task 1:</code>, <code>Task 2:</code>) or <strong>auto-detected lists</strong> (plain numbered, bullet, or bracket lists). The two modes cannot be mixed in the same description. See <a href="../15_nl_processing/">Natural Language Input</a> for details.</li>
 <li><strong>Circular dependencies</strong> are not detected by the parser — they will be caught when you load the file with <code>mcprojsim validate</code>.</li>
 <li>Advanced structures such as full volatility-overlay and spillover calibration blocks are still best edited directly in YAML after generation.</li>
 </ul>

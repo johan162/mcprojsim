@@ -1176,7 +1176,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../17_examples.md" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -1968,6 +1968,8 @@
 </tbody>
 </table>
 <p>Distributed teams face communication delays, timezone differences, and coordination overhead. This factor accounts for that systematic slowdown.</p>
+<!-- pagebreak:b5 -->
+
 <h3 id="integration-complexity">Integration Complexity<a class="headerlink" href="#integration-complexity" title="Permanent link">&para;</a></h3>
 <p>Measures how much integration work is involved with other systems.</p>
 <table>
@@ -2123,7 +2125,6 @@
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">      </span><span class="nt">technical_complexity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;high&quot;</span>
 </span></code></pre></div>
 <p>Here, <code>requirements_maturity</code>, <code>team_distribution</code>, and <code>integration_complexity</code> all take their default values.</p>
-<p>\newpage</p>
 <h2 id="configuring-uncertainty-factor-multipliers">Configuring Uncertainty Factor Multipliers<a class="headerlink" href="#configuring-uncertainty-factor-multipliers" title="Permanent link">&para;</a></h2>
 <p>The numeric multipliers for each factor and level are defined in the configuration file (<code>config.yaml</code>), not in the project file. This separation means the project file describes the project conditions, while the configuration file defines how the organization interprets those conditions.</p>
 <h3 id="default-configuration">Default Configuration<a class="headerlink" href="#default-configuration" title="Permanent link">&para;</a></h3>
@@ -2159,6 +2160,8 @@
 <p>Any values you specify in your configuration file are merged with the defaults. You only need to include the factors or levels you want to override.</p>
 <p>If you provide a factor with only some levels (for example only <code>distributed</code> under <code>team_distribution</code>), unspecified levels continue to use defaults.</p>
 <p>If you add additional factor names in configuration that are not referenced by the project task schema, they are effectively unused by the current simulation pipeline.</p>
+<!-- pagebreak:b5 -->
+
 <h2 id="recommended-authoring-pattern">Recommended Authoring Pattern<a class="headerlink" href="#recommended-authoring-pattern" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Keep task files focused on the five supported factor fields.</li>
@@ -2167,24 +2170,7 @@
 <li>Recheck combined multiplier magnitude for heavily adverse combinations to avoid unintentionally extreme schedules.</li>
 </ul>
 <h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Concept</th>
-<th>What It Models</th>
-<th>When It Applies</th>
-<th>How It Affects Duration</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Uncertainty factor</strong></td>
-<td>A persistent working condition</td>
-<td>Per task, every iteration</td>
-<td>Multiplies the sampled duration</td>
-</tr>
-</tbody>
-</table>
+<p><strong>Uncertainty factor</strong>  are persistent working conditions affecting the team and specific task involved in the project. </p>
 <ul>
 <li>Uncertainty factors are <strong>multiplicative</strong>: they scale the sampled base duration before risks are evaluated.</li>
 <li>Multiple uncertainty factors <strong>compound</strong>: their multipliers are multiplied together, which can produce significant combined effects.</li>

@@ -1310,7 +1310,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../17_examples.md" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -2194,7 +2194,7 @@
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>mcprojsim<span class="w"> </span>generate<span class="w"> </span>description.txt<span class="w"> </span>-o<span class="w"> </span>project.yaml<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml
 </span></code></pre></div>
 <h3 id="input-format">Input format<a class="headerlink" href="#input-format" title="Permanent link">&para;</a></h3>
-<p>The input file is a semi-structured text description. See <a href="mcp-server.md">MCP Server &amp; Natural Language Project Input</a> for the full input format reference, supported fields, and examples.</p>
+<p>The input file is a semi-structured text description. See <a href="../16_mcp-server/">MCP Server &amp; Natural Language Project Input</a> for the full input format reference, supported fields, and examples.</p>
 <p>A minimal example:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Project name: My Project
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Start date: 2026-04-01
@@ -2288,13 +2288,48 @@
 <td>50</td>
 </tr>
 <tr>
+<td><code>--target-budget AMOUNT</code></td>
+<td>Report probability of staying within the provided budget amount</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>--full-cost-detail</code></td>
+<td>Include per-iteration task-cost arrays in JSON output</td>
+<td>off</td>
+</tr>
+<tr>
+<td><code>--no-fx</code></td>
+<td>Disable exchange-rate fetches for secondary currency reporting</td>
+<td>off</td>
+</tr>
+<tr>
 <td><code>-q</code>, <code>-qq</code>, <code>--quiet</code></td>
 <td>Reduce CLI output verbosity. Use <code>-q</code> to suppress detailed output, or <code>-qq</code> to suppress all normal output</td>
 <td>off</td>
 </tr>
 <tr>
 <td><code>-v</code>, <code>--verbose</code></td>
-<td>Show detailed informational messages (config loaded, project parsed, etc.)</td>
+<td>Show detailed informational messages (config loaded, project parsed, etc.) and additional output sections: Default Uncertainty Factors and Sensitivity Analysis</td>
+<td>off</td>
+</tr>
+<tr>
+<td><code>-p</code>, <code>--progress</code></td>
+<td>Show a progress bar while the simulation is running</td>
+<td>off</td>
+</tr>
+<tr>
+<td><code>-S</code>, <code>--simtime</code></td>
+<td>Print elapsed simulation time and peak memory usage after each run</td>
+<td>off</td>
+</tr>
+<tr>
+<td><code>--minheader</code></td>
+<td>Show a compact two-line header (separator + version line) instead of the full project block</td>
+<td>off</td>
+</tr>
+<tr>
+<td><code>--noheader</code></td>
+<td>Suppress the header block entirely; output starts directly with the Project Overview section</td>
 <td>off</td>
 </tr>
 <tr>
@@ -2358,11 +2393,11 @@
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Default simulation</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Reproducible run with a seed</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Reproducible run with a seed and progress bar</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>-p
 </span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># More iterations for higher precision</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--iterations<span class="w"> </span><span class="m">50000</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># More iterations for higher precision, show simulation timne and memory usage</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--iterations<span class="w"> </span><span class="m">50000</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">42</span><span class="w"> </span>--simtime
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
 </span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1"># Custom configuration</span>
 </span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--config<span class="w"> </span>my_config.yaml
@@ -2373,29 +2408,38 @@
 </span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="c1"># Custom histogram bins for more granular distribution charts</span>
 </span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>-f<span class="w"> </span>json,csv,html<span class="w"> </span>--number-bins<span class="w"> </span><span class="m">100</span><span class="w"> </span>-o<span class="w"> </span>results/my_project
 </span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>
-</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="c1"># Quiet mode (suppress progress bars)</span>
-</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--quiet
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="c1"># Budget probability analysis</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--target-budget<span class="w"> </span><span class="m">45000</span>
 </span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>
-</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="c1"># Fully quiet mode (suppress all normal CLI output)</span>
-</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>-qq
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="c1"># Include full task-cost arrays in JSON export</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>-f<span class="w"> </span>json<span class="w"> </span>--full-cost-detail
 </span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>
-</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="c1"># Verbose mode (show config/project loading details)</span>
-</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--verbose
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="c1"># Disable FX lookups (offline/CI mode)</span>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--no-fx
 </span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>
-</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="c1"># Table mode (ASCII tables for tabular sections)</span>
-</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--table
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="c1"># Quiet mode (suppress detailed simulation results output)</span>
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--quiet
 </span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>
-</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="c1"># Minimal output mode (core summaries only)</span>
-</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--minimal
+</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="c1"># Fully quiet mode (suppress all normal CLI output)</span>
+</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>-qq
 </span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a>
-</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="c1"># Show staffing recommendations</span>
-</span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing
+</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="c1"># Verbose mode (show config/project loading details)</span>
+</span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--verbose
 </span><span id="__span-8-36"><a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a>
-</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="c1"># Override bare T-shirt sizes to use the epic category</span>
-</span><span id="__span-8-38"><a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--tshirt-category<span class="w"> </span>epic
+</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="c1"># Table mode (ASCII tables for tabular sections)</span>
+</span><span id="__span-8-38"><a id="__codelineno-8-38" name="__codelineno-8-38" href="#__codelineno-8-38"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--table
 </span><span id="__span-8-39"><a id="__codelineno-8-39" name="__codelineno-8-39" href="#__codelineno-8-39"></a>
-</span><span id="__span-8-40"><a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="c1"># Staffing with table formatting</span>
-</span><span id="__span-8-41"><a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing<span class="w"> </span>--table
+</span><span id="__span-8-40"><a id="__codelineno-8-40" name="__codelineno-8-40" href="#__codelineno-8-40"></a><span class="c1"># Minimal output mode (core summaries only)</span>
+</span><span id="__span-8-41"><a id="__codelineno-8-41" name="__codelineno-8-41" href="#__codelineno-8-41"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--minimal
+</span><span id="__span-8-42"><a id="__codelineno-8-42" name="__codelineno-8-42" href="#__codelineno-8-42"></a>
+</span><span id="__span-8-43"><a id="__codelineno-8-43" name="__codelineno-8-43" href="#__codelineno-8-43"></a><span class="c1"># Show staffing recommendations</span>
+</span><span id="__span-8-44"><a id="__codelineno-8-44" name="__codelineno-8-44" href="#__codelineno-8-44"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing
+</span><span id="__span-8-45"><a id="__codelineno-8-45" name="__codelineno-8-45" href="#__codelineno-8-45"></a>
+</span><span id="__span-8-46"><a id="__codelineno-8-46" name="__codelineno-8-46" href="#__codelineno-8-46"></a><span class="c1"># Override bare T-shirt sizes to use the epic category</span>
+</span><span id="__span-8-47"><a id="__codelineno-8-47" name="__codelineno-8-47" href="#__codelineno-8-47"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--tshirt-category<span class="w"> </span>epic
+</span><span id="__span-8-48"><a id="__codelineno-8-48" name="__codelineno-8-48" href="#__codelineno-8-48"></a>
+</span><span id="__span-8-49"><a id="__codelineno-8-49" name="__codelineno-8-49" href="#__codelineno-8-49"></a><span class="c1"># Staffing with table formatting</span>
+</span><span id="__span-8-50"><a id="__codelineno-8-50" name="__codelineno-8-50" href="#__codelineno-8-50"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--staffing<span class="w"> </span>--table
 </span></code></pre></div>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Sprint planning: switch velocity model to negative binomial</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>sprint_project.yaml<span class="w"> </span>--velocity-model<span class="w"> </span>neg_binomial
@@ -2456,7 +2500,7 @@
 </span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>│ 3 *         │ 2.76            │ 42             │ 2026-03-02      │ 92.2%        │
 </span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>└─────────────┴─────────────────┴────────────────┴─────────────────┴──────────────┘
 </span></code></pre></div>
-<p>The <code>*</code> suffix in the "Team Size" column marks the recommended team size for that profile. Without <code>--table</code>, the same information appears in plain indented text with <code>&lt;-- recommended</code> annotations. See <a href="interpreting_results.md#staffing-recommendations">Interpreting Results — Staffing recommendations</a> for a detailed explanation of the model and columns.</p>
+<p>The <code>*</code> suffix in the "Team Size" column marks the recommended team size for that profile. Without <code>--table</code>, the same information appears in plain indented text with <code>&lt;-- recommended</code> annotations. See <a href="../13_interpreting_results/#staffing-recommendations">Interpreting Results — Staffing recommendations</a> for a detailed explanation of the model and columns.</p>
 <p>Without <code>--table</code>, the same data is printed as indented text:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>=== Simulation Results ===
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
@@ -2519,7 +2563,7 @@
 <h2 id="mcprojsim-config"><code>mcprojsim config</code><a class="headerlink" href="#mcprojsim-config" title="Permanent link">&para;</a></h2>
 <p>Displays the active configuration (uncertainty factor multipliers, T-shirt size mappings, story point mappings, simulation defaults).</p>
 <h3 id="usage_3">Usage<a class="headerlink" href="#usage_3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>CONFIG_FILE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--generate<span class="o">]</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>CONFIG_FILE<span class="o">]</span><span class="w"> </span><span class="o">[</span>--list<span class="o">]</span><span class="w"> </span><span class="o">[</span>--generate<span class="o">]</span>
 </span></code></pre></div>
 <h3 id="options_3">Options<a class="headerlink" href="#options_3" title="Permanent link">&para;</a></h3>
 <table>
@@ -2531,8 +2575,12 @@
 </thead>
 <tbody>
 <tr>
-<td><code>-c</code>, <code>--config-file FILE</code></td>
+<td><code>-c</code>, <code>--config FILE</code></td>
 <td>Show configuration merged with a custom YAML file</td>
+</tr>
+<tr>
+<td><code>--list</code>, <code>--show</code></td>
+<td>List current configuration settings. Alias <code>--show</code> is identical. When omitted, the same output is produced by default for backward compatibility.</td>
 </tr>
 <tr>
 <td><code>--generate</code></td>
@@ -2542,22 +2590,28 @@
 </table>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The auto-loaded user default configuration file (applied automatically when no <code>-c</code> flag is given to any command) lives at <code>~/.mcprojsim/configuration.yaml</code> — note the full name <code>configuration.yaml</code>, not <code>config.yaml</code>. The <code>--generate</code> flag writes to <code>config.yaml</code> as a starting template; rename it to <code>configuration.yaml</code> if you want it to be picked up automatically.</p>
+<p>The auto-loaded user default configuration file (applied automatically when no <code>-c</code> flag is given to any command) lives at <code>~/.mcprojsim/config.yaml</code>. Use <code>--generate</code> to create a starter template at that path.</p>
 </div>
 <h3 id="examples_3">Examples<a class="headerlink" href="#examples_3" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Show built-in defaults</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Show built-in defaults (all three forms are equivalent)</span>
 </span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>mcprojsim<span class="w"> </span>config
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># Show a custom configuration merged with defaults</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--config-file<span class="w"> </span>my_config.yaml
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="c1"># Generate a default configuration file at ~/.mcprojsim/config.yaml</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--generate
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--list
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--show
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="c1"># Show a custom configuration merged with defaults</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--config<span class="w"> </span>my_config.yaml
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--list<span class="w"> </span>--config<span class="w"> </span>my_config.yaml
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="c1"># Generate a default configuration file at ~/.mcprojsim/config.yaml</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>mcprojsim<span class="w"> </span>config<span class="w"> </span>--generate
 </span></code></pre></div>
 <h2 id="parallel-simulation">Parallel simulation<a class="headerlink" href="#parallel-simulation" title="Permanent link">&para;</a></h2>
 <p>By default <code>mcprojsim simulate</code> runs iterations sequentially on a single process. For large iteration counts or computationally heavy projects you can distribute the work across multiple CPU cores with <code>--workers</code>.</p>
 <h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
-<p>When <code>--workers N</code> is set and both the iteration count and task count exceed the minimum thresholds (500 iterations and 5 tasks respectively), the engine:</p>
+<p>When <code>--workers N</code> is set and both the iteration count and task count both exceed an absolute minimum thresholds (500 iterations and 5 tasks respectively) but also exceeds heuristic limits that takes how heavy
+the execution are into account. For example, a dependency-only simulation (no resource constrains) will almost never benefit from parallel execution as each iteration is trivial and most time will be spent 
+in the parallel overhead. Hence, only one worker will be deployed in all but the most extreme dependency-only simulations.</p>
+<p>If the heuristics finds that several workers are beneficial the engine will:</p>
 <ol>
 <li>Partitions the total iterations into many small micro-chunks (more chunks than workers for smooth progress and load balancing).</li>
 <li>Submits chunks to a short-lived <code>ProcessPoolExecutor</code> with <code>N</code> workers, using the <code>spawn</code> start method for safety on all platforms.</li>
