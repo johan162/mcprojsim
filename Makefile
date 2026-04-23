@@ -194,9 +194,14 @@ $(TEST_ALL_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(FORMAT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running code formatter...$(NC)"
-	@poetry run black --check $(SRC_DIR) $(TEST_DIR) -q
-	@touch $(FORMAT_STAMP)
-	@echo -e "$(GREEN)✓ Format target runs successfully$(NC)"
+	@if poetry run black --check $(SRC_DIR) $(TEST_DIR) -q; then \
+		touch $(FORMAT_STAMP); \
+		echo -e "$(GREEN)✓ Format target runs successfully$(NC)"; \
+	else \
+		rm -f $(FORMAT_STAMP); \
+		echo -e "$(RED)✗ Error: Black formatting check failed. Run 'poetry run black $(SRC_DIR) $(TEST_DIR)' to fix.$(NC)"; \
+		exit 1; \
+	fi
 
 $(LINT_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running linter...$(NC)"
