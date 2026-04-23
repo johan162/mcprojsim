@@ -5,6 +5,10 @@ bypassing MCP transport.
 """
 
 import pytest
+
+# The mcp package is an optional dependency - skip all tests when missing.
+mcp = pytest.importorskip("mcp")
+
 from mcprojsim.mcp_server import (
     generate_project_file,
     simulate_project,
@@ -14,9 +18,6 @@ from mcprojsim.mcp_server import (
     validate_project_yaml,
     validate_project_description,
 )
-
-# The mcp package is an optional dependency – skip all tests when missing.
-mcp = pytest.importorskip("mcp")
 
 _SIMPLE_DESC = """\
 Project name: MCP Test
