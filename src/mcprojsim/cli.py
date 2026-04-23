@@ -2255,7 +2255,7 @@ def validate(project_file: str, verbose: bool) -> None:
 
 
 @cli.command(name="config")
-@click.option("--config-file", "-c", type=click.Path(exists=True), help="Config file")
+@click.option("--config", "--config-file", "-c", "config_file", type=click.Path(exists=True), help="Config file")
 @click.option(
     "--generate",
     is_flag=True,
