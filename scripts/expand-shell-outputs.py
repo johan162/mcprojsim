@@ -11,10 +11,15 @@ Placeholder syntax
   {{!cmd:N}}              First N lines of output in one ```...``` block.
   {{!cmd:N:M}}            First N lines in one ```...``` block, blank line, then
                           last M lines in a second ```...``` block.
+  {{!cmd:N:M:P}}          First N lines in one ```...``` block, blank line, then
+                          the next M lines in a second ```...``` block, blank line,
+                          then the last P lines in a third ```...``` block.
   {{!cmd@A4:25:25,B5:20:20}}  Format-specific truncation. When --format a4 is
                               passed, use A4 spec (25:25); when --format b5,
                               use B5 spec (20:20). If format not present in
                               specs, use full output for that format.
+  {{!cmd@A4:10:20:30}}    Triple variant with format spec: first 10 lines,
+                          next 20 lines, last 30 lines.
   {{!cmd@B5:20:20}}       Only B5 format has a spec; other formats use full output.
 
 Usage
@@ -65,13 +70,14 @@ def _fence(lines: list[str]) -> str:
 
 def _parse_format_specs(
     spec_str: str,
-) -> dict[str, tuple[int | None, int | None]]:
+) -> dict[str, tuple[int | None, int | None, int | None]]:
     """Parse format specification string like 'A4:25:25,B5:20:20'.
 
-    Returns dict like {'a4': (25, 25), 'b5': (20, 20), ...}
-    where tuples are (head, tail). Either head or tail can be None.
+    Returns dict like {'a4': (25, None, 25), 'b5': (20, None, 20), ...}
+    where tuples are (head, mid, tail). Any value can be None.
+    Two-number specs store None for mid; three-number specs populate all three.
     """
-    specs: dict[str, tuple[int | None, int | None]] = {}
+    specs: dict[str, tuple[int | None, int | None, int | None]] = {}
     for part in spec_str.split(","):
         part = part.strip()
         if not part:
@@ -81,8 +87,14 @@ def _parse_format_specs(
             continue
         fmt = pieces[0].strip().lower()
         head = int(pieces[1]) if len(pieces) > 1 and pieces[1].strip() else None
-        tail = int(pieces[2]) if len(pieces) > 2 and pieces[2].strip() else None
-        specs[fmt] = (head, tail)
+        if len(pieces) > 3 and pieces[3].strip():
+            # Three-number variant: head:mid:tail
+            mid = int(pieces[2]) if pieces[2].strip() else None
+            tail = int(pieces[3])
+        else:
+            mid = None
+            tail = int(pieces[2]) if len(pieces) > 2 and pieces[2].strip() else None
+        specs[fmt] = (head, mid, tail)
     return specs
 
 
@@ -105,33 +117,39 @@ def _expand_match(
         cmd_part = content
         format_specs_str = None
 
-    # Parse inline head:tail from cmd_part (backward compatibility).
-    # Look for :N or :N:M at the very end where N, M are digits.
-    inline_match = re.search(r":(\d+)(?::(\d+))?$", cmd_part)
+    # Parse inline head:tail or head:mid:tail from cmd_part (backward compatibility).
+    # Look for :N, :N:M, or :N:M:P at the very end where N, M, P are digits.
+    inline_match = re.search(r":(\d+)(?::(\d+)(?::(\d+))?)?$", cmd_part)
     inline_head: int | None = None
+    inline_mid: int | None = None
     inline_tail: int | None = None
     if inline_match:
         inline_head = int(inline_match.group(1))
-        inline_tail = (
-            int(inline_match.group(2)) if inline_match.group(2) else None
-        )
+        if inline_match.group(3) is not None:
+            # Three-number variant: head:mid:tail
+            inline_mid = int(inline_match.group(2))
+            inline_tail = int(inline_match.group(3))
+        elif inline_match.group(2) is not None:
+            inline_tail = int(inline_match.group(2))
         cmd = cmd_part[: inline_match.start()].strip()
     else:
         cmd = cmd_part.strip()
 
     # Parse format-specific specs if present
-    format_specs: dict[str, tuple[int | None, int | None]] = {}
+    format_specs: dict[str, tuple[int | None, int | None, int | None]] = {}
     if format_specs_str:
         format_specs = _parse_format_specs(format_specs_str)
 
-    # Determine which head/tail to use based on target_format
+    # Determine which head/mid/tail to use based on target_format
     head: int | None = None
+    mid: int | None = None
     tail: int | None = None
     if target_format and target_format.lower() in format_specs:
-        head, tail = format_specs[target_format.lower()]
+        head, mid, tail = format_specs[target_format.lower()]
     else:
         # Use inline specs if available (backward compat), else full output
         head = inline_head
+        mid = inline_mid
         tail = inline_tail
 
     lines = _run_command(cmd, cwd)
@@ -139,11 +157,17 @@ def _expand_match(
     if head is None:
         return _fence(lines)
 
-    if tail is None:
+    if mid is None and tail is None:
         return _fence(lines[:head])
 
-    tail_lines = lines[-tail:] if tail > 0 else []
-    return _fence(lines[:head]) + "\n\n" + _fence(tail_lines)
+    if mid is None:
+        tail_lines = lines[-tail:] if tail > 0 else []
+        return _fence(lines[:head]) + "\n\n" + _fence(tail_lines)
+
+    # Three-section: first head lines, next mid lines, last tail lines
+    mid_lines = lines[head : head + mid]
+    tail_lines = lines[-tail:] if tail and tail > 0 else []
+    return _fence(lines[:head]) + "\n\n" + _fence(mid_lines) + "\n\n" + _fence(tail_lines)
 
 
 def _process_file(src: Path, out_dir: Path, cwd: Path, target_format: str | None) -> None:
