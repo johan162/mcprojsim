@@ -68,7 +68,8 @@ mcprojsim simulate examples/quickstart_example.yaml --minimal --seed 42
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:52
 
 Project Overview:
   Project: Website Refresh
@@ -194,7 +195,8 @@ mcprojsim simulate examples/tshirt_sizing_project.yaml --minimal --seed 42
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:52
 
 Project Overview:
   Project: Mobile App Development
@@ -281,7 +283,8 @@ mcprojsim simulate examples/story_points_walkthrough_project.yaml --minimal --ta
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:52
 
 Project Overview:
 ┌────────────────────────────────┬───────────────────────────────────┐
@@ -544,7 +547,8 @@ mcprojsim simulate examples/sample_project.yaml --minimal --seed 42
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:52
 
 Project Overview:
   Project: Customer Portal Redesign
@@ -639,7 +643,8 @@ mcprojsim simulate examples/team_size_demo_with_team_size.yaml --minimal --seed 
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:51
 
 Project Overview:
   Project: Team Size Demo
@@ -684,7 +689,8 @@ mcprojsim simulate examples/team_size_demo_base.yaml --minimal --seed 42
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:52
 
 Project Overview:
   Project: Team Size Demo
@@ -792,7 +798,8 @@ mcprojsim simulate examples/constrained_portal.yaml --minimal --seed 42 --iterat
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:52
 
 Project Overview:
   Project: Onboarding Portal
@@ -867,7 +874,8 @@ mcprojsim simulate .build/gen-examples/nl_project.yaml --minimal --seed 42
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:55
 
 Project Overview:
   Project: Rework Web Interface
@@ -968,7 +976,8 @@ mcprojsim simulate .build/gen-examples/nl_constrained_project.yaml --minimal --s
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:55
 
 Project Overview:
   Project: Platform Migration
@@ -1073,7 +1082,8 @@ mcprojsim simulate examples/sprint_planning_minimal.yaml --minimal --seed 42
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:53
 
 Project Overview:
   Project: Sprint Planning Minimal
@@ -1107,7 +1117,7 @@ Calendar Time Confidence Intervals:
 Sprint Planning Summary:
 Sprint Length: 2 weeks
 Planning Confidence Level: 80%
-Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Removed Work Treatment: churn_only
 Velocity Model: empirical
 Planned Commitment Guidance: 7.55
 Historical Sampling Mode: matching_cadence
@@ -1221,7 +1231,8 @@ mcprojsim simulate examples/sprint_planning_advanced.yaml --minimal --table --se
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:52
 
 Project Overview:
 ┌────────────────────────────────┬───────────────────────────────────┐
@@ -1269,20 +1280,20 @@ Calendar Time Confidence Intervals:
 └──────────────┴─────────┴────────────────┴──────────────────────────┘
 
 Sprint Planning Summary:
-┌───────────────────────────────┬─────────────────────────────────────┐
-│ Field                         │ Value                               │
-├───────────────────────────────┼─────────────────────────────────────┤
-│ Sprint Length                 │ 2 weeks                             │
-│ Planning Confidence Level     │ 85%                                 │
-│ Removed Work Treatment        │ RemovedWorkTreatment.REDUCE_BACKLOG │
-│ Velocity Model                │ empirical                           │
-│ Planned Commitment Guidance   │ 7.13                                │
-│ Historical Sampling Mode      │ matching_cadence                    │
-│ Historical Observations       │ 4                                   │
-│ Carryover Mean                │ 2.10                                │
-│ Aggregate Spillover Rate      │ 0.1981                              │
-│ Observed Disruption Frequency │ 0.7250                              │
-└───────────────────────────────┴─────────────────────────────────────┘
+┌───────────────────────────────┬────────────────────────────────────┐
+│ Field                         │ Value                              │
+├───────────────────────────────┼────────────────────────────────────┤
+│ Sprint Length                 │ 2 weeks                            │
+│ Planning Confidence Level     │ 85%                                │
+│ Removed Work Treatment        │ reduce_backlog                     │
+│ Velocity Model                │ empirical                          │
+│ Planned Commitment Guidance   │ 7.13                               │
+│ Historical Sampling Mode      │ matching_cadence                   │
+│ Historical Observations       │ 4                                  │
+│ Carryover Mean                │ 2.10                               │
+│ Aggregate Spillover Rate      │ 0.1981                             │
+│ Observed Disruption Frequency │ 0.7250                             │
+└───────────────────────────────┴────────────────────────────────────┘
 
 Sprint Count Statistical Summary:
 ┌──────────────────────────┬─────────────────────────────────────────┐
@@ -1384,7 +1395,8 @@ mcprojsim simulate examples/sprint_planning_tasks.yaml --minimal --seed 42
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:51
 
 Project Overview:
   Project: Sprint Planning Tasks Mode
@@ -1418,7 +1430,7 @@ Calendar Time Confidence Intervals:
 Sprint Planning Summary:
 Sprint Length: 1 weeks
 Planning Confidence Level: 80%
-Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Removed Work Treatment: churn_only
 Velocity Model: empirical
 Planned Commitment Guidance: 2.28
 Historical Sampling Mode: matching_cadence
@@ -1623,7 +1635,8 @@ mcprojsim simulate .build/gen-examples/sprint_planning_nl.yaml --minimal --seed 
 ```
 
 ```text
-=== Simulation Results ===
+mcprojsim v0.15.0
+Run: 2026-04-23 10:47:55
 
 Project Overview:
   Project: Sprint Planning from Text
@@ -1658,7 +1671,7 @@ Calendar Time Confidence Intervals:
 Sprint Planning Summary:
 Sprint Length: 2 weeks
 Planning Confidence Level: 80%
-Removed Work Treatment: RemovedWorkTreatment.CHURN_ONLY
+Removed Work Treatment: churn_only
 Velocity Model: empirical
 Planned Commitment Guidance: 7.15
 Historical Sampling Mode: matching_cadence
