@@ -1162,6 +1162,12 @@ def _output_cost_text(
     help="Show a minimal two-line header (version + separator) instead of the full project block.",
 )
 @click.option(
+    "--noheader",
+    is_flag=True,
+    default=False,
+    help="Suppress the header block entirely; output starts directly with Project Overview.",
+)
+@click.option(
     "--workers",
     type=str,
     default="1",
@@ -1197,6 +1203,7 @@ def simulate(
     progress: bool,
     simtime: bool,
     minheader: bool,
+    noheader: bool,
     workers: str,
 ) -> None:
     """Run Monte Carlo simulation for a project."""
@@ -1225,7 +1232,7 @@ def simulate(
     if quiet < 2 and minimal:
         click.echo(f"mcprojsim v{__version__}")
         click.echo(f"Run: {_run_ts}")
-    elif quiet < 2 and minheader:
+    elif quiet < 2 and minheader and not noheader:
         _sep = "\u2500" * 50
         click.echo(_sep)
         click.echo(f"mcprojsim v{__version__}   Monte Carlo Simulator")
@@ -1288,7 +1295,7 @@ def simulate(
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
 
-        if quiet < 2 and not minimal and not minheader:
+        if quiet < 2 and not minimal and not minheader and not noheader:
             _sep = "─" * 50
             click.echo(_sep)
             click.echo(f" mcprojsim v{__version__}   Monte Carlo Simulator")
@@ -1496,7 +1503,8 @@ def simulate(
                     ["Max Parallel Tasks", f"{results.max_parallel_tasks}"],
                     ["Schedule Mode", schedule_mode],
                 ]
-                click.echo("\nProject Overview:")
+                click.echo("" if noheader else "\n", nl=False)
+                click.echo("Project Overview:")
                 project_overview_table = _tabulate(
                     common_rows,
                     headers=["Field", "Value"],
@@ -1600,7 +1608,8 @@ def simulate(
                     if project.project.start_date
                     else "Not specified"
                 )
-                click.echo("\nProject Overview:")
+                click.echo("" if noheader else "\n", nl=False)
+                click.echo("Project Overview:")
                 click.echo(f"  Project: {results.project_name}")
                 click.echo(f"  Start Date: {start_date_str}")
                 click.echo(f"  Number of Tasks: {len(project.tasks)}")
