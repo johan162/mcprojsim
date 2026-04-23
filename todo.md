@@ -21,10 +21,13 @@ Completed Tasks:
 - Review top-level README
 - Support `--list` flag for `config` command verb
 - Hide progressbar behind `-p` flag
-- Hide simulation time and  mem usage begind glag `--simtime`
-- Add script to make it possible to run the actual mcprojsim for each output in the user-guide
+- Hide simulation time and  mem usage behind flag `--simtime`
+- Add script to capture console command output to include in the user-guide with optional line number annotations
 - Tidy up structure of user-guide build
 - Fix default name for config file
+- Improve console output header and control that with `--minheader` and `--noheader` flags
+- Modify `--verbose` flag to show detailed informational messages and additional output sections (default uncertainty factors and sensitivity analysis)
+- Add automatic creation of images for user guide from HTML scripts
 
 
 ## Post-MVP (1.0.0) Themes
