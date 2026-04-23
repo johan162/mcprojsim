@@ -163,12 +163,13 @@ API_REF_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
 #   file_sfx — lowercase with hyphens    (-b5, -dark, -dark-b5)   for all other file names
 # ============================================================================================
 define DEFINE_USER_GUIDE_VARS
-$(1)_TEMPLATE  := $$(DOCS_DIR)/user_guide/userguide_template$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
-$(1)_PDF       := $$(DIST_DIR)/$$(PROJECT)_user_guide$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
-$(1)_CONCAT_MD := $$(USER_GUIDE_BUILD_DIR)/user_guide_concat$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').md
-$(1)_BODY_TEX  := $$(USER_GUIDE_BUILD_DIR)/user_guide_body$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
-$(1)_TEX       := $$(USER_GUIDE_BUILD_DIR)/user_guide_report$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
-$(1)_PDF_BUILT := $$(USER_GUIDE_BUILD_DIR)/user_guide_report$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').pdf
+$(1)_TEMPLATE     := $$(DOCS_DIR)/user_guide/userguide_template$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
+$(1)_PDF          := $$(DIST_DIR)/$$(PROJECT)_user_guide$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
+$(1)_CONCAT_MD    := $$(USER_GUIDE_BUILD_DIR)/user_guide_concat$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').md
+$(1)_BODY_TEX     := $$(USER_GUIDE_BUILD_DIR)/user_guide_body$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
+$(1)_TEX          := $$(USER_GUIDE_BUILD_DIR)/user_guide_report$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
+$(1)_PDF_BUILT    := $$(USER_GUIDE_BUILD_DIR)/user_guide_report$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').pdf
+$(1)_EXPANDED_DIR := $$(USER_GUIDE_BUILD_DIR)/expanded$(shell printf '%s' '$(patsubst USER_GUIDE%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')
 endef
 
 $(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_A4))
@@ -187,12 +188,13 @@ $(eval $(call DEFINE_USER_GUIDE_VARS,USER_GUIDE_DARK_B5))
 # ============================================================================================
 
 define DEFINE_API_REF_VARS
-$(1)_TEMPLATE  := $$(DOCS_DIR)/api_reference/api_ref_template$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
-$(1)_PDF       := $$(DIST_DIR)/$$(PROJECT)_api_ref$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
-$(1)_CONCAT_MD := $$(API_REF_BUILD_DIR)/api_ref_concat$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').md
-$(1)_BODY_TEX  := $$(API_REF_BUILD_DIR)/api_ref_body$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
-$(1)_TEX       := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
-$(1)_PDF_BUILT := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').pdf
+$(1)_TEMPLATE     := $$(DOCS_DIR)/api_reference/api_ref_template$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]' '[:lower:]').tex
+$(1)_PDF          := $$(DIST_DIR)/$$(PROJECT)_api_ref$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')-$$(VERSION).pdf
+$(1)_CONCAT_MD    := $$(API_REF_BUILD_DIR)/api_ref_concat$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').md
+$(1)_BODY_TEX     := $$(API_REF_BUILD_DIR)/api_ref_body$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
+$(1)_TEX          := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').tex
+$(1)_PDF_BUILT    := $$(API_REF_BUILD_DIR)/api_ref_report$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-').pdf
+$(1)_EXPANDED_DIR := $$(API_REF_BUILD_DIR)/expanded$(shell printf '%s' '$(patsubst API_REF%,%,$(1))' | tr '[:upper:]_' '[:lower:]-')
 endef
 
 $(eval $(call DEFINE_API_REF_VARS,API_REF_A4))
@@ -327,14 +329,14 @@ $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$
 	@echo -e "$$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$(USER_GUIDE_BUILD_DIR)
 	@echo -e "$$(DARKYELLOW)  - Expanding shell command outputs in markdown sources...$$(NC)"
-	@mkdir -p $$(USER_GUIDE_BUILD_DIR)/expanded
+	@mkdir -p $$($1_EXPANDED_DIR)
 	@poetry run python $$(SCRIPTS_DIR)/expand-shell-outputs.py \
-		--output-dir $$(USER_GUIDE_BUILD_DIR)/expanded \
+		--output-dir $$($1_EXPANDED_DIR) \
 		--cwd $$(SCRIPTS_DIR)/.. \
 		--format $(2) \
 		$$(USER_GUIDE_MD_SOURCES)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
-	@cat $$(foreach f,$$(USER_GUIDE_MD_SOURCES),$$(USER_GUIDE_BUILD_DIR)/expanded/$$(notdir $$f)) > $$($1_CONCAT_MD)
+	@cat $$(foreach f,$$(USER_GUIDE_MD_SOURCES),$$($1_EXPANDED_DIR)/$$(notdir $$f)) > $$($1_CONCAT_MD)
 	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
@@ -346,8 +348,16 @@ $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$
 		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$($1_TEMPLATE) > $$($1_TEX)
 	@echo -e "$$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) \
+		> $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) 2>&1 \
+		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$($1_PDF).$$(NC)" >&2; \
+		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log):$$(NC)" >&2; \
+		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) >&2; exit 1; }
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) \
+		> $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) 2>&1 \
+		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $$($1_PDF).$$(NC)" >&2; \
+		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log):$$(NC)" >&2; \
+		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) >&2; exit 1; }
 	@cp $$($1_PDF_BUILT) $$($1_PDF)
 	@echo -e "$$(GREEN)✓ User guide PDF built: $$($1_PDF)$$(NC)"
 endef
@@ -368,14 +378,14 @@ $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_R
 	@echo -e "$$(DARKYELLOW)- Building API reference PDF via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$(API_REF_BUILD_DIR)
 	@echo -e "$$(DARKYELLOW)  - Expanding shell command outputs in markdown sources...$$(NC)"
-	@mkdir -p $$(API_REF_BUILD_DIR)/expanded
+	@mkdir -p $$($1_EXPANDED_DIR)
 	@poetry run python $$(SCRIPTS_DIR)/expand-shell-outputs.py \
-		--output-dir $$(API_REF_BUILD_DIR)/expanded \
+		--output-dir $$($1_EXPANDED_DIR) \
 		--cwd $$(SCRIPTS_DIR)/.. \
 		--format $(2) \
 		$$(API_REF_MD_SOURCES)
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
-	@cat $$(foreach f,$$(API_REF_MD_SOURCES),$$(API_REF_BUILD_DIR)/expanded/$$(notdir $$f)) > $$($1_CONCAT_MD)
+	@cat $$(foreach f,$$(API_REF_MD_SOURCES),$$($1_EXPANDED_DIR)/$$(notdir $$f)) > $$($1_CONCAT_MD)
 	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(API_REF_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
@@ -387,8 +397,16 @@ $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_R
 		END { if (!inserted) { print "Template placeholder %%__API_REF_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$($1_TEMPLATE) > $$($1_TEX)
 	@echo -e "$$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$$(NC)"
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) >/dev/null
-	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) >/dev/null
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) \
+		> $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) 2>&1 \
+		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$($1_PDF).$$(NC)" >&2; \
+		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log):$$(NC)" >&2; \
+		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) >&2; exit 1; }
+	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) \
+		> $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) 2>&1 \
+		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $$($1_PDF).$$(NC)" >&2; \
+		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log):$$(NC)" >&2; \
+		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) >&2; exit 1; }
 	@cp $$($1_PDF_BUILT) $$($1_PDF)
 	@echo -e "$$(GREEN)✓ API reference PDF built: $$($1_PDF)$$(NC)"
 endef
