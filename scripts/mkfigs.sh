@@ -40,6 +40,20 @@ _find_chrome() {
 }
 
 # ---------------------------------------------------------------------------
+# Locate ImageMagick (v6: convert/identify, v7: magick)
+# ---------------------------------------------------------------------------
+IM_CONVERT_CMD=()
+IM_IDENTIFY_CMD=()
+
+if command -v magick >/dev/null 2>&1; then
+    IM_CONVERT_CMD=("magick" "convert")
+    IM_IDENTIFY_CMD=("magick" "identify")
+elif command -v convert >/dev/null 2>&1 && command -v identify >/dev/null 2>&1; then
+    IM_CONVERT_CMD=("convert")
+    IM_IDENTIFY_CMD=("identify")
+fi
+
+# ---------------------------------------------------------------------------
 # Parse arguments
 # ---------------------------------------------------------------------------
 SOURCE_DIR=""
@@ -120,6 +134,8 @@ TOTAL=${#HTML_FILES[@]}
 _say "Rendering $TOTAL figure(s) from $SOURCE_DIR → $OUTPUT_DIR"
 _say ""
 
+WARNED_NO_IM=0
+
 # ---------------------------------------------------------------------------
 # Render each file
 # ---------------------------------------------------------------------------
@@ -148,22 +164,29 @@ for html in "${HTML_FILES[@]}"; do
 
         # Always auto-trim browser margins first so trim-file coordinates
         # are relative to the visible content, not the raw viewport.
-        convert "$OUTPUT_PNG" -trim +repage "$OUTPUT_PNG" 2>/dev/null
+        if [[ ${#IM_CONVERT_CMD[@]} -gt 0 ]]; then
+            "${IM_CONVERT_CMD[@]}" "$OUTPUT_PNG" -trim +repage "$OUTPUT_PNG" 2>/dev/null || true
+        elif [[ $WARNED_NO_IM -eq 0 ]]; then
+            echo "WARN: ImageMagick not found (convert/identify or magick). Skipping trim/crop steps." >&2
+            WARNED_NO_IM=1
+        fi
 
         if [[ -f "$TRIM_FILE" ]]; then
             # Read "bl_x, bl_y, width, height" — bottom-left origin coordinates.
             # Convert to ImageMagick top-left origin: top_y = img_height - bl_y - height
             IFS=', ' read -r bl_x bl_y crop_w crop_h < "$TRIM_FILE" || true
-            img_h=$(identify -format "%h" "$OUTPUT_PNG" 2>/dev/null)
-            # Convert bottom-left origin → ImageMagick top-left origin.
-            # bottom_from_top is the fixed anchor; clamp crop_h if it overshoots.
-            bottom_from_top=$(( img_h - bl_y ))
-            top_y=$(( bottom_from_top - crop_h ))
-            if [[ $top_y -lt 0 ]]; then
-                top_y=0
-                crop_h=$bottom_from_top
+            if [[ ${#IM_CONVERT_CMD[@]} -gt 0 && ${#IM_IDENTIFY_CMD[@]} -gt 0 ]]; then
+                img_h=$("${IM_IDENTIFY_CMD[@]}" -format "%h" "$OUTPUT_PNG" 2>/dev/null || printf '0')
+                # Convert bottom-left origin → ImageMagick top-left origin.
+                # bottom_from_top is the fixed anchor; clamp crop_h if it overshoots.
+                bottom_from_top=$(( img_h - bl_y ))
+                top_y=$(( bottom_from_top - crop_h ))
+                if [[ $top_y -lt 0 ]]; then
+                    top_y=0
+                    crop_h=$bottom_from_top
+                fi
+                "${IM_CONVERT_CMD[@]}" "$OUTPUT_PNG" -crop "${crop_w}x${crop_h}+${bl_x}+${top_y}" +repage "$OUTPUT_PNG" 2>/dev/null || true
             fi
-            convert "$OUTPUT_PNG" -crop "${crop_w}x${crop_h}+${bl_x}+${top_y}" +repage "$OUTPUT_PNG" 2>/dev/null
         fi
 
         _say "done → $(basename "$OUTPUT_PNG")"

@@ -3,10 +3,15 @@
 # Each command target may depend on one or more timestamp files that encapsulate the logic for when
 # to re-run certain tasks based on file changes.
 
-.PHONY: help dev install clean-venv reinstall run test test-short test-param test-html test-probabilistic test-probabilistic-full lint format typecheck migrate init-db check \
-pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart docs-container-status docs-container-logs build container-build container-build-corporate container-build-public container-up container-down container-logs \
+.PHONY: help dev install clean-venv reinstall run test test-short test-param test-html test-probabilistic \
+test-probabilistic-full lint format typecheck migrate init-db check \
+pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples \
+figs docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart \
+docs-container-status docs-container-logs build container-build container-build-corporate container-build-public \
+container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
-container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all  black flake8 mypy pyright _check
+container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all \
+ black flake8 mypy pyright _check figs
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -566,6 +571,17 @@ pdfs: ## Build the documentation site with MkDoc
 docs-serve: ## Serve the documentation site locally with live reload
 	@$(MAKE) -C $(DOCS_DIR) serve
 
+# ============================================================================================
+# Render PNG figures from HTML source
+# ============================================================================================
+FIG_SOURCES := $(wildcard assets/fig-*.html)
+FIG_TARGETS := $(patsubst assets/fig-%.html,assets/fig-%.png,$(FIG_SOURCES))
+
+ $(info FIG_SOURCES: $(FIG_SOURCES))
+ $(info FIG_TARGETS: $(FIG_TARGETS))
+
+figs: ## Render PNG figures from HTML source
+	@./scripts/mkfigs.sh -s assets -o assets
 
 ### End of Makefile
 
