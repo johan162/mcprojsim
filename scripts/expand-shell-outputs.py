@@ -21,6 +21,12 @@ Placeholder syntax
   {{!cmd@A4:10:20:30}}    Triple variant with format spec: first 10 lines,
                           next 20 lines, last 30 lines.
   {{!cmd@B5:20:20}}       Only B5 format has a spec; other formats use full output.
+  {{!cmd@L}}              Add zero-padded line numbers at the left edge of every
+                          line. The number reflects the actual line position in the
+                          command output. Width is the minimum digits needed for the
+                          highest line number shown (e.g. 1: … 9:, then 01: … 99:).
+  {{!cmd@A4:10,L}}        Format spec + line numbers.
+  {{!cmd@A4:10:10,B5:5:10,L}}  Format spec with triple variant + line numbers.
 
 Usage
 -----
@@ -66,6 +72,16 @@ def _run_command(cmd: str, cwd: Path) -> list[str]:
 def _fence(lines: list[str]) -> str:
     """Wrap *lines* in a fenced code block."""
     return "```\n" + "\n".join(lines) + "\n```"
+
+
+def _fence_numbered(lines: list[str], start: int, width: int) -> str:
+    """Wrap *lines* in a fenced code block with zero-padded line numbers.
+
+    *start* is the 1-based line number of the first line in *lines*.
+    *width* is the total digit width for zero-padding.
+    """
+    numbered = [f"{str(i).zfill(width)}: {line}" for i, line in enumerate(lines, start=start)]
+    return "```\n" + "\n".join(numbered) + "\n```"
 
 
 def _parse_format_specs(
@@ -117,6 +133,15 @@ def _expand_match(
         cmd_part = content
         format_specs_str = None
 
+    # Extract the L (line-numbers) flag from the format-specs string.
+    line_numbers = False
+    if format_specs_str:
+        parts = [p.strip() for p in format_specs_str.split(",")]
+        if "L" in parts:
+            line_numbers = True
+            parts = [p for p in parts if p != "L"]
+        format_specs_str = ",".join(parts) if parts else None
+
     # Parse inline head:tail or head:mid:tail from cmd_part (backward compatibility).
     # Look for :N, :N:M, or :N:M:P at the very end where N, M, P are digits.
     inline_match = re.search(r":(\d+)(?::(\d+)(?::(\d+))?)?$", cmd_part)
@@ -153,21 +178,54 @@ def _expand_match(
         tail = inline_tail
 
     lines = _run_command(cmd, cwd)
+    n = len(lines)
+
+    if not line_numbers:
+        if head is None:
+            return _fence(lines)
+        if mid is None and tail is None:
+            return _fence(lines[:head])
+        if mid is None:
+            tail_lines = lines[-tail:] if tail and tail > 0 else []
+            return _fence(lines[:head]) + "\n\n" + _fence(tail_lines)
+        mid_lines = lines[head : head + mid]
+        tail_lines = lines[-tail:] if tail and tail > 0 else []
+        return _fence(lines[:head]) + "\n\n" + _fence(mid_lines) + "\n\n" + _fence(tail_lines)
+
+    # --- Line-numbered output ---
+    # Determine the highest actual line number that will appear so we can
+    # compute the zero-padding width.
+    if head is None:
+        max_line_no = n
+    else:
+        max_line_no = head
+        if mid is not None:
+            max_line_no = max(max_line_no, head + mid)
+        if tail is not None and tail > 0:
+            max_line_no = max(max_line_no, n)
+    width = len(str(max(max_line_no, 1)))
 
     if head is None:
-        return _fence(lines)
+        return _fence_numbered(lines, 1, width)
 
     if mid is None and tail is None:
-        return _fence(lines[:head])
+        return _fence_numbered(lines[:head], 1, width)
 
     if mid is None:
-        tail_lines = lines[-tail:] if tail and tail > 0 else []
-        return _fence(lines[:head]) + "\n\n" + _fence(tail_lines)
+        tail_slice = lines[-tail:] if tail and tail > 0 else []
+        result = _fence_numbered(lines[:head], 1, width)
+        if tail_slice:
+            result += "\n\n" + _fence_numbered(tail_slice, n - len(tail_slice) + 1, width)
+        return result
 
-    # Three-section: first head lines, next mid lines, last tail lines
+    # Three-section
     mid_lines = lines[head : head + mid]
-    tail_lines = lines[-tail:] if tail and tail > 0 else []
-    return _fence(lines[:head]) + "\n\n" + _fence(mid_lines) + "\n\n" + _fence(tail_lines)
+    tail_slice = lines[-tail:] if tail and tail > 0 else []
+    result = _fence_numbered(lines[:head], 1, width)
+    result += "\n\n" + _fence_numbered(mid_lines, head + 1, width)
+    if tail_slice:
+        result += "\n\n" + _fence_numbered(tail_slice, n - len(tail_slice) + 1, width)
+    return result
 
 
 def _process_file(src: Path, out_dir: Path, cwd: Path, target_format: str | None) -> None:
