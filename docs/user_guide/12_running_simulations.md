@@ -140,6 +140,7 @@ mcprojsim simulate PROJECT_FILE [OPTIONS]
 | `-p`, `--progress` | Show a progress bar while the simulation is running | off |
 | `-S`, `--simtime` | Print elapsed simulation time and peak memory usage after each run | off |
 | `--minheader` | Show a compact two-line header (separator + version line) instead of the full project block | off |
+| `--noheader` | Suppress the header block entirely; output starts directly with the Project Overview section | off |
 | `-t`, `--table` | Format tabular output sections (confidence intervals, sensitivity, slack, risk impact, staffing) as ASCII tables | off |
 | `-m`, `--minimal` | Show minimal console output: version, project overview, calendar/effort statistical summaries, and calendar confidence intervals only | off |
 | `--staffing` | Show full staffing analysis table with team-size recommendations per experience profile | off |
