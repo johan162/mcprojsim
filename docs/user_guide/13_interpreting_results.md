@@ -14,7 +14,7 @@ mcprojsim simulate --seed 42 examples/sample_project.yaml
 
 produces the full output seen below. The sections are explained in detail in the following parts of this chapter.
 
-{{!mcprojsim simulate --seed 42 examples/sample_project.yaml@B5:12:40,A4:25}}
+{{!mcprojsim simulate --seed 42 --noheader examples/sample_project.yaml@B5:19:41*,A4:20*,L}}
 
 Every number here comes from simulating your project thousands of times with different random samples. The results describe the *distribution* of outcomes, not a single prediction.
 
