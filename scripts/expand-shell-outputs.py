@@ -161,7 +161,7 @@ def _expand_match(
         return _fence(lines[:head])
 
     if mid is None:
-        tail_lines = lines[-tail:] if tail > 0 else []
+        tail_lines = lines[-tail:] if tail and tail > 0 else []
         return _fence(lines[:head]) + "\n\n" + _fence(tail_lines)
 
     # Three-section: first head lines, next mid lines, last tail lines
