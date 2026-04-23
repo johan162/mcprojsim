@@ -228,8 +228,7 @@ The combined effect of resource constraints, calendars, and absences is often su
 
 This is not a failure of estimation. It is a more honest picture of when work actually completes. The gap between effort-based estimates and calendar-based schedules is where many real-world planning surprises originate. By modeling resources, calendars, and absences explicitly, the simulation surfaces these effects before the project starts rather than after commitments have been made.
 
-::: pagebreak-b5
-:::
+<!-- pagebreak:b5 -->
 
 ## What the simulation computes, step by step
 

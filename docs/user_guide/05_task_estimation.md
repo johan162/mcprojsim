@@ -310,8 +310,7 @@ tasks:
 Here, the most likely duration is 10 days, but the long right tail means that in some iterations the sampled value could be 20 or 30 days — reflecting the genuine uncertainty in exploratory work.
 
 
-::: pagebreak-b5  
-:::
+<!-- pagebreak:b5 -->
 
 ### Comparing the two distributions
 
@@ -339,8 +338,7 @@ $$\ln(X) = \ln(X_0) + \ln(F_1) + \ln(F_2) + ... + \ln(F_n)$$
 
 If we assume the $\ln(F_i)$ are independent and identically distributed, then by the Central Limit Theorem, $\ln(X)$ will tend to be normally distributed, which means that $X$ is log-normally distributed.
 
-::: pagebreak-b5 
-:::
+<!-- pagebreak:b5 -->
 
 ### Determining log-normal parameters
 
@@ -454,8 +452,7 @@ The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_
 
 The built-in default category is `story`, so a bare value like `M` resolves as `story.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
 
-::: pagebreak-b5
-:::
+<!-- pagebreak:b5 -->
 
 ***Table: Bug - category***
 
@@ -491,8 +488,7 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `epic` | `XL` | 600 | 1000 | 1500 |
 | `epic` | `XXL` | 1200 | 2000 | 3200 |
 
-::: pagebreak-b5   
-:::
+<!-- pagebreak:b5 -->
 
 ***Table: Business/Program - category***
 

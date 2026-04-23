@@ -730,8 +730,7 @@ Some teams prefer to estimate backlog items in Story Points rather than T-shirt 
 
 Story points was originally conceived as a way to model actual working time where 1 SP was eqal to 1 uninterrupted day of work (something that rarely happens in real life). Now, SP is an estimat calibrated to a specific team and story points are only valid within the same and stable team as their own "currency" were each team have different exchange rates between SP <--> days. The program have *one* exchange rate by default but that can easily be adjusted by supplying a different exchange rate in a config file as shown below
 
-::: pagebreak-b5
-:::
+<!-- pagebreak:b5 -->
 
 ### Step 6: use `story_points`
 

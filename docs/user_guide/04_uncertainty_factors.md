@@ -59,8 +59,7 @@ Reflects whether the team is colocated or distributed.
 
 Distributed teams face communication delays, timezone differences, and coordination overhead. This factor accounts for that systematic slowdown.
 
-::: pagebreak-b5 
-:::
+<!-- pagebreak:b5 -->
 
 ### Integration Complexity
 
@@ -223,8 +222,7 @@ If you provide a factor with only some levels (for example only `distributed` un
 
 If you add additional factor names in configuration that are not referenced by the project task schema, they are effectively unused by the current simulation pipeline.
 
-::: pagebreak-b5  
-:::
+<!-- pagebreak:b5 -->
 
 ## Recommended Authoring Pattern
 
