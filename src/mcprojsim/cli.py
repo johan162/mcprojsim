@@ -1214,11 +1214,10 @@ def simulate(
             param_hint="--workers",
         )
 
-    if quiet < 2:
-        # click.echo("==== Simulation Results ====")
-        click.echo(
-            f"mcprojsim, version {__version__}, {datetime.datetime.now().date()}"
-        )
+    _run_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if quiet < 2 and minimal:
+        click.echo(f"mcprojsim v{__version__}")
+        click.echo(f"Run: {_run_ts}")
     logger = setup_logging(level="INFO" if verbose else "WARNING")
 
     try:
@@ -1276,6 +1275,14 @@ def simulate(
         logger.info(f"Loading project from {project_file}")
         project = parser.parse_file(project_file)
         logger.info(f"Loaded project: {project.project.name}")
+
+        if quiet < 2 and not minimal:
+            _sep = "─" * 50
+            click.echo(_sep)
+            click.echo(f" mcprojsim v{__version__}   Monte Carlo Simulator")
+            click.echo(f" Project : {project.project.name}")
+            click.echo(f" Run     : {_run_ts}")
+            click.echo(_sep)
 
         if (
             tshirt_category is None

@@ -318,7 +318,7 @@ class TestSimulateMinimalOutput:
             result = runner.invoke(cli, ["simulate", pf, "--minimal"])
 
         assert result.exit_code == 0
-        assert "mcprojsim, version" in result.output
+        assert "mcprojsim v" in result.output
         assert "Project Overview" in result.output
         assert "Calendar Time Statistical Summary" in result.output
         assert "Project Effort Statistical Summary" in result.output
