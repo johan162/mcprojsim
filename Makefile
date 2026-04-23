@@ -576,12 +576,17 @@ docs-serve: ## Serve the documentation site locally with live reload
 # ============================================================================================
 FIG_SOURCES := $(wildcard assets/fig-*.html)
 FIG_TARGETS := $(patsubst assets/fig-%.html,assets/fig-%.png,$(FIG_SOURCES))
+FIG_TRIMS := $(patsubst assets/fig-%.html,assets/fig-%.trim,$(FIG_SOURCES))
 
- $(info FIG_SOURCES: $(FIG_SOURCES))
- $(info FIG_TARGETS: $(FIG_TARGETS))
+# $(info FIG_SOURCES: $(FIG_SOURCES))
+# $(info FIG_TARGETS: $(FIG_TARGETS))
+# $(info FIG_TRIMS: $(FIG_TRIMS))
 
-figs: ## Render PNG figures from HTML source
-	@./scripts/mkfigs.sh -s assets -o assets
+figs: $(FIG_TARGETS) ## Render PNG figures from HTML source
+
+$(FIG_TARGETS): assets/fig-%.png: assets/fig-%.html assets/fig-%.trim
+	@echo -e "$(DARKYELLOW)- Rendering figure $< to $@...$(NC)"
+	@./scripts/mkfigs.sh -q -s assets -o assets fig-$*
 
 ### End of Makefile
 

@@ -166,7 +166,7 @@ for html in "${HTML_FILES[@]}"; do
         # are relative to the visible content, not the raw viewport.
         if [[ ${#IM_CONVERT_CMD[@]} -gt 0 ]]; then
             "${IM_CONVERT_CMD[@]}" "$OUTPUT_PNG" -trim +repage "$OUTPUT_PNG" 2>/dev/null || true
-        elif [[ $WARNED_NO_IM -eq 0 ]]; then
+        elif [[ $WARNED_NO_IM -eq 0 && $QUIET -eq 0 ]]; then
             echo "WARN: ImageMagick not found (convert/identify or magick). Skipping trim/crop steps." >&2
             WARNED_NO_IM=1
         fi
