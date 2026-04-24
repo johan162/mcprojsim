@@ -20,11 +20,22 @@
 
   .cover {
     position: relative;
-    width: 680px;
-    height: 960px;
+    /* B5 portrait at 300 DPI: 176mm x 250mm -> 2079 x 2953 px */
+    width: 2079px;
+    height: 2953px;
     background: #03060f;
     overflow: hidden;
     box-shadow: 0 0 120px rgba(0,180,255,0.15), 0 0 40px rgba(0,0,0,0.8);
+  }
+
+  .overlay-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 680px;
+    height: 960px;
+    transform-origin: top left;
+    z-index: 1;
   }
 
   canvas#bg {
@@ -311,6 +322,8 @@
   <!-- Background canvas: all distributions + particles -->
   <canvas id="bg"></canvas>
 
+  <div class="overlay-stage">
+
   <!-- Depth layers -->
   <div class="vignette"></div>
   <div class="scanlines"></div>
@@ -366,13 +379,28 @@
       </div>
     </div>
   </div>
+
+  </div>
 </div>
 
 <script>
 const canvas = document.getElementById('bg');
 const ctx = canvas.getContext('2d');
-canvas.width = 680;
-canvas.height = 960;
+const BASE_W = 680;
+const BASE_H = 960;
+
+// B5 portrait at 300 DPI (rounded to nearest integer pixel)
+const OUTPUT_W = 2079;
+const OUTPUT_H = 2953;
+
+const overlayStage = document.querySelector('.overlay-stage');
+overlayStage.style.transform = `scale(${OUTPUT_W / BASE_W}, ${OUTPUT_H / BASE_H})`;
+
+canvas.width = OUTPUT_W;
+canvas.height = OUTPUT_H;
+
+// Keep existing artwork coordinates by scaling from the original design grid.
+ctx.scale(OUTPUT_W / BASE_W, OUTPUT_H / BASE_H);
 
 // ─── Math helpers ───────────────────────────────────────────────────
 function normalPDF(x, mu=0, sigma=1) {
