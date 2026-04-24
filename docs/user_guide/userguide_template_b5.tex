@@ -81,7 +81,25 @@
 \fancyfoot[C]{\thepage}
 \setlength{\headheight}{14pt}
 
+
 \begin{document}
+
+% \newgeometry{margin=0cm}
+% \thispagestyle{empty}
+% %\pagecolor{black}
+% %\vspace*{-1in}\hspace*{-1.6cm}
+% \noindent\includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio=false]{../assets/fig-user-guide-cover.png}
+% %\pagecolor{white}
+% \restoregeometry
+% \newpage
+
+%\begin{titlepage}
+%  \thispagestyle{empty}
+%  \pagecolor{black}
+%  \vspace*{-1in}\hspace*{-0.65in}
+%  \noindent\includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio=false]{../assets/fig-user-guide-cover.png}
+%  \pagecolor{white}
+%\end{titlepage}
 
 \begin{titlepage}
   \centering
@@ -96,6 +114,8 @@
   {\large Generated on \today\par}
 \end{titlepage}
 
+\pagenumbering{roman}
+
 % --- SHORT TOC ---
 % Command: \shorttoc{Title}{Depth}
 % Depth 0 = Chapters, 1 = Chapters + Sections, etc.
@@ -105,6 +125,8 @@
 \tableofcontents
 \cleardoublepage
 
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
 %%__USER_GUIDE_CONTENT__%%
 
