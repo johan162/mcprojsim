@@ -18,6 +18,7 @@
 \usepackage{setspace}
 \usepackage{parskip}
 \usepackage{fancyvrb}
+\usepackage{titlesec}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeborder}{HTML}{C0C0C0}
 \fvset{fontsize=\small}
@@ -60,6 +61,17 @@
 
 \definecolor{brandblue}{HTML}{0E3A5D}
 \definecolor{brandgray}{HTML}{4B5563}
+
+% Modern chapter heading: accent rule + title + full-width rule
+\titleformat{\chapter}[display]
+  {\normalfont\sffamily}
+  {%
+    \color{brandblue}\rule{1.5cm}{3pt}\hspace{6pt}%
+    {\large\bfseries CHAPTER\ \thechapter}%
+  }
+  {8pt}
+  {\Huge\bfseries\color{brandblue}}
+  [\vspace{4pt}{\color{brandblue}\noindent\rule{\linewidth}{1.5pt}}\vspace{2pt}]
 
 \pagestyle{fancy}
 \fancyhf{}
