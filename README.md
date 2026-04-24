@@ -117,52 +117,53 @@ mcprojsim simulate project.yaml --seed 12345 --table --minimal
 This will generate output to the console as shown below:
 
 ```
-=== Simulation Results ===
+mcprojsim v0.15.1
+Run: 2026-04-25 06:53:15
 
 Project Overview:
-┌────────────────────────────────┬──────────────────────┐
-│ Field                          │ Value                │
-├────────────────────────────────┼──────────────────────┤
-│ Project                        │ Auth Service Rewrite │
-│ Start Date                     │ 2026-11-01           │
-│ Number of Tasks                │ 4                    │
-│ Effective Default Distribution │ triangular           │
-│ T-Shirt Category Used          │ story                │
-│ Hours per Day                  │ 8.0                  │
-│ Max Parallel Tasks             │ 2                    │
-│ Schedule Mode                  │ dependency_only      │
-└────────────────────────────────┴──────────────────────┘
+┌────────────────────────────────┬───────────────────────────────────┐
+│ Field                          │ Value                             │
+├────────────────────────────────┼───────────────────────────────────┤
+│ Project                        │ Auth Service Rewrite              │
+│ Start Date                     │ 2026-11-01                        │
+│ Number of Tasks                │ 4                                 │
+│ Effective Default Distribution │ triangular                        │
+│ T-Shirt Category Used          │ story                             │
+│ Hours per Day                  │ 8.0                               │
+│ Max Parallel Tasks             │ 2                                 │
+│ Schedule Mode                  │ dependency_only                   │
+└────────────────────────────────┴───────────────────────────────────┘
 
 Calendar Time Statistical Summary:
-┌──────────────┬────────────────────────────────┐
-│ Metric       │ Value                          │
-├──────────────┼────────────────────────────────┤
-│ Mean         │ 273.74 hours (35 working days) │
-│ Median (P50) │ 270.60 hours                   │
-│ Std Dev      │ 44.92 hours                    │
-│ Minimum      │ 149.01 hours                   │
-│ Maximum      │ 420.56 hours                   │
-└──────────────┴────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────────────┐
+│ Metric       │ Value                                               │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Mean         │ 273.74 hours (35 working days)                      │
+│ Median (P50) │ 270.60 hours                                        │
+│ Std Dev      │ 44.92 hours                                         │
+│ Minimum      │ 149.01 hours                                        │
+│ Maximum      │ 420.56 hours                                        │
+└──────────────┴─────────────────────────────────────────────────────┘
 
 Project Effort Statistical Summary:
-┌──────────────┬──────────────────────────────────────┐
-│ Metric       │ Value                                │
-├──────────────┼──────────────────────────────────────┤
-│ Mean         │ 308.45 person-hours (39 person-days) │
-│ Median (P50) │ 305.37 person-hours                  │
-│ Std Dev      │ 45.09 person-hours                   │
-│ Minimum      │ 182.62 person-hours                  │
-│ Maximum      │ 458.34 person-hours                  │
-└──────────────┴──────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────────────┐
+│ Metric       │ Value                                               │
+├──────────────┼─────────────────────────────────────────────────────┤
+│ Mean         │ 308.45 person-hours (39 person-days)                │
+│ Median (P50) │ 305.37 person-hours                                 │
+│ Std Dev      │ 45.09 person-hours                                  │
+│ Minimum      │ 182.62 person-hours                                 │
+│ Maximum      │ 458.34 person-hours                                 │
+└──────────────┴─────────────────────────────────────────────────────┘
 
 Calendar Time Confidence Intervals:
-┌──────────────┬─────────┬────────────────┬────────────┐
-│ Percentile   │   Hours │   Working Days │ Date       │
-├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │  270.6  │             34 │ 2026-12-17 │
-│ P80          │  314.37 │             40 │ 2026-12-25 │
-│ P90          │  336.27 │             43 │ 2026-12-30 │
-└──────────────┴─────────┴────────────────┴────────────┘
+┌──────────────┬─────────┬────────────────┬──────────────────────────┐
+│ Percentile   │   Hours │   Working Days │ Date                     │
+├──────────────┼─────────┼────────────────┼──────────────────────────┤
+│ P50          │  270.6  │             34 │ 2026-12-17               │
+│ P80          │  314.37 │             40 │ 2026-12-25               │
+│ P90          │  336.27 │             43 │ 2026-12-30               │
+└──────────────┴─────────┴────────────────┴──────────────────────────┘
 ```
 
 Output can also be generated in other formats. Typical outputs (see the `--help` for how to specify output) include:
