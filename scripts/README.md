@@ -18,6 +18,8 @@ documentation workflows, setup verification, and containerized docs serving.
     - [`mkghrelease.sh` - GitHub Release Creator](#mkghreleasesh---github-release-creator)
     - [`mkmcpbundle.sh` - MCP Bundle Builder](#mkmcpbundlesh---mcp-bundle-builder)
     - [`mkdocs.sh` - Documentation Automation Script](#mkdocssh---documentation-automation-script)
+    - [`mkfigs.sh` - Figure Renderer](#mkfigssh---figure-renderer)
+    - [`mkcover.sh` - PDF Cover Inserter](#mkcoversh---pdf-cover-inserter)
     - [`gen-examples.sh` - Examples Page Generator](#gen-examplessh---examples-page-generator)
     - [`gen_nb_sickness_example.py` - NB Sickness Example Generator](#gen_nb_sickness_examplepy---nb-sickness-example-generator)
     - [`verify_setup.sh` - Local Setup Verification](#verify_setupsh---local-setup-verification)
@@ -260,6 +262,77 @@ Builds, serves, deploys, or cleans the MkDocs documentation site.
 
 **Requirements:**
 - Poetry docs dependencies preferred: `poetry install --with docs`
+
+### `mkfigs.sh` - Figure Renderer
+
+Renders `assets/fig-*.html` files to PNG images using headless Chrome.
+
+```bash
+./scripts/mkfigs.sh -o <output_directory> [-s <source_directory>] [-q] [BASENAME]
+```
+
+**What it does:**
+1. Locates a usable Chrome/Chromium executable for headless screenshots
+2. Renders one figure (`BASENAME`) or all matching `fig-*.html` files
+3. Writes PNG files to the output directory
+4. Applies optional trim/crop steps when ImageMagick tools are available
+
+**Options:**
+- `-s DIR` - Source directory containing `fig-*.html` files (default: current directory)
+- `-o DIR` - Output directory for generated PNG files (required)
+- `-q` - Quiet mode (errors still reported)
+- `BASENAME` - Optional single figure name, for example `fig-user-guide-cover`
+
+**Requirements:**
+- A Chrome/Chromium executable available on the system
+- ImageMagick (`magick`/`convert`) optional for trim/crop behavior
+
+**Examples:**
+```bash
+# Render all figures from assets/ into assets/
+./scripts/mkfigs.sh -s assets -o assets
+
+# Render a single figure
+./scripts/mkfigs.sh -s assets -o assets fig-user-guide-cover
+
+# Quiet mode
+./scripts/mkfigs.sh -q -s assets -o assets fig-user-guide-cover
+```
+
+### `mkcover.sh` - PDF Cover Inserter
+
+Inserts a cover image as page 1 of an existing PDF and stretches it to fully cover the page.
+
+```bash
+./scripts/mkcover.sh [-q] [--dpi N] <image> <pdf>
+```
+
+**What it does:**
+1. Reads the target PDF first-page size
+2. Converts the image to a single-page PDF at the requested DPI
+3. Merges the generated cover page before the original PDF pages
+4. Replaces the target PDF in place
+
+**Options:**
+- `-q` - Quiet mode (errors still reported)
+- `--dpi N` - Render resolution for the generated cover page PDF (default: `72`)
+
+**Requirements:**
+- ImageMagick (`magick` or `convert`)
+- A PDF merge tool: `pdftk`, `gs`, or `pdfunite`
+- A page-size reader: `pdfinfo` (preferred) or `gs`
+
+**Examples:**
+```bash
+# Insert cover using default DPI (72)
+./scripts/mkcover.sh assets/fig-user-guide-cover.png dist/mcprojsim_user_guide-b5-0.15.1.pdf
+
+# Insert cover at 300 DPI
+./scripts/mkcover.sh --dpi 300 assets/fig-user-guide-cover.png dist/mcprojsim_user_guide-dark-b5-0.15.1.pdf
+
+# Quiet mode
+./scripts/mkcover.sh -q --dpi 300 assets/fig-user-guide-cover.png dist/mcprojsim_user_guide-dark-b5-0.15.1.pdf
+```
 
 ### `verify_setup.sh` - Local Setup Verification
 

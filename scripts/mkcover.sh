@@ -27,6 +27,28 @@
 
 set -euo pipefail
 
+show_help() {
+        cat << EOF
+Usage: $0 [-q] [--dpi N] <image> <pdf>
+
+Insert an image as the first page of a PDF.
+
+Options:
+    -q, --quiet   Quiet mode (suppress normal output)
+    --dpi N       Output DPI for the generated cover page (default: 72)
+    -h, --help    Show this help message and exit
+
+Arguments:
+    image         Path to the cover image (PNG, JPG, etc.)
+    pdf           Path to the target PDF to modify in-place
+
+Examples:
+    $0 assets/fig-user-guide-cover.png dist/book.pdf
+    $0 --dpi 300 assets/fig-user-guide-cover.png dist/book.pdf
+    $0 -q --dpi 300 assets/fig-user-guide-cover.png dist/book.pdf
+EOF
+}
+
 # ---------------------------------------------------------------------------
 # Arguments
 # ---------------------------------------------------------------------------
@@ -35,7 +57,8 @@ DPI=72
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -q)        QUIET=true; shift ;;
+                -q|--quiet) QUIET=true; shift ;;
+                -h|--help)  show_help; exit 0 ;;
         --dpi)     DPI="$2"; shift 2 ;;
         --dpi=*)   DPI="${1#--dpi=}"; shift ;;
         --)        shift; break ;;
