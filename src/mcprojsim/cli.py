@@ -1228,10 +1228,12 @@ def simulate(
             param_hint="--workers",
         )
 
-    _run_ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    _run_dt = datetime.datetime.now()
+    _run_ts = _run_dt.strftime("%Y-%m-%d %H:%M:%S")
+    _run_date = _run_dt.strftime("%Y-%m-%d")
     if quiet < 2 and minimal:
         click.echo(f"mcprojsim v{__version__}")
-        click.echo(f"Run: {_run_ts}")
+        click.echo(f"Run: {_run_date}")
     elif quiet < 2 and minheader and not noheader:
         _sep = "\u2500" * 50
         click.echo(_sep)
