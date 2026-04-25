@@ -2,11 +2,13 @@
 # mkcover.sh — Insert an image as the first page of a PDF.
 #
 # Usage:
-#   mkcover.sh [-q] [--dpi N] <image> <pdf>
+#   mkcover.sh [-q] [--dpi N] [-o FILE] <image> <pdf>
 #
 # Options:
 #   -q        Quiet mode — suppress all normal output (errors still go to stderr).
 #   --dpi N   Output resolution in DPI (default: 72). Use 300 for print-ready output.
+#   -o, --output FILE
+#             Write merged output to FILE instead of overwriting <pdf>.
 #
 # Arguments:
 #   image   Path to the cover image (PNG, JPG, etc.)
@@ -24,6 +26,8 @@
 # Example:
 #   ./scripts/mkcover.sh --dpi 300 assets/fig-user-guide-cover.png \
 #       dist/mcprojsim_user_guide-b5-0.15.1.pdf
+#   ./scripts/mkcover.sh --dpi 300 -o dist/book-with-cover.pdf \
+#       assets/fig-user-guide-cover.png dist/mcprojsim_user_guide-b5-0.15.1.pdf
 
 set -euo pipefail
 
@@ -36,6 +40,7 @@ Insert an image as the first page of a PDF.
 Options:
     -q, --quiet   Quiet mode (suppress normal output)
     --dpi N       Output DPI for the generated cover page (default: 72)
+    -o, --output  Write merged output PDF to this file (do not overwrite input)
     -h, --help    Show this help message and exit
 
 Arguments:
@@ -45,6 +50,7 @@ Arguments:
 Examples:
     $0 assets/fig-user-guide-cover.png dist/book.pdf
     $0 --dpi 300 assets/fig-user-guide-cover.png dist/book.pdf
+    $0 --dpi 300 -o dist/book-with-cover.pdf assets/fig-user-guide-cover.png dist/book.pdf
     $0 -q --dpi 300 assets/fig-user-guide-cover.png dist/book.pdf
 EOF
 }
@@ -54,6 +60,7 @@ EOF
 # ---------------------------------------------------------------------------
 QUIET=false
 DPI=72
+OUTPUT_PDF=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -61,6 +68,8 @@ while [[ $# -gt 0 ]]; do
                 -h|--help)  show_help; exit 0 ;;
         --dpi)     DPI="$2"; shift 2 ;;
         --dpi=*)   DPI="${1#--dpi=}"; shift ;;
+                -o|--output) OUTPUT_PDF="$2"; shift 2 ;;
+                --output=*) OUTPUT_PDF="${1#--output=}"; shift ;;
         --)        shift; break ;;
         -*)        echo "Error: unknown option: $1" >&2; exit 1 ;;
         *)         break ;;
@@ -68,12 +77,16 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 [-q] [--dpi N] <image> <pdf>" >&2
+    echo "Usage: $0 [-q] [--dpi N] [-o FILE] <image> <pdf>" >&2
     exit 1
 fi
 
 IMAGE="$1"
 PDF="$2"
+
+if [[ -n "$OUTPUT_PDF" ]]; then
+    mkdir -p "$(dirname "$OUTPUT_PDF")"
+fi
 
 [[ -f "$IMAGE" ]] || { echo "Error: image not found: $IMAGE" >&2; exit 1; }
 [[ -f "$PDF"   ]] || { echo "Error: PDF not found: $PDF"   >&2; exit 1; }
@@ -158,7 +171,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Step 4: Replace original PDF
+# Step 4: Write final PDF
 # ---------------------------------------------------------------------------
-mv "$MERGED_PDF" "$PDF"
-[[ "$QUIET" == true ]] || echo "Cover inserted: $PDF"
+if [[ -n "$OUTPUT_PDF" ]]; then
+    mv "$MERGED_PDF" "$OUTPUT_PDF"
+    [[ "$QUIET" == true ]] || echo "Cover inserted: $OUTPUT_PDF"
+else
+    mv "$MERGED_PDF" "$PDF"
+    [[ "$QUIET" == true ]] || echo "Cover inserted: $PDF"
+fi

@@ -3,7 +3,8 @@
 .PHONY: docs gen-examples update-version pdf-docs docs-serve \
  container-engine-check docs-container-build docs-container-start docs-container-stop \
  docs-container-restart docs-container-status docs-container-logs docs-deploy help clean really-clean \
- pdf-api-ref pdfs pdf-docs 
+ pdf-api-ref pdfs pdf-docs cover
+
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -302,6 +303,7 @@ pdfs: pdf-docs pdf-api-ref ## Build all PDF documentation variants in parallel
 
 pdf-docs:  ## Build the user guide in all PDF variants (A4 light/dark, B5 light/dark) in parallel
 	@$(MAKE) -j4 $(USER_GUIDE_A4_PDF) $(USER_GUIDE_DARK_A4_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
+	@$(MAKE) -j2 cover  # Adjust PDFs with cover image after all variants are built
 
 pdf-api-ref:  ## Build the API reference in all PDF variants (A4 light/dark, B5 light/dark) in parallel
 	@$(MAKE) -j4 $(API_REF_A4_PDF) $(API_REF_DARK_A4_PDF) $(API_REF_B5_PDF) $(API_REF_DARK_B5_PDF)
@@ -442,11 +444,37 @@ $(eval $(call BUILD_API_REF_PDF,API_REF_DARK_B5,b5))
 # $(info API_REF_DARK_B5_TEX: $(API_REF_DARK_B5_TEX))
 # $(info API_REF_DARK_B5_PDF_BUILT: $(API_REF_DARK_B5_PDF_BUILT))
 
+# ============================================================================================
+# Adjust the PDF by adding cover image
+# ============================================================================================
+COVER_IMAGE := ../assets/fig-user-guide-cover.png
+USER_GUIDE_PDF := ../dist/$(PROJECT)_user_guide-b5-$(VERSION).pdf
+USER_GUIDE_DARK_PDF := ../dist/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
 
+cover: cover-light cover-dark
+	@:
+
+cover-light: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(COVER_IMAGE) $(USER_GUIDE_PDF)
+	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+
+cover-dark: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(COVER_IMAGE) $(USER_GUIDE_DARK_PDF)
+	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+
+# ============================================================================================
+# Doc-server
+# ============================================================================================
 serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
 	@poetry run mkdocs serve -f ../mkdocs.yml -a localhost:$(DOCS_PORT)
 
+
+# ============================================================================================
+# Container handling
+# ============================================================================================
 container-engine-check:
 	@if [ "$(NO_CONTAINER_ENGINE)" = "yes" ]; then \
         echo -e "$(YELLOW)⚠️  Warning: No container engine detected. Skipping container operation. Please start Podman or Docker.$(NC)"; \
