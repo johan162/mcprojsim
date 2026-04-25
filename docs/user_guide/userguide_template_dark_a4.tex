@@ -110,8 +110,23 @@
 % --- SHORT TOC ---
 % Command: \shorttoc{Title}{Depth}
 % Depth 0 = Chapters, 1 = Chapters + Sections, etc.
-\shorttoc{Chapters}{0} 
+\newcommand{\shorttocentry}[1]{\MakeUppercase{#1}}
+{%
+  \renewcommand{\contentsname}{Chapters}%
+  \makeatletter
+  \renewcommand{\l@chapter}[2]{%
+    \addvspace{5pt}%
+    \noindent{%
+      \sffamily\bfseries\large\color{brandblue}\shorttocentry{#1}%
+      \hfill{\normalsize\mdseries\color{brandgray}#2}%
+    }\par%
+  }%
+  \makeatother
+  \shorttoc{Chapters}{0}%
+}
 \cleardoublepage
+
+
 
 \tableofcontents
 \cleardoublepage
