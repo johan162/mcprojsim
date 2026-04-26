@@ -340,6 +340,21 @@
       0 0 22px rgba(0,229,255,0.9),
       0 0 70px rgba(0,229,255,0.35);
   }
+
+  .content-shift {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(-130px);
+  }
+
+  .hero-copy {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 30px 0;
+  }
 </style>
 </head>
 <body>
@@ -377,24 +392,26 @@
     <div class="top-rule"></div>
     <div class="series-label">User Documentation</div>
 
-    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 30px 0;">
+    <div class="content-shift">
+      <div class="hero-copy">
 
-      <!-- MCProjSim — hero program name -->
-      <div class="program-label">Program Reference &amp; User Guide</div>
-      <div class="program-name">
-        <span class="mc">MC</span><span class="proj">Proj</span><span class="sim">Sim</span>
-      </div>
-      <div class="program-underline"></div>
+        <!-- MCProjSim — hero program name -->
+        <div class="program-label">Program Reference &amp; User Guide</div>
+        <div class="program-name">
+          <span class="mc">MC</span><span class="proj">Proj</span><span class="sim">Sim</span>
+        </div>
+        <div class="program-underline"></div>
 
-      <!-- Book title below -->
-      <!-- <div class="book-about">A complete guide to</div> -->
-      <div class="guide-title">User <span class="accent">Guide</span></div>
-      <div class="main-title" data-text="MONTE">MONTE</div>
-      <div class="main-title" data-text="CARLO"><span class="highlight">CARLO</span></div>
-      <div class="subtitle">Estimation &amp; Simulation</div>
-      <div class="divider"></div>
-      <div class="tagline">
-        Probabilistic reasoning under uncertainty.<br>
+        <!-- Book title below -->
+        <!-- <div class="book-about">A complete guide to</div> -->
+        <div class="guide-title">User <span class="accent">Guide</span></div>
+        <div class="main-title" data-text="MONTE">MONTE</div>
+        <div class="main-title" data-text="CARLO"><span class="highlight">CARLO</span></div>
+        <div class="subtitle">Estimation &amp; Simulation</div>
+        <div class="divider"></div>
+        <div class="tagline">
+          Probabilistic reasoning under uncertainty.<br>
+        </div>
       </div>
     </div>
 
@@ -404,7 +421,7 @@
         FIRST EDITION<br>
         2026
       </div>
-    </div>
+      </div>
   </div>
 
   </div>
