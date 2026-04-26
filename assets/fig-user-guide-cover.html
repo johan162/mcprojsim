@@ -256,11 +256,16 @@
   /* MCProjSim program name */
   .program-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 5px;
-    color: rgba(0,200,255,0.55);
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: rgba(214, 244, 255, 0.96);
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid rgba(0,200,255,0.35);
+    background: rgba(0, 22, 48, 0.42);
+    box-shadow: 0 0 14px rgba(0,200,255,0.18);
   }
 
   .program-name {
@@ -308,11 +313,32 @@
 
   .book-about {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 4px;
-    color: rgba(0,200,255,0.4);
+    color: rgba(0,200,255,0.62);
     text-transform: uppercase;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+  }
+
+  .guide-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    line-height: 1.03;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #f3f9ff;
+    margin-bottom: 16px;
+    text-shadow:
+      0 0 28px rgba(0, 200, 255, 0.44),
+      0 2px 0 rgba(0, 0, 0, 0.8);
+  }
+
+  .guide-title .accent {
+    color: #00e5ff;
+    text-shadow:
+      0 0 22px rgba(0,229,255,0.9),
+      0 0 70px rgba(0,229,255,0.35);
   }
 </style>
 </head>
@@ -349,7 +375,7 @@
   <!-- Main content -->
   <div class="content">
     <div class="top-rule"></div>
-    <div class="series-label">Quantitative Methods Series &nbsp;·&nbsp; Vol. I</div>
+    <div class="series-label">User Documentation</div>
 
     <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 30px 0;">
 
@@ -361,7 +387,8 @@
       <div class="program-underline"></div>
 
       <!-- Book title below -->
-      <div class="book-about">A complete guide to</div>
+      <!-- <div class="book-about">A complete guide to</div> -->
+      <div class="guide-title">User <span class="accent">Guide</span></div>
       <div class="main-title" data-text="MONTE">MONTE</div>
       <div class="main-title" data-text="CARLO"><span class="highlight">CARLO</span></div>
       <div class="subtitle">Estimation &amp; Simulation</div>
@@ -717,9 +744,9 @@ function drawLegend() {
   let lx = 62;
   for (const it of items) {
     ctx.fillStyle = it.col + 'cc';
-    ctx.fillRect(lx, 428, 18, 3);
+    ctx.fillRect(lx, 800, 18, 3);
     ctx.fillStyle = it.col + '99';
-    ctx.fillText(it.label, lx + 22, 431);
+    ctx.fillText(it.label, lx + 22, 805);
     lx += 110;
   }
   ctx.restore();

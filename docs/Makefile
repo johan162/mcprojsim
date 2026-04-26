@@ -3,7 +3,7 @@
 .PHONY: docs gen-examples update-version pdf-docs docs-serve \
  container-engine-check docs-container-build docs-container-start docs-container-stop \
  docs-container-restart docs-container-status docs-container-logs docs-deploy help clean really-clean \
- pdf-api-ref pdfs pdf-docs cover
+ pdf-api-ref pdfs pdf-docs cover cover-light cover-dark cover-api-ref cover-api-ref-light cover-api-ref-dark
 
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
@@ -445,9 +445,12 @@ $(eval $(call BUILD_API_REF_PDF,API_REF_DARK_B5,b5))
 # $(info API_REF_DARK_B5_PDF_BUILT: $(API_REF_DARK_B5_PDF_BUILT))
 
 # ============================================================================================
-# Adjust the PDF by adding cover image
+# Adjust the User Guide PDF by adding cover image to the user guide PDFs. 
+# This is done as a separate step after PDF generation to avoid triggering a full rebuild of 
+# the PDF when the cover image changes, and to allow parallel builds of all PDF variants 
+# before applying the cover.
 # ============================================================================================
-COVER_IMAGE := ../assets/fig-user-guide-cover.png
+USER_GUIDE_COVER_IMAGE := ../assets/fig-user-guide-cover.png
 USER_GUIDE_PDF := ../dist/$(PROJECT)_user_guide-b5-$(VERSION).pdf
 USER_GUIDE_DARK_PDF := ../dist/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
 
@@ -456,13 +459,39 @@ cover: cover-light cover-dark
 
 cover-light: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
-	@../scripts/mkcover.sh -q --dpi 300 $(COVER_IMAGE) $(USER_GUIDE_PDF)
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_PDF)
 	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
 
 cover-dark: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
-	@../scripts/mkcover.sh -q --dpi 300 $(COVER_IMAGE) $(USER_GUIDE_DARK_PDF)
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_PDF)
 	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+
+
+# ============================================================================================
+# Adjust the API Reference PDF by adding cover image to the API reference PDFs. 
+# This is done as a separate step after PDF generation to avoid triggering a full rebuild of 
+# the PDF when the cover image changes, and to allow parallel builds of all PDF variants 
+# before applying the cover.
+# ============================================================================================
+API_REF_COVER_IMAGE := ../assets/fig-api-ref-cover.png
+API_REF_PDF := ../dist/$(PROJECT)_api_ref-b5-$(VERSION).pdf
+API_REF_DARK_PDF := ../dist/$(PROJECT)_api_ref-dark-b5-$(VERSION).pdf
+
+cover-api-ref: cover-api-ref-light cover-api-ref-dark
+	@:
+
+cover-api-ref-light: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_PDF)
+	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+
+cover-api-ref-dark: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_PDF)
+	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+
+
 
 # ============================================================================================
 # Doc-server

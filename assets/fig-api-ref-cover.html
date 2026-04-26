@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Reference Cover - MCProjSim</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg-0: #02050d;
+    --bg-1: #060d1f;
+    --cyan: #00dcff;
+    --cyan-soft: #74e7ff;
+    --amber: #ffad4d;
+    --ink: #dbe8ff;
+    --muted: #8ea7c9;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #000;
+    overflow: hidden;
+  }
+
+  .cover {
+     /* B5 portrait at 300 DPI: 176mm x 250mm -> 2079 x 2953 px */
+    position: relative;
+    width: 2079px;
+    height: 2953px;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 35%, var(--bg-1), var(--bg-0) 60%);
+    box-shadow: 0 0 150px rgba(0, 180, 255, 0.14), 0 0 40px rgba(0, 0, 0, 0.8);
+  }
+
+  canvas#bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .overlay-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 680px;
+    height: 960px;
+    transform-origin: top left;
+    z-index: 2;
+  }
+
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.52));
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.09;
+    z-index: 4;
+    pointer-events: none;
+    background-image:
+      radial-gradient(rgba(255, 255, 255, 0.35) 0.45px, transparent 0.5px),
+      radial-gradient(rgba(0, 220, 255, 0.22) 0.45px, transparent 0.5px);
+    background-size: 3px 3px, 5px 5px;
+    background-position: 0 0, 1px 1px;
+  }
+
+  .corner {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    z-index: 12;
+  }
+
+  .corner::before,
+  .corner::after {
+    content: "";
+    position: absolute;
+    background: rgba(0, 220, 255, 0.92);
+  }
+
+  .corner::before { width: 100%; height: 2px; top: 0; left: 0; }
+  .corner::after { width: 2px; height: 100%; top: 0; left: 0; }
+
+  .corner.tl { top: 24px; left: 24px; }
+  .corner.tr { top: 24px; right: 24px; transform: scaleX(-1); }
+  .corner.bl { bottom: 24px; left: 24px; transform: scaleY(-1); }
+  .corner.br { bottom: 24px; right: 24px; transform: scale(-1); }
+
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    padding: 54px 50px 44px;
+  }
+
+  .top-rule {
+    height: 1px;
+    width: 100%;
+    margin-bottom: 26px;
+    background: linear-gradient(90deg, transparent, rgba(0, 220, 255, 0.25), rgba(0, 220, 255, 0.95), rgba(0, 220, 255, 0.25), transparent);
+    animation: glow 3.5s ease-in-out infinite;
+  }
+
+  @keyframes glow {
+    0%, 100% { opacity: 0.65; }
+    50% { opacity: 1; }
+  }
+
+  .eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: rgba(0, 220, 255, 0.76);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .product {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 58px;
+    line-height: 1;
+    letter-spacing: 1px;
+    font-weight: 900;
+    color: #e8f3ff;
+    text-shadow: 0 0 30px rgba(0, 220, 255, 0.2);
+  }
+
+  .product .mc {
+    color: var(--cyan);
+    text-shadow: 0 0 20px rgba(0, 220, 255, 0.95), 0 0 70px rgba(0, 220, 255, 0.32);
+  }
+
+  .product .sim {
+    color: var(--amber);
+    text-shadow: 0 0 16px rgba(255, 173, 77, 0.92), 0 0 70px rgba(255, 173, 77, 0.2);
+  }
+
+  .hero-rule {
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    margin: 8px 0 14px;
+    background: linear-gradient(90deg, var(--cyan), rgba(198, 233, 255, 0.6), var(--amber));
+    box-shadow: 0 0 10px rgba(0, 220, 255, 0.45);
+  }
+
+  .title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 55px;
+    line-height: 1.05;
+    letter-spacing: 2px;
+    color: #f3f9ff;
+    text-transform: uppercase;
+    text-shadow: 0 0 28px rgba(0, 220, 255, 0.45), 0 2px 0 rgba(0, 0, 0, 0.8);
+  }
+
+  .title .accent {
+    color: var(--cyan);
+    text-shadow: 0 0 22px rgba(0, 220, 255, 0.9), 0 0 70px rgba(0, 220, 255, 0.35);
+  }
+
+  .subtitle {
+    margin-top: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    color: #9ed7e8;
+    text-transform: uppercase;
+  }
+
+  .chip-row {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 520px;
+  }
+
+  .chip {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 5px 8px;
+    border: 1px solid rgba(0, 220, 255, 0.25);
+    color: rgba(214, 241, 255, 0.86);
+    background: rgba(0, 20, 45, 0.35);
+  }
+
+  .chip.get { border-color: rgba(118, 255, 170, 0.55); }
+  .chip.post { border-color: rgba(255, 173, 77, 0.62); }
+  .chip.sys { border-color: rgba(0, 220, 255, 0.62); }
+
+  .code-float {
+    position: absolute;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.6px;
+    color: rgba(0, 220, 255, 0.26);
+    z-index: 6;
+    pointer-events: none;
+    animation: drift 11s ease-in-out infinite;
+  }
+
+  .code-float:nth-child(odd) { animation-direction: reverse; }
+
+  @keyframes drift {
+    0%, 100% { transform: translateY(0px); opacity: 0.2; }
+    50% { transform: translateY(-10px); opacity: 0.38; }
+  }
+
+  .footer {
+    border-top: 1px solid rgba(0, 220, 255, 0.2);
+    padding-top: 17px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .author {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: #93d4e8;
+    text-transform: uppercase;
+  }
+
+  .meta {
+    text-align: right;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(0, 220, 255, 0.62);
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+  <canvas id="bg"></canvas>
+
+  <div class="overlay-stage">
+    <div class="vignette"></div>
+    <div class="grain"></div>
+
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <div class="code-float" style="top:8%; left:6%;">GET /simulate?iterations=10000</div>
+    <div class="code-float" style="top:14%; right:5%; animation-delay:-2s;">POST /validate</div>
+    <div class="code-float" style="top:22%; left:52%; animation-delay:-6s;">schema: ProjectSpec v1</div>
+    <div class="code-float" style="top:74%; right:6%; animation-delay:-3s;">response.p95_duration_hours</div>
+    <div class="code-float" style="top:82%; left:8%; animation-delay:-5s;">content-type: application/json</div>
+
+    <div class="content">
+      <div class="top-rule"></div>
+      <div class="eyebrow">Developer Documentation</div>
+
+      <div class="hero">
+        <div class="product"><span class="mc">MC</span>Proj<span class="sim">Sim</span></div>
+        <div class="hero-rule"></div>
+
+        <div class="title">API <span class="accent">Reference</span></div>
+        <div class="subtitle">Endpoints · Schemas · Examples</div>
+
+        <div class="chip-row">
+          <div class="chip get">GET /simulate</div>
+          <div class="chip post">POST /validate</div>
+          <div class="chip post">POST /generate</div>
+          <div class="chip sys">MCP Tooling</div>
+          <div class="chip sys">JSON Export</div>
+          <div class="chip sys">Typed Models</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="author">Johan Persson</div>
+        <div class="meta">FIRST EDITION<br>2026</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+
+const BASE_W = 680;
+const BASE_H = 960;
+const OUT_W = 2079;
+const OUT_H = 2953;
+
+const overlay = document.querySelector('.overlay-stage');
+overlay.style.transform = `scale(${OUT_W / BASE_W}, ${OUT_H / BASE_H})`;
+
+canvas.width = OUT_W;
+canvas.height = OUT_H;
+ctx.scale(OUT_W / BASE_W, OUT_H / BASE_H);
+
+function rng(seed) {
+  return function() {
+    seed |= 0;
+    seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function drawGradient() {
+  const g = ctx.createRadialGradient(340, 360, 0, 340, 520, 720);
+  g.addColorStop(0, '#0b1530');
+  g.addColorStop(0.5, '#050b19');
+  g.addColorStop(1, '#02050d');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, BASE_W, BASE_H);
+}
+
+function drawStars() {
+  const r = rng(14);
+  for (let i = 0; i < 350; i++) {
+    const x = r() * BASE_W;
+    const y = r() * BASE_H;
+    const s = 0.3 + r() * 1.2;
+    const a = 0.1 + r() * 0.65;
+    ctx.beginPath();
+    ctx.arc(x, y, s, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180,220,255,${a})`;
+    ctx.fill();
+  }
+
+  for (let i = 0; i < 18; i++) {
+    const x = r() * BASE_W;
+    const y = r() * BASE_H;
+    const l = 1.3 + r() * 3;
+    const a = 0.3 + r() * 0.5;
+    ctx.strokeStyle = `rgba(150,235,255,${a})`;
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(x - l, y);
+    ctx.lineTo(x + l, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y - l);
+    ctx.lineTo(x, y + l);
+    ctx.stroke();
+  }
+}
+
+function drawHexGrid() {
+  ctx.save();
+  ctx.translate(10, 30);
+  ctx.strokeStyle = 'rgba(0, 220, 255, 0.08)';
+  ctx.lineWidth = 1;
+  const size = 26;
+  const h = Math.sqrt(3) * size / 2;
+
+  for (let row = 0; row < 22; row++) {
+    for (let col = 0; col < 14; col++) {
+      const x = col * size * 1.5 + (row % 2 ? size * 0.75 : 0);
+      const y = row * h;
+      drawHex(x, y, size * 0.5);
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawHex(cx, cy, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = Math.PI / 3 * i;
+    const x = cx + r * Math.cos(a);
+    const y = cy + r * Math.sin(a);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+}
+
+function drawRadarNode(x, y, rad, color) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 3; i++) {
+    ctx.beginPath();
+    ctx.arc(x, y, rad * i / 3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, 2.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawNetwork() {
+  const points = [
+    [145, 285], [250, 230], [360, 260], [465, 220], [555, 285],
+    [205, 390], [325, 370], [455, 395], [545, 500], [395, 520],
+    [255, 505], [130, 565], [300, 615], [455, 640]
+  ];
+
+  const links = [
+    [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[8,13],
+    [6,9],[9,12],[12,13],[5,10],[10,11],[11,12],[2,6],[2,7],[4,7],[1,5],[3,7]
+  ];
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(0,220,255,0.2)';
+  ctx.lineWidth = 1.2;
+  for (const [a, b] of links) {
+    ctx.beginPath();
+    ctx.moveTo(points[a][0], points[a][1]);
+    ctx.lineTo(points[b][0], points[b][1]);
+    ctx.stroke();
+  }
+
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const main = i % 4 === 0;
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], main ? 4 : 2.8, 0, Math.PI * 2);
+    ctx.fillStyle = main ? 'rgba(255,173,77,0.95)' : 'rgba(0,220,255,0.92)';
+    ctx.shadowColor = main ? 'rgba(255,173,77,0.8)' : 'rgba(0,220,255,0.85)';
+    ctx.shadowBlur = 14;
+    ctx.fill();
+  }
+  ctx.restore();
+
+  drawRadarNode(555, 285, 42, 'rgba(255,173,77,0.24)');
+  drawRadarNode(130, 565, 34, 'rgba(0,220,255,0.24)');
+}
+
+function drawEndpointPanel() {
+  const x = 72;
+  const y = 700;
+  const w = 536;
+  const h = 185;
+
+  const g = ctx.createLinearGradient(x, y, x, y + h);
+  g.addColorStop(0, 'rgba(6, 22, 48, 0.62)');
+  g.addColorStop(1, 'rgba(5, 14, 30, 0.35)');
+
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = 'rgba(0,220,255,0.24)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, w, h);
+
+  ctx.font = "12px 'Share Tech Mono', monospace";
+  ctx.fillStyle = 'rgba(118,255,170,0.88)';
+  ctx.fillText('GET   /simulate', x + 16, y + 30);
+  ctx.fillStyle = 'rgba(255,173,77,0.9)';
+  ctx.fillText('POST  /validate', x + 16, y + 62);
+  ctx.fillText('POST  /generate', x + 16, y + 94);
+
+  ctx.fillStyle = 'rgba(199, 231, 255, 0.65)';
+  ctx.fillText('{', x + 240, y + 30);
+  ctx.fillText('  "iterations": 10000,', x + 240, y + 52);
+  ctx.fillText('  "confidence": [50, 80, 95]', x + 240, y + 74);
+  ctx.fillText('}', x + 240, y + 96);
+
+  ctx.fillStyle = 'rgba(0,220,255,0.45)';
+  for (let i = 0; i < 4; i++) {
+    ctx.fillRect(x + 16 + i * 120, y + 128, 95, 2);
+  }
+}
+
+function drawCircuitEdges() {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(0, 220, 255, 0.2)';
+  ctx.lineWidth = 1;
+
+  const paths = [
+    [[40,120],[120,120],[120,170],[180,170]],
+    [[640,120],[560,120],[560,178],[500,178]],
+    [[55,920],[120,920],[120,850],[160,850]],
+    [[625,920],[565,920],[565,855],[520,855]],
+    [[340,30],[340,90],[390,90]],
+    [[340,930],[340,875],[295,875]]
+  ];
+
+  for (const p of paths) {
+    ctx.beginPath();
+    ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]);
+    ctx.stroke();
+
+    for (const n of p) {
+      ctx.beginPath();
+      ctx.arc(n[0], n[1], 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,220,255,0.75)';
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function render() {
+  drawGradient();
+  drawStars();
+  drawHexGrid();
+  drawCircuitEdges();
+  drawNetwork();
+  drawEndpointPanel();
+}
+
+render();
+</script>
+</body>
+</html>
