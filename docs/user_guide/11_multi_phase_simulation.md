@@ -300,8 +300,6 @@ constrained_scheduling:
 With this config, every `simulate` invocation uses two-pass mode automatically for
 projects that have resources, with no need for the `--two-pass` flag.
 
-\newpage
-
 ## More Complex Example: Developer Allocation
 
 Consider a project with three workstreams all sharing a DevOps engineer for
@@ -320,7 +318,7 @@ tasks:
     name: "Backend development"
     estimate: { low: 60, expected: 80, high: 120 }
     resources: ["backend-dev-1"]
-
+!!! yaml-cbreak-b5
   - id: "backend-deploy"
     name: "Backend deployment"
     estimate: { low: 8, expected: 12, high: 16 }
@@ -350,22 +348,19 @@ tasks:
     estimate: { low: 8, expected: 10, high: 14 }
     dependencies: ["mobile-dev"]
     resources: ["devops"]              # shared bottleneck
-```
 
-```yaml
-  # --- Integration ---
+# --- Integration ---
   - id: "smoke-test"
     name: "Smoke test all streams"
     estimate: { low: 8, expected: 12, high: 20 }
     dependencies: ["backend-deploy", "frontend-deploy", "mobile-deploy"]
     resources: ["qa-1"]
-
   - id: "release"
     name: "Production release"
     estimate: { low: 4, expected: 6, high: 10 }
     dependencies: ["smoke-test"]
     resources: ["devops"]
-
+!!! yaml-cbreak-b5
 resources:
   - name: "backend-dev-1"
     experience_level: 3
@@ -394,8 +389,6 @@ The TwoPassDelta block in the JSON output will show which stream's deploy task
 had the highest criticality index in pass-1, and how much the end-to-end schedule
 improved once pass-2 gave that stream's DevOps slot priority.
 
-\newpage
-
 ## Output Formats
 
 ### Console (`-t` table mode)
@@ -417,6 +410,7 @@ runs and an object for two-pass runs:
     "pass1_iterations": 500,
     "pass2_iterations": 1000,
     "ranking_method": "criticality_index",
+!!! yaml-cbreak-b5    
     "pass1": {
       "mean_hours": 519.9,
       "p50_hours": 519.8,
@@ -437,9 +431,6 @@ runs and an object for two-pass runs:
       "resource_utilization": 0.91,
       "calendar_delay_hours": 0.0
     },
-```
-
-```json
     "delta": {
       "mean_hours": -97.0,
       "p50_hours": -97.5,
@@ -475,7 +466,7 @@ The HTML report gains a **Two-Pass Scheduling Traceability** table with pass-1,
 pass-2, and Δ columns for each key metric, followed by a **Task Criticality
 Index (Pass 1)** table.
 
----
+
 
 ## Choosing `pass1_iterations`
 
@@ -489,13 +480,15 @@ A few practical guidelines:
 | Rigorous / publication-quality | 2 000–5 000 |
 | Noisy project with many tasks | 5 000+ |
 
+: Recommendations
+
 The default of **1 000** is a good balance between ranking stability and
 computational cost for most projects.  If you reduce `pass1_iterations` below
 100 the engine logs a warning that the criticality indices may be noisy.
 
 `pass1_iterations` is automatically capped to `--iterations` if it is larger.
 
----
+
 
 ## Interpreting the Delta
 
