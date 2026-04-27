@@ -33,6 +33,8 @@ This chapter focuses on steps 1 through 3. Uncertainty factors and risks are cov
 | **T-shirt size** | `t_shirt_size` (e.g., `"M"` or `"epic.M"`) | Looked up in config → `low`, `expected`, `high` | Early-stage or relative estimation |
 | **Story points** | `story_points` (e.g., `5`) | Looked up in config → `low`, `expected`, `high` | Teams using story point estimation practices |
 
+***Table I:***
+
 All four methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.
 
 ## Explicit range estimates
@@ -45,6 +47,8 @@ The most direct way to estimate a task is to provide three values that describe 
 | `expected` | The expected duration under normal conditions     | Yes      |
 | `high`         | The longest plausible duration (pessimistic)       | Yes      |
 | `unit`        | The time unit: `"hours"`, `"days"`, or `"weeks"` (default: `"hours"`) | No       |
+
+***Table II:***
 
 The three values must satisfy: `low` ≤ `expected` ≤ `high`.
 
@@ -124,6 +128,8 @@ The triangular distribution is the default and most commonly used distribution i
 | Support | Values between `low` and `high` only |
 | Skewness | Determined by position of `expected` within the range |
 | Implementation | `numpy.random.triangular` |
+
+***Table III:***
 
 **When to use it:**
 
@@ -217,6 +223,8 @@ triangular estimates.
 | Support | All values greater than `low` |
 | Skewness | Always right-skewed; heavier tail with larger fitted sigma |
 | Implementation | `numpy.random.lognormal` |
+
+***Table IV:***
 
 Internally the simulator defines a shifted variable:
 
@@ -323,6 +331,8 @@ Here, the most likely duration is 10 days, but the long right tail means that in
 | Extreme values | Impossible beyond stated bounds | Possible — long tail |
 | Recommended for | Most estimation tasks | Tasks with open-ended risk |
 
+***Table V:***
+
 For most projects, the triangular distribution is the right choice. It is intuitive, bounded, and maps naturally to how teams think about estimates. The log-normal distribution is a specialized tool for tasks where the unbounded right tail better reflects reality.
 
 ### Why is log-normal a good model for software (or project) estimation?
@@ -351,6 +361,8 @@ estimate
 |---|---|---|
 | 5 | 9 | 16 |
 
+***Table VI:***
+
 
 To use a log-normal distribution based on a three-point estimate we need a way to fit those three point to the log-normal distribution. 
 
@@ -366,6 +378,8 @@ For the high estimate we also need to define which confidence level of the log-n
 | 95th percentile | 1.645 |
 | 97.5th percentile | 1.960 |
 | 99th percentile | 2.326 |
+
+***Table VII:***
 
 Great practical question. Since log-normal doesn't have a natural "minimum," the standard approach is to **shift the distribution** by your minimum, then fit μ and σ to the remaining two constraints.
 
@@ -420,6 +434,8 @@ $$
 | $\mu$ (log-mean of Y) | **1.609** |
 | $\sigma$ (log-std of Y) | **0.472** |
 
+***Table VIII:***
+
 
 #### Sanity Check
 
@@ -433,12 +449,49 @@ With these parameters, the distribution of X gives:
 | Mean | $5 + e^{(\mu + \sigma^2/2)} ≈ 5 + 5.6 \approx 10.6\, \texttt{days}$ |
 | 95th percentile | $\sim 16$ days  |
 
+***Table IX:***
+
 The median and mean both sitting above the mode is the classic log-normal skew in action — reinforcing that even with a "9 day" estimate, you should plan for closer to **10.5–11 days** on average.
 
-![Log-normal task duration (5,9,16)](../assets/lognormal01.jpg){ width=80% }
+![Log-normal task duration (5,9,16)](../../assets/fig-lognormal-graph.png)
   
  
 ***Figure:*** *Log-normal task duration (5,9,16)*
+
+### Deriving the formula to translate `low`, `expected`, `high` to log-normal parameters
+
+Starting from the two equations:
+
+$$
+\begin{align*}
+ \mu - \sigma^2 & = \ln(\text{expected}-\text{low}) \\
+\mu + z \cdot \sigma & = \ln(\text{high}-\text{low})
+\end{align*}
+$$
+
+
+Then using the same reasoning as in the previous example we express the log-normal parameters in closed form as
+
+$$
+\begin{align*}
+ & \\
+\sigma & = \frac{-z + \sqrt{\mathstrut z^{\mathstrut 2} + 4R}}{2} \\
+& \\
+\mu & = \ln\!\left(\text{expected} - \text{low}\right) + \sigma^2\\
+\end{align*}
+$$
+
+where
+
+$$
+\begin{align*}
+R  & = \ln\!\left[\frac{\text{high} - \text{low}}{\text{expected} - \text{low}}\right] \\
+& \\
+z & = \text{z-score for the chosen confidence level for high estimate}
+\end{align*}
+$$
+
+and where **z** is the z-score corresponding to your chosen confidence level for the high estimate as seen in ***Table VII:***
 
 ## T-shirt size estimates
 
@@ -465,6 +518,8 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `bug` | `XL` | 20 | 40 | 100 |
 | `bug` | `XXL` | 40 | 80 | 200 |
 
+***Table X:***
+
 ***Table: Story - category***
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
@@ -475,6 +530,8 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `story` | `L` | 160 | 240 | 500 |
 | `story` | `XL` | 320 | 400 | 750 |
 | `story` | `XXL` | 400 | 500 | 1200 |
+
+***Table XI:***
 
 
 ***Table: Epic - category***
@@ -487,6 +544,8 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `epic` | `L` | 290 | 480 | 700 |
 | `epic` | `XL` | 600 | 1000 | 1500 |
 | `epic` | `XXL` | 1200 | 2000 | 3200 |
+
+***Table XII:***
 
 <!-- pagebreak:b5 -->
 
@@ -501,6 +560,8 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `business` | `XL` | 8000 | 16000 | 40000 |
 | `business` | `XXL` | 16000 | 32000 | 80000 |
 
+***Table XIII:***
+
 ***Table: Initiative - category***
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
@@ -512,7 +573,7 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `initiative` | `XL` | 40000 | 80000 | 200000 |
 | `initiative` | `XXL` | 80000 | 160000 | 400000 |
 
-
+***Table XIV:***
 
 These category-specific defaults let you keep the same symbolic size scale while tuning absolute magnitude for different planning scopes.
 
@@ -697,6 +758,9 @@ The default unit for story points is **days** (configurable via `story_point_uni
 | 13           | 8          | 13                 | 21         |
 | 21           | 13         | 21                 | 34         |
 
+
+***Table XV:***
+
 The allowed values are: **1, 2, 3, 5, 8, 13, 21**. Other values are rejected during validation.
 
 ### Specifying a story point estimate
@@ -874,6 +938,8 @@ The `unit` field accepts exactly three values:
 | `"days"`  | Working days         | Multiplied by `hours_per_day` (default 8)        |
 | `"weeks"` | Working weeks        | Multiplied by `hours_per_day × 5` (default 40)   |
 
+***Table XVI:***
+
 Any other value is a validation error.
 
 
@@ -884,6 +950,8 @@ Any other value is a validation error.
 | Explicit range | `"hours"`    | Yes — `"hours"`, `"days"`, or `"weeks"` |
 | T-shirt size   | *(from config)* | **No** — specifying `unit` is a validation error |
 | Story points   | *(from config)* | **No** — specifying `unit` is a validation error |
+
+***Table XVII:***
 
 For explicit range estimates, the default unit is `"hours"`. If you omit the `unit` field, your numeric values are interpreted as hours.
 
@@ -963,6 +1031,8 @@ The resolved values are then converted to hours using the same conversion logic.
 | No `unit` on symbolic estimates | T-shirt / story point | Yes — unit comes from config |
 | `t_shirt_size` token shape must be `<size>` or `<category>.<size>` | T-shirt size | Yes — invalid token formats fail validation |
 | `t_shirt_size` category and size must exist in active config | T-shirt size | Yes — unknown category/size fails resolution |
+
+***Table XVIII:***
 
 
 ## Summary
