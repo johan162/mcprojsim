@@ -302,11 +302,16 @@ pdfs: pdf-docs pdf-api-ref ## Build all PDF documentation variants in parallel
 	@:
 
 pdf-docs:  ## Build the user guide in all PDF variants (A4 light/dark, B5 light/dark) in parallel
+	@rm -rf $(USER_GUIDE_BUILD_DIR)  # Clean build dir to ensure no stale files interfere
+	@rm $(DIST_DIR)/$(PROJECT)_user_guide-*.pdf 2>/dev/null || true  # Remove old PDFs to prevent confusion
 	@$(MAKE) -j4 $(USER_GUIDE_A4_PDF) $(USER_GUIDE_DARK_A4_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
-	@$(MAKE) -j2 cover  # Adjust PDFs with cover image after all variants are built
+	@$(MAKE) -j4 cover  # Adjust PDFs with cover image after all variants are built
 
 pdf-api-ref:  ## Build the API reference in all PDF variants (A4 light/dark, B5 light/dark) in parallel
+	@rm -rf $(API_REF_BUILD_DIR)  # Clean build dir to ensure no stale files interfere
+	@rm $(DIST_DIR)/$(PROJECT)_api_ref-*.pdf 2>/dev/null || true  # Remove old PDFs to prevent confusion
 	@$(MAKE) -j4 $(API_REF_A4_PDF) $(API_REF_DARK_A4_PDF) $(API_REF_B5_PDF) $(API_REF_DARK_B5_PDF)
+	@$(MAKE) -j4 cover-api-ref  # Adjust PDFs with cover image after all variants are built
 
 examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
 	@:
@@ -451,20 +456,32 @@ $(eval $(call BUILD_API_REF_PDF,API_REF_DARK_B5,b5))
 # before applying the cover.
 # ============================================================================================
 USER_GUIDE_COVER_IMAGE := ../assets/cover-user-guide.png
-USER_GUIDE_PDF := ../dist/$(PROJECT)_user_guide-b5-$(VERSION).pdf
-USER_GUIDE_DARK_PDF := ../dist/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
+USER_GUIDE_B5_PDF := ../dist/$(PROJECT)_user_guide-b5-$(VERSION).pdf
+USER_GUIDE_DARK_B5_PDF := ../dist/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
+USER_GUIDE_A4_PDF := ../dist/$(PROJECT)_user_guide-a4-$(VERSION).pdf
+USER_GUIDE_DARK_A4_PDF := ../dist/$(PROJECT)_user_guide-dark-a4-$(VERSION).pdf
 
-cover: cover-light cover-dark
+cover: cover-b5-light cover-b5-dark cover-a4-light cover-a4-dark ## Adjust all user guide PDFs with cover image in parallel
 	@:
 
-cover-light: ## Adjust the PDF by adding cover image
+cover-b5-light: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
-	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_PDF)
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_B5_PDF)
 	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
 
-cover-dark: ## Adjust the PDF by adding cover image
+cover-b5-dark: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
-	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_PDF)
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_B5_PDF)
+	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+
+cover-a4-light: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_A4_PDF)
+	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+
+cover-a4-dark: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_A4_PDF)
 	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
 
 
@@ -475,21 +492,34 @@ cover-dark: ## Adjust the PDF by adding cover image
 # before applying the cover.
 # ============================================================================================
 API_REF_COVER_IMAGE := ../assets/cover-api-ref.png
-API_REF_PDF := ../dist/$(PROJECT)_api_ref-b5-$(VERSION).pdf
-API_REF_DARK_PDF := ../dist/$(PROJECT)_api_ref-dark-b5-$(VERSION).pdf
+API_REF_B5_PDF := ../dist/$(PROJECT)_api_ref-b5-$(VERSION).pdf
+API_REF_DARK_B5_PDF := ../dist/$(PROJECT)_api_ref-dark-b5-$(VERSION).pdf
+API_REF_A4_PDF := ../dist/$(PROJECT)_api_ref-a4-$(VERSION).pdf
+API_REF_DARK_A4_PDF := ../dist/$(PROJECT)_api_ref-dark-a4-$(VERSION).pdf
 
-cover-api-ref: cover-api-ref-light cover-api-ref-dark
+cover-api-ref: cover-api-ref-b5-light cover-api-ref-b5-dark cover-api-ref-a4-light cover-api-ref-a4-dark
 	@:
 
-cover-api-ref-light: ## Adjust the PDF by adding cover image
+cover-api-ref-b5-light: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
-	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_PDF)
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_B5_PDF)
 	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
 
-cover-api-ref-dark: ## Adjust the PDF by adding cover image
+cover-api-ref-b5-dark: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
-	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_PDF)
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_B5_PDF)
 	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+
+cover-api-ref-a4-light: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_A4_PDF)
+	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+
+cover-api-ref-a4-dark: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_A4_PDF)
+	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+
 
 
 
