@@ -450,7 +450,7 @@ $(eval $(call BUILD_API_REF_PDF,API_REF_DARK_B5,b5))
 # the PDF when the cover image changes, and to allow parallel builds of all PDF variants 
 # before applying the cover.
 # ============================================================================================
-USER_GUIDE_COVER_IMAGE := ../assets/fig-user-guide-cover.png
+USER_GUIDE_COVER_IMAGE := ../assets/cover-user-guide.png
 USER_GUIDE_PDF := ../dist/$(PROJECT)_user_guide-b5-$(VERSION).pdf
 USER_GUIDE_DARK_PDF := ../dist/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
 
@@ -474,7 +474,7 @@ cover-dark: ## Adjust the PDF by adding cover image
 # the PDF when the cover image changes, and to allow parallel builds of all PDF variants 
 # before applying the cover.
 # ============================================================================================
-API_REF_COVER_IMAGE := ../assets/fig-api-ref-cover.png
+API_REF_COVER_IMAGE := ../assets/cover-api-ref.png
 API_REF_PDF := ../dist/$(PROJECT)_api_ref-b5-$(VERSION).pdf
 API_REF_DARK_PDF := ../dist/$(PROJECT)_api_ref-dark-b5-$(VERSION).pdf
 

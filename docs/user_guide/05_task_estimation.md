@@ -366,7 +366,7 @@ estimate
 
 To use a log-normal distribution based on a three-point estimate we need a way to fit those three point to the log-normal distribution. 
 
-Since log-normal doesn't have a natural "minimum," the standard approach is to shift the distribution by your minimum, then fit μ and σ to the remaining two constraints.
+Since log-normal doesn't have a natural "minimum," the standard approach is to shift the distribution by your minimum, then fit $\mu$ and $\sigma$ to the remaining two constraints.
 
 For the high estimate we also need to define which confidence level of the log-normal distribution it should correspond to. A common value is to use the 90%- or 95%- percentile. To make this relative to the distribution we use the $z$-value, i.e. the fraction number of standard deviation from the mean value.
 
@@ -381,7 +381,7 @@ For the high estimate we also need to define which confidence level of the log-n
 
 ***Table VII:***
 
-Great practical question. Since log-normal doesn't have a natural "minimum," the standard approach is to **shift the distribution** by your minimum, then fit μ and σ to the remaining two constraints.
+Great practical question. Since log-normal doesn't have a natural "minimum," the standard approach is to **shift the distribution** by your minimum, then fit $\mu$ and $\sigma$ to the remaining two constraints.
 
 #### Derivation
 
@@ -446,14 +446,14 @@ With these parameters, the distribution of X gives:
 | Minimum (hard floor) | 5 days |
 | Mode | $\sim 9$ days  |
 | Median | $5 + e^\mu = 5 + 5.0 \approx 10\, \texttt{days}$ |
-| Mean | $5 + e^{(\mu + \sigma^2/2)} ≈ 5 + 5.6 \approx 10.6\, \texttt{days}$ |
+| Mean | $5 + e^{(\mu + \sigma^2/2)} \approx 5 + 5.6 \approx 10.6\, \texttt{days}$ |
 | 95th percentile | $\sim 16$ days  |
 
 ***Table IX:***
 
 The median and mean both sitting above the mode is the classic log-normal skew in action — reinforcing that even with a "9 day" estimate, you should plan for closer to **10.5–11 days** on average.
 
-![Log-normal task duration (5,9,16)](../../assets/fig-lognormal-graph.png)
+![Log-normal task duration (5,9,16)](../assets/fig-lognormal-graph.png)
   
  
 ***Figure:*** *Log-normal task duration (5,9,16)*
@@ -1017,7 +1017,7 @@ The resolved values are then converted to hours using the same conversion logic.
 
 | Rule | Applies to | Error if violated |
 |------|-----------|-------------------|
-| `low` ≤ `expected` ≤ `high` | Triangular distribution | Yes — values must be in order |
+| `low` $\leq$ `expected` $\leq$ `high` | Triangular distribution | Yes — values must be in order |
 | `low` < `high` | Triangular distribution | Yes — NumPy requires strict inequality |
 | `expected` > 0 | All explicit estimates | Yes — zero or negative not allowed |
 | `low` ≥ 0 | All explicit estimates | Yes — negative values not allowed |

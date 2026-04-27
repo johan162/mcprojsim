@@ -120,7 +120,12 @@
 % --- SHORT TOC ---
 % Command: \shorttoc{Title}{Depth}
 % Depth 0 = Chapters, 1 = Chapters + Sections, etc.
-\newcommand{\shorttocentry}[1]{\MakeUppercase{#1}}
+\newcommand{\shorttocentry}[1]{%
+  {\makeatletter
+  \renewcommand{\numberline}[1]{\makebox[4.5em][l]{##1}}%
+  \MakeUppercase{#1}%
+  \makeatother}%
+}
 {%
   \renewcommand{\contentsname}{Chapters}%
   \makeatletter
