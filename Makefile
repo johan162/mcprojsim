@@ -11,7 +11,7 @@ docs-container-status docs-container-logs build container-build container-build-
 container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all \
- black flake8 mypy pyright _check figs
+ black flake8 mypy pyright _check figs cover
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -572,7 +572,8 @@ docs-serve: ## Serve the documentation site locally with live reload
 	@$(MAKE) -C $(DOCS_DIR) serve
 
 # ============================================================================================
-# Render PNG figures from HTML source
+# Render PNG figures from HTML source. These are figures used in the documentation and need 
+# to be rendered to PNG for embedding in the docs.
 # ============================================================================================
 FIG_SOURCES := $(wildcard assets/fig-*.html)
 FIG_TARGETS := $(patsubst assets/fig-%.html,assets/fig-%.png,$(FIG_SOURCES))
@@ -587,6 +588,25 @@ figs: $(FIG_TARGETS) ## Render PNG figures from HTML source
 $(FIG_TARGETS): assets/fig-%.png: assets/fig-%.html assets/fig-%.trim
 	@echo -e "$(DARKYELLOW)- Rendering figure $< to $@...$(NC)"
 	@./scripts/mkfigs.sh -q -s assets -o assets fig-$*
+	@./scripts/mkragged.sh  --raggedness 10  --blur 0.4  --micro-tears 15 -o  assets/fig-$*-rough.png $@
+	@echo -e "$(GREEN)✓ Figure $@ rendered successfully$(NC)"
+
+
+# ============================================================================================
+# Render Book Cover PNG figures from HTML source. These are the cover page for the
+# PDF documentation and need to be rendered to PNG for embedding in the PDF. 
+# They are separate from the regular figs because they have different styling and dimensions.
+# ============================================================================================
+COVER_SOURCES := $(wildcard assets/cover-*.html)
+COVER_TARGETS := $(patsubst assets/cover-%.html,assets/cover-%.png,$(COVER_SOURCES))
+COVER_TRIMS := $(patsubst assets/cover-%.html,assets/cover-%.trim,$(COVER_SOURCES))
+
+cover: $(COVER_TARGETS) ## Render book cover PNG figures from HTML source
+
+$(COVER_TARGETS): assets/cover-%.png: assets/cover-%.html assets/cover-%.trim
+	@echo -e "$(DARKYELLOW)- Rendering book cover figure $< to $@...$(NC)"
+	@./scripts/mkfigs.sh -q -s assets -o assets cover-$*
+	@echo -e "$(GREEN)✓ Cover $@ rendered successfully$(NC)"
 
 ### End of Makefile
 
