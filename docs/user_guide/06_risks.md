@@ -236,6 +236,7 @@ project_risks:
       value: 15
       unit: "days"
     description: "Payment provider delays final API specification delivery"
+!!! text-cbreak-b5 
   - id: "proj_risk_002"
     name: "Compliance review extends timeline"
     probability: 0.25
@@ -243,9 +244,7 @@ project_risks:
       type: "percentage"
       value: 15
     description: "PCI-DSS compliance review reveals additional work"
-```
 
-```yaml
 tasks:
   - id: "pay_001"
     name: "API client library"
@@ -261,7 +260,6 @@ tasks:
         name: "Incomplete vendor documentation"
         probability: 0.35
         impact: 4
-
   - id: "pay_002"
     name: "Transaction processing engine"
     description: "Core payment transaction handling logic"
@@ -280,9 +278,7 @@ tasks:
         name: "Retry logic complexity"
         probability: 0.15
         impact: 2
-```
-
-```yaml
+!!! yaml-cbreak-b5 
   - id: "pay_003"
     name: "Integration testing with sandbox"
     description: "End-to-end testing against vendor sandbox environment"
@@ -317,7 +313,7 @@ tasks:
 
 In this project, each iteration might unfold differently. In one run the vendor documentation risk triggers on `pay_001`, adding 4 days. In another, the compliance review project risk fires, stretching the total duration by 15%. The Monte Carlo process captures all these possibilities and summarizes them statistically.
 
-\newpage
+<!-- pagebreak:b5 -->
 
 ## Tasks Without Risks
 

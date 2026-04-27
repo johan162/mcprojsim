@@ -315,10 +315,8 @@ tasks:
     dependencies: []
 ```
 
-Here, the most likely duration is 10 days, but the long right tail means that in some iterations the sampled value could be 20 or 30 days — reflecting the genuine uncertainty in exploratory work.
+Here, the most likely duration is 10 days, but the long right tail means that in some iterations the sampled value could be 20 or 30 days, reflecting the genuine uncertainty in exploratory work.
 
-
-<!-- pagebreak:b5 -->
 
 ### Comparing the two distributions
 
@@ -454,7 +452,7 @@ With these parameters, the distribution of X gives:
 The median and mean both sitting above the mode is the classic log-normal skew in action — reinforcing that even with a "9 day" estimate, you should plan for closer to **10.5–11 days** on average.
 
 ![Log-normal task duration (5,9,16)](../assets/fig-lognormal-graph.png)
-  
+
  
 ***Figure:*** *Log-normal task duration (5,9,16)*
 
@@ -518,7 +516,6 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `bug` | `XL` | 20 | 40 | 100 |
 | `bug` | `XXL` | 40 | 80 | 200 |
 
-***Table X:***
 
 ***Table: Story - category***
 
@@ -531,9 +528,6 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `story` | `XL` | 320 | 400 | 750 |
 | `story` | `XXL` | 400 | 500 | 1200 |
 
-***Table XI:***
-
-
 ***Table: Epic - category***
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
@@ -544,8 +538,6 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `epic` | `L` | 290 | 480 | 700 |
 | `epic` | `XL` | 600 | 1000 | 1500 |
 | `epic` | `XXL` | 1200 | 2000 | 3200 |
-
-***Table XII:***
 
 <!-- pagebreak:b5 -->
 
@@ -560,7 +552,6 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `business` | `XL` | 8000 | 16000 | 40000 |
 | `business` | `XXL` | 16000 | 32000 | 80000 |
 
-***Table XIII:***
 
 ***Table: Initiative - category***
 
@@ -573,7 +564,6 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `initiative` | `XL` | 40000 | 80000 | 200000 |
 | `initiative` | `XXL` | 80000 | 160000 | 400000 |
 
-***Table XIV:***
 
 These category-specific defaults let you keep the same symbolic size scale while tuning absolute magnitude for different planning scopes.
 
@@ -759,8 +749,6 @@ The default unit for story points is **days** (configurable via `story_point_uni
 | 21           | 13         | 21                 | 34         |
 
 
-***Table XV:***
-
 The allowed values are: **1, 2, 3, 5, 8, 13, 21**. Other values are rejected during validation.
 
 ### Specifying a story point estimate
@@ -832,6 +820,7 @@ story_points:
     low: 0.5
     expected: 1
     high: 2.5
+!!! yaml-cbreak-b5 
   2:
     low: 1
     expected: 2
@@ -938,7 +927,6 @@ The `unit` field accepts exactly three values:
 | `"days"`  | Working days         | Multiplied by `hours_per_day` (default 8)        |
 | `"weeks"` | Working weeks        | Multiplied by `hours_per_day × 5` (default 40)   |
 
-***Table XVI:***
 
 Any other value is a validation error.
 
@@ -951,7 +939,6 @@ Any other value is a validation error.
 | T-shirt size   | *(from config)* | **No** — specifying `unit` is a validation error |
 | Story points   | *(from config)* | **No** — specifying `unit` is a validation error |
 
-***Table XVII:***
 
 For explicit range estimates, the default unit is `"hours"`. If you omit the `unit` field, your numeric values are interpreted as hours.
 
@@ -1031,8 +1018,6 @@ The resolved values are then converted to hours using the same conversion logic.
 | No `unit` on symbolic estimates | T-shirt / story point | Yes — unit comes from config |
 | `t_shirt_size` token shape must be `<size>` or `<category>.<size>` | T-shirt size | Yes — invalid token formats fail validation |
 | `t_shirt_size` category and size must exist in active config | T-shirt size | Yes — unknown category/size fails resolution |
-
-***Table XVIII:***
 
 
 ## Summary

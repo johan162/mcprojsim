@@ -725,6 +725,7 @@ risks:
       type: "absolute"
       value: 5
       unit: "days"
+!!! yaml-cbreak-b5  
 risks:
   - id: "risk_002"
     name: "Approval delay"
@@ -884,7 +885,7 @@ tasks:
       high: 40
       unit: "hours"
     fixed_cost: 3500.0      # one-time provisioning fee
-
+!!! json-cbreak-b5  
   - id: "data_migration"
     name: "Data Migration"
     estimate:
@@ -964,6 +965,7 @@ resources:
   - name: "alice"
     experience_level: 3
     hourly_rate: 240.0      # principal engineer; overrides project default
+!!! json-cbreak-b5  
   - name: "bob"
     experience_level: 2
     hourly_rate: 160.0
@@ -1041,7 +1043,7 @@ tasks:
       unit: "hours"
     resources: ["alice"]
     fixed_cost: -5000.0        # AWS credit (negative = rebate)
-
+!!! json-cbreak-b5  
   - id: "checkout"
     name: "Checkout & Payments"
     estimate:
@@ -1261,6 +1263,7 @@ sprint_planning:
   enabled: true
   sprint_length_weeks: 2
   capacity_mode: story_points
+!!! json-cbreak-b5  
   history:
     - sprint_id: "SPR-001"
       completed_story_points: 34
@@ -1359,8 +1362,6 @@ When `sprint_planning` is active, three additional task fields become relevant:
 
 The `sprint_defaults` section in the configuration file supplies default values for every `sprint_planning` parameter. Any value set directly in the project file's `sprint_planning` section overrides the corresponding config default. This means you can tune velocity models, sickness parameters, and spillover behaviour once in a shared config file and override only sprint-specific values in each project file.
 
-\newpage 
-
 ## Full YAML example
 
 The following example demonstrates every currently recognized project-file section in one file.
@@ -1374,7 +1375,7 @@ project:
   confidence_levels: [50, 75, 80, 90, 95]
   probability_red_threshold: 0.45
   probability_green_threshold: 0.90
-
+!!! json-cbreak-b5  
 project_risks:
   - id: "proj_risk_001"
     name: "Late stakeholder change"
@@ -1403,9 +1404,6 @@ tasks:
         name: "Clarification delay"
         probability: 0.15
         impact: 1.5
-```
-
-```yaml
   - id: "task_002"
     name: "Implementation"
     estimate:
@@ -1420,7 +1418,7 @@ tasks:
       technical_complexity: "high"
       team_distribution: "distributed"
     resources: ["backend_dev", "frontend_dev"]
-
+!!! json-cbreak-b5
   - id: "task_003"
     name: "Deployment"
     estimate:
@@ -1438,7 +1436,6 @@ calendars:
     holidays:
       - "2026-12-25"
 ```
-\newpage
 
 ## Full TOML example
 
@@ -1470,7 +1467,7 @@ name = "Design"
 description = "Design the feature set"
 dependencies = []
 resources = ["designer"]
-
+!!! toml-cbreak-b5
 [tasks.estimate]
 min = 2
 expected = 4
@@ -1504,9 +1501,7 @@ unit = "days"
 team_experience = "medium"
 technical_complexity = "high"
 team_distribution = "distributed"
-```
 
-```toml
 [[tasks]]
 id = "task_003"
 name = "Deployment"
@@ -1520,7 +1515,7 @@ name = "designer"
 
 [[resources]]
 name = "backend_dev"
-
+!!! toml-cbreak-b5
 [[resources]]
 name = "frontend_dev"
 
@@ -1615,6 +1610,7 @@ t_shirt_sizes:
       low: 40
       expected: 60
       high: 120
+!!! yaml-cbreak-b5
   epic:
     M:
       low: 200
@@ -1631,9 +1627,6 @@ story_points:
     low: 3
     expected: 5
     high: 8
-```
-
-```yaml
 story_point_unit: "days"
 
 lognormal:
@@ -1662,6 +1655,7 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
+!!! yaml-cbreak-b5
 constrained_scheduling:
   assignment_mode: "greedy_single_pass"
   pass1_iterations: 1000

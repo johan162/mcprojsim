@@ -164,6 +164,7 @@ tasks:
     name: "Foundation"
     estimate:
       story_points: 3
+!!! yaml-cbreak-b5
   - id: "task_002"
     name: "Backend API"
     estimate:
@@ -209,7 +210,7 @@ tasks:
     name: "Release prep"
     estimate:
       story_points: 3
-
+!!! yaml-cbreak-b5
 sprint_planning:
   enabled: true
   sprint_length_weeks: 2
@@ -763,6 +764,7 @@ sprint_planning:
   sickness:
     enabled: true
     # team_size falls back to project.team_size (6) if not set here
+!!! yaml-cbreak-b5    
   history:
     - sprint_id: "S1"
       completed_story_points: 10
@@ -1149,6 +1151,7 @@ The history path may be relative. Relative paths are resolved from the project f
     "committed_StoryPoints": "Sum of story points at sprint start",
     "completed_StoryPoints": "Sum of story points completed in sprint"
   },
+!!! json-cbreak-b5
   "sprints": [
     {
       "sprintUniqueID": "SPR-001",
