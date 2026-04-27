@@ -90,6 +90,25 @@
 
 \begin{document}
 
+% Cover verso / imprint page.
+% A bare \newpage does not ship out an empty page; TeX needs actual content.
+{%
+  \thispagestyle{empty}%
+  \null\vfill
+  {\small\color{brandgray}%
+  \textbf{MCProjSim User Guide}\\
+  Version \texttt{v0.15.1}\\
+  Copyright \textcopyright\ Johan Persson\\
+  Generated on \today\\
+   Prepared with \LaTeX\ from Markdown sources for duplex printing. 
+  Sources for documentation available at\\ 
+  \url{https://github.com/johan162/mcprojsim/docs}. 
+  \par}%
+  % \vfill\null
+  \clearpage
+}
+
+
 \begin{titlepage}
   \centering
   \vspace*{2.0cm}
