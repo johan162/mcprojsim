@@ -1233,7 +1233,6 @@ def simulate(
     _run_date = _run_dt.strftime("%Y-%m-%d")
     if quiet < 2 and minimal:
         click.echo(f"mcprojsim v{__version__}")
-        click.echo(f"Run: {_run_date}")
     elif quiet < 2 and minheader and not noheader:
         _sep = "\u2500" * 50
         click.echo(_sep)
