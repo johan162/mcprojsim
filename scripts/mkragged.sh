@@ -2,7 +2,7 @@
 # mkragged.dh — Create a torn-edge version of a PNG image.
 #
 # Usage:
-#   mkragged.dh [--raggedness N] [--mode MODE] [--paper-color COLOR] -o OUTPUT.png INPUT.png
+#   mkragged.dh [--raggedness N] [--mode MODE] [--paper-color COLOR] [--blur SIGMA] [--micro-tears LEVEL] -o OUTPUT.png INPUT.png
 #
 # Modes:
 #   transparent         Torn edges on a transparent background.
@@ -29,13 +29,17 @@ set -euo pipefail
 show_help() {
     cat << EOF
 Usage:
-    $0 [--raggedness N] [--mode MODE] [--paper-color COLOR] -o OUTPUT.png INPUT.png
+    $0 [--raggedness N] [--mode MODE] [--paper-color COLOR] [--blur SIGMA] [--micro-tears LEVEL] -o OUTPUT.png INPUT.png
 
 Create a version of a PNG image with ragged, torn-looking edges.
 
 Options:
     -o, --output FILE     Output PNG path (required)
     -r, --raggedness N    Raggedness amount in pixels (default: 28)
+    -b, --blur SIGMA      Edge blur sigma. Lower values make sharper tears.
+                          If omitted, uses the current auto blur behavior.
+    --micro-tears LEVEL   Add tiny edge nicks between large tears (default: 0).
+                          0 disables micro-tears; 1-20 increases fine detail.
     -m, --mode MODE       Output mode: transparent, transparent-shadow, deckled,
                           paper, or one-sided-tear (default: transparent)
     --paper-color COLOR   Paper background color for paper mode (default: #f5efe2)
@@ -54,6 +58,9 @@ Notes:
     - Paper mode composites the torn image onto a paper-colored background.
     - One-sided-tear mode keeps the top and side edges clean and only tears
       the bottom edge, like a page ripped from a notepad.
+        - --blur controls edge softness; e.g. 0.6 is crisper than the default.
+        - --micro-tears adds high-frequency detail to avoid unrealistically smooth
+            edge segments between larger tear shears.
     - Requires ImageMagick (magick or convert + identify).
 
 Examples:
@@ -61,6 +68,9 @@ Examples:
     $0 --raggedness 42 -o out.png in.png
     $0 --mode transparent-shadow -o out.png in.png
     $0 --mode deckled -o out.png in.png
+    $0 --blur 0.6 --mode one-sided-tear -o out.png in.png
+    $0 --micro-tears 3 --mode transparent -o out.png in.png
+    $0 --micro-tears 12 --mode one-sided-tear -o out.png in.png
     $0 --mode paper --paper-color '#f8f1e3' -o out.png in.png
     $0 --mode one-sided-tear -o out.png in.png
 EOF
@@ -69,6 +79,8 @@ EOF
 OUTPUT=""
 INPUT=""
 RAGGEDNESS=8
+BLUR_OVERRIDE=""
+MICRO_TEARS=0
 MODE="transparent"
 PAPER_COLOR="#f5efe2"
 
@@ -88,6 +100,22 @@ while [[ $# -gt 0 ]]; do
             ;;
         --raggedness=*)
             RAGGEDNESS="${1#--raggedness=}"
+            shift
+            ;;
+        -b|--blur)
+            BLUR_OVERRIDE="$2"
+            shift 2
+            ;;
+        --blur=*)
+            BLUR_OVERRIDE="${1#--blur=}"
+            shift
+            ;;
+        --micro-tears)
+            MICRO_TEARS="$2"
+            shift 2
+            ;;
+        --micro-tears=*)
+            MICRO_TEARS="${1#--micro-tears=}"
             shift
             ;;
         -m|--mode)
@@ -144,6 +172,16 @@ fi
 
 if ! [[ "$RAGGEDNESS" =~ ^[0-9]+$ ]] || [[ "$RAGGEDNESS" -lt 4 ]]; then
     echo "Error: --raggedness must be an integer >= 4." >&2
+    exit 1
+fi
+
+if [[ -n "$BLUR_OVERRIDE" ]] && ! [[ "$BLUR_OVERRIDE" =~ ^([0-9]+([.][0-9]+)?|[.][0-9]+)$ ]]; then
+    echo "Error: --blur must be a non-negative number (e.g. 0.6, 1, 2.5)." >&2
+    exit 1
+fi
+
+if ! [[ "$MICRO_TEARS" =~ ^[0-9]+$ ]] || [[ "$MICRO_TEARS" -gt 20 ]]; then
+    echo "Error: --micro-tears must be an integer from 0 to 20." >&2
     exit 1
 fi
 
@@ -214,11 +252,17 @@ if [[ "$MODE" == "one-sided-tear" ]]; then
     ONE_SIDED=1
 fi
 
-BLUR_RADIUS=$(awk -v r="$EDGE_RAGGEDNESS" -v style="$EDGE_STYLE" 'BEGIN {
+DEFAULT_BLUR_RADIUS=$(awk -v r="$EDGE_RAGGEDNESS" -v style="$EDGE_STYLE" 'BEGIN {
     base = (r < 20 ? 1.2 : r / 16.0)
     if (style == "deckled") { base += 0.8 }
     printf "%.1f", base
 }')
+
+if [[ -n "$BLUR_OVERRIDE" ]]; then
+    BLUR_RADIUS="$BLUR_OVERRIDE"
+else
+    BLUR_RADIUS="$DEFAULT_BLUR_RADIUS"
+fi
 
 awk \
     -v width="$WIDTH" \
@@ -294,6 +338,32 @@ awk \
             py[n] = y
         }
 
+        # Add an explicit chamfer point near the upper-left corner to avoid
+        # a small triangular "flag" peninsula where the polygon closes.
+        corner_trim = margin + ragged * 0.9
+        if (corner_trim < margin + 2) {
+            corner_trim = margin + 2
+        }
+        if (corner_trim > width * 0.2) {
+            corner_trim = width * 0.2
+        }
+        if (corner_trim > height * 0.2) {
+            corner_trim = height * 0.2
+        }
+
+        if (py[1] < corner_trim) {
+            py[1] = corner_trim
+        }
+        if (px[1] < corner_trim) {
+            px[1] = corner_trim
+        }
+        if (px[n] < corner_trim) {
+            px[n] = corner_trim
+        }
+        if (py[n] < corner_trim) {
+            py[n] = corner_trim
+        }
+
         out = "polygon"
         for (i = 1; i <= n; i++) {
             out = out sprintf(" %d,%d", int(px[i]), int(py[i]))
@@ -315,11 +385,32 @@ awk \
     -v ragged="$EDGE_RAGGEDNESS" \
     -v edge_style="$EDGE_STYLE" \
     -v one_sided="$ONE_SIDED" \
+    -v micro_tears="$MICRO_TEARS" \
     '
+    function clamp(v, lo, hi) {
+        return v < lo ? lo : (v > hi ? hi : v)
+    }
     BEGIN {
         srand()
         print "viewbox 0 0 " width " " height
         print "fill black"
+
+        # Keep corner regions cleaner to avoid small outward "flag" artifacts.
+        guard_x = 2.0 + ragged * 1.15
+        guard_y = 2.0 + ragged * 1.15
+        if (guard_x * 2 > width - 4) {
+            guard_x = (width - 4) / 2.0
+        }
+        if (guard_y * 2 > height - 4) {
+            guard_y = (height - 4) / 2.0
+        }
+        guard_x = clamp(guard_x, 0, width / 2.0)
+        guard_y = clamp(guard_y, 0, height / 2.0)
+        span_x = width - guard_x * 2
+        span_y = height - guard_y * 2
+        if (span_x < 1) { span_x = 1 }
+        if (span_y < 1) { span_y = 1 }
+
         # Deckled uses fewer, smaller nibbles for a rounder handmade look.
         # One-sided-tear concentrates nibbles on the bottom edge only.
         count = int(width / 220) + int(height / 260) + 4
@@ -333,20 +424,130 @@ awk \
             }
 
             if (side == 0) {
-                cx = rand() * width
+                cx = guard_x + rand() * span_x
                 cy = rand() * (ragged * 0.7)
             } else if (side == 1) {
                 cx = width - rand() * (ragged * 0.7)
-                cy = rand() * height
+                cy = guard_y + rand() * span_y
             } else if (side == 2) {
-                cx = rand() * width
+                cx = guard_x + rand() * span_x
                 cy = height - rand() * (ragged * 0.7)
             } else {
                 cx = rand() * (ragged * 0.7)
-                cy = rand() * height
+                cy = guard_y + rand() * span_y
             }
 
             print "circle " int(cx) "," int(cy) " " int(cx + radius) "," int(cy)
+        }
+
+        # Optional micro-tears add tiny high-frequency edge detail between
+        # the larger tears, reducing long smooth segments.
+        if (micro_tears > 0) {
+            micro_strength = micro_tears
+            micro_curve = micro_strength / 20.0
+            micro_curve2 = micro_curve * micro_curve
+            micro_scale = 2.0 + micro_strength * (1.0 + 1.4 * micro_curve)
+            micro_count = int(((width + height) / 55.0) * micro_scale)
+            if (edge_style == "deckled") {
+                micro_count = int(micro_count * 0.8)
+            }
+
+            for (i = 0; i < micro_count; i++) {
+                side = (one_sided ? 2 : int(rand() * 4))
+
+                # Triangular micro-notches produce a zig-zag/fibrous tear profile
+                # instead of rounded concave bubbles.
+                if (edge_style == "deckled") {
+                    notch_depth = 0.45 + rand() * (0.30 + ragged * 0.020)
+                    notch_half = 0.70 + rand() * (0.40 + ragged * 0.025)
+                } else {
+                    notch_depth = 0.55 + rand() * (0.45 + ragged * 0.030)
+                    notch_half = 0.90 + rand() * (0.55 + ragged * 0.040)
+                }
+
+                # Higher micro-tears should be clearly visible: increase notch
+                # depth and width with level, but keep hard caps to avoid bubbles.
+                notch_depth = notch_depth * (1.0 + 2.4 * micro_curve + 1.2 * micro_curve2)
+                notch_half = notch_half * (1.0 + 1.25 * micro_curve + 0.55 * micro_curve2)
+
+                max_depth = 1.9 + ragged * (0.08 + 0.21 * micro_curve + 0.10 * micro_curve2)
+                if (edge_style == "deckled") {
+                    max_depth = max_depth * 0.88
+                }
+                if (notch_depth > max_depth) {
+                    notch_depth = max_depth
+                }
+
+                max_half = 2.3 + ragged * (0.10 + 0.22 * micro_curve)
+                if (edge_style == "deckled") {
+                    max_half = max_half * 0.9
+                }
+                if (notch_half > max_half) {
+                    notch_half = max_half
+                }
+
+                # At higher levels, spread micro-tears further inward so the
+                # difference between low and high settings is obvious.
+                band = 0.8 + ragged * (0.16 + 0.42 * micro_curve)
+                if (edge_style == "deckled") {
+                    band = band * 0.85
+                }
+                max_band = 1.6 + ragged * (0.34 + 0.62 * micro_curve)
+                if (band > max_band) {
+                    band = max_band
+                }
+
+                if (side == 0) {
+                    cx = guard_x + rand() * span_x
+                    cy = rand() * band
+                    jitter = (rand() - 0.5) * notch_half * 0.9
+                    x1 = cx - notch_half
+                    y1 = cy + jitter
+                    x2 = cx + notch_half
+                    y2 = cy - jitter
+                    x3 = cx
+                    y3 = cy + notch_depth
+                } else if (side == 1) {
+                    cx = width - rand() * band
+                    cy = guard_y + rand() * span_y
+                    jitter = (rand() - 0.5) * notch_half * 0.9
+                    x1 = cx + jitter
+                    y1 = cy - notch_half
+                    x2 = cx - jitter
+                    y2 = cy + notch_half
+                    x3 = cx - notch_depth
+                    y3 = cy
+                } else if (side == 2) {
+                    cx = guard_x + rand() * span_x
+                    cy = height - rand() * band
+                    jitter = (rand() - 0.5) * notch_half * 0.9
+                    x1 = cx - notch_half
+                    y1 = cy - jitter
+                    x2 = cx + notch_half
+                    y2 = cy + jitter
+                    x3 = cx
+                    y3 = cy - notch_depth
+                } else {
+                    cx = rand() * band
+                    cy = guard_y + rand() * span_y
+                    jitter = (rand() - 0.5) * notch_half * 0.9
+                    x1 = cx - jitter
+                    y1 = cy - notch_half
+                    x2 = cx + jitter
+                    y2 = cy + notch_half
+                    x3 = cx + notch_depth
+                    y3 = cy
+                }
+
+                x1 = clamp(x1, 0, width - 1)
+                y1 = clamp(y1, 0, height - 1)
+                x2 = clamp(x2, 0, width - 1)
+                y2 = clamp(y2, 0, height - 1)
+                x3 = clamp(x3, 0, width - 1)
+                y3 = clamp(y3, 0, height - 1)
+
+                print "polygon " int(x1) "," int(y1) " " int(x2) "," int(y2) " " int(x3) "," int(y3)
+            }
         }
     }
     ' > "$NIBBLES"
