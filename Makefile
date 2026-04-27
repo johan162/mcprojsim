@@ -263,7 +263,7 @@ $(BUILD_WHEEL) $(BUILD_SDIST): $(SRC_FILES) $(TEST_FILES) $(MISC_FILES)
 		exit 1; \
 	fi
 	@echo -e "$(DARKYELLOW)- Verifying packages with twine...$(NC)"
-	@if poetry run twine check dist/*; then \
+	@if poetry run twine check dist/*.whl dist/*.tar.gz; then \
 		echo -e "$(GREEN)✓ 📦 Package verification passed$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Package verification failed$(NC)"; \
@@ -320,7 +320,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html|test-probabilistic|test-probabilistic-full)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build)
+	@$(call print_section,Build & Documentation,build|figs|cover|docs|pdf|pdfs|docs-serve)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
