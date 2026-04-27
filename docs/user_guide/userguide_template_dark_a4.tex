@@ -109,6 +109,9 @@
   \clearpage
 }
 
+\pagenumbering{roman}
+\setcounter{page}{1}
+
 \begin{titlepage}
   \centering
   \vspace*{2.0cm}
@@ -122,8 +125,12 @@
   {\large Generated on \today\par}
 \end{titlepage}
 
-\pagenumbering{roman}
-
+% Ensure exactly one blank page after title before short TOC.
+% Locally downgrade chapter's openright behavior inside shorttoc.
+\clearpage
+\thispagestyle{empty}\null\clearpage
+\begingroup
+\let\cleardoublepage\clearpage
 
 % --- SHORT TOC ---
 % Command: \shorttoc{Title}{Depth}
@@ -136,6 +143,8 @@
 }
 {%
   \renewcommand{\contentsname}{Chapters}%
+  % Reduce top whitespace on short TOC page so all chapter entries fit.
+  \titlespacing*{\chapter}{0pt}{0pt}{0.8em}%
   \makeatletter
   \renewcommand{\l@chapter}[2]{%
     \addvspace{5pt}%
@@ -147,6 +156,7 @@
   \makeatother
   \shorttoc{Chapters}{0}%
 }
+\endgroup
 \cleardoublepage
 
 
