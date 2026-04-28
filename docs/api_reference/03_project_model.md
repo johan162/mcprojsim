@@ -125,7 +125,7 @@ Stores top-level project settings and characteristics.
 | `description` | `str \| None` | `None` | Optional project description |
 | `start_date` | `date` | required | Project start date |
 | `hours_per_day` | `float` | `8.0` | Working hours per day |
-| `currency` | `str \| None` | `"USD"` | ISO 4217 currency code for cost tracking (e.g. `"USD"`, `"EUR"`, `"SEK"`) |
+| `currency` | `str \| None` | `None` | ISO 4217 currency code for cost tracking (e.g. `"USD"`, `"EUR"`, `"SEK"`). When not set, falls back to `config.cost.currency` (default `"EUR"`) |
 | `default_hourly_rate` | `float \| None` | `None` | Default hourly rate applied to all tasks that don't specify a per-task or per-resource rate. Must be ≥ 0. |
 | `overhead_rate` | `float` | `0.0` | Overhead multiplier applied on top of hourly rates (0.0–3.0). E.g. `0.15` adds 15 % overhead. |
 | `secondary_currencies` | `list[str]` | `[]` | Up to 5 additional ISO 4217 currency codes for multi-currency cost output. |

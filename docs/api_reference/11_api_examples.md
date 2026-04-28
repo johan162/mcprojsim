@@ -533,12 +533,16 @@ print(f"Last reported progress: {progress_pct}%")
 Enable cost tracking by setting `default_hourly_rate` on the project metadata. The engine computes per-iteration costs (effort × rate + fixed costs + risk cost impacts), and `SimulationResults` exposes budget-analysis helpers.
 
 ```python
-from mcprojsim.models.project import Project, ProjectMetadata, Task, Risk, ResourceSpec
+from datetime import date
+from mcprojsim.models.project import (
+    Project, ProjectMetadata, Task, TaskEstimate, Risk, RiskImpact, ResourceSpec,
+)
 from mcprojsim.simulation.engine import SimulationEngine
 
 project = Project(
-    metadata=ProjectMetadata(
+    project=ProjectMetadata(
         name="Payment Gateway",
+        start_date=date(2026, 6, 1),
         default_hourly_rate=120.0,
         overhead_rate=0.15,
         currency="USD",
@@ -547,28 +551,20 @@ project = Project(
         Task(
             id="design",
             name="API Design",
-            low=16,
-            expected=24,
-            high=40,
-            unit="hours",
+            estimate=TaskEstimate(low=16, expected=24, high=40),
             fixed_cost=2000.0,  # licensing fee
         ),
         Task(
             id="impl",
             name="Implementation",
-            low=80,
-            expected=120,
-            high=200,
-            unit="hours",
-            depends_on=["design"],
+            estimate=TaskEstimate(low=80, expected=120, high=200),
+            dependencies=["design"],
             risks=[
                 Risk(
                     id="impl_vendor",
                     name="Vendor API instability",
                     probability=0.25,
-                    impact_low=20,
-                    impact_high=60,
-                    unit="hours",
+                    impact=RiskImpact(type="absolute", value=40, unit="hours"),
                     cost_impact=8000.0,
                 ),
             ],
@@ -576,16 +572,13 @@ project = Project(
         Task(
             id="qa",
             name="QA & Certification",
-            low=40,
-            expected=60,
-            high=100,
-            unit="hours",
-            depends_on=["impl"],
+            estimate=TaskEstimate(low=40, expected=60, high=100),
+            dependencies=["impl"],
         ),
     ],
     resources=[
-        ResourceSpec(id="alice", name="Alice", hourly_rate=150.0),
-        ResourceSpec(id="bob", name="Bob"),  # uses default_hourly_rate
+        ResourceSpec(name="Alice", hourly_rate=150.0),
+        ResourceSpec(name="Bob"),  # uses default_hourly_rate
     ],
 )
 
@@ -606,7 +599,7 @@ prob = results.probability_within_budget(50_000)
 print(f"Probability within $50k: {prob*100:.1f}%")
 
 # Joint probability: within budget AND on schedule
-joint = results.joint_probability(budget=50_000, schedule_hours=250)
+joint = results.joint_probability(target_hours=250, target_budget=50_000)
 print(f"Joint probability ($50k & 250h): {joint*100:.1f}%")
 
 # --- Cost drivers ---

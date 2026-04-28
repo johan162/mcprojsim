@@ -98,11 +98,11 @@ Holds the complete output of a Monte Carlo simulation run, including all percent
 | `sensitivity` | `dict[str, float]` | `{}` | Per-task Spearman rank correlation with total duration |
 | `task_slack` | `dict[str, float]` | `{}` | Mean schedule slack per task (hours) across all iterations |
 | `max_parallel_tasks` | `int` | `0` | Peak parallel task count observed across all iterations |
-| `schedule_mode` | `str` | `"dependency_only"` | `"dependency_only"` or `"constrained"` |
+| `schedule_mode` | `str` | `"dependency_only"` | `"dependency_only"` or `"resource_constrained"` |
 | `resource_constraints_active` | `bool` | `False` | Whether resource-constrained scheduling was used |
-| `resource_wait_time_hours` | `float` | `0.0` | Total wait time caused by resource unavailability |
+| `resource_wait_time_hours` | `float` | `0.0` | Mean hours tasks waited for a resource slot |
 | `resource_utilization` | `float` | `0.0` | Average resource utilization (0.0–1.0) |
-| `calendar_delay_time_hours` | `float` | `0.0` | Hours lost to calendar constraints (weekends, holidays) |
+| `calendar_delay_time_hours` | `float` | `0.0` | Mean hours lost to calendar constraints (weekends, holidays) |
 | `risk_impacts` | `dict[str, np.ndarray]` | `{}` | Per-task risk impact arrays (task ID → per-iteration impact in hours) |
 | `project_risk_impacts` | `np.ndarray` | `[]` | Per-iteration project-level risk impacts in hours |
 | `effort_durations` | `np.ndarray` | `[]` | Per-iteration total person-effort (sum of all task durations); differs from `durations` which is elapsed time |
@@ -147,14 +147,14 @@ Holds the complete output of a Monte Carlo simulation run, including all percent
 - **`calculate_cost_statistics() -> None`** — Populate `cost_mean`, `cost_std_dev`, and `cost_percentiles` from the `costs` array. Called automatically by `SimulationEngine` after the run.
 - **`cost_percentile(p: int) -> float`** — Cost value at percentile *p*.
 - **`probability_within_budget(target_budget: float) -> float`** — Fraction of iterations where total cost was ≤ `target_budget`.
-- **`budget_confidence_interval(target_budget: float, confidence_level: float = 0.95) -> tuple[float, float, float]`** — Returns `(lower_bound, upper_bound, probability_within_budget)` for a given target budget at the specified confidence level.
+- **`budget_confidence_interval(target_budget: float, confidence_level: float = 0.95) -> tuple[float, float, float]`** — Returns `(point_estimate, lower_bound, upper_bound)` where `point_estimate` is the fraction of iterations within budget and the bounds form the confidence interval for that probability.
 - **`budget_for_confidence(confidence: float) -> float`** — The budget amount needed to achieve a given confidence level (e.g. `0.80` for 80 % certainty of staying within budget).
 - **`joint_probability(target_hours: float, target_budget: float) -> float`** — Probability that the project completes within *both* the target duration and the target budget simultaneously.
 
 **Example: Complete Results Query**
 
 ```python
-from mcprojsim.simulation import SimulationEngine
+from mcprojsim import SimulationEngine
 from mcprojsim.config import Config
 from mcprojsim.parsers import YAMLParser
 

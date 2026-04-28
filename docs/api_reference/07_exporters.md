@@ -3,7 +3,7 @@
 
 ## Overview
 
-The exporters module converts a `SimulationResults` object into persistent output files. All three exporters — `JSONExporter`, `CSVExporter`, and `HTMLExporter` — expose the same design: a single static `export()` class method that writes directly to a file path. Choose JSON for downstream tooling and API integration, CSV for spreadsheet analysis, and HTML for human-readable reports that can be shared without any tooling. Sprint-planning results and the original `Project` definition are optional enrichments accepted by all three. The `include_historic_base` flag embeds baseline comparison data and is supported only by JSON and HTML; passing it to CSV raises a `ValueError`.
+The exporters module converts a `SimulationResults` object into persistent output files. All three exporters — `JSONExporter`, `CSVExporter`, and `HTMLExporter` — expose the same design: a single static `export()` class method that writes directly to a file path. Choose JSON for downstream tooling and API integration, CSV for spreadsheet analysis, and HTML for human-readable reports that can be shared without any tooling. Sprint-planning results and the original `Project` definition are optional enrichments accepted by all three. The `include_historic_base` flag embeds baseline comparison data and is supported only by JSON and HTML; passing it to CSV raises a `TypeError` (unexpected keyword argument).
 
 **When to use this module:** Write simulation output to disk from your own Python code, or extend a pipeline that consumes JSON, CSV, or HTML artefacts.
 
@@ -86,7 +86,7 @@ CSVExporter.export(results, "results.csv", config=config)
 
 Exports a formatted, interactive HTML report with thermometers, percentile tables, charts (using matplotlib), critical-path analysis, staffing recommendations, and sprint-planning traceability.
 
-**Method:** `export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, fx_provider=None) -> None`
+**Method:** `export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, include_historic_base=False, fx_provider=None, target_budget=None, target_hours=None) -> None`
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -96,7 +96,10 @@ Exports a formatted, interactive HTML report with thermometers, percentile table
 | `config` | `Config \| None` | `None` | Active configuration; used for T-shirt size labels and histogram bins (optional). |
 | `critical_path_limit` | `int \| None` | `None` | Override number of critical paths to include. |
 | `sprint_results` | `SprintPlanningResults \| None` | `None` | Sprint planning results to embed (optional). |
+| `include_historic_base` | `bool` | `False` | Include historic baseline data when available. |
 | `fx_provider` | `Any \| None` | `None` | Foreign-exchange rate provider for multi-currency cost output (optional). |
+| `target_budget` | `float \| None` | `None` | Target budget for budget-confidence analysis in the output. |
+| `target_hours` | `float \| None` | `None` | Target duration (hours) for joint probability analysis in the output. |
 
 **When `project` and `config` are provided:**
 
