@@ -96,31 +96,26 @@ tasks:
     name: "Spec review"
     estimate: { low: 9, expected: 10, high: 12 }
     resources: ["dev-senior"]
-
   - id: "A2"
     name: "Core implementation"
     estimate: { low: 13, expected: 15, high: 18 }
     dependencies: ["A1"]
     resources: ["dev-senior"]
-
   - id: "A3"
     name: "Code review"
     estimate: { low: 9, expected: 10, high: 12 }
     dependencies: ["A2"]
     resources: ["dev-senior"]
-
   - id: "B1"
     name: "Documentation"
     estimate: { low: 18, expected: 20, high: 24 }
-    resources: ["dev-senior"]          # competes for dev-senior!
+    resources: ["dev-senior"]          # competes for dev-senior!  
   - id: "B2"
     name: "User testing"
     estimate: { low: 9, expected: 10, high: 12 }
     dependencies: ["B1"]
-    resources: ["dev-junior"]
-```
-
-```yaml
+    resources: ["dev-junior"]    
+!!! yaml-cbreak-b5  
   - id: "C1"
     name: "Integration"
     estimate: { low: 4, expected: 5, high: 7 }
@@ -135,42 +130,19 @@ tasks:
 resources:
   - name: "dev-senior"
     experience_level: 3
-
   - name: "dev-junior"
     experience_level: 1
 ```
-
+ 
 ### Single-pass run
 
 ```
-mcprojsim % mcprojsim simulate examples/contention.yaml -n 1000 -t --seed 1234
+mcprojsim % mcprojsim simulate examples/contention.yaml -n 1000 -t --seed 1234 --minimal
 ```
 
-Output excerpt:
+{{!mcprojsim simulate examples/contention.yaml -n 1000 -t --seed 1234 --minimal@B5:26*}} 
 
-```
-=== Simulation Results ===
-
-Calendar Time Statistical Summary:
-┌──────────────────────────┬────────────────────────────────┐
-│ Metric                   │ Value                          │
-├──────────────────────────┼────────────────────────────────┤
-│ Mean                     │ 360.44 hours (46 working days) │
-│ Median (P50)             │ 384.62 hours                   │
-│ Std Dev                  │ 32.78 hours                    │
-└──────────────────────────┴────────────────────────────────┘
-
-Calendar Time Confidence Intervals:
-┌──────────────┬─────────┬────────────────┬────────────┐
-│ Percentile   │   Hours │   Working Days │ Date       │
-├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │  384.62 │             49 │ 2025-05-08 │
-│ P80          │  386.51 │             49 │ 2025-05-08 │
-│ P90          │  387.45 │             49 │ 2025-05-08 │
-│ P95          │  388.43 │             49 │ 2025-05-08 │
-└──────────────┴─────────┴────────────────┴────────────┘
-```
-\newpage
+The mean duration is ~361 hours (45 working days), with a P80 of 386 hours and a P95 of 388 hours.  The critical path is dominated by the senior developer's stream (A1 → A2 → A3) but the documentation task B1 is also critical in a significant fraction of iterations, causing the junior developer to wait for it before starting B2 and C1.
 
 ### Two-pass run
 
@@ -179,47 +151,11 @@ Add the `--two-pass` flag:
 ```
 mcprojsim % mcprojsim simulate examples/contention.yaml -n 1000 --two-pass --pass1-iterations 500 -t --seed 1234
 ```
-
 Output excerpt:
 
-```
-Pass 1: computing criticality indices
-Progress: 100.0% (500/1000)
-Pass 2: priority-ordered scheduling
-Progress: 100.0% (1000/1000)
 
-=== Simulation Results ===
+{{!mcprojsim simulate examples/contention.yaml -n 1000 --two-pass --pass1-iterations 500 -t --seed 1234 --minimal@B5:15*}} 
 
-Calendar Time Statistical Summary:
-┌──────────────────────────┬────────────────────────────────┐
-│ Metric                   │ Value                          │
-├──────────────────────────┼────────────────────────────────┤
-│ Mean                     │ 298.42 hours (38 working days) │
-│ Median (P50)             │ 294.43 hours                   │
-│ Std Dev                  │ 8.60 hours                     │
-└──────────────────────────┴────────────────────────────────┘
-
-Calendar Time Confidence Intervals:
-┌──────────────┬─────────┬────────────────┬────────────┐
-│ Percentile   │   Hours │   Working Days │ Date       │
-├──────────────┼─────────┼────────────────┼────────────┤
-│ P50          │  294.43 │             37 │ 2025-04-22 │
-│ P80          │  312.31 │             40 │ 2025-04-25 │
-│ P90          │  313.21 │             40 │ 2025-04-25 │
-│ P95          │  313.83 │             40 │ 2025-04-25 │
-└──────────────┴─────────┴────────────────┴────────────┘
-
-Two-Pass Scheduling Traceability:
-┌──────────┬────────────────────┬─────────────────────┬─────────┐
-│ Metric   │ Pass-1 iter: 500   │ Pass-2 iter: 1000   │ Delta   │
-├──────────┼────────────────────┼─────────────────────┼─────────┤
-│ Mean     │ 361.2h             │ 298.4h              │ -62.7h  │
-│ P80      │ 386.4h             │ 312.3h              │ -74.1h  │
-│ P95      │ 388.7h             │ 313.8h              │ -74.9h  │
-└──────────┴────────────────────┴─────────────────────┴─────────┘
-
-Resource wait delta: -47.5h
-```
 
 The two-pass run reduces the mean project duration from **~361 h to ~298 h** (~8 working
 days) purely by prioritising the tasks that pass-1 identified as critical
@@ -318,7 +254,6 @@ tasks:
     name: "Backend development"
     estimate: { low: 60, expected: 80, high: 120 }
     resources: ["backend-dev-1"]
-!!! yaml-cbreak-b5
   - id: "backend-deploy"
     name: "Backend deployment"
     estimate: { low: 8, expected: 12, high: 16 }
@@ -330,7 +265,7 @@ tasks:
     name: "Frontend development"
     estimate: { low: 40, expected: 60, high: 90 }
     resources: ["frontend-dev-1"]
-
+!!! yaml-cbreak-b5
   - id: "frontend-deploy"
     name: "Frontend deployment"
     estimate: { low: 6, expected: 8, high: 12 }
@@ -342,13 +277,11 @@ tasks:
     name: "Mobile development"
     estimate: { low: 80, expected: 100, high: 140 }
     resources: ["mobile-dev-1"]
-
   - id: "mobile-deploy"
     name: "Mobile deployment"
     estimate: { low: 8, expected: 10, high: 14 }
     dependencies: ["mobile-dev"]
     resources: ["devops"]              # shared bottleneck
-
 # --- Integration ---
   - id: "smoke-test"
     name: "Smoke test all streams"
@@ -360,20 +293,15 @@ tasks:
     estimate: { low: 4, expected: 6, high: 10 }
     dependencies: ["smoke-test"]
     resources: ["devops"]
-!!! yaml-cbreak-b5
 resources:
   - name: "backend-dev-1"
     experience_level: 3
-
   - name: "frontend-dev-1"
     experience_level: 2
-
   - name: "mobile-dev-1"
     experience_level: 2
-
   - name: "devops"
     experience_level: 3
-
   - name: "qa-1"
     experience_level: 2
 ```
@@ -410,7 +338,6 @@ runs and an object for two-pass runs:
     "pass1_iterations": 500,
     "pass2_iterations": 1000,
     "ranking_method": "criticality_index",
-!!! yaml-cbreak-b5    
     "pass1": {
       "mean_hours": 519.9,
       "p50_hours": 519.8,
@@ -431,6 +358,7 @@ runs and an object for two-pass runs:
       "resource_utilization": 0.91,
       "calendar_delay_hours": 0.0
     },
+!!! yaml-cbreak-b5      
     "delta": {
       "mean_hours": -97.0,
       "p50_hours": -97.5,
