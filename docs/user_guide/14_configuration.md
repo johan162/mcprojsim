@@ -68,21 +68,18 @@ uncertainty_factors:
     high: 0.90
     medium: 1.0
     low: 1.30
-
   requirements_maturity:
     high: 1.0
     medium: 1.15
     low: 1.40
-
   technical_complexity:
     low: 1.0
     medium: 1.20
     high: 1.50
-
+!!! yaml-cbreak-b5
   team_distribution:
     colocated: 1.0
     distributed: 1.25
-
   integration_complexity:
     low: 1.0
     medium: 1.15
@@ -103,13 +100,8 @@ t_shirt_sizes:
       low: 200
       expected: 480
       high: 1200
-
 t_shirt_size_default_category: "story"
-
 t_shirt_size_unit: "hours"
-```
-
-```yaml
 story_points:
   1:
     low: 0.5
@@ -123,14 +115,13 @@ story_points:
     low: 5
     expected: 8
     high: 15
-
 story_point_unit: "days"
 
 simulation:
   default_iterations: 10000
   random_seed: 42
   max_stored_critical_paths: 20
-
+!!! yaml-cbreak-b5  
 lognormal:
   high_percentile: 95
 
@@ -152,14 +143,10 @@ staffing:
     junior:
       productivity_factor: 0.65
       communication_overhead: 0.08
-```
-
-```yaml
 constrained_scheduling:
   sickness_prob: 0.0
   assignment_mode: greedy_single_pass
   pass1_iterations: 1000
-
 sprint_defaults:
   planning_confidence_level: 0.8
   removed_work_treatment: churn_only
@@ -179,7 +166,8 @@ sprint_defaults:
       probability: 0.25
     - max_points: null
       probability: 0.40
-  spillover_consumed_fraction_alpha: 3.25
+!!! yaml-cbreak-b5    
+spillover_consumed_fraction_alpha: 3.25
   spillover_consumed_fraction_beta: 1.75
   spillover_logistic_slope: 1.9
   spillover_logistic_intercept: -1.9924301646902063
@@ -642,26 +630,113 @@ Several of these settings change simulation behavior directly, not just reportin
 
 ### Field reference
 
-| Field | Type | Default | Allowed values | Effect |
-|---|---|---|---|---|
-| `planning_confidence_level` | float | `0.8` | `0 < value < 1` | Target confidence used when planning sprint outcomes |
-| `removed_work_treatment` | string | `churn_only` | `churn_only`, `reduce_backlog` | Controls whether removed work is treated as churn only or also reduces backlog |
-| `velocity_model` | string | `empirical` | `empirical`, `neg_binomial` | Controls how historical capacity is sampled |
-| `volatility_disruption_probability` | float | `0.0` | `0 <= value <= 1` | Probability that disruption multipliers apply |
-| `volatility_disruption_multiplier_low` | float | `1.0` | `value >= 0` | Low bound for sampled disruption multiplier |
-| `volatility_disruption_multiplier_expected` | float | `1.0` | `value >= 0` | Expected disruption multiplier |
-| `volatility_disruption_multiplier_high` | float | `1.0` | `value >= 0` | High bound for sampled disruption multiplier |
-| `spillover_model` | string | `table` | `table`, `logistic` | Controls how spillover probability is modeled |
-| `spillover_size_reference_points` | float | `5.0` | `value > 0` | Reference size used by spillover probability models |
-| `spillover_size_brackets` | list | built-in table | bracket list | Size-to-probability table used when `spillover_model: table` |
-| `spillover_consumed_fraction_alpha` | float | `3.25` | `value > 0` | Beta-shape parameter controlling typical consumed fraction |
-| `spillover_consumed_fraction_beta` | float | `1.75` | `value > 0` | Beta-shape parameter controlling typical remaining spillover |
-| `spillover_logistic_slope` | float | `1.9` | `value > 0` | Slope of the logistic spillover probability curve |
-| `spillover_logistic_intercept` | float | `-1.9924301646902063` | any float | Intercept of the logistic spillover probability curve |
-| `sickness.enabled` | boolean | `false` | `true`, `false` | Enables sprint sickness modeling |
-| `sickness.probability_per_person_per_week` | float | `0.058` | `0 < value < 1` | Weekly sickness probability per team member |
-| `sickness.duration_log_mu` | float | `0.693` | any float | Log-normal sickness duration location parameter |
-| `sickness.duration_log_sigma` | float | `0.75` | `value > 0` | Log-normal sickness duration scale parameter |
+1. `planning_confidence_level`
+   - **Type:** float
+   - **Default:** `0.8`
+   - **Allowed:** `0 < value < 1`
+   - **Effect:** Target confidence used when planning sprint outcomes
+
+2. `removed_work_treatment`
+   - **Type:** string
+   - **Default:** `churn_only`
+   - **Allowed:** `churn_only`, `reduce_backlog`
+   - **Effect:** Controls whether removed work is treated as churn only or also reduces backlog
+
+3. `velocity_model`
+   - **Type:** string
+   - **Default:** `empirical`
+   - **Allowed:** `empirical`, `neg_binomial`
+   - **Effect:** Controls how historical capacity is sampled
+
+4. `volatility_disruption_probability`
+   - **Type:** float
+   - **Default:** `0.0`
+   - **Allowed:** `0 <= value <= 1`
+   - **Effect:** Probability that disruption multipliers apply
+
+5. `volatility_disruption_multiplier_low`
+   - **Type:** float
+   - **Default:** `1.0`
+   - **Allowed:** `value >= 0`
+   - **Effect:** Low bound for sampled disruption multiplier
+
+6. `volatility_disruption_multiplier_expected`
+   - **Type:** float
+   - **Default:** `1.0`
+   - **Allowed:** `value >= 0`
+   - **Effect:** Expected disruption multiplier
+
+7. `volatility_disruption_multiplier_high`
+   - **Type:** float
+   - **Default:** `1.0`
+   - **Allowed:** `value >= 0`
+   - **Effect:** High bound for sampled disruption multiplier
+
+8. `spillover_model`
+   - **Type:** string
+   - **Default:** `table`
+   - **Allowed:** `table`, `logistic`
+   - **Effect:** Controls how spillover probability is modeled
+
+9. `spillover_size_reference_points`
+   - **Type:** float
+   - **Default:** `5.0`
+   - **Allowed:** `value > 0`
+   - **Effect:** Reference size used by spillover probability models
+
+10. `spillover_size_brackets`
+    - **Type:** list
+    - **Default:** built-in table
+    - **Allowed:** bracket list
+    - **Effect:** Size-to-probability table used when `spillover_model: table`
+
+11. `spillover_consumed_fraction_alpha`
+    - **Type:** float
+    - **Default:** `3.25`
+    - **Allowed:** `value > 0`
+    - **Effect:** Beta-shape parameter controlling typical consumed fraction
+
+12. `spillover_consumed_fraction_beta`
+    - **Type:** float
+    - **Default:** `1.75`
+    - **Allowed:** `value > 0`
+    - **Effect:** Beta-shape parameter controlling typical remaining spillover
+
+13. `spillover_logistic_slope`
+    - **Type:** float
+    - **Default:** `1.9`
+    - **Allowed:** `value > 0`
+    - **Effect:** Slope of the logistic spillover probability curve
+
+14. `spillover_logistic_intercept`
+    - **Type:** float
+    - **Default:** `-1.9924301646902063`
+    - **Allowed:** any float
+    - **Effect:** Intercept of the logistic spillover probability curve
+
+15. `sickness.enabled`
+    - **Type:** boolean
+    - **Default:** `false`
+    - **Allowed:** `true`, `false`
+    - **Effect:** Enables sprint sickness modeling
+
+16. `sickness.probability_per_person_per_week`
+    - **Type:** float
+    - **Default:** `0.058`
+    - **Allowed:** `0 < value < 1`
+    - **Effect:** Weekly sickness probability per team member
+
+17. `sickness.duration_log_mu`
+    - **Type:** float
+    - **Default:** `0.693`
+    - **Allowed:** any float
+    - **Effect:** Log-normal sickness duration location parameter
+
+18. `sickness.duration_log_sigma`
+    - **Type:** float
+    - **Default:** `0.75`
+    - **Allowed:** `value > 0`
+    - **Effect:** Log-normal sickness duration scale parameter
 
 ### Notes on behavioral impact
 
@@ -725,11 +800,23 @@ These settings affect scheduling behavior directly:
 
 ### Field reference
 
-| Field | Type | Default | Allowed values | Effect |
-|---|---|---|---|---|
-| `sickness_prob` | float | `0.0` | `0 <= value <= 1` | Fallback per-resource sickness probability |
-| `assignment_mode` | string | `greedy_single_pass` | `greedy_single_pass`, `criticality_two_pass` | Selects constrained scheduling strategy |
-| `pass1_iterations` | integer | `1000` | `value > 0` | Number of pass-1 iterations used to compute criticality ranking in two-pass mode |
+1. `sickness_prob`
+   - **Type:** float
+   - **Default:** `0.0`
+   - **Allowed:** `0 <= value <= 1`
+   - **Effect:** Fallback per-resource sickness probability
+
+2. `assignment_mode`
+   - **Type:** string
+   - **Default:** `greedy_single_pass`
+   - **Allowed:** `greedy_single_pass`, `criticality_two_pass`
+   - **Effect:** Selects constrained scheduling strategy
+
+3. `pass1_iterations`
+   - **Type:** integer
+   - **Default:** `1000`
+   - **Allowed:** `value > 0`
+   - **Effect:** Number of pass-1 iterations used to compute criticality ranking in two-pass mode
 
 ### `sickness_prob`
 
