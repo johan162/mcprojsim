@@ -132,8 +132,8 @@ fi
 
 # Scale page dimensions from points (at 72 DPI) to pixels at the target DPI.
 # 1 point = 1/72 inch, so pixels = points * (DPI / 72).
-W_PX=$(printf '%.0f' "$(echo "$W_PT * $DPI / 72" | bc -l)")
-H_PX=$(printf '%.0f' "$(echo "$H_PT * $DPI / 72" | bc -l)")
+W_PX=$(LC_ALL=C awk -v w="$W_PT" -v d="$DPI" 'BEGIN { printf "%.0f", w * d / 72 }')
+H_PX=$(LC_ALL=C awk -v h="$H_PT" -v d="$DPI" 'BEGIN { printf "%.0f", h * d / 72 }')
 
 # ---------------------------------------------------------------------------
 # Step 2: Convert image → single-page PDF at the target page size
