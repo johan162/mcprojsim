@@ -467,22 +467,22 @@ cover: cover-b5-light cover-b5-dark cover-a4-light cover-a4-dark ## Adjust all u
 cover-b5-light: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_B5_PDF)
-	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_B5_PDF) adjusted with cover image$(NC)"
 
 cover-b5-dark: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_B5_PDF)
-	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_DARK_B5_PDF) adjusted with cover image$(NC)"
 
 cover-a4-light: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_A4_PDF)
-	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_A4_PDF) adjusted with cover image$(NC)"
 
 cover-a4-dark: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_A4_PDF)
-	@echo -e "$(GREEN)✓ PDF adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_DARK_A4_PDF) adjusted with cover image$(NC)"
 
 
 # ============================================================================================
@@ -503,22 +503,22 @@ cover-api-ref: cover-api-ref-b5-light cover-api-ref-b5-dark cover-api-ref-a4-lig
 cover-api-ref-b5-light: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_B5_PDF)
-	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_B5_PDF) adjusted with cover image$(NC)"
 
 cover-api-ref-b5-dark: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_B5_PDF)
-	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_DARK_B5_PDF) adjusted with cover image$(NC)"
 
 cover-api-ref-a4-light: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_A4_PDF)
-	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_A4_PDF) adjusted with cover image$(NC)"
 
 cover-api-ref-a4-dark: ## Adjust the PDF by adding cover image
 	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_A4_PDF)
-	@echo -e "$(GREEN)✓ API reference PDF adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_DARK_A4_PDF) adjusted with cover image$(NC)"
 
 
 
@@ -566,3 +566,6 @@ docs-deploy: ## Build and deploy documentation to GitHub Pages
 		echo -e "$(RED)✗ Error: Documentation deployment failed$(NC)"; \
 		exit 1; \
 	fi
+
+# EOF
+
