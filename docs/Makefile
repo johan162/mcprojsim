@@ -348,13 +348,13 @@ $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
-	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template $$($1_TEMPLATE) ...$$(NC)"
 	@awk -v body="$$($1_BODY_TEX)" '\
 		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$($1_TEMPLATE) > $$($1_TEX)
-	@echo -e "$$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Compiling $$($1_PDF) with xelatex (2 passes for references/TOC)...$$(NC)"
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) 2>&1 \
 		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$($1_PDF).$$(NC)" >&2; \
@@ -397,13 +397,13 @@ $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_R
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(API_REF_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
-	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Injecting body $$($1_BODY_TEX) into handcrafted LaTeX template $$($1_TEMPLATE) ...$$(NC)"
 	@awk -v body="$$($1_BODY_TEX)" '\
 		/%%__API_REF_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__API_REF_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$($1_TEMPLATE) > $$($1_TEX)
-	@echo -e "$$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Compiling $$($1_PDF) with xelatex (2 passes for references/TOC)...$$(NC)"
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) 2>&1 \
 		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$($1_PDF).$$(NC)" >&2; \
@@ -465,22 +465,22 @@ cover: cover-b5-light cover-b5-dark cover-a4-light cover-a4-dark ## Adjust all u
 	@:
 
 cover-b5-light: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_B5_PDF) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_B5_PDF)
 	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_B5_PDF) adjusted with cover image$(NC)"
 
 cover-b5-dark: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_DARK_B5_PDF) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_B5_PDF)
 	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_DARK_B5_PDF) adjusted with cover image$(NC)"
 
 cover-a4-light: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_A4_PDF) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_A4_PDF)
 	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_A4_PDF) adjusted with cover image$(NC)"
 
 cover-a4-dark: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting PDF with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_DARK_A4_PDF) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_A4_PDF)
 	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_DARK_A4_PDF) adjusted with cover image$(NC)"
 
@@ -501,22 +501,22 @@ cover-api-ref: cover-api-ref-b5-light cover-api-ref-b5-dark cover-api-ref-a4-lig
 	@:
 
 cover-api-ref-b5-light: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_B5_PDF) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_B5_PDF)
 	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_B5_PDF) adjusted with cover image$(NC)"
 
 cover-api-ref-b5-dark: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_DARK_B5_PDF) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_B5_PDF)
 	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_DARK_B5_PDF) adjusted with cover image$(NC)"
 
 cover-api-ref-a4-light: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_A4_PDF) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_A4_PDF)
 	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_A4_PDF) adjusted with cover image$(NC)"
 
 cover-api-ref-a4-dark: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_DARK_A4_PDF) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_A4_PDF)
 	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_DARK_A4_PDF) adjusted with cover image$(NC)"
 
