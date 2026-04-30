@@ -19,6 +19,63 @@ You need:
 - A terminal
 - `pipx` for the easiest CLI install (recommended), or `pip`
 
+### Install Python
+
+#### macOS
+
+The recommended way is to use the official installer from [python.org](https://www.python.org/downloads/). Download the latest macOS package and run it.
+
+Alternatively, use [Homebrew](https://brew.sh):
+
+```bash
+brew install python@3.13
+```
+
+After installation, verify the version:
+
+```bash
+python3 --version
+```
+
+#### Linux
+
+Most distributions ship with Python 3 but may not include 3.13 yet. Use your package manager:
+
+**Debian / Ubuntu:**
+
+```bash
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3-pip
+```
+
+**Fedora / RHEL:**
+
+```bash
+sudo dnf install python3.13
+```
+
+**Arch Linux:**
+
+```bash
+sudo pacman -S python
+```
+
+If your distribution's package manager does not offer 3.13 yet, install it from source or use [pyenv](https://github.com/pyenv/pyenv):
+
+```bash
+curl https://pyenv.run | bash
+pyenv install 3.13
+pyenv global 3.13
+```
+
+After installation, verify:
+
+```bash
+python3 --version
+```
+
+
+
 If you do not have `pipx` yet:
 
 ```bash
