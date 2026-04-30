@@ -4,7 +4,7 @@
 # to re-run certain tasks based on file changes.
 
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html test-probabilistic \
-test-probabilistic-full lint format typecheck migrate init-db check \
+test-probabilistic-full test-statistical lint format typecheck migrate init-db check \
 pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples \
 figs docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart \
 docs-container-status docs-container-logs build container-build container-build-corporate container-build-public \
@@ -375,6 +375,15 @@ test-probabilistic-full: ## Run full probabilistic verification suite (slow, ~40
 		echo -e "$(GREEN)✓ Full probabilistic verification suite passed$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Full probabilistic verification suite failed$(NC)"; \
+		exit 1; \
+	fi
+
+test-statistical: ## Run end-to-end statistical validation tests (~90 s)
+	@echo -e "$(DARKYELLOW)- Running statistical validation tests...$(NC)"
+	@if poetry run pytest tests/test_statistical_validation/ --no-cov -v; then \
+		echo -e "$(GREEN)✓ Statistical validation tests passed (126 tests)$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Statistical validation tests failed$(NC)"; \
 		exit 1; \
 	fi
 
