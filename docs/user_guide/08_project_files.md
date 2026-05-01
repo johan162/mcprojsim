@@ -725,7 +725,6 @@ risks:
       type: "absolute"
       value: 5
       unit: "days"
-!!! yaml-cbreak-b5  
 risks:
   - id: "risk_002"
     name: "Approval delay"
@@ -885,7 +884,6 @@ tasks:
       high: 40
       unit: "hours"
     fixed_cost: 3500.0      # one-time provisioning fee
-!!! json-cbreak-b5  
   - id: "data_migration"
     name: "Data Migration"
     estimate:
@@ -965,7 +963,6 @@ resources:
   - name: "alice"
     experience_level: 3
     hourly_rate: 240.0      # principal engineer; overrides project default
-!!! json-cbreak-b5  
   - name: "bob"
     experience_level: 2
     hourly_rate: 160.0
@@ -1263,7 +1260,6 @@ sprint_planning:
   enabled: true
   sprint_length_weeks: 2
   capacity_mode: story_points
-!!! json-cbreak-b5  
   history:
     - sprint_id: "SPR-001"
       completed_story_points: 34
@@ -1375,7 +1371,6 @@ project:
   confidence_levels: [50, 75, 80, 90, 95]
   probability_red_threshold: 0.45
   probability_green_threshold: 0.90
-!!! json-cbreak-b5  
 project_risks:
   - id: "proj_risk_001"
     name: "Late stakeholder change"
@@ -1384,7 +1379,6 @@ project_risks:
       type: "absolute"
       value: 4
       unit: "days"
-
 tasks:
   - id: "task_001"
     name: "Design"
@@ -1404,6 +1398,7 @@ tasks:
         name: "Clarification delay"
         probability: 0.15
         impact: 1.5
+!!! json-cbreak-b5
   - id: "task_002"
     name: "Implementation"
     estimate:
@@ -1418,7 +1413,6 @@ tasks:
       technical_complexity: "high"
       team_distribution: "distributed"
     resources: ["backend_dev", "frontend_dev"]
-!!! json-cbreak-b5
   - id: "task_003"
     name: "Deployment"
     estimate:
@@ -1455,7 +1449,7 @@ probability_green_threshold = 0.90
 id = "proj_risk_001"
 name = "Late stakeholder change"
 probability = 0.20
-
+!!! toml-cbreak-b5
 [project_risks.impact]
 type = "absolute"
 value = 4
@@ -1467,7 +1461,6 @@ name = "Design"
 description = "Design the feature set"
 dependencies = []
 resources = ["designer"]
-!!! toml-cbreak-b5
 [tasks.estimate]
 min = 2
 expected = 4
@@ -1509,13 +1502,13 @@ dependencies = ["task_002"]
 
 [tasks.estimate]
 t_shirt_size = "S"
-
+!!! toml-cbreak-b5
 [[resources]]
 name = "designer"
 
 [[resources]]
 name = "backend_dev"
-!!! toml-cbreak-b5
+
 [[resources]]
 name = "frontend_dev"
 

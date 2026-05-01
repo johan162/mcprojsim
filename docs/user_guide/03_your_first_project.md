@@ -114,7 +114,7 @@ mcprojsim simulate first-project-step-1.yaml --iterations 5000 --seed 42 --minim
 
 Example result:
 
-{{!mcprojsim simulate examples/01_first_project/first-project-step-1.yaml --iterations 5000 --seed 42 --minimal}}
+{{!mcprojsim simulate examples/01_first_project/first-project-step-1.yaml --iterations 5000 --seed 42 --minimal@B5:18*}}
 
 
 The important thing here is not the exact numbers. The important thing is that even a one-task project produces a range of likely outcomes rather than one fixed answer. Results are reported in hours (the canonical internal unit) with working days shown alongside.
@@ -131,7 +131,6 @@ project:
   description: "Adding sequencing"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
-!!! yaml-cbreak-b5
 tasks:
   - id: "task_001"
     name: "Create landing page"
@@ -140,7 +139,6 @@ tasks:
       expected: 3
       high: 5
       unit: "days"
-
   - id: "task_002"
     name: "Deploy site"
     estimate:
@@ -466,7 +464,6 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "high"
-!!! yaml-cbreak-b5   
   - id: "task_002"
     name: "Build page"
     estimate:
@@ -550,7 +547,7 @@ mcprojsim simulate examples/tshirt_walkthrough_project.yaml \
 
 Example result summary:
 
-{{!mcprojsim simulate examples/tshirt_walkthrough_project.yaml --config examples/tshirt_walkthrough_config.yaml --seed 42 --iterations 5000 --minimal@B5:4*}}
+{{!mcprojsim simulate examples/tshirt_walkthrough_project.yaml --config examples/tshirt_walkthrough_config.yaml --seed 42 --iterations 5000 --minimal}}
 
 The interpretation is exactly the same as for explicit ranges. The only difference is how the task effort was expressed in the input file.
 
@@ -610,7 +607,6 @@ Story Points (unit: days):
     low: 0.5, expected: 1.0, high: 3.0
   2:
     low: 1.0, expected: 2.0, high: 4.0
-!!! yaml-cbreak-b5
   3:
     low: 1.5, expected: 3.0, high: 5.0
   5:
