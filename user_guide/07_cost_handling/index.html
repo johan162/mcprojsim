@@ -2537,7 +2537,6 @@ one</strong> of the following is set:</p>
 <p>A <code>default_hourly_rate: 0</code> alone does <strong>not</strong> activate cost — zero rate produces zero
 labor cost, so there is nothing to report.  But <code>hourly_rate: 0</code> on a named resource
 <em>does</em> activate it (an explicit zero is different from "not set").</p>
-<hr />
 <h2 id="project-level-cost-fields">Project-level cost fields<a class="headerlink" href="#project-level-cost-fields" title="Permanent link">&para;</a></h2>
 <p>Add these to the <code>project:</code> metadata block in your YAML file.</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">project</span><span class="p">:</span>
@@ -2572,7 +2571,6 @@ cost figures.  It is <strong>not</strong> used for conversion — it is purely c
 <li>If omitted, falls back to the <code>currency</code> setting in your <a href="../14_configuration/">configuration file</a>
   (default: <code>EUR</code>)</li>
 </ul>
-<hr />
 <h2 id="per-resource-hourly-rates">Per-resource hourly rates<a class="headerlink" href="#per-resource-hourly-rates" title="Permanent link">&para;</a></h2>
 <p>When you have named resources, you can assign each a specific rate:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">resources</span><span class="p">:</span>
@@ -2587,7 +2585,6 @@ cost figures.  It is <strong>not</strong> used for conversion — it is purely c
 that resource.  If a task is assigned to multiple resources the engine uses the
 <strong>mean</strong> of their rates as a Phase 1 simplifying assumption (see
 <a href="#known-limitations">Known limitations</a> below).</p>
-<hr />
 <h2 id="per-task-fixed-costs">Per-task fixed costs<a class="headerlink" href="#per-task-fixed-costs" title="Permanent link">&para;</a></h2>
 <p>Some tasks carry a cost regardless of how long they take — a software license,
 a cloud-infrastructure setup fee, a hardware purchase:</p>
@@ -2605,7 +2602,6 @@ a cloud-infrastructure setup fee, a hardware purchase:</p>
   rebates</strong> (e.g. a committed-spend discount or an early-delivery bonus)</li>
 <li>Fixed costs are included in total cost but are <strong>not</strong> subject to <code>overhead_rate</code></li>
 </ul>
-<hr />
 <h2 id="risk-cost-impacts">Risk cost impacts<a class="headerlink" href="#risk-cost-impacts" title="Permanent link">&para;</a></h2>
 <p>Risks can carry a monetary consequence in addition to (or instead of) a schedule
 impact.  When a risk triggers in an iteration, its <code>cost_impact</code> is added to that
@@ -2615,16 +2611,14 @@ iteration's total cost.</p>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span><span class="w">           </span><span class="c1"># +5 hours schedule impact when triggered</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">cost_impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4000</span><span class="w">   </span><span class="c1"># +€4,000 cost impact when triggered</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Early sign-off bonus</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.20</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-8</span><span class="w">          </span><span class="c1"># saves 8 hours</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span><span class="nt">cost_impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1500</span><span class="w">  </span><span class="c1"># saves €1,500</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Compliance audit fee</span>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.10</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">           </span><span class="c1"># no schedule impact</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="w">    </span><span class="nt">cost_impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000</span><span class="w">   </span><span class="c1"># pure cost event — affects cost distribution only</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Early sign-off bonus</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.20</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-8</span><span class="w">          </span><span class="c1"># saves 8 hours</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">cost_impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1500</span><span class="w">  </span><span class="c1"># saves €1,500</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Compliance audit fee</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.10</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">           </span><span class="c1"># no schedule impact</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="nt">cost_impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8000</span><span class="w">   </span><span class="c1"># pure cost event — affects cost distribution only</span>
 </span></code></pre></div>
 <p>Both task-level and project-level risks support <code>cost_impact</code>.</p>
 <h3 id="project-level-risks">Project-level risks<a class="headerlink" href="#project-level-risks" title="Permanent link">&para;</a></h3>
@@ -2647,7 +2641,6 @@ apply globally to the whole project:</p>
 </span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">    </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">              </span><span class="c1"># no schedule impact — cost-only</span>
 </span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span><span class="nt">cost_impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50000</span><span class="w">     </span><span class="c1"># emergency vendor replacement</span>
 </span></code></pre></div>
-<hr />
 <h2 id="full-project-example">Full project example<a class="headerlink" href="#full-project-example" title="Permanent link">&para;</a></h2>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">project</span><span class="p">:</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">API Platform</span>
@@ -2674,21 +2667,20 @@ apply globally to the whole project:</p>
 </span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="w">        </span><span class="nt">probability</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.30</span>
 </span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">        </span><span class="nt">impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
 </span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">        </span><span class="nt">cost_impact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1500</span>
-</span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>
-</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">backend</span>
-</span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Backend Implementation</span>
-</span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> low</span><span class="p">:</span><span class="w"> </span><span class="nv">60</span><span class="p p-Indicator">,</span><span class="nt"> expected</span><span class="p">:</span><span class="w"> </span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="nt"> high</span><span class="p">:</span><span class="w"> </span><span class="nv">160</span><span class="w"> </span><span class="p p-Indicator">}</span>
+</span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="kt">!!!</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yaml-cbreak-b5</span>
+</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">- id</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">backend</span>
+</span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Backend Implementation</span>
+</span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="w">    </span><span class="l l-Scalar l-Scalar-Plain">estimate</span><span class="p p-Indicator">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> low</span><span class="p">:</span><span class="w"> </span><span class="nv">60</span><span class="p p-Indicator">,</span><span class="nt"> expected</span><span class="p">:</span><span class="w"> </span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="nt"> high</span><span class="p">:</span><span class="w"> </span><span class="nv">160</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">design</span><span class="p p-Indicator">]</span>
 </span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a><span class="w">    </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">alice</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">bob</span><span class="p p-Indicator">]</span>
 </span><span id="__span-6-32"><a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a><span class="w">    </span><span class="nt">fixed_cost</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-2000</span><span class="w">   </span><span class="c1"># tooling credit</span>
 </span><span id="__span-6-33"><a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>
-</span><span id="__span-6-34"><a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deploy</span>
+</span><span id="__span-6-34"><a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a><span class="w w-Error">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deploy</span>
 </span><span id="__span-6-35"><a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Deployment</span>
 </span><span id="__span-6-36"><a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a><span class="w">    </span><span class="nt">estimate</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> low</span><span class="p">:</span><span class="w"> </span><span class="nv">8</span><span class="p p-Indicator">,</span><span class="nt"> expected</span><span class="p">:</span><span class="w"> </span><span class="nv">12</span><span class="p p-Indicator">,</span><span class="nt"> high</span><span class="p">:</span><span class="w"> </span><span class="nv">24</span><span class="w"> </span><span class="p p-Indicator">}</span>
 </span><span id="__span-6-37"><a id="__codelineno-6-37" name="__codelineno-6-37" href="#__codelineno-6-37"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">backend</span><span class="p p-Indicator">]</span>
 </span><span id="__span-6-38"><a id="__codelineno-6-38" name="__codelineno-6-38" href="#__codelineno-6-38"></a><span class="w">    </span><span class="nt">fixed_cost</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500</span><span class="w">     </span><span class="c1"># cloud provisioning fee</span>
 </span></code></pre></div>
-<hr />
 <h2 id="running-a-simulation-with-cost">Running a simulation with cost<a class="headerlink" href="#running-a-simulation-with-cost" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Standard run — cost output appears automatically when cost fields are present</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml
@@ -2699,7 +2691,6 @@ apply globally to the whole project:</p>
 </span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Include full per-task cost breakdown in JSON export</span>
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>-f<span class="w"> </span>json<span class="w"> </span>--full-cost-detail
 </span></code></pre></div>
-<hr />
 <h2 id="reading-cost-output">Reading cost output<a class="headerlink" href="#reading-cost-output" title="Permanent link">&para;</a></h2>
 <h3 id="table-mode-default">Table mode (default)<a class="headerlink" href="#table-mode-default" title="Permanent link">&para;</a></h3>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>┌─────────────────────────────────────────────────────────────┐
@@ -2725,7 +2716,6 @@ sensitivity note.</p>
 <p>When cost estimation is active, <code>mcprojsim</code> computes a <strong>Spearman rank correlation</strong>
 between each task's cost contribution and the total project cost.  High-correlation
 tasks are the biggest cost drivers.</p>
-<hr />
 <h2 id="budget-confidence-analysis">Budget confidence analysis<a class="headerlink" href="#budget-confidence-analysis" title="Permanent link">&para;</a></h2>
 <h3 id="-target-budget"><code>--target-budget</code><a class="headerlink" href="#-target-budget" title="Permanent link">&para;</a></h3>
 <p>Pass <code>--target-budget &lt;amount&gt;</code> to see:</p>
@@ -2747,7 +2737,6 @@ tasks are the biggest cost drivers.</p>
 </span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="c1"># Confidence interval (point estimate, lower, upper)</span>
 </span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="n">point</span><span class="p">,</span> <span class="n">lo</span><span class="p">,</span> <span class="n">hi</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">budget_confidence_interval</span><span class="p">(</span><span class="mi">45000</span><span class="p">,</span> <span class="n">confidence_level</span><span class="o">=</span><span class="mf">0.80</span><span class="p">)</span>
 </span></code></pre></div>
-<hr />
 <h2 id="cost-in-exported-reports">Cost in exported reports<a class="headerlink" href="#cost-in-exported-reports" title="Permanent link">&para;</a></h2>
 <h3 id="json-f-json">JSON (<code>-f json</code>)<a class="headerlink" href="#json-f-json" title="Permanent link">&para;</a></h3>
 <p>The cost section appears under <code>"cost"</code> in the JSON output:</p>
@@ -2757,14 +2746,15 @@ tasks are the biggest cost drivers.</p>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="nt">&quot;std_dev&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">6200.0</span><span class="p">,</span>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="nt">&quot;percentiles&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;50&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">35800.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;80&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">41900.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;90&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">46200.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;95&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">49800.0</span><span class="w"> </span><span class="p">},</span>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nt">&quot;overhead_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.18</span><span class="p">,</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="nt">&quot;task_costs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="nt">&quot;design&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">4200.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p50&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">4050.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p90&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">5800.0</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">28100.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p50&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">27500.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p90&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">34200.0</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="nt">&quot;deploy&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">3600.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p50&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">3400.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p90&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">4800.0</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">  </span><span class="p">},</span>
-</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">  </span><span class="nt">&quot;sensitivity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.82</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;design&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.35</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;deploy&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.18</span><span class="w"> </span><span class="p">},</span>
-</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">  </span><span class="nt">&quot;duration_correlation&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.97</span>
-</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="p">}</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="err">!!!</span><span class="w"> </span><span class="err">jso</span><span class="kc">n</span><span class="mi">-</span><span class="err">cbreak</span><span class="mi">-</span><span class="err">b</span><span class="mi">5</span><span class="w">  </span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="nt">&quot;task_costs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span><span class="nt">&quot;design&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">4200.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p50&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">4050.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p90&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">5800.0</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">28100.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p50&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">27500.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p90&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">34200.0</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="nt">&quot;deploy&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">3600.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p50&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">3400.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;p90&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">4800.0</span><span class="w"> </span><span class="p">}</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">  </span><span class="p">},</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">  </span><span class="nt">&quot;sensitivity&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.82</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;design&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.35</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;deploy&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.18</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">  </span><span class="nt">&quot;duration_correlation&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.97</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>Use <code>--full-cost-detail</code> to include the complete per-task breakdown.</p>
 <h3 id="csv-f-csv">CSV (<code>-f csv</code>)<a class="headerlink" href="#csv-f-csv" title="Permanent link">&para;</a></h3>
@@ -2783,7 +2773,6 @@ percentile plus rows for mean and standard deviation.</p>
   probability gauge, percentile table, and cost CDF S-curve chart</li>
 <li>A <strong>Cost Sensitivity</strong> table ranking tasks by their cost correlation</li>
 </ul>
-<hr />
 <h2 id="configuration-defaults">Configuration defaults<a class="headerlink" href="#configuration-defaults" title="Permanent link">&para;</a></h2>
 <p>Override cost defaults in a <a href="../14_configuration/">config file</a> so you don't have to
 repeat them in every project file:</p>
@@ -2796,7 +2785,6 @@ repeat them in every project file:</p>
 <p><code>include_in_output: false</code> suppresses cost output in all reports and console
 output, but does <strong>not</strong> suppress the underlying computation — budget methods
 on <code>SimulationResults</code> still return values.</p>
-<hr />
 <h2 id="natural-language-input">Natural-language input<a class="headerlink" href="#natural-language-input" title="Permanent link">&para;</a></h2>
 <p>The <code>generate</code> command understands cost fields in plain-text project descriptions.
 Supported cost-related patterns:</p>
@@ -2870,7 +2858,7 @@ one consequence (schedule delay or cost impact). Keywords like <em>penalty</em>,
 </span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>Resource 1: Alice
 </span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>- Experience: 3
 </span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>- Rate: €200/hour
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>!!! json-cbreak-b5  
 </span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>Task 1:
 </span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>- API Design
 </span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a>- Size: M
@@ -2889,7 +2877,6 @@ one consequence (schedule delay or cost impact). Keywords like <em>penalty</em>,
 <p>See <code>examples/cost_nl_prose_example.txt</code>, <code>examples/cost_nl_example.txt</code>, and
 <code>examples/cost_nl_risk_example.txt</code> for full natural-language examples with cost
 and risk definitions.</p>
-<hr />
 <h2 id="secondary-currencies-and-fx-conversion">Secondary currencies and FX conversion<a class="headerlink" href="#secondary-currencies-and-fx-conversion" title="Permanent link">&para;</a></h2>
 <p>When your team spans multiple countries, or when you report costs to a client in a
 different currency, <code>mcprojsim</code> can automatically convert every cost distribution to
@@ -3141,7 +3128,6 @@ still fetched and used for the current run; they just will not be persisted.</p>
 </span></code></pre></div>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>mcprojsim<span class="w"> </span>simulate<span class="w"> </span>project.yaml<span class="w"> </span>--target-budget<span class="w"> </span><span class="m">45000</span>
 </span></code></pre></div>
-<hr />
 <h2 id="known-limitations">Known limitations<a class="headerlink" href="#known-limitations" title="Permanent link">&para;</a></h2>
 <p><strong>Multi-resource equal-effort-split (Phase 1 simplification)</strong></p>
 <p>When a task is assigned to multiple resources, the engine uses the <strong>mean</strong> of
@@ -3155,7 +3141,6 @@ true cost only when each person works 16 hours (equal split).  If both work the
 full 32 hours in parallel the true cost is <code>32×100 + 32×200 = €9,600</code>.</p>
 <p>This limitation will be addressed in a future release with explicit effort
 tracking per resource.</p>
-<hr />
 <h2 id="example-files">Example files<a class="headerlink" href="#example-files" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

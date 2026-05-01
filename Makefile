@@ -3,7 +3,8 @@
 .PHONY: docs gen-examples update-version pdf-docs docs-serve \
  container-engine-check docs-container-build docs-container-start docs-container-stop \
  docs-container-restart docs-container-status docs-container-logs docs-deploy help clean really-clean \
- pdf-api-ref pdfs pdf-docs 
+ pdf-api-ref pdfs pdf-docs cover cover-light cover-dark cover-api-ref cover-api-ref-light cover-api-ref-dark
+
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -301,10 +302,16 @@ pdfs: pdf-docs pdf-api-ref ## Build all PDF documentation variants in parallel
 	@:
 
 pdf-docs:  ## Build the user guide in all PDF variants (A4 light/dark, B5 light/dark) in parallel
+	@rm -rf $(USER_GUIDE_BUILD_DIR)  # Clean build dir to ensure no stale files interfere
+	@rm $(DIST_DIR)/$(PROJECT)_user_guide-*.pdf 2>/dev/null || true  # Remove old PDFs to prevent confusion
 	@$(MAKE) -j4 $(USER_GUIDE_A4_PDF) $(USER_GUIDE_DARK_A4_PDF) $(USER_GUIDE_B5_PDF) $(USER_GUIDE_DARK_B5_PDF)
+	@$(MAKE) -j4 cover  # Adjust PDFs with cover image after all variants are built
 
 pdf-api-ref:  ## Build the API reference in all PDF variants (A4 light/dark, B5 light/dark) in parallel
+	@rm -rf $(API_REF_BUILD_DIR)  # Clean build dir to ensure no stale files interfere
+	@rm $(DIST_DIR)/$(PROJECT)_api_ref-*.pdf 2>/dev/null || true  # Remove old PDFs to prevent confusion
 	@$(MAKE) -j4 $(API_REF_A4_PDF) $(API_REF_DARK_A4_PDF) $(API_REF_B5_PDF) $(API_REF_DARK_B5_PDF)
+	@$(MAKE) -j4 cover-api-ref  # Adjust PDFs with cover image after all variants are built
 
 examples: $(EXAMPLES_OUTPUT) ## Regenerate docs/examples.md from template
 	@:
@@ -323,7 +330,7 @@ $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES)
 # ============================================================================================
 define BUILD_USER_GUIDE_PDF
 $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$(USER_GUIDE_LUA_FILTER)
-	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
+	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
 	@rm -f $$($1_TEMPLATE).bak
 	@echo -e "$$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$$(NC)"
@@ -341,25 +348,25 @@ $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
-	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template $$(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW) ...$$(NC)"
 	@awk -v body="$$($1_BODY_TEX)" '\
 		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$($1_TEMPLATE) > $$($1_TEX)
-	@echo -e "$$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Compiling $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(DARKYELLOW) with xelatex (2 passes for references/TOC)...$$(NC)"
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) 2>&1 \
-		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$($1_PDF).$$(NC)" >&2; \
+		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(RED).$$(NC)" >&2; \
 		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log):$$(NC)" >&2; \
 		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) >&2; exit 1; }
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) 2>&1 \
-		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $$($1_PDF).$$(NC)" >&2; \
+		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(RED).$$(NC)" >&2; \
 		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log):$$(NC)" >&2; \
 		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) >&2; exit 1; }
 	@cp $$($1_PDF_BUILT) $$($1_PDF)
-	@echo -e "$$(GREEN)✓ User guide PDF built: $$($1_PDF)$$(NC)"
+	@echo -e "$$(GREEN)✓ User guide PDF built: $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(GREEN)$$(NC)"
 endef
 
 # ============================================================================================
@@ -372,7 +379,7 @@ endef
 # ============================================================================================
 define BUILD_API_REF_PDF
 $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_REF_LUA_FILTER)
-	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
+	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
 	@rm -f $$($1_TEMPLATE).bak
 	@echo -e "$$(DARKYELLOW)- Building API reference PDF via LaTeX report pipeline...$$(NC)"
@@ -390,25 +397,25 @@ $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_R
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(API_REF_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
-	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Injecting body $(BRIGHTCYAN)\"$$(notdir $$($1_BODY_TEX))\"$(DARKYELLOW) into handcrafted LaTeX template $(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW) ...$$(NC)"
 	@awk -v body="$$($1_BODY_TEX)" '\
 		/%%__API_REF_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__API_REF_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$($1_TEMPLATE) > $$($1_TEX)
-	@echo -e "$$(DARKYELLOW)  - Compiling PDF with xelatex (2 passes for references/TOC)...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Compiling $(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(DARKYELLOW) with xelatex (2 passes for references/TOC)...$$(NC)"
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) 2>&1 \
-		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$($1_PDF).$$(NC)" >&2; \
+		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(RED).$$(NC)" >&2; \
 		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log):$$(NC)" >&2; \
 		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) >&2; exit 1; }
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) 2>&1 \
-		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $$($1_PDF).$$(NC)" >&2; \
+		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(RED).$$(NC)" >&2; \
 		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log):$$(NC)" >&2; \
 		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) >&2; exit 1; }
 	@cp $$($1_PDF_BUILT) $$($1_PDF)
-	@echo -e "$$(GREEN)✓ API reference PDF built: $$($1_PDF)$$(NC)"
+	@echo -e "$$(GREEN)✓ API reference PDF built: $(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(GREEN)$$(NC)"
 endef
 
 
@@ -442,11 +449,91 @@ $(eval $(call BUILD_API_REF_PDF,API_REF_DARK_B5,b5))
 # $(info API_REF_DARK_B5_TEX: $(API_REF_DARK_B5_TEX))
 # $(info API_REF_DARK_B5_PDF_BUILT: $(API_REF_DARK_B5_PDF_BUILT))
 
+# ============================================================================================
+# Adjust the User Guide PDF by adding cover image to the user guide PDFs. 
+# This is done as a separate step after PDF generation to avoid triggering a full rebuild of 
+# the PDF when the cover image changes, and to allow parallel builds of all PDF variants 
+# before applying the cover.
+# ============================================================================================
+USER_GUIDE_COVER_IMAGE := ../assets/cover-user-guide.png
+USER_GUIDE_B5_PDF := ../dist/$(PROJECT)_user_guide-b5-$(VERSION).pdf
+USER_GUIDE_DARK_B5_PDF := ../dist/$(PROJECT)_user_guide-dark-b5-$(VERSION).pdf
+USER_GUIDE_A4_PDF := ../dist/$(PROJECT)_user_guide-a4-$(VERSION).pdf
+USER_GUIDE_DARK_A4_PDF := ../dist/$(PROJECT)_user_guide-dark-a4-$(VERSION).pdf
 
+cover: cover-b5-light cover-b5-dark cover-a4-light cover-a4-dark ## Adjust all user guide PDFs with cover image in parallel
+	@:
+
+cover-b5-light: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_B5_PDF) with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_B5_PDF)
+	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_B5_PDF) adjusted with cover image$(NC)"
+
+cover-b5-dark: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_DARK_B5_PDF) with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_B5_PDF)
+	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_DARK_B5_PDF) adjusted with cover image$(NC)"
+
+cover-a4-light: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_A4_PDF) with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_A4_PDF)
+	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_A4_PDF) adjusted with cover image$(NC)"
+
+cover-a4-dark: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_DARK_A4_PDF) with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_A4_PDF)
+	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_DARK_A4_PDF) adjusted with cover image$(NC)"
+
+
+# ============================================================================================
+# Adjust the API Reference PDF by adding cover image to the API reference PDFs. 
+# This is done as a separate step after PDF generation to avoid triggering a full rebuild of 
+# the PDF when the cover image changes, and to allow parallel builds of all PDF variants 
+# before applying the cover.
+# ============================================================================================
+API_REF_COVER_IMAGE := ../assets/cover-api-ref.png
+API_REF_B5_PDF := ../dist/$(PROJECT)_api_ref-b5-$(VERSION).pdf
+API_REF_DARK_B5_PDF := ../dist/$(PROJECT)_api_ref-dark-b5-$(VERSION).pdf
+API_REF_A4_PDF := ../dist/$(PROJECT)_api_ref-a4-$(VERSION).pdf
+API_REF_DARK_A4_PDF := ../dist/$(PROJECT)_api_ref-dark-a4-$(VERSION).pdf
+
+cover-api-ref: cover-api-ref-b5-light cover-api-ref-b5-dark cover-api-ref-a4-light cover-api-ref-a4-dark
+	@:
+
+cover-api-ref-b5-light: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_B5_PDF) with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_B5_PDF)
+	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_B5_PDF) adjusted with cover image$(NC)"
+
+cover-api-ref-b5-dark: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_DARK_B5_PDF) with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_B5_PDF)
+	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_DARK_B5_PDF) adjusted with cover image$(NC)"
+
+cover-api-ref-a4-light: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_A4_PDF) with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_A4_PDF)
+	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_A4_PDF) adjusted with cover image$(NC)"
+
+cover-api-ref-a4-dark: ## Adjust the PDF by adding cover image
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_DARK_A4_PDF) with cover image...$(NC)"
+	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_A4_PDF)
+	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_DARK_A4_PDF) adjusted with cover image$(NC)"
+
+
+
+
+# ============================================================================================
+# Doc-server
+# ============================================================================================
 serve: docs ## Serve the project documentation locally with MkDocs
 	@echo -e "$(BLUE)Serving documentation on http://localhost:$(DOCS_PORT)$(NC)"
 	@poetry run mkdocs serve -f ../mkdocs.yml -a localhost:$(DOCS_PORT)
 
+
+# ============================================================================================
+# Container handling
+# ============================================================================================
 container-engine-check:
 	@if [ "$(NO_CONTAINER_ENGINE)" = "yes" ]; then \
         echo -e "$(YELLOW)⚠️  Warning: No container engine detected. Skipping container operation. Please start Podman or Docker.$(NC)"; \
@@ -479,3 +566,6 @@ docs-deploy: ## Build and deploy documentation to GitHub Pages
 		echo -e "$(RED)✗ Error: Documentation deployment failed$(NC)"; \
 		exit 1; \
 	fi
+
+# EOF
+

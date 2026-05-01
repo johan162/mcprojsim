@@ -897,6 +897,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#deriving-the-formula-to-translate-low-expected-high-to-log-normal-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deriving the formula to translate low, expected, high to log-normal parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2185,6 +2196,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#deriving-the-formula-to-translate-low-expected-high-to-log-normal-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deriving the formula to translate low, expected, high to log-normal parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2522,6 +2544,7 @@
 </tr>
 </tbody>
 </table>
+<p><strong><em>Table I:</em></strong></p>
 <p>All four methods ultimately feed into the same simulation machinery. T-shirt sizes and story points are convenience mappings that resolve to explicit ranges before sampling begins.</p>
 <h2 id="explicit-range-estimates">Explicit range estimates<a class="headerlink" href="#explicit-range-estimates" title="Permanent link">&para;</a></h2>
 <p>The most direct way to estimate a task is to provide three values that describe the range of plausible effort:</p>
@@ -2556,6 +2579,7 @@
 </tr>
 </tbody>
 </table>
+<p><strong><em>Table II:</em></strong></p>
 <p>The three values must satisfy: <code>low</code> ≤ <code>expected</code> ≤ <code>high</code>.</p>
 <h3 id="basic-example">Basic example<a class="headerlink" href="#basic-example" title="Permanent link">&para;</a></h3>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">tasks</span><span class="p">:</span>
@@ -2636,6 +2660,7 @@
 </tr>
 </tbody>
 </table>
+<p><strong><em>Table III:</em></strong></p>
 <p><strong>When to use it:</strong></p>
 <ul>
 <li>When the team can provide three-point estimates (optimistic, likely, pessimistic)</li>
@@ -2734,6 +2759,7 @@ triangular estimates.</p>
 </tr>
 </tbody>
 </table>
+<p><strong><em>Table IV:</em></strong></p>
 <p>Internally the simulator defines a shifted variable:</p>
 <p>$$Y = X - \text{low}$$</p>
 <p>where $X$ is the actual duration and $Y$ follows a standard log-normal
@@ -2800,9 +2826,7 @@ between <code>expected</code> and <code>high</code> produce a heavier right tail
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">      </span><span class="nt">unit</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;days&quot;</span>
 </span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 </span></code></pre></div>
-<p>Here, the most likely duration is 10 days, but the long right tail means that in some iterations the sampled value could be 20 or 30 days — reflecting the genuine uncertainty in exploratory work.</p>
-<!-- pagebreak:b5 -->
-
+<p>Here, the most likely duration is 10 days, but the long right tail means that in some iterations the sampled value could be 20 or 30 days, reflecting the genuine uncertainty in exploratory work.</p>
 <h3 id="comparing-the-two-distributions">Comparing the two distributions<a class="headerlink" href="#comparing-the-two-distributions" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2845,6 +2869,7 @@ between <code>expected</code> and <code>high</code> produce a heavier right tail
 </tr>
 </tbody>
 </table>
+<p><strong><em>Table V:</em></strong></p>
 <p>For most projects, the triangular distribution is the right choice. It is intuitive, bounded, and maps naturally to how teams think about estimates. The log-normal distribution is a specialized tool for tasks where the unbounded right tail better reflects reality.</p>
 <h3 id="why-is-log-normal-a-good-model-for-software-or-project-estimation">Why is log-normal a good model for software (or project) estimation?<a class="headerlink" href="#why-is-log-normal-a-good-model-for-software-or-project-estimation" title="Permanent link">&para;</a></h3>
 <p>Individual task durations are often observed to follow a log-normal distribution in empirical studies of projects and software projects in particular. 
@@ -2875,8 +2900,9 @@ estimate</p>
 </tr>
 </tbody>
 </table>
+<p><strong><em>Table VI:</em></strong></p>
 <p>To use a log-normal distribution based on a three-point estimate we need a way to fit those three point to the log-normal distribution. </p>
-<p>Since log-normal doesn't have a natural "minimum," the standard approach is to shift the distribution by your minimum, then fit μ and σ to the remaining two constraints.</p>
+<p>Since log-normal doesn't have a natural "minimum," the standard approach is to shift the distribution by your minimum, then fit $\mu$ and $\sigma$ to the remaining two constraints.</p>
 <p>For the high estimate we also need to define which confidence level of the log-normal distribution it should correspond to. A common value is to use the 90%- or 95%- percentile. To make this relative to the distribution we use the $z$-value, i.e. the fraction number of standard deviation from the mean value.</p>
 <table>
 <thead>
@@ -2912,7 +2938,8 @@ estimate</p>
 </tr>
 </tbody>
 </table>
-<p>Great practical question. Since log-normal doesn't have a natural "minimum," the standard approach is to <strong>shift the distribution</strong> by your minimum, then fit μ and σ to the remaining two constraints.</p>
+<p><strong><em>Table VII:</em></strong></p>
+<p>Great practical question. Since log-normal doesn't have a natural "minimum," the standard approach is to <strong>shift the distribution</strong> by your minimum, then fit $\mu$ and $\sigma$ to the remaining two constraints.</p>
 <h4 id="derivation">Derivation<a class="headerlink" href="#derivation" title="Permanent link">&para;</a></h4>
 <p>Define the shifted variable:</p>
 <p>$Y = X − 5$ (where $X$ is actual duration, $Y$ is the excess above minimum)</p>
@@ -2963,6 +2990,7 @@ $$</p>
 </tr>
 </tbody>
 </table>
+<p><strong><em>Table VIII:</em></strong></p>
 <h4 id="sanity-check">Sanity Check<a class="headerlink" href="#sanity-check" title="Permanent link">&para;</a></h4>
 <p>With these parameters, the distribution of X gives:</p>
 <table>
@@ -2987,7 +3015,7 @@ $$</p>
 </tr>
 <tr>
 <td>Mean</td>
-<td>$5 + e^{(\mu + \sigma^2/2)} ≈ 5 + 5.6 \approx 10.6\, \texttt{days}$</td>
+<td>$5 + e^{(\mu + \sigma^2/2)} \approx 5 + 5.6 \approx 10.6\, \texttt{days}$</td>
 </tr>
 <tr>
 <td>95th percentile</td>
@@ -2995,9 +3023,36 @@ $$</p>
 </tr>
 </tbody>
 </table>
+<p><strong><em>Table IX:</em></strong></p>
 <p>The median and mean both sitting above the mode is the classic log-normal skew in action — reinforcing that even with a "9 day" estimate, you should plan for closer to <strong>10.5–11 days</strong> on average.</p>
-<p><img alt="Log-normal task duration (5,9,16)" src="../assets/lognormal01.jpg" width="80%" /></p>
+<p><img alt="Log-normal task duration (5,9,16)" src="../assets/fig-lognormal-graph.png" /></p>
 <p><strong><em>Figure:</em></strong> <em>Log-normal task duration (5,9,16)</em></p>
+<h3 id="deriving-the-formula-to-translate-low-expected-high-to-log-normal-parameters">Deriving the formula to translate <code>low</code>, <code>expected</code>, <code>high</code> to log-normal parameters<a class="headerlink" href="#deriving-the-formula-to-translate-low-expected-high-to-log-normal-parameters" title="Permanent link">&para;</a></h3>
+<p>Starting from the two equations:</p>
+<p>$$
+\begin{align<em>}
+ \mu - \sigma^2 &amp; = \ln(\text{expected}-\text{low}) \
+\mu + z \cdot \sigma &amp; = \ln(\text{high}-\text{low})
+\end{align</em>}
+$$</p>
+<p>Then using the same reasoning as in the previous example we express the log-normal parameters in closed form as</p>
+<p>$$
+\begin{align<em>}
+ &amp; \
+\sigma &amp; = \frac{-z + \sqrt{\mathstrut z^{\mathstrut 2} + 4R}}{2} \
+&amp; \
+\mu &amp; = \ln!\left(\text{expected} - \text{low}\right) + \sigma^2\
+\end{align</em>}
+$$</p>
+<p>where</p>
+<p>$$
+\begin{align<em>}
+R  &amp; = \ln!\left[\frac{\text{high} - \text{low}}{\text{expected} - \text{low}}\right] \
+&amp; \
+z &amp; = \text{z-score for the chosen confidence level for high estimate}
+\end{align</em>}
+$$</p>
+<p>and where <strong>z</strong> is the z-score corresponding to your chosen confidence level for the high estimate as seen in <strong><em>Table VII:</em></strong></p>
 <h2 id="t-shirt-size-estimates">T-shirt size estimates<a class="headerlink" href="#t-shirt-size-estimates" title="Permanent link">&para;</a></h2>
 <p>T-shirt sizing is a relative estimation technique where tasks are classified into sizes such as <code>XS</code>, <code>S</code>, <code>M</code>, <code>L</code>, <code>XL</code>, and <code>XXL</code>, scoped by named categories (<code>bug</code>, <code>story</code>, <code>epic</code>, <code>business</code>, <code>initiative</code>). This is useful when teams need different calibration levels across planning horizons.</p>
 <p>In <code>mcprojsim</code>, each T-shirt size is mapped to a numeric range (<code>low</code>, <code>expected</code>, <code>high</code>) inside a category in the configuration file. During simulation, a bare value like <code>M</code> resolves through <code>t_shirt_size_default_category</code> (default: <code>story</code>), while a qualified value like <code>epic.M</code> resolves directly.</p>
@@ -3529,14 +3584,15 @@ $$</p>
 </span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
 </span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">    </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 </span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.5</span>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="w">  </span><span class="nt">2</span><span class="p">:</span>
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="w">    </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.5</span>
-</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="w">  </span><span class="nt">5</span><span class="p">:</span>
-</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.5</span>
-</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="w">    </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5.5</span>
-</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="kt">!!!</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yaml-cbreak-b5</span><span class="w"> </span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="p p-Indicator">:</span>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="w">    </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.5</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="w w-Error">  </span><span class="nt">5</span><span class="p">:</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="w">    </span><span class="nt">low</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.5</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">    </span><span class="nt">expected</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5.5</span>
+</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="w">    </span><span class="nt">high</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
 </span></code></pre></div>
 <p>You only need to include the story point values you want to override. Any values not specified in your configuration will use the built-in defaults. Note that you can only use values from the allowed set (1, 2, 3, 5, 8, 13, 21) — the allowed values are defined in the code, not in configuration.</p>
 <h3 id="choosing-the-unit-for-story-points">Choosing the unit for story points<a class="headerlink" href="#choosing-the-unit-for-story-points" title="Permanent link">&para;</a></h3>
@@ -3714,7 +3770,7 @@ $$</p>
 </thead>
 <tbody>
 <tr>
-<td><code>low</code> ≤ <code>expected</code> ≤ <code>high</code></td>
+<td><code>low</code> $\leq$ <code>expected</code> $\leq$ <code>high</code></td>
 <td>Triangular distribution</td>
 <td>Yes — values must be in order</td>
 </tr>

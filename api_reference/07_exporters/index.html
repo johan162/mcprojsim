@@ -1586,7 +1586,7 @@
 
 <h1 id="exporters">Exporters<a class="headerlink" href="#exporters" title="Permanent link">&para;</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>The exporters module converts a <code>SimulationResults</code> object into persistent output files. All three exporters — <code>JSONExporter</code>, <code>CSVExporter</code>, and <code>HTMLExporter</code> — expose the same design: a single static <code>export()</code> class method that writes directly to a file path. Choose JSON for downstream tooling and API integration, CSV for spreadsheet analysis, and HTML for human-readable reports that can be shared without any tooling. Sprint-planning results and the original <code>Project</code> definition are optional enrichments accepted by all three. The <code>include_historic_base</code> flag embeds baseline comparison data and is supported only by JSON and HTML; passing it to CSV raises a <code>ValueError</code>.</p>
+<p>The exporters module converts a <code>SimulationResults</code> object into persistent output files. All three exporters — <code>JSONExporter</code>, <code>CSVExporter</code>, and <code>HTMLExporter</code> — expose the same design: a single static <code>export()</code> class method that writes directly to a file path. Choose JSON for downstream tooling and API integration, CSV for spreadsheet analysis, and HTML for human-readable reports that can be shared without any tooling. Sprint-planning results and the original <code>Project</code> definition are optional enrichments accepted by all three. The <code>include_historic_base</code> flag embeds baseline comparison data and is supported only by JSON and HTML; passing it to CSV raises a <code>TypeError</code> (unexpected keyword argument).</p>
 <p><strong>When to use this module:</strong> Write simulation output to disk from your own Python code, or extend a pipeline that consumes JSON, CSV, or HTML artefacts.</p>
 <table>
 <thead>
@@ -1783,7 +1783,7 @@
 </span></code></pre></div>
 <h2 id="htmlexporter"><code>HTMLExporter</code><a class="headerlink" href="#htmlexporter" title="Permanent link">&para;</a></h2>
 <p>Exports a formatted, interactive HTML report with thermometers, percentile tables, charts (using matplotlib), critical-path analysis, staffing recommendations, and sprint-planning traceability.</p>
-<p><strong>Method:</strong> <code>export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, fx_provider=None) -&gt; None</code></p>
+<p><strong>Method:</strong> <code>export(results, output_path, project=None, config=None, critical_path_limit=None, sprint_results=None, include_historic_base=False, fx_provider=None, target_budget=None, target_hours=None) -&gt; None</code></p>
 <table>
 <thead>
 <tr>
@@ -1831,10 +1831,28 @@
 <td>Sprint planning results to embed (optional).</td>
 </tr>
 <tr>
+<td><code>include_historic_base</code></td>
+<td><code>bool</code></td>
+<td><code>False</code></td>
+<td>Include historic baseline data when available.</td>
+</tr>
+<tr>
 <td><code>fx_provider</code></td>
 <td><code>Any \| None</code></td>
 <td><code>None</code></td>
 <td>Foreign-exchange rate provider for multi-currency cost output (optional).</td>
+</tr>
+<tr>
+<td><code>target_budget</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Target budget for budget-confidence analysis in the output.</td>
+</tr>
+<tr>
+<td><code>target_hours</code></td>
+<td><code>float \| None</code></td>
+<td><code>None</code></td>
+<td>Target duration (hours) for joint probability analysis in the output.</td>
 </tr>
 </tbody>
 </table>
