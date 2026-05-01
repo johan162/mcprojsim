@@ -112,40 +112,9 @@ Now run the simulation:
 mcprojsim simulate first-project-step-1.yaml --iterations 5000 --seed 42 --minimal
 ```
 
-Example result summary:
+Example result:
 
-```text
-=== Simulation Results ===
-
-Project Overview:
-  Project: Tiny Landing Page
-  Start Date: 2026-03-01
-  Number of Tasks: 1
-  Effective Default Distribution: triangular
-  T-Shirt Category Used: story
-  Hours per Day: 8.0
-  Max Parallel Tasks: 1
-  Schedule Mode: dependency_only
-
-Calendar Time Statistical Summary:
-  Mean: 26.61 hours (4 working days)
-  Median (P50): 26.14 hours
-  Std Dev: 4.99 hours
-  Minimum: 16.05 hours
-  Maximum: 39.67 hours
-
-Project Effort Statistical Summary:
-  Mean: 26.61 person-hours (4 person-days)
-  Median (P50): 26.14 person-hours
-  Std Dev: 4.99 person-hours
-  Minimum: 16.05 person-hours
-  Maximum: 39.67 person-hours
-
-Calendar Time Confidence Intervals:
-  P50: 26.14 hours (4 working days)  (2026-03-05)
-  P80: 31.23 hours (4 working days)  (2026-03-05)
-  P90: 33.68 hours (5 working days)  (2026-03-06)
-```
+{{!mcprojsim simulate examples/01_first_project/first-project-step-1.yaml --iterations 5000 --seed 42 --minimal}}
 
 
 The important thing here is not the exact numbers. The important thing is that even a one-task project produces a range of likely outcomes rather than one fixed answer. Results are reported in hours (the canonical internal unit) with working days shown alongside.
@@ -162,7 +131,7 @@ project:
   description: "Adding sequencing"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
-
+!!! yaml-cbreak-b5
 tasks:
   - id: "task_001"
     name: "Create landing page"
@@ -192,36 +161,8 @@ mcprojsim simulate first-project-step-2.yaml --iterations 5000 --seed 42
 
 Example result summary:
 
-```text
-=== Simulation Results ===
+{{!mcprojsim simulate examples/01_first_project/first-project-step-2.yaml --iterations 5000 --seed 42@B5:16:14}}
 
-Project Overview:
-  Project: Tiny Landing Page
-  Start Date: 2026-03-01
-  Number of Tasks: 2
-  Effective Default Distribution: triangular
-  T-Shirt Category Used: story
-  Hours per Day: 8.0
-  Max Parallel Tasks: 1
-  Schedule Mode: dependency_only
-
-  < --- SKIP --- >
-
-Sensitivity Analysis (top contributors):
-  task_002: +0.6901
-  task_001: +0.6775
-
-Schedule Slack:
-  task_001: 0.00 hours (Critical)
-  task_002: 0.00 hours (Critical)
-
-Most Frequent Critical Paths:
-  1. task_001 -> task_002 (5000/5000, 100.0%)
-
-Staffing (based on mean effort): 1 people recommended (mixed team), 7 working days
-  Total effort: 45 person-hours (6 person-days) | Parallelism ratio: 1.0
-
-```
 
 Compared with the first example, the schedule is now longer because the project contains more work. More importantly, the dependency means the tasks form a chain rather than happening independently. This is the beginning of a project network.
 
@@ -293,7 +234,7 @@ project:
   description: "Adding uncertainty factors"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
-
+!!! yaml-cbreak-b5
 tasks:
   - id: "task_001"
     name: "Create landing page"
@@ -319,7 +260,7 @@ tasks:
       technical_complexity: "medium"
 ```
 
-Run it with the configuration file:
+Run it with this configuration file:
 
 ```bash
 mcprojsim simulate first-project-step-3.yaml --seed 42 --minimal
@@ -327,38 +268,8 @@ mcprojsim simulate first-project-step-3.yaml --seed 42 --minimal
 
 Example result summary:
 
-```text
-=== Simulation Results ===
+{{!mcprojsim simulate examples/01_first_project/first-project-step-3.yaml --seed 42 --minimal@B5:18*}}
 
-Project Overview:
-  Project: Tiny Landing Page
-  Start Date: 2026-03-01
-  Number of Tasks: 2
-  Effective Default Distribution: triangular
-  T-Shirt Category Used: story
-  Hours per Day: 8.0
-  Max Parallel Tasks: 1
-  Schedule Mode: dependency_only
-
-Calendar Time Statistical Summary:
-  Mean: 49.98 hours (7 working days)
-  Median (P50): 49.67 hours
-  Std Dev: 7.88 hours
-  Minimum: 27.41 hours
-  Maximum: 76.84 hours
-
-Project Effort Statistical Summary:
-  Mean: 49.98 person-hours (7 person-days)
-  Median (P50): 49.67 person-hours
-  Std Dev: 7.88 person-hours
-  Minimum: 27.41 person-hours
-  Maximum: 76.84 person-hours
-
-Calendar Time Confidence Intervals:
-  P50: 49.67 hours (7 working days)  (2026-03-10)
-  P80: 56.79 hours (8 working days)  (2026-03-11)
-  P90: 60.43 hours (8 working days)  (2026-03-11)
-```
 
 This is an important modeling step. As can be seen from the simulation these uncertainty factors add another day effort to be 80% certain.
 
@@ -370,21 +281,17 @@ uncertainty_factors:
     high: 0.90    
     medium: 1.1    
     low: 1.50  
-    
   requirements_maturity:    
     high: 1.0    
     medium: 1.40    
     low: 1.80  
-    
   technical_complexity:    
     low: 1.0    
     medium: 1.15    
     high: 1.40
-  
 simulation:  
   default_iterations: 10000  
   random_seed: null
-
 output:
     formats: ["json"]
     include_histogram: true
@@ -439,7 +346,6 @@ Calendar Time Statistical Summary:
   Std Dev: 8.87 hours
   Minimum: 31.76 hours
   Maximum: 87.52 hours
-
 Project Effort Statistical Summary:
   Mean: 57.19 person-hours (8 person-days)
   Median (P50): 56.85 person-hours
@@ -464,7 +370,6 @@ project:
   description: "Adding risk events"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
-
 project_risks:
   - id: "risk_001"
     name: "Late stakeholder changes"
@@ -473,7 +378,6 @@ project_risks:
       type: "absolute"
       value: 2
       unit: "days"
-
 tasks:
   - id: "task_001"
     name: "Create landing page"
@@ -485,8 +389,6 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "medium"
-!!! yaml-cbreak-b5
-
   - id: "task_002"
     name: "Deploy site"
     estimate:
@@ -510,48 +412,13 @@ Again, run this as:
 ```bash
 mcprojsim simulate first-project-step-4.yaml \
   --config first-project-step-3-config.yaml \
-  --iterations 5000 --seed 42 --minimal
+  --iterations 5000 --seed 42 
 ```
 
 Example result summary:
 
-```text
-=== Simulation Results ===
+{{!mcprojsim simulate examples/01_first_project/first-project-step-4.yaml --config examples/01_first_project/first-project-step-3-config.yaml --iterations 5000 --seed 42 --minimal}}
 
-Project Overview:
-  Project: Tiny Landing Page
-  Start Date: 2026-03-01
-  Number of Tasks: 2
-  Effective Default Distribution: triangular
-  T-Shirt Category Used: story
-  Hours per Day: 8.0
-  Max Parallel Tasks: 1
-  Schedule Mode: dependency_only
-
-Calendar Time Statistical Summary:
-  Mean: 60.52 hours (8 working days)
-  Median (P50): 59.64 hours
-  Std Dev: 10.99 hours
-  Minimum: 32.85 hours
-  Maximum: 103.52 hours
-!!! text-cbreak-b5
-Project Effort Statistical Summary:
-  Mean: 57.35 person-hours (8 person-days)
-  Median (P50): 57.01 person-hours
-  Std Dev: 8.87 person-hours
-  Minimum: 31.76 person-hours
-  Maximum: 87.52 person-hours
-
-Calendar Time Confidence Intervals:
-  P50: 59.64 hours (8 working days)  (2026-03-11)
-  P80: 69.95 hours (9 working days)  (2026-03-12)
-  P90: 75.46 hours (10 working days)  (2026-03-13)
-
-  <-- SKIP -->
-
-  Risk Impact Analysis:
-    task_002: mean=0.23h, triggers=15.0%, mean_when_triggered=1.50h
-```
 
 Notice what happened relative to Step 3:
 
@@ -599,6 +466,7 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "high"
+!!! yaml-cbreak-b5   
   - id: "task_002"
     name: "Build page"
     estimate:
@@ -677,44 +545,12 @@ Run the T-shirt-sized example like this:
 ```bash
 mcprojsim simulate examples/tshirt_walkthrough_project.yaml \
   --config examples/tshirt_walkthrough_config.yaml \
-  --seed 42 --minimal
+  --seed 42 --iterations 5000 --minimal
 ```
 
 Example result summary:
 
-```text
-=== Simulation Results ===
-
-Project Overview:
-  Project: Tiny Landing Page
-  Start Date: 2026-03-01
-  Number of Tasks: 3
-  Effective Default Distribution: triangular
-  T-Shirt Category Used: story
-  Hours per Day: 8.0
-  Max Parallel Tasks: 1
-  Schedule Mode: dependency_only
-
-Calendar Time Statistical Summary:
-  Mean: 9.67 hours (2 working days)
-  Median (P50): 9.59 hours
-  Std Dev: 1.39 hours
-  Minimum: 5.83 hours
-  Maximum: 14.45 hours
-!!! yaml-cbreak-b5
-
-Project Effort Statistical Summary:
-  Mean: 9.67 person-hours (2 person-days)
-  Median (P50): 9.59 person-hours
-  Std Dev: 1.39 person-hours
-  Minimum: 5.83 person-hours
-  Maximum: 14.45 person-hours
-
-Calendar Time Confidence Intervals:
-  P50: 9.59 hours (2 working days)  (2026-03-03)
-  P80: 10.88 hours (2 working days)  (2026-03-03)
-  P90: 11.55 hours (2 working days)  (2026-03-03)
-```
+{{!mcprojsim simulate examples/tshirt_walkthrough_project.yaml --config examples/tshirt_walkthrough_config.yaml --seed 42 --iterations 5000 --minimal@B5:4*}}
 
 The interpretation is exactly the same as for explicit ranges. The only difference is how the task effort was expressed in the input file.
 
@@ -730,7 +566,6 @@ Some teams prefer to estimate backlog items in Story Points rather than T-shirt 
 
 Story points was originally conceived as a way to model actual working time where 1 SP was eqal to 1 uninterrupted day of work (something that rarely happens in real life). Now, SP is an estimat calibrated to a specific team and story points are only valid within the same and stable team as their own "currency" were each team have different exchange rates between SP <--> days. The program have *one* exchange rate by default but that can easily be adjusted by supplying a different exchange rate in a config file as shown below
 
-<!-- pagebreak:b5 -->
 
 ### Step 6: use `story_points`
 
@@ -775,11 +610,11 @@ Story Points (unit: days):
     low: 0.5, expected: 1.0, high: 3.0
   2:
     low: 1.0, expected: 2.0, high: 4.0
+!!! yaml-cbreak-b5
   3:
     low: 1.5, expected: 3.0, high: 5.0
   5:
     low: 3.0, expected: 5.0, high: 8.0
-  !!! text-cbreak-b5 
   8:
     low: 5.0, expected: 8.0, high: 15.0
   13:
@@ -826,45 +661,16 @@ Run the Story Point example like this:
 ```bash
 mcprojsim simulate first-project-step-6.yaml \
 --config  first-project-step-6-config.yaml \
---seed 42  --minimal
+--iterations 5000 --seed 42  --minimal
 ```
 
 Example result summary:
 
-```text
-=== Simulation Results ===
-
-Project Overview:
-  Project: Tiny Landing Page
-  Start Date: 2026-03-01
-  Number of Tasks: 3
-  Effective Default Distribution: triangular
-  T-Shirt Category Used: story
-  Hours per Day: 8.0
-  Max Parallel Tasks: 1
-  Schedule Mode: dependency_only
-
-Calendar Time Statistical Summary:
-  Mean: 80.64 hours (11 working days)
-  Median (P50): 80.12 hours
-  Std Dev: 11.58 hours
-  Minimum: 47.68 hours
-  Maximum: 123.43 hours
-
-Project Effort Statistical Summary:
-  Mean: 80.64 person-hours (11 person-days)
-  Median (P50): 80.12 person-hours
-  Std Dev: 11.58 person-hours
-  Minimum: 47.68 person-hours
-  Maximum: 123.43 person-hours
-
-Calendar Time Confidence Intervals:
-  P50: 80.12 hours (11 working days)  (2026-03-16)
-  P80: 90.55 hours (12 working days)  (2026-03-17)
-  P90: 95.93 hours (12 working days)  (2026-03-17)
-```
+{{!mcprojsim simulate examples/01_first_project/first-project-step-6.yaml --config examples/01_first_project/first-project-step-6-config.yaml --iterations 5000 --seed 42 --minimal}}
 
 Story Points are useful when the team has a stable internal understanding of what `1`, `2`, `3`, `5`, `8`, `13`, or `21` mean, but that understanding does not translate directly to raw hours or days. The config file is where that team-specific calibration belongs.
+
+<!-- pagebreak:b5 -->
 
 ## What each stage added
 

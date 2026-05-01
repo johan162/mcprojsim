@@ -17,6 +17,29 @@
 
 set -euo pipefail
 
+show_help() {
+        cat << EOF
+Usage:
+    mkfigs.sh -o <output_directory> [-s <source_directory>] [-q] [BASENAME]
+
+Options:
+    -s DIR     Source directory containing fig-*.html files.
+                         Defaults to the current working directory.
+    -o DIR     Output directory for PNG images (required).
+    -q         Quiet mode - suppress all normal output (errors still go to stderr).
+    -h, --help Show this help message and exit.
+
+Arguments:
+    BASENAME   Optional file base-name (e.g. fig-lognormal-graph) to process
+                         only that single HTML file.
+
+Examples:
+    mkfigs.sh -s assets -o assets
+    mkfigs.sh -s assets -o assets fig-user-guide-cover
+    mkfigs.sh -q -s assets -o assets fig-user-guide-cover
+EOF
+}
+
 # ---------------------------------------------------------------------------
 # Locate headless Chrome/Chromium
 # ---------------------------------------------------------------------------
@@ -60,11 +83,21 @@ SOURCE_DIR=""
 OUTPUT_DIR=""
 QUIET=0
 
-while getopts ":s:o:q" opt; do
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+    esac
+done
+
+while getopts ":s:o:qh" opt; do
     case "$opt" in
         s) SOURCE_DIR="$OPTARG" ;;
         o) OUTPUT_DIR="$OPTARG" ;;
         q) QUIET=1 ;;
+        h) show_help; exit 0 ;;
         :) echo "ERROR: option -$OPTARG requires an argument." >&2; exit 1 ;;
         \?) echo "ERROR: unknown option -$OPTARG." >&2; exit 1 ;;
     esac

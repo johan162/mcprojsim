@@ -164,6 +164,7 @@ tasks:
     name: "Foundation"
     estimate:
       story_points: 3
+!!! yaml-cbreak-b5
   - id: "task_002"
     name: "Backend API"
     estimate:
@@ -209,7 +210,7 @@ tasks:
     name: "Release prep"
     estimate:
       story_points: 3
-
+!!! yaml-cbreak-b5
 sprint_planning:
   enabled: true
   sprint_length_weeks: 2
@@ -443,6 +444,207 @@ The multipliers must satisfy `low <= expected <= high`.
 | `consumed_fraction_beta` | `1.75` | Beta parameter of the beta distribution for consumed fraction |
 | `logistic_slope` | `1.9` | Logistic model slope |
 | `logistic_intercept` | `-1.9924301646902063` | Logistic model intercept |
+
+#### Task-level spillover modeling in depth
+
+**Background**
+
+In any agile sprint, a story or task pulled into the sprint may not be fully finished by sprint end. The team ran out of time, the item turned out to be bigger than estimated, or an unexpected blocker appeared mid-sprint. The unfinished work carries into the next sprint. This is called *spillover* or *carryover*.
+
+This is distinct from the sprint-level spillover already captured in `sprint_planning.history[]`. Those historical `spillover_story_points` rows describe the aggregate carryover the team observed after each historical sprint. The task-level spillover model described here operates at a different granularity: it simulates what happens to *each individual backlog item* during a future simulated sprint.
+
+**What problem does task-level spillover solve?**
+
+A simulation without task-level spillover treats each sprint's pulled work as binary: an item either fits into the sprint's capacity and completes, or it doesn't fit and stays in the backlog. This misses a common real-world pattern: a 13-point item pulled into a sprint might be 70 % complete by sprint end, leaving only 4 points of work as carryover. Without this model, that item either disappears cleanly or never starts.
+
+Enabling task-level spillover produces more realistic forecast distributions because it:
+
+- prolongs the forecast tail when many large items are in the backlog — large items fragment across sprints more often
+- generates partial-completion carryover items that inflate future sprint loads
+- creates a correlation between item size, sprint fragmentation, and overall sprint count that a pure velocity model cannot capture
+
+**How the two-stage simulation works**
+
+When an item is pulled into a simulated sprint, the engine applies a two-stage process:
+
+1. **Spillover trial.** The engine computes a spillover probability $p(x)$ for the item based on its planning story points $x$. It then draws a Bernoulli sample: with probability $p(x)$ the item spills, otherwise it completes normally.
+
+2. **Consumed fraction.** If the item spills, the engine draws a consumed fraction $f$ from a Beta($\alpha$, $\beta$) distribution (clamped to $(10^{-6},\, 0.999999)$). The sprint records $x \cdot f$ as completed work and creates a new backlog item of size $x \cdot (1-f)$ to carry into a later sprint.
+
+The `consumed_fraction_alpha` and `consumed_fraction_beta` parameters control the shape of this fraction. The default values ($\alpha = 3.25$, $\beta = 1.75$) produce a mean consumed fraction of about 65 %, meaning the team typically finishes roughly two-thirds of a spilling item before the sprint ends.
+
+**Choosing between `table` and `logistic`**
+
+The `table` model assigns a flat spillover probability to each size band. It is easy to reason about: a 6-point item and an 8-point item receive exactly the same probability because they share the same bracket. This makes calibration intuitive but creates step discontinuities at bracket boundaries.
+
+The `logistic` model replaces those steps with a smooth, continuously increasing sigmoid curve. Every distinct story-point value gets a distinct probability. It is better suited when:
+
+- the backlog contains items with fine-grained story-point estimates (e.g., a Fibonacci scale of 1, 2, 3, 5, 8, 13)
+- you want the forecast to be sensitive to precise size differences rather than coarse buckets
+- you have retrospective data that tells you the spillover rate at a representative item size (the reference point)
+
+For a new team without calibration data, the `table` model is simpler to start with. The default `table` brackets (5 %, 12 %, 25 %, 40 %) reflect typical observed spillover rates across size categories.
+
+**How the logistic model computes probability**
+
+The logistic model maps each item's planning story points $x$ to a probability $p(x)$ through a sigmoid function applied in log-space:
+
+$$
+p(x) = \frac{1}{1 + e^{-\left(s \cdot \ln\!\left(\frac{x}{r}\right) + b\right)}}
+$$
+
+Three parameters jointly define the curve:
+
+| Parameter | Field | Role |
+|---|---|---|
+| $r$ | `size_reference_points` | The anchor size. The curve passes through `sigmoid(b)` at $x = r$ |
+| $b$ | `logistic_intercept` | Sets the probability at the reference size. Calibrate with $b = \ln(p_0 / (1 - p_0))$ |
+| $s$ | `logistic_slope` | Controls how steeply probability grows as size increases above (or below) the reference |
+
+The slope and intercept are independent controls. Changing the intercept shifts the entire curve up or down while preserving its shape. Changing the slope stretches or compresses the curve without moving the probability at the reference size. This separation makes calibration predictable: if your retrospectives tell you that 5-point items spill 12 % of the time, set the intercept to $\ln(0.12/0.88) \approx -1.992$ and use the reference size of 5. The slope then governs only how fast risk grows for items above 5 points.
+
+**Extended example: comparing `table` and `logistic` on a Fibonacci backlog**
+
+Consider a team building a SaaS backend. Their backlog uses a Fibonacci story-point scale: 1, 2, 3, 5, 8, 13. After several retrospectives they have observed:
+
+- 3-point items almost never spill (~5 % of the time)
+- 5-point items spill occasionally (~12 %)
+- 8-point items spill frequently (~25 %)
+
+These observations match the default `table` brackets almost exactly. However, the team also estimates many items as 4, 6, or 7 points and notices that the `table` model treats them identically to the bracket ceiling: a 4-point item gets the same 12 % probability as a 5-point item, and a 6-point item gets the same 25 % probability as an 8-point item.
+
+Switching to `logistic` with the default parameters gives item-level differentiation without changing the calibration at the anchor sizes:
+
+```yaml
+spillover:
+  enabled: true
+  model: logistic
+  size_reference_points: 5.0       # 5-point item is the anchor
+  logistic_intercept: -1.9924      # 12 % at the reference size
+  logistic_slope: 1.9              # default steepness
+  consumed_fraction_alpha: 3.25
+  consumed_fraction_beta: 1.75
+```
+
+Resulting probabilities compared to the `table` model:
+
+| Item size (pts) | `table` model | `logistic` (defaults) | Note |
+|---:|---:|---:|---|
+| 1 | 5 % | 1 % | logistic treats very small items as nearly safe |
+| 2 | 5 % | 2 % | logistic differentiates within the ≤2 bracket |
+| 3 | 12 % | 5 % | logistic separates 3-pt from 5-pt; table treats them equally |
+| 4 | 12 % | 8 % | logistic differentiates 4-pt from 5-pt |
+| **5 (reference)** | **12 %** | **12 %** | both models agree |
+| 6 | 25 % | 16 % | logistic separates 6-pt from 8-pt; table treats them equally |
+| 7 | 25 % | 21 % | logistic differentiates 7-pt from 8-pt |
+| **8** | **25 %** | **25 %** | both models agree at the 8-pt bracket boundary |
+| 10 | 40 % | 34 % | logistic gives a smooth curve above the highest bracket |
+| 13 | 40 % | 46 % | logistic continues rising; table stays flat at 40 % |
+
+Key observations:
+
+- The two models agree exactly at the reference size (5 pts) and at the 8-pt bracket boundary, because the default logistic parameters were calibrated to match those points.
+- For items smaller than the reference, the logistic curve descends rapidly. A 1-point item receives only 1 % spillover probability versus 5 % in the `table` model.
+- For items larger than the highest `table` bracket (8 pts), the logistic model continues increasing past 40 %, while the `table` model plateaus. Whether a 13-pt item should be assigned 40 % or 46 % is a judgment call — if your team's largest items spill more than 40 % of the time, `logistic` is the more honest representation.
+- The choice of model has the greatest impact on forecasts when the backlog contains a mix of very small (1–2 pt) and very large (10–13 pt) items. For homogeneous backlogs where most items cluster near the reference size, the two models produce similar results.
+
+The `logistic_slope` used in this example (1.9) is the default. It is *not derived from* the 12 % observation at 5 points — it is an independent assumption about the steepness of the size-to-risk relationship. See the parameter reference section below for guidance on fitting the slope from multi-size retrospective data.
+
+#### Understanding `logistic_slope` and `logistic_intercept`
+
+These two parameters define the shape of the continuous sigmoid curve that maps item size to spillover probability when `model: logistic` is selected. Together they answer two independent questions: *how likely is a reference-size item to spill over?* and *how fast does that probability grow as items get larger?*
+
+The complete formula (also given in [Item spillover](#item-spillover) in the statistical methods section) is:
+
+$$
+p(x) = \frac{1}{1 + e^{-\left(s \cdot \ln\!\left(\frac{x}{r}\right) + b\right)}}
+$$
+
+where $x$ is the item's planning story points, $r$ is `size_reference_points`, $s$ is `logistic_slope`, and $b$ is `logistic_intercept`.
+
+**`logistic_intercept` controls the probability at the reference size.**
+
+When $x = r$, the $\ln(x/r)$ term equals zero and the formula reduces to:
+
+$$
+p(r) = \frac{1}{1 + e^{-b}} = \text{sigmoid}(b)
+$$
+
+So `logistic_intercept` is the logit of your desired baseline spillover probability. To target a specific probability $p_0$ at the reference size, compute:
+
+$$
+b = \ln\!\left(\frac{p_0}{1 - p_0}\right)
+$$
+
+Calibration reference:
+
+| Desired $p$ at reference size | `logistic_intercept` value |
+|---:|---:|
+| 5 % | −2.944 |
+| 10 % | −2.197 |
+| **12 % (default)** | **−1.992** |
+| 15 % | −1.735 |
+| 20 % | −1.386 |
+| 30 % | −0.847 |
+
+The default −1.9924 produces exactly 12 % at the reference size of 5 points, which matches the built-in `table` bracket for items up to 5 points.
+
+**`logistic_slope` controls how steeply probability grows with item size.**
+
+Because the formula operates in log-space ($\ln(x/r)$), the slope governs a power-law-like sensitivity. A higher slope makes probability rise sharply as items grow beyond the reference size; a lower slope produces a more gradual curve. The probability at the reference size ($x = r$) is always `sigmoid(logistic_intercept)` regardless of slope, because the $\ln$ term vanishes there.
+
+Comparison with `size_reference_points = 5` and the default `logistic_intercept = -1.9924`:
+
+| Item size (pts) | `logistic_slope = 1.0` | `logistic_slope = 1.9` (default) | `logistic_slope = 3.0` |
+|---:|---:|---:|---:|
+| 1 | 3 % | 1 % | <1 % |
+| 2 | 5 % | 2 % | 1 % |
+| **5 (reference)** | **12 %** | **12 %** | **12 %** |
+| 8 | 18 % | 25 % | 36 % |
+| 13 | 26 % | 46 % | 71 % |
+
+All three curves pass through 12 % at 5 points because `logistic_intercept` is the same. The curves diverge only as items move away from the reference.
+
+**How the defaults relate to the built-in `table` breakpoints.**
+
+The default parameters ($s = 1.9$, $b = -1.9924$, $r = 5$) were chosen so the logistic curve closely matches the four built-in `table` bracket probabilities:
+
+| Size (pts) | Built-in `table` | Logistic (defaults) |
+|---:|---:|---:|
+| 2 | 5 % | ≈ 2 % |
+| 5 | 12 % | 12 % |
+| 8 | 25 % | 25 % |
+| 13 | — | ≈ 46 % |
+
+The `table` model applies a flat probability across each size band. The logistic model produces a smooth monotone curve — use it when you want item-level precision rather than step-wise jumps between brackets.
+
+**Practical example: team with higher baseline spillover.**
+
+Suppose your retrospective data shows that 5-point items spill about 20 % of the time. That single data point lets you set `logistic_intercept` precisely — but it tells you nothing about `logistic_slope`. The slope is an independent assumption about how steeply spillover risk grows with item size. In this example `logistic_slope` is kept at its default of 1.9, which means the 38 % and 61 % figures below are consequences of that slope choice, not of the 20 % observation.
+
+If you have size-stratified retrospective data — for example, you know that 8-point items spilled 35 % of the time — you can fit the slope directly by solving the logistic equation at two (size, probability) pairs. Otherwise, keep the default slope and treat probabilities for sizes far from the reference as order-of-magnitude estimates rather than precise predictions.
+
+Set `logistic_intercept` to `logit(0.20) = -1.386` and keep `logistic_slope` at its default:
+
+```yaml
+spillover:
+  enabled: true
+  model: logistic
+  size_reference_points: 5.0
+  logistic_intercept: -1.386    # sigmoid(-1.386) ≈ 20 % at x = r
+  logistic_slope: 1.9           # default; not derived from the 20 % figure
+```
+
+With these settings:
+
+| Item size (pts) | Spillover probability | Derivation |
+|---:|---:|---|
+| 2 | ≈ 4 % | $1.9 \cdot \ln(0.4) - 1.386 \Rightarrow p \approx 0.04$ |
+| **5 (reference)** | **20 %** | anchored by `logistic_intercept` |
+| 8 | ≈ 38 % | $1.9 \cdot \ln(1.6) - 1.386 \Rightarrow p \approx 0.38$ |
+| 13 | ≈ 61 % | $1.9 \cdot \ln(2.6) - 1.386 \Rightarrow p \approx 0.61$ — slope assumption |
+
+To verify a calibration before using it in production, compute $p(x)$ for a few representative item sizes by substituting your values of $s$, $b$, and $r$ into the formula above.
 
 ### `spillover.size_brackets[]` fields
 
@@ -763,6 +965,7 @@ sprint_planning:
   sickness:
     enabled: true
     # team_size falls back to project.team_size (6) if not set here
+!!! yaml-cbreak-b5    
   history:
     - sprint_id: "S1"
       completed_story_points: 10
@@ -1149,6 +1352,7 @@ The history path may be relative. Relative paths are resolved from the project f
     "committed_StoryPoints": "Sum of story points at sprint start",
     "completed_StoryPoints": "Sum of story points completed in sprint"
   },
+!!! json-cbreak-b5
   "sprints": [
     {
       "sprintUniqueID": "SPR-001",

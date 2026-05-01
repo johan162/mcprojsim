@@ -20,11 +20,22 @@
 
   .cover {
     position: relative;
-    width: 680px;
-    height: 960px;
+    /* B5 portrait at 300 DPI: 176mm x 250mm -> 2079 x 2953 px */
+    width: 2079px;
+    height: 2953px;
     background: #03060f;
     overflow: hidden;
     box-shadow: 0 0 120px rgba(0,180,255,0.15), 0 0 40px rgba(0,0,0,0.8);
+  }
+
+  .overlay-stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 680px;
+    height: 960px;
+    transform-origin: top left;
+    z-index: 1;
   }
 
   canvas#bg {
@@ -245,11 +256,16 @@
   /* MCProjSim program name */
   .program-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 5px;
-    color: rgba(0,200,255,0.55);
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: rgba(214, 244, 255, 0.96);
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    display: inline-block;
+    padding: 5px 10px;
+    border: 1px solid rgba(0,200,255,0.35);
+    background: rgba(0, 22, 48, 0.42);
+    box-shadow: 0 0 14px rgba(0,200,255,0.18);
   }
 
   .program-name {
@@ -297,11 +313,47 @@
 
   .book-about {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: 4px;
-    color: rgba(0,200,255,0.4);
+    color: rgba(0,200,255,0.62);
     text-transform: uppercase;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+  }
+
+  .guide-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    line-height: 1.03;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #f3f9ff;
+    margin-bottom: 16px;
+    text-shadow:
+      0 0 28px rgba(0, 200, 255, 0.44),
+      0 2px 0 rgba(0, 0, 0, 0.8);
+  }
+
+  .guide-title .accent {
+    color: #00e5ff;
+    text-shadow:
+      0 0 22px rgba(0,229,255,0.9),
+      0 0 70px rgba(0,229,255,0.35);
+  }
+
+  .content-shift {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(-130px);
+  }
+
+  .hero-copy {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 30px 0;
   }
 </style>
 </head>
@@ -310,6 +362,8 @@
 
   <!-- Background canvas: all distributions + particles -->
   <canvas id="bg"></canvas>
+
+  <div class="overlay-stage">
 
   <!-- Depth layers -->
   <div class="vignette"></div>
@@ -336,25 +390,28 @@
   <!-- Main content -->
   <div class="content">
     <div class="top-rule"></div>
-    <div class="series-label">Quantitative Methods Series &nbsp;·&nbsp; Vol. I</div>
+    <div class="series-label">User Documentation</div>
 
-    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 30px 0;">
+    <div class="content-shift">
+      <div class="hero-copy">
 
-      <!-- MCProjSim — hero program name -->
-      <div class="program-label">Program Reference &amp; User Guide</div>
-      <div class="program-name">
-        <span class="mc">MC</span><span class="proj">Proj</span><span class="sim">Sim</span>
-      </div>
-      <div class="program-underline"></div>
+        <!-- MCProjSim — hero program name -->
+        <div class="program-label">Program Reference &amp; User Guide</div>
+        <div class="program-name">
+          <span class="mc">MC</span><span class="proj">Proj</span><span class="sim">Sim</span>
+        </div>
+        <div class="program-underline"></div>
 
-      <!-- Book title below -->
-      <div class="book-about">A complete guide to</div>
-      <div class="main-title" data-text="MONTE">MONTE</div>
-      <div class="main-title" data-text="CARLO"><span class="highlight">CARLO</span></div>
-      <div class="subtitle">Estimation &amp; Simulation</div>
-      <div class="divider"></div>
-      <div class="tagline">
-        Probabilistic reasoning under uncertainty.<br>
+        <!-- Book title below -->
+        <!-- <div class="book-about">A complete guide to</div> -->
+        <div class="guide-title">User <span class="accent">Guide</span></div>
+        <div class="main-title" data-text="MONTE">MONTE</div>
+        <div class="main-title" data-text="CARLO"><span class="highlight">CARLO</span></div>
+        <div class="subtitle">Estimation &amp; Simulation</div>
+        <div class="divider"></div>
+        <div class="tagline">
+          Probabilistic reasoning under uncertainty.<br>
+        </div>
       </div>
     </div>
 
@@ -364,15 +421,30 @@
         FIRST EDITION<br>
         2026
       </div>
-    </div>
+      </div>
+  </div>
+
   </div>
 </div>
 
 <script>
 const canvas = document.getElementById('bg');
 const ctx = canvas.getContext('2d');
-canvas.width = 680;
-canvas.height = 960;
+const BASE_W = 680;
+const BASE_H = 960;
+
+// B5 portrait at 300 DPI (rounded to nearest integer pixel)
+const OUTPUT_W = 2079;
+const OUTPUT_H = 2953;
+
+const overlayStage = document.querySelector('.overlay-stage');
+overlayStage.style.transform = `scale(${OUTPUT_W / BASE_W}, ${OUTPUT_H / BASE_H})`;
+
+canvas.width = OUTPUT_W;
+canvas.height = OUTPUT_H;
+
+// Keep existing artwork coordinates by scaling from the original design grid.
+ctx.scale(OUTPUT_W / BASE_W, OUTPUT_H / BASE_H);
 
 // ─── Math helpers ───────────────────────────────────────────────────
 function normalPDF(x, mu=0, sigma=1) {
@@ -689,9 +761,9 @@ function drawLegend() {
   let lx = 62;
   for (const it of items) {
     ctx.fillStyle = it.col + 'cc';
-    ctx.fillRect(lx, 428, 18, 3);
+    ctx.fillRect(lx, 800, 18, 3);
     ctx.fillStyle = it.col + '99';
-    ctx.fillText(it.label, lx + 22, 431);
+    ctx.fillText(it.label, lx + 22, 805);
     lx += 110;
   }
   ctx.restore();

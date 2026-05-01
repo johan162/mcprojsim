@@ -4,14 +4,14 @@
 # to re-run certain tasks based on file changes.
 
 .PHONY: help dev install clean-venv reinstall run test test-short test-param test-html test-probabilistic \
-test-probabilistic-full lint format typecheck migrate init-db check \
+test-probabilistic-full test-statistical lint format typecheck migrate init-db check \
 pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples \
 figs docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart \
 docs-container-status docs-container-logs build container-build container-build-corporate container-build-public \
 container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all \
- black flake8 mypy pyright _check figs
+ black flake8 mypy pyright _check figs cover
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
 # NOTE: This requires GNU Make 4.3+ and MacOS ships with vGNU Make 3.81 due to licensing issues
@@ -150,10 +150,12 @@ COVERAGE := 80
 
 # Source and Test Files
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.py')
-TEST_FILES := $(shell find $(TEST_DIR) -name 'test_*.py')
+TEST_FILES := $(shell find $(TEST_DIR) -name '*.py' )
 MISC_FILES := pyproject.toml README.md mypy.ini .flake8
 LOCK_FILE := poetry.lock
 DOCKER_SRC_FILES := Dockerfile docker-compose.yml
+
+# $(info TEST_FILES: $(TEST_FILES))
 
 # Timestamp files
 STAMP_DIR := .makefile-stamps
@@ -237,7 +239,7 @@ $(PYRIGHT_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(TYPECHECK_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running type checker...$(NC)"
-	@if poetry run mypy src/ tests/ --strict; then \
+	@if poetry run mypy $(SRC_DIR) $(TEST_DIR) --strict; then \
 		echo -e "$(GREEN)✓ Mypy type checking passed$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Mypy type checking failed$(NC)"; \
@@ -263,7 +265,7 @@ $(BUILD_WHEEL) $(BUILD_SDIST): $(SRC_FILES) $(TEST_FILES) $(MISC_FILES)
 		exit 1; \
 	fi
 	@echo -e "$(DARKYELLOW)- Verifying packages with twine...$(NC)"
-	@if poetry run twine check dist/*; then \
+	@if poetry run twine check dist/*.whl dist/*.tar.gz; then \
 		echo -e "$(GREEN)✓ 📦 Package verification passed$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Package verification failed$(NC)"; \
@@ -320,7 +322,7 @@ help: ## Show this help message
 	@$(call print_section,Code Quality,check|lint|format|typecheck|pre-commit)
 	@$(call print_section,Testing,test|test-short|test-param|test-html|test-probabilistic|test-probabilistic-full)
 	@$(call print_section,Database,migrate|init-db)
-	@$(call print_section,Build & Documentation,build)
+	@$(call print_section,Build & Documentation,build|figs|cover|docs|pdf|pdfs|docs-serve)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
@@ -375,6 +377,15 @@ test-probabilistic-full: ## Run full probabilistic verification suite (slow, ~40
 		echo -e "$(GREEN)✓ Full probabilistic verification suite passed$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Full probabilistic verification suite failed$(NC)"; \
+		exit 1; \
+	fi
+
+test-statistical: ## Run end-to-end statistical validation tests (~90 s)
+	@echo -e "$(DARKYELLOW)- Running statistical validation tests...$(NC)"
+	@if poetry run pytest tests/test_statistical_validation/ --no-cov -v; then \
+		echo -e "$(GREEN)✓ Statistical validation tests passed (126 tests)$(NC)"; \
+	else \
+		echo -e "$(RED)✗ Error: Statistical validation tests failed$(NC)"; \
 		exit 1; \
 	fi
 
@@ -566,13 +577,14 @@ docs: ## Build the documentation site with MkDoc
 	@$(MAKE) -C $(DOCS_DIR)
 
 pdfs: ## Build the documentation site with MkDoc
-	@$(MAKE) -j 4 -C $(DOCS_DIR) pdf-docs pdf-api-ref
+	@$(MAKE) -j 8 -C $(DOCS_DIR) pdfs
 
 docs-serve: ## Serve the documentation site locally with live reload
 	@$(MAKE) -C $(DOCS_DIR) serve
 
 # ============================================================================================
-# Render PNG figures from HTML source
+# Render PNG figures from HTML source. These are figures used in the documentation and need 
+# to be rendered to PNG for embedding in the docs.
 # ============================================================================================
 FIG_SOURCES := $(wildcard assets/fig-*.html)
 FIG_TARGETS := $(patsubst assets/fig-%.html,assets/fig-%.png,$(FIG_SOURCES))
@@ -587,6 +599,25 @@ figs: $(FIG_TARGETS) ## Render PNG figures from HTML source
 $(FIG_TARGETS): assets/fig-%.png: assets/fig-%.html assets/fig-%.trim
 	@echo -e "$(DARKYELLOW)- Rendering figure $< to $@...$(NC)"
 	@./scripts/mkfigs.sh -q -s assets -o assets fig-$*
+	@./scripts/mkragged.sh  --raggedness 10  --blur 0.4  --micro-tears 15 -o  assets/fig-$*-rough.png $@
+	@echo -e "$(GREEN)✓ Figure $@ rendered successfully$(NC)"
+
+
+# ============================================================================================
+# Render Book Cover PNG figures from HTML source. These are the cover page for the
+# PDF documentation and need to be rendered to PNG for embedding in the PDF. 
+# They are separate from the regular figs because they have different styling and dimensions.
+# ============================================================================================
+COVER_SOURCES := $(wildcard assets/cover-*.html)
+COVER_TARGETS := $(patsubst assets/cover-%.html,assets/cover-%.png,$(COVER_SOURCES))
+COVER_TRIMS := $(patsubst assets/cover-%.html,assets/cover-%.trim,$(COVER_SOURCES))
+
+cover: $(COVER_TARGETS) ## Render book cover PNG figures from HTML source
+
+$(COVER_TARGETS): assets/cover-%.png: assets/cover-%.html assets/cover-%.trim
+	@echo -e "$(DARKYELLOW)- Rendering book cover figure $< to $@...$(NC)"
+	@./scripts/mkfigs.sh -q -s assets -o assets cover-$*
+	@echo -e "$(GREEN)✓ Cover $@ rendered successfully$(NC)"
 
 ### End of Makefile
 

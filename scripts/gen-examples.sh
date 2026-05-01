@@ -24,6 +24,25 @@
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
+BLACK='\033[0;30m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+
+DARKGRAY='\033[1;30m'
+BRIGHTRED='\033[1;31m'
+BRIGHTGREEN='\033[1;32m'
+DARKYELLOW='\033[0;33m'
+BRIGHTBLUE='\033[1;34m'
+BRIGHTMAGENTA='\033[1;35m'
+BRIGHTCYAN='\033[1;36m'
+LIGHTGRAY='\033[0;37m'
+NC='\033[0m'
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
@@ -151,7 +170,7 @@ wait_for_free_slot() {
     done
 }
 
-echo "Generating $OUTPUT from $TEMPLATE ..." >&2
+# echo "Generating $OUTPUT from $TEMPLATE ..." >&2
 
 RUN_DIR="$WORK_DIR/runs"
 mkdir -p "$RUN_DIR"
@@ -169,9 +188,9 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 done < "$TEMPLATE"
 
 if (( JOBS > 0 )); then
-    echo "PASS 1: executing ${#run_cmds[@]} unique run command(s) in parallel (jobs=$JOBS) ..." >&2
+    echo -e "${DARKYELLOW}  PASS 1: executing ${#run_cmds[@]} unique run command(s) in parallel (jobs=$JOBS) ...${NC}" >&2
 else
-    echo "PASS 1: executing ${#run_cmds[@]} unique run command(s) in parallel ..." >&2
+    echo -e "${DARKYELLOW}  PASS 1: executing ${#run_cmds[@]} unique run command(s) in parallel ...${NC}" >&2
 fi
 
 # Execute all unique run commands in parallel and cache outputs under .build
@@ -202,14 +221,14 @@ done
 
 for i in "${!run_cmds[@]}"; do
     if [[ -f "$RUN_DIR/$i.status" ]] && [[ "$(cat "$RUN_DIR/$i.status")" != "0" ]]; then
-        echo "  ⚠  non-zero exit: ${run_cmds[$i]}" >&2
+        echo -e "${BRIGHTRED}  ⚠  non-zero exit: ${run_cmds[$i]}${NC}" >&2
         run_failures=$((run_failures + 1))
     else
-        echo "  ✓ run:  ${run_cmds[$i]:0:72}…" >&2
+        echo -e "${DARKYELLOW}  ✓ run:  ${run_cmds[$i]:0:72}…${NC}" >&2
     fi
 done
 
-echo "PASS 2: rendering $OUTPUT ..." >&2
+echo -e "${DARKYELLOW}PASS 2: rendering $OUTPUT ...${NC}" >&2
 
 {
     # Auto-generated header
@@ -229,10 +248,10 @@ echo "PASS 2: rendering $OUTPUT ..." >&2
                 cat "$fpath"
                 echo '```'
                 file_count=$((file_count + 1))
-                echo "  ✓ file: $fpath" >&2
+                echo -e "${DARKYELLOW}  ✓ file: $fpath${NC}" >&2
             else
-                echo "<!-- ERROR: file not found: $fpath -->" 
-                echo "  ✗ file not found: $fpath" >&2
+                echo -e "${DARKRED}<!-- ERROR: file not found: $fpath -->${NC}" 
+                echo -e "${DARKRED}  ✗ file not found: $fpath${NC}" >&2
                 errors=$((errors + 1))
             fi
 
@@ -251,11 +270,11 @@ echo "PASS 2: rendering $OUTPUT ..." >&2
                 if [[ -f "$RUN_DIR/$cmd_idx.out" ]]; then
                     cat "$RUN_DIR/$cmd_idx.out"
                 else
-                    echo "<!-- ERROR: missing cached output for run command -->"
+                    echo -e "${DARKRED}<!-- ERROR: missing cached output for run command -->${NC}"
                     errors=$((errors + 1))
                 fi
             else
-                echo "<!-- ERROR: run command not found in pass 1 cache -->"
+                echo -e "${DARKRED}<!-- ERROR: run command not found in pass 1 cache -->${NC}"
                 errors=$((errors + 1))
             fi
             echo '```'
@@ -270,8 +289,8 @@ echo "PASS 2: rendering $OUTPUT ..." >&2
 } > "$OUTPUT"
 
 echo "" >&2
-echo "✓ Generated $OUTPUT  (files: $file_count, runs: $run_count, errors: $errors, run_failures: $run_failures)" >&2
+echo -e "${BRIGHTGREEN}✓ Generated $OUTPUT  (files: $file_count, runs: $run_count, errors: $errors, run_failures: $run_failures)${NC}" >&2
 if (( errors > 0 )); then
-    echo "⚠  There were $errors error(s) — review the output for <!-- ERROR --> comments." >&2
+    echo -e "${BRIGHTRED}⚠  There were $errors error(s) — review the output for <!-- ERROR --> comments.${NC}" >&2
     exit 1
 fi

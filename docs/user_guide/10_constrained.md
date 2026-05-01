@@ -346,7 +346,7 @@ project:
   name: "Onboarding Portal"
   start_date: "2026-04-01"
   hours_per_day: 8
-
+!!! yaml-cbreak-b5
 tasks:
   - id: "task_001"
     name: "Requirements"
@@ -408,8 +408,6 @@ Because `max_resources` defaults to `1`, each task in Example 2 is effectively a
 - `experience_level` on each resource is matched against task `min_experience_level` (default task minimum is `1`).
 - `productivity_level` affects effective capacity, so two resources with different productivity can produce different calendar durations even for the same effort.
 
-\newpage 
-
 ### Making assignment explicit (optional)
 
 If you want explicit control instead of automatic pooling, set `tasks[*].resources`:
@@ -465,7 +463,7 @@ project:
   name: "Onboarding Portal"
   start_date: "2026-04-01"
   hours_per_day: 8
-
+ 
 tasks:
   - id: "task_001"
     name: "Requirements"
@@ -484,7 +482,7 @@ resources:
     calendar: "part_time"
     experience_level: 2
     productivity_level: 0.9
-
+!!! text-cbreak-b5
 calendars:
   - id: "default"
     work_hours_per_day: 8
@@ -498,8 +496,6 @@ calendars:
 ```
 
 This introduces calendar-driven delays automatically (weekends, holidays, shorter days).
-
-\newpage
 
 Sample output excerpt (seed `42`, `200` iterations):
 
@@ -628,8 +624,6 @@ tasks:
 This is the first point in the walkthrough where `max_resources` is actively overridden above the default (`1`) to allow multi-resource task execution.
 
 
-\newpage
-
 ## Example 6: Full constrained project (final build-up)
 
 This example combines core project fields, risks, uncertainty factors, resource constraints, calendars, absences, and sickness.
@@ -658,7 +652,6 @@ tasks:
     uncertainty_factors:
       team_experience: medium
       technical_complexity: medium
-
   - id: "task_002"
     name: "Core implementation"
     estimate: { low: 80, expected: 120, high: 180 }
@@ -666,15 +659,13 @@ tasks:
     resources: ["alice", "bob", "carol"]
     max_resources: 2
     min_experience_level: 2
+!!! yaml-cbreak-b5
     risks:
       - id: "risk_rework"
         name: "Unexpected rework"
         probability: 0.25
         impact: 24
         impact_unit: "hours"
-```
-
-```yaml
   - id: "task_003"
     name: "Migration"
     estimate: { low: 40, expected: 64, high: 96 }
@@ -711,7 +702,7 @@ resources:
     productivity_level: 0.9
     sickness_prob: 0.04
     planned_absence: ["2026-06-01", "2026-06-02"]
-
+!!! yaml-cbreak-b5
 calendars:
   - id: "default"
     work_hours_per_day: 8
@@ -777,7 +768,6 @@ Notes:
 - `--pass1-iterations` is capped to total simulation iterations.
 - If `pass1_iterations` is small, criticality ranking may be noisy.
 
-\newpage
 
 ## CLI options most relevant to constrained runs
 

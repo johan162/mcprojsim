@@ -34,14 +34,13 @@ project:
   name: "New feature launch"
   start_date: "2026-04-13"
   confidence_levels: [50, 80, 90, 95]
-
+!!! yaml-cbreak-b5    
 tasks:
   - id: "task_001"
     name: "Design database schema ()"
     estimate:
       t_shirt_size: "M"
     dependencies: []
-
   - id: "task_002"
     name: "Implement backend REST API (probably"
     estimate:
@@ -50,7 +49,6 @@ tasks:
       high: 4
       unit: "days"
     dependencies: ["task_001"]
-
   - id: "task_003"
     name: "UI design"
     estimate:
@@ -59,7 +57,6 @@ tasks:
       high: 5
       unit: "weeks"
     dependencies: []
-
   - id: "task_004"
     name: "Frontend integration testing ()"
     estimate:
@@ -68,19 +65,17 @@ tasks:
       high: 5.4
       unit: "weeks"
     dependencies: []
-
   - id: "task_005"
     name: "Deployment and smoke tests ()"
     estimate:
       t_shirt_size: "S"
     dependencies: ["task_002", "task_003", "task_004"]
-
   - id: "task_006"
     name: "Post-launch monitoring ()"
     estimate:
       t_shirt_size: "L"
     dependencies: ["task_005"]
-
+!!! yaml-cbreak-b5
   - id: "task_007"
     name: "Delivery report"
     estimate:
@@ -158,7 +153,6 @@ Task 3: QA and testing
 
 **Separators** between keyword and value can be `:`, `.`, `=`, or a space. All are equivalent and case-insensitive.
 
----
 
 ## Auto-detected task lists
 
@@ -228,7 +222,6 @@ Indented lines under an auto-detected task are treated as bullet properties, exa
   Estimate: 3/5/10 days
 ```
 
----
 
 ## Inline properties on task lines
 
@@ -356,7 +349,6 @@ Multiple inline properties can appear on the same line:
 
 This sets both the T-shirt size and the estimate range.
 
----
 
 ## T-shirt size aliases
 
@@ -373,7 +365,6 @@ The parser normalizes many size labels to the six canonical sizes:
 
 Matching is case-insensitive.
 
----
 
 ## Complete examples
 
@@ -431,7 +422,6 @@ Start date: 2026-07-01
 Project name: Auth Service Rewrite
 Description: Replace legacy auth with OAuth2/OIDC
 Start date: 2026-08-01
-
 1. Evaluate identity providers 2–4 days
 2. Design token flow and session management [M]
   Depends on Task 1
@@ -439,6 +429,7 @@ Start date: 2026-08-01
   Depends on Task 2
 4. Migrate user database (L)
   Depends on Task 2
+!!! yaml-cbreak-b5
 5. Integration testing [L]
   Depends on Task 3, Task 4
 6. Security audit, assume M
@@ -490,13 +481,11 @@ Starting in 2 weeks
 - Rollout verification roughly 6 hours
 ```
 
----
 
 ## Resources, calendars, and sprint planning
 
 These sections use the same structured format regardless of whether tasks use explicit headers or auto-detection. See the [MCP Server](16_mcp-server.md#natural-language-input-format) page and the [API reference](../api_reference/10_nl_parser.md) for full details on resource, calendar, and sprint planning input patterns.
 
----
 
 ## Mixing estimation methods
 
@@ -512,14 +501,13 @@ Different tasks can use different estimation methods within the same project:
 
 The parser handles this correctly, and `mcprojsim` resolves each estimate type using the appropriate configuration mapping at simulation time.
 
----
 
 ## What is NOT supported in NL input
 
-- **Uncertainty factors** — add these to the YAML after generation
-- **Project-level risks** — add manually to YAML
-- **Circular dependency detection** — caught later by `mcprojsim validate`
-- **Volatility-overlay and spillover calibration** — edit directly in YAML
+- **Uncertainty factors**, add these manually to the YAML 
+- **Project-level risks**, add these manually to the YAML
+- **Circular dependency detection**,  caught later by `mcprojsim validate`
+- **Volatility-overlay and spillover calibration**, edit directly in YAML
 - Mixing `Task N:` headers and auto-detected lists in the same description
 
 \newpage

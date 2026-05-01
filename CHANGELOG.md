@@ -1,4 +1,40 @@
+## [v0.15.2] - 2026-05-01
+
+Release Type: patch
+
+### 📋 Summary
+
+This release hardens the documentation build pipeline, improves PDF rendering quality across all variants, adds a comprehensive statistical test suite, and fixes compatibility issues on Linux. No user-visible simulation behavior changes are included.
+
+### 🐛 Bug Fixes
+
+- Fixed bash compatibility issue in Linux environments when running build scripts
+- Fixed `verify_setup` script to correctly support both macOS and Linux
+- Fixed console output coloring in the example generator script
+- Fixed page-break syntax conflict between HTML docs generation and PDF rendering
+
+### 📚 Documentation
+
+- Added detailed explanation of spillover calculation and modelling
+- Updated User Guide with optimised B5 layout and manual page-breaks
+- Added log-normal parameter derivation section to documentation
+- Added Python installation instructions to the User Guide
+- Improved PDF rendering with 10pt base size, manual B5 page-breaks, duplex printing support, modern chapter layout, and short TOC in brand blue all-caps
+
+
+### 🛠 Internal
+
+- Extended requirements document to match the current implementation
+- Improved PDF build progress messages to display filenames and more detailed step descriptions
+- Moved requirements document to `design-ideas/` and added a rendered PDF version
+- Added `mkragged.sh` script for generating deckled and torn-edge image effects
+- Added comprehensive statistical test suite covering distribution and simulation output properties
+- Refactored cover and figure generation scripts for cleaner separation of concerns
+- Parallel PDF build runners and clean-build-dir logic added to Makefile to prevent stale LaTeX artifacts
+- Updated coverage badge and regenerated examples with latest program output
+
 ## [v0.15.1] - 2026-04-23
+
 
 Release Type: patch
 

@@ -1,4 +1,4 @@
-\documentclass[11pt,a4paper]{report}
+\documentclass[10pt,a4paper]{report}
 
 \usepackage{fontspec}
 %% \setmainfont{DejaVu Serif}
@@ -20,6 +20,7 @@
 \usepackage{fancyvrb}
 \usepackage{xcolor}
 \usepackage{shorttoc}
+\usepackage{titlesec}
 \definecolor{codebg}{HTML}{404040}
 \definecolor{codeborder}{HTML}{C0C0C0}
 \fvset{fontsize=\small}
@@ -60,10 +61,21 @@
 % Pandoc 3.x may wrap images with \pandocbounded{...}.
 \providecommand{\pandocbounded}[1]{#1}
 
-\definecolor{brandblue}{HTML}{0E5AAD}
+\definecolor{brandblue}{HTML}{129ADD}
 \definecolor{brandgray}{HTML}{6B7583}
 \definecolor{lightorange}{HTML}{FFA500}
 \definecolor{darkorange}{HTML}{FF8C00}
+
+% Modern chapter heading: accent rule + title + full-width rule
+\titleformat{\chapter}[display]
+  {\normalfont\sffamily}
+  {%
+    \color{brandblue}\rule{1.5cm}{3pt}\hspace{6pt}%
+    {\large\bfseries\color{brandblue} CHAPTER\ \thechapter}%
+  }
+  {8pt}
+  {\Huge\bfseries\color{brandblue}}
+  [\vspace{4pt}{\color{brandblue}\noindent\rule{\linewidth}{1.5pt}}\vspace{2pt}]
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -79,27 +91,81 @@
 
 \begin{document}
 
+% Cover verso / imprint page.
+% A bare \newpage does not ship out an empty page; TeX needs actual content.
+{%
+  \thispagestyle{empty}%
+  \null\vfill
+  {\small\color{brandgray}%
+  \textbf{MCProjSim User Guide}\\
+  Version \texttt{v0.15.1}\\
+  Copyright \textcopyright\ Johan Persson\\
+  Generated on \today\\
+   Prepared with \LaTeX\ from Markdown sources for duplex printing. 
+  Sources for documentation available at\\ 
+  \url{https://github.com/johan162/mcprojsim/docs}. 
+  \par}%
+  % \vfill\null
+  \clearpage
+}
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
 \begin{titlepage}
   \centering
   \vspace*{2.0cm}
   {\Huge\bfseries\color{lightorange}User Guide\par}
   \vspace{1.2cm}
-  {\Large \texttt{mcprojsim}, v0.15.1\par}
+  {\Large \texttt{mcprojsim}, v0.15.2\par}
   \vspace{1.2cm}
   {\Large Monte Carlo Project Simulation\par}
   \vfill
   {\large Johan Persson \texttt{<johan162@gmail.com>}\par}
   {\large Generated on \today\par}
 \end{titlepage}
+
+% Ensure exactly one blank page after title before short TOC.
+% Locally downgrade chapter's openright behavior inside shorttoc.
+\clearpage
+\thispagestyle{empty}\null\clearpage
+\begingroup
+\let\cleardoublepage\clearpage
+
 % --- SHORT TOC ---
 % Command: \shorttoc{Title}{Depth}
 % Depth 0 = Chapters, 1 = Chapters + Sections, etc.
-\shorttoc{Chapters}{0} 
+\newcommand{\shorttocentry}[1]{%
+  {\makeatletter
+  \renewcommand{\numberline}[1]{\makebox[4.5em][l]{##1}}%
+  \MakeUppercase{#1}%
+  \makeatother}%
+}
+{%
+  \renewcommand{\contentsname}{Chapters}%
+  % Reduce top whitespace on short TOC page so all chapter entries fit.
+  \titlespacing*{\chapter}{0pt}{0pt}{0.8em}%
+  \makeatletter
+  \renewcommand{\l@chapter}[2]{%
+    \addvspace{5pt}%
+    \noindent{%
+      \sffamily\bfseries\large\color{brandblue}\shorttocentry{#1}%
+      \hfill{\normalsize\mdseries\color{brandgray}#2}%
+    }\par%
+  }%
+  \makeatother
+  \shorttoc{Chapters}{0}%
+}
+\endgroup
 \cleardoublepage
+
+
 
 \tableofcontents
 \cleardoublepage
 
+\pagenumbering{arabic}
+\setcounter{page}{1}
 
 %%__USER_GUIDE_CONTENT__%%
 

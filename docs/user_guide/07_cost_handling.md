@@ -22,7 +22,7 @@ A `default_hourly_rate: 0` alone does **not** activate cost — zero rate produc
 labor cost, so there is nothing to report.  But `hourly_rate: 0` on a named resource
 *does* activate it (an explicit zero is different from "not set").
 
----
+
 
 ## Project-level cost fields
 
@@ -67,7 +67,7 @@ cost figures.  It is **not** used for conversion — it is purely cosmetic.
 - If omitted, falls back to the `currency` setting in your [configuration file](14_configuration.md)
   (default: `EUR`)
 
----
+
 
 ## Per-resource hourly rates
 
@@ -88,7 +88,7 @@ that resource.  If a task is assigned to multiple resources the engine uses the
 **mean** of their rates as a Phase 1 simplifying assumption (see
 [Known limitations](#known-limitations) below).
 
----
+
 
 ## Per-task fixed costs
 
@@ -110,7 +110,7 @@ tasks:
   rebates** (e.g. a committed-spend discount or an early-delivery bonus)
 - Fixed costs are included in total cost but are **not** subject to `overhead_rate`
 
----
+
 
 ## Risk cost impacts
 
@@ -124,12 +124,10 @@ risks:
     probability: 0.25
     impact: 5           # +5 hours schedule impact when triggered
     cost_impact: 4000   # +€4,000 cost impact when triggered
-
   - name: Early sign-off bonus
     probability: 0.20
     impact: -8          # saves 8 hours
     cost_impact: -1500  # saves €1,500
-
   - name: Compliance audit fee
     probability: 0.10
     impact: 0           # no schedule impact
@@ -162,7 +160,7 @@ project_risks:
     cost_impact: 50000     # emergency vendor replacement
 ```
 
----
+
 
 ## Full project example
 
@@ -192,7 +190,7 @@ tasks:
         probability: 0.30
         impact: 8
         cost_impact: 1500
-
+!!! yaml-cbreak-b5
   - id: backend
     name: Backend Implementation
     estimate: { low: 60, expected: 100, high: 160 }
@@ -207,7 +205,7 @@ tasks:
     fixed_cost: 500     # cloud provisioning fee
 ```
 
----
+
 
 ## Running a simulation with cost
 
@@ -222,7 +220,7 @@ mcprojsim simulate project.yaml --target-budget 40000
 mcprojsim simulate project.yaml -f json --full-cost-detail
 ```
 
----
+
 
 ## Reading cost output
 
@@ -257,7 +255,7 @@ When cost estimation is active, `mcprojsim` computes a **Spearman rank correlati
 between each task's cost contribution and the total project cost.  High-correlation
 tasks are the biggest cost drivers.
 
----
+
 
 ## Budget confidence analysis
 
@@ -287,7 +285,7 @@ budget_90 = results.budget_for_confidence(0.90)
 point, lo, hi = results.budget_confidence_interval(45000, confidence_level=0.80)
 ```
 
----
+
 
 ## Cost in exported reports
 
@@ -302,6 +300,7 @@ The cost section appears under `"cost"` in the JSON output:
   "std_dev": 6200.0,
   "percentiles": { "50": 35800.0, "80": 41900.0, "90": 46200.0, "95": 49800.0 },
   "overhead_rate": 0.18,
+!!! json-cbreak-b5  
   "task_costs": {
     "design": { "mean": 4200.0, "p50": 4050.0, "p90": 5800.0 },
     "backend": { "mean": 28100.0, "p50": 27500.0, "p90": 34200.0 },
@@ -333,7 +332,7 @@ The HTML report gains:
   probability gauge, percentile table, and cost CDF S-curve chart
 - A **Cost Sensitivity** table ranking tasks by their cost correlation
 
----
+
 
 ## Configuration defaults
 
@@ -352,7 +351,7 @@ cost:
 output, but does **not** suppress the underlying computation — budget methods
 on `SimulationResults` still return values.
 
----
+
 
 ## Natural-language input
 
@@ -411,7 +410,7 @@ Currency: EUR
 Resource 1: Alice
 - Experience: 3
 - Rate: €200/hour
-
+!!! json-cbreak-b5  
 Task 1:
 - API Design
 - Size: M
@@ -434,7 +433,7 @@ See `examples/cost_nl_prose_example.txt`, `examples/cost_nl_example.txt`, and
 `examples/cost_nl_risk_example.txt` for full natural-language examples with cost
 and risk definitions.
 
----
+
 
 ## Secondary currencies and FX conversion
 
@@ -663,7 +662,7 @@ tasks:
 mcprojsim simulate project.yaml --target-budget 45000
 ```
 
----
+
 
 ## Known limitations
 
@@ -683,7 +682,7 @@ full 32 hours in parallel the true cost is `32×100 + 32×200 = €9,600`.
 This limitation will be addressed in a future release with explicit effort
 tracking per resource.
 
----
+
 
 ## Example files
 

@@ -14,7 +14,7 @@ mcprojsim simulate --seed 42 examples/sample_project.yaml
 
 produces the full output seen below. The sections are explained in detail in the following parts of this chapter.
 
-{{!mcprojsim simulate --seed 42 --noheader examples/sample_project.yaml@B5:19:41*,A4:20*,L}}
+{{!mcprojsim simulate --seed 42 --noheader examples/sample_project.yaml@B5:17:42*,A4:10*,L}}
 
 Every number here comes from simulating your project thousands of times with different random samples. The results describe the *distribution* of outcomes, not a single prediction.
 
@@ -24,7 +24,7 @@ The sections below explain each part of this output in detail.
 
 Several `simulate` flags change which sections are printed:
 
-| Flag | Effect on output |
+| Flag | Effect on output | 
 |------|------------------|
 | `--minimal` | Shows only core overview and confidence intervals; omits detailed analyses (sensitivity, slack, risk impact, etc.) |
 | `--table` | Renders sections as ASCII tables instead of plain text lines |

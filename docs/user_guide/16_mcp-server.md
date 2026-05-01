@@ -570,7 +570,7 @@ tasks:
     estimate:
       story_points: 13
     dependencies: ["task_001"]
-
+!!! yaml-cbreak-b5
   - id: "task_004"
     name: "Integration testing"
     estimate:
@@ -641,7 +641,7 @@ tasks:
       high: 32
       unit: "hours"
     dependencies: ["task_002"]
-
+!!! yaml-cbreak-b5
   - id: "task_004"
     name: "Production cutover"
     estimate:
@@ -707,7 +707,7 @@ project:
   name: "Platform Upgrade"
   start_date: "2026-08-01"
   confidence_levels: [50, 80, 90, 95]
-
+!!! yaml-cbreak-b5
 tasks:
   - id: "task_001"
     name: "Upgrade framework"
