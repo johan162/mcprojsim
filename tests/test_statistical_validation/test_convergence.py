@@ -11,15 +11,11 @@ from __future__ import annotations
 import math
 
 import numpy as np
-import pytest
 from scipy import stats
 
 from mcprojsim.models.project import DistributionType
 
 from .conftest import (
-    N_ITERATIONS,
-    assert_mean_within_ci,
-    chain_project,
     run_sim,
     single_task_project,
     triangular_mean,
@@ -34,10 +30,10 @@ class TestConvergenceOfMean:
         """Mean error decreases approximately as 1/√N."""
         low, mode, high = 10.0, 25.0, 50.0
         true_mean = triangular_mean(low, mode, high)
-        true_var = triangular_variance(low, mode, high)
-        true_se_fn = lambda n: math.sqrt(true_var / n)
 
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
 
         iteration_counts = [100, 500, 2000, 10000, 50000]
         errors = []
@@ -59,8 +55,9 @@ class TestConvergenceOfMean:
         """SE = σ/√N should predict the actual estimation error magnitude."""
         low, mode, high = 5.0, 20.0, 40.0
         true_var = triangular_variance(low, mode, high)
-        true_mean = triangular_mean(low, mode, high)
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
 
         # Run many independent replications and check SE
         n = 10_000
@@ -88,7 +85,9 @@ class TestCLTNormality:
     def test_mean_distribution_normal(self):
         """Distribution of sample means across replications is approximately normal."""
         low, mode, high = 8.0, 20.0, 45.0
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
 
         n = 5000
         n_replications = 50
@@ -101,9 +100,7 @@ class TestCLTNormality:
         # With 50 replications, Shapiro-Wilk is appropriate
         stat, p_value = stats.shapiro(sample_means)
         # We don't need p > 0.05 strictly, but it shouldn't be extremely small
-        assert p_value > 0.01, (
-            f"Sample means not normal: Shapiro-Wilk p={p_value:.4f}"
-        )
+        assert p_value > 0.01, f"Sample means not normal: Shapiro-Wilk p={p_value:.4f}"
 
 
 class TestConfidenceIntervalCoverage:
@@ -113,7 +110,9 @@ class TestConfidenceIntervalCoverage:
         """A 95% CI should contain the true mean ~95% of the time."""
         low, mode, high = 10.0, 25.0, 50.0
         true_mean = triangular_mean(low, mode, high)
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
 
         n = 5000
         n_replications = 200
@@ -145,7 +144,9 @@ class TestConfidenceIntervalCoverage:
         """A 99% CI should contain the true mean ~99% of the time."""
         low, mode, high = 5.0, 15.0, 35.0
         true_mean = triangular_mean(low, mode, high)
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
 
         n = 5000
         n_replications = 200
@@ -166,9 +167,9 @@ class TestConfidenceIntervalCoverage:
 
         coverage_rate = coverage_count / n_replications
         # Should be ≥ 97% (allowing some slack for discrete N)
-        assert coverage_rate >= 0.96, (
-            f"99% CI coverage = {coverage_rate*100:.1f}% ({coverage_count}/{n_replications})"
-        )
+        assert (
+            coverage_rate >= 0.96
+        ), f"99% CI coverage = {coverage_rate*100:.1f}% ({coverage_count}/{n_replications})"
 
 
 class TestVarianceConvergence:
@@ -178,7 +179,9 @@ class TestVarianceConvergence:
         """Sample variance (ddof=1) is unbiased for the population variance."""
         low, mode, high = 10.0, 30.0, 60.0
         true_var = triangular_variance(low, mode, high)
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
 
         n = 10_000
         n_replications = 30

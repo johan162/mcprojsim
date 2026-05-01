@@ -10,10 +10,7 @@ a tiny spread (±0.001) to simulate near-deterministic behavior.
 
 from __future__ import annotations
 
-from datetime import date
-
 import numpy as np
-import pytest
 
 from mcprojsim.config import EffortUnit
 from mcprojsim.models.project import (
@@ -24,7 +21,7 @@ from mcprojsim.models.project import (
     TaskEstimate,
 )
 
-from .conftest import N_ITERATIONS, START_DATE, run_sim
+from .conftest import START_DATE, run_sim
 
 # Use tiny spread to simulate near-deterministic behavior
 # numpy.random.triangular requires left < right
@@ -50,9 +47,7 @@ class TestNearDeterministicSingleTask:
                 hours_per_day=8.0,
                 distribution=DistributionType.TRIANGULAR,
             ),
-            tasks=[
-                Task(id="t1", name="Task 1", estimate=_det_estimate(24.0))
-            ],
+            tasks=[Task(id="t1", name="Task 1", estimate=_det_estimate(24.0))],
         )
         results = run_sim(project, iterations=1000, seed=99)
 
@@ -90,7 +85,9 @@ class TestNearDeterministicSingleTask:
         results = run_sim(project, iterations=500)
         expected_total = sum(durations)  # 100 hours
 
-        assert np.all(np.abs(results.durations - expected_total) <= len(durations) * EPS)
+        assert np.all(
+            np.abs(results.durations - expected_total) <= len(durations) * EPS
+        )
         assert abs(results.mean - expected_total) < len(durations) * EPS
 
     def test_near_deterministic_parallel_max(self):
@@ -243,6 +240,8 @@ class TestNearDeterministicEffort:
         expected_effort = sum(durations)  # 60 hours total work
 
         # Effort should be approximately the sum (parallel tasks still take individual effort)
-        assert np.all(np.abs(results.effort_durations - expected_effort) <= len(durations) * EPS)
+        assert np.all(
+            np.abs(results.effort_durations - expected_effort) <= len(durations) * EPS
+        )
         # Elapsed duration ≈ max(parallel tasks) = 30
         assert np.all(np.abs(results.durations - max(durations)) <= EPS)

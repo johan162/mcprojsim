@@ -12,13 +12,8 @@ of the project-level duration distribution shape.
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
-import pytest
 from scipy import stats
-
-from mcprojsim.models.project import DistributionType
 
 from .conftest import (
     ALPHA,
@@ -74,7 +69,9 @@ class TestSequentialAdditivity:
         results = run_sim(project, iterations=N_ITERATIONS, seed=3)
 
         expected_var = sum(triangular_variance(*e) for e in estimates)
-        assert_variance_within_ci(results.durations, expected_var, label="Chain variance")
+        assert_variance_within_ci(
+            results.durations, expected_var, label="Chain variance"
+        )
 
 
 class TestParallelMaxStatistic:
@@ -101,14 +98,14 @@ class TestParallelMaxStatistic:
         results = run_sim(project, iterations=N_ITERATIONS, seed=5)
 
         # Cross-check: manually sample max of two triangular RVs
-        rng = np.random.RandomState(5)
-        # Engine uses same seed → we replicate the sampling
-        # Instead, verify the property: E[max(X,Y)] > E[X] for iid X,Y
+        # Verify the property: E[max(X,Y)] > E[X] for iid X,Y
         single_project = single_task_project(low, mode, high)
         single_results = run_sim(single_project, iterations=N_ITERATIONS, seed=5)
 
         # Mean of max must exceed mean of single (strictly for non-degenerate dist)
-        assert float(np.mean(results.durations)) > float(np.mean(single_results.durations))
+        assert float(np.mean(results.durations)) > float(
+            np.mean(single_results.durations)
+        )
 
     def test_parallel_dominated_task_irrelevant(self):
         """If one task dominates all others (stochastically), it determines duration."""
@@ -174,14 +171,13 @@ class TestDiamondTopology:
 
         # B and C should be critical approximately equally
         freq_b = results.critical_path_frequency["B"]
-        freq_c = results.critical_path_frequency["C"]
         total = results.iterations
 
         # Each should be ~50% (binomial test)
         result_b = stats.binomtest(freq_b, total, 0.5)
-        assert result_b.pvalue > ALPHA, (
-            f"B criticality {freq_b}/{total} not ≈ 50%: p={result_b.pvalue:.2e}"
-        )
+        assert (
+            result_b.pvalue > ALPHA
+        ), f"B criticality {freq_b}/{total} not ≈ 50%: p={result_b.pvalue:.2e}"
 
     def test_diamond_asymmetric_dominant_branch(self):
         """When B >> C, B is critical in nearly all iterations."""

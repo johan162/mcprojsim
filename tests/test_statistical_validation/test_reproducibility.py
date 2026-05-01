@@ -9,7 +9,6 @@ Verify that:
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from mcprojsim.models.project import DistributionType
 
@@ -42,11 +41,15 @@ class TestSeedDeterminism:
         results2 = run_sim(project, iterations=10_000, seed=99)
 
         for tid in ["t1", "t2"]:
-            assert np.array_equal(results1.task_durations[tid], results2.task_durations[tid])
+            assert np.array_equal(
+                results1.task_durations[tid], results2.task_durations[tid]
+            )
 
     def test_different_seeds_different_results(self):
         """Different seeds produce statistically different results."""
-        project = single_task_project(5.0, 20.0, 50.0, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            5.0, 20.0, 50.0, distribution=DistributionType.TRIANGULAR
+        )
         results1 = run_sim(project, iterations=10_000, seed=1)
         results2 = run_sim(project, iterations=10_000, seed=2)
 
@@ -55,7 +58,9 @@ class TestSeedDeterminism:
 
     def test_seed_independence_from_iteration_count(self):
         """First K iterations with seed S are identical whether N=K or N>K."""
-        project = single_task_project(10.0, 30.0, 60.0, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            10.0, 30.0, 60.0, distribution=DistributionType.TRIANGULAR
+        )
         results_short = run_sim(project, iterations=1000, seed=77)
         results_long = run_sim(project, iterations=5000, seed=77)
 
@@ -68,7 +73,9 @@ class TestStatisticalIndependence:
 
     def test_no_autocorrelation_in_durations(self):
         """Lag-1 autocorrelation of project durations should be ≈ 0."""
-        project = single_task_project(5.0, 20.0, 50.0, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            5.0, 20.0, 50.0, distribution=DistributionType.TRIANGULAR
+        )
         results = run_sim(project, iterations=N_ITERATIONS, seed=400)
 
         # Compute lag-1 autocorrelation
@@ -79,7 +86,9 @@ class TestStatisticalIndependence:
 
         # Should be very close to 0 (within statistical noise)
         # For N=50000, the standard error of r under H0 is ~1/√N ≈ 0.0045
-        assert abs(correlation) < 0.02, f"Lag-1 autocorrelation = {correlation:.6f}, expected ≈ 0"
+        assert (
+            abs(correlation) < 0.02
+        ), f"Lag-1 autocorrelation = {correlation:.6f}, expected ≈ 0"
 
     def test_no_trend_in_iterations(self):
         """No systematic trend across iterations (first half ≈ second half)."""
@@ -112,13 +121,15 @@ class TestStatisticalIndependence:
             for j in range(i + 1, 3):
                 ti = f"t{i+1}"
                 tj = f"t{j+1}"
-                corr = float(np.corrcoef(
-                    results.task_durations[ti],
-                    results.task_durations[tj],
-                )[0, 1])
-                assert abs(corr) < 0.02, (
-                    f"Tasks {ti},{tj} correlated: r={corr:.4f}, expected ≈ 0"
+                corr = float(
+                    np.corrcoef(
+                        results.task_durations[ti],
+                        results.task_durations[tj],
+                    )[0, 1]
                 )
+                assert (
+                    abs(corr) < 0.02
+                ), f"Tasks {ti},{tj} correlated: r={corr:.4f}, expected ≈ 0"
 
 
 class TestReproducibilityAcrossProjects:

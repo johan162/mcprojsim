@@ -13,12 +13,10 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from scipy import stats
 
 from mcprojsim.models.project import DistributionType
 
 from .conftest import (
-    ALPHA,
     N_ITERATIONS,
     N_ITERATIONS_HEAVY,
     assert_mean_within_ci,
@@ -48,7 +46,9 @@ class TestTriangularMoments:
     )
     def test_mean(self, low: float, mode: float, high: float):
         """Sample mean matches (low + mode + high) / 3."""
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
         results = run_sim(project, iterations=N_ITERATIONS, seed=77)
         samples = results.task_durations["t1"]
 
@@ -66,7 +66,9 @@ class TestTriangularMoments:
     )
     def test_variance(self, low: float, mode: float, high: float):
         """Sample variance matches triangular variance formula."""
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
         results = run_sim(project, iterations=N_ITERATIONS, seed=88)
         samples = results.task_durations["t1"]
 
@@ -76,7 +78,9 @@ class TestTriangularMoments:
     def test_bounds_respected(self):
         """All samples must be within [low, high]."""
         low, mode, high = 5.0, 15.0, 40.0
-        project = single_task_project(low, mode, high, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            low, mode, high, distribution=DistributionType.TRIANGULAR
+        )
         results = run_sim(project, iterations=N_ITERATIONS, seed=100)
         samples = results.task_durations["t1"]
 
@@ -106,7 +110,9 @@ class TestLognormalMoments:
         samples = results.task_durations["t1"]
 
         expected = lognormal_mean(low, expected_val, high)
-        assert_mean_within_ci(samples, expected, label=f"LN({low},{expected_val},{high})")
+        assert_mean_within_ci(
+            samples, expected, label=f"LN({low},{expected_val},{high})"
+        )
 
     @pytest.mark.parametrize(
         "low,expected_val,high",
@@ -189,7 +195,12 @@ class TestProjectDurationMoments:
         """Effort (person-hours) mean = sum of task means for any DAG."""
         from .conftest import diamond_project
 
-        a, b, c, d = (5.0, 10.0, 20.0), (10.0, 20.0, 40.0), (8.0, 15.0, 30.0), (3.0, 6.0, 12.0)
+        a, b, c, d = (
+            (5.0, 10.0, 20.0),
+            (10.0, 20.0, 40.0),
+            (8.0, 15.0, 30.0),
+            (3.0, 6.0, 12.0),
+        )
         project = diamond_project(a, b, c, d, distribution=DistributionType.TRIANGULAR)
         results = run_sim(project, iterations=N_ITERATIONS, seed=42)
 

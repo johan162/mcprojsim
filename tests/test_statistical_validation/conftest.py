@@ -12,7 +12,6 @@ from datetime import date
 from typing import Callable
 
 import numpy as np
-import pytest
 from scipy import stats
 
 from mcprojsim.config import Config, EffortUnit
@@ -21,7 +20,6 @@ from mcprojsim.models.project import (
     Project,
     ProjectMetadata,
     Risk,
-    RiskImpact,
     Task,
     TaskEstimate,
 )

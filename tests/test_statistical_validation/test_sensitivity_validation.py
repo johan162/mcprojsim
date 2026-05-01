@@ -10,8 +10,6 @@ known:
 
 from __future__ import annotations
 
-import numpy as np
-import pytest
 from scipy import stats
 
 from mcprojsim.config import EffortUnit
@@ -74,13 +72,23 @@ class TestSensitivityOrdering:
         results = run_sim(project, iterations=N_ITERATIONS, seed=300)
 
         # Compute Spearman correlations manually
-        rho_t1 = float(stats.spearmanr(results.task_durations["t1"], results.durations).statistic)
-        rho_t2 = float(stats.spearmanr(results.task_durations["t2"], results.durations).statistic)
-        rho_t3 = float(stats.spearmanr(results.task_durations["t3"], results.durations).statistic)
+        rho_t1 = float(
+            stats.spearmanr(results.task_durations["t1"], results.durations).statistic
+        )
+        rho_t2 = float(
+            stats.spearmanr(results.task_durations["t2"], results.durations).statistic
+        )
+        rho_t3 = float(
+            stats.spearmanr(results.task_durations["t3"], results.durations).statistic
+        )
 
         # t2 should have highest correlation
-        assert abs(rho_t2) > abs(rho_t1), f"|ρ_t2|={abs(rho_t2):.4f} should > |ρ_t1|={abs(rho_t1):.4f}"
-        assert abs(rho_t2) > abs(rho_t3), f"|ρ_t2|={abs(rho_t2):.4f} should > |ρ_t3|={abs(rho_t3):.4f}"
+        assert abs(rho_t2) > abs(
+            rho_t1
+        ), f"|ρ_t2|={abs(rho_t2):.4f} should > |ρ_t1|={abs(rho_t1):.4f}"
+        assert abs(rho_t2) > abs(
+            rho_t3
+        ), f"|ρ_t2|={abs(rho_t2):.4f} should > |ρ_t3|={abs(rho_t3):.4f}"
 
     def test_parallel_tasks_only_critical_one_matters(self):
         """In parallel topology, only the dominant task correlates with project duration."""
@@ -112,8 +120,12 @@ class TestSensitivityOrdering:
         )
         results = run_sim(project, iterations=N_ITERATIONS, seed=301)
 
-        rho_t1 = float(stats.spearmanr(results.task_durations["t1"], results.durations).statistic)
-        rho_t2 = float(stats.spearmanr(results.task_durations["t2"], results.durations).statistic)
+        rho_t1 = float(
+            stats.spearmanr(results.task_durations["t1"], results.durations).statistic
+        )
+        rho_t2 = float(
+            stats.spearmanr(results.task_durations["t2"], results.durations).statistic
+        )
 
         # t1 dominates → very high correlation
         assert rho_t1 > 0.9, f"ρ_t1={rho_t1:.4f} should be > 0.9"
@@ -150,16 +162,16 @@ class TestSensitivityOrdering:
         for i in range(n_tasks):
             tid = f"t{i+1}"
             rho = float(
-                stats.spearmanr(results.task_durations[tid], results.durations).statistic
+                stats.spearmanr(
+                    results.task_durations[tid], results.durations
+                ).statistic
             )
             correlations.append(rho)
 
         # All correlations should be similar (within 10% of each other)
         max_rho = max(correlations)
         min_rho = min(correlations)
-        assert max_rho - min_rho < 0.15, (
-            f"Sensitivity spread too wide: {correlations}"
-        )
+        assert max_rho - min_rho < 0.15, f"Sensitivity spread too wide: {correlations}"
 
 
 class TestSensitivityDirectionality:
@@ -204,7 +216,9 @@ class TestSensitivityDirectionality:
 
         for tid in ["t1", "t2", "t3"]:
             rho = float(
-                stats.spearmanr(results.task_durations[tid], results.durations).statistic
+                stats.spearmanr(
+                    results.task_durations[tid], results.durations
+                ).statistic
             )
             assert rho > 0, f"Task {tid}: ρ={rho:.4f} should be positive"
 
@@ -246,7 +260,9 @@ class TestSensitivityDirectionality:
         for i in range(len(estimates)):
             tid = f"t{i+1}"
             rho = float(
-                stats.spearmanr(results.task_durations[tid], results.durations).statistic
+                stats.spearmanr(
+                    results.task_durations[tid], results.durations
+                ).statistic
             )
             sum_rho_sq += rho**2
 

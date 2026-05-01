@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from scipy import stats
 
 from mcprojsim.config import EffortUnit
 from mcprojsim.models.project import (
@@ -25,7 +24,6 @@ from mcprojsim.models.project import (
 )
 
 from .conftest import (
-    ALPHA,
     N_ITERATIONS,
     START_DATE,
     assert_mean_within_ci,
@@ -106,9 +104,7 @@ class TestRiskTriggerProbability:
                     id="t1",
                     name="Task 1",
                     estimate=_det_estimate(20.0),
-                    risks=[
-                        Risk(id="r1", name="Never", probability=0.0, impact=100.0)
-                    ],
+                    risks=[Risk(id="r1", name="Never", probability=0.0, impact=100.0)],
                 )
             ],
         )
@@ -130,9 +126,7 @@ class TestRiskTriggerProbability:
                     id="t1",
                     name="Task 1",
                     estimate=_det_estimate(20.0),
-                    risks=[
-                        Risk(id="r1", name="Always", probability=1.0, impact=15.0)
-                    ],
+                    risks=[Risk(id="r1", name="Always", probability=1.0, impact=15.0)],
                 )
             ],
         )
@@ -159,7 +153,9 @@ class TestRiskImpactOnMean:
         )
         results = run_sim(project, iterations=N_ITERATIONS, seed=60)
 
-        expected_mean = triangular_mean(base_low, base_mode, base_high) + risk_prob * risk_impact
+        expected_mean = (
+            triangular_mean(base_low, base_mode, base_high) + risk_prob * risk_impact
+        )
         assert_mean_within_ci(
             results.task_durations["t1"], expected_mean, label="Mean with risk"
         )
@@ -218,9 +214,7 @@ class TestRiskImpactVariance:
                     id="t1",
                     name="Task 1",
                     estimate=_det_estimate(base),
-                    risks=[
-                        Risk(id="r1", name="R1", probability=prob, impact=impact)
-                    ],
+                    risks=[Risk(id="r1", name="R1", probability=prob, impact=impact)],
                 )
             ],
         )
@@ -233,9 +227,9 @@ class TestRiskImpactVariance:
         obs_var = float(np.var(samples, ddof=1))
 
         # Check variance is close (relative tolerance since base adds tiny noise)
-        assert abs(obs_var - expected_var) / expected_var < 0.05, (
-            f"observed_var={obs_var:.4f}, expected_var={expected_var:.4f}"
-        )
+        assert (
+            abs(obs_var - expected_var) / expected_var < 0.05
+        ), f"observed_var={obs_var:.4f}, expected_var={expected_var:.4f}"
 
 
 class TestPercentageRiskImpact:

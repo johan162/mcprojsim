@@ -150,10 +150,12 @@ COVERAGE := 80
 
 # Source and Test Files
 SRC_FILES := $(shell find $(SRC_DIR) -name '*.py')
-TEST_FILES := $(shell find $(TEST_DIR) -name 'test_*.py')
+TEST_FILES := $(shell find $(TEST_DIR) -name '*.py' )
 MISC_FILES := pyproject.toml README.md mypy.ini .flake8
 LOCK_FILE := poetry.lock
 DOCKER_SRC_FILES := Dockerfile docker-compose.yml
+
+# $(info TEST_FILES: $(TEST_FILES))
 
 # Timestamp files
 STAMP_DIR := .makefile-stamps
@@ -237,7 +239,7 @@ $(PYRIGHT_STAMP): $(SRC_FILES) $(TEST_FILES)
 
 $(TYPECHECK_STAMP): $(SRC_FILES) $(TEST_FILES)
 	@echo -e "$(DARKYELLOW)- Running type checker...$(NC)"
-	@if poetry run mypy src/ tests/ --strict; then \
+	@if poetry run mypy $(SRC_DIR) $(TEST_DIR) --strict; then \
 		echo -e "$(GREEN)✓ Mypy type checking passed$(NC)"; \
 	else \
 		echo -e "$(RED)✗ Error: Mypy type checking failed$(NC)"; \

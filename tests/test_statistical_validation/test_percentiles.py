@@ -10,20 +10,14 @@ to validate percentile accuracy.
 
 from __future__ import annotations
 
-import math
-
 import numpy as np
 import pytest
-from scipy import stats
 
 from mcprojsim.models.project import DistributionType
 
 from .conftest import (
-    ALPHA,
     N_ITERATIONS,
-    assert_proportion,
     chain_project,
-    parallel_project,
     run_sim,
     single_task_project,
 )
@@ -35,7 +29,9 @@ class TestPercentileCalibration:
     @pytest.mark.parametrize("percentile", [10, 25, 50, 75, 90, 95, 99])
     def test_single_task_percentile_calibration(self, percentile: int):
         """For a single triangular task, P(X ≤ percentile_val) ≈ percentile/100."""
-        project = single_task_project(5.0, 20.0, 50.0, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            5.0, 20.0, 50.0, distribution=DistributionType.TRIANGULAR
+        )
         results = run_sim(project, iterations=N_ITERATIONS, seed=200)
         samples = results.task_durations["t1"]
 
@@ -73,7 +69,9 @@ class TestPercentileCalibration:
 
     def test_median_close_to_reported_p50(self):
         """The results.median and the 50th percentile should agree."""
-        project = single_task_project(10.0, 30.0, 60.0, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            10.0, 30.0, 60.0, distribution=DistributionType.TRIANGULAR
+        )
         results = run_sim(project, iterations=N_ITERATIONS, seed=202)
 
         # results.median is computed by the engine
@@ -116,7 +114,9 @@ class TestQuantileConvergence:
 
     def test_convergence_rate(self):
         """Quantile estimate error decreases as O(1/√N)."""
-        project = single_task_project(10.0, 25.0, 50.0, distribution=DistributionType.TRIANGULAR)
+        project = single_task_project(
+            10.0, 25.0, 50.0, distribution=DistributionType.TRIANGULAR
+        )
 
         # Run at different iteration counts
         p50_estimates = []
@@ -152,9 +152,9 @@ class TestConfidenceLevelInterpretation:
 
         # Should be approximately 80%
         obs_frac = count_within / N_ITERATIONS
-        assert abs(obs_frac - 0.80) < 0.02, (
-            f"P80 interpretation: {obs_frac*100:.1f}% finish by P80 value"
-        )
+        assert (
+            abs(obs_frac - 0.80) < 0.02
+        ), f"P80 interpretation: {obs_frac*100:.1f}% finish by P80 value"
 
     def test_p95_means_95_percent_finish_by(self):
         """If P95 = X hours, then ~95% of simulations finish within X hours."""

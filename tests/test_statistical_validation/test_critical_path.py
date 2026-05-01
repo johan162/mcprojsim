@@ -7,8 +7,6 @@ or bounded.
 
 from __future__ import annotations
 
-import numpy as np
-import pytest
 from scipy import stats
 
 from mcprojsim.config import EffortUnit
@@ -24,7 +22,6 @@ from .conftest import (
     ALPHA,
     N_ITERATIONS,
     START_DATE,
-    assert_proportion,
     run_sim,
 )
 
@@ -121,9 +118,9 @@ class TestCriticalPathFrequency:
         # B and C each ≈ 50% (binomial test)
         freq_b = results.critical_path_frequency["B"]
         result = stats.binomtest(freq_b, N_ITERATIONS, 0.5)
-        assert result.pvalue > ALPHA, (
-            f"B criticality = {freq_b/N_ITERATIONS:.4f}, p={result.pvalue:.2e}"
-        )
+        assert (
+            result.pvalue > ALPHA
+        ), f"B criticality = {freq_b/N_ITERATIONS:.4f}, p={result.pvalue:.2e}"
 
     def test_asymmetric_diamond_dominant_branch(self):
         """When one branch is much longer, it dominates criticality."""
@@ -172,9 +169,9 @@ class TestCriticalPathFrequency:
 
         # B should be critical in almost all iterations
         freq_b = results.critical_path_frequency["B"]
-        assert freq_b / N_ITERATIONS > 0.99, (
-            f"B criticality = {freq_b/N_ITERATIONS:.4f}, expected > 0.99"
-        )
+        assert (
+            freq_b / N_ITERATIONS > 0.99
+        ), f"B criticality = {freq_b/N_ITERATIONS:.4f}, expected > 0.99"
         # C should rarely be critical
         freq_c = results.critical_path_frequency["C"]
         assert freq_c / N_ITERATIONS < 0.01

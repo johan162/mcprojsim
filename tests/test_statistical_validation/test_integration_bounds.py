@@ -11,10 +11,8 @@ from __future__ import annotations
 import math
 
 import numpy as np
-import pytest
-from scipy import stats
 
-from mcprojsim.config import Config, EffortUnit
+from mcprojsim.config import EffortUnit
 from mcprojsim.models.project import (
     DistributionType,
     Project,
@@ -25,11 +23,9 @@ from mcprojsim.models.project import (
 )
 
 from .conftest import (
-    ALPHA,
     N_ITERATIONS,
     START_DATE,
     assert_mean_within_ci,
-    assert_proportion,
     run_sim,
     triangular_mean,
     triangular_variance,
@@ -104,7 +100,9 @@ class TestAnalyticalBoundsParallel:
 
         for i, tid in enumerate(["t1", "t2", "t3"]):
             diffs = results.durations - results.task_durations[tid]
-            assert np.all(diffs >= -1e-9), f"Project duration < task {tid} in some iteration"
+            assert np.all(
+                diffs >= -1e-9
+            ), f"Project duration < task {tid} in some iteration"
 
     def test_max_bounded_by_sum(self):
         """max(T1,...,Tn) ≤ T1 + T2 + ... + Tn always."""
@@ -208,9 +206,7 @@ class TestCostValidation:
 
         expected_cost_mean = triangular_mean(low, mode, high) * rate
         assert results.costs is not None
-        assert_mean_within_ci(
-            results.costs, expected_cost_mean, label="Cost mean"
-        )
+        assert_mean_within_ci(results.costs, expected_cost_mean, label="Cost mean")
 
     def test_risk_cost_impact_mean(self):
         """Risk with cost_impact: E[cost] includes probability * cost_impact."""
@@ -251,9 +247,7 @@ class TestCostValidation:
         expected_hours_mean = base_hours + risk_prob * 10.0
         expected_cost_mean = expected_hours_mean * rate + risk_prob * cost_impact
         assert results.costs is not None
-        assert_mean_within_ci(
-            results.costs, expected_cost_mean, label="Risk cost mean"
-        )
+        assert_mean_within_ci(results.costs, expected_cost_mean, label="Risk cost mean")
 
 
 class TestSlackValidation:
@@ -322,8 +316,11 @@ class TestLargeProjectConsistency:
         expected_mean = sum(triangular_mean(*e) for e in estimates)
         expected_var = sum(triangular_variance(*e) for e in estimates)
 
-        assert_mean_within_ci(results.durations, expected_mean, label="20-task chain mean")
+        assert_mean_within_ci(
+            results.durations, expected_mean, label="20-task chain mean"
+        )
         from .conftest import assert_variance_within_ci
+
         assert_variance_within_ci(
             results.durations, expected_var, label="20-task chain variance"
         )

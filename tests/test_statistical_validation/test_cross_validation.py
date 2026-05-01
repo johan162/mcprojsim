@@ -8,13 +8,11 @@ internal wiring that wouldn't be detected by checking against formulas alone.
 from __future__ import annotations
 
 import math
-from datetime import date
 
 import numpy as np
-import pytest
 from scipy import stats
 
-from mcprojsim.config import Config, EffortUnit
+from mcprojsim.config import EffortUnit
 from mcprojsim.models.project import (
     DistributionType,
     Project,
@@ -95,6 +93,7 @@ class TestReferenceComparisonChain:
 
         # Engine simulation
         from .conftest import chain_project
+
         project = chain_project(estimates, distribution=DistributionType.TRIANGULAR)
         engine = SimulationEngine(
             iterations=N_ITERATIONS, random_seed=42, show_progress=False
@@ -103,26 +102,31 @@ class TestReferenceComparisonChain:
 
         # Reference simulation (same seed won't match due to engine overhead,
         # but distributions should be statistically indistinguishable)
-        ref_durations = _reference_simulate_chain_triangular(estimates, N_ITERATIONS, seed=43)
+        ref_durations = _reference_simulate_chain_triangular(
+            estimates, N_ITERATIONS, seed=43
+        )
 
         # Two-sample KS test: both come from same distribution
         ks_stat, p_value = stats.ks_2samp(engine_results.durations, ref_durations)
-        assert p_value > ALPHA, (
-            f"Engine vs reference: KS D={ks_stat:.6f}, p={p_value:.2e}"
-        )
+        assert (
+            p_value > ALPHA
+        ), f"Engine vs reference: KS D={ks_stat:.6f}, p={p_value:.2e}"
 
     def test_chain_moments_match_reference(self):
         """Engine mean and std match reference within statistical tolerance."""
         estimates = [(10.0, 20.0, 40.0), (5.0, 12.0, 25.0)]
 
         from .conftest import chain_project
+
         project = chain_project(estimates, distribution=DistributionType.TRIANGULAR)
         engine = SimulationEngine(
             iterations=N_ITERATIONS, random_seed=42, show_progress=False
         )
         engine_results = engine.run(project)
 
-        ref_durations = _reference_simulate_chain_triangular(estimates, N_ITERATIONS, seed=43)
+        ref_durations = _reference_simulate_chain_triangular(
+            estimates, N_ITERATIONS, seed=43
+        )
 
         # Means should be very close
         engine_mean = float(np.mean(engine_results.durations))
@@ -148,19 +152,22 @@ class TestReferenceComparisonParallel:
         estimates = [(10.0, 25.0, 50.0), (8.0, 20.0, 45.0), (12.0, 30.0, 55.0)]
 
         from .conftest import parallel_project
+
         project = parallel_project(estimates, distribution=DistributionType.TRIANGULAR)
         engine = SimulationEngine(
             iterations=N_ITERATIONS, random_seed=44, show_progress=False
         )
         engine_results = engine.run(project)
 
-        ref_durations = _reference_simulate_parallel_triangular(estimates, N_ITERATIONS, seed=45)
+        ref_durations = _reference_simulate_parallel_triangular(
+            estimates, N_ITERATIONS, seed=45
+        )
 
         # Two-sample KS test
         ks_stat, p_value = stats.ks_2samp(engine_results.durations, ref_durations)
-        assert p_value > ALPHA, (
-            f"Engine vs reference (parallel): KS D={ks_stat:.6f}, p={p_value:.2e}"
-        )
+        assert (
+            p_value > ALPHA
+        ), f"Engine vs reference (parallel): KS D={ks_stat:.6f}, p={p_value:.2e}"
 
 
 class TestReferenceComparisonRisk:
@@ -185,10 +192,18 @@ class TestReferenceComparisonRisk:
                     id="t1",
                     name="T1",
                     estimate=TaskEstimate(
-                        low=base_low, expected=base_mode, high=base_high, unit=EffortUnit.HOURS
+                        low=base_low,
+                        expected=base_mode,
+                        high=base_high,
+                        unit=EffortUnit.HOURS,
                     ),
                     risks=[
-                        Risk(id="r1", name="R1", probability=risk_prob, impact=risk_impact)
+                        Risk(
+                            id="r1",
+                            name="R1",
+                            probability=risk_prob,
+                            impact=risk_impact,
+                        )
                     ],
                 )
             ],
@@ -200,27 +215,32 @@ class TestReferenceComparisonRisk:
 
         # Reference: ~base + Bernoulli(p) * impact
         rng = np.random.RandomState(51)
-        ref_durations = np.array([
-            base_mode + (risk_impact if rng.random() < risk_prob else 0.0)
-            for _ in range(N_ITERATIONS)
-        ])
+        ref_durations = np.array(
+            [
+                base_mode + (risk_impact if rng.random() < risk_prob else 0.0)
+                for _ in range(N_ITERATIONS)
+            ]
+        )
 
         # Both should have same mean: ~base + p*impact
         expected_mean = base_mode + risk_prob * risk_impact
         assert_mean_within_ci(
             engine_results.durations, expected_mean, label="Engine risk mean"
         )
-        assert_mean_within_ci(
-            ref_durations, expected_mean, label="Reference risk mean"
-        )
+        assert_mean_within_ci(ref_durations, expected_mean, label="Reference risk mean")
 
         # Distribution should be two-point: check proportions match
-        engine_fired = int(np.sum(engine_results.task_durations["t1"] > base_mode + 1.0))
+        engine_fired = int(
+            np.sum(engine_results.task_durations["t1"] > base_mode + 1.0)
+        )
         ref_fired = int(np.sum(ref_durations > base_mode + 1.0))
 
         # Both should be close to p * N
         from .conftest import assert_proportion
-        assert_proportion(engine_fired, N_ITERATIONS, risk_prob, label="Engine risk rate")
+
+        assert_proportion(
+            engine_fired, N_ITERATIONS, risk_prob, label="Engine risk rate"
+        )
         assert_proportion(ref_fired, N_ITERATIONS, risk_prob, label="Ref risk rate")
 
 
@@ -232,6 +252,7 @@ class TestReferenceComparisonLognormal:
         estimates = [(5.0, 15.0, 40.0), (10.0, 25.0, 60.0)]
 
         from .conftest import chain_project
+
         project = chain_project(estimates, distribution=DistributionType.LOGNORMAL)
         engine = SimulationEngine(
             iterations=N_ITERATIONS, random_seed=60, show_progress=False
@@ -249,6 +270,6 @@ class TestReferenceComparisonLognormal:
 
         # Two-sample KS test
         ks_stat, p_value = stats.ks_2samp(engine_results.durations, ref_durations)
-        assert p_value > ALPHA, (
-            f"Lognormal engine vs reference: KS D={ks_stat:.6f}, p={p_value:.2e}"
-        )
+        assert (
+            p_value > ALPHA
+        ), f"Lognormal engine vs reference: KS D={ks_stat:.6f}, p={p_value:.2e}"
