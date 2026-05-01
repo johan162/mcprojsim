@@ -453,7 +453,6 @@ The median and mean both sitting above the mode is the classic log-normal skew i
 
 ![Log-normal task duration (5,9,16)](../assets/fig-lognormal-graph.png)
 
- 
 ***Figure:*** *Log-normal task duration (5,9,16)*
 
 ### Deriving the formula to translate `low`, `expected`, `high` to log-normal parameters
@@ -466,7 +465,6 @@ $$
 \mu + z \cdot \sigma & = \ln(\text{high}-\text{low})
 \end{align*}
 $$
-
 
 Then using the same reasoning as in the previous example we express the log-normal parameters in closed form as
 
@@ -539,8 +537,6 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `epic` | `XL` | 600 | 1000 | 1500 |
 | `epic` | `XXL` | 1200 | 2000 | 3200 |
 
-<!-- pagebreak:b5 -->
-
 ***Table: Business/Program - category***
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
@@ -552,7 +548,7 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `business` | `XL` | 8000 | 16000 | 40000 |
 | `business` | `XXL` | 16000 | 32000 | 80000 |
 
-
+<!-- pagebreak:b5 -->
 ***Table: Initiative - category***
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
@@ -637,8 +633,6 @@ tasks:
       team_experience: "high"
       requirements_maturity: "high"
 
-!!! yaml-cbreak-b5 
-
   - id: "task_002"
     name: "Build page"
     estimate:
@@ -669,12 +663,12 @@ t_shirt_sizes:
       low: 45
       expected: 65
       high: 130
+!!! yaml-cbreak-b5 
   epic:
     M:
       low: 240
       expected: 520
-      high: 1400
-
+      high: 1400 
 t_shirt_size_default_category: epic
 ```
 
@@ -820,11 +814,11 @@ story_points:
     low: 0.5
     expected: 1
     high: 2.5
-!!! yaml-cbreak-b5 
   2:
     low: 1
     expected: 2
     high: 3.5
+!!! yaml-cbreak-b5  
   5:
     low: 3.5
     expected: 5.5
@@ -877,6 +871,7 @@ A single project can use different estimation methods for different tasks. This 
 tasks:
   - id: "research"
     name: "Technology research"
+!!! yaml-cbreak-b5 
     estimate:
       distribution: "lognormal"
       low: 3
