@@ -330,10 +330,10 @@ $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES)
 # ============================================================================================
 define BUILD_USER_GUIDE_PDF
 $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$(USER_GUIDE_LUA_FILTER)
-	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW)...$(NC)"
+	@echo -e "$(DARKYELLOW)- Updating version number $(BRIGHTCYAN)v$(VERSION)$(DARKYELLOW) in LaTeX template $$(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
 	@rm -f $$($1_TEMPLATE).bak
-	@echo -e "$$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$$(NC)"
+	@echo -e "$$(DARKYELLOW)- Building $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(DARKYELLOW) via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$(USER_GUIDE_BUILD_DIR)
 	@echo -e "$$(DARKYELLOW)  - Expanding shell command outputs in markdown sources...$$(NC)"
 	@mkdir -p $$($1_EXPANDED_DIR)
@@ -379,10 +379,10 @@ endef
 # ============================================================================================
 define BUILD_API_REF_PDF
 $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_REF_LUA_FILTER)
-	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW)...$(NC)"
+	@echo -e "$(DARKYELLOW)- Updating version number $(BRIGHTCYAN)v$(VERSION)$(DARKYELLOW) in LaTeX template $(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
 	@rm -f $$($1_TEMPLATE).bak
-	@echo -e "$$(DARKYELLOW)- Building API reference PDF via LaTeX report pipeline...$$(NC)"
+	@echo -e "$$(DARKYELLOW)- Building $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(DARKYELLOW) via LaTeX report pipeline...$$(NC)"
 	@mkdir -p $$(API_REF_BUILD_DIR)
 	@echo -e "$$(DARKYELLOW)  - Expanding shell command outputs in markdown sources...$$(NC)"
 	@mkdir -p $$($1_EXPANDED_DIR)
@@ -465,24 +465,24 @@ cover: cover-b5-light cover-b5-dark cover-a4-light cover-a4-dark ## Adjust all u
 	@:
 
 cover-b5-light: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_B5_PDF) with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting $(BRIGHTCYAN)\"$(notdir $(USER_GUIDE_B5_PDF))\"$(DARKYELLOW) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_B5_PDF)
-	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_B5_PDF) adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ PDF $(BRIGHTCYAN)\"$(notdir $(USER_GUIDE_B5_PDF))\"$(GREEN) adjusted with cover image$(NC)"
 
 cover-b5-dark: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_DARK_B5_PDF) with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting $(BRIGHTCYAN)\"$(notdir $(USER_GUIDE_DARK_B5_PDF))\"$(DARKYELLOW) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_B5_PDF)
-	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_DARK_B5_PDF) adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ PDF $(BRIGHTCYAN)\"$(notdir $(USER_GUIDE_DARK_B5_PDF))\"$(GREEN) adjusted with cover image$(NC)"
 
 cover-a4-light: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_A4_PDF) with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting $(BRIGHTCYAN)\"$(notdir $(USER_GUIDE_A4_PDF))\"$(DARKYELLOW) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_A4_PDF)
-	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_A4_PDF) adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ PDF $(BRIGHTCYAN)\"$(notdir $(USER_GUIDE_A4_PDF))\"$(GREEN) adjusted with cover image$(NC)"
 
 cover-a4-dark: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting $(USER_GUIDE_DARK_A4_PDF) with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting $(BRIGHTCYAN)\"$(notdir $(USER_GUIDE_DARK_A4_PDF))\"$(DARKYELLOW) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(USER_GUIDE_COVER_IMAGE) $(USER_GUIDE_DARK_A4_PDF)
-	@echo -e "$(GREEN)✓ PDF $(USER_GUIDE_DARK_A4_PDF) adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ PDF $(BRIGHTCYAN)\"$(notdir $(USER_GUIDE_DARK_A4_PDF))\"$(GREEN) adjusted with cover image$(NC)"
 
 
 # ============================================================================================
@@ -501,25 +501,24 @@ cover-api-ref: cover-api-ref-b5-light cover-api-ref-b5-dark cover-api-ref-a4-lig
 	@:
 
 cover-api-ref-b5-light: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_B5_PDF) with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(BRIGHTCYAN)\"$(notdir $(API_REF_B5_PDF))\"$(DARKYELLOW) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_B5_PDF)
-	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_B5_PDF) adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ API reference PDF $(BRIGHTCYAN)\"$(notdir $(API_REF_B5_PDF))\"$(GREEN) adjusted with cover image$(NC)"
 
 cover-api-ref-b5-dark: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_DARK_B5_PDF) with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(BRIGHTCYAN)\"$(notdir $(API_REF_DARK_B5_PDF))\"$(DARKYELLOW) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_B5_PDF)
-	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_DARK_B5_PDF) adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ API reference PDF $(BRIGHTCYAN)\"$(notdir $(API_REF_DARK_B5_PDF))\"$(GREEN) adjusted with cover image$(NC)"
 
 cover-api-ref-a4-light: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_A4_PDF) with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(BRIGHTCYAN)\"$(notdir $(API_REF_A4_PDF))\"$(DARKYELLOW) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_A4_PDF)
-	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_A4_PDF) adjusted with cover image$(NC)"
+	@echo -e "$(GREEN)✓ API reference PDF $(BRIGHTCYAN)\"$(notdir $(API_REF_A4_PDF))\"$(GREEN) adjusted with cover image$(NC)"
 
 cover-api-ref-a4-dark: ## Adjust the PDF by adding cover image
-	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(API_REF_DARK_A4_PDF) with cover image...$(NC)"
+	@echo -e "$(DARKYELLOW)- Adjusting API reference PDF $(BRIGHTCYAN)\"$(notdir $(API_REF_DARK_A4_PDF))\"$(DARKYELLOW) with cover image...$(NC)"
 	@../scripts/mkcover.sh -q --dpi 300 $(API_REF_COVER_IMAGE) $(API_REF_DARK_A4_PDF)
-	@echo -e "$(GREEN)✓ API reference PDF $(API_REF_DARK_A4_PDF) adjusted with cover image$(NC)"
-
+	@echo -e "$(GREEN)✓ API reference PDF $(BRIGHTCYAN)\"$(notdir $(API_REF_DARK_A4_PDF))\"$(GREEN) adjusted with cover image$(NC)"
 
 
 
