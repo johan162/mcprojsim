@@ -174,32 +174,7 @@ number when the project is done. Instead the result is a range of numbers with a
 confidence of success. With the numbers given in the project file the result will be the
 `50%`, `80%`, and `90%` confidence levels. 
 
-```yaml
-project:
-  name: "Website Refresh"
-  description: "Small example project"
-  start_date: "2026-04-01"
-  confidence_levels: [50, 80, 90] 
-tasks:
-  - id: "task_001"
-    name: "Design updates"
-    estimate:
-      low: 2
-      expected: 3
-      high: 5
-      unit: "days"
-  - id: "task_002"
-    name: "Frontend changes"
-    estimate:
-      low: 4
-      expected: 6
-      high: 10
-      unit: "days"
-    dependencies: ["task_001"]
-    uncertainty_factors:
-      team_experience: "medium"
-      technical_complexity: "medium"
-```
+{{! cat examples/quickstart_example.yaml }}
 
 
 ## Generating a YAML project file 
@@ -287,41 +262,7 @@ Tip: increase precision with `--iterations` (tradeoff: runtime vs accuracy) and 
 
 Depending on the version of `mcprojsim` used the output will look something like the following (numbers will vary by version and platform):
 
-```text
-mcprojsim, version 0.15.0
-Progress: 100.0% (10000/10000)
-
-=== Simulation Results ===
-
-Project Overview:
-  Project: Website Refresh
-  Start Date: 2026-04-01
-  Number of Tasks: 2
-  Effective Default Distribution: triangular
-  T-Shirt Category Used: story
-  Hours per Day: 8.0
-  Max Parallel Tasks: 1
-  Schedule Mode: dependency_only
-
-Calendar Time Statistical Summary:
-  Mean: 90.65 hours (12 working days)
-  Median (P50): 89.68 hours
-  Std Dev: 12.97 hours
-  Minimum: 55.92 hours
-  Maximum: 131.62 hours
-
-Project Effort Statistical Summary:
-  Mean: 90.65 person-hours (12 person-days)
-  Median (P50): 89.68 person-hours
-  Std Dev: 12.97 person-hours
-  Minimum: 55.92 person-hours
-  Maximum: 131.62 person-hours
-
-Calendar Time Confidence Intervals:
-  P50: 89.68 hours (12 working days)  (2026-04-17)
-  P80: 102.25 hours (13 working days)  (2026-04-20)
-  P90: 108.53 hours (14 working days)  (2026-04-21)
-```
+{{! mcprojsim simulate --seed 42 --minimal examples/quickstart_example.yaml }}
 
 ## Export results
 
