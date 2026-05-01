@@ -13,9 +13,9 @@ Status: Released (reviewed)
 
 
 
-## 1. Introduction
+## Introduction
 
-### 1.1 Purpose
+### Purpose
 
 mcprojsim uses Monte Carlo simulation to produce probabilistic schedule, effort, and cost
 estimates for software projects. Given a set of tasks with uncertain duration estimates,
@@ -23,7 +23,7 @@ dependency relationships, optional resource constraints, risk events, and cost p
 the tool runs thousands of simulated project executions and reports statistical distributions
 of outcomes.
 
-### 1.2 Scope
+### Scope
 
 The system provides:
 
@@ -37,7 +37,7 @@ The system provides:
 - **Resource-constrained scheduling**: Calendar-aware scheduling with sickness and absence
 - **Multiple input modes**: YAML project files, TOML, natural language descriptions, MCP server
 
-### 1.3 Key Design Principles
+### Key Design Principles
 
 1. **Reproducibility**: Given the same seed, produce identical results
 2. **Configuration over code**: All tuning parameters externalized to config
@@ -47,9 +47,9 @@ The system provides:
 
 
 
-## 2. Functional Requirements
+## Functional Requirements
 
-### 2.1 Core Simulation (FR-001 through FR-025)
+### Core Simulation (FR-001 through FR-025)
 
 #### FR-001: Project File Parsing
 The system SHALL parse project specifications from YAML and TOML formats. The parser
@@ -407,7 +407,7 @@ instructions without requiring full re-specification.
 
 
 
-### 2.2 Cost Estimation (FR-045 through FR-054)
+### Cost Estimation (FR-045 through FR-054)
 
 #### FR-045: Cost Model Activation
 
@@ -500,7 +500,7 @@ percentage of total project cost.
 
 
 
-### 2.3 Resource & Calendar Constrained Scheduling (FR-026 through FR-044)
+### Resource & Calendar Constrained Scheduling (FR-026 through FR-044)
 
 #### FR-026: Team Resource Model
 
@@ -705,7 +705,7 @@ The system SHALL report per-iteration diagnostics:
 
 
 
-### 2.4 Sprint Planning (FR-055 through FR-070)
+### Sprint Planning (FR-055 through FR-070)
 
 #### FR-055: Sprint Planning Model
 The system SHALL support Monte Carlo sprint forecasting as an optional overlay on top
@@ -893,7 +893,7 @@ This prevents infinite loops from misconfigured projects where tasks can never c
 
 
 
-### 2.5 Distribution Selection (FR-071)
+### Distribution Selection (FR-071)
 
 #### FR-071: Per-Project and Per-Task Distribution
 
@@ -907,7 +907,7 @@ When unspecified at project level, triangular is the default.
 
 
 
-## 3. Non-Functional Requirements
+## Non-Functional Requirements
 
 ### NFR-001: Performance
 
@@ -982,11 +982,11 @@ Python 3.13+ features throughout. This is a hard requirement.
 
 
 
-## 4. Input File Format Specification
+## Input File Format Specification
 
-### 4.1 Project YAML Structure
+### Project YAML Structure
 
-#### 4.1.1 Minimal Valid Project
+#### Minimal Valid Project
 ```yaml
 project:
   name: "My Project"
@@ -1001,7 +1001,7 @@ tasks:
       high: 10
 ```
 
-#### 4.1.2 Complete Project Structure
+#### Complete Project Structure
 
 ```yaml
 project:
@@ -1041,7 +1041,9 @@ project_risks:
       type: "percentage"
       value: 0.25
     cost_impact: 50000
+```
 
+```yaml
 tasks:
   - id: "task_001"
     name: "Database schema design"
@@ -1062,13 +1064,18 @@ tasks:
     resources: ["alice", "bob"]
     max_resources: 2
     min_experience_level: 2
+```
+
+```yaml
     risks:
       - id: "task_risk_001"
         name: "Schema migration issues"
         probability: 0.20
         impact: 16              # hours (plain numbers are hours)
         cost_impact: 2000
+```
 
+```yaml
   - id: "task_002"
     name: "API implementation"
     estimate:
@@ -1087,7 +1094,9 @@ tasks:
     estimate:
       story_points: 8          # Maps to config story_point ranges
     dependencies: ["task_001"]
+```
 
+```yaml
 resources:
   - name: "alice"
     availability: 1.0
@@ -1106,7 +1115,9 @@ resources:
     experience_level: 2
     productivity_level: 1.0
     hourly_rate: 75.0
+```
 
+```yaml
 calendars:
   - id: "standard"
     work_hours_per_day: 8.0
@@ -1114,7 +1125,9 @@ calendars:
     holidays:
       - "2026-01-01"
       - "2026-12-25"
+```
 
+```yaml
 sprint_planning:
   enabled: true
   sprint_length_weeks: 2
@@ -1122,6 +1135,9 @@ sprint_planning:
   velocity_model: "empirical"
   planning_confidence_level: 0.80
   removed_work_treatment: "churn_only"
+```
+
+```yaml
   sickness:
     enabled: true
     team_size: 4
@@ -1134,6 +1150,9 @@ sprint_planning:
     disruption_multiplier_low: 0.5
     disruption_multiplier_expected: 0.7
     disruption_multiplier_high: 0.9
+```
+
+```yaml
   spillover:
     enabled: true
     model: "table"
@@ -1156,6 +1175,9 @@ sprint_planning:
     - start_date: "2026-04-01"
       capacity_multiplier: 0.8
       notes: "Team member on leave"
+```
+
+```yaml
   history:
     - sprint_id: "S1"
       completed_story_points: 21
@@ -1176,7 +1198,7 @@ sprint_planning:
       notes: "Holiday sprint"
 ```
 
-#### 4.1.3 Unit Conversion
+#### Unit Conversion
 
 All durations are internally converted to hours using:
 
@@ -1188,7 +1210,7 @@ All durations are internally converted to hours using:
 **Gotcha**: `STANDARD_HOURS_PER_DAY` (used for risk percentage calculations and output
 conversions) is always 8.0 regardless of the project's `hours_per_day` setting.
 
-#### 4.1.4 Field Aliases
+#### Field Aliases
 
 The following field aliases are accepted by the Pydantic model layer:
 
@@ -1204,7 +1226,7 @@ In YAML files, prefer the canonical field names.
 
 
 
-### 4.2 Configuration File (config.yaml)
+### Configuration File (config.yaml)
 
 The configuration file controls all default values and tuning parameters.
 A complete template can be generated with `mcprojsim config show --generate`.
@@ -1231,7 +1253,9 @@ uncertainty_factors:
     low: 1.0
     medium: 1.15
     high: 1.35
+```
 
+```yaml
 # T-shirt size mappings (5 categories × 6 sizes)
 t_shirt_sizes:
   story:
@@ -1241,6 +1265,9 @@ t_shirt_sizes:
     L: {low: 160, expected: 240, high: 500}
     XL: {low: 320, expected: 400, high: 750}
     XXL: {low: 400, expected: 500, high: 1200}
+```
+
+```yaml
   bug:
     XS: {low: 0.5, expected: 1, high: 4}
     S: {low: 1, expected: 3, high: 10}
@@ -1248,6 +1275,9 @@ t_shirt_sizes:
     L: {low: 8, expected: 20, high: 60}
     XL: {low: 20, expected: 40, high: 100}
     XXL: {low: 40, expected: 80, high: 200}
+```
+
+```yaml
   epic:
     XS: {low: 20, expected: 40, high: 60}
     S: {low: 60, expected: 120, high: 170}
@@ -1255,6 +1285,9 @@ t_shirt_sizes:
     L: {low: 290, expected: 480, high: 700}
     XL: {low: 600, expected: 1000, high: 1500}
     XXL: {low: 1200, expected: 2000, high: 3200}
+```
+
+```yaml
   business:
     XS: {low: 400, expected: 800, high: 2000}
     S: {low: 800, expected: 2000, high: 5000}
@@ -1262,6 +1295,9 @@ t_shirt_sizes:
     L: {low: 4000, expected: 8000, high: 20000}
     XL: {low: 8000, expected: 16000, high: 40000}
     XXL: {low: 16000, expected: 32000, high: 80000}
+```
+
+```yaml
   initiative:
     XS: {low: 2000, expected: 4000, high: 10000}
     S: {low: 4000, expected: 10000, high: 25000}
@@ -1269,7 +1305,9 @@ t_shirt_sizes:
     L: {low: 20000, expected: 40000, high: 100000}
     XL: {low: 40000, expected: 80000, high: 200000}
     XXL: {low: 80000, expected: 160000, high: 400000}
+```
 
+```yaml
 t_shirt_size_default_category: "story"
 t_shirt_size_unit: "hours"   # Unit for t-shirt size ranges
 
@@ -1301,7 +1339,9 @@ output:
   include_histogram: true
   number_bins: 50
   critical_path_report_limit: 2
+```
 
+```yaml
 # Staffing analysis
 staffing:
   effort_percentile: null    # null = use mean; 1-99 = use that percentile
@@ -1322,7 +1362,9 @@ constrained_scheduling:
   sickness_prob: 0.0
   assignment_mode: "greedy_single_pass"  # or "criticality_two_pass"
   pass1_iterations: 1000
+```
 
+```yaml
 # Sprint planning defaults
 sprint_defaults:
   planning_confidence_level: 0.80
@@ -1359,9 +1401,9 @@ cost:
 
 
 
-## 5. System Architecture
+## System Architecture
 
-### 5.1 Module Structure
+### Module Structure
 
 ```
 src/mcprojsim/
@@ -1401,7 +1443,9 @@ src/mcprojsim/
     ├── json_exporter.py     # JSON output
     ├── csv_exporter.py      # CSV output
     └── html_exporter.py     # HTML with Matplotlib PNG charts
+```
 
+```yaml
 tests/
 ├── test_models.py           # Pydantic model validation
 ├── test_parsers.py          # Parser correctness
@@ -1417,7 +1461,7 @@ tests/
 └── fixtures/                # Sample YAML/TOML files
 ```
 
-### 5.2 Data Flow
+### Data Flow
 
 ```
 Input (YAML/TOML/NL) → Parser → Pydantic Models (validated) → SimulationEngine
@@ -1433,7 +1477,7 @@ Input (YAML/TOML/NL) → Parser → Pydantic Models (validated) → SimulationEn
                                                     Exporters (JSON, CSV, HTML)
 ```
 
-### 5.3 Key Design Decisions
+### Key Design Decisions
 
 1. **Pydantic v2 for validation**: All data models use Pydantic v2 with `model_validator`
    decorators for complex cross-field validation. This catches errors at construction time.
@@ -1455,9 +1499,9 @@ Input (YAML/TOML/NL) → Parser → Pydantic Models (validated) → SimulationEn
 
 
 
-## 6. Algorithms
+## Algorithms
 
-### 6.1 Monte Carlo Simulation Loop (Complete)
+### Monte Carlo Simulation Loop (Complete)
 
 ```python
 def run_simulation(project, config, iterations, seed):
@@ -1509,7 +1553,7 @@ def run_simulation(project, config, iterations, seed):
     return results
 ```
 
-### 6.2 Shifted Log-Normal Fitting
+### Shifted Log-Normal Fitting
 
 ```python
 def fit_shifted_lognormal(low, expected, high, z):
@@ -1534,7 +1578,7 @@ def fit_shifted_lognormal(low, expected, high, z):
 
 **Sampling**: `result = low + rng.lognormal(mu, sigma)`
 
-### 6.3 Dependency-Only Scheduling
+### Dependency-Only Scheduling
 
 ```python
 def schedule_dependency_only(task_durations, topological_order, dependencies):
@@ -1546,7 +1590,7 @@ def schedule_dependency_only(task_durations, topological_order, dependencies):
     return schedule
 ```
 
-### 6.4 Resource-Constrained Scheduling (Event-Driven Greedy)
+### Resource-Constrained Scheduling (Event-Driven Greedy)
 
 ```python
 def schedule_resource_constrained(task_durations, project, rng, task_priority=None):
@@ -1601,7 +1645,7 @@ def schedule_resource_constrained(task_durations, project, rng, task_priority=No
     return schedule, diagnostics
 ```
 
-### 6.5 Two-Pass Criticality Scheduling
+### Two-Pass Criticality Scheduling
 
 ```python
 def run_two_pass(project, config, iterations, seed):
@@ -1626,7 +1670,7 @@ def run_two_pass(project, config, iterations, seed):
     return pass2_results
 ```
 
-### 6.6 Staffing Analysis
+### Staffing Analysis
 
 ```python
 def recommend_staffing(results, config, project):
@@ -1657,7 +1701,7 @@ def recommend_staffing(results, config, project):
     return recommendations
 ```
 
-### 6.7 Critical Path Tracing
+### Critical Path Tracing
 
 For each iteration, after scheduling:
 ```python
@@ -1690,7 +1734,7 @@ def trace_backwards(task_id, schedule, dependencies):
     return path
 ```
 
-### 6.8 Sensitivity Analysis (Spearman Rank Correlation)
+### Sensitivity Analysis (Spearman Rank Correlation)
 
 ```python
 def compute_sensitivity(task_durations_per_iteration, project_durations):
@@ -1708,7 +1752,7 @@ def compute_sensitivity(task_durations_per_iteration, project_durations):
     return correlations
 ```
 
-### 6.9 Sprint Velocity Sampling (Empirical)
+### Sprint Velocity Sampling (Empirical)
 
 ```python
 def sample_empirical_velocity(history, sprint_length_weeks, rng):
@@ -1726,7 +1770,7 @@ def sample_empirical_velocity(history, sprint_length_weeks, rng):
         return total
 ```
 
-### 6.10 Sprint Spillover Model (Table)
+### Sprint Spillover Model (Table)
 
 ```python
 def sample_spillover(task, config, rng):
@@ -1754,9 +1798,9 @@ def sample_spillover(task, config, rng):
 
 
 
-## 7. CLI Interface Specification
+## CLI Interface Specification
 
-### 7.1 Commands
+### Commands
 
 #### `mcprojsim simulate`
 Run Monte Carlo simulation on a project file.
@@ -1831,7 +1875,7 @@ Show and manage configuration settings.
 - `--generate`: Write default config template to `~/.mcprojsim/config.yaml`
 - `--list, --show`: List current configuration settings (default behavior)
 
-### 7.2 Output Formatting Modes
+### Output Formatting Modes
 
 The CLI supports multiple output verbosity and formatting combinations:
 
@@ -1848,9 +1892,9 @@ Header control: `--minheader` (two-line separator) or `--noheader` (no header at
 
 
 
-## 8. Output Format Specifications
+## Output Format Specifications
 
-### 8.1 JSON Output
+### JSON Output
 
 Complete nested dictionary containing:
 
@@ -1871,10 +1915,10 @@ Complete nested dictionary containing:
 - `constrained_diagnostics` (if active): wait time, utilization, calendar delay
 - `two_pass_trace` (if active): pass-1/pass-2 stats and deltas
 
-### 8.2 CSV Output
+### CSV Output
 Two-column format (Metric, Value) with section headers. Same data as JSON in flat tabular form.
 
-### 8.3 HTML Output
+### HTML Output
 
 Self-contained HTML report with:
 
@@ -1891,9 +1935,9 @@ No JavaScript or external dependencies required to view the HTML report.
 
 
 
-## 9. Validation Rules (Complete)
+## Validation Rules (Complete)
 
-### 9.1 Project-Level
+### Project-Level
 
 1. `project.name` must be non-empty string
 2. `project.start_date` must be valid ISO 8601 date
@@ -1904,7 +1948,7 @@ No JavaScript or external dependencies required to view the HTML report.
 7. `fx_conversion_cost` in [0, 0.50]
 8. `fx_overhead_rate` in [0, 1.0]
 
-### 9.2 Task-Level
+### Task-Level
 
 1. All task IDs must be unique
 2. At least one task must be defined
@@ -1920,13 +1964,13 @@ No JavaScript or external dependencies required to view the HTML report.
 12. Task resource references must point to existing resources
 13. At least one eligible resource must exist for each task's experience requirement
 
-### 9.3 Risk-Level
+### Risk-Level
 
 1. `probability` in [0.0, 1.0]
 2. Impact value > 0 (for RiskImpact objects)
 3. `risk.id` must be non-empty
 
-### 9.4 Resource-Level
+### Resource-Level
 
 1. Resource names must be unique (after normalization)
 2. `availability` in (0.0, 1.0]
@@ -1936,13 +1980,13 @@ No JavaScript or external dependencies required to view the HTML report.
 6. Resource calendar must reference an existing calendar
 7. `hourly_rate` >= 0 (if specified)
 
-### 9.5 Calendar-Level
+### Calendar-Level
 
 1. Calendar IDs must be unique
 2. `work_hours_per_day` > 0
 3. Each `work_days` entry in {1, 2, 3, 4, 5, 6, 7}
 
-### 9.6 Sprint Planning
+### Sprint Planning
 
 1. `sprint_length_weeks` > 0
 2. Exactly ONE of `completed_story_points` or `completed_tasks` per history entry
@@ -1955,7 +1999,7 @@ No JavaScript or external dependencies required to view the HTML report.
 9. Future sprint overrides: at least one of `sprint_number` or `start_date` required
 10. Future sprint dates must align to sprint boundaries
 
-### 9.7 Cross-Cutting
+### Cross-Cutting
 
 1. If `team_size` > 0 and explicit resources > team_size: error
 2. If `capacity_mode = "story_points"`: all tasks must have resolvable planning_story_points
@@ -1963,12 +2007,12 @@ No JavaScript or external dependencies required to view the HTML report.
 
 
 
-## 10. Implementation Gotchas and Pitfalls
+## Implementation Gotchas and Pitfalls
 
 This section documents non-obvious behaviors and mistakes encountered during implementation.
 Any re-implementation should anticipate these issues.
 
-### 10.1 Field Alias Mismatch
+### Field Alias Mismatch
 
 **Problem**: Pydantic field aliases (`min` → `low`, `max` → `high`) work at model
 construction time but NOT in the YAML parser's strict field checking. Users writing
@@ -1977,7 +2021,7 @@ construction time but NOT in the YAML parser's strict field checking. Users writ
 **Resolution**: Document canonical field names clearly. Aliases exist for programmatic API
 compatibility only.
 
-### 10.2 Enum str() vs .value
+### Enum str() vs .value
 
 **Problem**: Python's `str(SomeEnum.MEMBER)` includes the class name (e.g.,
 `"RemovedWorkTreatment.churn_only"`). Using `.value` gives the clean string `"churn_only"`.
@@ -1985,7 +2029,7 @@ compatibility only.
 **Affected areas**: Any place enum values are displayed to users or written to output files
 must use `.value`, not `str()`.
 
-### 10.3 Click Flag Naming
+### Click Flag Naming
 
 **Problem**: Click's `@click.option("--config", "--config-file", "-c", "config_file", ...)`
 syntax requires an explicit parameter name string (`"config_file"`) when the primary flag
@@ -1995,7 +2039,7 @@ TypeError.
 **Resolution**: Always specify the explicit Python parameter name as a positional string
 after all flag aliases.
 
-### 10.4 Config Auto-Load Path
+### Config Auto-Load Path
 
 **Problem**: The auto-load config path is `~/.mcprojsim/config.yaml`. Early documentation
 incorrectly referenced `configuration.yaml`.
@@ -2003,7 +2047,7 @@ incorrectly referenced `configuration.yaml`.
 **Rule**: The same path is used for both `config show --generate` (writes template) and
 auto-load on startup.
 
-### 10.5 Silent Two-Pass Fallback
+### Silent Two-Pass Fallback
 
 **Problem**: Specifying `--two-pass` without named resources silently falls back to
 single-pass with no warning, even in `--verbose` mode.
@@ -2011,7 +2055,7 @@ single-pass with no warning, even in `--verbose` mode.
 **Why**: Two-pass only affects resource assignment ORDER. Without resources, there's nothing
 to reorder. But users may expect an error or warning.
 
-### 10.6 STANDARD_HOURS_PER_DAY vs hours_per_day
+### STANDARD_HOURS_PER_DAY vs hours_per_day
 
 **Problem**: Two different "hours per day" values exist:
 
@@ -2020,14 +2064,14 @@ to reorder. But users may expect an error or warning.
 
 Risk percentage calculations, for example, always use 8.0 regardless of project setting.
 
-### 10.7 Stale Output Concerns
+### Stale Output Concerns
 
 **Problem**: HTML/JSON/CSV output is generated once after simulation. If the user changes
 the project file and re-runs, old output files may still exist alongside new ones.
 
 **Resolution**: Output files include timestamps. CLI overwrites same-named files.
 
-### 10.8 Critical Path with Multiple Terminals
+### Critical Path with Multiple Terminals
 
 **Problem**: If multiple terminal tasks finish at exactly the same project end time,
 ALL are traced as critical path origins. One iteration can produce multiple path branches.
@@ -2035,14 +2079,14 @@ ALL are traced as critical path origins. One iteration can produce multiple path
 **Impact**: Critical path sequence counts can sum to more than the number of iterations.
 The frequency/criticality index per task remains valid (capped at 1.0).
 
-### 10.9 Sprint Convergence Loop
+### Sprint Convergence Loop
 
 **Problem**: Misconfigured sprint planning (e.g., tasks with unmet dependencies that
 can never become ready) can cause infinite simulation loops.
 
 **Protection**: Hard limit at 10,000 sprints per iteration raises ValueError.
 
-### 10.10 Lognormal Degenerate Cases
+### Lognormal Degenerate Cases
 
 **Problem**: If `low == expected` or `expected == high`, the lognormal fit produces
 `sigma = 0` or invalid parameters.
@@ -2050,7 +2094,7 @@ can never become ready) can cause infinite simulation loops.
 **Validation**: Lognormal requires STRICT inequality `low < expected < high`.
 The validator rejects degenerate cases at parse time.
 
-### 10.11 Config Merge vs Replace
+### Config Merge vs Replace
 
 **Problem**: Early implementations replaced the entire config structure when a user config
 file was loaded, losing all defaults for unspecified sections.
@@ -2058,7 +2102,7 @@ file was loaded, losing all defaults for unspecified sections.
 **Resolution**: Deep merge strategy — only keys present in the user config file are
 overridden. All other keys retain their built-in defaults.
 
-### 10.12 Resource Productivity vs Availability
+### Resource Productivity vs Availability
 
 **Problem**: Both `availability` and `productivity_level` affect effective work rate,
 but they're distinct concepts:
@@ -2068,7 +2112,7 @@ but they're distinct concepts:
 Both multiply together for effective capacity:
 `effective_rate = availability × productivity_level × work_hours_per_day`
 
-### 10.13 Calendar Delay Interpretation
+### Calendar Delay Interpretation
 
 **Problem**: Users see large "calendar delay" with zero "resource wait time" and are confused.
 
@@ -2077,14 +2121,14 @@ that falls within the project span, regardless of whether resources were actuall
 Resource wait time only measures the gap between dependency satisfaction and resource
 availability.
 
-### 10.14 T-shirt Size Token Validation
+### T-shirt Size Token Validation
 
 **Problem**: T-shirt size values like `"3XL"` or `"M1"` are rejected because the validator
 requires purely alphabetic tokens (with optional dashes/dots for category qualification).
 
 **Allowed formats**: `XS`, `S`, `M`, `L`, `XL`, `XXL`, `story.M`, `bug.S`, `epic-L`
 
-### 10.15 Sprint Planning Story Points Requirement
+### Sprint Planning Story Points Requirement
 
 **Problem**: When `capacity_mode = "story_points"` and spillover is enabled, ALL tasks
 must have resolvable `planning_story_points`. This means either:
@@ -2095,9 +2139,9 @@ Tasks with only T-shirt sizes or explicit estimates will cause a validation erro
 
 
 
-## 11. Technology Stack
+## Technology Stack
 
-### 11.1 Core Dependencies
+### Core Dependencies
 
 - **Python**: 3.13+ (uses modern typing features)
 - **NumPy**: 1.24+ (random sampling, array operations)
@@ -2108,12 +2152,12 @@ Tasks with only T-shirt sizes or explicit estimates will cause a validation erro
 - **Click**: 8.0+ (CLI framework)
 - **Matplotlib**: 3.7+ (chart rendering for HTML export)
 
-### 11.2 Optional Dependencies
+### Optional Dependencies
 
 - **FastMCP**: MCP server implementation (stdio transport)
 - **tomli / tomli-w**: TOML parsing/writing
 
-### 11.3 Development Dependencies
+### Development Dependencies
 
 - **pytest**: 7.0+ (testing)
 - **pytest-cov**: 4.0+ (coverage)
@@ -2123,7 +2167,7 @@ Tasks with only T-shirt sizes or explicit estimates will cause a validation erro
 - **flake8**: 6.0+ (linting)
 - **Poetry**: package management (with `poetry.toml` for in-project virtualenvs)
 
-### 11.4 Documentation Dependencies
+### Documentation Dependencies
 
 - **MkDocs**: 1.5+ (site generator)
 - **mkdocs-material**: 9.0+ (Material theme)
@@ -2131,7 +2175,7 @@ Tasks with only T-shirt sizes or explicit estimates will cause a validation erro
 
 
 
-## 12. Implementation Plan
+## Implementation Plan
 
 This plan is ordered by dependencies between components. Each phase produces testable,
 independently verifiable deliverables.
@@ -2277,7 +2321,7 @@ independently verifiable deliverables.
 
 
 
-## 13. Future Enhancements (Out of Scope)
+## Future Enhancements (Out of Scope)
 
 1. Correlation between task durations (currently assumes independence)
 2. Resource leveling optimization (currently greedy, not globally optimal)
@@ -2293,7 +2337,7 @@ independently verifiable deliverables.
 
 
 
-## 14. References
+## References
 
 - *Software Estimation: Demystifying the Black Art* by Steve McConnell
 - *The Mythical Man-Month* by Frederick Brooks
@@ -2310,7 +2354,7 @@ independently verifiable deliverables.
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2025-10-23 | Initial | Initial specification |
-| 2.0 | 2025-07-21 | Review | Complete rewrite: added cost, sprint planning, NL/MCP, staffing, gotchas, implementation plan. Updated all sections to match actual v0.15.0 implementation. |
+| 2.0 | 2026-05-01 | Review | Complete rewrite: added cost, sprint planning, NL/MCP, staffing, gotchas, implementation plan. Updated all sections to match actual v0.15.0 implementation. |
 
 
 
