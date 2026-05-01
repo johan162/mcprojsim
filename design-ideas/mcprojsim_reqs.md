@@ -680,7 +680,9 @@ the resource is unavailable for work assignment (treated identically to sickness
 for scheduling purposes).
 
 #### FR-042: Effort vs Duration Distinction
+
 The system SHALL maintain and report two independent metrics:
+
 - **Project Duration** (calendar time): `max(task_end_times)` — elapsed time from start to finish
 - **Project Effort** (person-hours): `sum(all task durations)` — total work regardless of parallelism
 
