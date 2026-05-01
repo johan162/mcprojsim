@@ -127,6 +127,7 @@ endif
 SRC_DIR := src
 TEST_DIR := tests
 DOCS_DIR := docs
+DESIGN_DIR := design-ideas
 DIST_DIR := dist
 BUILD_DIR := .build
 
@@ -578,6 +579,9 @@ docs: ## Build the documentation site with MkDoc
 
 pdfs: ## Build the documentation site with MkDoc
 	@$(MAKE) -j 8 -C $(DOCS_DIR) pdfs
+
+reqs: ## Build the documentation site with MkDoc
+	@$(MAKE) -j 8 -C $(DESIGN_DIR) reqs
 
 docs-serve: ## Serve the documentation site locally with live reload
 	@$(MAKE) -C $(DOCS_DIR) serve
