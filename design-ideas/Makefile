@@ -185,6 +185,9 @@ $(eval $(call DEFINE_DESIGN_DOC_VARS,UI_DESIGN,ui-design,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,UI_WEB_DESIGN,ui-web-design,,))
 $(eval $(call DEFINE_DESIGN_DOC_VARS,PARALLEL_SIM,parallel-sim,,))
 
+$(eval $(call DEFINE_DESIGN_DOC_VARS,MCPROJSIM_REQS,mcprojsim_reqs,,))
+
+
 
 # ============================================================================================
 # Makefile Targets
@@ -202,9 +205,12 @@ $(eval $(call DESIGN_DOC_PDF_RULE,UI_DESIGN,UI design))
 $(eval $(call DESIGN_DOC_PDF_RULE,UI_WEB_DESIGN,UI web design))
 $(eval $(call DESIGN_DOC_PDF_RULE,PARALLEL_SIM,parallel simulation))
 
+$(eval $(call DESIGN_DOC_PDF_RULE,MCPROJSIM_REQS,mcprojsim requirements))
+
 PDF_DESIGN_DOCS := $(SPRINT_PLANNING_PDF) $(TSHIRT_CATEGORY_PDF) $(MULTIPHASE_SIM_PDF) \
 $(SENSITIVITY_ANALYSIS_PDF) $(PLUGGABLE_DISTRIBUTIONS_PDF) $(NL_MCP_IMPROVEMENTS_PDF) \
-$(HANDLING_COST_PDF) $(PROBABILISTIC_TESTING_PDF) $(UI_DESIGN_PDF) $(UI_WEB_DESIGN_PDF) $(PARALLEL_SIM_PDF)
+$(HANDLING_COST_PDF) $(PROBABILISTIC_TESTING_PDF) $(UI_DESIGN_PDF) $(UI_WEB_DESIGN_PDF) \
+$(PARALLEL_SIM_PDF) $(MCPROJSIM_REQS_PDF)
 
 help: ## Show this help message
 	@echo -e "$(DARKYELLOW)OneSelect - Makefile Targets$(NC)"
@@ -235,4 +241,7 @@ dark: ## Build all PDFs in dark theme (adds -dark suffix to filenames)
 	@$(MAKE) pdf-design-docs THEME=dark
 
 cost: $(HANDLING_COST_PDF) ## Build the handling cost design document PDF
+	@:
+
+reqs: $(MCPROJSIM_REQS_PDF) ## Build the MCPProjSim requirements design document PDF
 	@:

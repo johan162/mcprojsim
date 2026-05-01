@@ -1,11 +1,17 @@
-# Monte Carlo Project Simulator (mcprojsim) — Requirements & Implementation Specification
+Version: 2.0.0
+
+Date: 2026-04-17
+
+Status: Released (reviewed)
+
+# REQUIREMENTS - Monte Carlo Project Simulator
 
 > **Purpose**: This document specifies the complete functional and non-functional requirements
 > for `mcprojsim`, a Monte Carlo simulation tool for software project schedule, effort, and
 > cost estimation. It is written with sufficient detail that a competent engineering team
 > could recreate the system from scratch in any programming language.
 
----
+
 
 ## 1. Introduction
 
@@ -20,6 +26,7 @@ of outcomes.
 ### 1.2 Scope
 
 The system provides:
+
 - **Schedule estimation**: Elapsed calendar-time project duration with confidence intervals
 - **Effort estimation**: Total person-hours of work (independent of parallelism)
 - **Cost estimation**: Labor + fixed + risk-triggered monetary costs with budget confidence
@@ -38,7 +45,7 @@ The system provides:
 4. **Separation of concerns**: Parsing → Modeling → Simulation → Analysis → Export
 5. **Strict validation**: Catch errors early with location-aware error messages
 
----
+
 
 ## 2. Functional Requirements
 
@@ -49,6 +56,7 @@ The system SHALL parse project specifications from YAML and TOML formats. The pa
 SHALL produce location-aware error messages including line numbers for validation failures.
 
 **Implementation notes:**
+
 - YAML parser tracks line numbers using a custom loader that annotates each node
 - Unknown/unrecognized fields cause validation errors (strict mode)
 - Field aliases are supported in the Pydantic model layer (e.g., `min` → `low`, `max` → `high`,
@@ -60,10 +68,12 @@ The system SHALL accept three-point estimates (low, expected, high) for each tas
 sample durations from either a triangular or shifted log-normal distribution.
 
 **Triangular distribution:**
+
 - Direct sampling: `numpy.random.triangular(low, expected, high)`
 - Requires: `low <= expected <= high`
 
 **Shifted log-normal distribution:**
+
 - Model: `actual_duration = low + exp(Normal(μ, σ²))`
 - Parameter derivation from three-point input:
   ```
@@ -86,6 +96,7 @@ The system SHALL execute N iterations (default 10,000) of the simulation, each i
 independently sampling task durations, evaluating risks, and scheduling tasks.
 
 **Per-iteration flow:**
+
 1. For each task: sample base duration → convert units to hours → apply uncertainty multipliers
 2. Evaluate task-level risks (both time impact and cost impact)
 3. Schedule all tasks respecting dependencies (and optionally resource constraints)
@@ -95,21 +106,26 @@ independently sampling task durations, evaluating risks, and scheduling tasks.
    risk impacts, schedule slack, critical path, costs
 
 #### FR-004: Risk Modeling
+
 The system SHALL support risks at both task and project levels. Each risk has:
+
 - `probability` [0.0, 1.0]: Chance of occurring per iteration
 - `impact`: Time impact in hours (absolute) or percentage of base duration
 - `cost_impact` (optional): Monetary impact when triggered (can be negative for savings)
 
 **Impact types:**
+
 - `absolute`: Fixed hours added (with optional unit conversion from days/weeks)
 - `percentage`: Fraction of the task's adjusted duration (e.g., 0.20 = 20% increase)
 
 **Evaluation order:**
+
 - Task-level risks are evaluated and added to task duration BEFORE scheduling
 - Project-level risks are evaluated and added to project duration AFTER scheduling
 - Both time and cost impacts share the same probability roll (a triggered risk applies both)
 
 #### FR-005: Uncertainty Factors
+
 The system SHALL support multiplicative uncertainty factors applied to each task's sampled
 duration. Five factor dimensions are supported:
 
@@ -122,7 +138,9 @@ duration. Five factor dimensions are supported:
 | integration_complexity | low, medium, high | 1.00, 1.15, 1.35 |
 
 **Application**: All applicable factors are multiplied together into a single compound
+
 multiplier, then applied to the sampled duration:
+
 ```
 final_duration = sampled_duration × hours_multiplier × Π(uncertainty_factors)
 ```
@@ -141,12 +159,14 @@ In dependency-only mode: `start_time = max(end_time of all predecessors)`
 The system SHALL identify critical paths through the task dependency network.
 
 **Two forms of critical path data:**
+
 1. **Per-task criticality frequency**: For each task, count how many iterations it appeared
    on at least one critical path. Express as `criticality_index = count / iterations` (0.0–1.0).
 2. **Full path sequences**: Track complete ordered task chains that form critical paths.
    Multiple terminal tasks finishing at the same time produce multiple branches per iteration.
 
 **Stored data:**
+
 - `critical_path_frequency: Dict[task_id → count]`
 - `critical_path_sequences: List[CriticalPathRecord]` with path tuple, count, and frequency
 
@@ -155,7 +175,9 @@ distinct path sequences are shown in output. The simulation stores up to
 `simulation.max_stored_critical_paths` (default 20) unique sequences.
 
 #### FR-008: Statistical Analysis
+
 The system SHALL compute and report:
+
 - Mean, median, standard deviation, variance, min, max, range
 - Coefficient of variation (std_dev / mean)
 - Skewness (scipy.stats.skew)
@@ -168,6 +190,7 @@ The system SHALL compute Spearman rank correlation between each task's per-itera
 duration and the overall project duration.
 
 **Algorithm:**
+
 ```python
 for each task_id:
     correlation = scipy.stats.spearmanr(task_durations[task_id], project_durations).correlation
@@ -178,7 +201,9 @@ for each task_id:
 duration variability drives more of the project schedule uncertainty.
 
 #### FR-010: Configuration System
+
 The system SHALL load configuration from:
+
 1. Built-in defaults (hardcoded in Config class)
 2. Auto-loaded user config at `~/.mcprojsim/config.yaml` (if exists)
 3. Explicit `--config` flag on CLI (overrides auto-loaded)
@@ -209,6 +234,7 @@ The system SHALL accept story point estimates as an alternative to three-point n
 estimates. Story points are mapped to three-point hour ranges via configuration.
 
 **Default mappings** (unit: days):
+
 | Points | Low | Expected | High |
 |--------|-----|----------|------|
 | 1 | 0.5 | 1 | 3 |
@@ -227,6 +253,7 @@ The system SHALL accept T-shirt size estimates (XS, S, M, L, XL, XXL) with suppo
 for multiple size categories.
 
 **Categories** (5 built-in):
+
 - `story` (default): Standard development tasks (hours scale)
 - `bug`: Bug fixes (smaller scale)
 - `epic`: Large feature groupings (hundreds of hours)
@@ -255,6 +282,7 @@ Weekend days are skipped in the count.
 #### FR-017: Schedule Slack (Total Float)
 The system SHALL compute and report the mean total float (slack) for each task across
 all iterations. Slack is calculated as:
+
 ```
 slack = latest_possible_start - earliest_start
 ```
@@ -267,7 +295,9 @@ See FR-007 above. The system tracks complete path sequences (ordered task ID tup
 and reports their frequency of occurrence.
 
 #### FR-019: Risk Impact Reporting
+
 The system SHALL report per-task risk statistics:
+
 - `mean_impact`: Average time impact across all iterations (including zero for non-triggered)
 - `trigger_rate`: Fraction of iterations where the risk was triggered
 - `mean_when_triggered`: Average impact in iterations where it DID trigger
@@ -282,21 +312,25 @@ The system SHALL provide team size recommendations using a Brooks's Law communic
 overhead model.
 
 **Individual Productivity formula:**
+
 ```
 IP(n) = max(min_individual_productivity, 1.0 - communication_overhead × (n - 1))
 ```
 
 **Effective Capacity formula:**
+
 ```
 E(n) = n × IP(n) × productivity_factor
 ```
 
 **Calendar Duration formula:**
+
 ```
 T(n) = max(critical_path_hours, total_effort / E(n))
 ```
 
 **Experience profiles** (configurable):
+
 | Profile | productivity_factor | communication_overhead |
 |---------|--------------------|-----------------------|
 | senior | 1.0 | 0.04 |
@@ -315,6 +349,7 @@ The system SHALL accept semi-structured natural language project descriptions an
 generate valid YAML project specifications from them.
 
 **Supported input elements:**
+
 - Project metadata: `Project name:`, `Start date:`, `Hours per day:`, `Description:`
 - Tasks: `Task N:` headers or auto-detected numbered/bulleted lists
 - Estimates: T-shirt sizes, story points, three-point (`3/5/10 days`), prose ("about a week")
@@ -324,6 +359,7 @@ generate valid YAML project specifications from them.
 - Sprint planning: `Sprint planning:` section with sprint length, history entries
 
 **Fuzzy duration mapping** (prose → T-shirt sizes):
+
 - XS: "a few hours", "couple of hours"
 - S: "a day or two", "couple of days", "half a day"
 - M: "about a week", "5 working days"
@@ -345,6 +381,7 @@ The system SHALL expose simulation functionality via a Model Context Protocol (M
 server using stdio transport.
 
 **Exposed tools** (7 total):
+
 1. `generate_project_file(description) → yaml_string`
 2. `validate_project_description(description) → validation_report`
 3. `validate_generated_project_yaml(description, config_yaml?, velocity_model?, no_sickness?) → report + yaml`
@@ -364,15 +401,18 @@ The system SHALL support updating existing YAML project files from natural langu
 instructions without requiring full re-specification.
 
 **Behavior:**
+
 - `replace_tasks=False` (default): Preserves existing tasks; updates metadata/sprint/resources/calendars only
 - `replace_tasks=True`: Replaces entire task list with newly parsed tasks
 
----
+
 
 ### 2.2 Cost Estimation (FR-045 through FR-054)
 
 #### FR-045: Cost Model Activation
+
 The system SHALL activate cost estimation when ANY of the following conditions are met:
+
 - `project.default_hourly_rate > 0`
 - Any resource has `hourly_rate` set (even to 0)
 - Any task has `fixed_cost` set
@@ -382,11 +422,13 @@ When cost estimation is inactive, all cost-related output fields are None/omitte
 
 #### FR-046: Labor Cost Calculation
 The system SHALL compute labor cost per task as:
+
 ```
 task_labor_cost = task_duration_hours × effective_hourly_rate
 ```
 
 **Rate resolution:**
+
 - In constrained mode (resources assigned): Uses mean of assigned resources' hourly_rates;
   falls back to project `default_hourly_rate` for resources without explicit rates
 - In dependency-only mode: Always uses project `default_hourly_rate`
@@ -400,11 +442,13 @@ The system SHALL support per-task fixed costs that are added regardless of durat
 Fixed costs may be negative (representing credits or subsidies).
 
 #### FR-048: Risk Cost Impact
+
 The system SHALL support monetary `cost_impact` on risks. When a risk triggers (based on
 its probability roll), both time impact AND cost impact are applied in the same iteration.
 Cost impacts may be negative.
 
 #### FR-049: Overhead Rate
+
 The system SHALL apply a fractional overhead rate to labor costs ONLY:
 ```
 overhead = total_labor_cost × overhead_rate
@@ -412,29 +456,36 @@ overhead = total_labor_cost × overhead_rate
 Fixed costs and risk cost impacts are NOT subject to overhead markup.
 
 **Total project cost per iteration:**
+
 ```
 total_cost = total_labor + total_fixed + total_risk_cost + (total_labor × overhead_rate)
 ```
 
 #### FR-050: Budget Confidence Analysis
+
 When `--target-budget` is specified, the system SHALL report:
+
 1. Probability of staying within budget: `P(cost ≤ target)`
 2. 95% confidence interval on that probability (Wilson score for small tails, normal approx otherwise)
 3. Budget required for P50, P80, P90 confidence levels
 4. Joint probability of meeting BOTH schedule AND budget targets (if applicable)
 
 #### FR-051: Cost Statistics
+
 The system SHALL compute and report cost distribution statistics (mean, std_dev, percentiles)
 in the same manner as duration statistics.
 
 #### FR-052: Cost Sensitivity Analysis
+
 The system SHALL compute correlation between per-task costs and total project cost,
 identifying which tasks drive cost uncertainty.
 
 #### FR-053: Secondary Currencies
+
 The system SHALL support display of cost results in up to 5 secondary currencies.
 
 **Fields:**
+
 - `secondary_currencies`: List of ISO 4217 codes (max 5)
 - `fx_rates`: Manual exchange rate overrides (target_currency → rate)
 - `fx_conversion_cost`: Bank spread fraction [0, 0.50]
@@ -447,12 +498,14 @@ via `fx_rates` or display will use the raw primary-currency amounts.
 The system SHALL report per-task cost statistics: mean, std_dev, min, max, and
 percentage of total project cost.
 
----
+
 
 ### 2.3 Resource & Calendar Constrained Scheduling (FR-026 through FR-044)
 
 #### FR-026: Team Resource Model
+
 The system SHALL support explicit resource definitions with:
+
 - `name`: Unique identifier
 - `availability`: Fraction of full-time [0, 1.0]
 - `calendar`: Reference to a calendar definition
@@ -467,19 +520,24 @@ If `project.team_size > 0` and fewer explicit resources are defined, the system 
 auto-generate default resources to reach the specified team_size.
 
 **Rules:**
+
 - If explicit resources > team_size: validation error
 - If explicit resources < team_size: append generic resources with default attributes
 - Auto-generated resources use the "default" calendar
 
 #### FR-028: Resource Productivity
+
 The system SHALL apply `productivity_level` as a divisor on effective work rate:
+
 ```
 effective_hours_per_calendar_hour = availability × productivity_level
 ```
 Higher productivity = task completes faster.
 
 #### FR-029: Calendar Definitions
+
 The system SHALL support calendar specifications with:
+
 - `id`: Unique identifier (default: "default")
 - `work_hours_per_day`: Hours of productive work per calendar day (default: 8.0)
 - `work_days`: List of working weekdays as integers 1–7 (1=Monday, 7=Sunday; default: [1,2,3,4,5])
@@ -489,6 +547,7 @@ The system SHALL support calendar specifications with:
 The system SHALL stochastically simulate sickness absence for each resource.
 
 **Algorithm:**
+
 1. Estimate project horizon: `max(30, ceil(total_effort / (hours_per_day × total_capacity)) + 60)` days
 2. For each resource, for each working day in the horizon:
    - Roll `random() < sickness_prob`
@@ -497,6 +556,7 @@ The system SHALL stochastically simulate sickness absence for each resource.
 3. Sickness days are excluded from resource availability windows
 
 **Sickness probability precedence:**
+
 1. Per-resource `sickness_prob` field (explicit in YAML)
 2. Config `constrained_scheduling.sickness_prob` (global fallback)
 
@@ -506,16 +566,19 @@ The system SHALL stochastically simulate sickness absence for each resource.
 The system SHALL assign resources to tasks using a greedy event-driven algorithm.
 
 **Single-pass (default):**
+
 - Ready tasks sorted by ascending task_id (lexicographic, deterministic)
 - For each ready task: find eligible free resources meeting experience requirements
 - Eligible resources sorted alphabetically by name
 - Assign first `min(max_resources, practical_cap)` eligible resources
 
 **Practical auto-cap formula:**
+
 ```python
 granularity_cap = max(1, floor(effort_hours / MIN_EFFORT_PER_ASSIGNEE_HOURS))
 practical_cap = max(1, min(MAX_ASSIGNEES_PER_TASK, granularity_cap))
 ```
+
 Where `MIN_EFFORT_PER_ASSIGNEE_HOURS = 16.0` and `MAX_ASSIGNEES_PER_TASK = 3`.
 
 This prevents unrealistic compression (e.g., a 5-hour task split among 3 people).
@@ -533,7 +596,9 @@ Track total calendar_delay (non-work periods within task span)
 ```
 
 #### FR-033: Task Eligibility and Experience
+
 A resource is eligible for a task if:
+
 1. The resource is listed in the task's `resources` field (or task has no explicit resource list)
 2. `resource.experience_level >= task.min_experience_level`
 
@@ -547,11 +612,13 @@ The system SHALL support a two-pass scheduling mode (`--two-pass` flag or
 Build per-task criticality index from critical path frequency.
 
 **Pass 2**: Re-run with task priority ordering:
+
 - Ready tasks sorted by `(-criticality_index, task_id)` — higher criticality scheduled first
 - First `pass1_iterations` iterations replay cached durations deterministically
 - Remaining iterations sample fresh
 
 **Traceability output:**
+
 - Pass-1 aggregate stats (mean, P50, P80, P90, P95)
 - Pass-2 aggregate stats (same)
 - Deltas (negative = improvement from prioritization)
@@ -563,6 +630,7 @@ scheduling where assignment order matters.
 
 #### FR-035: Scheduling Mode Selection
 The scheduler mode is selected per the project's resource configuration:
+
 - `dependency_only`: When no resources exist (no explicit resources, team_size=0 or unset)
 - `resource_constrained`: When resources exist (explicitly defined or generated from team_size)
 
@@ -592,6 +660,7 @@ Pure dependency-chain parallelism: tasks without mutual dependencies can overlap
 
 #### FR-040: Resource-Constrained Scheduling Algorithm
 **Event-driven greedy loop:**
+
 ```
 while remaining_tasks:
     1. Release completed tasks at current_time
@@ -619,18 +688,22 @@ In dependency-only mode these may be similar. In resource-constrained mode, dura
 typically much longer than effort would suggest due to resource bottlenecks.
 
 #### FR-043: Constrained Scheduling Validation
+
 The system SHALL validate resource-constraint configurations:
+
 - All task resource references must point to existing resources
 - Resource calendars must reference existing calendar definitions
 - Experience requirements must be satisfiable (at least one eligible resource exists)
 
 #### FR-044: Constrained Scheduling Diagnostics
+
 The system SHALL report per-iteration diagnostics:
+
 - Mean resource wait time (hours)
 - Mean resource utilization (0–1)
 - Mean calendar delay (hours)
 
----
+
 
 ### 2.4 Sprint Planning (FR-055 through FR-070)
 
@@ -643,7 +716,9 @@ simulate how many sprints are needed to complete all named tasks (and optional
 aggregate backlog), producing a probabilistic sprint count distribution.
 
 #### FR-056: Sprint History Input
+
 The system SHALL accept sprint history entries with:
+
 - `sprint_id`: Unique identifier (required)
 - `sprint_length_weeks`: Duration (inherits from global sprint_length_weeks if omitted)
 - Delivery signal: EXACTLY ONE of `completed_story_points` or `completed_tasks`
@@ -656,6 +731,7 @@ The system SHALL accept sprint history entries with:
 - `notes`: Optional context
 
 **Validation rules:**
+
 - Minimum 2 entries with positive delivery signal required
 - Cannot mix story-point and task-count fields in the same entry
 - Entry field family must match `capacity_mode` (story_points vs tasks)
@@ -668,12 +744,14 @@ normalize for reduced-capacity sprints. Added and removed are NOT normalized.
 The system SHALL support two velocity sampling models:
 
 **Empirical (default):**
+
 - Resamples from historical completed-units observations
 - Prefers sprints with matching `sprint_length_weeks`
 - Falls back to weekly-rate normalization if no matching cadence exists
   (breaks history into per-week rates, samples N weeks, aggregates)
 
 **Negative Binomial:**
+
 - Fits NB distribution parameters using method of moments:
   ```
   μ = mean(completed_units)
@@ -685,7 +763,9 @@ The system SHALL support two velocity sampling models:
 - Records diagnostic params (mu, k, overdispersed flag)
 
 #### FR-058: Sprint Simulation Algorithm
+
 Each iteration of the sprint simulation:
+
 ```
 while (named_tasks_remaining OR aggregate_backlog > threshold):
     1. Sample velocity (completed_units) from chosen model
@@ -704,7 +784,9 @@ while (named_tasks_remaining OR aggregate_backlog > threshold):
 Dependency DAG is respected — only dependency-ready tasks are available.
 
 #### FR-059: Removed Work Treatment
+
 Two modes for handling removed scope:
+
 - `churn_only` (default): Removed work is a diagnostic signal only; does not reduce forecast backlog
 - `reduce_backlog`: Removed work directly reduces the remaining aggregate backlog projection
 
@@ -712,6 +794,7 @@ Two modes for handling removed scope:
 The system SHALL optionally model partial task completion (spillover) within sprints.
 
 **Table model** (default):
+
 - Size brackets map task size (in planning story points) to spillover probability
 - Default brackets: [{max_points: 2, prob: 0.05}, {max_points: 5, prob: 0.12},
   {max_points: 8, prob: 0.25}, {max_points: None, prob: 0.40}]
@@ -719,6 +802,7 @@ The system SHALL optionally model partial task completion (spillover) within spr
   (default α=3.25, β=1.75 — right-skewed, most work completed)
 
 **Logistic model** (alternative):
+
 - Spillover probability = sigmoid(slope × normalized_size + intercept)
 - Same consumed fraction model
 
@@ -726,6 +810,7 @@ The system SHALL optionally model partial task completion (spillover) within spr
 The system SHALL optionally model team-member sickness within sprint planning.
 
 **Per-sprint sickness multiplier:**
+
 1. For each week in sprint: Binomial(team_size, prob_per_person_per_week) → sick count
 2. For each sick event: sample duration from LogNormal(μ, σ), cap at remaining sprint days
 3. Total lost_days capped at total person-days
@@ -734,19 +819,25 @@ The system SHALL optionally model team-member sickness within sprint planning.
 Applied to completed_units after volatility and future overrides.
 
 #### FR-062: Volatility/Disruption Overlay
+
 The system SHALL optionally apply a stochastic disruption event per sprint:
+
 - `disruption_probability`: Chance of disruption per sprint
 - If triggered: sample multiplier from Triangular(low, expected, high)
 - Applied as: `completed_units × disruption_multiplier`
 
 #### FR-063: Future Sprint Overrides
+
 The system SHALL support explicit capacity adjustments for known upcoming sprints:
+
 - Matched by `sprint_number` OR `start_date` (OR logic — first match wins)
 - Each override provides `holiday_factor` and/or `capacity_multiplier`
 - Effective multiplier = holiday_factor × capacity_multiplier
 
 #### FR-064: Sprint Planning Results
+
 The system SHALL produce:
+
 - Sprint count distribution (array of per-iteration counts)
 - Statistics: mean, median, std_dev, min, max, percentiles
 - Date percentiles: sprint count mapped to calendar delivery dates
@@ -762,7 +853,9 @@ The system SHALL produce:
 - Future sprint override transparency (which overrides were applied)
 
 #### FR-065: Planned Commitment Guidance
+
 The system SHALL compute a heuristic sprint commitment recommendation:
+
 ```
 removal_ratio = removed / (completed + spillover + removed)
 guidance = median(completed) × (1 - Pq(spillover_ratio)) × (1 - Pq(removal_ratio)) - Pq(added)
@@ -770,16 +863,21 @@ guidance = median(completed) × (1 - Pq(spillover_ratio)) × (1 - Pq(removal_rat
 Where Pq = percentile at q = confidence_level × 100.
 
 #### FR-066: Sprint Capacity Mode
+
 Two capacity modes determine the unit system:
+
 - `story_points`: Tasks have planning_story_points; velocity measured in points
 - `tasks`: Tasks counted as unit-each; velocity measured in task count
 
 #### FR-067: Sprint Burnup Tracking
+
 The system SHALL track cumulative delivered units at percentiles (P50, P80, P90) per
 sprint number across all iterations, producing a burnup forecast chart dataset.
 
 #### FR-068: Sprint Planning Confidence Level
+
 The system SHALL use a configurable confidence level (default 0.80) for:
+
 - Commitment guidance percentile calculations
 - Sprint count confidence intervals
 - Burnup forecast reporting
@@ -793,34 +891,39 @@ The system SHALL raise a ValueError if any iteration exceeds 10,000 sprints.
 This prevents infinite loops from misconfigured projects where tasks can never complete
 (e.g., circular dependency that slipped past validation, or unreachable tasks).
 
----
+
 
 ### 2.5 Distribution Selection (FR-071)
 
 #### FR-071: Per-Project and Per-Task Distribution
+
 The system SHALL support selecting distribution type at both project and task level:
+
 - `project.distribution`: Default distribution for all tasks (triangular or lognormal)
 - `task.estimate.distribution`: Override for specific tasks
 
 When unspecified at task level, the project default applies.
 When unspecified at project level, triangular is the default.
 
----
+
 
 ## 3. Non-Functional Requirements
 
 ### NFR-001: Performance
+
 - 10,000 iterations on a 20-task project SHALL complete within 10 seconds
 - Memory usage SHALL scale linearly with iterations × tasks
 - NumPy vectorization SHALL be used for bulk random sampling where possible
 
 ### NFR-002: Code Quality
+
 - Strict type annotations throughout source code (Python 3.13+ typing features)
 - Pydantic v2 for all data models with comprehensive validators
 - Black formatting, flake8 linting, strict mypy type checking
 - Pre-commit hooks for automated quality checks
 
 ### NFR-003: Test Coverage
+
 - Minimum 80% line coverage (enforced by CI)
 - Integration tests for CLI commands (using Click's CliRunner)
 - MCP tests use `pytest.importorskip("mcp")` since MCP is an optional dependency
@@ -828,6 +931,7 @@ When unspecified at project level, triangular is the default.
 - Reproducibility tests: same seed → identical results
 
 ### NFR-004: Documentation
+
 - MkDocs with Material theme
 - Sequentially numbered user guide chapters (01–16)
 - Grammar reference for YAML project file format
@@ -835,11 +939,13 @@ When unspecified at project level, triangular is the default.
 - Examples directory with sample project files
 
 ### NFR-005: Maintainability
+
 - Clear separation: parsers (with line tracking) → Pydantic models (validation) → engine (simulation) → analysis (post-processing) → exporters (output)
 - Config as single source of truth for all defaults and tuning parameters
 - No hardcoded magic numbers in simulation logic
 
 ### NFR-006: Portability
+
 - **Python 3.13+** required (uses modern typing features including `type` statements)
 - Dependencies: NumPy, SciPy, Pandas, PyYAML, Pydantic v2, Click 8+, Matplotlib
 - Optional: FastMCP (for MCP server), tomli/tomli-w (for TOML support)
@@ -849,28 +955,32 @@ When unspecified at project level, triangular is the default.
 Python 3.13+ features throughout. This is a hard requirement.
 
 ### NFR-007: Reproducibility
+
 - All randomness flows through `numpy.random.RandomState(seed)`
 - Given same seed + same input + same config → bit-identical results
 - The random state is passed through all sampling functions (no global random state)
 
 ### NFR-008: Extensibility
+
 - New distribution types can be added to DistributionSampler
 - New export formats can be added as ExporterBase subclasses
 - New uncertainty factor dimensions can be added via config (no code changes)
 - New T-shirt size categories can be added via config
 
 ### NFR-009: Usability
+
 - CLI with helpful error messages and `--help` on all commands
 - Validation errors include file path, line number, and field context
 - HTML reports with embedded charts (no external dependencies to view)
 - Progressive complexity: minimal projects need only `project:` + `tasks:` sections
 
 ### NFR-010: Logging
+
 - Standard Python logging with configurable levels
 - `--verbose` flag enables detailed output during simulation
 - `--quiet` suppresses all output except errors and final results
 
----
+
 
 ## 4. Input File Format Specification
 
@@ -892,6 +1002,7 @@ tasks:
 ```
 
 #### 4.1.2 Complete Project Structure
+
 ```yaml
 project:
   name: "Complete Example"
@@ -1066,7 +1177,9 @@ sprint_planning:
 ```
 
 #### 4.1.3 Unit Conversion
+
 All durations are internally converted to hours using:
+
 - `hours_per_day` (from project metadata, default 8.0) for days → hours
 - `hours_per_day × 5` for weeks → hours (5 working days per week)
 - The constant `STANDARD_HOURS_PER_DAY = 8.0` is used for unit conversions in the engine,
@@ -1076,7 +1189,9 @@ All durations are internally converted to hours using:
 conversions) is always 8.0 regardless of the project's `hours_per_day` setting.
 
 #### 4.1.4 Field Aliases
+
 The following field aliases are accepted by the Pydantic model layer:
+
 - `estimate.min` → `estimate.low`
 - `estimate.max` → `estimate.high`
 - `estimate.most_likely` → `estimate.expected`
@@ -1087,7 +1202,7 @@ enforces strict field names and will reject unknown fields. Therefore, aliases o
 work reliably when data flows directly through model constructors (as in tests or API use).
 In YAML files, prefer the canonical field names.
 
----
+
 
 ### 4.2 Configuration File (config.yaml)
 
@@ -1242,7 +1357,7 @@ cost:
   include_in_output: true
 ```
 
----
+
 
 ## 5. System Architecture
 
@@ -1338,7 +1453,7 @@ Input (YAML/TOML/NL) → Parser → Pydantic Models (validated) → SimulationEn
 6. **Version resolution**: `__init__.py` tries `importlib.metadata.version("mcprojsim")`;
    falls back to reading version from `pyproject.toml` for source checkouts.
 
----
+
 
 ## 6. Algorithms
 
@@ -1637,7 +1752,7 @@ def sample_spillover(task, config, rng):
     return True, consumed
 ```
 
----
+
 
 ## 7. CLI Interface Specification
 
@@ -1647,9 +1762,11 @@ def sample_spillover(task, config, rng):
 Run Monte Carlo simulation on a project file.
 
 **Arguments:**
+
 - `PROJECT_FILE` (required): Path to YAML or TOML project file
 
 **Options:**
+
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--iterations, -n` | int | 10000 | Number of MC iterations |
@@ -1684,9 +1801,11 @@ Run Monte Carlo simulation on a project file.
 Validate a project file without running simulation.
 
 **Arguments:**
+
 - `PROJECT_FILE` (required): Path to YAML or TOML file
 
 **Options:**
+
 - `--config, --config-file, -c`: Config YAML path
 - `--verbose, -v`: Show full validation details
 
@@ -1694,9 +1813,11 @@ Validate a project file without running simulation.
 Generate a YAML project file from natural language description.
 
 **Arguments:**
+
 - `INPUT_FILE` (required): Plain-text project description file
 
 **Options:**
+
 - `--output, -o`: Output YAML file path (default: stdout)
 - `--validate-only`: Only validate description, don't generate YAML
 - `--verbose, -v`: Show detailed messages
@@ -1705,6 +1826,7 @@ Generate a YAML project file from natural language description.
 Show and manage configuration settings.
 
 **Options:**
+
 - `--config, --config-file, -c`: Config file path
 - `--generate`: Write default config template to `~/.mcprojsim/config.yaml`
 - `--list, --show`: List current configuration settings (default behavior)
@@ -1724,12 +1846,14 @@ The CLI supports multiple output verbosity and formatting combinations:
 
 Header control: `--minheader` (two-line separator) or `--noheader` (no header at all).
 
----
+
 
 ## 8. Output Format Specifications
 
 ### 8.1 JSON Output
+
 Complete nested dictionary containing:
+
 - `project`: metadata (name, start_date, num_tasks, distribution, t_shirt_category)
 - `simulation`: parameters (iterations, seed, hours_per_day, schedule_mode)
 - `statistics`: duration stats (mean, median, std_dev, min, max, CV, skewness, kurtosis)
@@ -1751,7 +1875,9 @@ Complete nested dictionary containing:
 Two-column format (Metric, Value) with section headers. Same data as JSON in flat tabular form.
 
 ### 8.3 HTML Output
+
 Self-contained HTML report with:
+
 - **Charts**: Matplotlib-generated PNG images embedded as base64 data URIs
 - **Thermometer bars**: Colored probability gauges (red/yellow/green thresholds)
 - **Tables**: Statistical summaries, confidence intervals, staffing, critical paths
@@ -1763,11 +1889,12 @@ Self-contained HTML report with:
 **Chart technology**: Matplotlib renders to PNG in memory; base64-encoded inline.
 No JavaScript or external dependencies required to view the HTML report.
 
----
+
 
 ## 9. Validation Rules (Complete)
 
 ### 9.1 Project-Level
+
 1. `project.name` must be non-empty string
 2. `project.start_date` must be valid ISO 8601 date
 3. `probability_red_threshold` < `probability_green_threshold`
@@ -1778,6 +1905,7 @@ No JavaScript or external dependencies required to view the HTML report.
 8. `fx_overhead_rate` in [0, 1.0]
 
 ### 9.2 Task-Level
+
 1. All task IDs must be unique
 2. At least one task must be defined
 3. All dependency references must point to existing task IDs
@@ -1793,11 +1921,13 @@ No JavaScript or external dependencies required to view the HTML report.
 13. At least one eligible resource must exist for each task's experience requirement
 
 ### 9.3 Risk-Level
+
 1. `probability` in [0.0, 1.0]
 2. Impact value > 0 (for RiskImpact objects)
 3. `risk.id` must be non-empty
 
 ### 9.4 Resource-Level
+
 1. Resource names must be unique (after normalization)
 2. `availability` in (0.0, 1.0]
 3. `experience_level` in {1, 2, 3}
@@ -1807,11 +1937,13 @@ No JavaScript or external dependencies required to view the HTML report.
 7. `hourly_rate` >= 0 (if specified)
 
 ### 9.5 Calendar-Level
+
 1. Calendar IDs must be unique
 2. `work_hours_per_day` > 0
 3. Each `work_days` entry in {1, 2, 3, 4, 5, 6, 7}
 
 ### 9.6 Sprint Planning
+
 1. `sprint_length_weeks` > 0
 2. Exactly ONE of `completed_story_points` or `completed_tasks` per history entry
 3. Field family must match `capacity_mode`
@@ -1824,11 +1956,12 @@ No JavaScript or external dependencies required to view the HTML report.
 10. Future sprint dates must align to sprint boundaries
 
 ### 9.7 Cross-Cutting
+
 1. If `team_size` > 0 and explicit resources > team_size: error
 2. If `capacity_mode = "story_points"`: all tasks must have resolvable planning_story_points
 3. Unknown/unrecognized YAML fields: rejected with line-number error
 
----
+
 
 ## 10. Implementation Gotchas and Pitfalls
 
@@ -1836,6 +1969,7 @@ This section documents non-obvious behaviors and mistakes encountered during imp
 Any re-implementation should anticipate these issues.
 
 ### 10.1 Field Alias Mismatch
+
 **Problem**: Pydantic field aliases (`min` → `low`, `max` → `high`) work at model
 construction time but NOT in the YAML parser's strict field checking. Users writing
 `min:` in YAML get "unknown field" errors even though the model would accept it.
@@ -1844,6 +1978,7 @@ construction time but NOT in the YAML parser's strict field checking. Users writ
 compatibility only.
 
 ### 10.2 Enum str() vs .value
+
 **Problem**: Python's `str(SomeEnum.MEMBER)` includes the class name (e.g.,
 `"RemovedWorkTreatment.churn_only"`). Using `.value` gives the clean string `"churn_only"`.
 
@@ -1851,6 +1986,7 @@ compatibility only.
 must use `.value`, not `str()`.
 
 ### 10.3 Click Flag Naming
+
 **Problem**: Click's `@click.option("--config", "--config-file", "-c", "config_file", ...)`
 syntax requires an explicit parameter name string (`"config_file"`) when the primary flag
 name (`--config`) would collide with the Python function parameter name and cause a
@@ -1860,6 +1996,7 @@ TypeError.
 after all flag aliases.
 
 ### 10.4 Config Auto-Load Path
+
 **Problem**: The auto-load config path is `~/.mcprojsim/config.yaml`. Early documentation
 incorrectly referenced `configuration.yaml`.
 
@@ -1867,6 +2004,7 @@ incorrectly referenced `configuration.yaml`.
 auto-load on startup.
 
 ### 10.5 Silent Two-Pass Fallback
+
 **Problem**: Specifying `--two-pass` without named resources silently falls back to
 single-pass with no warning, even in `--verbose` mode.
 
@@ -1874,19 +2012,23 @@ single-pass with no warning, even in `--verbose` mode.
 to reorder. But users may expect an error or warning.
 
 ### 10.6 STANDARD_HOURS_PER_DAY vs hours_per_day
+
 **Problem**: Two different "hours per day" values exist:
+
 - `STANDARD_HOURS_PER_DAY = 8.0` (constant, used for engine calculations and unit conversions)
 - `project.hours_per_day` (configurable, used for OUTPUT display — working days calculation)
 
 Risk percentage calculations, for example, always use 8.0 regardless of project setting.
 
 ### 10.7 Stale Output Concerns
+
 **Problem**: HTML/JSON/CSV output is generated once after simulation. If the user changes
 the project file and re-runs, old output files may still exist alongside new ones.
 
 **Resolution**: Output files include timestamps. CLI overwrites same-named files.
 
 ### 10.8 Critical Path with Multiple Terminals
+
 **Problem**: If multiple terminal tasks finish at exactly the same project end time,
 ALL are traced as critical path origins. One iteration can produce multiple path branches.
 
@@ -1894,12 +2036,14 @@ ALL are traced as critical path origins. One iteration can produce multiple path
 The frequency/criticality index per task remains valid (capped at 1.0).
 
 ### 10.9 Sprint Convergence Loop
+
 **Problem**: Misconfigured sprint planning (e.g., tasks with unmet dependencies that
 can never become ready) can cause infinite simulation loops.
 
 **Protection**: Hard limit at 10,000 sprints per iteration raises ValueError.
 
 ### 10.10 Lognormal Degenerate Cases
+
 **Problem**: If `low == expected` or `expected == high`, the lognormal fit produces
 `sigma = 0` or invalid parameters.
 
@@ -1907,6 +2051,7 @@ can never become ready) can cause infinite simulation loops.
 The validator rejects degenerate cases at parse time.
 
 ### 10.11 Config Merge vs Replace
+
 **Problem**: Early implementations replaced the entire config structure when a user config
 file was loaded, losing all defaults for unspecified sections.
 
@@ -1914,6 +2059,7 @@ file was loaded, losing all defaults for unspecified sections.
 overridden. All other keys retain their built-in defaults.
 
 ### 10.12 Resource Productivity vs Availability
+
 **Problem**: Both `availability` and `productivity_level` affect effective work rate,
 but they're distinct concepts:
 - `availability`: Fraction of time allocated to this project (e.g., 0.5 = half-time)
@@ -1923,6 +2069,7 @@ Both multiply together for effective capacity:
 `effective_rate = availability × productivity_level × work_hours_per_day`
 
 ### 10.13 Calendar Delay Interpretation
+
 **Problem**: Users see large "calendar delay" with zero "resource wait time" and are confused.
 
 **Explanation**: Calendar delay accumulates ALL non-work time (weekends, holidays, sickness)
@@ -1931,12 +2078,14 @@ Resource wait time only measures the gap between dependency satisfaction and res
 availability.
 
 ### 10.14 T-shirt Size Token Validation
+
 **Problem**: T-shirt size values like `"3XL"` or `"M1"` are rejected because the validator
 requires purely alphabetic tokens (with optional dashes/dots for category qualification).
 
 **Allowed formats**: `XS`, `S`, `M`, `L`, `XL`, `XXL`, `story.M`, `bug.S`, `epic-L`
 
 ### 10.15 Sprint Planning Story Points Requirement
+
 **Problem**: When `capacity_mode = "story_points"` and spillover is enabled, ALL tasks
 must have resolvable `planning_story_points`. This means either:
 - Task has explicit `planning_story_points` field, OR
@@ -1944,11 +2093,12 @@ must have resolvable `planning_story_points`. This means either:
 
 Tasks with only T-shirt sizes or explicit estimates will cause a validation error.
 
----
+
 
 ## 11. Technology Stack
 
 ### 11.1 Core Dependencies
+
 - **Python**: 3.13+ (uses modern typing features)
 - **NumPy**: 1.24+ (random sampling, array operations)
 - **SciPy**: 1.10+ (statistics: spearmanr, skew, kurtosis, NormalDist)
@@ -1959,10 +2109,12 @@ Tasks with only T-shirt sizes or explicit estimates will cause a validation erro
 - **Matplotlib**: 3.7+ (chart rendering for HTML export)
 
 ### 11.2 Optional Dependencies
+
 - **FastMCP**: MCP server implementation (stdio transport)
 - **tomli / tomli-w**: TOML parsing/writing
 
 ### 11.3 Development Dependencies
+
 - **pytest**: 7.0+ (testing)
 - **pytest-cov**: 4.0+ (coverage)
 - **pytest-xdist**: parallel test execution (`-n auto`)
@@ -1972,11 +2124,12 @@ Tasks with only T-shirt sizes or explicit estimates will cause a validation erro
 - **Poetry**: package management (with `poetry.toml` for in-project virtualenvs)
 
 ### 11.4 Documentation Dependencies
+
 - **MkDocs**: 1.5+ (site generator)
 - **mkdocs-material**: 9.0+ (Material theme)
 - **mkdocstrings**: 0.22+ (API documentation)
 
----
+
 
 ## 12. Implementation Plan
 
@@ -2014,6 +2167,7 @@ independently verifiable deliverables.
 **Verification**: Sensitivity correlations match expected patterns (long tasks on critical path → high r).
 
 ### Phase 3: Symbolic Estimation
+
 **Goal**: Support T-shirt sizes and story points.
 
 1. **T-shirt size mappings**: 5 categories × 6 sizes, config-driven
@@ -2025,6 +2179,7 @@ independently verifiable deliverables.
 **Verification**: T-shirt "M" produces duration in expected range. Mixing t_shirt + unit → error.
 
 ### Phase 4: Lognormal Distribution
+
 **Goal**: Alternative distribution with shifted log-normal fitting.
 
 1. **Fit algorithm**: μ, σ derivation from three-point + z-score
@@ -2035,6 +2190,7 @@ independently verifiable deliverables.
 **Verification**: Lognormal samples are right-skewed with mode ≈ expected.
 
 ### Phase 5: Resource-Constrained Scheduling
+
 **Goal**: Calendar-aware scheduling with resource pools.
 
 1. **Resource model**: Name, availability, calendar, experience, productivity
@@ -2049,6 +2205,7 @@ independently verifiable deliverables.
 **Verification**: Resource-constrained schedule is always >= dependency-only schedule.
 
 ### Phase 6: Two-Pass Scheduling
+
 **Goal**: Criticality-prioritized resource assignment.
 
 1. **Pass-1 infrastructure**: Criticality index computation
@@ -2059,6 +2216,7 @@ independently verifiable deliverables.
 **Verification**: Pass-2 P90 ≤ Pass-1 P90 (or equal) on typical projects.
 
 ### Phase 7: Cost Estimation
+
 **Goal**: Full monetary cost modeling.
 
 1. **Cost activation logic**: Detect when cost calculation is needed
@@ -2073,6 +2231,7 @@ independently verifiable deliverables.
 **Verification**: Total cost = sum(task_labor) + sum(fixed) + sum(risk_cost) + overhead_on_labor.
 
 ### Phase 8: Sprint Planning
+
 **Goal**: Monte Carlo sprint forecasting.
 
 1. **Sprint planning model**: All SprintPlanningSpec fields
@@ -2090,6 +2249,7 @@ independently verifiable deliverables.
 **Verification**: Sprint count decreases with higher velocity history.
 
 ### Phase 9: Natural Language & MCP
+
 **Goal**: NL input and MCP protocol support.
 
 1. **NL parser**: Task extraction, fuzzy matching, prose estimate recognition
@@ -2101,6 +2261,7 @@ independently verifiable deliverables.
 **Verification**: Generated YAML passes `validate`. Round-trip NL → YAML → simulate works.
 
 ### Phase 10: Staffing Analysis & Polish
+
 **Goal**: Team size optimization and final output polish.
 
 1. **Staffing algorithm**: Brooks's Law model with profiles
@@ -2114,7 +2275,7 @@ independently verifiable deliverables.
 
 **Verification**: Recommended team size produces minimum calendar duration for each profile.
 
----
+
 
 ## 13. Future Enhancements (Out of Scope)
 
@@ -2130,7 +2291,7 @@ independently verifiable deliverables.
 10. Automatic FX rate fetching (currently manual rates only)
 11. PERT distribution as alternative to triangular/lognormal
 
----
+
 
 ## 14. References
 
@@ -2142,7 +2303,7 @@ independently verifiable deliverables.
 - Monte Carlo methods in project management (PMI white papers)
 - Brooks's Law: communication overhead = n(n-1)/2 (simplified to linear per-person model)
 
----
+
 
 ## Document Control
 
