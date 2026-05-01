@@ -3,7 +3,9 @@
 .PHONY: docs gen-examples update-version pdf-docs docs-serve \
  container-engine-check docs-container-build docs-container-start docs-container-stop \
  docs-container-restart docs-container-status docs-container-logs docs-deploy help clean really-clean \
- pdf-api-ref pdfs pdf-docs cover cover-light cover-dark cover-api-ref cover-api-ref-light cover-api-ref-dark
+ pdf-api-ref pdfs pdf-docs cover cover-light cover-dark cover-api-ref cover-api-ref-light cover-api-ref-dark \
+ cover-api-ref-b5-light cover-api-ref-b5-dark cover-api-ref-a4-light cover-api-ref-a4-dark \
+ cover-user-guide-a4-light cover-user-guide-a4-dark cover-user-guide-b5-light cover-user-guide-b5-dark
 
 
 # Makefile itself as a dependency to ensure it is re-evaluated when changed
@@ -154,6 +156,35 @@ API_REF_BUILD_DIR := $(BUILD_DIR)/api-reference
 USER_GUIDE_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
 API_REF_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
 
+# Markdown sources that are concatenated into the User Guide PDF body.
+# Keep this list markdown-only; non-markdown assets are tracked separately
+# via USER_GUIDE_PDF_DEPS so they trigger rebuilds without polluting content.
+USER_GUIDE_MD_SOURCES := \
+	$(sort $(wildcard $(DOCS_DIR)/user_guide/[0-9][0-9]_*.md)) \
+	$(DOCS_DIR)/examples.md
+
+API_REF_MD_SOURCES := \
+	$(sort $(wildcard $(DOCS_DIR)/api_reference/[0-9][0-9]_*.md))
+
+# Non-markdown assets that should still trigger a rebuild when changed.
+USER_GUIDE_PDF_DEPS := \
+	$(DOCS_DIR)/user_guide/pagebreaks.lua \
+	$(DOCS_DIR)/user_guide/userguide_template_a4.tex \
+	$(DOCS_DIR)/user_guide/userguide_template_dark_a4.tex \
+	$(DOCS_DIR)/user_guide/userguide_template_b5.tex \
+	$(DOCS_DIR)/user_guide/userguide_template_dark_b5.tex \
+	$(DOCS_DIR)/examples_template.md
+
+API_REF_PDF_DEPS := \
+	$(DOCS_DIR)/user_guide/pagebreaks.lua \
+	$(DOCS_DIR)/api_reference/api_ref_template_a4.tex \
+	$(DOCS_DIR)/api_reference/api_ref_template_dark_a4.tex \
+	$(DOCS_DIR)/api_reference/api_ref_template_b5.tex \
+	$(DOCS_DIR)/api_reference/api_ref_template_dark_b5.tex
+
+# $(info API_REF_MD_SOURCES: $(API_REF_MD_SOURCES))
+
+
 # ============================================================================================
 # Macro: DEFINE_USER_GUIDE_VARS
 # Derives all variant-specific file-path variables from the base name alone.
@@ -203,49 +234,6 @@ $(eval $(call DEFINE_API_REF_VARS,API_REF_DARK_A4))
 $(eval $(call DEFINE_API_REF_VARS,API_REF_B5))
 $(eval $(call DEFINE_API_REF_VARS,API_REF_DARK_B5))
 
-# Markdown sources that are concatenated into the User Guide PDF body.
-# Keep this list markdown-only; non-markdown assets are tracked separately
-# via USER_GUIDE_PDF_DEPS so they trigger rebuilds without polluting content.
-USER_GUIDE_MD_SOURCES := \
-	$(DOCS_DIR)/user_guide/01_getting_started.md \
-	$(DOCS_DIR)/user_guide/02_introduction.md \
-	$(DOCS_DIR)/user_guide/03_your_first_project.md  \
-	$(DOCS_DIR)/user_guide/04_uncertainty_factors.md  \
-	$(DOCS_DIR)/user_guide/05_task_estimation.md  \
-	$(DOCS_DIR)/user_guide/06_risks.md  \
-	$(DOCS_DIR)/user_guide/07_cost_handling.md  \
-	$(DOCS_DIR)/user_guide/08_project_files.md  \
-	$(DOCS_DIR)/user_guide/09_sprint_planning.md  \
-	$(DOCS_DIR)/user_guide/10_constrained.md  \
-	$(DOCS_DIR)/user_guide/11_multi_phase_simulation.md  \
-	$(DOCS_DIR)/user_guide/12_running_simulations.md  \
-	$(DOCS_DIR)/user_guide/13_interpreting_results.md  \
-	$(DOCS_DIR)/user_guide/14_configuration.md  \
-	$(DOCS_DIR)/user_guide/15_nl_processing.md  \
-	$(DOCS_DIR)/user_guide/16_mcp-server.md \
-	$(DOCS_DIR)/examples.md
-
-# Non-markdown assets that should still trigger a rebuild when changed.
-USER_GUIDE_PDF_DEPS := \
-	$(DOCS_DIR)/user_guide/pagebreaks.lua \
-	$(DOCS_DIR)/user_guide/userguide_template_a4.tex \
-	$(DOCS_DIR)/user_guide/userguide_template_dark_a4.tex \
-	$(DOCS_DIR)/user_guide/userguide_template_b5.tex \
-	$(DOCS_DIR)/user_guide/userguide_template_dark_b5.tex \
-	$(DOCS_DIR)/examples_template.md
-
-API_REF_MD_SOURCES := \
-	$(DOCS_DIR)/api_reference/01_intro.md \
-	$(DOCS_DIR)/api_reference/02_core.md \
-	$(DOCS_DIR)/api_reference/03_project_model.md \
-	$(DOCS_DIR)/api_reference/04_simulation_results.md \
-	$(DOCS_DIR)/api_reference/05_parsers.md \
-	$(DOCS_DIR)/api_reference/06_configuration.md \
-	$(DOCS_DIR)/api_reference/07_exporters.md \
-	$(DOCS_DIR)/api_reference/08_analysis_helpers.md \
-	$(DOCS_DIR)/api_reference/09_validation_utilities.md \
-	$(DOCS_DIR)/api_reference/10_nl_parser.md \
-	$(DOCS_DIR)/api_reference/11_api_examples.md
 
 # Example generation
 EXAMPLES_TEMPLATE := $(DOCS_DIR)/examples_template.md
