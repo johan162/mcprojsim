@@ -330,7 +330,7 @@ $(EXAMPLES_OUTPUT): $(EXAMPLES_TEMPLATE) $(EXAMPLES_GENERATOR) $(EXAMPLE_FILES)
 # ============================================================================================
 define BUILD_USER_GUIDE_PDF
 $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$(USER_GUIDE_LUA_FILTER)
-	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
+	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
 	@rm -f $$($1_TEMPLATE).bak
 	@echo -e "$$(DARKYELLOW)- Building user guide PDF via LaTeX report pipeline...$$(NC)"
@@ -348,25 +348,25 @@ $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
-	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template $$($1_TEMPLATE) ...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template $$(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW) ...$$(NC)"
 	@awk -v body="$$($1_BODY_TEX)" '\
 		/%%__USER_GUIDE_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__USER_GUIDE_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$($1_TEMPLATE) > $$($1_TEX)
-	@echo -e "$$(DARKYELLOW)  - Compiling $$($1_PDF) with xelatex (2 passes for references/TOC)...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Compiling $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(DARKYELLOW) with xelatex (2 passes for references/TOC)...$$(NC)"
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) 2>&1 \
-		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$($1_PDF).$$(NC)" >&2; \
+		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(RED).$$(NC)" >&2; \
 		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log):$$(NC)" >&2; \
 		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) >&2; exit 1; }
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(USER_GUIDE_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) 2>&1 \
-		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $$($1_PDF).$$(NC)" >&2; \
+		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(RED).$$(NC)" >&2; \
 		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log):$$(NC)" >&2; \
 		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) >&2; exit 1; }
 	@cp $$($1_PDF_BUILT) $$($1_PDF)
-	@echo -e "$$(GREEN)✓ User guide PDF built: $$($1_PDF)$$(NC)"
+	@echo -e "$$(GREEN)✓ User guide PDF built: $$(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(GREEN)$$(NC)"
 endef
 
 # ============================================================================================
@@ -379,7 +379,7 @@ endef
 # ============================================================================================
 define BUILD_API_REF_PDF
 $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_REF_LUA_FILTER)
-	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $$($1_TEMPLATE)...$(NC)"
+	@echo -e "$(DARKYELLOW)- Updating version number v$(VERSION) in LaTeX template $(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW)...$(NC)"
 	@sed -i.bak -E 's/\\texttt{$(PROJECT)}, v[0-9.]+/\\texttt{$(PROJECT)}, v$(VERSION)/g' $$($1_TEMPLATE)
 	@rm -f $$($1_TEMPLATE).bak
 	@echo -e "$$(DARKYELLOW)- Building API reference PDF via LaTeX report pipeline...$$(NC)"
@@ -397,25 +397,25 @@ $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_R
 	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(API_REF_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
-	@echo -e "$$(DARKYELLOW)  - Injecting body $$($1_BODY_TEX) into handcrafted LaTeX template $$($1_TEMPLATE) ...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Injecting body $(BRIGHTCYAN)\"$$(notdir $$($1_BODY_TEX))\"$(DARKYELLOW) into handcrafted LaTeX template $(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW) ...$$(NC)"
 	@awk -v body="$$($1_BODY_TEX)" '\
 		/%%__API_REF_CONTENT__%%/ { while ((getline line < body) > 0) print line; close(body); inserted=1; next } \
 		{ print } \
 		END { if (!inserted) { print "Template placeholder %%__API_REF_CONTENT__%% not found" > "/dev/stderr"; exit 2 } }' \
 		$$($1_TEMPLATE) > $$($1_TEX)
-	@echo -e "$$(DARKYELLOW)  - Compiling $$($1_PDF) with xelatex (2 passes for references/TOC)...$$(NC)"
+	@echo -e "$$(DARKYELLOW)  - Compiling $(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(DARKYELLOW) with xelatex (2 passes for references/TOC)...$$(NC)"
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) 2>&1 \
-		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $$($1_PDF).$$(NC)" >&2; \
+		|| { echo -e "$$(RED)✗ xelatex pass 1 failed for $(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(RED).$$(NC)" >&2; \
 		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log):$$(NC)" >&2; \
 		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass1.log) >&2; exit 1; }
 	@xelatex -interaction=nonstopmode -halt-on-error -output-directory $$(API_REF_BUILD_DIR) $$($1_TEX) \
 		> $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) 2>&1 \
-		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $$($1_PDF).$$(NC)" >&2; \
+		|| { echo -e "$$(RED)✗ xelatex pass 2 failed for $(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(RED).$$(NC)" >&2; \
 		     echo -e "$$(RED)  Last 30 lines of $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log):$$(NC)" >&2; \
 		     tail -30 $$($1_PDF_BUILT:.pdf=-xelatex-pass2.log) >&2; exit 1; }
 	@cp $$($1_PDF_BUILT) $$($1_PDF)
-	@echo -e "$$(GREEN)✓ API reference PDF built: $$($1_PDF)$$(NC)"
+	@echo -e "$$(GREEN)✓ API reference PDF built: $(BRIGHTCYAN)\"$$(notdir $$($1_PDF))\"$(GREEN)$$(NC)"
 endef
 
 
