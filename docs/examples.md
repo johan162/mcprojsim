@@ -68,7 +68,7 @@ mcprojsim simulate examples/quickstart_example.yaml --minimal --seed 42
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Website Refresh
@@ -194,7 +194,7 @@ mcprojsim simulate examples/tshirt_sizing_project.yaml --minimal --seed 42
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Mobile App Development
@@ -281,7 +281,7 @@ mcprojsim simulate examples/story_points_walkthrough_project.yaml --minimal --ta
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
 ┌────────────────────────────────┬───────────────────────────────────┐
@@ -544,7 +544,7 @@ mcprojsim simulate examples/sample_project.yaml --minimal --seed 42
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Customer Portal Redesign
@@ -639,7 +639,7 @@ mcprojsim simulate examples/team_size_demo_with_team_size.yaml --minimal --seed 
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Team Size Demo
@@ -684,7 +684,7 @@ mcprojsim simulate examples/team_size_demo_base.yaml --minimal --seed 42
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Team Size Demo
@@ -792,7 +792,7 @@ mcprojsim simulate examples/constrained_portal.yaml --minimal --seed 42 --iterat
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Onboarding Portal
@@ -867,7 +867,7 @@ mcprojsim simulate .build/gen-examples/nl_project.yaml --minimal --seed 42
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Rework Web Interface
@@ -968,7 +968,7 @@ mcprojsim simulate .build/gen-examples/nl_constrained_project.yaml --minimal --s
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Platform Migration
@@ -1073,7 +1073,7 @@ mcprojsim simulate examples/sprint_planning_minimal.yaml --minimal --seed 42
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Sprint Planning Minimal
@@ -1221,7 +1221,7 @@ mcprojsim simulate examples/sprint_planning_advanced.yaml --minimal --table --se
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
 ┌────────────────────────────────┬───────────────────────────────────┐
@@ -1384,7 +1384,7 @@ mcprojsim simulate examples/sprint_planning_tasks.yaml --minimal --seed 42
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Sprint Planning Tasks Mode
@@ -1623,7 +1623,7 @@ mcprojsim simulate .build/gen-examples/sprint_planning_nl.yaml --minimal --seed 
 ```
 
 ```text
-mcprojsim v0.15.1
+mcprojsim v0.15.2
 
 Project Overview:
   Project: Sprint Planning from Text
