@@ -155,6 +155,9 @@ API_REF_BUILD_DIR := $(BUILD_DIR)/api-reference
 # USER_GUIDE_LUA_FILTER is shared across all variants.
 USER_GUIDE_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
 API_REF_LUA_FILTER := $(DOCS_DIR)/user_guide/pagebreaks.lua
+ADMONITIONS_LUA_FILTER := $(DOCS_DIR)/admonitions.lua
+USER_GUIDE_LUA_FILTER_FLAGS := --lua-filter $(USER_GUIDE_LUA_FILTER) --lua-filter $(ADMONITIONS_LUA_FILTER)
+API_REF_LUA_FILTER_FLAGS := --lua-filter $(API_REF_LUA_FILTER) --lua-filter $(ADMONITIONS_LUA_FILTER)
 
 # Markdown sources that are concatenated into the User Guide PDF body.
 # Keep this list markdown-only; non-markdown assets are tracked separately
@@ -169,6 +172,7 @@ API_REF_MD_SOURCES := \
 # Non-markdown assets that should still trigger a rebuild when changed.
 USER_GUIDE_PDF_DEPS := \
 	$(DOCS_DIR)/user_guide/pagebreaks.lua \
+	$(DOCS_DIR)/admonitions.lua \
 	$(DOCS_DIR)/user_guide/userguide_template_a4.tex \
 	$(DOCS_DIR)/user_guide/userguide_template_dark_a4.tex \
 	$(DOCS_DIR)/user_guide/userguide_template_b5.tex \
@@ -177,6 +181,7 @@ USER_GUIDE_PDF_DEPS := \
 
 API_REF_PDF_DEPS := \
 	$(DOCS_DIR)/user_guide/pagebreaks.lua \
+	$(DOCS_DIR)/admonitions.lua \
 	$(DOCS_DIR)/api_reference/api_ref_template_a4.tex \
 	$(DOCS_DIR)/api_reference/api_ref_template_dark_a4.tex \
 	$(DOCS_DIR)/api_reference/api_ref_template_b5.tex \
@@ -333,7 +338,7 @@ $$($1_PDF): $$(USER_GUIDE_MD_SOURCES) $$(USER_GUIDE_PDF_DEPS) $$($1_TEMPLATE) $$
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
 	@cat $$(foreach f,$$(USER_GUIDE_MD_SOURCES),$$($1_EXPANDED_DIR)/$$(notdir $$f)) > $$($1_CONCAT_MD)
 	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(USER_GUIDE_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $$(USER_GUIDE_LUA_FILTER_FLAGS) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
 	@echo -e "$$(DARKYELLOW)  - Injecting body into handcrafted LaTeX template $$(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW) ...$$(NC)"
@@ -382,7 +387,7 @@ $$($1_PDF): $$(API_REF_MD_SOURCES) $$(API_REF_PDF_DEPS) $$($1_TEMPLATE) $$(API_R
 	@echo -e "$$(DARKYELLOW)  - Concatenating markdown sources...$$(NC)"
 	@cat $$(foreach f,$$(API_REF_MD_SOURCES),$$($1_EXPANDED_DIR)/$$(notdir $$f)) > $$($1_CONCAT_MD)
 	@echo -e "$$(DARKYELLOW)  - Converting concatenated markdown to LaTeX body...$$(NC)"
-	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none --lua-filter $$(API_REF_LUA_FILTER) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
+	@pandoc --from=markdown --to=latex --top-level-division=chapter --syntax-highlighting=none $$(API_REF_LUA_FILTER_FLAGS) --metadata paper_format=$(2) $$($1_CONCAT_MD) -o $$($1_BODY_TEX)
 	@sed -i.bak 's/\\def\\LTcaptype{none}/\\def\\LTcaptype{table}/g' $$($1_BODY_TEX)
 	@rm -f $$($1_BODY_TEX).bak
 	@echo -e "$$(DARKYELLOW)  - Injecting body $(BRIGHTCYAN)\"$$(notdir $$($1_BODY_TEX))\"$(DARKYELLOW) into handcrafted LaTeX template $(BRIGHTCYAN)\"$$(notdir $$($1_TEMPLATE))\"$(DARKYELLOW) ...$$(NC)"
