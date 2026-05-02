@@ -266,7 +266,7 @@ mcprojsim simulate first-project-step-3.yaml --seed 42 --minimal
 
 Example result summary:
 
-{{!mcprojsim simulate examples/01_first_project/first-project-step-3.yaml --seed 42 --minimal@B5:18*}}
+{{!mcprojsim simulate examples/01_first_project/first-project-step-3.yaml --seed 42 --minimal@B5:24*}}
 
 
 This is an important modeling step. As can be seen from the simulation these uncertainty factors add another day effort to be 80% certain.
@@ -318,6 +318,7 @@ Uncertainty Factors:
     low: 1.0
     medium: 1.2
     high: 1.5
+  !!! yaml-cbreak-b5
   team_distribution:
     colocated: 1.0
     distributed: 1.25
@@ -368,6 +369,7 @@ project:
   description: "Adding risk events"
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
+!!! yaml-cbreak-b5
 project_risks:
   - id: "risk_001"
     name: "Late stakeholder changes"
@@ -415,7 +417,7 @@ mcprojsim simulate first-project-step-4.yaml \
 
 Example result summary:
 
-{{!mcprojsim simulate examples/01_first_project/first-project-step-4.yaml --config examples/01_first_project/first-project-step-3-config.yaml --iterations 5000 --seed 42 --minimal}}
+{{!mcprojsim simulate examples/01_first_project/first-project-step-4.yaml --config examples/01_first_project/first-project-step-3-config.yaml --iterations 5000 --seed 42 --minimal@B5:8*}}
 
 
 Notice what happened relative to Step 3:
@@ -607,6 +609,7 @@ Story Points (unit: days):
     low: 0.5, expected: 1.0, high: 3.0
   2:
     low: 1.0, expected: 2.0, high: 4.0
+  !!! yaml-cbreak-b5
   3:
     low: 1.5, expected: 3.0, high: 5.0
   5:
@@ -662,11 +665,9 @@ mcprojsim simulate first-project-step-6.yaml \
 
 Example result summary:
 
-{{!mcprojsim simulate examples/01_first_project/first-project-step-6.yaml --config examples/01_first_project/first-project-step-6-config.yaml --iterations 5000 --seed 42 --minimal}}
+{{!mcprojsim simulate examples/01_first_project/first-project-step-6.yaml --config examples/01_first_project/first-project-step-6-config.yaml --iterations 5000 --seed 42 --minimal@B5:3*}}
 
 Story Points are useful when the team has a stable internal understanding of what `1`, `2`, `3`, `5`, `8`, `13`, or `21` mean, but that understanding does not translate directly to raw hours or days. The config file is where that team-specific calibration belongs.
-
-<!-- pagebreak:b5 -->
 
 ## What each stage added
 

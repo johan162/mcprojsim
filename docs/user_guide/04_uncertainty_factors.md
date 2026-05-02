@@ -59,8 +59,6 @@ Reflects whether the team is colocated or distributed.
 
 Distributed teams face communication delays, timezone differences, and coordination overhead. This factor accounts for that systematic slowdown.
 
-<!-- pagebreak:b5 -->
-
 ### Integration Complexity
 
 Measures how much integration work is involved with other systems.
@@ -99,7 +97,6 @@ If the sampled base duration is 5 days, the adjusted duration becomes $5 \times 
 
 This illustrates why multiple adverse factors compound quickly. Even moderate individual adjustments can produce a significant overall effect when multiplied together.
 
-\newpage
 
 ## Validation and Fallback Behavior
 
@@ -133,8 +130,6 @@ A task that omits the `uncertainty_factors` block entirely still receives these 
 $$1.00 \times 1.00 \times 1.00 \times 1.00 \times 1.00 = 1.0$$
 
 This means a task with no explicit uncertainty factors will have its sampled base duration used as-is, with no stretching applied before risks are evaluated.
-
-\newpage
 
 ## Defining Uncertainty Factors in the Project File
 

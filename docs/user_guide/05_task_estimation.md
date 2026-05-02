@@ -346,7 +346,6 @@ $$\ln(X) = \ln(X_0) + \ln(F_1) + \ln(F_2) + ... + \ln(F_n)$$
 
 If we assume the $\ln(F_i)$ are independent and identically distributed, then by the Central Limit Theorem, $\ln(X)$ will tend to be normally distributed, which means that $X$ is log-normally distributed.
 
-<!-- pagebreak:b5 -->
 
 ### Determining log-normal parameters
 
@@ -453,7 +452,7 @@ The median and mean both sitting above the mode is the classic log-normal skew i
 
 ![Log-normal task duration (5,9,16)](../assets/fig-lognormal-graph.png)
 
-***Figure:*** *Log-normal task duration (5,9,16)*
+
 
 ### Deriving the formula to translate `low`, `expected`, `high` to log-normal parameters
 
@@ -501,9 +500,6 @@ The default unit for T-shirt sizes is **hours** (configurable via `t_shirt_size_
 
 The built-in default category is `story`, so a bare value like `M` resolves as `story.M` unless you change `t_shirt_size_default_category` or pass `--tshirt-category` on the CLI.
 
-<!-- pagebreak:b5 -->
-
-***Table: Bug - category***
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
 |---|---|---:|---:|---:|
@@ -514,8 +510,8 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `bug` | `XL` | 20 | 40 | 100 |
 | `bug` | `XXL` | 40 | 80 | 200 |
 
+:Table: Bug - category
 
-***Table: Story - category***
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
 |---|---|---:|---:|---:|
@@ -526,7 +522,8 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `story` | `XL` | 320 | 400 | 750 |
 | `story` | `XXL` | 400 | 500 | 1200 |
 
-***Table: Epic - category***
+:Table: Story - category
+
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
 |---|---|---:|---:|---:|
@@ -537,7 +534,7 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `epic` | `XL` | 600 | 1000 | 1500 |
 | `epic` | `XXL` | 1200 | 2000 | 3200 |
 
-***Table: Business/Program - category***
+:Table: Epic - category
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
 |---|---|---:|---:|---:|
@@ -548,8 +545,8 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `business` | `XL` | 8000 | 16000 | 40000 |
 | `business` | `XXL` | 16000 | 32000 | 80000 |
 
-<!-- pagebreak:b5 -->
-***Table: Initiative - category***
+:Table: Business/Program - category
+
 
 | Category | Size | low (hours) | expected (hours) | high (hours) |
 |---|---|---:|---:|---:|
@@ -560,6 +557,7 @@ The built-in default category is `story`, so a bare value like `M` resolves as `
 | `initiative` | `XL` | 40000 | 80000 | 200000 |
 | `initiative` | `XXL` | 80000 | 160000 | 400000 |
 
+:Table: Initiative - category
 
 These category-specific defaults let you keep the same symbolic size scale while tuning absolute magnitude for different planning scopes.
 
@@ -622,7 +620,7 @@ project:
   start_date: "2026-03-01"
   confidence_levels: [50, 80, 90]
   hours_per_day: 8
-
+!!! yaml-cbreak-b5
 tasks:
   - id: "task_001"
     name: "Design page"
@@ -663,7 +661,6 @@ t_shirt_sizes:
       low: 45
       expected: 65
       high: 130
-!!! yaml-cbreak-b5 
   epic:
     M:
       low: 240
@@ -786,6 +783,7 @@ tasks:
     uncertainty_factors:
       team_experience: "high"
       requirements_maturity: "high"
+!!! yaml-cbreak-b5
   - id: "task_002"
     name: "Build page"
     estimate:
@@ -818,7 +816,6 @@ story_points:
     low: 1
     expected: 2
     high: 3.5
-!!! yaml-cbreak-b5  
   5:
     low: 3.5
     expected: 5.5
@@ -838,6 +835,7 @@ story_points:
     low: 0.5
     expected: 1
     high: 3       # 0.5–3 days → 4–24 hours (at 8 hours/day)
+!!! yaml-cbreak-b5
   5:
     low: 3
     expected: 5
@@ -871,7 +869,6 @@ A single project can use different estimation methods for different tasks. This 
 tasks:
   - id: "research"
     name: "Technology research"
-!!! yaml-cbreak-b5 
     estimate:
       distribution: "lognormal"
       low: 3
@@ -893,6 +890,7 @@ tasks:
       high: 25
       unit: "days"
     dependencies: ["design"]
+!!! yaml-cbreak-b5
   - id: "testing"
     name: "Integration testing"
     estimate:
@@ -1014,6 +1012,7 @@ The resolved values are then converted to hours using the same conversion logic.
 | `t_shirt_size` token shape must be `<size>` or `<category>.<size>` | T-shirt size | Yes — invalid token formats fail validation |
 | `t_shirt_size` category and size must exist in active config | T-shirt size | Yes — unknown category/size fails resolution |
 
+<!-- pagebreak:b5 -->
 
 ## Summary
 
