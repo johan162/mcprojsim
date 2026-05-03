@@ -10,7 +10,7 @@
 # Proxy build: podman build --build-arg USE_PROXY_CA=true \
 #                --secret id=proxy_ca,src=CA_proxy_fw_all.pem \
 #                -f Dockerfile.docs -t mcprojsim-docs .
-# Run:         podman run -d --rm -p 9090:80 --name mcprojsim-docs mcprojsim-docs
+# Run:         podman run -d --rm -p 8080:8080 --name mcprojsim-docs mcprojsim-docs
 # =============================================================================
 
 # -----------------------------------------------------------------------------
