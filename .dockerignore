@@ -16,4 +16,6 @@
 !src/**
 !docs/
 !docs/**
+!assets/
+!assets/**
 

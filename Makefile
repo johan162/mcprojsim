@@ -7,7 +7,7 @@
 test-probabilistic-full test-statistical lint format typecheck migrate init-db check \
 pre-commit clean maintainer-clean docs pdf pdf-sprint-planning pdf-pandoc gen-examples \
 figs docs-serve docs-container-build docs-container-start docs-container-stop docs-container-restart \
-docs-container-status docs-container-logs build container-build container-build-corporate container-build-public \
+docs-container-status docs-container-logs docs-container-clean build container-build container-build-corporate container-build-public \
 container-up container-down container-logs \
 container-restart container-shell container-clean container-clean-container-volumes container-clean-images \
 container-volume-info container-rebuild ghcr-login ghcr-logout ghcr-push ghcr-clean pull-all \
@@ -325,6 +325,7 @@ help: ## Show this help message
 	@$(call print_section,Database,migrate|init-db)
 	@$(call print_section,Build & Documentation,build|figs|cover|docs|pdf|pdfs|docs-serve)
 	@$(call print_section,Container Management,container-build|container-build-corporate|container-build-public|container-up|container-down|container-logs|container-restart|container-shell|container-rebuild|container-volume-info|container-clean)
+	@$(call print_section,Documentation Container,docs-container-build|docs-container-start|docs-container-stop|docs-container-restart|docs-container-status|docs-container-logs|docs-container-clean)
 	@$(call print_section,Cleanup,clean|clean-venv|maintainer-clean)
 	@$(call print_section,GitHub Container Registry,ghcr-login|ghcr-logout|ghcr-push)
 	@$(call print_section,Git Operations,pull-all)
@@ -502,6 +503,117 @@ container-build-standard: | container-engine-check ## Build container image with
 	@touch $(CONTAINER_STAMP)
 	@echo -e "$(GREEN)✓ Public container image built$(NC)"
 
+
+# ============================================================================================
+# Documentation Container Targets
+# Builds and manages the documentation server container using Dockerfile.docs
+# ============================================================================================
+
+DOCS_CONTAINER_NAME := $(PROJECT)-docs
+DOCS_CONTAINER_STAMP := $(STAMP_DIR)/docs-container-stamp
+
+# Build documentation container (auto-detects proxy environment)
+docs-container-build: docs-container-build-auto | container-engine-check ## Build documentation container (auto-detects proxy)
+	@:
+
+# Auto-detect and build docs container with appropriate configuration
+docs-container-build-auto: | container-engine-check ## Auto-detect proxy and build docs container
+	@echo -e "$(DARKYELLOW)- Auto-detecting build environment for docs container...$(NC)"
+	@if [ "$(PROXY_DETECTED)" = "yes" ]; then \
+		$(MAKE) docs-container-build-proxy; \
+	else \
+		$(MAKE) docs-container-build-standard; \
+	fi
+
+# Build docs container with proxy CA certificate
+docs-container-build-proxy: | container-engine-check ## Build documentation container with proxy CA support
+	@echo -e "$(DARKYELLOW)- Building documentation container with proxy CA support...$(NC)"
+	@if [ ! -s $(PROXY_CA_FILE) ]; then \
+		echo -e "$(RED)✗ Error: $(PROXY_CA_FILE) not found$(NC)"; \
+		echo -e "$(YELLOW)  Copy your proxy CA certificate to the project root as $(PROXY_CA_FILE)$(NC)"; \
+		exit 1; \
+	fi
+	@$(CONTAINER_CMD) build -f Dockerfile.docs --build-arg USE_PROXY_CA=true --secret id=proxy_ca,src=$(PROXY_CA_FILE) -t $(DOCS_CONTAINER_NAME):latest -t $(DOCS_CONTAINER_NAME):$(VERSION) .
+	@touch $(DOCS_CONTAINER_STAMP)
+	@echo -e "$(GREEN)✓ Documentation container image built with proxy CA support$(NC)"
+
+# Build docs container without proxy CA
+docs-container-build-standard: | container-engine-check ## Build documentation container without proxy CA
+	@echo -e "$(DARKYELLOW)- Building documentation container (no proxy CA)...$(NC)"
+	@$(CONTAINER_CMD) build -f Dockerfile.docs --build-arg USE_PROXY_CA=false -t $(DOCS_CONTAINER_NAME):latest -t $(DOCS_CONTAINER_NAME):$(VERSION) .
+	@touch $(DOCS_CONTAINER_STAMP)
+	@echo -e "$(GREEN)✓ Documentation container image built$(NC)"
+
+# Start documentation container
+docs-container-start: | container-engine-check ## Start the documentation container
+	@echo -e "$(DARKYELLOW)- Starting documentation container...$(NC)"
+	@if $(CONTAINER_CMD) ps -a --format '{{.Names}}' | grep -q '^$(DOCS_CONTAINER_NAME)$$'; then \
+		if $(CONTAINER_CMD) ps --format '{{.Names}}' | grep -q '^$(DOCS_CONTAINER_NAME)$$'; then \
+			echo -e "$(YELLOW)⚠ Documentation container is already running$(NC)"; \
+		else \
+			echo -e "$(DARKYELLOW)- Starting existing documentation container...$(NC)"; \
+			$(CONTAINER_CMD) start $(DOCS_CONTAINER_NAME); \
+		fi; \
+	else \
+		echo -e "$(DARKYELLOW)- Creating and starting new documentation container...$(NC)"; \
+		$(CONTAINER_CMD) run -d --rm -p 8080:8080 --name $(DOCS_CONTAINER_NAME) $(DOCS_CONTAINER_NAME):latest; \
+	fi
+	@echo -e "$(GREEN)✓ Documentation container started on http://localhost:8080$(NC)"
+
+# Stop documentation container
+docs-container-stop: | container-engine-check ## Stop the documentation container
+	@echo -e "$(DARKYELLOW)- Stopping documentation container...$(NC)"
+	@if $(CONTAINER_CMD) ps --format '{{.Names}}' | grep -q '^$(DOCS_CONTAINER_NAME)$$'; then \
+		$(CONTAINER_CMD) stop $(DOCS_CONTAINER_NAME); \
+		echo -e "$(GREEN)✓ Documentation container stopped$(NC)"; \
+	else \
+		echo -e "$(GREEN)✓ Documentation container was already stopped$(NC)"; \
+	fi
+
+# Restart documentation container
+docs-container-restart: docs-container-stop docs-container-start ## Restart the documentation container
+	@:
+
+# Check documentation container status
+docs-container-status: | container-engine-check ## Show documentation container status
+	@echo -e "$(DARKYELLOW)- Documentation container status:$(NC)"
+	@if $(CONTAINER_CMD) ps -a --format '{{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -q '^$(DOCS_CONTAINER_NAME)'; then \
+		$(CONTAINER_CMD) ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -E '^NAMES|^$(DOCS_CONTAINER_NAME)'; \
+	else \
+		echo -e "$(YELLOW)⚠ Documentation container does not exist$(NC)"; \
+	fi
+
+# Show documentation container logs
+docs-container-logs: | container-engine-check ## Show documentation container logs
+	@if $(CONTAINER_CMD) ps -a --format '{{.Names}}' | grep -q '^$(DOCS_CONTAINER_NAME)$$'; then \
+		$(CONTAINER_CMD) logs -f $(DOCS_CONTAINER_NAME); \
+	else \
+		echo -e "$(GREEN)✓ Documentation container was already stopped$(NC)"; \
+	fi
+
+docs-container-images-clean: | container-engine-check docs-container-stop ## Remove documentation container images
+	@echo -e "$(DARKYELLOW)- Removing documentation container images...$(NC)"
+	@$(CONTAINER_CMD) rmi -f $$($(CONTAINER_CMD) images --filter "reference=mcprojsim*" -q) 2>/dev/null || true
+	@rm -f $(DOCS_CONTAINER_STAMP)
+	@echo -e "$(GREEN)✓ Documentation container images removed$(NC)"
+
+# Clean up docs container and images
+docs-container-clean: | container-engine-check docs-container-stop ## Remove all docs containers and images
+	@echo -e "$(DARKYELLOW)- Cleaning up documentation container and images...$(NC)"
+	@if $(CONTAINER_CMD) ps -a --format '{{.Names}}' | grep -q '^$(DOCS_CONTAINER_NAME)$$'; then \
+		echo -e "$(DARKYELLOW)- Removing documentation container...$(NC)"; \
+		$(CONTAINER_CMD) rm -f $(DOCS_CONTAINER_NAME); \
+	fi
+	@echo -e "$(DARKYELLOW)- Removing documentation images...$(NC)"
+	-@$(CONTAINER_CMD) rmi -f $$($(CONTAINER_CMD) images --filter "reference=mcprojsim*" -q) 2>/dev/null || true
+	@rm -f $(DOCS_CONTAINER_STAMP)
+	@echo -e "$(GREEN)✓ Documentation container and images removed$(NC)"
+
+container-prune: | container-engine-check docs-container-stop ## Remove all stopped containers and dangling images
+	@echo -e "$(DARKYELLOW)- Pruning stopped containers and dangling images...$(NC)"
+	@$(CONTAINER_CMD) container prune -f
+	@$(CONTAINER_CMD) image prune -f
+	@echo -e "$(GREEN)✓ Container prune completed$(NC)"
 
 # ============================================================================================
 # GitHub Container Registry Targets
