@@ -3,6 +3,7 @@ project:
   description: "Small example project"
   start_date: "2026-04-01"
   confidence_levels: [50, 80, 90]
+  distribution: "lognormal"
 
 tasks:
   - id: "task_001"
@@ -19,6 +20,18 @@ tasks:
       low: 4
       expected: 6
       high: 10
+      unit: "days"
+    dependencies: ["task_001"]
+    uncertainty_factors:
+      team_experience: "medium"
+      technical_complexity: "medium"
+
+  - id: "task_003"
+    name: "Backend changes"
+    estimate:
+      low: 4
+      expected: 6
+      high: 20
       unit: "days"
     dependencies: ["task_001"]
     uncertainty_factors:

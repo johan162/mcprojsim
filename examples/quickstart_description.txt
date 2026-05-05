@@ -10,3 +10,9 @@ Task 2:
 - Frontend changes
 - Depends on Task 1
 - Size: M
+
+Task 3:
+- Frontend changes
+- Depends on Task 1
+- Size: L
+
